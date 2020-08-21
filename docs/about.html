@@ -19,9 +19,6 @@
 <script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
-<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
-<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
-<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
@@ -271,90 +268,6 @@ $(document).ready(function () {
 
 
 
-<script>
-$(document).ready(function ()  {
-
-    // move toc-ignore selectors from section div to header
-    $('div.section.toc-ignore')
-        .removeClass('toc-ignore')
-        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
-
-    // establish options
-    var options = {
-      selectors: "h1,h2,h3",
-      theme: "bootstrap3",
-      context: '.toc-content',
-      hashGenerator: function (text) {
-        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
-      },
-      ignoreSelector: ".toc-ignore",
-      scrollTo: 0
-    };
-    options.showAndHide = true;
-    options.smoothScroll = true;
-
-    // tocify
-    var toc = $("#TOC").tocify(options).data("toc-tocify");
-});
-</script>
-
-<style type="text/css">
-
-#TOC {
-  margin: 25px 0px 20px 0px;
-}
-@media (max-width: 768px) {
-#TOC {
-  position: relative;
-  width: 100%;
-}
-}
-
-
-.toc-content {
-  padding-left: 30px;
-  padding-right: 40px;
-}
-
-div.main-container {
-  max-width: 1200px;
-}
-
-div.tocify {
-  width: 20%;
-  max-width: 260px;
-  max-height: 85%;
-}
-
-@media (min-width: 768px) and (max-width: 991px) {
-  div.tocify {
-    width: 25%;
-  }
-}
-
-@media (max-width: 767px) {
-  div.tocify {
-    width: 100%;
-    max-width: none;
-  }
-}
-
-.tocify ul, .tocify li {
-  line-height: 20px;
-}
-
-.tocify-subheader .tocify-item {
-  font-size: 0.90em;
-}
-
-.tocify .list-group-item {
-  border-radius: 0px;
-}
-
-
-</style>
-
-
 
 </head>
 
@@ -362,16 +275,6 @@ div.tocify {
 
 
 <div class="container-fluid main-container">
-
-
-<!-- setup 3col/9col grid for toc_float and main content  -->
-<div class="row-fluid">
-<div class="col-xs-12 col-sm-4 col-md-3">
-<div id="TOC" class="tocify">
-</div>
-</div>
-
-<div class="toc-content col-xs-12 col-sm-8 col-md-9">
 
 
 
@@ -437,7 +340,7 @@ div.tocify {
 <strong>Last updated:</strong> 2020-08-21
 </p>
 <p>
-<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 5 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 1
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 1
 </p>
 <p>
 <strong>Knit directory:</strong> <code>ChromatinSplicingQTLs/analysis/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
@@ -450,6 +353,18 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 </div>
 <div id="checks" class="tab-pane fade">
 <div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges"> <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted changes </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguncommittedchanges" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The R Markdown file has unstaged changes. To know which version of the R Markdown file created these results, you’ll want to first commit it to the Git repo. If you’re still working on the analysis, you can ignore this warning. When you’re finished, you can run <code>wflow_publish</code> to commit the R Markdown file and build the HTML.</p>
+</div>
+</div>
+</div>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
@@ -513,12 +428,53 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongnoversioncontrol"> <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> <strong>Repository version:</strong> no version control </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstreedd0eadbb209caea66e98ef74baf13cd7a9268ecatargetblankdd0eadba"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/dd0eadbb209caea66e98ef74baf13cd7a9268eca" target="_blank">dd0eadb</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongnoversioncontrol" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstreedd0eadbb209caea66e98ef74baf13cd7a9268ecatargetblankdd0eadba" class="panel-collapse collapse">
 <div class="panel-body">
-<p>Tracking code development and connecting the code version to the results is critical for reproducibility. To start using Git, open the Terminal and type <code>git init</code> in your project directory.</p>
+<p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/dd0eadbb209caea66e98ef74baf13cd7a9268eca" target="_blank">dd0eadb</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    code/.snakemake/
+    Ignored:    code/Alignments/
+    Ignored:    code/Bigwigs/
+    Ignored:    code/Fastq/
+    Ignored:    code/Genotypes/
+    Ignored:    code/Log.out
+    Ignored:    code/Phenotypes/
+    Ignored:    code/PlotGruberQTLs/
+    Ignored:    code/ReferenceGenome/
+    Ignored:    code/Rplots.pdf
+    Ignored:    code/Session.vim
+    Ignored:    code/logs/
+    Ignored:    code/scratch/
+    Ignored:    code/scripts/GenometracksByGenotype/GenometracksByGenotype.conda_env.yml
+    Ignored:    code/scripts/GenometracksByGenotype/NormalizedBigwigsByGenotype.py
+    Ignored:    code/scripts/GenometracksByGenotype/images/
+    Ignored:    code/scripts/GenometracksByGenotype/test_data/
+    Ignored:    code/scripts/GenometracksByGenotype/tracks_templates/
+    Ignored:    code/scripts/liftOverBedpe/liftOverBedpe.py
+    Ignored:    code/snakemake.sbatch.log
+
+Unstaged changes:
+    Modified:   analysis/DataInCode_20200821_H3K4me3AndEqtl.Rmd
+    Modified:   analysis/about.Rmd
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+</p>
 </div>
 </div>
 </div>
@@ -526,9 +482,69 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <hr>
 </div>
 <div id="versions" class="tab-pane fade">
+
 <p>
-This project is not being versioned with Git. To obtain the full reproducibility benefits of using workflowr, please see <code>?wflow_start</code>.
+These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/about.Rmd</code>) and HTML (<code>docs/about.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
 </p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/dd0eadbb209caea66e98ef74baf13cd7a9268eca/analysis/about.Rmd" target="_blank">dd0eadb</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2020-08-21
+</td>
+<td>
+initial commit
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/dd0eadbb209caea66e98ef74baf13cd7a9268eca/docs/about.html" target="_blank">dd0eadb</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2020-08-21
+</td>
+<td>
+initial commit
+</td>
+</tr>
+</tbody>
+</table>
+</div>
 <hr>
 </div>
 </div>
@@ -553,6 +569,43 @@ This project is not being versioned with Git. To obtain the full reproducibility
 <h2>Including Plots</h2>
 <p>You can also embed plots, for example:</p>
 <p><img src="figure/about.Rmd/pressure-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-pressure-1">
+Past versions of pressure-1.png
+</button>
+</p>
+<div id="fig-pressure-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/dd0eadbb209caea66e98ef74baf13cd7a9268eca/docs/figure/about.Rmd/pressure-1.png" target="_blank">dd0eadb</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2020-08-21
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Note that the <code>echo = FALSE</code> parameter was added to the code chunk to prevent printing of the R code that generated the plot.</p>
 </div>
 <div id="rmarkdowns-as-a-workflowr" class="section level2">
@@ -598,9 +651,9 @@ loaded via a namespace (and not attached):
  [1] workflowr_1.6.2 Rcpp_1.0.3      rprojroot_1.3-2 digest_0.6.20  
  [5] later_0.8.0     R6_2.4.0        backports_1.1.4 git2r_0.26.1   
  [9] magrittr_1.5    evaluate_0.14   stringi_1.4.3   fs_1.3.1       
-[13] promises_1.0.1  rmarkdown_1.13  tools_3.6.1     stringr_1.4.0  
-[17] glue_1.3.1      httpuv_1.5.1    xfun_0.8        yaml_2.2.0     
-[21] compiler_3.6.1  htmltools_0.3.6 knitr_1.23     </code></pre>
+[13] promises_1.0.1  whisker_0.3-2   rmarkdown_1.13  tools_3.6.1    
+[17] stringr_1.4.0   glue_1.3.1      httpuv_1.5.1    xfun_0.8       
+[21] yaml_2.2.0      compiler_3.6.1  htmltools_0.3.6 knitr_1.23     </code></pre>
 </div>
 </div>
 </div>
@@ -619,8 +672,6 @@ footer is added to webpages before the MathJax javascript. -->
 </script>
 
 
-</div>
-</div>
 
 </div>
 
