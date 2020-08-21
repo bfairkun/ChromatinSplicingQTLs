@@ -1,0 +1,15 @@
+---
+title: "Home"
+site: workflowr::wflow_site
+output:
+  workflowr::wflow_html:
+    toc: false
+editor_options:
+  chunk_output_type: console
+---
+
+Welcome to my research website.
+
+This project will investigate the correlation of genetic effects on chromatin, splicing, transcription, and complex phenotypes, using naturally occuring human genetic variation.
+
+We are still collecting data, but I have also been perusing around published data a bit.

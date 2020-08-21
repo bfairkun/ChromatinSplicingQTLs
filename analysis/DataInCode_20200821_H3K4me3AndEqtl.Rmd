@@ -1,0 +1,69 @@
+---
+title: "H3K4me3FromGruber"
+toc: true
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F)
+```
+
+## Introduction
+
+This analysis is an example to demonstrate how I will set up Rmarkdowns for this project. See [about](about.html) for more description. In this example I will make a QQ-plot of H3K4me3 P-values (from [Gruber et al](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4556133/)), grouped by whether the SNP is an eQTL ( [GEUVADIS data](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3918453/) ). In the `code` directory, the snakemake has already downloaded and or processed the data from these publications. I expect that SNPs that are eQTLs will have smaller P-values for H3K4me3.
+
+
+First load necessary libraries and read in data...
+
+```{r read_data}
+library(tidyverse)
+library(knitr)
+
+Grubert.H3K4me3.QTLs <- read.delim("../code/PlotGruberQTLs/Data/localQTLs_H3K4ME3.FDR0.1.hg38.bedpe", col.names=c("SNP_chr", "SNP_pos", "SNP_stop", "Peak_Chr", "Peak_start", "Peak_stop", "Name", "Score", "strand1", "stand2"), stringsAsFactors = F) %>%
+  separate(col = "Name", into=c("PEAKid","SNPrsid","beta","p.value","FDR_TH","pvalTH","pass.pvalTH","mod","peak.state"), sep = ";", convert = T) %>%
+  mutate(SNP_pos = as.numeric(SNP_pos))
+
+head(Grubert.H3K4me3.QTLs) %>% kable()
+
+
+GEUVADIS.eQTLs <- read.delim("../data/QTLBase.GEUVADIS.eQTLs.hg38.txt.gz", stringsAsFactors = F) %>%
+  mutate(SNP_chr=paste0("chr",SNP_chr)) %>%
+  filter(!SNP_chr == "chr6") %>% #blunt way to filter out MHC locus
+  mutate(SNP_pos = as.numeric(SNP_pos))  %>%
+  mutate(SNP=paste(SNP_chr, SNP_pos))
+
+head(GEUVADIS.eQTLs) %>% kable()
+
+```
+
+Peruse data a little.
+
+```{r}
+hist(Grubert.H3K4me3.QTLs$p.value)
+```
+
+Ok, good look histogram of P-values for H3K4me3 QTLs. What about eQTLs from GEUVADIS which I downlaoded from [QTLbase](https://academic.oup.com/nar/article/48/D1/D983/5584691)
+
+```{r}
+hist(GEUVADIS.eQTLs$Pvalue)
+```
+
+Ok.. those P-values are all very very small. It seems the P values from QTLbase are only for significant eQTLs. So now let's make a QQ-plot for H3K4me3 QTL P-values, based on whether the snp is an eQTL.
+
+```{r}
+H3K4me3_QQ <- Grubert.H3K4me3.QTLs %>%
+  dplyr::select(p.value, SNP_chr, SNP_chr, SNP_pos) %>%
+  filter(!SNP_chr == "chr6") %>%
+  mutate(SNP=paste(SNP_chr, SNP_pos)) %>%
+  mutate(SNPIsEqtl= SNP %in% GEUVADIS.eQTLs$SNP) %>%
+  group_by(SNPIsEqtl) %>%
+  mutate(ExpectedP=percent_rank(p.value)) %>%
+  sample_n(400) %>% #Just sample 400 random points from each group to be quick
+  ggplot(aes(x=-log10(ExpectedP), y=-log10(p.value), color=SNPIsEqtl)) +
+  geom_point() +
+  geom_abline() +
+  theme_bw()
+H3K4me3_QQ
+```
+
+As expected, SNPs that are eQTLs have more significant P-value inflation for H3K4me3 genetic effects.

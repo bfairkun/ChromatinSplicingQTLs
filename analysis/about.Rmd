@@ -1,0 +1,49 @@
+---
+title: "About"
+output:
+  workflowr::wflow_html:
+    toc: true
+editor_options:
+  chunk_output_type: console
+
+---
+
+# Project description
+
+A project investigating the correlation of genetic effects on chromatin, splicing, transcription, and complex phenotypes, using naturally occuring human genetic variation.
+
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+## Rmarkdowns as a workflowr
+
+Make sure you installed the [workflowr](https://jdblischak.github.io/workflowr/) library for R. I have been organizing this project according to this cookiecutter project template [https://github.com/bfairkun/cookiecutter-wflowR-smk](https://github.com/bfairkun/cookiecutter-wflowR-smk). To summarize, this project structure follows the recommended project structure by the [workflowr](https://jdblischak.github.io/workflowr/) project ([https://jdblischak.github.io/workflowr/articles/wflow-01-getting-started.html](https://jdblischak.github.io/workflowr/articles/wflow-01-getting-started.html)), where all of the files in `code` are part of a snakemake workflow. The snakemake workflow takes care of all of all the data proessing that requires lots of computational resources, and outputs some relevant files into the `output` directory if they are small enough to add to github. Large files that the snakemake creates are saved in `code` and not added to git repository as specified in `code/.gitignore` (since github places a limit on the size of files that can be upload), but theoretically, they can be easily recreated using the snakemake. From there, I use these R to further analyze and explore the results, in the form of Rmarkdown scripts for each conceptually distinct analysis I am interested in. Each Rmarkdown script should contain enough information for others to follow my thoughts as I analyze data. All of the datafiles required to run the Rmarkdown scripts should be in `output`, `data`, or `code`, and all the Rmarkdown scripts should reference these filepaths using relative filepaths for easier reproducibility. When I am satisfied with the Rmarkdwon analysis and I want to make my analyses public, I use the `workflowr::wflow_build()` command in the console. This will knit the Rmd file(s) in analysis into html files in `docs`, which github can host for display as a public website. All Rmd files that are to be included into this workflow must be saved in `analysis`. I have a naming convention for Rmd files:
+
+1. Rmd files that rely only on datafiles in `data/` or `output/` should be named as such: `analysis/DataNotInCode_<date>_<short title>.Rmd`.
+1. Rmd files that rely on datafiles that are in `code/` should be named as such: `analysis/DataInCode_<date>_<short title>.Rmd`.
+
+With this, Rmd files that can be easily ran by cloning the git repo to my local computer are separated from the Rmd files that require large data files which I keep on midway as part of the snakemake. Therefore, from my laptop, I can run build Rmd files locally with `workflowr::wflow_build("analysis/DataNotInCode_*")`. I can build the other Rmd files on midway. After Rmd files are built into `docs/`, I can add and commit them to the repository.
+
+[Here](DataInCode_20200821_H3K4me3AndEqtl.html) is an example Rmd.
+
+## Contributing.
+
+Let's use this [branching workflow](https://www.atlassian.com/git/tutorials/comparing-workflows/feature-branch-workflow) to collaborate with git. Others can clone my repo, start their own branch, make commits, and send pull requests to merge into master (the public site that github hosts will be on the master branch). Only I will have permissions to write to the master branch, so collaboraters must send pull requests. Alternatively, we can work with this [forking workflow](https://www.atlassian.com/git/tutorials/comparing-workflows/forking-workflow) if you prefer, so that you have permissions to write to the master branch on your own repository.

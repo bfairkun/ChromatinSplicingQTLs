@@ -1,0 +1,27 @@
+{
+  "__default__" :
+  {"partition" : "broadwl", "mem" : 4000, "n" : 1, "name" : "{rule}-{wildcards}", "logfile": "/dev/null"},
+
+  "MakeHisat2Index" :
+  {"mem": 42000, "tasks-per-node" : 10},
+
+  "ChIPSeq_BamToBigwig" :
+  {"mem": 32000},
+
+  "RNASeq_BamToBigwig" :
+  {"mem": 32000},
+
+  "Download_Grubert_ChIP_seq" :
+  {"tasks-per-node" : 7},
+
+  "STAR_alignment":
+  {"mem" : 58000, "tasks-per-node" : 14},
+
+  "STAR_make_index":
+  {"mem" : 72000, "tasks-per-node" : 5, "partition" : "bigmem2"},
+
+  "Align_From_SRA" :
+  {"mem": 58000, "tasks-per-node" : 10}
+
+}
+

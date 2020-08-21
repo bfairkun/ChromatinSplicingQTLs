@@ -1,0 +1,21 @@
+# The main entry point of your workflow.
+# After configuring, running snakemake -n in a clone of this repository should successfully execute a dry-run of the workflow.
+
+include: "rules/common.smk"
+configfile: "config.yaml"
+
+rule all:
+    input:
+        expand( "Bigwigs/GEUVADIS_RNAseq/{RNASeqSample}.bw", RNASeqSample=GEUVADIS_line_fastq_dict.keys()),
+        expand( "Bigwigs/Grubert_ChIPSeq/{Antibody}.{Cell_Line}.bw", zip, Antibody=Grubert_ChIP_seq['Antibody'], Cell_Line=Grubert_ChIP_seq['Cell_Line']),
+        "Genotypes/GEUVADIS_1000G/All.vcf.gz",
+        # "Phenotypes/GEUVADIS_RNAseq/leafcutter/clustering/leafcutter_perind.counts.gz.PCs",
+        expand("logs/PlotGruberQTLs/PlotFromShellScript.{pheno}.log", pheno=["H3K4ME3", "H3K27AC", "H3K4ME1"])
+
+
+include: "rules/other.smk"
+include: "rules/DownloadData.smk"
+include: "rules/RNASeqProcessing.smk"
+include: "rules/Genotypes.smk"
+include: "rules/ChIPSeqProcessing.smk"
+include: "rules/PlotGruberExamples.smk"

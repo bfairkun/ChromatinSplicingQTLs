@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+
+
+<title>H3K4me3FromGruber</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/master/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">myproject</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">H3K4me3FromGruber</h1>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2020-08-21
+</p>
+<p>
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 5 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 1
+</p>
+<p>
+<strong>Knit directory:</strong> <code>ChromatinSplicingQTLs/analysis/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
+</p>
+<p>
+This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
+  href="https://github.com/jdblischak/workflowr">workflowr</a> (version 1.6.2). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20191126code"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Seed:</strong> <code>set.seed(20191126)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20191126code" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20191126)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Session information:</strong> recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be confident that you successfully produced the results during this run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongnoversioncontrol"> <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> <strong>Repository version:</strong> no version control </a>
+</p>
+</div>
+<div id="strongRepositoryversionstrongnoversioncontrol" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Tracking code development and connecting the code version to the results is critical for reproducibility. To start using Git, open the Terminal and type <code>git init</code> in your project directory.</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+<p>
+This project is not being versioned with Git. To obtain the full reproducibility benefits of using workflowr, please see <code>?wflow_start</code>.
+</p>
+<hr>
+</div>
+</div>
+</div>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>This analysis is an example to demonstrate how I will set up Rmarkdowns for this project. See <a href="about.html">about</a> for more description. In this example I will make a QQ-plot of H3K4me3 P-values (from <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4556133/">Gruber et al</a>), grouped by whether the SNP is an eQTL ( <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3918453/">GEUVADIS data</a> ). In the <code>code</code> directory, the snakemake has already downloaded and or processed the data from these publications. I expect that SNPs that are eQTLs will have smaller P-values for H3K4me3.</p>
+<p>First load necessary libraries and read in data…</p>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>── Attaching packages ────────────────────────────────────────────────────── tidyverse 1.3.0 ──</code></pre>
+<pre><code>✔ ggplot2 3.2.1     ✔ purrr   0.3.4
+✔ tibble  2.1.3     ✔ dplyr   0.8.3
+✔ tidyr   1.1.0     ✔ stringr 1.4.0
+✔ readr   1.3.1     ✔ forcats 0.4.0</code></pre>
+<pre><code>── Conflicts ───────────────────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>library(knitr)
+
+Grubert.H3K4me3.QTLs &lt;- read.delim(&quot;../code/PlotGruberQTLs/Data/localQTLs_H3K4ME3.FDR0.1.hg38.bedpe&quot;, col.names=c(&quot;SNP_chr&quot;, &quot;SNP_pos&quot;, &quot;SNP_stop&quot;, &quot;Peak_Chr&quot;, &quot;Peak_start&quot;, &quot;Peak_stop&quot;, &quot;Name&quot;, &quot;Score&quot;, &quot;strand1&quot;, &quot;stand2&quot;), stringsAsFactors = F) %&gt;%
+  separate(col = &quot;Name&quot;, into=c(&quot;PEAKid&quot;,&quot;SNPrsid&quot;,&quot;beta&quot;,&quot;p.value&quot;,&quot;FDR_TH&quot;,&quot;pvalTH&quot;,&quot;pass.pvalTH&quot;,&quot;mod&quot;,&quot;peak.state&quot;), sep = &quot;;&quot;, convert = T) %&gt;%
+  mutate(SNP_pos = as.numeric(SNP_pos))
+
+head(Grubert.H3K4me3.QTLs) %&gt;% kable()</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">SNP_chr</th>
+<th align="right">SNP_pos</th>
+<th align="right">SNP_stop</th>
+<th align="left">Peak_Chr</th>
+<th align="right">Peak_start</th>
+<th align="right">Peak_stop</th>
+<th align="right">PEAKid</th>
+<th align="left">SNPrsid</th>
+<th align="right">beta</th>
+<th align="right">p.value</th>
+<th align="right">FDR_TH</th>
+<th align="right">pvalTH</th>
+<th align="left">pass.pvalTH</th>
+<th align="left">mod</th>
+<th align="left">peak.state</th>
+<th align="left">Score</th>
+<th align="left">strand1</th>
+<th align="left">stand2</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">chr10</td>
+<td align="right">98266058</td>
+<td align="right">98266059</td>
+<td align="left">chr10</td>
+<td align="right">98267895</td>
+<td align="right">98268846</td>
+<td align="right">1</td>
+<td align="left">rs10748723</td>
+<td align="right">0.2032748</td>
+<td align="right">0.2292467</td>
+<td align="right">0.1</td>
+<td align="right">0.0009998</td>
+<td align="left">fail</td>
+<td align="left">H3K4ME3</td>
+<td align="left">TSS</td>
+<td align="left">.</td>
+<td align="left">.</td>
+<td align="left">.</td>
+</tr>
+<tr class="even">
+<td align="left">chr10</td>
+<td align="right">98268012</td>
+<td align="right">98268013</td>
+<td align="left">chr10</td>
+<td align="right">98267895</td>
+<td align="right">98268846</td>
+<td align="right">1</td>
+<td align="left">rs10786407</td>
+<td align="right">-0.1114408</td>
+<td align="right">0.6567359</td>
+<td align="right">0.1</td>
+<td align="right">0.0009998</td>
+<td align="left">fail</td>
+<td align="left">H3K4ME3</td>
+<td align="left">TSS</td>
+<td align="left">.</td>
+<td align="left">.</td>
+<td align="left">.</td>
+</tr>
+<tr class="odd">
+<td align="left">chr10</td>
+<td align="right">98268054</td>
+<td align="right">98268055</td>
+<td align="left">chr10</td>
+<td align="right">98267895</td>
+<td align="right">98268846</td>
+<td align="right">1</td>
+<td align="left">rs10883055</td>
+<td align="right">-0.1188379</td>
+<td align="right">0.6095054</td>
+<td align="right">0.1</td>
+<td align="right">0.0009998</td>
+<td align="left">fail</td>
+<td align="left">H3K4ME3</td>
+<td align="left">TSS</td>
+<td align="left">.</td>
+<td align="left">.</td>
+<td align="left">.</td>
+</tr>
+<tr class="even">
+<td align="left">chr10</td>
+<td align="right">98266369</td>
+<td align="right">98266370</td>
+<td align="left">chr10</td>
+<td align="right">98267895</td>
+<td align="right">98268846</td>
+<td align="right">1</td>
+<td align="left">rs11189529</td>
+<td align="right">-0.6061942</td>
+<td align="right">0.0009072</td>
+<td align="right">0.1</td>
+<td align="right">0.0009998</td>
+<td align="left">pass</td>
+<td align="left">H3K4ME3</td>
+<td align="left">TSS</td>
+<td align="left">.</td>
+<td align="left">.</td>
+<td align="left">.</td>
+</tr>
+<tr class="odd">
+<td align="left">chr10</td>
+<td align="right">98266356</td>
+<td align="right">98266357</td>
+<td align="left">chr10</td>
+<td align="right">98267895</td>
+<td align="right">98268846</td>
+<td align="right">1</td>
+<td align="left">rs114440225</td>
+<td align="right">-0.2236145</td>
+<td align="right">0.5527621</td>
+<td align="right">0.1</td>
+<td align="right">0.0009998</td>
+<td align="left">fail</td>
+<td align="left">H3K4ME3</td>
+<td align="left">TSS</td>
+<td align="left">.</td>
+<td align="left">.</td>
+<td align="left">.</td>
+</tr>
+<tr class="even">
+<td align="left">chr10</td>
+<td align="right">98269803</td>
+<td align="right">98269804</td>
+<td align="left">chr10</td>
+<td align="right">98267895</td>
+<td align="right">98268846</td>
+<td align="right">1</td>
+<td align="left">rs1325500</td>
+<td align="right">-0.5212768</td>
+<td align="right">0.0047903</td>
+<td align="right">0.1</td>
+<td align="right">0.0009998</td>
+<td align="left">fail</td>
+<td align="left">H3K4ME3</td>
+<td align="left">TSS</td>
+<td align="left">.</td>
+<td align="left">.</td>
+<td align="left">.</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>GEUVADIS.eQTLs &lt;- read.delim(&quot;../data/QTLBase.GEUVADIS.eQTLs.hg38.txt.gz&quot;, stringsAsFactors = F) %&gt;%
+  mutate(SNP_chr=paste0(&quot;chr&quot;,SNP_chr)) %&gt;%
+  filter(!SNP_chr == &quot;chr6&quot;) %&gt;% #blunt way to filter out MHC locus
+  mutate(SNP_pos = as.numeric(SNP_pos))  %&gt;%
+  mutate(SNP=paste(SNP_chr, SNP_pos))
+
+head(GEUVADIS.eQTLs) %&gt;% kable()</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">SNP_chr</th>
+<th align="right">SNP_pos</th>
+<th align="left">Mapped_gene</th>
+<th align="right">Trait_chr</th>
+<th align="right">Trait_start</th>
+<th align="right">Trait_end</th>
+<th align="right">Pvalue</th>
+<th align="right">Sourceid</th>
+<th align="left">SNP</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">chr4</td>
+<td align="right">76939335</td>
+<td align="left">NAAA</td>
+<td align="right">4</td>
+<td align="right">76834813</td>
+<td align="right">76862166</td>
+<td align="right">0.0e+00</td>
+<td align="right">418</td>
+<td align="left">chr4 76939335</td>
+</tr>
+<tr class="even">
+<td align="left">chr4</td>
+<td align="right">76939335</td>
+<td align="left">CXCL10</td>
+<td align="right">4</td>
+<td align="right">76942271</td>
+<td align="right">76944650</td>
+<td align="right">0.0e+00</td>
+<td align="right">418</td>
+<td align="left">chr4 76939335</td>
+</tr>
+<tr class="odd">
+<td align="left">chr4</td>
+<td align="right">144902942</td>
+<td align="left">GYPE</td>
+<td align="right">4</td>
+<td align="right">144792017</td>
+<td align="right">144826716</td>
+<td align="right">0.0e+00</td>
+<td align="right">418</td>
+<td align="left">chr4 144902942</td>
+</tr>
+<tr class="even">
+<td align="left">chr4</td>
+<td align="right">83899764</td>
+<td align="left">SCD5</td>
+<td align="right">4</td>
+<td align="right">83550692</td>
+<td align="right">83719949</td>
+<td align="right">0.0e+00</td>
+<td align="right">418</td>
+<td align="left">chr4 83899764</td>
+</tr>
+<tr class="odd">
+<td align="left">chr4</td>
+<td align="right">88310523</td>
+<td align="left">HSD17B11</td>
+<td align="right">4</td>
+<td align="right">88257667</td>
+<td align="right">88312340</td>
+<td align="right">3.1e-06</td>
+<td align="right">418</td>
+<td align="left">chr4 88310523</td>
+</tr>
+<tr class="even">
+<td align="left">chr4</td>
+<td align="right">84144189</td>
+<td align="left">PLAC8</td>
+<td align="right">4</td>
+<td align="right">84011201</td>
+<td align="right">84058228</td>
+<td align="right">1.0e-07</td>
+<td align="right">418</td>
+<td align="left">chr4 84144189</td>
+</tr>
+</tbody>
+</table>
+<p>Peruse data a little.</p>
+<pre class="r"><code>hist(Grubert.H3K4me3.QTLs$p.value)</code></pre>
+<p><img src="figure/DataInCode_20200821_H3K4me3AndEqtl.Rmd/unnamed-chunk-1-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok, good look histogram of P-values for H3K4me3 QTLs. What about eQTLs from GEUVADIS which I downlaoded from <a href="https://academic.oup.com/nar/article/48/D1/D983/5584691">QTLbase</a></p>
+<pre class="r"><code>hist(GEUVADIS.eQTLs$Pvalue)</code></pre>
+<p><img src="figure/DataInCode_20200821_H3K4me3AndEqtl.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok.. those P-values are all very very small. It seems the P values from QTLbase are only for significant eQTLs. So now let’s make a QQ-plot for H3K4me3 QTL P-values, based on whether the snp is an eQTL.</p>
+<pre class="r"><code>H3K4me3_QQ &lt;- Grubert.H3K4me3.QTLs %&gt;%
+  dplyr::select(p.value, SNP_chr, SNP_chr, SNP_pos) %&gt;%
+  filter(!SNP_chr == &quot;chr6&quot;) %&gt;%
+  mutate(SNP=paste(SNP_chr, SNP_pos)) %&gt;%
+  mutate(SNPIsEqtl= SNP %in% GEUVADIS.eQTLs$SNP) %&gt;%
+  group_by(SNPIsEqtl) %&gt;%
+  mutate(ExpectedP=percent_rank(p.value)) %&gt;%
+  sample_n(400) %&gt;% #Just sample 400 random points from each group to be quick
+  ggplot(aes(x=-log10(ExpectedP), y=-log10(p.value), color=SNPIsEqtl)) +
+  geom_point() +
+  geom_abline() +
+  theme_bw()
+H3K4me3_QQ</code></pre>
+<p><img src="figure/DataInCode_20200821_H3K4me3AndEqtl.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>As expected, SNPs that are eQTLs have more significant P-value inflation for H3K4me3 genetic effects.</p>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.6.1 (2019-07-05)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Scientific Linux 7.4 (Nitrogen)
+
+Matrix products: default
+BLAS/LAPACK: /software/openblas-0.2.19-el7-x86_64/lib/libopenblas_haswellp-r0.2.19.so
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+ [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] knitr_1.23      forcats_0.4.0   stringr_1.4.0   dplyr_0.8.3    
+ [5] purrr_0.3.4     readr_1.3.1     tidyr_1.1.0     tibble_2.1.3   
+ [9] ggplot2_3.2.1   tidyverse_1.3.0
+
+loaded via a namespace (and not attached):
+ [1] tidyselect_1.1.0 xfun_0.8         haven_2.3.1      lattice_0.20-38 
+ [5] colorspace_1.4-1 vctrs_0.3.1      generics_0.0.2   htmltools_0.3.6 
+ [9] yaml_2.2.0       rlang_0.4.6      later_0.8.0      pillar_1.4.2    
+[13] withr_2.1.2      glue_1.3.1       DBI_1.1.0        dbplyr_1.4.2    
+[17] modelr_0.1.8     readxl_1.3.1     lifecycle_0.1.0  munsell_0.5.0   
+[21] gtable_0.3.0     workflowr_1.6.2  cellranger_1.1.0 rvest_0.3.5     
+[25] evaluate_0.14    labeling_0.3     httpuv_1.5.1     highr_0.8       
+[29] broom_0.5.2      Rcpp_1.0.3       promises_1.0.1   backports_1.1.4 
+[33] scales_1.1.0     jsonlite_1.6     farver_2.0.1     fs_1.3.1        
+[37] hms_0.5.3        digest_0.6.20    stringi_1.4.3    grid_3.6.1      
+[41] rprojroot_1.3-2  cli_1.1.0        tools_3.6.1      magrittr_1.5    
+[45] lazyeval_0.2.2   crayon_1.3.4     pkgconfig_2.0.2  ellipsis_0.2.0.1
+[49] xml2_1.3.2       reprex_0.3.0     lubridate_1.7.4  rstudioapi_0.10 
+[53] assertthat_0.2.1 rmarkdown_1.13   httr_1.4.1       R6_2.4.0        
+[57] nlme_3.1-140     git2r_0.26.1     compiler_3.6.1  </code></pre>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+http://docs.mathjax.org/en/latest/configuration.html.  This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
