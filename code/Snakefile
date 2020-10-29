@@ -11,7 +11,8 @@ rule all:
         "Genotypes/GEUVADIS_1000G/All.vcf.gz",
         # "Phenotypes/GEUVADIS_RNAseq/leafcutter/clustering/leafcutter_perind.counts.gz.PCs",
         expand("logs/PlotGruberQTLs/PlotFromShellScript.{pheno}.log", pheno=["H3K4ME3", "H3K27AC", "H3K4ME1"]),
-        "Genotypes/GEUVADIS_1000G/All.Dummy.vcf"
+        "Genotypes/GEUVADIS_1000G/All.Dummy.vcf",
+        "Phenotypes/GEUVADIS_RNAseq/leafcutter/clustering/leafcutter_perind.counts.gz.PCs"
 
 
 include: "rules/other.smk"

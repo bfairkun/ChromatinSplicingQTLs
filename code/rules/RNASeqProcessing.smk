@@ -76,6 +76,8 @@ rule STAR_to_leafcutter_junc:
         awk -F'\\t' -v OFS='\\t' '$4==1 && $1!="MT" {{ print $1,$2,$3,".",$7,"+" }} $4==2&& $1!="MT" {{ print $1,$2,$3,".",$7,"-" }}' {input} > {output}
         """
 
+#TODO: regtools to make juncfiles.
+
 rule make_leafcutter_juncfile:
     input:
         expand ("Phenotypes/GEUVADIS_RNAseq/BySample/{RNASeqSample}.junc", RNASeqSample=GEUVADIS_line_fastq_dict.keys()),
@@ -105,7 +107,7 @@ rule leafcutter_cluster:
         "logs/Phenotypes/GEUVADIS_RNAseq/leafcutter_cluster.log"
     shell:
         """
-        leafcutter_cluster.py -j {input} -r Phenotypes/GEUVADIS_RNAseq/leafcutter/clustering/ &> {log}
+        leafcutter_cluster.py -s -j {input} -r Phenotypes/GEUVADIS_RNAseq/leafcutter/clustering/ &> {log}
         """
 
 rule MakeLeafcutterBlacklistChromsFile:
@@ -136,9 +138,11 @@ rule leafcutter_prepare_phenotype_table:
         PCs = "Phenotypes/GEUVADIS_RNAseq/leafcutter/clustering/leafcutter_perind.counts.gz.PCs"
     log:
         "logs/Phenotypes/GEUVADIS_RNAseq/leafcutter_prepare_phenotype_table.log"
+    conda:
+        "../envs/py27.yaml"
     shell:
         """
-        ~/miniconda3/bin/python2.7 /home/bjf79/software/leafcutter/scripts/prepare_phenotype_table.py -p 15 {input.counts}
+        scripts/prepare_phenotype_table.py -p 15 {input.counts}
         """
 
 # rule leafcutter_prepare_cluster_groups:
