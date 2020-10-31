@@ -11,6 +11,9 @@
   "RNASeq_BamToBigwig" :
   {"mem": 32000},
 
+  "regtools_bam_to_junc" :
+  {"mem": 12000},
+
   "Download_Grubert_ChIP_seq" :
   {"tasks-per-node" : 7},
 
