@@ -16,9 +16,12 @@ rule STAR_make_index:
         "logs/STAR_make_index.log"
     params:
         genomeDir = "ReferenceGenome/STARIndex/"
+    threads: 4
+    resources:
+        mem_mb = 72000
     shell:
         """
-        STAR --runMode genomeGenerate --genomeSAsparseD 2 --runThreadN 4 --genomeDir {params.genomeDir} --sjdbGTFfile {input.gtf} --genomeFastaFiles {input.fasta} &> {log}
+        STAR --runMode genomeGenerate --genomeSAsparseD 2 --runThreadN {threads} --genomeDir {params.genomeDir} --sjdbGTFfile {input.gtf} --genomeFastaFiles {input.fasta} &> {log}
         """
 
 
@@ -31,6 +34,8 @@ rule STAR_alignment:
     log:
         "logs/GEUVADIS_RNAseq/STAR/{RNASeqSample}.log"
     threads: 12
+    resources:
+        mem_mb = 58000
     params:
         AdapterClip = "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT",
         ReadNum = "-1"
@@ -59,6 +64,8 @@ rule RNASeq_BamToBigwig:
         bigwig = "Bigwigs/GEUVADIS_RNAseq/{RNASeqSample}.bw"
     log:
         "logs/GEUVADIS_RNAseq/BamToBig/{RNASeqSample}.log"
+    resources:
+        mem_mb = 32000
     shell:
         """
         scripts/BamToBigwig.sh {input.fai} {input.bam} {output.bigwig} -split &> {log}
@@ -90,6 +97,8 @@ elif juncfile_source == "regtools":
             regtools = "Phenotypes/GEUVADIS_RNAseq/BySample/{RNASeqSample}.regtools.junc"
         log:
             "logs/regtools_to_leafcutter_junc/{RNASeqSample}.log"
+        resources:
+            mem_mb =12000
         params:
             regtools_junction_strand = 0
         shell:
