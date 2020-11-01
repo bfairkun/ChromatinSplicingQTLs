@@ -1,4 +1,6 @@
 *
+!snakemake_profiles
+!snakemake_profiles/**
 !scripts
 !scripts/*
 !scripts/common
@@ -24,3 +26,4 @@ scripts/.snakemake*
 !snakemake.sbatch
 !cluster-config.json
 *.swp
+**__pycache__/
