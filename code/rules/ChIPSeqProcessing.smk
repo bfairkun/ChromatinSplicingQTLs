@@ -6,6 +6,8 @@ rule MakeHisat2Index:
     log:
         "logs/MakeIndex.log"
     threads: 8
+    resources:
+        mem_mb = 42000
     shell:
         """
         hisat2-build {input} {input} -p {threads} &> {log}
@@ -26,6 +28,8 @@ rule Align_From_SRA:
     log:
         "logs/ChIPSeq/Align_From_SRA/{Antibody}.{Cell_Line}.log"
     threads: 8
+    resources:
+        mem_mb = 58000
     shell:
         """
         (hisat2 -x ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa --sra-acc {params.SRA} --no-spliced-alignment --no-discordant -p {threads} | samtools sort -n | samtools fixmate -m - - |   samtools sort | samtools markdup - -  > {output.bam}) &> {log}
@@ -39,6 +43,8 @@ rule ChIPSeq_BamToBigwig:
         bigwig = "Bigwigs/Grubert_ChIPSeq/{Antibody}.{Cell_Line}.bw"
     log:
         "logs/ChIPSeq/BamToBig/{Antibody}.{Cell_Line}.log"
+    resources:
+        mem_mb = 32000
     shell:
         """
         scripts/BamToBigwig.sh {input.fai} {input.bam} {output.bigwig} -pc &> {log}

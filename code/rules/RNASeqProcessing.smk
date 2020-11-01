@@ -16,9 +16,12 @@ rule STAR_make_index:
         "logs/STAR_make_index.log"
     params:
         genomeDir = "ReferenceGenome/STARIndex/"
+    threads: 4
+    resources:
+        mem_mb = 72000
     shell:
         """
-        STAR --runMode genomeGenerate --genomeSAsparseD 2 --runThreadN 4 --genomeDir {params.genomeDir} --sjdbGTFfile {input.gtf} --genomeFastaFiles {input.fasta} &> {log}
+        STAR --runMode genomeGenerate --genomeSAsparseD 2 --runThreadN {threads} --genomeDir {params.genomeDir} --sjdbGTFfile {input.gtf} --genomeFastaFiles {input.fasta} &> {log}
         """
 
 
@@ -31,6 +34,8 @@ rule STAR_alignment:
     log:
         "logs/GEUVADIS_RNAseq/STAR/{RNASeqSample}.log"
     threads: 12
+    resources:
+        mem_mb = 58000
     params:
         AdapterClip = "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT",
         ReadNum = "-1"
@@ -59,22 +64,47 @@ rule RNASeq_BamToBigwig:
         bigwig = "Bigwigs/GEUVADIS_RNAseq/{RNASeqSample}.bw"
     log:
         "logs/GEUVADIS_RNAseq/BamToBig/{RNASeqSample}.log"
+    resources:
+        mem_mb = 32000
     shell:
         """
         scripts/BamToBigwig.sh {input.fai} {input.bam} {output.bigwig} -split &> {log}
         """
 
-rule STAR_to_leafcutter_junc:
-    input:
-        "Alignments/GEUVADIS_RNAseq/{RNASeqSample}/SJ.out.tab"
-    output:
-        "Phenotypes/GEUVADIS_RNAseq/BySample/{RNASeqSample}.junc"
-    log:
-        "logs/STAR_to_leafcutter_junc/{RNASeqSample}.log"
-    shell:
-        """
-        awk -F'\\t' -v OFS='\\t' '$4==1 && $1!="MT" {{ print $1,$2,$3,".",$7,"+" }} $4==2&& $1!="MT" {{ print $1,$2,$3,".",$7,"-" }}' {input} > {output}
-        """
+juncfile_source = "regtools"
+
+if juncfile_source == "STAR":
+    rule STAR_to_leafcutter_junc:
+        input:
+            "Alignments/GEUVADIS_RNAseq/{RNASeqSample}/SJ.out.tab"
+        output:
+            "Phenotypes/GEUVADIS_RNAseq/BySample/{RNASeqSample}.junc"
+        log:
+            "logs/STAR_to_leafcutter_junc/{RNASeqSample}.log"
+        shell:
+            """
+            awk -F'\\t' -v OFS='\\t' '$4==1 && $1!="MT" {{ print $1,$2,$3,".",$7,"+" }} $4==2&& $1!="MT" {{ print $1,$2,$3,".",$7,"-" }}' {input} > {output}
+            """
+
+elif juncfile_source == "regtools":
+    rule regtools_bam_to_junc:
+        input:
+            bam = "Alignments/GEUVADIS_RNAseq/{RNASeqSample}/Aligned.sortedByCoord.out.bam",
+            fa = "ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa",
+            gtf = "ReferenceGenome/Annotations/gencode.v34.chromasomal.annotation.gtf"
+        output:
+            junc = "Phenotypes/GEUVADIS_RNAseq/BySample/{RNASeqSample}.junc",
+            regtools = "Phenotypes/GEUVADIS_RNAseq/BySample/{RNASeqSample}.regtools.junc"
+        log:
+            "logs/regtools_to_leafcutter_junc/{RNASeqSample}.log"
+        resources:
+            mem_mb =12000
+        params:
+            regtools_junction_strand = 0
+        shell:
+            """
+            (regtools junctions extract -s {params.regtools_junction_strand} {input.bam} | regtools junctions annotate -S - {input.fa} {input.gtf} | tee {output.regtools} | awk -F'\\t' -v OFS='\\t' 'NR>1 {{ print $1, $2, $3, $4, $5, $6 }}' > {output.junc}) &> {log}
+            """
 
 rule make_leafcutter_juncfile:
     input:
@@ -103,9 +133,11 @@ rule leafcutter_cluster:
         "Phenotypes/GEUVADIS_RNAseq/leafcutter/clustering/leafcutter_perind_numers.counts.gz"
     log:
         "logs/Phenotypes/GEUVADIS_RNAseq/leafcutter_cluster.log"
+    params:
+        ExtraParams = "-s True"
     shell:
         """
-        leafcutter_cluster.py -j {input} -r Phenotypes/GEUVADIS_RNAseq/leafcutter/clustering/ &> {log}
+        python2.7 scripts/leafcutter_cluster.py {params.ExtraParams} -j {input} -r Phenotypes/GEUVADIS_RNAseq/leafcutter/clustering/ &> {log}
         """
 
 rule MakeLeafcutterBlacklistChromsFile:
@@ -129,17 +161,61 @@ rule FilterLeafcutterClustersForAutosomes:
         """
 
 rule leafcutter_prepare_phenotype_table:
+    """
+    phenotype table compatible with QTLtools (6 column bed format, bgzip
+    compressed with tbi index file). groupid for each phenotype is the
+    leafcutter clusterid, so permutation testing will be for phenotypes grouped
+    by cluster
+    """
     input:
         counts ="Phenotypes/GEUVADIS_RNAseq/leafcutter/clustering/leafcutter_perind.counts.autosomes.gz",
     output:
-        phenotypes = "Phenotypes/GEUVADIS_RNAseq/leafcutter/clustering/leafcutter_perind.counts.gz.qqnorm",
-        PCs = "Phenotypes/GEUVADIS_RNAseq/leafcutter/clustering/leafcutter_perind.counts.gz.PCs"
+        phenotypes_perchrom = expand("Phenotypes/GEUVADIS_RNAseq/leafcutter/clustering/leafcutter_perind.counts.autosomes.gz.qqnorm_chr{chrom}", chrom=range(1, 23)),
+        phenotypes_uncompressed = "Phenotypes/GEUVADIS_RNAseq/leafcutter/SplicingPhenotypesQQNormed.bed",
+        phenotypes = "Phenotypes/GEUVADIS_RNAseq/leafcutter/SplicingPhenotypesQQNormed.bed.gz",
+        phenotypes_tbi = "Phenotypes/GEUVADIS_RNAseq/leafcutter/SplicingPhenotypesQQNormed.bed.gz.tbi",
+        PCs = "Phenotypes/GEUVADIS_RNAseq/leafcutter/clustering/leafcutter_perind.counts.autosomes.gz.PCs"
     log:
         "logs/Phenotypes/GEUVADIS_RNAseq/leafcutter_prepare_phenotype_table.log"
+    params:
+        NumberPCs = 15
+    conda:
+        "../envs/py27.yaml"
     shell:
         """
-        ~/miniconda3/bin/python2.7 /home/bjf79/software/leafcutter/scripts/prepare_phenotype_table.py -p 15 {input.counts}
+        scripts/prepare_phenotype_table.py -p {params.NumberPCs} {input.counts}
+        cat {output.phenotypes_perchrom} | awk -F'\\t' -v OFS='\\t' 'NR==1 {{print $1,$2,$3,"pid","gid","strand", $0}} NR>1 {{split($4,a,":"); split(a[4],b,"_"); print $1,$2,$3,$4,a[4],b[3],$0}}' | sed -r 's/(^(\S+\s+){{6}})(\S+\s+){{4}}/\\1/' | bedtools sort -header -i - > {output.phenotypes_uncompressed}
+        bgzip {output.phenotypes_uncompressed} -c > {output.phenotypes}
+        tabix -p bed {output.phenotypes}
         """
 
-# rule leafcutter_prepare_cluster_groups:
-    
+rule sQTL_QTLtools_cis_permutation_pass:
+    input:
+        phenotypes = "Phenotypes/GEUVADIS_RNAseq/leafcutter/SplicingPhenotypesQQNormed.bed.gz",
+        phenotypes_tbi = "Phenotypes/GEUVADIS_RNAseq/leafcutter/SplicingPhenotypesQQNormed.bed.gz.tbi",
+        genotypes = "Genotypes/GEUVADIS_1000G/All.vcf.gz",
+        genotpes_tbi = "Genotypes/GEUVADIS_1000G/All.vcf.gz.tbi",
+        PCs = "Phenotypes/GEUVADIS_RNAseq/leafcutter/clustering/leafcutter_perind.counts.autosomes.gz.PCs"
+    params:
+        CisWindow = 100000
+    output:
+        chunk = "QTLs/sQTLs/permutation_pass_chunks/{{chunk_num}}.{total_chunk_num}.txt.gz".format(total_chunk_num = config["sQTL_chunks"])
+    shell:
+        """
+        QTLtools_1.2_CentOS7.8_x86_64 cis --permute 20 --vcf {input.genotypes} --bed {input.phenotypes} --cov {input.PCs} --out {output.chunk} --grp-best --chunk 1 {config[sQTL_chunks]}
+        """
+
+rule Gather_sQTL_QTLtools_cis_permutation_pass:
+    input:
+        expand("QTLs/sQTLs/permutation_pass_chunks/{chunk_num}.{total_chunk_num}.txt.gz", chunk_num=range(1,int(config["sQTL_chunks"])+1), total_chunk_num = config["sQTL_chunks"])
+    output:
+        "QTLs/sQTLs/permuations_pass.txt.gz"
+    shell:
+        """
+        cat {input} > {output}
+        """
+
+# rule sQTL_QTLtools_cis_nominal_pass:
+#     """
+#     Do a nominal cis pass to get all phenotype:SNP pairs for phenotypes that are significant in permutation pass. This might be necessary for colocalization methods.
+#     """

@@ -11,7 +11,11 @@ rule all:
         "Genotypes/GEUVADIS_1000G/All.vcf.gz",
         # "Phenotypes/GEUVADIS_RNAseq/leafcutter/clustering/leafcutter_perind.counts.gz.PCs",
         expand("logs/PlotGruberQTLs/PlotFromShellScript.{pheno}.log", pheno=["H3K4ME3", "H3K27AC", "H3K4ME1"]),
-        "Genotypes/GEUVADIS_1000G/All.Dummy.vcf"
+        "Genotypes/GEUVADIS_1000G/All.Dummy.vcf",
+        expand("Phenotypes/GEUVADIS_RNAseq/BySample/{RNASeqSample}.junc", RNASeqSample=GEUVADIS_line_fastq_dict.keys()),
+        "Phenotypes/GEUVADIS_RNAseq/leafcutter/SplicingPhenotypesQQNormed.bed.gz",
+        # "QTLs/sQTLs/permuations_pass.txt.gz",
+        "QTLs/sQTLs/permutation_pass_chunks/1.1000.txt.gz",
 
 
 include: "rules/other.smk"

@@ -5,3 +5,6 @@
 samples: samples.tsv
 
 scratch: "/scratch/midway2/bjf79/"
+
+#Parrallelization of sQTL mapping with QTLtools
+sQTL_chunks: 1000

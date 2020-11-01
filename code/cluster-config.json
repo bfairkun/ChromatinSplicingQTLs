@@ -11,6 +11,9 @@
   "RNASeq_BamToBigwig" :
   {"mem": 32000},
 
+  "regtools_bam_to_junc" :
+  {"mem": 12000},
+
   "Download_Grubert_ChIP_seq" :
   {"tasks-per-node" : 7},
 
@@ -19,6 +22,9 @@
 
   "STAR_make_index":
   {"mem" : 72000, "tasks-per-node" : 5, "partition" : "bigmem2"},
+
+  "leafcutter_prepare_phenotype_table":
+  {"mem" : 12000},
 
   "Align_From_SRA" :
   {"mem": 58000, "tasks-per-node" : 10}

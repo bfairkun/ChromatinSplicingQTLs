@@ -1,0 +1,7 @@
+__default__:
+    partition: broadwl # the partition you use
+    nodes: 1
+    ntasks: 1
+    mem: 4000
+    output: "/dev/null"
+    job-name: "{rule}.{wildcards}"
