@@ -170,10 +170,11 @@ rule leafcutter_prepare_phenotype_table:
     input:
         counts ="Phenotypes/GEUVADIS_RNAseq/leafcutter/clustering/leafcutter_perind.counts.autosomes.gz",
     output:
-        phenotypes_perchrom = expand("Phenotypes/GEUVADIS_RNAseq/leafcutter/clustering/leafcutter_perind.counts.gz.qqnorm_chr{chrom}", chrom=range(1, 23)),
+        phenotypes_perchrom = expand("Phenotypes/GEUVADIS_RNAseq/leafcutter/clustering/leafcutter_perind.counts.autosomes.gz.qqnorm_chr{chrom}", chrom=range(1, 23)),
+        phenotypes_uncompressed = "Phenotypes/GEUVADIS_RNAseq/leafcutter/SplicingPhenotypesQQNormed.bed",
         phenotypes = "Phenotypes/GEUVADIS_RNAseq/leafcutter/SplicingPhenotypesQQNormed.bed.gz",
         phenotypes_tbi = "Phenotypes/GEUVADIS_RNAseq/leafcutter/SplicingPhenotypesQQNormed.bed.gz.tbi",
-        PCs = "Phenotypes/GEUVADIS_RNAseq/leafcutter/clustering/leafcutter_perind.counts.gz.PCs"
+        PCs = "Phenotypes/GEUVADIS_RNAseq/leafcutter/clustering/leafcutter_perind.counts.autosomes.gz.PCs"
     log:
         "logs/Phenotypes/GEUVADIS_RNAseq/leafcutter_prepare_phenotype_table.log"
     params:
@@ -183,7 +184,8 @@ rule leafcutter_prepare_phenotype_table:
     shell:
         """
         scripts/prepare_phenotype_table.py -p {params.NumberPCs} {input.counts}
-        cat {output.phenotypes_perchrom} | awk -F'\\t' -v OFS='\\t' 'NR==1 {{print $1,$2,$3,"pid","gid","strand", $0}} NR>1 {{split($4,a,":"); split(a[4],b,"_"); print $1,$2,$3,$4[4],b[3],$0}}' | sed -r 's/(^(\S+\s+){{6}})(\S+\s+){{4}}/\\1/' | bedtools sort -i - | bgzip -c /dev/stdin > {output.phenotypes}
+        cat {output.phenotypes_perchrom} | awk -F'\\t' -v OFS='\\t' 'NR==1 {{print $1,$2,$3,"pid","gid","strand", $0}} NR>1 {{split($4,a,":"); split(a[4],b,"_"); print $1,$2,$3,$4,a[4],b[3],$0}}' | sed -r 's/(^(\S+\s+){{6}})(\S+\s+){{4}}/\\1/' | bedtools sort -header -i - > {output.phenotypes_uncompressed}
+        bgzip {output.phenotypes_uncompressed} -c > {output.phenotypes}
         tabix -p bed {output.phenotypes}
         """
 
@@ -191,17 +193,26 @@ rule sQTL_QTLtools_cis_permutation_pass:
     input:
         phenotypes = "Phenotypes/GEUVADIS_RNAseq/leafcutter/SplicingPhenotypesQQNormed.bed.gz",
         phenotypes_tbi = "Phenotypes/GEUVADIS_RNAseq/leafcutter/SplicingPhenotypesQQNormed.bed.gz.tbi",
-        genotypes = "Genotypes/GEUVADIS_Lappalainnen.vcf",
-        genotypes_tbi = "Genotypes/GEUVADIS_Lappalainnen.vcf",
-
-        PCs = "Phenotypes/GEUVADIS_RNAseq/leafcutter/clustering/leafcutter_perind.counts.gz.PCs"
+        genotypes = "Genotypes/GEUVADIS_1000G/All.vcf.gz",
+        genotpes_tbi = "Genotypes/GEUVADIS_1000G/All.vcf.gz.tbi",
+        PCs = "Phenotypes/GEUVADIS_RNAseq/leafcutter/clustering/leafcutter_perind.counts.autosomes.gz.PCs"
     params:
         CisWindow = 100000
     output:
-        chunk = "QTLs/sQTLs/permutation_pass_chunks/{chunk_num}.txt"
+        chunk = "QTLs/sQTLs/permutation_pass_chunks/{{chunk_num}}.{total_chunk_num}.txt.gz".format(total_chunk_num = config["sQTL_chunks"])
     shell:
         """
-        QTLtools_1.2_CentOS7.8_x86_64 cis --permute 10000 --vcf {input.genotypes} --bed {phenotypes} --cov {input.PCs} --out {output.chunk} --grp-best
+        QTLtools_1.2_CentOS7.8_x86_64 cis --permute 20 --vcf {input.genotypes} --bed {input.phenotypes} --cov {input.PCs} --out {output.chunk} --grp-best --chunk 1 {config[sQTL_chunks]}
+        """
+
+rule Gather_sQTL_QTLtools_cis_permutation_pass:
+    input:
+        expand("QTLs/sQTLs/permutation_pass_chunks/{chunk_num}.{total_chunk_num}.txt.gz", chunk_num=range(1,int(config["sQTL_chunks"])+1), total_chunk_num = config["sQTL_chunks"])
+    output:
+        "QTLs/sQTLs/permuations_pass.txt.gz"
+    shell:
+        """
+        cat {input} > {output}
         """
 
 # rule sQTL_QTLtools_cis_nominal_pass:
