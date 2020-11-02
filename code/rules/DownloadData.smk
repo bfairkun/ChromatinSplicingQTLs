@@ -68,4 +68,6 @@ rule Download_Grubert_ChIP_seq:
 
 
 rule Download_McVicker_PolII_ChIP_seq:
+    input:
+        "../data/McVicker_PolII_ChIPSeq_SRA_RunSelectorTable.txt"
 
