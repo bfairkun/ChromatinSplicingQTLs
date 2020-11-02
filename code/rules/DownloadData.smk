@@ -66,3 +66,6 @@ rule Download_Grubert_ChIP_seq:
         gzip Fastq/Grubert_{wildcards.antibody}/{wildcards.SRR}_2.fastq
         """
 
+
+rule Download_McVicker_PolII_ChIP_seq:
+
