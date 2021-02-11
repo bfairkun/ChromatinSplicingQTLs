@@ -1,0 +1,164 @@
+---
+title: "20200110_PickSamplesForGrowth"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+```{r}
+library(tidyverse)
+library(readxl)
+library(knitr)
+
+LCLs.1000Genomes.vec <- read.table("../data/GiladStrains/YRI.list.from1000Genomes.txt", sep='\t') %>% pull(V1) %>%
+  gsub("^NA", "", ., perl=T)
+
+LCLs.GiladFreezer <- read.table("../data/GiladStrains/Human_LCLs.txt", sep = '\t', header = T, stringsAsFactors = F)
+
+LCLs.GiladFreezer.LCL.YRI.vec <- read.table("../data/GiladStrains/LCL_YRI.GiladCryoSheetTab.list.txt", stringsAsFactors = F) %>% pull(V1) %>% as.character()
+
+GrowthNotes <- read_delim("../data/GrowthNotes/GrowthNotes.tsv", delim = '\t')
+
+SamplesToRestock.vec <- read.table("../data/GiladStrains/Human_LCLs.ToRestock.txt", stringsAsFactors = F) %>% pull(V1) %>% as.character()
+
+```
+
+Ok now figure out which lines to pull
+
+```{r}
+AlreadyDone.vec <- GrowthNotes %>%
+  filter(!is.na(`Raw Count1 (x10^6)`)) %>%
+  pull(`Cell Line`) %>% as.character()
+
+#Lines that I can replenish from Briana's stocks
+LinesToPutBack.vec <- intersect(SamplesToRestock.vec, AlreadyDone.vec)
+
+LinesStillNeedToRestock.vec <- setdiff(SamplesToRestock.vec, AlreadyDone.vec)
+
+#Are there any YRI lines in Gilad lab freezer that aren't in YRI box
+LCLs.GiladFreezer.MainTab.YRI.vec <-  LCLs.GiladFreezer %>%
+  filter(Human.LCL.ID %in% LCLs.1000Genomes.vec) %>%
+  pull(Human.LCL.ID) %>% as.character()
+setdiff(LCLs.GiladFreezer.MainTab.YRI.vec, LCLs.GiladFreezer.LCL.YRI.vec)
+
+#And the reverse?
+setdiff(LCLs.GiladFreezer.LCL.YRI.vec, LCLs.GiladFreezer.MainTab.YRI.vec)
+
+BlacklistFromYang <- c("18502", "18516", "18916", "19012")
+BlacklistFromBriana <- c("18517", "19128")
+
+```
+
+Let's include those reverse matches in this experiment. Let's come up with a list of "StillToDo" strains based on the following points
+
+1. Not already done
+2. Not in Yang or Briana's blacklist
+3. Pull from the LinesStillNeedToRestock.vec first, and then from other lines in LCLs.GiladFreezer and not in LCLs.GiladFreezer.LCL.YRI.vec
+4. Should be in 1000Genome's project (some samples are not, though they are clearly YRI from Coriell)
+
+```{r}
+#Start with set of LCLs in GiladFreezer Main tab
+StillToDo.vec <- LCLs.GiladFreezer.MainTab.YRI.vec %>%
+  #Add list of LCLs in GiladFreezer YRI tab
+  union(LCLs.GiladFreezer.MainTab.YRI.vec) %>%
+  #intersect with 1000Genome's YRI list
+  intersect(LCLs.1000Genomes.vec) %>%
+  #Subtract out the blacklist strains and the ones we've already done
+  setdiff(BlacklistFromYang) %>%
+  setdiff(BlacklistFromBriana) %>%
+  setdiff(AlreadyDone.vec) %>% sort()
+length(StillToDo.vec)
+
+```
+
+
+From that list, let's prioritize a list of 30 strains for this experiment by
+
+1. Including strains I still have to restock because I took a vial and didn't replenish it from 2019
+2. The two lines that we need to redo because of swapped pellet
+3. Prioritize strains have more than 2 vials in the freezer
+4. Things that more published data already
+
+```{r}
+NumVials <- read_delim("../data/GiladStrains/Human_LCLs.NumberOfVials.counts.txt", delim = '\t', col_names = c("Strain", "Count"))
+
+
+LinesStillNeedToRestock.vec
+LinesToRedoFromBriannasStocks.vec <- c("18861", "19140")
+
+Points1And2 <- union(LinesStillNeedToRestock.vec,LinesToRedoFromBriannasStocks.vec)
+
+#Points 3 and 4
+LinesWithMoreThan2Vials.vec <- NumVials %>%
+  filter(Strain %in% StillToDo.vec) %>%
+  filter(Count > 2) %>%
+  pull(Strain) %>%
+  setdiff(Points1And2)
+LinesWithMoreThan2Vials.vec
+
+LCLs.PreviousMolecularDatasets <- read_excel("../data/GiladStrains/individuals.data.types.xlsx", col_names =c("Line", "NumberAssays", "Assay1", "Assay2", "Assay3", "Assay4", "Assay5", "Assay6", "Assay7", "Assay8"))
+head(LCLs.PreviousMolecularDatasets)
+
+Points3And4 <- LCLs.PreviousMolecularDatasets %>%
+  filter(Line %in% LinesWithMoreThan2Vials.vec) %>%
+  arrange(desc(NumberAssays)) %>%
+  slice_head(n=32-length(Points1And2)) %>%
+  pull(Line) %>% as.character()
+
+LinesToThaw <- union(Points3And4, Points1And2)
+length(LinesToThaw)
+```
+
+Lastly, let's obtain the exact location of these strains
+
+```{r}
+#Read in location of strains
+GiladLabLinesLocation <- read_delim("../data/GiladStrains/Large_Cryo_2019_Human_LCLs.tsv", delim = '\t', comment = '#')
+
+GiladLabLinesLocation %>%
+  filter(Line %in% LinesToThaw) %>%
+  # filter(is.na(Notes1)) %>%
+  arrange(Box) %>%
+  distinct(Line, .keep_all = T) %>%
+  dplyr::select(Box, Position, Line, Notes1) %>%
+  write_tsv("../data/GiladStrains/20200111_CellsToWake.tsv")
+
+
+GiladLabLinesLocation %>%
+  filter(Line %in% c("18870", "18510"))
+```
+
+## Update:
+
+As of 1/19, only 14/32 strains that we woke up are growing well. therefore, let's thaw 13 more strains, bringing the total to 27, which, assuming no more than three drop out due to poor growth, will leave us with a batch of 24 for fractionation.
+
+Let's pick which ones to do by picking from the list of cell lines left to do, subtracting the 14 lines that are growing well, and then intersecting amongst the gilad lab YRI cryo rack strains which are probably stocked in better condition and I think will grow better...
+
+
+
+```{r}
+
+GiladLabYRI.Rack <- read_delim("../data/GiladStrains/LCL_YRI.Gilad.Positions2.txt", delim = '\t') %>%
+  mutate(Line=as.character(Line))
+
+FourteenLinesAlreadyGrowing <- GrowthNotes %>%
+  filter(Thawed == "1/12/21") %>%
+  filter(`CellFractionedAttempted?` == "Y") %>%
+  pull(`Cell Line`) %>% as.character()
+
+CellLinesToThaw_Jan19 <- LCLs.1000Genomes.vec %>%
+  setdiff(AlreadyDone.vec) %>%
+  setdiff(FourteenLinesAlreadyGrowing) %>%
+  base::intersect(GiladLabYRI.Rack %>% pull(Line))
+  
+CellLinesToThaw_Jan19
+
+GiladLabYRI.Rack %>%
+  filter(Line %in% CellLinesToThaw_Jan19) %>%
+  slice_head(n=13) %>%
+  write_tsv("../data/GiladStrains/20200119_CellsToWake.tsv")
+  
+```
+

@@ -1,0 +1,1299 @@
+#Columns I-K in this sheet references contents of cells in Human LCLs tab. tab separated values (tsv) organized like this is easier to parse with computer										
+#ColumnsA-F are there to help me easily make the correct reference equations for columns I-K. Once you have a string for the desired cell equation, (minus the '=' sign, like in columns D-F) use search/replace to insert the '=' sign at the beginning of the string										
+LineRowNumber	LineColumnNumber	LineColumnLetter	LineReferenceString	Notes1ReferenceString	Notes2ReferenceString	Box	Position	Line	Notes1	Notes2
+4	2	B	Human LCLs'!B4	Human LCLs'!B5	Human LCLs'!B6	1	1	11992	7/18/07	
+4	3	C	Human LCLs'!C4	Human LCLs'!C5	Human LCLs'!C6	1	2	11992	7/18/07	
+4	4	D	Human LCLs'!D4	Human LCLs'!D5	Human LCLs'!D6	1	3	11992	7/18/07	
+4	5	E	Human LCLs'!E4	Human LCLs'!E5	Human LCLs'!E6	1	4	11992	7/18/07	
+4	6	F	Human LCLs'!F4	Human LCLs'!F5	Human LCLs'!F6	1	5	11992	7/18/07	
+4	7	G	Human LCLs'!G4	Human LCLs'!G5	Human LCLs'!G6	1	6	11992	7/18/07	
+4	8	H	Human LCLs'!H4	Human LCLs'!H5	Human LCLs'!H6	1	7	11992	7/18/07	
+4	9	I	Human LCLs'!I4	Human LCLs'!I5	Human LCLs'!I6	1	8	11992	7/18/07	
+4	10	J	Human LCLs'!J4	Human LCLs'!J5	Human LCLs'!J6	1	9	11992	7/18/07	
+7	2	B	Human LCLs'!B7	Human LCLs'!B8	Human LCLs'!B9	1	10	11992	7/18/07	
+7	3	C	Human LCLs'!C7	Human LCLs'!C8	Human LCLs'!C9	1	11	11992	7/18/07	
+7	4	D	Human LCLs'!D7	Human LCLs'!D8	Human LCLs'!D9	1	12	11992	7/18/07	
+7	5	E	Human LCLs'!E7	Human LCLs'!E8	Human LCLs'!E9	1	13	11992	7/18/07	
+7	6	F	Human LCLs'!F7	Human LCLs'!F8	Human LCLs'!F9	1	14	11992	7/18/07	
+7	7	G	Human LCLs'!G7	Human LCLs'!G8	Human LCLs'!G9	1	15	11992	7/18/07	
+7	8	H	Human LCLs'!H7	Human LCLs'!H8	Human LCLs'!H9	1	16			
+7	9	I	Human LCLs'!I7	Human LCLs'!I8	Human LCLs'!I9	1	17			
+7	10	J	Human LCLs'!J7	Human LCLs'!J8	Human LCLs'!J9	1	18			
+10	2	B	Human LCLs'!B10	Human LCLs'!B11	Human LCLs'!B12	1	19	11993		
+10	3	C	Human LCLs'!C10	Human LCLs'!C11	Human LCLs'!C12	1	20	11993		
+10	4	D	Human LCLs'!D10	Human LCLs'!D11	Human LCLs'!D12	1	21	11993		
+10	5	E	Human LCLs'!E10	Human LCLs'!E11	Human LCLs'!E12	1	22	11993		
+10	6	F	Human LCLs'!F10	Human LCLs'!F11	Human LCLs'!F12	1	23	11993		
+10	7	G	Human LCLs'!G10	Human LCLs'!G11	Human LCLs'!G12	1	24	11993		
+10	8	H	Human LCLs'!H10	Human LCLs'!H11	Human LCLs'!H12	1	25	11993		
+10	9	I	Human LCLs'!I10	Human LCLs'!I11	Human LCLs'!I12	1	26	11993		
+10	10	J	Human LCLs'!J10	Human LCLs'!J11	Human LCLs'!J12	1	27	11993		
+13	2	B	Human LCLs'!B13	Human LCLs'!B14	Human LCLs'!B15	1	28	11993		
+13	3	C	Human LCLs'!C13	Human LCLs'!C14	Human LCLs'!C15	1	29	11993		
+13	4	D	Human LCLs'!D13	Human LCLs'!D14	Human LCLs'!D15	1	30	11993		
+13	5	E	Human LCLs'!E13	Human LCLs'!E14	Human LCLs'!E15	1	31	11993		
+13	6	F	Human LCLs'!F13	Human LCLs'!F14	Human LCLs'!F15	1	32			
+13	7	G	Human LCLs'!G13	Human LCLs'!G14	Human LCLs'!G15	1	33			
+13	8	H	Human LCLs'!H13	Human LCLs'!H14	Human LCLs'!H15	1	34			
+13	9	I	Human LCLs'!I13	Human LCLs'!I14	Human LCLs'!I15	1	35			
+13	10	J	Human LCLs'!J13	Human LCLs'!J14	Human LCLs'!J15	1	36			
+16	2	B	Human LCLs'!B16	Human LCLs'!B17	Human LCLs'!B18	1	37	12145		
+16	3	C	Human LCLs'!C16	Human LCLs'!C17	Human LCLs'!C18	1	38	12145		
+16	4	D	Human LCLs'!D16	Human LCLs'!D17	Human LCLs'!D18	1	39	12145		
+16	5	E	Human LCLs'!E16	Human LCLs'!E17	Human LCLs'!E18	1	40	12145		
+16	6	F	Human LCLs'!F16	Human LCLs'!F17	Human LCLs'!F18	1	41	12145		
+16	7	G	Human LCLs'!G16	Human LCLs'!G17	Human LCLs'!G18	1	42	12145		
+16	8	H	Human LCLs'!H16	Human LCLs'!H17	Human LCLs'!H18	1	43	12145		
+16	9	I	Human LCLs'!I16	Human LCLs'!I17	Human LCLs'!I18	1	44	12145		
+16	10	J	Human LCLs'!J16	Human LCLs'!J17	Human LCLs'!J18	1	45	12145		
+19	2	B	Human LCLs'!B19	Human LCLs'!B20	Human LCLs'!B21	1	46	12145		
+19	3	C	Human LCLs'!C19	Human LCLs'!C20	Human LCLs'!C21	1	47	12145		
+19	4	D	Human LCLs'!D19	Human LCLs'!D20	Human LCLs'!D21	1	48	12145		
+19	5	E	Human LCLs'!E19	Human LCLs'!E20	Human LCLs'!E21	1	49	12145		
+19	6	F	Human LCLs'!F19	Human LCLs'!F20	Human LCLs'!F21	1	50	12145		
+19	7	G	Human LCLs'!G19	Human LCLs'!G20	Human LCLs'!G21	1	51	12145		
+19	8	H	Human LCLs'!H19	Human LCLs'!H20	Human LCLs'!H21	1	52	12145		
+19	9	I	Human LCLs'!I19	Human LCLs'!I20	Human LCLs'!I21	1	53	12145		
+19	10	J	Human LCLs'!J19	Human LCLs'!J20	Human LCLs'!J21	1	54	12145		
+22	2	B	Human LCLs'!B22	Human LCLs'!B23	Human LCLs'!B24	1	55	12145		
+22	3	C	Human LCLs'!C22	Human LCLs'!C23	Human LCLs'!C24	1	56	07022		
+22	4	D	Human LCLs'!D22	Human LCLs'!D23	Human LCLs'!D24	1	57	07022		
+22	5	E	Human LCLs'!E22	Human LCLs'!E23	Human LCLs'!E24	1	58	07022		
+22	6	F	Human LCLs'!F22	Human LCLs'!F23	Human LCLs'!F24	1	59	07022		
+22	7	G	Human LCLs'!G22	Human LCLs'!G23	Human LCLs'!G24	1	60	07022		
+22	8	H	Human LCLs'!H22	Human LCLs'!H23	Human LCLs'!H24	1	61	07022		
+22	9	I	Human LCLs'!I22	Human LCLs'!I23	Human LCLs'!I24	1	62	07022		
+22	10	J	Human LCLs'!J22	Human LCLs'!J23	Human LCLs'!J24	1	63	07022		
+25	2	B	Human LCLs'!B25	Human LCLs'!B26	Human LCLs'!B27	1	64	07022		
+25	3	C	Human LCLs'!C25	Human LCLs'!C26	Human LCLs'!C27	1	65	07022		
+25	4	D	Human LCLs'!D25	Human LCLs'!D26	Human LCLs'!D27	1	66	07022		
+25	5	E	Human LCLs'!E25	Human LCLs'!E26	Human LCLs'!E27	1	67	07022		
+25	6	F	Human LCLs'!F25	Human LCLs'!F26	Human LCLs'!F27	1	68	07022		
+25	7	G	Human LCLs'!G25	Human LCLs'!G26	Human LCLs'!G27	1	69	07022		
+25	8	H	Human LCLs'!H25	Human LCLs'!H26	Human LCLs'!H27	1	70	07022		
+25	9	I	Human LCLs'!I25	Human LCLs'!I26	Human LCLs'!I27	1	71	07022		
+25	10	J	Human LCLs'!J25	Human LCLs'!J26	Human LCLs'!J27	1	72	11830		
+28	2	B	Human LCLs'!B28	Human LCLs'!B29	Human LCLs'!B30	1	73	11830		
+28	3	C	Human LCLs'!C28	Human LCLs'!C29	Human LCLs'!C30	1	74	11830		
+28	4	D	Human LCLs'!D28	Human LCLs'!D29	Human LCLs'!D30	1	75	11830		
+28	5	E	Human LCLs'!E28	Human LCLs'!E29	Human LCLs'!E30	1	76	11830		
+28	6	F	Human LCLs'!F28	Human LCLs'!F29	Human LCLs'!F30	1	77	11830		
+28	7	G	Human LCLs'!G28	Human LCLs'!G29	Human LCLs'!G30	1	78	11830		
+28	8	H	Human LCLs'!H28	Human LCLs'!H29	Human LCLs'!H30	1	79	11830		
+28	9	I	Human LCLs'!I28	Human LCLs'!I29	Human LCLs'!I30	1	80	11830		
+28	10	J	Human LCLs'!J28	Human LCLs'!J29	Human LCLs'!J30	1	81	11830		
+35	2	B	Human LCLs'!B35	Human LCLs'!B36	Human LCLs'!B37	2	1	11807		
+35	3	C	Human LCLs'!C35	Human LCLs'!C36	Human LCLs'!C37	2	2	11807		
+35	4	D	Human LCLs'!D35	Human LCLs'!D36	Human LCLs'!D37	2	3	11807		
+35	5	E	Human LCLs'!E35	Human LCLs'!E36	Human LCLs'!E37	2	4	11807		
+35	6	F	Human LCLs'!F35	Human LCLs'!F36	Human LCLs'!F37	2	5	11807		
+35	7	G	Human LCLs'!G35	Human LCLs'!G36	Human LCLs'!G37	2	6	11807		
+35	8	H	Human LCLs'!H35	Human LCLs'!H36	Human LCLs'!H37	2	7	11807		
+35	9	I	Human LCLs'!I35	Human LCLs'!I36	Human LCLs'!I37	2	8	11807		
+35	10	J	Human LCLs'!J35	Human LCLs'!J36	Human LCLs'!J37	2	9	11807		
+38	2	B	Human LCLs'!B38	Human LCLs'!B39	Human LCLs'!B40	2	10	11807		
+38	3	C	Human LCLs'!C38	Human LCLs'!C39	Human LCLs'!C40	2	11	11807		
+38	4	D	Human LCLs'!D38	Human LCLs'!D39	Human LCLs'!D40	2	12	11807		
+38	5	E	Human LCLs'!E38	Human LCLs'!E39	Human LCLs'!E40	2	13	11807		
+38	6	F	Human LCLs'!F38	Human LCLs'!F39	Human LCLs'!F40	2	14	11807		
+38	7	G	Human LCLs'!G38	Human LCLs'!G39	Human LCLs'!G40	2	15	19208		
+38	8	H	Human LCLs'!H38	Human LCLs'!H39	Human LCLs'!H40	2	16	19208		
+38	9	I	Human LCLs'!I38	Human LCLs'!I39	Human LCLs'!I40	2	17	19208		
+38	10	J	Human LCLs'!J38	Human LCLs'!J39	Human LCLs'!J40	2	18	19208		
+41	2	B	Human LCLs'!B41	Human LCLs'!B42	Human LCLs'!B43	2	19	11831		
+41	3	C	Human LCLs'!C41	Human LCLs'!C42	Human LCLs'!C43	2	20	11831		
+41	4	D	Human LCLs'!D41	Human LCLs'!D42	Human LCLs'!D43	2	21	11831		
+41	5	E	Human LCLs'!E41	Human LCLs'!E42	Human LCLs'!E43	2	22	11831		
+41	6	F	Human LCLs'!F41	Human LCLs'!F42	Human LCLs'!F43	2	23	11831		
+41	7	G	Human LCLs'!G41	Human LCLs'!G42	Human LCLs'!G43	2	24	11831		
+41	8	H	Human LCLs'!H41	Human LCLs'!H42	Human LCLs'!H43	2	25	11831		
+41	9	I	Human LCLs'!I41	Human LCLs'!I42	Human LCLs'!I43	2	26	11831		
+41	10	J	Human LCLs'!J41	Human LCLs'!J42	Human LCLs'!J43	2	27	11831		
+44	2	B	Human LCLs'!B44	Human LCLs'!B45	Human LCLs'!B46	2	28	11831		
+44	3	C	Human LCLs'!C44	Human LCLs'!C45	Human LCLs'!C46	2	29	11831		
+44	4	D	Human LCLs'!D44	Human LCLs'!D45	Human LCLs'!D46	2	30	11831		
+44	5	E	Human LCLs'!E44	Human LCLs'!E45	Human LCLs'!E46	2	31	11831		
+44	6	F	Human LCLs'!F44	Human LCLs'!F45	Human LCLs'!F46	2	32	11831		
+44	7	G	Human LCLs'!G44	Human LCLs'!G45	Human LCLs'!G46	2	33	11831		
+44	8	H	Human LCLs'!H44	Human LCLs'!H45	Human LCLs'!H46	2	34	11831		
+44	9	I	Human LCLs'!I44	Human LCLs'!I45	Human LCLs'!I46	2	35	11831		
+44	10	J	Human LCLs'!J44	Human LCLs'!J45	Human LCLs'!J46	2	36	11831		
+47	2	B	Human LCLs'!B47	Human LCLs'!B48	Human LCLs'!B49	2	37	11831		
+47	3	C	Human LCLs'!C47	Human LCLs'!C48	Human LCLs'!C49	2	38	18854		
+47	4	D	Human LCLs'!D47	Human LCLs'!D48	Human LCLs'!D49	2	39	18854		
+47	5	E	Human LCLs'!E47	Human LCLs'!E48	Human LCLs'!E49	2	40	18854		
+47	6	F	Human LCLs'!F47	Human LCLs'!F48	Human LCLs'!F49	2	41	18854		
+47	7	G	Human LCLs'!G47	Human LCLs'!G48	Human LCLs'!G49	2	42	18854		
+47	8	H	Human LCLs'!H47	Human LCLs'!H48	Human LCLs'!H49	2	43	18854		
+47	9	I	Human LCLs'!I47	Human LCLs'!I48	Human LCLs'!I49	2	44	18854		
+47	10	J	Human LCLs'!J47	Human LCLs'!J48	Human LCLs'!J49	2	45	18854		
+50	2	B	Human LCLs'!B50	Human LCLs'!B51	Human LCLs'!B52	2	46	12814		
+50	3	C	Human LCLs'!C50	Human LCLs'!C51	Human LCLs'!C52	2	47	12814		
+50	4	D	Human LCLs'!D50	Human LCLs'!D51	Human LCLs'!D52	2	48	12814		
+50	5	E	Human LCLs'!E50	Human LCLs'!E51	Human LCLs'!E52	2	49	12814		
+50	6	F	Human LCLs'!F50	Human LCLs'!F51	Human LCLs'!F52	2	50	12814		
+50	7	G	Human LCLs'!G50	Human LCLs'!G51	Human LCLs'!G52	2	51	12814		
+50	8	H	Human LCLs'!H50	Human LCLs'!H51	Human LCLs'!H52	2	52	12814		
+50	9	I	Human LCLs'!I50	Human LCLs'!I51	Human LCLs'!I52	2	53	12814		
+50	10	J	Human LCLs'!J50	Human LCLs'!J51	Human LCLs'!J52	2	54	12814		
+53	2	B	Human LCLs'!B53	Human LCLs'!B54	Human LCLs'!B55	2	55	12814		
+53	3	C	Human LCLs'!C53	Human LCLs'!C54	Human LCLs'!C55	2	56	12814		
+53	4	D	Human LCLs'!D53	Human LCLs'!D54	Human LCLs'!D55	2	57	12814		
+53	5	E	Human LCLs'!E53	Human LCLs'!E54	Human LCLs'!E55	2	58	12814		
+53	6	F	Human LCLs'!F53	Human LCLs'!F54	Human LCLs'!F55	2	59	12814		
+53	7	G	Human LCLs'!G53	Human LCLs'!G54	Human LCLs'!G55	2	60	12814		
+53	8	H	Human LCLs'!H53	Human LCLs'!H54	Human LCLs'!H55	2	61	12814		
+53	9	I	Human LCLs'!I53	Human LCLs'!I54	Human LCLs'!I55	2	62	12814		
+53	10	J	Human LCLs'!J53	Human LCLs'!J54	Human LCLs'!J55	2	63	12814		
+56	2	B	Human LCLs'!B56	Human LCLs'!B57	Human LCLs'!B58	2	64	12814		
+56	3	C	Human LCLs'!C56	Human LCLs'!C57	Human LCLs'!C58	2	65	12814		
+56	4	D	Human LCLs'!D56	Human LCLs'!D57	Human LCLs'!D58	2	66	19208		
+56	5	E	Human LCLs'!E56	Human LCLs'!E57	Human LCLs'!E58	2	67	19208		
+56	6	F	Human LCLs'!F56	Human LCLs'!F57	Human LCLs'!F58	2	68	19208		
+56	7	G	Human LCLs'!G56	Human LCLs'!G57	Human LCLs'!G58	2	69	11995		
+56	8	H	Human LCLs'!H56	Human LCLs'!H57	Human LCLs'!H58	2	70	11995		
+56	9	I	Human LCLs'!I56	Human LCLs'!I57	Human LCLs'!I58	2	71	11995		
+56	10	J	Human LCLs'!J56	Human LCLs'!J57	Human LCLs'!J58	2	72	11995		
+59	2	B	Human LCLs'!B59	Human LCLs'!B60	Human LCLs'!B61	2	73	11995		
+59	3	C	Human LCLs'!C59	Human LCLs'!C60	Human LCLs'!C61	2	74	11995		
+59	4	D	Human LCLs'!D59	Human LCLs'!D60	Human LCLs'!D61	2	75	11995		
+59	5	E	Human LCLs'!E59	Human LCLs'!E60	Human LCLs'!E61	2	76	11995		
+59	6	F	Human LCLs'!F59	Human LCLs'!F60	Human LCLs'!F61	2	77	11995		
+59	7	G	Human LCLs'!G59	Human LCLs'!G60	Human LCLs'!G61	2	78	11995		
+59	8	H	Human LCLs'!H59	Human LCLs'!H60	Human LCLs'!H61	2	79	11995		
+59	9	I	Human LCLs'!I59	Human LCLs'!I60	Human LCLs'!I61	2	80	11995		
+59	10	J	Human LCLs'!J59	Human LCLs'!J60	Human LCLs'!J61	2	81	11995		
+66	2	B	Human LCLs'!B66	Human LCLs'!B67	Human LCLs'!B68	3	1	12044		
+66	3	C	Human LCLs'!C66	Human LCLs'!C67	Human LCLs'!C68	3	2	12044		
+66	4	D	Human LCLs'!D66	Human LCLs'!D67	Human LCLs'!D68	3	3	12044		
+66	5	E	Human LCLs'!E66	Human LCLs'!E67	Human LCLs'!E68	3	4	12044		
+66	6	F	Human LCLs'!F66	Human LCLs'!F67	Human LCLs'!F68	3	5	12044		
+66	7	G	Human LCLs'!G66	Human LCLs'!G67	Human LCLs'!G68	3	6	12044		
+66	8	H	Human LCLs'!H66	Human LCLs'!H67	Human LCLs'!H68	3	7	12044		
+66	9	I	Human LCLs'!I66	Human LCLs'!I67	Human LCLs'!I68	3	8	12044		
+66	10	J	Human LCLs'!J66	Human LCLs'!J67	Human LCLs'!J68	3	9	12044		
+69	2	B	Human LCLs'!B69	Human LCLs'!B70	Human LCLs'!B71	3	10	12044		
+69	3	C	Human LCLs'!C69	Human LCLs'!C70	Human LCLs'!C71	3	11	12044		
+69	4	D	Human LCLs'!D69	Human LCLs'!D70	Human LCLs'!D71	3	12	12044		
+69	5	E	Human LCLs'!E69	Human LCLs'!E70	Human LCLs'!E71	3	13	12044		
+69	6	F	Human LCLs'!F69	Human LCLs'!F70	Human LCLs'!F71	3	14	12044		
+69	7	G	Human LCLs'!G69	Human LCLs'!G70	Human LCLs'!G71	3	15	12044		
+69	8	H	Human LCLs'!H69	Human LCLs'!H70	Human LCLs'!H71	3	16	19102		
+69	9	I	Human LCLs'!I69	Human LCLs'!I70	Human LCLs'!I71	3	17	19238		
+69	10	J	Human LCLs'!J69	Human LCLs'!J70	Human LCLs'!J71	3	18	11807		
+72	2	B	Human LCLs'!B72	Human LCLs'!B73	Human LCLs'!B74	3	19	12264		
+72	3	C	Human LCLs'!C72	Human LCLs'!C73	Human LCLs'!C74	3	20	12264		
+72	4	D	Human LCLs'!D72	Human LCLs'!D73	Human LCLs'!D74	3	21	12264		
+72	5	E	Human LCLs'!E72	Human LCLs'!E73	Human LCLs'!E74	3	22	12264		
+72	6	F	Human LCLs'!F72	Human LCLs'!F73	Human LCLs'!F74	3	23	12264		
+72	7	G	Human LCLs'!G72	Human LCLs'!G73	Human LCLs'!G74	3	24	12264		
+72	8	H	Human LCLs'!H72	Human LCLs'!H73	Human LCLs'!H74	3	25	12264		
+72	9	I	Human LCLs'!I72	Human LCLs'!I73	Human LCLs'!I74	3	26	12264		
+72	10	J	Human LCLs'!J72	Human LCLs'!J73	Human LCLs'!J74	3	27	12264		
+75	2	B	Human LCLs'!B75	Human LCLs'!B76	Human LCLs'!B77	3	28	12264		
+75	3	C	Human LCLs'!C75	Human LCLs'!C76	Human LCLs'!C77	3	29	12264		
+75	4	D	Human LCLs'!D75	Human LCLs'!D76	Human LCLs'!D77	3	30	12264		
+75	5	E	Human LCLs'!E75	Human LCLs'!E76	Human LCLs'!E77	3	31	12264		
+75	6	F	Human LCLs'!F75	Human LCLs'!F76	Human LCLs'!F77	3	32	12264		
+75	7	G	Human LCLs'!G75	Human LCLs'!G76	Human LCLs'!G77	3	33			
+75	8	H	Human LCLs'!H75	Human LCLs'!H76	Human LCLs'!H77	3	34	18871		
+75	9	I	Human LCLs'!I75	Human LCLs'!I76	Human LCLs'!I77	3	35	18871		
+75	10	J	Human LCLs'!J75	Human LCLs'!J76	Human LCLs'!J77	3	36	18871		
+78	2	B	Human LCLs'!B78	Human LCLs'!B79	Human LCLs'!B80	3	37	18501		
+78	3	C	Human LCLs'!C78	Human LCLs'!C79	Human LCLs'!C80	3	38	18501		
+78	4	D	Human LCLs'!D78	Human LCLs'!D79	Human LCLs'!D80	3	39	18501		
+78	5	E	Human LCLs'!E78	Human LCLs'!E79	Human LCLs'!E80	3	40	18501		
+78	6	F	Human LCLs'!F78	Human LCLs'!F79	Human LCLs'!F80	3	41	18501		
+78	7	G	Human LCLs'!G78	Human LCLs'!G79	Human LCLs'!G80	3	42	18501		
+78	8	H	Human LCLs'!H78	Human LCLs'!H79	Human LCLs'!H80	3	43	18501		
+78	9	I	Human LCLs'!I78	Human LCLs'!I79	Human LCLs'!I80	3	44	18501		
+78	10	J	Human LCLs'!J78	Human LCLs'!J79	Human LCLs'!J80	3	45	18501		
+81	2	B	Human LCLs'!B81	Human LCLs'!B82	Human LCLs'!B83	3	46	18501		
+81	3	C	Human LCLs'!C81	Human LCLs'!C82	Human LCLs'!C83	3	47	18501		
+81	4	D	Human LCLs'!D81	Human LCLs'!D82	Human LCLs'!D83	3	48	18504		
+81	5	E	Human LCLs'!E81	Human LCLs'!E82	Human LCLs'!E83	3	49	18504		
+81	6	F	Human LCLs'!F81	Human LCLs'!F82	Human LCLs'!F83	3	50	18504		
+81	7	G	Human LCLs'!G81	Human LCLs'!G82	Human LCLs'!G83	3	51	18504		
+81	8	H	Human LCLs'!H81	Human LCLs'!H82	Human LCLs'!H83	3	52			
+81	9	I	Human LCLs'!I81	Human LCLs'!I82	Human LCLs'!I83	3	53			
+81	10	J	Human LCLs'!J81	Human LCLs'!J82	Human LCLs'!J83	3	54			
+84	2	B	Human LCLs'!B84	Human LCLs'!B85	Human LCLs'!B86	3	55	19102		
+84	3	C	Human LCLs'!C84	Human LCLs'!C85	Human LCLs'!C86	3	56	19102		
+84	4	D	Human LCLs'!D84	Human LCLs'!D85	Human LCLs'!D86	3	57	19102		
+84	5	E	Human LCLs'!E84	Human LCLs'!E85	Human LCLs'!E86	3	58	19102		
+84	6	F	Human LCLs'!F84	Human LCLs'!F85	Human LCLs'!F86	3	59	19102		
+84	7	G	Human LCLs'!G84	Human LCLs'!G85	Human LCLs'!G86	3	60	19102		
+84	8	H	Human LCLs'!H84	Human LCLs'!H85	Human LCLs'!H86	3	61	19102		
+84	9	I	Human LCLs'!I84	Human LCLs'!I85	Human LCLs'!I86	3	62	19102		
+84	10	J	Human LCLs'!J84	Human LCLs'!J85	Human LCLs'!J86	3	63	19102		
+87	2	B	Human LCLs'!B87	Human LCLs'!B88	Human LCLs'!B89	3	64	19210		
+87	3	C	Human LCLs'!C87	Human LCLs'!C88	Human LCLs'!C89	3	65	19210		
+87	4	D	Human LCLs'!D87	Human LCLs'!D88	Human LCLs'!D89	3	66	19210		
+87	5	E	Human LCLs'!E87	Human LCLs'!E88	Human LCLs'!E89	3	67	19210		
+87	6	F	Human LCLs'!F87	Human LCLs'!F88	Human LCLs'!F89	3	68	19210		
+87	7	G	Human LCLs'!G87	Human LCLs'!G88	Human LCLs'!G89	3	69	19210		
+87	8	H	Human LCLs'!H87	Human LCLs'!H88	Human LCLs'!H89	3	70	19210		
+87	9	I	Human LCLs'!I87	Human LCLs'!I88	Human LCLs'!I89	3	71	19210		
+87	10	J	Human LCLs'!J87	Human LCLs'!J88	Human LCLs'!J89	3	72	19210		
+90	2	B	Human LCLs'!B90	Human LCLs'!B91	Human LCLs'!B92	3	73			
+90	3	C	Human LCLs'!C90	Human LCLs'!C91	Human LCLs'!C92	3	74			
+90	4	D	Human LCLs'!D90	Human LCLs'!D91	Human LCLs'!D92	3	75			
+90	5	E	Human LCLs'!E90	Human LCLs'!E91	Human LCLs'!E92	3	76			
+90	6	F	Human LCLs'!F90	Human LCLs'!F91	Human LCLs'!F92	3	77			
+90	7	G	Human LCLs'!G90	Human LCLs'!G91	Human LCLs'!G92	3	78	19210		
+90	8	H	Human LCLs'!H90	Human LCLs'!H91	Human LCLs'!H92	3	79	19210		
+90	9	I	Human LCLs'!I90	Human LCLs'!I91	Human LCLs'!I92	3	80	19210		
+90	10	J	Human LCLs'!J90	Human LCLs'!J91	Human LCLs'!J92	3	81	19210		
+97	2	B	Human LCLs'!B97	Human LCLs'!B98	Human LCLs'!B99	4	1	19171		
+97	3	C	Human LCLs'!C97	Human LCLs'!C98	Human LCLs'!C99	4	2	19171		
+97	4	D	Human LCLs'!D97	Human LCLs'!D98	Human LCLs'!D99	4	3	19171		
+97	5	E	Human LCLs'!E97	Human LCLs'!E98	Human LCLs'!E99	4	4	19171		
+97	6	F	Human LCLs'!F97	Human LCLs'!F98	Human LCLs'!F99	4	5	19171		
+97	7	G	Human LCLs'!G97	Human LCLs'!G98	Human LCLs'!G99	4	6	19171		
+97	8	H	Human LCLs'!H97	Human LCLs'!H98	Human LCLs'!H99	4	7	19171		
+97	9	I	Human LCLs'!I97	Human LCLs'!I98	Human LCLs'!I99	4	8	19171		
+97	10	J	Human LCLs'!J97	Human LCLs'!J98	Human LCLs'!J99	4	9	19171		
+100	2	B	Human LCLs'!B100	Human LCLs'!B101	Human LCLs'!B102	4	10	19171		
+100	3	C	Human LCLs'!C100	Human LCLs'!C101	Human LCLs'!C102	4	11	19171		
+100	4	D	Human LCLs'!D100	Human LCLs'!D101	Human LCLs'!D102	4	12			
+100	5	E	Human LCLs'!E100	Human LCLs'!E101	Human LCLs'!E102	4	13	18907		
+100	6	F	Human LCLs'!F100	Human LCLs'!F101	Human LCLs'!F102	4	14	18907		
+100	7	G	Human LCLs'!G100	Human LCLs'!G101	Human LCLs'!G102	4	15	18907		
+100	8	H	Human LCLs'!H100	Human LCLs'!H101	Human LCLs'!H102	4	16	18907		
+100	9	I	Human LCLs'!I100	Human LCLs'!I101	Human LCLs'!I102	4	17	19130		
+100	10	J	Human LCLs'!J100	Human LCLs'!J101	Human LCLs'!J102	4	18	19130		
+103	2	B	Human LCLs'!B103	Human LCLs'!B104	Human LCLs'!B105	4	19	19200		
+103	3	C	Human LCLs'!C103	Human LCLs'!C104	Human LCLs'!C105	4	20	19200		
+103	4	D	Human LCLs'!D103	Human LCLs'!D104	Human LCLs'!D105	4	21	19200		
+103	5	E	Human LCLs'!E103	Human LCLs'!E104	Human LCLs'!E105	4	22	19200		
+103	6	F	Human LCLs'!F103	Human LCLs'!F104	Human LCLs'!F105	4	23	19200		
+103	7	G	Human LCLs'!G103	Human LCLs'!G104	Human LCLs'!G105	4	24	19200	*Ben took this and is in the midst of stocking a replacement	
+103	8	H	Human LCLs'!H103	Human LCLs'!H104	Human LCLs'!H105	4	25	19099		
+103	9	I	Human LCLs'!I103	Human LCLs'!I104	Human LCLs'!I105	4	26	19130		
+103	10	J	Human LCLs'!J103	Human LCLs'!J104	Human LCLs'!J105	4	27	19130		
+106	2	B	Human LCLs'!B106	Human LCLs'!B107	Human LCLs'!B108	4	28	19207		
+106	3	C	Human LCLs'!C106	Human LCLs'!C107	Human LCLs'!C108	4	29	19207		
+106	4	D	Human LCLs'!D106	Human LCLs'!D107	Human LCLs'!D108	4	30	19207		
+106	5	E	Human LCLs'!E106	Human LCLs'!E107	Human LCLs'!E108	4	31	19207		
+106	6	F	Human LCLs'!F106	Human LCLs'!F107	Human LCLs'!F108	4	32	19207		
+106	7	G	Human LCLs'!G106	Human LCLs'!G107	Human LCLs'!G108	4	33	19207		
+106	8	H	Human LCLs'!H106	Human LCLs'!H107	Human LCLs'!H108	4	34	19207		
+106	9	I	Human LCLs'!I106	Human LCLs'!I107	Human LCLs'!I108	4	35			
+106	10	J	Human LCLs'!J106	Human LCLs'!J107	Human LCLs'!J108	4	36	19137		
+109	2	B	Human LCLs'!B109	Human LCLs'!B110	Human LCLs'!B111	4	37	19159		
+109	3	C	Human LCLs'!C109	Human LCLs'!C110	Human LCLs'!C111	4	38	19159		
+109	4	D	Human LCLs'!D109	Human LCLs'!D110	Human LCLs'!D111	4	39	19159		
+109	5	E	Human LCLs'!E109	Human LCLs'!E110	Human LCLs'!E111	4	40	19159		
+109	6	F	Human LCLs'!F109	Human LCLs'!F110	Human LCLs'!F111	4	41	19159		
+109	7	G	Human LCLs'!G109	Human LCLs'!G110	Human LCLs'!G111	4	42	19159		
+109	8	H	Human LCLs'!H109	Human LCLs'!H110	Human LCLs'!H111	4	43	19114		
+109	9	I	Human LCLs'!I109	Human LCLs'!I110	Human LCLs'!I111	4	44	19114		
+109	10	J	Human LCLs'!J109	Human LCLs'!J110	Human LCLs'!J111	4	45	19114		
+112	2	B	Human LCLs'!B112	Human LCLs'!B113	Human LCLs'!B114	4	46	19127		
+112	3	C	Human LCLs'!C112	Human LCLs'!C113	Human LCLs'!C114	4	47	19127		
+112	4	D	Human LCLs'!D112	Human LCLs'!D113	Human LCLs'!D114	4	48	19127		
+112	5	E	Human LCLs'!E112	Human LCLs'!E113	Human LCLs'!E114	4	49	19127		
+112	6	F	Human LCLs'!F112	Human LCLs'!F113	Human LCLs'!F114	4	50	19127		
+112	7	G	Human LCLs'!G112	Human LCLs'!G113	Human LCLs'!G114	4	51	19127		
+112	8	H	Human LCLs'!H112	Human LCLs'!H113	Human LCLs'!H114	4	52	19127		
+112	9	I	Human LCLs'!I112	Human LCLs'!I113	Human LCLs'!I114	4	53	19127		
+112	10	J	Human LCLs'!J112	Human LCLs'!J113	Human LCLs'!J114	4	54	19206		
+115	2	B	Human LCLs'!B115	Human LCLs'!B116	Human LCLs'!B117	4	55	19206		
+115	3	C	Human LCLs'!C115	Human LCLs'!C116	Human LCLs'!C117	4	56	19206		
+115	4	D	Human LCLs'!D115	Human LCLs'!D116	Human LCLs'!D117	4	57	19206		
+115	5	E	Human LCLs'!E115	Human LCLs'!E116	Human LCLs'!E117	4	58	19206		
+115	6	F	Human LCLs'!F115	Human LCLs'!F116	Human LCLs'!F117	4	59	19206		
+115	7	G	Human LCLs'!G115	Human LCLs'!G116	Human LCLs'!G117	4	60	19206		
+115	8	H	Human LCLs'!H115	Human LCLs'!H116	Human LCLs'!H117	4	61	19206		
+115	9	I	Human LCLs'!I115	Human LCLs'!I116	Human LCLs'!I117	4	62	19206		
+115	10	J	Human LCLs'!J115	Human LCLs'!J116	Human LCLs'!J117	4	63	19206		
+118	2	B	Human LCLs'!B118	Human LCLs'!B119	Human LCLs'!B120	4	64	19209		
+118	3	C	Human LCLs'!C118	Human LCLs'!C119	Human LCLs'!C120	4	65	19209		
+118	4	D	Human LCLs'!D118	Human LCLs'!D119	Human LCLs'!D120	4	66	19209		
+118	5	E	Human LCLs'!E118	Human LCLs'!E119	Human LCLs'!E120	4	67	19209	*Ben took this and is in the midst of stocking a replacement	
+118	6	F	Human LCLs'!F118	Human LCLs'!F119	Human LCLs'!F120	4	68	18907		
+118	7	G	Human LCLs'!G118	Human LCLs'!G119	Human LCLs'!G120	4	69	18907		
+118	8	H	Human LCLs'!H118	Human LCLs'!H119	Human LCLs'!H120	4	70	18907		
+118	9	I	Human LCLs'!I118	Human LCLs'!I119	Human LCLs'!I120	4	71	19200		
+118	10	J	Human LCLs'!J118	Human LCLs'!J119	Human LCLs'!J120	4	72	19200		
+121	2	B	Human LCLs'!B121	Human LCLs'!B122	Human LCLs'!B123	4	73	19152		
+121	3	C	Human LCLs'!C121	Human LCLs'!C122	Human LCLs'!C123	4	74	19152		
+121	4	D	Human LCLs'!D121	Human LCLs'!D122	Human LCLs'!D123	4	75	19152		
+121	5	E	Human LCLs'!E121	Human LCLs'!E122	Human LCLs'!E123	4	76	19152		
+121	6	F	Human LCLs'!F121	Human LCLs'!F122	Human LCLs'!F123	4	77	19152		
+121	7	G	Human LCLs'!G121	Human LCLs'!G122	Human LCLs'!G123	4	78	18912		
+121	8	H	Human LCLs'!H121	Human LCLs'!H122	Human LCLs'!H123	4	79	18912		
+121	9	I	Human LCLs'!I121	Human LCLs'!I122	Human LCLs'!I123	4	80	18912		
+121	10	J	Human LCLs'!J121	Human LCLs'!J122	Human LCLs'!J123	4	81	19200		
+128	2	B	Human LCLs'!B128	Human LCLs'!B129	Human LCLs'!B130	5	1	19093		
+128	3	C	Human LCLs'!C128	Human LCLs'!C129	Human LCLs'!C130	5	2	19093		
+128	4	D	Human LCLs'!D128	Human LCLs'!D129	Human LCLs'!D130	5	3	19093		
+128	5	E	Human LCLs'!E128	Human LCLs'!E129	Human LCLs'!E130	5	4	19093		
+128	6	F	Human LCLs'!F128	Human LCLs'!F129	Human LCLs'!F130	5	5	19093		
+128	7	G	Human LCLs'!G128	Human LCLs'!G129	Human LCLs'!G130	5	6	19093		
+128	8	H	Human LCLs'!H128	Human LCLs'!H129	Human LCLs'!H130	5	7	19093		
+128	9	I	Human LCLs'!I128	Human LCLs'!I129	Human LCLs'!I130	5	8	19093		
+128	10	J	Human LCLs'!J128	Human LCLs'!J129	Human LCLs'!J130	5	9	19093		
+131	2	B	Human LCLs'!B131	Human LCLs'!B132	Human LCLs'!B133	5	10	19093		
+131	3	C	Human LCLs'!C131	Human LCLs'!C132	Human LCLs'!C133	5	11	19093		
+131	4	D	Human LCLs'!D131	Human LCLs'!D132	Human LCLs'!D133	5	12	19093		
+131	5	E	Human LCLs'!E131	Human LCLs'!E132	Human LCLs'!E133	5	13	19139		
+131	6	F	Human LCLs'!F131	Human LCLs'!F132	Human LCLs'!F133	5	14	19139		
+131	7	G	Human LCLs'!G131	Human LCLs'!G132	Human LCLs'!G133	5	15	19139		
+131	8	H	Human LCLs'!H131	Human LCLs'!H132	Human LCLs'!H133	5	16	19139		
+131	9	I	Human LCLs'!I131	Human LCLs'!I132	Human LCLs'!I133	5	17	19139		
+131	10	J	Human LCLs'!J131	Human LCLs'!J132	Human LCLs'!J133	5	18	19139		
+134	2	B	Human LCLs'!B134	Human LCLs'!B135	Human LCLs'!B136	5	19	19092		
+134	3	C	Human LCLs'!C134	Human LCLs'!C135	Human LCLs'!C136	5	20	19092		
+134	4	D	Human LCLs'!D134	Human LCLs'!D135	Human LCLs'!D136	5	21	19092		
+134	5	E	Human LCLs'!E134	Human LCLs'!E135	Human LCLs'!E136	5	22	19092		
+134	6	F	Human LCLs'!F134	Human LCLs'!F135	Human LCLs'!F136	5	23	19092		
+134	7	G	Human LCLs'!G134	Human LCLs'!G135	Human LCLs'!G136	5	24	19092		
+134	8	H	Human LCLs'!H134	Human LCLs'!H135	Human LCLs'!H136	5	25	19092		
+134	9	I	Human LCLs'!I134	Human LCLs'!I135	Human LCLs'!I136	5	26	19092		
+134	10	J	Human LCLs'!J134	Human LCLs'!J135	Human LCLs'!J136	5	27	19092		
+137	2	B	Human LCLs'!B137	Human LCLs'!B138	Human LCLs'!B139	5	28	18516		
+137	3	C	Human LCLs'!C137	Human LCLs'!C138	Human LCLs'!C139	5	29	18516		
+137	4	D	Human LCLs'!D137	Human LCLs'!D138	Human LCLs'!D139	5	30	18516		
+137	5	E	Human LCLs'!E137	Human LCLs'!E138	Human LCLs'!E139	5	31	18516		
+137	6	F	Human LCLs'!F137	Human LCLs'!F138	Human LCLs'!F139	5	32	18516		
+137	7	G	Human LCLs'!G137	Human LCLs'!G138	Human LCLs'!G139	5	33	18516		
+137	8	H	Human LCLs'!H137	Human LCLs'!H138	Human LCLs'!H139	5	34	18516		
+137	9	I	Human LCLs'!I137	Human LCLs'!I138	Human LCLs'!I139	5	35	18516		
+137	10	J	Human LCLs'!J137	Human LCLs'!J138	Human LCLs'!J139	5	36	18516		
+140	2	B	Human LCLs'!B140	Human LCLs'!B141	Human LCLs'!B142	5	37	18516		
+140	3	C	Human LCLs'!C140	Human LCLs'!C141	Human LCLs'!C142	5	38	18516		
+140	4	D	Human LCLs'!D140	Human LCLs'!D141	Human LCLs'!D142	5	39	18516		
+140	5	E	Human LCLs'!E140	Human LCLs'!E141	Human LCLs'!E142	5	40	18516		
+140	6	F	Human LCLs'!F140	Human LCLs'!F141	Human LCLs'!F142	5	41	18516		
+140	7	G	Human LCLs'!G140	Human LCLs'!G141	Human LCLs'!G142	5	42	18516		
+140	8	H	Human LCLs'!H140	Human LCLs'!H141	Human LCLs'!H142	5	43	18516		
+140	9	I	Human LCLs'!I140	Human LCLs'!I141	Human LCLs'!I142	5	44	18516		
+140	10	J	Human LCLs'!J140	Human LCLs'!J141	Human LCLs'!J142	5	45	18516		
+143	2	B	Human LCLs'!B143	Human LCLs'!B144	Human LCLs'!B145	5	46	19119		
+143	3	C	Human LCLs'!C143	Human LCLs'!C144	Human LCLs'!C145	5	47	19119		
+143	4	D	Human LCLs'!D143	Human LCLs'!D144	Human LCLs'!D145	5	48	19119		
+143	5	E	Human LCLs'!E143	Human LCLs'!E144	Human LCLs'!E145	5	49	19119		
+143	6	F	Human LCLs'!F143	Human LCLs'!F144	Human LCLs'!F145	5	50	19119		
+143	7	G	Human LCLs'!G143	Human LCLs'!G144	Human LCLs'!G145	5	51	19119		
+143	8	H	Human LCLs'!H143	Human LCLs'!H144	Human LCLs'!H145	5	52	19119		
+143	9	I	Human LCLs'!I143	Human LCLs'!I144	Human LCLs'!I145	5	53	19119		
+143	10	J	Human LCLs'!J143	Human LCLs'!J144	Human LCLs'!J145	5	54	19119		
+146	2	B	Human LCLs'!B146	Human LCLs'!B147	Human LCLs'!B148	5	55	19119		
+146	3	C	Human LCLs'!C146	Human LCLs'!C147	Human LCLs'!C148	5	56	19119		
+146	4	D	Human LCLs'!D146	Human LCLs'!D147	Human LCLs'!D148	5	57	18192		
+146	5	E	Human LCLs'!E146	Human LCLs'!E147	Human LCLs'!E148	5	58	18192		
+146	6	F	Human LCLs'!F146	Human LCLs'!F147	Human LCLs'!F148	5	59	18192		
+146	7	G	Human LCLs'!G146	Human LCLs'!G147	Human LCLs'!G148	5	60	18192		
+146	8	H	Human LCLs'!H146	Human LCLs'!H147	Human LCLs'!H148	5	61	18192		
+146	9	I	Human LCLs'!I146	Human LCLs'!I147	Human LCLs'!I148	5	62	18192		
+146	10	J	Human LCLs'!J146	Human LCLs'!J147	Human LCLs'!J148	5	63	18192		
+149	2	B	Human LCLs'!B149	Human LCLs'!B150	Human LCLs'!B151	5	64	18870	*Ben took this and is in the midst of stocking a replacement	
+149	3	C	Human LCLs'!C149	Human LCLs'!C150	Human LCLs'!C151	5	65	18870	banked back by WL 8/25/20	
+149	4	D	Human LCLs'!D149	Human LCLs'!D150	Human LCLs'!D151	5	66	18870		
+149	5	E	Human LCLs'!E149	Human LCLs'!E150	Human LCLs'!E151	5	67	18870		
+149	6	F	Human LCLs'!F149	Human LCLs'!F150	Human LCLs'!F151	5	68	18870		
+149	7	G	Human LCLs'!G149	Human LCLs'!G150	Human LCLs'!G151	5	69	18870		
+149	8	H	Human LCLs'!H149	Human LCLs'!H150	Human LCLs'!H151	5	70	18870		
+149	9	I	Human LCLs'!I149	Human LCLs'!I150	Human LCLs'!I151	5	71	18870		
+149	10	J	Human LCLs'!J149	Human LCLs'!J150	Human LCLs'!J151	5	72	18870		
+152	2	B	Human LCLs'!B152	Human LCLs'!B153	Human LCLs'!B154	5	73	18870		
+152	3	C	Human LCLs'!C152	Human LCLs'!C153	Human LCLs'!C154	5	74	18870		
+152	4	D	Human LCLs'!D152	Human LCLs'!D153	Human LCLs'!D154	5	75			
+152	5	E	Human LCLs'!E152	Human LCLs'!E153	Human LCLs'!E154	5	76			
+152	6	F	Human LCLs'!F152	Human LCLs'!F153	Human LCLs'!F154	5	77			
+152	7	G	Human LCLs'!G152	Human LCLs'!G153	Human LCLs'!G154	5	78			
+152	8	H	Human LCLs'!H152	Human LCLs'!H153	Human LCLs'!H154	5	79			
+152	9	I	Human LCLs'!I152	Human LCLs'!I153	Human LCLs'!I154	5	80	19139		
+152	10	J	Human LCLs'!J152	Human LCLs'!J153	Human LCLs'!J154	5	81	19139		
+159	2	B	Human LCLs'!B159	Human LCLs'!B160	Human LCLs'!B161	6	1	19225		
+159	3	C	Human LCLs'!C159	Human LCLs'!C160	Human LCLs'!C161	6	2	19225		
+159	4	D	Human LCLs'!D159	Human LCLs'!D160	Human LCLs'!D161	6	3			
+159	5	E	Human LCLs'!E159	Human LCLs'!E160	Human LCLs'!E161	6	4	19131		
+159	6	F	Human LCLs'!F159	Human LCLs'!F160	Human LCLs'!F161	6	5	19131		
+159	7	G	Human LCLs'!G159	Human LCLs'!G160	Human LCLs'!G161	6	6	19131		
+159	8	H	Human LCLs'!H159	Human LCLs'!H160	Human LCLs'!H161	6	7	19131		
+159	9	I	Human LCLs'!I159	Human LCLs'!I160	Human LCLs'!I161	6	8	19131		
+159	10	J	Human LCLs'!J159	Human LCLs'!J160	Human LCLs'!J161	6	9	19131		
+162	2	B	Human LCLs'!B162	Human LCLs'!B163	Human LCLs'!B164	6	10	19223		
+162	3	C	Human LCLs'!C162	Human LCLs'!C163	Human LCLs'!C164	6	11	19223		
+162	4	D	Human LCLs'!D162	Human LCLs'!D163	Human LCLs'!D164	6	12	19223		
+162	5	E	Human LCLs'!E162	Human LCLs'!E163	Human LCLs'!E164	6	13	19223		
+162	6	F	Human LCLs'!F162	Human LCLs'!F163	Human LCLs'!F164	6	14			
+162	7	G	Human LCLs'!G162	Human LCLs'!G163	Human LCLs'!G164	6	15	18097		
+162	8	H	Human LCLs'!H162	Human LCLs'!H163	Human LCLs'!H164	6	16	18097		
+162	9	I	Human LCLs'!I162	Human LCLs'!I163	Human LCLs'!I164	6	17	18097		
+162	10	J	Human LCLs'!J162	Human LCLs'!J163	Human LCLs'!J164	6	18	19101		
+165	2	B	Human LCLs'!B165	Human LCLs'!B166	Human LCLs'!B167	6	19	19239		
+165	3	C	Human LCLs'!C165	Human LCLs'!C166	Human LCLs'!C167	6	20	19239		
+165	4	D	Human LCLs'!D165	Human LCLs'!D166	Human LCLs'!D167	6	21	19239		
+165	5	E	Human LCLs'!E165	Human LCLs'!E166	Human LCLs'!E167	6	22	19239		
+165	6	F	Human LCLs'!F165	Human LCLs'!F166	Human LCLs'!F167	6	23	19239		
+165	7	G	Human LCLs'!G165	Human LCLs'!G166	Human LCLs'!G167	6	24	19239		
+165	8	H	Human LCLs'!H165	Human LCLs'!H166	Human LCLs'!H167	6	25	19239		
+165	9	I	Human LCLs'!I165	Human LCLs'!I166	Human LCLs'!I167	6	26	19239		
+165	10	J	Human LCLs'!J165	Human LCLs'!J166	Human LCLs'!J167	6	27	18913		
+168	2	B	Human LCLs'!B168	Human LCLs'!B169	Human LCLs'!B170	6	28	19238		
+168	3	C	Human LCLs'!C168	Human LCLs'!C169	Human LCLs'!C170	6	29	19238		
+168	4	D	Human LCLs'!D168	Human LCLs'!D169	Human LCLs'!D170	6	30	19238		
+168	5	E	Human LCLs'!E168	Human LCLs'!E169	Human LCLs'!E170	6	31	19238		
+168	6	F	Human LCLs'!F168	Human LCLs'!F169	Human LCLs'!F170	6	32	19238		
+168	7	G	Human LCLs'!G168	Human LCLs'!G169	Human LCLs'!G170	6	33	19238		
+168	8	H	Human LCLs'!H168	Human LCLs'!H169	Human LCLs'!H170	6	34	19238		
+168	9	I	Human LCLs'!I168	Human LCLs'!I169	Human LCLs'!I170	6	35	19238		
+168	10	J	Human LCLs'!J168	Human LCLs'!J169	Human LCLs'!J170	6	36	19238		
+171	2	B	Human LCLs'!B171	Human LCLs'!B172	Human LCLs'!B173	6	37	19130		
+171	3	C	Human LCLs'!C171	Human LCLs'!C172	Human LCLs'!C173	6	38	19130		
+171	4	D	Human LCLs'!D171	Human LCLs'!D172	Human LCLs'!D173	6	39	19130		
+171	5	E	Human LCLs'!E171	Human LCLs'!E172	Human LCLs'!E173	6	40	19130		
+171	6	F	Human LCLs'!F171	Human LCLs'!F172	Human LCLs'!F173	6	41	19130		
+171	7	G	Human LCLs'!G171	Human LCLs'!G172	Human LCLs'!G173	6	42	19130		
+171	8	H	Human LCLs'!H171	Human LCLs'!H172	Human LCLs'!H173	6	43	19130		
+171	9	I	Human LCLs'!I171	Human LCLs'!I172	Human LCLs'!I173	6	44	19130		
+171	10	J	Human LCLs'!J171	Human LCLs'!J172	Human LCLs'!J173	6	45	19130		
+174	2	B	Human LCLs'!B174	Human LCLs'!B175	Human LCLs'!B176	6	46	19127		
+174	3	C	Human LCLs'!C174	Human LCLs'!C175	Human LCLs'!C176	6	47	19127		
+174	4	D	Human LCLs'!D174	Human LCLs'!D175	Human LCLs'!D176	6	48	19127		
+174	5	E	Human LCLs'!E174	Human LCLs'!E175	Human LCLs'!E176	6	49	19127		
+174	6	F	Human LCLs'!F174	Human LCLs'!F175	Human LCLs'!F176	6	50	19127		
+174	7	G	Human LCLs'!G174	Human LCLs'!G175	Human LCLs'!G176	6	51	19127		
+174	8	H	Human LCLs'!H174	Human LCLs'!H175	Human LCLs'!H176	6	52	18504		
+174	9	I	Human LCLs'!I174	Human LCLs'!I175	Human LCLs'!I176	6	53	18504		
+174	10	J	Human LCLs'!J174	Human LCLs'!J175	Human LCLs'!J176	6	54	18504		
+177	2	B	Human LCLs'!B177	Human LCLs'!B178	Human LCLs'!B179	6	55	18517		
+177	3	C	Human LCLs'!C177	Human LCLs'!C178	Human LCLs'!C179	6	56	18517		
+177	4	D	Human LCLs'!D177	Human LCLs'!D178	Human LCLs'!D179	6	57	18517		
+177	5	E	Human LCLs'!E177	Human LCLs'!E178	Human LCLs'!E179	6	58	18517		
+177	6	F	Human LCLs'!F177	Human LCLs'!F178	Human LCLs'!F179	6	59			
+177	7	G	Human LCLs'!G177	Human LCLs'!G178	Human LCLs'!G179	6	60	19152		
+177	8	H	Human LCLs'!H177	Human LCLs'!H178	Human LCLs'!H179	6	61	19152		
+177	9	I	Human LCLs'!I177	Human LCLs'!I178	Human LCLs'!I179	6	62	19152		
+177	10	J	Human LCLs'!J177	Human LCLs'!J178	Human LCLs'!J179	6	63	19152		
+180	2	B	Human LCLs'!B180	Human LCLs'!B181	Human LCLs'!B182	6	64	18859		
+180	3	C	Human LCLs'!C180	Human LCLs'!C181	Human LCLs'!C182	6	65	18859		
+180	4	D	Human LCLs'!D180	Human LCLs'!D181	Human LCLs'!D182	6	66	18859		
+180	5	E	Human LCLs'!E180	Human LCLs'!E181	Human LCLs'!E182	6	67	18859		
+180	6	F	Human LCLs'!F180	Human LCLs'!F181	Human LCLs'!F182	6	68	18859		
+180	7	G	Human LCLs'!G180	Human LCLs'!G181	Human LCLs'!G182	6	69	18859		
+180	8	H	Human LCLs'!H180	Human LCLs'!H181	Human LCLs'!H182	6	70	18859		
+180	9	I	Human LCLs'!I180	Human LCLs'!I181	Human LCLs'!I182	6	71	18859		
+180	10	J	Human LCLs'!J180	Human LCLs'!J181	Human LCLs'!J182	6	72	18859		
+183	2	B	Human LCLs'!B183	Human LCLs'!B184	Human LCLs'!B185	6	73	19143		
+183	3	C	Human LCLs'!C183	Human LCLs'!C184	Human LCLs'!C185	6	74	19143		
+183	4	D	Human LCLs'!D183	Human LCLs'!D184	Human LCLs'!D185	6	75	19143		
+183	5	E	Human LCLs'!E183	Human LCLs'!E184	Human LCLs'!E185	6	76	19143		
+183	6	F	Human LCLs'!F183	Human LCLs'!F184	Human LCLs'!F185	6	77			
+183	7	G	Human LCLs'!G183	Human LCLs'!G184	Human LCLs'!G185	6	78	19144		
+183	8	H	Human LCLs'!H183	Human LCLs'!H184	Human LCLs'!H185	6	79	19144		
+183	9	I	Human LCLs'!I183	Human LCLs'!I184	Human LCLs'!I185	6	80	19144		
+183	10	J	Human LCLs'!J183	Human LCLs'!J184	Human LCLs'!J185	6	81			
+190	2	B	Human LCLs'!B190	Human LCLs'!B191	Human LCLs'!B192	7	1	19190		
+190	3	C	Human LCLs'!C190	Human LCLs'!C191	Human LCLs'!C192	7	2	19190		
+190	4	D	Human LCLs'!D190	Human LCLs'!D191	Human LCLs'!D192	7	3	19190		
+190	5	E	Human LCLs'!E190	Human LCLs'!E191	Human LCLs'!E192	7	4	19190		
+190	6	F	Human LCLs'!F190	Human LCLs'!F191	Human LCLs'!F192	7	5	19190		
+190	7	G	Human LCLs'!G190	Human LCLs'!G191	Human LCLs'!G192	7	6	19190		
+190	8	H	Human LCLs'!H190	Human LCLs'!H191	Human LCLs'!H192	7	7	19147		
+190	9	I	Human LCLs'!I190	Human LCLs'!I191	Human LCLs'!I192	7	8	19147		
+190	10	J	Human LCLs'!J190	Human LCLs'!J191	Human LCLs'!J192	7	9	19147		
+193	2	B	Human LCLs'!B193	Human LCLs'!B194	Human LCLs'!B195	7	10	18852		
+193	3	C	Human LCLs'!C193	Human LCLs'!C194	Human LCLs'!C195	7	11	18852		
+193	4	D	Human LCLs'!D193	Human LCLs'!D194	Human LCLs'!D195	7	12	18852		
+193	5	E	Human LCLs'!E193	Human LCLs'!E194	Human LCLs'!E195	7	13	18852		
+193	6	F	Human LCLs'!F193	Human LCLs'!F194	Human LCLs'!F195	7	14	18909		
+193	7	G	Human LCLs'!G193	Human LCLs'!G194	Human LCLs'!G195	7	15	18486		
+193	8	H	Human LCLs'!H193	Human LCLs'!H194	Human LCLs'!H195	7	16	18486		
+193	9	I	Human LCLs'!I193	Human LCLs'!I194	Human LCLs'!I195	7	17	18486		
+193	10	J	Human LCLs'!J193	Human LCLs'!J194	Human LCLs'!J195	7	18	18486		
+196	2	B	Human LCLs'!B196	Human LCLs'!B197	Human LCLs'!B198	7	19	19203		
+196	3	C	Human LCLs'!C196	Human LCLs'!C197	Human LCLs'!C198	7	20	19203		
+196	4	D	Human LCLs'!D196	Human LCLs'!D197	Human LCLs'!D198	7	21	19203		
+196	5	E	Human LCLs'!E196	Human LCLs'!E197	Human LCLs'!E198	7	22	19203		
+196	6	F	Human LCLs'!F196	Human LCLs'!F197	Human LCLs'!F198	7	23	19203		
+196	7	G	Human LCLs'!G196	Human LCLs'!G197	Human LCLs'!G198	7	24	19203		
+196	8	H	Human LCLs'!H196	Human LCLs'!H197	Human LCLs'!H198	7	25	19203		
+196	9	I	Human LCLs'!I196	Human LCLs'!I197	Human LCLs'!I198	7	26	18856		
+196	10	J	Human LCLs'!J196	Human LCLs'!J197	Human LCLs'!J198	7	27	18856		
+199	2	B	Human LCLs'!B199	Human LCLs'!B200	Human LCLs'!B201	7	28	18508		
+199	3	C	Human LCLs'!C199	Human LCLs'!C200	Human LCLs'!C201	7	29	18508		
+199	4	D	Human LCLs'!D199	Human LCLs'!D200	Human LCLs'!D201	7	30	18508		
+199	5	E	Human LCLs'!E199	Human LCLs'!E200	Human LCLs'!E201	7	31	18508		
+199	6	F	Human LCLs'!F199	Human LCLs'!F200	Human LCLs'!F201	7	32	18508		
+199	7	G	Human LCLs'!G199	Human LCLs'!G200	Human LCLs'!G201	7	33	18508		
+199	8	H	Human LCLs'!H199	Human LCLs'!H200	Human LCLs'!H201	7	34	18508		
+199	9	I	Human LCLs'!I199	Human LCLs'!I200	Human LCLs'!I201	7	35	18508		
+199	10	J	Human LCLs'!J199	Human LCLs'!J200	Human LCLs'!J201	7	36	18508		
+202	2	B	Human LCLs'!B202	Human LCLs'!B203	Human LCLs'!B204	7	37	18502		
+202	3	C	Human LCLs'!C202	Human LCLs'!C203	Human LCLs'!C204	7	38	18502		
+202	4	D	Human LCLs'!D202	Human LCLs'!D203	Human LCLs'!D204	7	39	18502		
+202	5	E	Human LCLs'!E202	Human LCLs'!E203	Human LCLs'!E204	7	40	18502		
+202	6	F	Human LCLs'!F202	Human LCLs'!F203	Human LCLs'!F204	7	41	18502		
+202	7	G	Human LCLs'!G202	Human LCLs'!G203	Human LCLs'!G204	7	42	19116		
+202	8	H	Human LCLs'!H202	Human LCLs'!H203	Human LCLs'!H204	7	43	19116		
+202	9	I	Human LCLs'!I202	Human LCLs'!I203	Human LCLs'!I204	7	44	19116		
+202	10	J	Human LCLs'!J202	Human LCLs'!J203	Human LCLs'!J204	7	45	19116		
+205	2	B	Human LCLs'!B205	Human LCLs'!B206	Human LCLs'!B207	7	46	18511	banked back by WL 8/25/20	
+205	3	C	Human LCLs'!C205	Human LCLs'!C206	Human LCLs'!C207	7	47	18511		
+205	4	D	Human LCLs'!D205	Human LCLs'!D206	Human LCLs'!D207	7	48	18511		
+205	5	E	Human LCLs'!E205	Human LCLs'!E206	Human LCLs'!E207	7	49	18511		
+205	6	F	Human LCLs'!F205	Human LCLs'!F206	Human LCLs'!F207	7	50	18511		
+205	7	G	Human LCLs'!G205	Human LCLs'!G206	Human LCLs'!G207	7	51	18511		
+205	8	H	Human LCLs'!H205	Human LCLs'!H206	Human LCLs'!H207	7	52	18511		
+205	9	I	Human LCLs'!I205	Human LCLs'!I206	Human LCLs'!I207	7	53	18511		
+205	10	J	Human LCLs'!J205	Human LCLs'!J206	Human LCLs'!J207	7	54	18499		
+208	2	B	Human LCLs'!B208	Human LCLs'!B209	Human LCLs'!B210	7	55	19257		
+208	3	C	Human LCLs'!C208	Human LCLs'!C209	Human LCLs'!C210	7	56	19257		
+208	4	D	Human LCLs'!D208	Human LCLs'!D209	Human LCLs'!D210	7	57	19257		
+208	5	E	Human LCLs'!E208	Human LCLs'!E209	Human LCLs'!E210	7	58	19257		
+208	6	F	Human LCLs'!F208	Human LCLs'!F209	Human LCLs'!F210	7	59	19257		
+208	7	G	Human LCLs'!G208	Human LCLs'!G209	Human LCLs'!G210	7	60	19257		
+208	8	H	Human LCLs'!H208	Human LCLs'!H209	Human LCLs'!H210	7	61	18862		
+208	9	I	Human LCLs'!I208	Human LCLs'!I209	Human LCLs'!I210	7	62	18913		
+208	10	J	Human LCLs'!J208	Human LCLs'!J209	Human LCLs'!J210	7	63	18916		
+211	2	B	Human LCLs'!B211	Human LCLs'!B212	Human LCLs'!B213	7	64	18852		
+211	3	C	Human LCLs'!C211	Human LCLs'!C212	Human LCLs'!C213	7	65	18852		
+211	4	D	Human LCLs'!D211	Human LCLs'!D212	Human LCLs'!D213	7	66	18852		
+211	5	E	Human LCLs'!E211	Human LCLs'!E212	Human LCLs'!E213	7	67	18852		
+211	6	F	Human LCLs'!F211	Human LCLs'!F212	Human LCLs'!F213	7	68	18852		
+211	7	G	Human LCLs'!G211	Human LCLs'!G212	Human LCLs'!G213	7	69	18852		
+211	8	H	Human LCLs'!H211	Human LCLs'!H212	Human LCLs'!H213	7	70	18852		
+211	9	I	Human LCLs'!I211	Human LCLs'!I212	Human LCLs'!I213	7	71	19238	for knockdown	
+211	10	J	Human LCLs'!J211	Human LCLs'!J212	Human LCLs'!J213	7	72	19238	for knockdown	
+214	2	B	Human LCLs'!B214	Human LCLs'!B215	Human LCLs'!B216	7	73	19192		
+214	3	C	Human LCLs'!C214	Human LCLs'!C215	Human LCLs'!C216	7	74	19192		
+214	4	D	Human LCLs'!D214	Human LCLs'!D215	Human LCLs'!D216	7	75	19192		
+214	5	E	Human LCLs'!E214	Human LCLs'!E215	Human LCLs'!E216	7	76	19192		
+214	6	F	Human LCLs'!F214	Human LCLs'!F215	Human LCLs'!F216	7	77	19192		
+214	7	G	Human LCLs'!G214	Human LCLs'!G215	Human LCLs'!G216	7	78	18517		
+214	8	H	Human LCLs'!H214	Human LCLs'!H215	Human LCLs'!H216	7	79	18517		
+214	9	I	Human LCLs'!I214	Human LCLs'!I215	Human LCLs'!I216	7	80	18517		
+214	10	J	Human LCLs'!J214	Human LCLs'!J215	Human LCLs'!J216	7	81	19238	for knockdown	
+221	2	B	Human LCLs'!B221	Human LCLs'!B222	Human LCLs'!B223	8	1	19201		
+221	3	C	Human LCLs'!C221	Human LCLs'!C222	Human LCLs'!C223	8	2	19201		
+221	4	D	Human LCLs'!D221	Human LCLs'!D222	Human LCLs'!D223	8	3	19201		
+221	5	E	Human LCLs'!E221	Human LCLs'!E222	Human LCLs'!E223	8	4	19201		
+221	6	F	Human LCLs'!F221	Human LCLs'!F222	Human LCLs'!F223	8	5	19201		
+221	7	G	Human LCLs'!G221	Human LCLs'!G222	Human LCLs'!G223	8	6	19201		
+221	8	H	Human LCLs'!H221	Human LCLs'!H222	Human LCLs'!H223	8	7	19201		
+221	9	I	Human LCLs'!I221	Human LCLs'!I222	Human LCLs'!I223	8	8	18861		
+221	10	J	Human LCLs'!J221	Human LCLs'!J222	Human LCLs'!J223	8	9	18498		
+224	2	B	Human LCLs'!B224	Human LCLs'!B225	Human LCLs'!B226	8	10	19222		
+224	3	C	Human LCLs'!C224	Human LCLs'!C225	Human LCLs'!C226	8	11	19222		
+224	4	D	Human LCLs'!D224	Human LCLs'!D225	Human LCLs'!D226	8	12	19222		
+224	5	E	Human LCLs'!E224	Human LCLs'!E225	Human LCLs'!E226	8	13	19222		
+224	6	F	Human LCLs'!F224	Human LCLs'!F225	Human LCLs'!F226	8	14	19222		
+224	7	G	Human LCLs'!G224	Human LCLs'!G225	Human LCLs'!G226	8	15	19222		
+224	8	H	Human LCLs'!H224	Human LCLs'!H225	Human LCLs'!H226	8	16	19222		
+224	9	I	Human LCLs'!I224	Human LCLs'!I225	Human LCLs'!I226	8	17	19222		
+224	10	J	Human LCLs'!J224	Human LCLs'!J225	Human LCLs'!J226	8	18	19222	*Ben took this and is in the midst of stocking a replacement	
+227	2	B	Human LCLs'!B227	Human LCLs'!B228	Human LCLs'!B229	8	19	18517		
+227	3	C	Human LCLs'!C227	Human LCLs'!C228	Human LCLs'!C229	8	20	18517		
+227	4	D	Human LCLs'!D227	Human LCLs'!D228	Human LCLs'!D229	8	21	18517		
+227	5	E	Human LCLs'!E227	Human LCLs'!E228	Human LCLs'!E229	8	22	18517		
+227	6	F	Human LCLs'!F227	Human LCLs'!F228	Human LCLs'!F229	8	23			
+227	7	G	Human LCLs'!G227	Human LCLs'!G228	Human LCLs'!G229	8	24	18853		
+227	8	H	Human LCLs'!H227	Human LCLs'!H228	Human LCLs'!H229	8	25	18853		
+227	9	I	Human LCLs'!I227	Human LCLs'!I228	Human LCLs'!I229	8	26	18853		
+227	10	J	Human LCLs'!J227	Human LCLs'!J228	Human LCLs'!J229	8	27			
+230	2	B	Human LCLs'!B230	Human LCLs'!B231	Human LCLs'!B232	8	28	18858		
+230	3	C	Human LCLs'!C230	Human LCLs'!C231	Human LCLs'!C232	8	29	18858		
+230	4	D	Human LCLs'!D230	Human LCLs'!D231	Human LCLs'!D232	8	30	18858		
+230	5	E	Human LCLs'!E230	Human LCLs'!E231	Human LCLs'!E232	8	31	18858		
+230	6	F	Human LCLs'!F230	Human LCLs'!F231	Human LCLs'!F232	8	32	18498		
+230	7	G	Human LCLs'!G230	Human LCLs'!G231	Human LCLs'!G232	8	33	18498		
+230	8	H	Human LCLs'!H230	Human LCLs'!H231	Human LCLs'!H232	8	34	18498		
+230	9	I	Human LCLs'!I230	Human LCLs'!I231	Human LCLs'!I232	8	35	18498		
+230	10	J	Human LCLs'!J230	Human LCLs'!J231	Human LCLs'!J232	8	36	18498		
+233	2	B	Human LCLs'!B233	Human LCLs'!B234	Human LCLs'!B235	8	37	18505		
+233	3	C	Human LCLs'!C233	Human LCLs'!C234	Human LCLs'!C235	8	38	18505		
+233	4	D	Human LCLs'!D233	Human LCLs'!D234	Human LCLs'!D235	8	39	18505		
+233	5	E	Human LCLs'!E233	Human LCLs'!E234	Human LCLs'!E235	8	40	18505		
+233	6	F	Human LCLs'!F233	Human LCLs'!F234	Human LCLs'!F235	8	41	18505		
+233	7	G	Human LCLs'!G233	Human LCLs'!G234	Human LCLs'!G235	8	42	18505		
+233	8	H	Human LCLs'!H233	Human LCLs'!H234	Human LCLs'!H235	8	43	18505		
+233	9	I	Human LCLs'!I233	Human LCLs'!I234	Human LCLs'!I235	8	44	18505		
+233	10	J	Human LCLs'!J233	Human LCLs'!J234	Human LCLs'!J235	8	45	18505		
+236	2	B	Human LCLs'!B236	Human LCLs'!B237	Human LCLs'!B238	8	46	18858		
+236	3	C	Human LCLs'!C236	Human LCLs'!C237	Human LCLs'!C238	8	47	18858		
+236	4	D	Human LCLs'!D236	Human LCLs'!D237	Human LCLs'!D238	8	48	18858		
+236	5	E	Human LCLs'!E236	Human LCLs'!E237	Human LCLs'!E238	8	49	18858		
+236	6	F	Human LCLs'!F236	Human LCLs'!F237	Human LCLs'!F238	8	50	18858		
+236	7	G	Human LCLs'!G236	Human LCLs'!G237	Human LCLs'!G238	8	51	18858		
+236	8	H	Human LCLs'!H236	Human LCLs'!H237	Human LCLs'!H238	8	52	19140		
+236	9	I	Human LCLs'!I236	Human LCLs'!I237	Human LCLs'!I238	8	53	19140		
+236	10	J	Human LCLs'!J236	Human LCLs'!J237	Human LCLs'!J238	8	54	19140	*Ben took this and is in the midst of stocking a replacement	
+239	2	B	Human LCLs'!B239	Human LCLs'!B240	Human LCLs'!B241	8	55	18498		
+239	3	C	Human LCLs'!C239	Human LCLs'!C240	Human LCLs'!C241	8	56	18498		
+239	4	D	Human LCLs'!D239	Human LCLs'!D240	Human LCLs'!D241	8	57	18498		
+239	5	E	Human LCLs'!E239	Human LCLs'!E240	Human LCLs'!E241	8	58	18498		
+239	6	F	Human LCLs'!F239	Human LCLs'!F240	Human LCLs'!F241	8	59	18498		
+239	7	G	Human LCLs'!G239	Human LCLs'!G240	Human LCLs'!G241	8	60	18498		
+239	8	H	Human LCLs'!H239	Human LCLs'!H240	Human LCLs'!H241	8	61	18498		
+239	9	I	Human LCLs'!I239	Human LCLs'!I240	Human LCLs'!I241	8	62	18498		
+239	10	J	Human LCLs'!J239	Human LCLs'!J240	Human LCLs'!J241	8	63			
+242	2	B	Human LCLs'!B242	Human LCLs'!B243	Human LCLs'!B244	8	64	18519		
+242	3	C	Human LCLs'!C242	Human LCLs'!C243	Human LCLs'!C244	8	65	18519		
+242	4	D	Human LCLs'!D242	Human LCLs'!D243	Human LCLs'!D244	8	66	18519		
+242	5	E	Human LCLs'!E242	Human LCLs'!E243	Human LCLs'!E244	8	67			
+242	6	F	Human LCLs'!F242	Human LCLs'!F243	Human LCLs'!F244	8	68	18592		
+242	7	G	Human LCLs'!G242	Human LCLs'!G243	Human LCLs'!G244	8	69	18592		
+242	8	H	Human LCLs'!H242	Human LCLs'!H243	Human LCLs'!H244	8	70	18592		
+242	9	I	Human LCLs'!I242	Human LCLs'!I243	Human LCLs'!I244	8	71	18592		
+242	10	J	Human LCLs'!J242	Human LCLs'!J243	Human LCLs'!J244	8	72	18592		
+245	2	B	Human LCLs'!B245	Human LCLs'!B246	Human LCLs'!B247	8	73	19223		
+245	3	C	Human LCLs'!C245	Human LCLs'!C246	Human LCLs'!C247	8	74	19223		
+245	4	D	Human LCLs'!D245	Human LCLs'!D246	Human LCLs'!D247	8	75	19223		
+245	5	E	Human LCLs'!E245	Human LCLs'!E246	Human LCLs'!E247	8	76	19223		
+245	6	F	Human LCLs'!F245	Human LCLs'!F246	Human LCLs'!F247	8	77	19223		
+245	7	G	Human LCLs'!G245	Human LCLs'!G246	Human LCLs'!G247	8	78	19223		
+245	8	H	Human LCLs'!H245	Human LCLs'!H246	Human LCLs'!H247	8	79	18862		
+245	9	I	Human LCLs'!I245	Human LCLs'!I246	Human LCLs'!I247	8	80	18862		
+245	10	J	Human LCLs'!J245	Human LCLs'!J246	Human LCLs'!J247	8	81	18862		
+252	2	B	Human LCLs'!B252	Human LCLs'!B253	Human LCLs'!B254	9	1	19102		
+252	3	C	Human LCLs'!C252	Human LCLs'!C253	Human LCLs'!C254	9	2	19102		
+252	4	D	Human LCLs'!D252	Human LCLs'!D253	Human LCLs'!D254	9	3	19102		
+252	5	E	Human LCLs'!E252	Human LCLs'!E253	Human LCLs'!E254	9	4	19102		
+252	6	F	Human LCLs'!F252	Human LCLs'!F253	Human LCLs'!F254	9	5	19238		
+252	7	G	Human LCLs'!G252	Human LCLs'!G253	Human LCLs'!G254	9	6	19238		
+252	8	H	Human LCLs'!H252	Human LCLs'!H253	Human LCLs'!H254	9	7	18508		
+252	9	I	Human LCLs'!I252	Human LCLs'!I253	Human LCLs'!I254	9	8	18508		
+252	10	J	Human LCLs'!J252	Human LCLs'!J253	Human LCLs'!J254	9	9	18508		
+255	2	B	Human LCLs'!B255	Human LCLs'!B256	Human LCLs'!B257	9	10	18505		
+255	3	C	Human LCLs'!C255	Human LCLs'!C256	Human LCLs'!C257	9	11	18508		
+255	4	D	Human LCLs'!D255	Human LCLs'!D256	Human LCLs'!D257	9	12	19204		
+255	5	E	Human LCLs'!E255	Human LCLs'!E256	Human LCLs'!E257	9	13	19143		
+255	6	F	Human LCLs'!F255	Human LCLs'!F256	Human LCLs'!F257	9	14	19143	*Ben took this and is in the midst of stocking a replacement	
+255	7	G	Human LCLs'!G255	Human LCLs'!G256	Human LCLs'!G257	9	15	19143		
+255	8	H	Human LCLs'!H255	Human LCLs'!H256	Human LCLs'!H257	9	16	18323		
+255	9	I	Human LCLs'!I255	Human LCLs'!I256	Human LCLs'!I257	9	17	18323		
+255	10	J	Human LCLs'!J255	Human LCLs'!J256	Human LCLs'!J257	9	18	18323		
+258	2	B	Human LCLs'!B258	Human LCLs'!B259	Human LCLs'!B260	9	19	19131		
+258	3	C	Human LCLs'!C258	Human LCLs'!C259	Human LCLs'!C260	9	20	19131		
+258	4	D	Human LCLs'!D258	Human LCLs'!D259	Human LCLs'!D260	9	21	18502		
+258	5	E	Human LCLs'!E258	Human LCLs'!E259	Human LCLs'!E260	9	22	18502		
+258	6	F	Human LCLs'!F258	Human LCLs'!F259	Human LCLs'!F260	9	23	19160		
+258	7	G	Human LCLs'!G258	Human LCLs'!G259	Human LCLs'!G260	9	24	19160		
+258	8	H	Human LCLs'!H258	Human LCLs'!H259	Human LCLs'!H260	9	25	18499		
+258	9	I	Human LCLs'!I258	Human LCLs'!I259	Human LCLs'!I260	9	26	18499		
+258	10	J	Human LCLs'!J258	Human LCLs'!J259	Human LCLs'!J260	9	27	18855		
+261	2	B	Human LCLs'!B261	Human LCLs'!B262	Human LCLs'!B263	9	28	18912		
+261	3	C	Human LCLs'!C261	Human LCLs'!C262	Human LCLs'!C263	9	29	18912		
+261	4	D	Human LCLs'!D261	Human LCLs'!D262	Human LCLs'!D263	9	30	18510	*Ben took this and is in the midst of stocking a replacement	
+261	5	E	Human LCLs'!E261	Human LCLs'!E262	Human LCLs'!E263	9	31			
+261	6	F	Human LCLs'!F261	Human LCLs'!F262	Human LCLs'!F263	9	32	18862		
+261	7	G	Human LCLs'!G261	Human LCLs'!G262	Human LCLs'!G263	9	33	18862		
+261	8	H	Human LCLs'!H261	Human LCLs'!H262	Human LCLs'!H263	9	34	18862		
+261	9	I	Human LCLs'!I261	Human LCLs'!I262	Human LCLs'!I263	9	35	18862		
+261	10	J	Human LCLs'!J261	Human LCLs'!J262	Human LCLs'!J263	9	36	18862		
+264	2	B	Human LCLs'!B264	Human LCLs'!B265	Human LCLs'!B266	9	37	19141		
+264	3	C	Human LCLs'!C264	Human LCLs'!C265	Human LCLs'!C266	9	38	19141		
+264	4	D	Human LCLs'!D264	Human LCLs'!D265	Human LCLs'!D266	9	39	19141		
+264	5	E	Human LCLs'!E264	Human LCLs'!E265	Human LCLs'!E266	9	40	19141		
+264	6	F	Human LCLs'!F264	Human LCLs'!F265	Human LCLs'!F266	9	41	19141		
+264	7	G	Human LCLs'!G264	Human LCLs'!G265	Human LCLs'!G266	9	42	19141		
+264	8	H	Human LCLs'!H264	Human LCLs'!H265	Human LCLs'!H266	9	43	19141		
+264	9	I	Human LCLs'!I264	Human LCLs'!I265	Human LCLs'!I266	9	44	19141		
+264	10	J	Human LCLs'!J264	Human LCLs'!J265	Human LCLs'!J266	9	45	19141		
+267	2	B	Human LCLs'!B267	Human LCLs'!B268	Human LCLs'!B269	9	46	19204		
+267	3	C	Human LCLs'!C267	Human LCLs'!C268	Human LCLs'!C269	9	47	19204		
+267	4	D	Human LCLs'!D267	Human LCLs'!D268	Human LCLs'!D269	9	48	19204		
+267	5	E	Human LCLs'!E267	Human LCLs'!E268	Human LCLs'!E269	9	49	19204		
+267	6	F	Human LCLs'!F267	Human LCLs'!F268	Human LCLs'!F269	9	50	19204		
+267	7	G	Human LCLs'!G267	Human LCLs'!G268	Human LCLs'!G269	9	51	19204		
+267	8	H	Human LCLs'!H267	Human LCLs'!H268	Human LCLs'!H269	9	52	19204		
+267	9	I	Human LCLs'!I267	Human LCLs'!I268	Human LCLs'!I269	9	53	19204		
+267	10	J	Human LCLs'!J267	Human LCLs'!J268	Human LCLs'!J269	9	54			
+270	2	B	Human LCLs'!B270	Human LCLs'!B271	Human LCLs'!B272	9	55	18499	*Ben took this and is in the midst of stocking a replacement	
+270	3	C	Human LCLs'!C270	Human LCLs'!C271	Human LCLs'!C272	9	56	18499		
+270	4	D	Human LCLs'!D270	Human LCLs'!D271	Human LCLs'!D272	9	57	18499		
+270	5	E	Human LCLs'!E270	Human LCLs'!E271	Human LCLs'!E272	9	58	18499		
+270	6	F	Human LCLs'!F270	Human LCLs'!F271	Human LCLs'!F272	9	59	18499		
+270	7	G	Human LCLs'!G270	Human LCLs'!G271	Human LCLs'!G272	9	60	18499		
+270	8	H	Human LCLs'!H270	Human LCLs'!H271	Human LCLs'!H272	9	61	18499		
+270	9	I	Human LCLs'!I270	Human LCLs'!I271	Human LCLs'!I272	9	62	19193		
+270	10	J	Human LCLs'!J270	Human LCLs'!J271	Human LCLs'!J272	9	63	19193		
+273	2	B	Human LCLs'!B273	Human LCLs'!B274	Human LCLs'!B275	9	64	18498	*Ben took this and is in the midst of stocking a replacement	
+273	3	C	Human LCLs'!C273	Human LCLs'!C274	Human LCLs'!C275	9	65	18498		
+273	4	D	Human LCLs'!D273	Human LCLs'!D274	Human LCLs'!D275	9	66	18498		
+273	5	E	Human LCLs'!E273	Human LCLs'!E274	Human LCLs'!E275	9	67	18498		
+273	6	F	Human LCLs'!F273	Human LCLs'!F274	Human LCLs'!F275	9	68	18498		
+273	7	G	Human LCLs'!G273	Human LCLs'!G274	Human LCLs'!G275	9	69			
+273	8	H	Human LCLs'!H273	Human LCLs'!H274	Human LCLs'!H275	9	70			
+273	9	I	Human LCLs'!I273	Human LCLs'!I274	Human LCLs'!I275	9	71			
+273	10	J	Human LCLs'!J273	Human LCLs'!J274	Human LCLs'!J275	9	72			
+276	2	B	Human LCLs'!B276	Human LCLs'!B277	Human LCLs'!B278	9	73	19114		
+276	3	C	Human LCLs'!C276	Human LCLs'!C277	Human LCLs'!C278	9	74	19114		
+276	4	D	Human LCLs'!D276	Human LCLs'!D277	Human LCLs'!D278	9	75	19114		
+276	5	E	Human LCLs'!E276	Human LCLs'!E277	Human LCLs'!E278	9	76	19114		
+276	6	F	Human LCLs'!F276	Human LCLs'!F277	Human LCLs'!F278	9	77	19114		
+276	7	G	Human LCLs'!G276	Human LCLs'!G277	Human LCLs'!G278	9	78	19114		
+276	8	H	Human LCLs'!H276	Human LCLs'!H277	Human LCLs'!H278	9	79	19114		
+276	9	I	Human LCLs'!I276	Human LCLs'!I277	Human LCLs'!I278	9	80	19114		
+276	10	J	Human LCLs'!J276	Human LCLs'!J277	Human LCLs'!J278	9	81	19114		
+283	2	B	Human LCLs'!B283	Human LCLs'!B284	Human LCLs'!B285	10	1	18508		
+283	3	C	Human LCLs'!C283	Human LCLs'!C284	Human LCLs'!C285	10	2	18508		
+283	4	D	Human LCLs'!D283	Human LCLs'!D284	Human LCLs'!D285	10	3	18508		
+283	5	E	Human LCLs'!E283	Human LCLs'!E284	Human LCLs'!E285	10	4	18508		
+283	6	F	Human LCLs'!F283	Human LCLs'!F284	Human LCLs'!F285	10	5	18508		
+283	7	G	Human LCLs'!G283	Human LCLs'!G284	Human LCLs'!G285	10	6	18508		
+283	8	H	Human LCLs'!H283	Human LCLs'!H284	Human LCLs'!H285	10	7	18508		
+283	9	I	Human LCLs'!I283	Human LCLs'!I284	Human LCLs'!I285	10	8	18508		
+283	10	J	Human LCLs'!J283	Human LCLs'!J284	Human LCLs'!J285	10	9	18508		
+286	2	B	Human LCLs'!B286	Human LCLs'!B287	Human LCLs'!B288	10	10	18522		
+286	3	C	Human LCLs'!C286	Human LCLs'!C287	Human LCLs'!C288	10	11	18522		
+286	4	D	Human LCLs'!D286	Human LCLs'!D287	Human LCLs'!D288	10	12	18522		
+286	5	E	Human LCLs'!E286	Human LCLs'!E287	Human LCLs'!E288	10	13	18522		
+286	6	F	Human LCLs'!F286	Human LCLs'!F287	Human LCLs'!F288	10	14	18522		
+286	7	G	Human LCLs'!G286	Human LCLs'!G287	Human LCLs'!G288	10	15	18522		
+286	8	H	Human LCLs'!H286	Human LCLs'!H287	Human LCLs'!H288	10	16	18522		
+286	9	I	Human LCLs'!I286	Human LCLs'!I287	Human LCLs'!I288	10	17	18522		
+286	10	J	Human LCLs'!J286	Human LCLs'!J287	Human LCLs'!J288	10	18			
+289	2	B	Human LCLs'!B289	Human LCLs'!B290	Human LCLs'!B291	10	19	18855	banked back by WL 8/25/20	
+289	3	C	Human LCLs'!C289	Human LCLs'!C290	Human LCLs'!C291	10	20	18855		
+289	4	D	Human LCLs'!D289	Human LCLs'!D290	Human LCLs'!D291	10	21	18855		
+289	5	E	Human LCLs'!E289	Human LCLs'!E290	Human LCLs'!E291	10	22	18855		
+289	6	F	Human LCLs'!F289	Human LCLs'!F290	Human LCLs'!F291	10	23	18855		
+289	7	G	Human LCLs'!G289	Human LCLs'!G290	Human LCLs'!G291	10	24	18855		
+289	8	H	Human LCLs'!H289	Human LCLs'!H290	Human LCLs'!H291	10	25	18855		
+289	9	I	Human LCLs'!I289	Human LCLs'!I290	Human LCLs'!I291	10	26	18855		
+289	10	J	Human LCLs'!J289	Human LCLs'!J290	Human LCLs'!J291	10	27	18855		
+292	2	B	Human LCLs'!B292	Human LCLs'!B293	Human LCLs'!B294	10	28	18505		
+292	3	C	Human LCLs'!C292	Human LCLs'!C293	Human LCLs'!C294	10	29	18505		
+292	4	D	Human LCLs'!D292	Human LCLs'!D293	Human LCLs'!D294	10	30	18505		
+292	5	E	Human LCLs'!E292	Human LCLs'!E293	Human LCLs'!E294	10	31	18505		
+292	6	F	Human LCLs'!F292	Human LCLs'!F293	Human LCLs'!F294	10	32	18505		
+292	7	G	Human LCLs'!G292	Human LCLs'!G293	Human LCLs'!G294	10	33	18505		
+292	8	H	Human LCLs'!H292	Human LCLs'!H293	Human LCLs'!H294	10	34	18505		
+292	9	I	Human LCLs'!I292	Human LCLs'!I293	Human LCLs'!I294	10	35	18505		
+292	10	J	Human LCLs'!J292	Human LCLs'!J293	Human LCLs'!J294	10	36	18505		
+295	2	B	Human LCLs'!B295	Human LCLs'!B296	Human LCLs'!B297	10	37	19192		
+295	3	C	Human LCLs'!C295	Human LCLs'!C296	Human LCLs'!C297	10	38	19192		
+295	4	D	Human LCLs'!D295	Human LCLs'!D296	Human LCLs'!D297	10	39	19192		
+295	5	E	Human LCLs'!E295	Human LCLs'!E296	Human LCLs'!E297	10	40	19192		
+295	6	F	Human LCLs'!F295	Human LCLs'!F296	Human LCLs'!F297	10	41	19192		
+295	7	G	Human LCLs'!G295	Human LCLs'!G296	Human LCLs'!G297	10	42	19192		
+295	8	H	Human LCLs'!H295	Human LCLs'!H296	Human LCLs'!H297	10	43	19192		
+295	9	I	Human LCLs'!I295	Human LCLs'!I296	Human LCLs'!I297	10	44	18516		
+295	10	J	Human LCLs'!J295	Human LCLs'!J296	Human LCLs'!J297	10	45	18516		
+298	2	B	Human LCLs'!B298	Human LCLs'!B299	Human LCLs'!B300	10	46	18913		
+298	3	C	Human LCLs'!C298	Human LCLs'!C299	Human LCLs'!C300	10	47	18913		
+298	4	D	Human LCLs'!D298	Human LCLs'!D299	Human LCLs'!D300	10	48	18913		
+298	5	E	Human LCLs'!E298	Human LCLs'!E299	Human LCLs'!E300	10	49	18913		
+298	6	F	Human LCLs'!F298	Human LCLs'!F299	Human LCLs'!F300	10	50	18913		
+298	7	G	Human LCLs'!G298	Human LCLs'!G299	Human LCLs'!G300	10	51	18913		
+298	8	H	Human LCLs'!H298	Human LCLs'!H299	Human LCLs'!H300	10	52	18516		
+298	9	I	Human LCLs'!I298	Human LCLs'!I299	Human LCLs'!I300	10	53	18516		
+298	10	J	Human LCLs'!J298	Human LCLs'!J299	Human LCLs'!J300	10	54	18516		
+301	2	B	Human LCLs'!B301	Human LCLs'!B302	Human LCLs'!B303	10	55	18504		
+301	3	C	Human LCLs'!C301	Human LCLs'!C302	Human LCLs'!C303	10	56	18504		
+301	4	D	Human LCLs'!D301	Human LCLs'!D302	Human LCLs'!D303	10	57	18504		
+301	5	E	Human LCLs'!E301	Human LCLs'!E302	Human LCLs'!E303	10	58	18504		
+301	6	F	Human LCLs'!F301	Human LCLs'!F302	Human LCLs'!F303	10	59	18504		
+301	7	G	Human LCLs'!G301	Human LCLs'!G302	Human LCLs'!G303	10	60	18504		
+301	8	H	Human LCLs'!H301	Human LCLs'!H302	Human LCLs'!H303	10	61			
+301	9	I	Human LCLs'!I301	Human LCLs'!I302	Human LCLs'!I303	10	62			
+301	10	J	Human LCLs'!J301	Human LCLs'!J302	Human LCLs'!J303	10	63			
+304	2	B	Human LCLs'!B304	Human LCLs'!B305	Human LCLs'!B306	10	64	19238		
+304	3	C	Human LCLs'!C304	Human LCLs'!C305	Human LCLs'!C306	10	65	19238		
+304	4	D	Human LCLs'!D304	Human LCLs'!D305	Human LCLs'!D306	10	66	19238		
+304	5	E	Human LCLs'!E304	Human LCLs'!E305	Human LCLs'!E306	10	67	19238		
+304	6	F	Human LCLs'!F304	Human LCLs'!F305	Human LCLs'!F306	10	68	19238		
+304	7	G	Human LCLs'!G304	Human LCLs'!G305	Human LCLs'!G306	10	69	19238		
+304	8	H	Human LCLs'!H304	Human LCLs'!H305	Human LCLs'!H306	10	70	19238		
+304	9	I	Human LCLs'!I304	Human LCLs'!I305	Human LCLs'!I306	10	71	19238		
+304	10	J	Human LCLs'!J304	Human LCLs'!J305	Human LCLs'!J306	10	72	19238		
+307	2	B	Human LCLs'!B307	Human LCLs'!B308	Human LCLs'!B309	10	73	19103		
+307	3	C	Human LCLs'!C307	Human LCLs'!C308	Human LCLs'!C309	10	74	19103		
+307	4	D	Human LCLs'!D307	Human LCLs'!D308	Human LCLs'!D309	10	75	19103		
+307	5	E	Human LCLs'!E307	Human LCLs'!E308	Human LCLs'!E309	10	76	19103		
+307	6	F	Human LCLs'!F307	Human LCLs'!F308	Human LCLs'!F309	10	77	19103		
+307	7	G	Human LCLs'!G307	Human LCLs'!G308	Human LCLs'!G309	10	78	19103		
+307	8	H	Human LCLs'!H307	Human LCLs'!H308	Human LCLs'!H309	10	79	19103		
+307	9	I	Human LCLs'!I307	Human LCLs'!I308	Human LCLs'!I309	10	80	19103		
+307	10	J	Human LCLs'!J307	Human LCLs'!J308	Human LCLs'!J309	10	81	19103		
+314	2	B	Human LCLs'!B314	Human LCLs'!B315	Human LCLs'!B316	11	1	18509		
+314	3	C	Human LCLs'!C314	Human LCLs'!C315	Human LCLs'!C316	11	2	18509		
+314	4	D	Human LCLs'!D314	Human LCLs'!D315	Human LCLs'!D316	11	3	18509		
+314	5	E	Human LCLs'!E314	Human LCLs'!E315	Human LCLs'!E316	11	4	18509		
+314	6	F	Human LCLs'!F314	Human LCLs'!F315	Human LCLs'!F316	11	5	18509		
+314	7	G	Human LCLs'!G314	Human LCLs'!G315	Human LCLs'!G316	11	6	18509		
+314	8	H	Human LCLs'!H314	Human LCLs'!H315	Human LCLs'!H316	11	7	18509		
+314	9	I	Human LCLs'!I314	Human LCLs'!I315	Human LCLs'!I316	11	8	18509		
+314	10	J	Human LCLs'!J314	Human LCLs'!J315	Human LCLs'!J316	11	9	18509		
+317	2	B	Human LCLs'!B317	Human LCLs'!B318	Human LCLs'!B319	11	10	18503		
+317	3	C	Human LCLs'!C317	Human LCLs'!C318	Human LCLs'!C319	11	11	18503		
+317	4	D	Human LCLs'!D317	Human LCLs'!D318	Human LCLs'!D319	11	12	18503		
+317	5	E	Human LCLs'!E317	Human LCLs'!E318	Human LCLs'!E319	11	13	18503		
+317	6	F	Human LCLs'!F317	Human LCLs'!F318	Human LCLs'!F319	11	14	18503		
+317	7	G	Human LCLs'!G317	Human LCLs'!G318	Human LCLs'!G319	11	15	18503		
+317	8	H	Human LCLs'!H317	Human LCLs'!H318	Human LCLs'!H319	11	16	18503		
+317	9	I	Human LCLs'!I317	Human LCLs'!I318	Human LCLs'!I319	11	17	18503		
+317	10	J	Human LCLs'!J317	Human LCLs'!J318	Human LCLs'!J319	11	18	18503		
+320	2	B	Human LCLs'!B320	Human LCLs'!B321	Human LCLs'!B322	11	19	18872		
+320	3	C	Human LCLs'!C320	Human LCLs'!C321	Human LCLs'!C322	11	20	18872		
+320	4	D	Human LCLs'!D320	Human LCLs'!D321	Human LCLs'!D322	11	21	18872		
+320	5	E	Human LCLs'!E320	Human LCLs'!E321	Human LCLs'!E322	11	22	18872		
+320	6	F	Human LCLs'!F320	Human LCLs'!F321	Human LCLs'!F322	11	23	18872		
+320	7	G	Human LCLs'!G320	Human LCLs'!G321	Human LCLs'!G322	11	24	18872		
+320	8	H	Human LCLs'!H320	Human LCLs'!H321	Human LCLs'!H322	11	25	18872		
+320	9	I	Human LCLs'!I320	Human LCLs'!I321	Human LCLs'!I322	11	26	18872		
+320	10	J	Human LCLs'!J320	Human LCLs'!J321	Human LCLs'!J322	11	27			
+323	2	B	Human LCLs'!B323	Human LCLs'!B324	Human LCLs'!B325	11	28	19211		
+323	3	C	Human LCLs'!C323	Human LCLs'!C324	Human LCLs'!C325	11	29	19211		
+323	4	D	Human LCLs'!D323	Human LCLs'!D324	Human LCLs'!D325	11	30	19211		
+323	5	E	Human LCLs'!E323	Human LCLs'!E324	Human LCLs'!E325	11	31	19211		
+323	6	F	Human LCLs'!F323	Human LCLs'!F324	Human LCLs'!F325	11	32	19211		
+323	7	G	Human LCLs'!G323	Human LCLs'!G324	Human LCLs'!G325	11	33	19211		
+323	8	H	Human LCLs'!H323	Human LCLs'!H324	Human LCLs'!H325	11	34	19211		
+323	9	I	Human LCLs'!I323	Human LCLs'!I324	Human LCLs'!I325	11	35	19211		
+323	10	J	Human LCLs'!J323	Human LCLs'!J324	Human LCLs'!J325	11	36	19211		
+326	2	B	Human LCLs'!B326	Human LCLs'!B327	Human LCLs'!B328	11	37	19202		
+326	3	C	Human LCLs'!C326	Human LCLs'!C327	Human LCLs'!C328	11	38	19202		
+326	4	D	Human LCLs'!D326	Human LCLs'!D327	Human LCLs'!D328	11	39	19202		
+326	5	E	Human LCLs'!E326	Human LCLs'!E327	Human LCLs'!E328	11	40	19202		
+326	6	F	Human LCLs'!F326	Human LCLs'!F327	Human LCLs'!F328	11	41	19202		
+326	7	G	Human LCLs'!G326	Human LCLs'!G327	Human LCLs'!G328	11	42	19202		
+326	8	H	Human LCLs'!H326	Human LCLs'!H327	Human LCLs'!H328	11	43	19202		
+326	9	I	Human LCLs'!I326	Human LCLs'!I327	Human LCLs'!I328	11	44	19202		
+326	10	J	Human LCLs'!J326	Human LCLs'!J327	Human LCLs'!J328	11	45	19202		
+329	2	B	Human LCLs'!B329	Human LCLs'!B330	Human LCLs'!B331	11	46	19142		
+329	3	C	Human LCLs'!C329	Human LCLs'!C330	Human LCLs'!C331	11	47	19142		
+329	4	D	Human LCLs'!D329	Human LCLs'!D330	Human LCLs'!D331	11	48	19142		
+329	5	E	Human LCLs'!E329	Human LCLs'!E330	Human LCLs'!E331	11	49	19142		
+329	6	F	Human LCLs'!F329	Human LCLs'!F330	Human LCLs'!F331	11	50	19142		
+329	7	G	Human LCLs'!G329	Human LCLs'!G330	Human LCLs'!G331	11	51	19142		
+329	8	H	Human LCLs'!H329	Human LCLs'!H330	Human LCLs'!H331	11	52	19142		
+329	9	I	Human LCLs'!I329	Human LCLs'!I330	Human LCLs'!I331	11	53	19142		
+329	10	J	Human LCLs'!J329	Human LCLs'!J330	Human LCLs'!J331	11	54	19142		
+332	2	B	Human LCLs'!B332	Human LCLs'!B333	Human LCLs'!B334	11	55	19145		
+332	3	C	Human LCLs'!C332	Human LCLs'!C333	Human LCLs'!C334	11	56	19145		
+332	4	D	Human LCLs'!D332	Human LCLs'!D333	Human LCLs'!D334	11	57	19145		
+332	5	E	Human LCLs'!E332	Human LCLs'!E333	Human LCLs'!E334	11	58	19145		
+332	6	F	Human LCLs'!F332	Human LCLs'!F333	Human LCLs'!F334	11	59	19145		
+332	7	G	Human LCLs'!G332	Human LCLs'!G333	Human LCLs'!G334	11	60	19145		
+332	8	H	Human LCLs'!H332	Human LCLs'!H333	Human LCLs'!H334	11	61	19145		
+332	9	I	Human LCLs'!I332	Human LCLs'!I333	Human LCLs'!I334	11	62	19145		
+332	10	J	Human LCLs'!J332	Human LCLs'!J333	Human LCLs'!J334	11	63			
+335	2	B	Human LCLs'!B335	Human LCLs'!B336	Human LCLs'!B337	11	64	18500		
+335	3	C	Human LCLs'!C335	Human LCLs'!C336	Human LCLs'!C337	11	65	18500		
+335	4	D	Human LCLs'!D335	Human LCLs'!D336	Human LCLs'!D337	11	66	18500		
+335	5	E	Human LCLs'!E335	Human LCLs'!E336	Human LCLs'!E337	11	67	18500		
+335	6	F	Human LCLs'!F335	Human LCLs'!F336	Human LCLs'!F337	11	68	18500		
+335	7	G	Human LCLs'!G335	Human LCLs'!G336	Human LCLs'!G337	11	69	18500		
+335	8	H	Human LCLs'!H335	Human LCLs'!H336	Human LCLs'!H337	11	70	18500		
+335	9	I	Human LCLs'!I335	Human LCLs'!I336	Human LCLs'!I337	11	71			
+335	10	J	Human LCLs'!J335	Human LCLs'!J336	Human LCLs'!J337	11	72			
+338	2	B	Human LCLs'!B338	Human LCLs'!B339	Human LCLs'!B340	11	73	19100		
+338	3	C	Human LCLs'!C338	Human LCLs'!C339	Human LCLs'!C340	11	74	19100		
+338	4	D	Human LCLs'!D338	Human LCLs'!D339	Human LCLs'!D340	11	75	19100		
+338	5	E	Human LCLs'!E338	Human LCLs'!E339	Human LCLs'!E340	11	76	19100		
+338	6	F	Human LCLs'!F338	Human LCLs'!F339	Human LCLs'!F340	11	77	19100		
+338	7	G	Human LCLs'!G338	Human LCLs'!G339	Human LCLs'!G340	11	78	19100		
+338	8	H	Human LCLs'!H338	Human LCLs'!H339	Human LCLs'!H340	11	79	19100		
+338	9	I	Human LCLs'!I338	Human LCLs'!I339	Human LCLs'!I340	11	80	19100		
+338	10	J	Human LCLs'!J338	Human LCLs'!J339	Human LCLs'!J340	11	81			
+345	2	B	Human LCLs'!B345	Human LCLs'!B346	Human LCLs'!B347	12	1	18518		
+345	3	C	Human LCLs'!C345	Human LCLs'!C346	Human LCLs'!C347	12	2	18518		
+345	4	D	Human LCLs'!D345	Human LCLs'!D346	Human LCLs'!D347	12	3	18518		
+345	5	E	Human LCLs'!E345	Human LCLs'!E346	Human LCLs'!E347	12	4	18518		
+345	6	F	Human LCLs'!F345	Human LCLs'!F346	Human LCLs'!F347	12	5	18518		
+345	7	G	Human LCLs'!G345	Human LCLs'!G346	Human LCLs'!G347	12	6	18518		
+345	8	H	Human LCLs'!H345	Human LCLs'!H346	Human LCLs'!H347	12	7	18518		
+345	9	I	Human LCLs'!I345	Human LCLs'!I346	Human LCLs'!I347	12	8	18518		
+345	10	J	Human LCLs'!J345	Human LCLs'!J346	Human LCLs'!J347	12	9	19153		
+348	2	B	Human LCLs'!B348	Human LCLs'!B349	Human LCLs'!B350	12	10	19132		
+348	3	C	Human LCLs'!C348	Human LCLs'!C349	Human LCLs'!C350	12	11	19132		
+348	4	D	Human LCLs'!D348	Human LCLs'!D349	Human LCLs'!D350	12	12	19132		
+348	5	E	Human LCLs'!E348	Human LCLs'!E349	Human LCLs'!E350	12	13	19132		
+348	6	F	Human LCLs'!F348	Human LCLs'!F349	Human LCLs'!F350	12	14	19132		
+348	7	G	Human LCLs'!G348	Human LCLs'!G349	Human LCLs'!G350	12	15	19132		
+348	8	H	Human LCLs'!H348	Human LCLs'!H349	Human LCLs'!H350	12	16	19132		
+348	9	I	Human LCLs'!I348	Human LCLs'!I349	Human LCLs'!I350	12	17	19132		
+348	10	J	Human LCLs'!J348	Human LCLs'!J349	Human LCLs'!J350	12	18	19132		
+351	2	B	Human LCLs'!B351	Human LCLs'!B352	Human LCLs'!B353	12	19	19129		
+351	3	C	Human LCLs'!C351	Human LCLs'!C352	Human LCLs'!C353	12	20	19129		
+351	4	D	Human LCLs'!D351	Human LCLs'!D352	Human LCLs'!D353	12	21	19129		
+351	5	E	Human LCLs'!E351	Human LCLs'!E352	Human LCLs'!E353	12	22	19129		
+351	6	F	Human LCLs'!F351	Human LCLs'!F352	Human LCLs'!F353	12	23	19129		
+351	7	G	Human LCLs'!G351	Human LCLs'!G352	Human LCLs'!G353	12	24	19129		
+351	8	H	Human LCLs'!H351	Human LCLs'!H352	Human LCLs'!H353	12	25	19129		
+351	9	I	Human LCLs'!I351	Human LCLs'!I352	Human LCLs'!I353	12	26	19129		
+351	10	J	Human LCLs'!J351	Human LCLs'!J352	Human LCLs'!J353	12	27	19129		
+354	2	B	Human LCLs'!B354	Human LCLs'!B355	Human LCLs'!B356	12	28	18521		
+354	3	C	Human LCLs'!C354	Human LCLs'!C355	Human LCLs'!C356	12	29	18521		
+354	4	D	Human LCLs'!D354	Human LCLs'!D355	Human LCLs'!D356	12	30	18521		
+354	5	E	Human LCLs'!E354	Human LCLs'!E355	Human LCLs'!E356	12	31	18521		
+354	6	F	Human LCLs'!F354	Human LCLs'!F355	Human LCLs'!F356	12	32	18521		
+354	7	G	Human LCLs'!G354	Human LCLs'!G355	Human LCLs'!G356	12	33	18521		
+354	8	H	Human LCLs'!H354	Human LCLs'!H355	Human LCLs'!H356	12	34	18521		
+354	9	I	Human LCLs'!I354	Human LCLs'!I355	Human LCLs'!I356	12	35	18521		
+354	10	J	Human LCLs'!J354	Human LCLs'!J355	Human LCLs'!J356	12	36	18521		
+357	2	B	Human LCLs'!B357	Human LCLs'!B358	Human LCLs'!B359	12	37	18515		
+357	3	C	Human LCLs'!C357	Human LCLs'!C358	Human LCLs'!C359	12	38	18515		
+357	4	D	Human LCLs'!D357	Human LCLs'!D358	Human LCLs'!D359	12	39	18515		
+357	5	E	Human LCLs'!E357	Human LCLs'!E358	Human LCLs'!E359	12	40	18515		
+357	6	F	Human LCLs'!F357	Human LCLs'!F358	Human LCLs'!F359	12	41	18515		
+357	7	G	Human LCLs'!G357	Human LCLs'!G358	Human LCLs'!G359	12	42	18515		
+357	8	H	Human LCLs'!H357	Human LCLs'!H358	Human LCLs'!H359	12	43	18515		
+357	9	I	Human LCLs'!I357	Human LCLs'!I358	Human LCLs'!I359	12	44	18489		
+357	10	J	Human LCLs'!J357	Human LCLs'!J358	Human LCLs'!J359	12	45	18489		
+360	2	B	Human LCLs'!B360	Human LCLs'!B361	Human LCLs'!B362	12	46	19194		
+360	3	C	Human LCLs'!C360	Human LCLs'!C361	Human LCLs'!C362	12	47	19194		
+360	4	D	Human LCLs'!D360	Human LCLs'!D361	Human LCLs'!D362	12	48	19194		
+360	5	E	Human LCLs'!E360	Human LCLs'!E361	Human LCLs'!E362	12	49	19194		
+360	6	F	Human LCLs'!F360	Human LCLs'!F361	Human LCLs'!F362	12	50	19194		
+360	7	G	Human LCLs'!G360	Human LCLs'!G361	Human LCLs'!G362	12	51	19194		
+360	8	H	Human LCLs'!H360	Human LCLs'!H361	Human LCLs'!H362	12	52	19194		
+360	9	I	Human LCLs'!I360	Human LCLs'!I361	Human LCLs'!I362	12	53	19194		
+360	10	J	Human LCLs'!J360	Human LCLs'!J361	Human LCLs'!J362	12	54	19194		
+363	2	B	Human LCLs'!B363	Human LCLs'!B364	Human LCLs'!B365	12	55	19131		
+363	3	C	Human LCLs'!C363	Human LCLs'!C364	Human LCLs'!C365	12	56	19131		
+363	4	D	Human LCLs'!D363	Human LCLs'!D364	Human LCLs'!D365	12	57	19131		
+363	5	E	Human LCLs'!E363	Human LCLs'!E364	Human LCLs'!E365	12	58	19131		
+363	6	F	Human LCLs'!F363	Human LCLs'!F364	Human LCLs'!F365	12	59	19119		
+363	7	G	Human LCLs'!G363	Human LCLs'!G364	Human LCLs'!G365	12	60	19119		
+363	8	H	Human LCLs'!H363	Human LCLs'!H364	Human LCLs'!H365	12	61	19119		
+363	9	I	Human LCLs'!I363	Human LCLs'!I364	Human LCLs'!I365	12	62	19119		
+363	10	J	Human LCLs'!J363	Human LCLs'!J364	Human LCLs'!J365	12	63	19119		
+366	2	B	Human LCLs'!B366	Human LCLs'!B367	Human LCLs'!B368	12	64	18519		
+366	3	C	Human LCLs'!C366	Human LCLs'!C367	Human LCLs'!C368	12	65	18519		
+366	4	D	Human LCLs'!D366	Human LCLs'!D367	Human LCLs'!D368	12	66	18519		
+366	5	E	Human LCLs'!E366	Human LCLs'!E367	Human LCLs'!E368	12	67	18519		
+366	6	F	Human LCLs'!F366	Human LCLs'!F367	Human LCLs'!F368	12	68	19101		
+366	7	G	Human LCLs'!G366	Human LCLs'!G367	Human LCLs'!G368	12	69	19101		
+366	8	H	Human LCLs'!H366	Human LCLs'!H367	Human LCLs'!H368	12	70	19101		
+366	9	I	Human LCLs'!I366	Human LCLs'!I367	Human LCLs'!I368	12	71			
+366	10	J	Human LCLs'!J366	Human LCLs'!J367	Human LCLs'!J368	12	72			
+369	2	B	Human LCLs'!B369	Human LCLs'!B370	Human LCLs'!B371	12	73	19190		
+369	3	C	Human LCLs'!C369	Human LCLs'!C370	Human LCLs'!C371	12	74	19190		
+369	4	D	Human LCLs'!D369	Human LCLs'!D370	Human LCLs'!D371	12	75	19190		
+369	5	E	Human LCLs'!E369	Human LCLs'!E370	Human LCLs'!E371	12	76	19190		
+369	6	F	Human LCLs'!F369	Human LCLs'!F370	Human LCLs'!F371	12	77	19143		
+369	7	G	Human LCLs'!G369	Human LCLs'!G370	Human LCLs'!G371	12	78	19143		
+369	8	H	Human LCLs'!H369	Human LCLs'!H370	Human LCLs'!H371	12	79	19143		
+369	9	I	Human LCLs'!I369	Human LCLs'!I370	Human LCLs'!I371	12	80	19143		
+369	10	J	Human LCLs'!J369	Human LCLs'!J370	Human LCLs'!J371	12	81			
+376	2	B	Human LCLs'!B376	Human LCLs'!B377	Human LCLs'!B378	13	1	18860		
+376	3	C	Human LCLs'!C376	Human LCLs'!C377	Human LCLs'!C378	13	2	18860		
+376	4	D	Human LCLs'!D376	Human LCLs'!D377	Human LCLs'!D378	13	3	18860		
+376	5	E	Human LCLs'!E376	Human LCLs'!E377	Human LCLs'!E378	13	4	18860		
+376	6	F	Human LCLs'!F376	Human LCLs'!F377	Human LCLs'!F378	13	5	18860		
+376	7	G	Human LCLs'!G376	Human LCLs'!G377	Human LCLs'!G378	13	6	18860		
+376	8	H	Human LCLs'!H376	Human LCLs'!H377	Human LCLs'!H378	13	7	18860		
+376	9	I	Human LCLs'!I376	Human LCLs'!I377	Human LCLs'!I378	13	8	18860		
+376	10	J	Human LCLs'!J376	Human LCLs'!J377	Human LCLs'!J378	13	9	18860		
+379	2	B	Human LCLs'!B379	Human LCLs'!B380	Human LCLs'!B381	13	10	18857		
+379	3	C	Human LCLs'!C379	Human LCLs'!C380	Human LCLs'!C381	13	11	18857		
+379	4	D	Human LCLs'!D379	Human LCLs'!D380	Human LCLs'!D381	13	12	18857		
+379	5	E	Human LCLs'!E379	Human LCLs'!E380	Human LCLs'!E381	13	13	18857		
+379	6	F	Human LCLs'!F379	Human LCLs'!F380	Human LCLs'!F381	13	14	18857		
+379	7	G	Human LCLs'!G379	Human LCLs'!G380	Human LCLs'!G381	13	15	18857		
+379	8	H	Human LCLs'!H379	Human LCLs'!H380	Human LCLs'!H381	13	16	18857		
+379	9	I	Human LCLs'!I379	Human LCLs'!I380	Human LCLs'!I381	13	17	18857		
+379	10	J	Human LCLs'!J379	Human LCLs'!J380	Human LCLs'!J381	13	18	18857		
+382	2	B	Human LCLs'!B382	Human LCLs'!B383	Human LCLs'!B384	13	19	18863		
+382	3	C	Human LCLs'!C382	Human LCLs'!C383	Human LCLs'!C384	13	20	18863		
+382	4	D	Human LCLs'!D382	Human LCLs'!D383	Human LCLs'!D384	13	21	18863		
+382	5	E	Human LCLs'!E382	Human LCLs'!E383	Human LCLs'!E384	13	22	18863		
+382	6	F	Human LCLs'!F382	Human LCLs'!F383	Human LCLs'!F384	13	23	18863		
+382	7	G	Human LCLs'!G382	Human LCLs'!G383	Human LCLs'!G384	13	24	18863		
+382	8	H	Human LCLs'!H382	Human LCLs'!H383	Human LCLs'!H384	13	25	18863		
+382	9	I	Human LCLs'!I382	Human LCLs'!I383	Human LCLs'!I384	13	26	18863		
+382	10	J	Human LCLs'!J382	Human LCLs'!J383	Human LCLs'!J384	13	27	18863		
+385	2	B	Human LCLs'!B385	Human LCLs'!B386	Human LCLs'!B387	13	28	19173		
+385	3	C	Human LCLs'!C385	Human LCLs'!C386	Human LCLs'!C387	13	29	19173		
+385	4	D	Human LCLs'!D385	Human LCLs'!D386	Human LCLs'!D387	13	30	19173		
+385	5	E	Human LCLs'!E385	Human LCLs'!E386	Human LCLs'!E387	13	31	19173		
+385	6	F	Human LCLs'!F385	Human LCLs'!F386	Human LCLs'!F387	13	32	19173		
+385	7	G	Human LCLs'!G385	Human LCLs'!G386	Human LCLs'!G387	13	33	19173		
+385	8	H	Human LCLs'!H385	Human LCLs'!H386	Human LCLs'!H387	13	34	19173		
+385	9	I	Human LCLs'!I385	Human LCLs'!I386	Human LCLs'!I387	13	35	19173		
+385	10	J	Human LCLs'!J385	Human LCLs'!J386	Human LCLs'!J387	13	36	19173		
+388	2	B	Human LCLs'!B388	Human LCLs'!B389	Human LCLs'!B390	13	37	19221		
+388	3	C	Human LCLs'!C388	Human LCLs'!C389	Human LCLs'!C390	13	38	19221		
+388	4	D	Human LCLs'!D388	Human LCLs'!D389	Human LCLs'!D390	13	39	19221		
+388	5	E	Human LCLs'!E388	Human LCLs'!E389	Human LCLs'!E390	13	40	19221		
+388	6	F	Human LCLs'!F388	Human LCLs'!F389	Human LCLs'!F390	13	41	19221		
+388	7	G	Human LCLs'!G388	Human LCLs'!G389	Human LCLs'!G390	13	42	19221		
+388	8	H	Human LCLs'!H388	Human LCLs'!H389	Human LCLs'!H390	13	43	19221		
+388	9	I	Human LCLs'!I388	Human LCLs'!I389	Human LCLs'!I390	13	44	19221		
+388	10	J	Human LCLs'!J388	Human LCLs'!J389	Human LCLs'!J390	13	45	19221		
+391	2	B	Human LCLs'!B391	Human LCLs'!B392	Human LCLs'!B393	13	46	18914		
+391	3	C	Human LCLs'!C391	Human LCLs'!C392	Human LCLs'!C393	13	47	18914		
+391	4	D	Human LCLs'!D391	Human LCLs'!D392	Human LCLs'!D393	13	48	18914		
+391	5	E	Human LCLs'!E391	Human LCLs'!E392	Human LCLs'!E393	13	49	18914		
+391	6	F	Human LCLs'!F391	Human LCLs'!F392	Human LCLs'!F393	13	50	18914		
+391	7	G	Human LCLs'!G391	Human LCLs'!G392	Human LCLs'!G393	13	51	18914		
+391	8	H	Human LCLs'!H391	Human LCLs'!H392	Human LCLs'!H393	13	52	18914		
+391	9	I	Human LCLs'!I391	Human LCLs'!I392	Human LCLs'!I393	13	53	18914		
+391	10	J	Human LCLs'!J391	Human LCLs'!J392	Human LCLs'!J393	13	54	18914		
+394	2	B	Human LCLs'!B394	Human LCLs'!B395	Human LCLs'!B396	13	55	19205		
+394	3	C	Human LCLs'!C394	Human LCLs'!C395	Human LCLs'!C396	13	56	19205		
+394	4	D	Human LCLs'!D394	Human LCLs'!D395	Human LCLs'!D396	13	57	19205		
+394	5	E	Human LCLs'!E394	Human LCLs'!E395	Human LCLs'!E396	13	58	19205		
+394	6	F	Human LCLs'!F394	Human LCLs'!F395	Human LCLs'!F396	13	59	19205		
+394	7	G	Human LCLs'!G394	Human LCLs'!G395	Human LCLs'!G396	13	60	19205		
+394	8	H	Human LCLs'!H394	Human LCLs'!H395	Human LCLs'!H396	13	61	19205		
+394	9	I	Human LCLs'!I394	Human LCLs'!I395	Human LCLs'!I396	13	62	19205		
+394	10	J	Human LCLs'!J394	Human LCLs'!J395	Human LCLs'!J396	13	63	19205		
+397	2	B	Human LCLs'!B397	Human LCLs'!B398	Human LCLs'!B399	13	64	18497		
+397	3	C	Human LCLs'!C397	Human LCLs'!C398	Human LCLs'!C399	13	65	18497		
+397	4	D	Human LCLs'!D397	Human LCLs'!D398	Human LCLs'!D399	13	66	18497		
+397	5	E	Human LCLs'!E397	Human LCLs'!E398	Human LCLs'!E399	13	67	18497		
+397	6	F	Human LCLs'!F397	Human LCLs'!F398	Human LCLs'!F399	13	68	18497		
+397	7	G	Human LCLs'!G397	Human LCLs'!G398	Human LCLs'!G399	13	69	18497		
+397	8	H	Human LCLs'!H397	Human LCLs'!H398	Human LCLs'!H399	13	70	18497		
+397	9	I	Human LCLs'!I397	Human LCLs'!I398	Human LCLs'!I399	13	71			
+397	10	J	Human LCLs'!J397	Human LCLs'!J398	Human LCLs'!J399	13	72			
+400	2	B	Human LCLs'!B400	Human LCLs'!B401	Human LCLs'!B402	13	73	19161		
+400	3	C	Human LCLs'!C400	Human LCLs'!C401	Human LCLs'!C402	13	74	19161		
+400	4	D	Human LCLs'!D400	Human LCLs'!D401	Human LCLs'!D402	13	75	19161		
+400	5	E	Human LCLs'!E400	Human LCLs'!E401	Human LCLs'!E402	13	76	19161		
+400	6	F	Human LCLs'!F400	Human LCLs'!F401	Human LCLs'!F402	13	77	19161		
+400	7	G	Human LCLs'!G400	Human LCLs'!G401	Human LCLs'!G402	13	78	19161		
+400	8	H	Human LCLs'!H400	Human LCLs'!H401	Human LCLs'!H402	13	79	19161		
+400	9	I	Human LCLs'!I400	Human LCLs'!I401	Human LCLs'!I402	13	80	19161		
+400	10	J	Human LCLs'!J400	Human LCLs'!J401	Human LCLs'!J402	13	81	19161		
+407	2	B	Human LCLs'!B407	Human LCLs'!B408	Human LCLs'!B409	14	1	111611		
+407	3	C	Human LCLs'!C407	Human LCLs'!C408	Human LCLs'!C409	14	2	111611		
+407	4	D	Human LCLs'!D407	Human LCLs'!D408	Human LCLs'!D409	14	3	111611		
+407	5	E	Human LCLs'!E407	Human LCLs'!E408	Human LCLs'!E409	14	4	111611		
+407	6	F	Human LCLs'!F407	Human LCLs'!F408	Human LCLs'!F409	14	5	111611		
+407	7	G	Human LCLs'!G407	Human LCLs'!G408	Human LCLs'!G409	14	6	111611		
+407	8	H	Human LCLs'!H407	Human LCLs'!H408	Human LCLs'!H409	14	7	111611		
+407	9	I	Human LCLs'!I407	Human LCLs'!I408	Human LCLs'!I409	14	8	160881		
+407	10	J	Human LCLs'!J407	Human LCLs'!J408	Human LCLs'!J409	14	9			
+410	2	B	Human LCLs'!B410	Human LCLs'!B411	Human LCLs'!B412	14	10	160881		
+410	3	C	Human LCLs'!C410	Human LCLs'!C411	Human LCLs'!C412	14	11	160881		
+410	4	D	Human LCLs'!D410	Human LCLs'!D411	Human LCLs'!D412	14	12	160881		
+410	5	E	Human LCLs'!E410	Human LCLs'!E411	Human LCLs'!E412	14	13	11171		
+410	6	F	Human LCLs'!F410	Human LCLs'!F411	Human LCLs'!F412	14	14	11171		
+410	7	G	Human LCLs'!G410	Human LCLs'!G411	Human LCLs'!G412	14	15	11171		
+410	8	H	Human LCLs'!H410	Human LCLs'!H411	Human LCLs'!H412	14	16	11171		
+410	9	I	Human LCLs'!I410	Human LCLs'!I411	Human LCLs'!I412	14	17	11171		
+410	10	J	Human LCLs'!J410	Human LCLs'!J411	Human LCLs'!J412	14	18	11171		
+413	2	B	Human LCLs'!B413	Human LCLs'!B414	Human LCLs'!B415	14	19	111781		
+413	3	C	Human LCLs'!C413	Human LCLs'!C414	Human LCLs'!C415	14	20	111781		
+413	4	D	Human LCLs'!D413	Human LCLs'!D414	Human LCLs'!D415	14	21	111781		
+413	5	E	Human LCLs'!E413	Human LCLs'!E414	Human LCLs'!E415	14	22	111781		
+413	6	F	Human LCLs'!F413	Human LCLs'!F414	Human LCLs'!F415	14	23	111781		
+413	7	G	Human LCLs'!G413	Human LCLs'!G414	Human LCLs'!G415	14	24	111781		
+413	8	H	Human LCLs'!H413	Human LCLs'!H414	Human LCLs'!H415	14	25	111781		
+413	9	I	Human LCLs'!I413	Human LCLs'!I414	Human LCLs'!I415	14	26	111781		
+413	10	J	Human LCLs'!J413	Human LCLs'!J414	Human LCLs'!J415	14	27	111781		
+416	2	B	Human LCLs'!B416	Human LCLs'!B417	Human LCLs'!B418	14	28	111781		
+416	3	C	Human LCLs'!C416	Human LCLs'!C417	Human LCLs'!C418	14	29	111781		
+416	4	D	Human LCLs'!D416	Human LCLs'!D417	Human LCLs'!D418	14	30	111781		
+416	5	E	Human LCLs'!E416	Human LCLs'!E417	Human LCLs'!E418	14	31	111781		
+416	6	F	Human LCLs'!F416	Human LCLs'!F417	Human LCLs'!F418	14	32	111781		
+416	7	G	Human LCLs'!G416	Human LCLs'!G417	Human LCLs'!G418	14	33	111781		
+416	8	H	Human LCLs'!H416	Human LCLs'!H417	Human LCLs'!H418	14	34	111781		
+416	9	I	Human LCLs'!I416	Human LCLs'!I417	Human LCLs'!I418	14	35	111781		
+416	10	J	Human LCLs'!J416	Human LCLs'!J417	Human LCLs'!J418	14	36			
+419	2	B	Human LCLs'!B419	Human LCLs'!B420	Human LCLs'!B421	14	37	111611		
+419	3	C	Human LCLs'!C419	Human LCLs'!C420	Human LCLs'!C421	14	38	111611		
+419	4	D	Human LCLs'!D419	Human LCLs'!D420	Human LCLs'!D421	14	39	111611		
+419	5	E	Human LCLs'!E419	Human LCLs'!E420	Human LCLs'!E421	14	40	111611		
+419	6	F	Human LCLs'!F419	Human LCLs'!F420	Human LCLs'!F421	14	41	111611		
+419	7	G	Human LCLs'!G419	Human LCLs'!G420	Human LCLs'!G421	14	42	111611		
+419	8	H	Human LCLs'!H419	Human LCLs'!H420	Human LCLs'!H421	14	43			
+419	9	I	Human LCLs'!I419	Human LCLs'!I420	Human LCLs'!I421	14	44	19120		
+419	10	J	Human LCLs'!J419	Human LCLs'!J420	Human LCLs'!J421	14	45	19120		
+422	2	B	Human LCLs'!B422	Human LCLs'!B423	Human LCLs'!B424	14	46	111301		
+422	3	C	Human LCLs'!C422	Human LCLs'!C423	Human LCLs'!C424	14	47	111301		
+422	4	D	Human LCLs'!D422	Human LCLs'!D423	Human LCLs'!D424	14	48	111301		
+422	5	E	Human LCLs'!E422	Human LCLs'!E423	Human LCLs'!E424	14	49	111301		
+422	6	F	Human LCLs'!F422	Human LCLs'!F423	Human LCLs'!F424	14	50	111301		
+422	7	G	Human LCLs'!G422	Human LCLs'!G423	Human LCLs'!G424	14	51	111301		
+422	8	H	Human LCLs'!H422	Human LCLs'!H423	Human LCLs'!H424	14	52	111301		
+422	9	I	Human LCLs'!I422	Human LCLs'!I423	Human LCLs'!I424	14	53	111301		
+422	10	J	Human LCLs'!J422	Human LCLs'!J423	Human LCLs'!J424	14	54	111301		
+425	2	B	Human LCLs'!B425	Human LCLs'!B426	Human LCLs'!B427	14	55	111801		
+425	3	C	Human LCLs'!C425	Human LCLs'!C426	Human LCLs'!C427	14	56	111801		
+425	4	D	Human LCLs'!D425	Human LCLs'!D426	Human LCLs'!D427	14	57	111801		
+425	5	E	Human LCLs'!E425	Human LCLs'!E426	Human LCLs'!E427	14	58	111801		
+425	6	F	Human LCLs'!F425	Human LCLs'!F426	Human LCLs'!F427	14	59			
+425	7	G	Human LCLs'!G425	Human LCLs'!G426	Human LCLs'!G427	14	60	111301		
+425	8	H	Human LCLs'!H425	Human LCLs'!H426	Human LCLs'!H427	14	61	111301		
+425	9	I	Human LCLs'!I425	Human LCLs'!I426	Human LCLs'!I427	14	62	11171		
+425	10	J	Human LCLs'!J425	Human LCLs'!J426	Human LCLs'!J427	14	63	19120		
+428	2	B	Human LCLs'!B428	Human LCLs'!B429	Human LCLs'!B430	14	64	111781		
+428	3	C	Human LCLs'!C428	Human LCLs'!C429	Human LCLs'!C430	14	65	111781		
+428	4	D	Human LCLs'!D428	Human LCLs'!D429	Human LCLs'!D430	14	66	111781		
+428	5	E	Human LCLs'!E428	Human LCLs'!E429	Human LCLs'!E430	14	67	111781		
+428	6	F	Human LCLs'!F428	Human LCLs'!F429	Human LCLs'!F430	14	68	11171		
+428	7	G	Human LCLs'!G428	Human LCLs'!G429	Human LCLs'!G430	14	69	11171		
+428	8	H	Human LCLs'!H428	Human LCLs'!H429	Human LCLs'!H430	14	70	11171		
+428	9	I	Human LCLs'!I428	Human LCLs'!I429	Human LCLs'!I430	14	71	11171		
+428	10	J	Human LCLs'!J428	Human LCLs'!J429	Human LCLs'!J430	14	72	19120		
+431	2	B	Human LCLs'!B431	Human LCLs'!B432	Human LCLs'!B433	14	73	160881		
+431	3	C	Human LCLs'!C431	Human LCLs'!C432	Human LCLs'!C433	14	74	160881		
+431	4	D	Human LCLs'!D431	Human LCLs'!D432	Human LCLs'!D433	14	75	160881		
+431	5	E	Human LCLs'!E431	Human LCLs'!E432	Human LCLs'!E433	14	76	160881		
+431	6	F	Human LCLs'!F431	Human LCLs'!F432	Human LCLs'!F433	14	77	19120		
+431	7	G	Human LCLs'!G431	Human LCLs'!G432	Human LCLs'!G433	14	78	19120		
+431	8	H	Human LCLs'!H431	Human LCLs'!H432	Human LCLs'!H433	14	79	19120		
+431	9	I	Human LCLs'!I431	Human LCLs'!I432	Human LCLs'!I433	14	80	19120		
+431	10	J	Human LCLs'!J431	Human LCLs'!J432	Human LCLs'!J433	14	81	19120		
+438	2	B	Human LCLs'!B438	Human LCLs'!B439	Human LCLs'!B440	15	1			
+438	3	C	Human LCLs'!C438	Human LCLs'!C439	Human LCLs'!C440	15	2	19239		
+438	4	D	Human LCLs'!D438	Human LCLs'!D439	Human LCLs'!D440	15	3	19239		
+438	5	E	Human LCLs'!E438	Human LCLs'!E439	Human LCLs'!E440	15	4	19239		
+438	6	F	Human LCLs'!F438	Human LCLs'!F439	Human LCLs'!F440	15	5	19239		
+438	7	G	Human LCLs'!G438	Human LCLs'!G439	Human LCLs'!G440	15	6	19130		
+438	8	H	Human LCLs'!H438	Human LCLs'!H439	Human LCLs'!H440	15	7	19130		
+438	9	I	Human LCLs'!I438	Human LCLs'!I439	Human LCLs'!I440	15	8	19130		
+438	10	J	Human LCLs'!J438	Human LCLs'!J439	Human LCLs'!J440	15	9	19130		
+441	2	B	Human LCLs'!B441	Human LCLs'!B442	Human LCLs'!B443	15	10	19130		
+441	3	C	Human LCLs'!C441	Human LCLs'!C442	Human LCLs'!C443	15	11	19153		
+441	4	D	Human LCLs'!D441	Human LCLs'!D442	Human LCLs'!D443	15	12	19153		
+441	5	E	Human LCLs'!E441	Human LCLs'!E442	Human LCLs'!E443	15	13	19153		
+441	6	F	Human LCLs'!F441	Human LCLs'!F442	Human LCLs'!F443	15	14	19153		
+441	7	G	Human LCLs'!G441	Human LCLs'!G442	Human LCLs'!G443	15	15	19153		
+441	8	H	Human LCLs'!H441	Human LCLs'!H442	Human LCLs'!H443	15	16	19153		
+441	9	I	Human LCLs'!I441	Human LCLs'!I442	Human LCLs'!I443	15	17	19153		
+441	10	J	Human LCLs'!J441	Human LCLs'!J442	Human LCLs'!J443	15	18	19153		
+444	2	B	Human LCLs'!B444	Human LCLs'!B445	Human LCLs'!B446	15	19	19201		
+444	3	C	Human LCLs'!C444	Human LCLs'!C445	Human LCLs'!C446	15	20	19201		
+444	4	D	Human LCLs'!D444	Human LCLs'!D445	Human LCLs'!D446	15	21	19201		
+444	5	E	Human LCLs'!E444	Human LCLs'!E445	Human LCLs'!E446	15	22	19201		
+444	6	F	Human LCLs'!F444	Human LCLs'!F445	Human LCLs'!F446	15	23	19201		
+444	7	G	Human LCLs'!G444	Human LCLs'!G445	Human LCLs'!G446	15	24	18853		
+444	8	H	Human LCLs'!H444	Human LCLs'!H445	Human LCLs'!H446	15	25	18853		
+444	9	I	Human LCLs'!I444	Human LCLs'!I445	Human LCLs'!I446	15	26	18853		
+444	10	J	Human LCLs'!J444	Human LCLs'!J445	Human LCLs'!J446	15	27	18853		
+447	2	B	Human LCLs'!B447	Human LCLs'!B448	Human LCLs'!B449	15	28	18853		
+447	3	C	Human LCLs'!C447	Human LCLs'!C448	Human LCLs'!C449	15	29	18502		
+447	4	D	Human LCLs'!D447	Human LCLs'!D448	Human LCLs'!D449	15	30	18502		
+447	5	E	Human LCLs'!E447	Human LCLs'!E448	Human LCLs'!E449	15	31	18502		
+447	6	F	Human LCLs'!F447	Human LCLs'!F448	Human LCLs'!F449	15	32	18502		
+447	7	G	Human LCLs'!G447	Human LCLs'!G448	Human LCLs'!G449	15	33	18502		
+447	8	H	Human LCLs'!H447	Human LCLs'!H448	Human LCLs'!H449	15	34	18502		
+447	9	I	Human LCLs'!I447	Human LCLs'!I448	Human LCLs'!I449	15	35	18502		
+447	10	J	Human LCLs'!J447	Human LCLs'!J448	Human LCLs'!J449	15	36	18502		
+450	2	B	Human LCLs'!B450	Human LCLs'!B451	Human LCLs'!B452	15	37	19138		
+450	3	C	Human LCLs'!C450	Human LCLs'!C451	Human LCLs'!C452	15	38	19138		
+450	4	D	Human LCLs'!D450	Human LCLs'!D451	Human LCLs'!D452	15	39	19138		
+450	5	E	Human LCLs'!E450	Human LCLs'!E451	Human LCLs'!E452	15	40	19138		
+450	6	F	Human LCLs'!F450	Human LCLs'!F451	Human LCLs'!F452	15	41	19138		
+450	7	G	Human LCLs'!G450	Human LCLs'!G451	Human LCLs'!G452	15	42	19138		
+450	8	H	Human LCLs'!H450	Human LCLs'!H451	Human LCLs'!H452	15	43	19138		
+450	9	I	Human LCLs'!I450	Human LCLs'!I451	Human LCLs'!I452	15	44	18853		
+450	10	J	Human LCLs'!J450	Human LCLs'!J451	Human LCLs'!J452	15	45	18853		
+453	2	B	Human LCLs'!B453	Human LCLs'!B454	Human LCLs'!B455	15	46	18853		
+453	3	C	Human LCLs'!C453	Human LCLs'!C454	Human LCLs'!C455	15	47	18853		
+453	4	D	Human LCLs'!D453	Human LCLs'!D454	Human LCLs'!D455	15	48	18853		
+453	5	E	Human LCLs'!E453	Human LCLs'!E454	Human LCLs'!E455	15	49	18853		
+453	6	F	Human LCLs'!F453	Human LCLs'!F454	Human LCLs'!F455	15	50	18853		
+453	7	G	Human LCLs'!G453	Human LCLs'!G454	Human LCLs'!G455	15	51	18853		
+453	8	H	Human LCLs'!H453	Human LCLs'!H454	Human LCLs'!H455	15	52	18861	*Ben took this and is in the midst of stocking a replacement	
+453	9	I	Human LCLs'!I453	Human LCLs'!I454	Human LCLs'!I455	15	53	18861		
+453	10	J	Human LCLs'!J453	Human LCLs'!J454	Human LCLs'!J455	15	54	18861		
+456	2	B	Human LCLs'!B456	Human LCLs'!B457	Human LCLs'!B458	15	55	18861		
+456	3	C	Human LCLs'!C456	Human LCLs'!C457	Human LCLs'!C458	15	56	18861		
+456	4	D	Human LCLs'!D456	Human LCLs'!D457	Human LCLs'!D458	15	57	18861		
+456	5	E	Human LCLs'!E456	Human LCLs'!E457	Human LCLs'!E458	15	58	18861		
+456	6	F	Human LCLs'!F456	Human LCLs'!F457	Human LCLs'!F458	15	59	19099		
+456	7	G	Human LCLs'!G456	Human LCLs'!G457	Human LCLs'!G458	15	60	19099		
+456	8	H	Human LCLs'!H456	Human LCLs'!H457	Human LCLs'!H458	15	61	19099		
+456	9	I	Human LCLs'!I456	Human LCLs'!I457	Human LCLs'!I458	15	62	19099		
+456	10	J	Human LCLs'!J456	Human LCLs'!J457	Human LCLs'!J458	15	63	19099		
+459	2	B	Human LCLs'!B459	Human LCLs'!B460	Human LCLs'!B461	15	64	19099		
+459	3	C	Human LCLs'!C459	Human LCLs'!C460	Human LCLs'!C461	15	65	19099		
+459	4	D	Human LCLs'!D459	Human LCLs'!D460	Human LCLs'!D461	15	66	19099		
+459	5	E	Human LCLs'!E459	Human LCLs'!E460	Human LCLs'!E461	15	67	19138		
+459	6	F	Human LCLs'!F459	Human LCLs'!F460	Human LCLs'!F461	15	68	19138		
+459	7	G	Human LCLs'!G459	Human LCLs'!G460	Human LCLs'!G461	15	69	19138		
+459	8	H	Human LCLs'!H459	Human LCLs'!H460	Human LCLs'!H461	15	70	19138		
+459	9	I	Human LCLs'!I459	Human LCLs'!I460	Human LCLs'!I461	15	71	19138		
+459	10	J	Human LCLs'!J459	Human LCLs'!J460	Human LCLs'!J461	15	72	19138		
+462	2	B	Human LCLs'!B462	Human LCLs'!B463	Human LCLs'!B464	15	73	19210		
+462	3	C	Human LCLs'!C462	Human LCLs'!C463	Human LCLs'!C464	15	74	19210		
+462	4	D	Human LCLs'!D462	Human LCLs'!D463	Human LCLs'!D464	15	75	19210		
+462	5	E	Human LCLs'!E462	Human LCLs'!E463	Human LCLs'!E464	15	76	19210		
+462	6	F	Human LCLs'!F462	Human LCLs'!F463	Human LCLs'!F464	15	77	19210		
+462	7	G	Human LCLs'!G462	Human LCLs'!G463	Human LCLs'!G464	15	78	19210		
+462	8	H	Human LCLs'!H462	Human LCLs'!H463	Human LCLs'!H464	15	79	19210		
+462	9	I	Human LCLs'!I462	Human LCLs'!I463	Human LCLs'!I464	15	80	19210		
+462	10	J	Human LCLs'!J462	Human LCLs'!J463	Human LCLs'!J464	15	81	19210		
+469	2	B	Human LCLs'!B469	Human LCLs'!B470	Human LCLs'!B471	16	1	19207		
+469	3	C	Human LCLs'!C469	Human LCLs'!C470	Human LCLs'!C471	16	2	19207		
+469	4	D	Human LCLs'!D469	Human LCLs'!D470	Human LCLs'!D471	16	3	19207		
+469	5	E	Human LCLs'!E469	Human LCLs'!E470	Human LCLs'!E471	16	4	19207		
+469	6	F	Human LCLs'!F469	Human LCLs'!F470	Human LCLs'!F471	16	5	19207		
+469	7	G	Human LCLs'!G469	Human LCLs'!G470	Human LCLs'!G471	16	6	18522		
+469	8	H	Human LCLs'!H469	Human LCLs'!H470	Human LCLs'!H471	16	7	18522		
+469	9	I	Human LCLs'!I469	Human LCLs'!I470	Human LCLs'!I471	16	8	18522		
+469	10	J	Human LCLs'!J469	Human LCLs'!J470	Human LCLs'!J471	16	9	18522		
+472	2	B	Human LCLs'!B472	Human LCLs'!B473	Human LCLs'!B474	16	10	19102		
+472	3	C	Human LCLs'!C472	Human LCLs'!C473	Human LCLs'!C474	16	11	19102		
+472	4	D	Human LCLs'!D472	Human LCLs'!D473	Human LCLs'!D474	16	12	19102		
+472	5	E	Human LCLs'!E472	Human LCLs'!E473	Human LCLs'!E474	16	13	19102		
+472	6	F	Human LCLs'!F472	Human LCLs'!F473	Human LCLs'!F474	16	14	19102		
+472	7	G	Human LCLs'!G472	Human LCLs'!G473	Human LCLs'!G474	16	15	18859		
+472	8	H	Human LCLs'!H472	Human LCLs'!H473	Human LCLs'!H474	16	16	18859		
+472	9	I	Human LCLs'!I472	Human LCLs'!I473	Human LCLs'!I474	16	17	18859		
+472	10	J	Human LCLs'!J472	Human LCLs'!J473	Human LCLs'!J474	16	18	18859		
+475	2	B	Human LCLs'!B475	Human LCLs'!B476	Human LCLs'!B477	16	19	18859		
+475	3	C	Human LCLs'!C475	Human LCLs'!C476	Human LCLs'!C477	16	20	18859		
+475	4	D	Human LCLs'!D475	Human LCLs'!D476	Human LCLs'!D477	16	21	19141		
+475	5	E	Human LCLs'!E475	Human LCLs'!E476	Human LCLs'!E477	16	22	19141		
+475	6	F	Human LCLs'!F475	Human LCLs'!F476	Human LCLs'!F477	16	23	19141		
+475	7	G	Human LCLs'!G475	Human LCLs'!G476	Human LCLs'!G477	16	24	19141		
+475	8	H	Human LCLs'!H475	Human LCLs'!H476	Human LCLs'!H477	16	25	19141		
+475	9	I	Human LCLs'!I475	Human LCLs'!I476	Human LCLs'!I477	16	26	19141		
+475	10	J	Human LCLs'!J475	Human LCLs'!J476	Human LCLs'!J477	16	27	18517		
+478	2	B	Human LCLs'!B478	Human LCLs'!B479	Human LCLs'!B480	16	28	18517		
+478	3	C	Human LCLs'!C478	Human LCLs'!C479	Human LCLs'!C480	16	29	18517		
+478	4	D	Human LCLs'!D478	Human LCLs'!D479	Human LCLs'!D480	16	30	18517		
+478	5	E	Human LCLs'!E478	Human LCLs'!E479	Human LCLs'!E480	16	31	18517		
+478	6	F	Human LCLs'!F478	Human LCLs'!F479	Human LCLs'!F480	16	32	18517		
+478	7	G	Human LCLs'!G478	Human LCLs'!G479	Human LCLs'!G480	16	33			
+478	8	H	Human LCLs'!H478	Human LCLs'!H479	Human LCLs'!H480	16	34			
+478	9	I	Human LCLs'!I478	Human LCLs'!I479	Human LCLs'!I480	16	35			
+478	10	J	Human LCLs'!J478	Human LCLs'!J479	Human LCLs'!J480	16	36			
+481	2	B	Human LCLs'!B481	Human LCLs'!B482	Human LCLs'!B483	16	37			
+481	3	C	Human LCLs'!C481	Human LCLs'!C482	Human LCLs'!C483	16	38			
+481	4	D	Human LCLs'!D481	Human LCLs'!D482	Human LCLs'!D483	16	39			
+481	5	E	Human LCLs'!E481	Human LCLs'!E482	Human LCLs'!E483	16	40			
+481	6	F	Human LCLs'!F481	Human LCLs'!F482	Human LCLs'!F483	16	41			
+481	7	G	Human LCLs'!G481	Human LCLs'!G482	Human LCLs'!G483	16	42			
+481	8	H	Human LCLs'!H481	Human LCLs'!H482	Human LCLs'!H483	16	43			
+481	9	I	Human LCLs'!I481	Human LCLs'!I482	Human LCLs'!I483	16	44			
+481	10	J	Human LCLs'!J481	Human LCLs'!J482	Human LCLs'!J483	16	45			
+484	2	B	Human LCLs'!B484	Human LCLs'!B485	Human LCLs'!B486	16	46			
+484	3	C	Human LCLs'!C484	Human LCLs'!C485	Human LCLs'!C486	16	47			
+484	4	D	Human LCLs'!D484	Human LCLs'!D485	Human LCLs'!D486	16	48			
+484	5	E	Human LCLs'!E484	Human LCLs'!E485	Human LCLs'!E486	16	49			
+484	6	F	Human LCLs'!F484	Human LCLs'!F485	Human LCLs'!F486	16	50			
+484	7	G	Human LCLs'!G484	Human LCLs'!G485	Human LCLs'!G486	16	51			
+484	8	H	Human LCLs'!H484	Human LCLs'!H485	Human LCLs'!H486	16	52			
+484	9	I	Human LCLs'!I484	Human LCLs'!I485	Human LCLs'!I486	16	53			
+484	10	J	Human LCLs'!J484	Human LCLs'!J485	Human LCLs'!J486	16	54			
+487	2	B	Human LCLs'!B487	Human LCLs'!B488	Human LCLs'!B489	16	55			
+487	3	C	Human LCLs'!C487	Human LCLs'!C488	Human LCLs'!C489	16	56			
+487	4	D	Human LCLs'!D487	Human LCLs'!D488	Human LCLs'!D489	16	57			
+487	5	E	Human LCLs'!E487	Human LCLs'!E488	Human LCLs'!E489	16	58			
+487	6	F	Human LCLs'!F487	Human LCLs'!F488	Human LCLs'!F489	16	59			
+487	7	G	Human LCLs'!G487	Human LCLs'!G488	Human LCLs'!G489	16	60			
+487	8	H	Human LCLs'!H487	Human LCLs'!H488	Human LCLs'!H489	16	61			
+487	9	I	Human LCLs'!I487	Human LCLs'!I488	Human LCLs'!I489	16	62			
+487	10	J	Human LCLs'!J487	Human LCLs'!J488	Human LCLs'!J489	16	63			
+490	2	B	Human LCLs'!B490	Human LCLs'!B491	Human LCLs'!B492	16	64			
+490	3	C	Human LCLs'!C490	Human LCLs'!C491	Human LCLs'!C492	16	65			
+490	4	D	Human LCLs'!D490	Human LCLs'!D491	Human LCLs'!D492	16	66			
+490	5	E	Human LCLs'!E490	Human LCLs'!E491	Human LCLs'!E492	16	67			
+490	6	F	Human LCLs'!F490	Human LCLs'!F491	Human LCLs'!F492	16	68			
+490	7	G	Human LCLs'!G490	Human LCLs'!G491	Human LCLs'!G492	16	69			
+490	8	H	Human LCLs'!H490	Human LCLs'!H491	Human LCLs'!H492	16	70			
+490	9	I	Human LCLs'!I490	Human LCLs'!I491	Human LCLs'!I492	16	71			
+490	10	J	Human LCLs'!J490	Human LCLs'!J491	Human LCLs'!J492	16	72			
+493	2	B	Human LCLs'!B493	Human LCLs'!B494	Human LCLs'!B495	16	73			
+493	3	C	Human LCLs'!C493	Human LCLs'!C494	Human LCLs'!C495	16	74			
+493	4	D	Human LCLs'!D493	Human LCLs'!D494	Human LCLs'!D495	16	75			
+493	5	E	Human LCLs'!E493	Human LCLs'!E494	Human LCLs'!E495	16	76			
+493	6	F	Human LCLs'!F493	Human LCLs'!F494	Human LCLs'!F495	16	77			
+493	7	G	Human LCLs'!G493	Human LCLs'!G494	Human LCLs'!G495	16	78			
+493	8	H	Human LCLs'!H493	Human LCLs'!H494	Human LCLs'!H495	16	79			
+493	9	I	Human LCLs'!I493	Human LCLs'!I494	Human LCLs'!I495	16	80			
+493	10	J	Human LCLs'!J493	Human LCLs'!J494	Human LCLs'!J495	16	81			

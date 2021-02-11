@@ -1,0 +1,61 @@
+Cell Line	Used In Final analysis	CellFractionedAttempted?	Thawed	Thaw Notes	Additional Notes	Raw Count1 (x10^6)	RawCount2	Percent Alive1	Percent Alive2	MeanLiveDensity (1E6 cells/mL)	Vol to 30M cells	Volume to 50mL	Mean live density on collection day	Cell Line	"Alt Identifier (Batch, Plate, Well)"	chRNA NanoDrop (ng/uL); total yield is 25uL	chRNA qubit (ng/uL); total yield is 25uL	chRNA qubit after dilution factor correction	qubit/nanodrop	"chRNA concentration estimate (based on nanodrop reading, and scaling by a constant estimated from a few qubit readings)"	nucRNA NanoDrop (ng/uL); total yield is 25uL	nucRNA qubit (ng/uL); total yield is 25uL	nucRNA qubit after dilution factor correction (ng/uL)	nucRNA qubit total RNA amounts
+19137		Y	8/13/20	Bri's box		0.981	0.368	75	55	0.93815	31.97782871	18.02217129	1.08692	19137	1-1-A1	789.4	NA	#VALUE!	#VALUE!	572.315	51.8	0.198	39.6	
+19152		Y	8/13/20	Bri's box		1.36	0.986	67	68	1.58168	18.96717414	31.03282586		19152	1-1-A2	1392.8	NA	#VALUE!	#VALUE!	1009.78	191	0.711	142.2	
+19153		Y	8/13/20	Bri's box		0.574	0.735	83	84	1.09382	27.42681611	22.57318389		19153	1-1-A3	643.1	NA	#VALUE!	#VALUE!	466.2475	335.9	1.33	266	
+19171		Y	8/13/20	Bri's box		0.858	0.936	68	68	1.21992	24.59177651	25.40822349		19171	1-1-A4	988.2	3.7	740	74.8836268	716.445	113.8	0.415	83	
+19200		Y	8/13/20	Bri's box		1.15	1.25	67	63	1.558	19.25545571	30.74454429		19200	1-1-A5	797	3.04	608	76.28607277	577.825	121.9	0.439	87.8	
+19160		Y	8/13/20	Bri's box		0.596	0.953	67	75	1.11407	26.92828996	23.07171004		19160	1-1-A6	769.4	2.63	526	68.36495971	557.815	137.1	0.399	79.8	
+19092		Y	8/13/20	Bri's box		0.769	1.3	63	72	1.42047	21.11977022	28.88022978		19092	1-1-A7	672.5	2.26	452	67.21189591	487.5625	107.9	0.312	62.4	
+19210		Y	8/13/20	Bri's box		0.858	1.33	71	81	1.68648	17.78852996	32.21147004		19210	1-1-A8	1049.2	4.03	806	76.82043462	760.67	145.6	0.541	108.2	
+19207		Y	8/13/20	Bri's box	8/13: stock aliquot appeared more yellow than others									19207			NA	#VALUE!	#VALUE!	0			0	
+19119		Y	8/13/20	Bri's box		1.08	1.47	74	72	1.8576	16.1498708	33.8501292		19119	1-1-A9	677.5	NA	#VALUE!	#VALUE!	491.1875	89.2	0.423	84.6	
+18909		Y	8/13/20	Bri's box		0.652	0.836	78	73	1.11884	26.8134854	23.1865146		18909	1-1-A10	1031.1	NA	#VALUE!	#VALUE!	747.5475	149	0.535	107	
+18912		Y	8/13/20	Bri's box		0.942	0.535	72	79	1.10089	27.250679	22.749321		18912	1-1-A11	853	NA	#VALUE!	#VALUE!	618.425	109.7	0.312	62.4	
+19131		Y	8/13/20	Bri's box		0.797	0.674	59	49	0.80049	37.47704531	12.52295469		19131	1-1-A12	666.7	NA	#VALUE!	#VALUE!	483.3575	69.5	0.256	51.2	
+19130		Y	8/13/20	Bri's box		1.05	0.63	57	65	1.008	29.76190476	20.23809524		19130	1-2-A1	1332.1	NA	#VALUE!	#VALUE!	965.7725	101.9	0.377	75.4	
+18519		Y	8/13/20	Bri's box		1.1	1.36	83	77	1.9602	15.30456076	34.69543924		18519	1-2-A2	668.9	2.59	518	77.44057408	484.9525	94.9	0.271	54.2	
+19093		Y	8/13/20	Bri's box		1.34	1.39	68	66	1.8286	16.40599366	33.59400634		19093	1-2-A3	818.1	2.98	596	72.85172962	593.1225	119.6	0.427	85.4	
+18511		Y	8/13/20	"Bri's box, intials EEA"		0.646	1.18	78	80	1.44788	20.71994917	29.28005083		18511	1-2-A4	549.3	1.89	378	68.81485527	398.2425	290.3	1.09	218	
+18861		Y	8/13/20	Bri's box	chromatin pellet lost to 1-2-A6	1.37	1.24	77	81	2.0593	14.56805711	35.43194289	1.19673	18861	1-2-A5	58.8	NA	#VALUE!	#VALUE!	42.63	88.8	0.332	66.4	
+19144		Y	8/13/20	Bri's box										19144			NA	#VALUE!	#VALUE!	0			0	
+19140		Y	8/13/20	Bri's box	chromatin pellet contaminated with 1-2-A5	1.53	1.75	78	72	2.4534	12.22792859	37.77207141		19140	1-2-A6	1328.3	NA	#VALUE!	#VALUE!	963.0175	151.3	0.574	114.8	
+18858		Y	8/13/20	Bri's box		1.38	1.04	76	72	1.7976	16.68891856	33.31108144		18858	1-2-A7	1059.3	NA	#VALUE!	#VALUE!	767.9925	81.1	0.31	62	
+19138		Y	8/13/20	Bri's box		0.797	0.953	85	71	1.35408	22.15526409	27.84473591		19138	1-2-A8	799.5	NA	#VALUE!	#VALUE!	579.6375	73.8	0.247	49.4	
+18504		Y	8/13/20	Bri's box										18504			NA	#VALUE!	#VALUE!	0				
+18913		Y	8/13/20	Bri's box		0.39	0.635	80	84	0.8454	35.4861604	14.5138396		18913	1-2-A9	500	NA	#VALUE!	#VALUE!	362.5	204.4	0.826	165.2	
+19101		Y	8/13/20	Bri's box		0.63	0.858	86	82	1.24536	24.08941993	25.91058007		19101	1-2-A10	1284.9	NA	#VALUE!	#VALUE!	931.5525	156	0.565	113	
+18856		Y	8/13/20	Bri's box		0.657	0.401	62	63	0.65997	45.45661166	4.543388336	1.13832	18856	1-2-A11	837.5	NA	#VALUE!	#VALUE!	607.1875	246.1	0.89	178	4450
+19099		Y	8/13/20	Bri's box	Why is there an X for chRNA concentration?	1.49	0.808	74	59	1.57932	18.99551706	31.00448294		19099	1-2-A12	X	NA	#VALUE!	#VALUE!	#VALUE!	120.7	0.387	77.4	
+18907		Y	8/13/20	Bri's box		0.958	0.908	67	68	1.2593	23.82275868	26.17724132		18907	1-2-B1	863.8	NA	#VALUE!	#VALUE!	626.255	152.9	0.426	85.2	
+19102		Y	1/12/21	"Human Suspension (Human LCLs), Box3, Pos16"																				
+18501		N	1/12/21	"Human Suspension (Human LCLs), Box3, Pos37"																				
+18504		N	1/12/21	"Human Suspension (Human LCLs), Box3, Pos48"																				
+19207		N	1/12/21	"Human Suspension (Human LCLs), Box4, Pos28"																				
+19159		N	1/12/21	"Human Suspension (Human LCLs), Box4, Pos37"																				
+19114		Y	1/12/21	"Human Suspension (Human LCLs), Box9, Pos73"																				
+19127		Y	1/12/21	"Human Suspension (Human LCLs), Box4, Pos46"																				
+19209		N	1/12/21	"Human Suspension (Human LCLs), Box4, Pos64"																				
+18870		Y	1/12/21	"Human Suspension (Human LCLs), Box5, Pos66"																				
+19223		N	1/12/21	"Human Suspension (Human LCLs), Box6, Pos10"																				
+19143		N	1/12/21	"Human Suspension (Human LCLs), Box6, Pos73"																				
+19144		N	1/12/21	"Human Suspension (Human LCLs), Box6, Pos78"																				
+19190		Y	1/12/21	"Human Suspension (Human LCLs), Box7, Pos1"																				
+19147		N	1/12/21	"Human Suspension (Human LCLs), Box7, Pos7"																				
+18852		Y	1/12/21	"Human Suspension (Human LCLs), Box7, Pos10"																				
+18486		Y	1/12/21	"Human Suspension (Human LCLs), Box7, Pos15"																				
+19203		N	1/12/21	"Human Suspension (Human LCLs), Box7, Pos19"																				
+18508		N	1/12/21	"Human Suspension (Human LCLs), Box7, Pos28"																				
+19116		N	1/12/21	"Human Suspension (Human LCLs), Box7, Pos42"																				
+18499		Y	1/12/21	"Human Suspension (Human LCLs), Box7, Pos54"																				
+18862		N	1/12/21	"Human Suspension (Human LCLs), Box7, Pos61"																				
+19201		Y	1/12/21	"Human Suspension (Human LCLs), Box8, Pos1"																				
+18861		N	1/12/21	"Human Suspension (Human LCLs), Box15, Pos53"																				
+18498		Y	1/12/21	"Human Suspension (Human LCLs), Box8, Pos9"																				
+19222		N	1/12/21	"Human Suspension (Human LCLs), Box8, Pos10"																				
+18505		N	1/12/21	"Human Suspension (Human LCLs), Box8, Pos37"																				
+19140		Y	1/12/21	"Bri, Box6, PosGreen cap"																				
+19204		N	1/12/21	"Human Suspension (Human LCLs), Box9, Pos12"																				
+18855		Y	1/12/21	"Human Suspension (Human LCLs), Box9, Pos27"																				
+18510		N	1/12/21	"LCL_YRI, Box3, Poscol4"																				
+19141		Y	1/12/21	"Human Suspension (Human LCLs), Box9, Pos37"																				
+18522		Y	1/12/21	"Human Suspension (Human LCLs), Box10, Pos10"																				

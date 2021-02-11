@@ -1,0 +1,318 @@
+---
+title: "20200210_PickSamplesToOrder"
+output: html_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+# motivation
+
+So far, Austin and I have performed cell fractionation on ~50 YRI LCL lines. We have had dissappointing success at waking up some of the other YRI LCL lines that Gilad lab has frozen stocks of. So we will order most of the remaining YRI LCL lines that are available from [Coriell cell repository](https://www.coriell.org/1/NHGRI/Collections/1000-Genomes-Collections/Yoruba-in-Ibadan-Nigeria-YRI). Coriell has 31 unrelated individuals, 60 trios, and 9 duos. For this project, we want all of our samples to be unrelated, so I can pick one sample from each trio or duo. Ideally, I will order the child for each duo or trio since it probably has the most accurate phasing information in the published HapMap genotypes. I also want to exclude ordering samples from families that we have already done from Gilad lab stocks.
+
+Here I will read in data and use some R set functions to help me identify the cell lines that I should order for this experiment...
+
+```{r}
+library(tidyverse)
+library(readxl)
+library(knitr)
+
+#Downloaded from Coriell
+CoriellLines <- read_delim("../data/GiladStrains/Coriell-Catalog-Export-02-10-2021.csv", delim = ",") %>%
+  mutate(RowNumber = as.character(1:nrow(.))) %>% #When family is blank, replace it with new identifier
+  mutate(Family=case_when(
+    is.na(Family) ~ RowNumber,
+    TRUE ~ Family
+  ))
+
+#Downloaded from 1000G
+FamilyRelationships <- read_delim("../data/GiladStrains/1000G_Pedigree.txt", delim='\t')
+
+LCLs.1000Genomes.vec <- read.table("../data/GiladStrains/YRI.list.from1000Genomes.txt", sep='\t') %>% pull(V1) %>%
+  gsub("^NA", "", ., perl=T) %>% as.numeric()
+
+GiladLabYRI.Rack <- read_delim("../data/GiladStrains/LCL_YRI.Gilad.Positions2.txt", delim = '\t') %>%
+  mutate(Line=as.character(Line))
+
+GiladLabYRIRack.Lines <- GiladLabYRI.Rack %>% pull(Line) %>% unique() %>% as.numeric()
+
+GrowthNotes <- read_delim("../data/GrowthNotes/20200210_GrowthNotes.tsv", delim = '\t')
+
+SamplesAlreadyDone <- GrowthNotes %>%
+  filter(!is.na(`Date of chRNA-seq library Prep`)) %>%
+  pull(`Cell Line`) %>% unique()
+
+```
+
+What is the sample that we have already done twice?
+
+```{r}
+GrowthNotes %>%
+  filter(!is.na(`Date of chRNA-seq library Prep`)) %>%
+  pull(`Cell Line`) %>% table()
+```
+
+19128 has two "good" samples. I should let Austin now. That would bring the total to 48 samples, which is more convenient for multichannelling anyway.
+
+Find these lines in the hapmap project. Make sure not to order additional lines from those families.
+
+This block of code is now irrelevant, now that I see Coriell has family info as well.
+
+```{r}
+#Check that all 48 samples we have already done are represented in this family info. How many are the children?
+FamilyRelationships %>%
+  filter(Population == "YRI") %>%
+  pull(Relationship) %>% table()
+
+FamilyRelationships %>%
+  filter(Population == "YRI") %>%
+  count(`Family ID`)
+
+FamilyRelationships %>%
+  filter(Population == "YRI") %>%
+  mutate(CellLine = str_replace(`Individual ID`, "NA(\\d{5})", "\\1")) %>%
+  mutate(IsAlreadyDone = CellLine %in% SamplesAlreadyDone) %>%
+  filter(IsAlreadyDone) %>%
+  pull(Relationship) %>% table()
+
+
+```
+
+Let's check that we get the same results from Coriell's family info
+
+```{r}
+CoriellLines %>%
+  mutate(CellLine = str_replace(ID, "GM(\\d{5})", "\\1")) %>%
+  mutate(IsAlreadyDone = CellLine %in% SamplesAlreadyDone) %>%
+  filter(IsAlreadyDone) %>%
+  pull(`Relationship to Proband`) %>% table()
+```
+
+Ok. Close enough.
+
+I wonder why all the ones we have done so far are mother or father. Was Gilad lab deliberately choosing not the proband samples?
+
+```{r}
+
+CoriellLines %>% nrow()
+
+CoriellLines %>%
+  pull(`Relationship to Proband`) %>% table()
+
+
+#How many singles, duos, and trios do I count?
+CoriellLines %>%
+  count(Family) %>%
+  pull(n) %>% table()
+
+```
+
+Ok, it seems that Coriell's claim of 60 trios, 9 duos, and 31 unrelated individuals isn't adding up.
+
+Let's grab the list of all lines available from Coriell that found when I click the trios link.
+
+```{r}
+CoriellLines_trios <- read_delim("../data/GiladStrains/Coriell-Catalog-Export-02-10-2021-Trios.csv", delim = ",") %>%
+  mutate(RowNumber = as.character(1:nrow(.))) %>% #When family is blank, replace it with new identifier
+  mutate(Family=case_when(
+    is.na(Family) ~ RowNumber,
+    TRUE ~ Family
+  ))
+
+CoriellLines_trios %>% nrow()
+
+CoriellLines_trios %>% count(Family) %>% 
+  pull(n) %>% table()
+
+CoriellLines_trios %>%
+  filter(ID %in% CoriellLines$ID) %>% nrow()
+```
+
+Ok, it seems to me that the original link I clicked with 120 samples is a subset of the total available samples. I can probably see the full list of available samples by combining the trios, duos, and unrelated individuals. 
+
+```{r}
+CoriellLines_trios <- read_delim("../data/GiladStrains/Coriell-Catalog-Export-02-10-2021-Trios.csv", delim = ",")
+CoriellLines_duos <- read_delim("../data/GiladStrains/Coriell-Catalog-Export-02-10-2021-Duos.csv", delim = ",")
+CoriellLines_singles <- read_delim("../data/GiladStrains/Coriell-Catalog-Export-02-10-2021-Singles.csv", delim = ",")
+
+AllCoriellSamples <- bind_rows(CoriellLines_singles, CoriellLines_duos, CoriellLines_trios, .id = "Set") %>%
+  mutate(CellLine = str_replace(ID, "GM(\\d{5})", "\\1")) %>%
+  mutate(IsAlreadyDone = CellLine %in% SamplesAlreadyDone)
+
+AllCoriellSamples %>% nrow()
+  
+AllCoriellSamples %>% count(Family) %>% 
+  pull(n) %>% table()
+
+AllCoriellSamples %>%
+  filter(ID %in% CoriellLines$ID) %>% nrow()
+
+AllCoriellSamples %>%
+  pull(`Relationship to Proband`) %>% table()
+```
+
+Ok, now it is clear that those 120 samples are just a subset of all the ones that Coriell has for 
+sale. Let's check again about the proband relationship status of the 48 samples we have already done.
+
+```{r}
+AllCoriellSamples %>%
+  pull(`Relationship to Proband`) %>% table()
+
+```
+
+
+Ok, that is interesting that most all the strains we have done so far are father or mother. Maybe that is just because at the time, in the earlier days of HapMap, the parents data were collected first, then as 1000G expanded, the children were collected later. I dunno. Anyway, let's just go ahead and pick out more unrelated samples. I guess to be consistent with the lines we have already done, maybe we should avoid the children when possible, in case age of donor has some effect on gene expression. For all I know the children are babies. Maybe 1000 genome's project has this info.
+
+Update:
+As per 1000G [FAQ page](https://www.internationalgenome.org/faq/can-i-get-phenotype-gender-and-family-relationship-information-samples/), all donors are >=18 years of age.
+
+First let's check that the sample we have already done are unrelated. Or at least, mother and father so still unrelated.
+
+```{r}
+AllCoriellSamples %>%
+  filter(CellLine %in% c(SamplesAlreadyDone)) %>%
+  pull(Family) %>% table() %>% table()
+
+AllCoriellSamples %>%
+  filter(CellLine %in% c(SamplesAlreadyDone)) %>%
+  dplyr::select(CellLine, `Relationship to Proband`, Family) %>%
+  arrange(Family)
+
+
+AllCoriellSamples %>%
+  add_count(Family, name = "FamilySize") %>%
+  count(FamilySize, `Relationship to Proband`)
+
+```
+
+Hmm.. Ok, so this is making more sense...
+
+So firstly, it seems that the unrelated samples are labelled as 'proband' rather than 'child' under the 'relationship to proband', and those samples have NA as family. These are all probably safe to pick as unrelated individuals for this experiment.
+
+Also, it seems that out of the 48 samples we have already done, 20 are in a unique family, a there are 14 duos that are in the same family. Luckily since it seems that we have mostly picked mothers and fathers, these samples are mostly still genetically unrelated. (Except for a single mother-child relationship in family Y003). This is probably why Gilad lab generally picked fathers and mothers.... That way if someone who wasn't careful (like me) and just picked seemingly random lines from the freezer for an experiment, they would still probably mostly be genetically unrelated.
+
+
+So let's actually not pick children from the trios/duos, and pick parents in as many cases as possible. In the cases of trios, that will actually leave us more unrelated samples to pick from, as we can utilize both parents. Well, maybe that still isn't the best idea in case shared family environment would violote the independence assumptions of linear modelling that QTL data. So perhaps still best to just pick parents, and only parents from different families. My guess is that the shared environment would have minimual effect (these are LCLs, quite removed from shared familial environments anyway), so it isn't totally unreasonable to use both parents which would open up a larger potential sample size. But since we want to keep the experiment size manageable, lets still just prioritize one parent per family as the first cell lines to order.
+
+Also, let's prioritize samples that are 1000G... After emailing Coriell customer service, I now realize that Coriell sells all samples in the union of HapMap and 1000G. The 120 samples that I was confused about before are just the 1000G samples (many of which are also HapMap). Given the choice, I would prefer to prioritize the 1000G samples since they probably have more complete and accurate genotype information (1000G generally used high coverage WholeGenomeSequencing, HapMap generally used SNP arrays). Also important to check, is that we have roughly equal numbers of male and female.
+
+```{r}
+
+#Fist let's add a column for if a sample is in 1000 Genome project, and a column for if it is a line in Gilad lab freezer
+AllCoriellSamples <-
+  AllCoriellSamples %>%
+  mutate(IsInGiladLabYRI.Inventory = CellLine %in% GiladLabYRIRack.Lines) %>%
+  mutate(Is1KGP = CellLine %in% LCLs.1000Genomes.vec)
+
+#Get list of samples that are fair game to do in the experiment, meaning they are either unrelated to the samples we have already done and are not the children in the case of trios. In the case of duos, children are fine, but let's just pick the parent anyway.
+AllUnrelatedSamplesLeftToDo <- AllCoriellSamples %>%
+  filter(! IsAlreadyDone) %>%
+  filter(!`Relationship to Proband` == "child")
+
+nrow(AllUnrelatedSamplesLeftToDo)
+
+```
+
+
+Ok, there are a total of unrelated 113 samples we could potentially use.
+
+Now let's choose the ones to order first. Let's first use all the Gilad lab lines that we already have of the unrelated samples left to do, then select from the list of other unrelated samples and randomly pick a samples that are in 1000G and from unique families until we have a total batch size of 30. I figure 28 is a nice number since our past batches have been roughly this size.
+
+```{r}
+#Get the lines we can just pick from Gilad lab freezer
+GiladLabLinesToPick <- AllCoriellSamples %>%
+  filter(CellLine %in% AllUnrelatedSamplesLeftToDo$CellLine) %>%
+  filter(IsInGiladLabYRI.Inventory) %>% pull(CellLine)
+
+GiladLabLinesToPick
+NumGiladLinesToPick <- length(GiladLabLinesToPick)
+
+FamaliesAlreadyDoneOrInGiladLinesToPick <- AllCoriellSamples %>%
+  filter(CellLine %in% c(SamplesAlreadyDone, GiladLabLinesToPick)) %>%
+  pull(Family) %>% na.omit()
+
+#Now get cell lines to order from Coriell
+PotentialSamplesToOrder <- AllCoriellSamples %>%
+  filter(CellLine %in% AllUnrelatedSamplesLeftToDo$CellLine) %>%
+  filter(!CellLine %in% GiladLabLinesToPick) %>%
+  filter(!Family %in% FamaliesAlreadyDoneOrInGiladLinesToPick)  %>%
+  filter(Is1KGP) %>%
+  distinct(Family, .keep_all = T) %>%
+  pull(CellLine)
+
+PotentialSamplesToOrder %>% length()
+
+```
+
+Ok, that critera of requiring samples that we order are
+- Not already done
+- Not in Gilad lab freezer
+- Are in 1000 Genome's project
+- Not in a family that we have already done
+- Only one sample per family
+
+results in a list of 23 samples. If we ordered those 23, we would have a  total of 29 samples in this batch. Which is close to the 30 was shooting for... Let's check that they are roughly sex-balanced.
+
+```{r}
+AllCoriellSamples %>%
+  filter(CellLine %in% PotentialSamplesToOrder) %>%
+  pull(Sex) %>% table()
+```
+
+Ok, not so much. Let's relax the family requirements and then randomly pick some, hoping that we come up with a more sex balanced sex. But actually, let's first check the sex of the samples we have already done:
+
+```{r}
+AllCoriellSamples %>%
+  filter(CellLine %in% c(SamplesAlreadyDone, GiladLabLinesToPick)) %>%
+  pull(Sex) %>% table()
+
+```
+
+Ok, not so balanced. let's relax the family restriction, then randomly select 8 females and 16 males, leaving us with 39M + 39F at the conclusion of this next batch.
+
+```{r}
+set.seed(0)
+PotentialSamplesToOrder.Male <- AllCoriellSamples %>%
+  filter(CellLine %in% AllUnrelatedSamplesLeftToDo$CellLine) %>%
+  filter(!CellLine %in% GiladLabLinesToPick) %>%
+  filter(Is1KGP) %>%
+  filter(Sex == "Male") %>%
+  sample_n(16) %>% pull(CellLine)
+
+set.seed(0)
+PotentialSamplesToOrder.Female <- AllCoriellSamples %>%
+  filter(CellLine %in% AllUnrelatedSamplesLeftToDo$CellLine) %>%
+  filter(!CellLine %in% GiladLabLinesToPick) %>%
+  filter(Is1KGP) %>%
+  filter(Sex == "Female") %>%
+  sample_n(8) %>% pull(CellLine)
+
+SamplesToOrder <- c(PotentialSamplesToOrder.Female, PotentialSamplesToOrder.Male)
+SamplesToOrder
+```
+
+Ok, let's do a final sanity check before I purchase that these lines do not contain any children (implying no blood relation to other samples), that they do not overlap with any samples we have already done, and that they do not overlap with the 6 samples we can take from Gilad lab freezer...
+
+```{r}
+AllCoriellSamples %>%
+  filter(CellLine %in% SamplesToOrder) %>%
+  pull(`Relationship to Proband`) %>% table()
+
+intersect(SamplesToOrder, as.character(SamplesAlreadyDone))
+
+intersect(SamplesToOrder, GiladLabLinesToPick)
+
+SamplesToOrder
+
+```
+
+All looks good. I will put these on the order sheet 2020-02-11. Let's write them out to an excel that we can email to Claudia.
+
+```{r}
+AllCoriellSamples %>%
+  filter(CellLine %in% SamplesToOrder) %>%
+  dplyr::select(-c("Set")) %>%
+  dplyr::select(ID:Family) %>%
+  write_excel_csv("../data/GiladStrains/20200211_CoriellOrder.BF.csv" )
+```
+
