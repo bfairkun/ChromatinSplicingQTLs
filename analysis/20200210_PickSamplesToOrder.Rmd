@@ -242,6 +242,7 @@ PotentialSamplesToOrder <- AllCoriellSamples %>%
 
 PotentialSamplesToOrder %>% length()
 
+
 ```
 
 Ok, that critera of requiring samples that we order are
@@ -314,5 +315,50 @@ AllCoriellSamples %>%
   dplyr::select(-c("Set")) %>%
   dplyr::select(ID:Family) %>%
   write_excel_csv("../data/GiladStrains/20200211_CoriellOrder.BF.csv" )
+```
+
+##Update 04/12/2021
+
+Going to order more cell lines, by the same critera.
+
+First out of curiosity, how many cell that we have already done or plan to do are not in 1KG?
+
+```{r}
+AllCoriellSamples %>%
+  filter(CellLine %in% c(SamplesAlreadyDone)) %>%
+  mutate(In1KG = CellLine %in% LCLs.1000Genomes.vec) %>%
+  pull(In1KG) %>% table()
+
+# length(setdiff(as.character(LCLs.1000Genomes.vec), SamplesToOrder))
+# length(LCLs.1000Genomes.vec)
+```
+
+Ok it seems ALL the samples we have already done or have recently ordered are 1000 genome's project. Now let's get all the samples that we haven't already done that are in 1KG that we could consider ordereing:
+
+```{r}
+set.seed(0)
+AllCoriellSamples %>%
+  filter(CellLine %in% AllUnrelatedSamplesLeftToDo$CellLine) %>%
+  filter(!CellLine %in% GiladLabLinesToPick) %>%
+  filter(Is1KGP) %>%
+  filter(!CellLine %in% SamplesToOrder) %>%
+  group_by(Sex) %>%
+  sample_n(16) %>%
+  ungroup() %>%
+  dplyr::select(-c("Set")) %>%
+  dplyr::select(ID:Family) %>%
+  write_excel_csv("../data/GiladStrains/20210411_CoriellOrder2.BF.csv" )
+
+set.seed(0)
+AllCoriellSamples %>%
+  filter(CellLine %in% AllUnrelatedSamplesLeftToDo$CellLine) %>%
+  filter(!CellLine %in% GiladLabLinesToPick) %>%
+  filter(Is1KGP) %>%
+  filter(!CellLine %in% SamplesToOrder) %>%
+  group_by(Sex) %>%
+  sample_n(16) %>%
+  ungroup() %>%
+  pull(ID)
+
 ```
 
