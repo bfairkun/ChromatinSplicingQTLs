@@ -2,7 +2,7 @@
 # After configuring, running snakemake -n in a clone of this repository should successfully execute a dry-run of the workflow.
 
 include: "rules/common.smk"
-configfile: "config.yaml"
+configfile: "config/config.yaml"
 
 rule all:
     input:
@@ -24,4 +24,4 @@ include: "rules/RNASeqProcessing.smk"
 include: "rules/Genotypes.smk"
 include: "rules/ChIPSeqProcessing.smk"
 include: "rules/PlotGruberExamples.smk"
-include: "rules/RASQUAL.smk"
+# include: "rules/RASQUAL.smk"

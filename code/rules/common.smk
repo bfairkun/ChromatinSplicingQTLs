@@ -2,7 +2,7 @@ import pandas as pd
 import os
 
 ###### Config file and sample sheets #####
-configfile: "config.yaml"
+configfile: "config/config.yaml"
 
 autosomes = [str(i) for i in range(1,23)]
 
