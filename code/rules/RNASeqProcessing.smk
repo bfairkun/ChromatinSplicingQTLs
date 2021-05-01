@@ -2,27 +2,6 @@
 #     input:
 #     output:
 
-rule STAR_make_index:
-    """
-    did not work on bigmem2. Never figured out why (the log file didn't
-    indicate anything). Ran on login node with success.
-    """
-    input:
-        fasta = "ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa",
-        gtf = "ReferenceGenome/Annotations/gencode.v34.primary_assembly.annotation.gtf",
-    output:
-        index = "ReferenceGenome/STARIndex/chrLength.txt",
-    log:
-        "logs/STAR_make_index.log"
-    params:
-        genomeDir = "ReferenceGenome/STARIndex/"
-    threads: 4
-    resources:
-        mem_mb = 72000
-    shell:
-        """
-        STAR --runMode genomeGenerate --genomeSAsparseD 2 --runThreadN {threads} --genomeDir {params.genomeDir} --sjdbGTFfile {input.gtf} --genomeFastaFiles {input.fasta} &> {log}
-        """
 
 
 rule STAR_alignment:

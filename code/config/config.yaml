@@ -2,9 +2,18 @@
 # In case of sample based data, it should be complemented by a samples.tsv file that contains
 # one row per sample. It can be parsed easily via pandas.
 
+
+#Scratch dir for large temporary files
+scratch: "/scratch/midway2/bjf79/"
+
+#Define fastq samples to process
 samples: samples.tsv
 
-scratch: "/scratch/midway2/bjf79/"
+# key for faster downloading of public fastq samples with aspera instead of
+# ftp.  Leave blank if not using aspera. wget/curl can be used with ftp/http
+# links can be used instead if defined in samples, but aspera tends to just
+# work better/faster
+aspera_key: "/home/bjf79/.aspera/connect/etc/asperaweb_id_dsa.openssh"
 
 #Parrallelization of sQTL mapping with QTLtools
 sQTL_chunks: 1000

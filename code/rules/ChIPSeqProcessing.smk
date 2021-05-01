@@ -1,17 +1,3 @@
-rule MakeHisat2Index:
-    input:
-        "ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa"
-    output:
-        ht1 = "ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa.1.ht2"
-    log:
-        "logs/MakeIndex.log"
-    threads: 8
-    resources:
-        mem_mb = 42000
-    shell:
-        """
-        hisat2-build {input} {input} -p {threads} &> {log}
-        """
 
 rule Align_From_SRA:
     """

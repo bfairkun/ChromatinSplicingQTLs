@@ -1,23 +1,7 @@
-# The main entry point of your workflow.
-# After configuring, running snakemake -n in a clone of this repository should successfully execute a dry-run of the workflow.
 
-include: "rules/common.smk"
 configfile: "config/config.yaml"
 
-rule all:
-    input:
-        expand( "Bigwigs/GEUVADIS_RNAseq/{RNASeqSample}.bw", RNASeqSample=GEUVADIS_line_fastq_dict.keys()),
-        expand( "Bigwigs/Grubert_ChIPSeq/{Antibody}.{Cell_Line}.bw", zip, Antibody=Grubert_ChIP_seq['Antibody'], Cell_Line=Grubert_ChIP_seq['Cell_Line']),
-        "Genotypes/GEUVADIS_1000G/All.vcf.gz",
-        # "Phenotypes/GEUVADIS_RNAseq/leafcutter/clustering/leafcutter_perind.counts.gz.PCs",
-        expand("logs/PlotGruberQTLs/PlotFromShellScript.{pheno}.log", pheno=["H3K4ME3", "H3K27AC", "H3K4ME1"]),
-        "Genotypes/GEUVADIS_1000G/All.Dummy.vcf",
-        expand("Phenotypes/GEUVADIS_RNAseq/BySample/{RNASeqSample}.junc", RNASeqSample=GEUVADIS_line_fastq_dict.keys()),
-        "Phenotypes/GEUVADIS_RNAseq/leafcutter/SplicingPhenotypesQQNormed.bed.gz",
-        # "QTLs/sQTLs/permuations_pass.txt.gz",
-        "QTLs/sQTLs/permutation_pass_chunks/1.1000.txt.gz",
-
-
+include: "rules/common.smk"
 include: "rules/other.smk"
 include: "rules/DownloadData.smk"
 include: "rules/RNASeqProcessing.smk"
@@ -25,3 +9,237 @@ include: "rules/Genotypes.smk"
 include: "rules/ChIPSeqProcessing.smk"
 include: "rules/PlotGruberExamples.smk"
 # include: "rules/RASQUAL.smk"
+
+wildcard_constraints:
+    chrom="|".join(autosomes)
+localrules: all, CopyFastqFromLocal, DownloadFastqFromLink, Download1KG_GRCh38, STAR_make_index
+ruleorder: CopyFastqFromLocal > DownloadFastqFromLink
+
+
+rule all:
+    input:
+        # expand( "Bigwigs/GEUVADIS_RNAseq/{RNASeqSample}.bw", RNASeqSample=GEUVADIS_line_fastq_dict.keys()),
+        # expand( "Bigwigs/Grubert_ChIPSeq/{Antibody}.{Cell_Line}.bw", zip, Antibody=Grubert_ChIP_seq['Antibody'], Cell_Line=Grubert_ChIP_seq['Cell_Line']),
+        # "Genotypes/GEUVADIS_1000G/All.vcf.gz",
+        # # "Phenotypes/GEUVADIS_RNAseq/leafcutter/clustering/leafcutter_perind.counts.gz.PCs",
+        # expand("logs/PlotGruberQTLs/PlotFromShellScript.{pheno}.log", pheno=["H3K4ME3", "H3K27AC", "H3K4ME1"]),
+        # "Genotypes/GEUVADIS_1000G/All.Dummy.vcf",
+        # expand("Phenotypes/GEUVADIS_RNAseq/BySample/{RNASeqSample}.junc", RNASeqSample=GEUVADIS_line_fastq_dict.keys()),
+        # "Phenotypes/GEUVADIS_RNAseq/leafcutter/SplicingPhenotypesQQNormed.bed.gz",
+        # # "QTLs/sQTLs/permuations_pass.txt.gz",
+        # "QTLs/sQTLs/permutation_pass_chunks/1.1000.txt.gz",
+        expand("FastqFastp/{Phenotype}/{IndID}/{Rep}.R2.fastq.gz", zip, Phenotype=Fastq_samples['Phenotype'], IndID=Fastq_samples['IndID'], Rep=Fastq_samples['RepNumber']),
+        # expand("Alignments_perSample/{Phenotype}/{IndID}.{Rep}.bam", zip, Phenotype=Fastq_samples['Phenotype'], IndID=Fastq_samples['IndID'], Rep=Fastq_samples['RepNumber'])
+        "ReferenceGenome/STARIndex/chrLength.txt",
+        # expand("ReferenceGenome/STAR_WASP_Vcfs/{Phenotype}/{chrom}.vcf", Phenotype=['Expression.Splicing'], chrom=autosomes),
+        "ReferenceGenome/STAR_WASP_Vcfs/Expression.Splicing/WholeGenome.vcf",
+
+rule Download1KG_GRCh38:
+    output:
+        vcf = "Genotypes/1KG_GRCh38/{chrom}.vcf.gz",
+        tbi = "Genotypes/1KG_GRCh38/{chrom}.vcf.gz.tbi",
+    log:
+        "logs/Download1KG_GRCh38/{chrom}.log"
+    params:
+        aspera_key = config['aspera_key']
+    wildcard_constraints:
+
+    shell:
+        """
+        #Use aspera if aspera key file and aspera links parameters are defined (not empty strings)
+        if [[ ! -z "{params.aspera_key}" ]]
+        then
+            ascp -i {params.aspera_key} -Tr -Q -l 100M -P33001 -L- fasp-g1k@fasp.1000genomes.ebi.ac.uk:vol1/ftp/data_collections/1000_genomes_project/release/20181203_biallelic_SNV/ALL.chr{wildcards.chrom}.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.gz {output.vcf} &> {log}
+            ascp -i {params.aspera_key} -Tr -Q -l 100M -P33001 -L- fasp-g1k@fasp.1000genomes.ebi.ac.uk:vol1/ftp/data_collections/1000_genomes_project/release/20181203_biallelic_SNV/ALL.chr{wildcards.chrom}.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.gz.tbi {output.tbi} &>> {log}
+        else
+            curl -f -o {output.vcf} "http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000_genomes_project/release/20181203_biallelic_SNV/ALL.chr{wildcards.chrom}.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.gz" &> {log}
+            curl -f -o {output.tbi} "http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000_genomes_project/release/20181203_biallelic_SNV/ALL.chr{wildcards.chrom}.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.gz.tbi" &>> {log}
+        fi
+        """
+
+rule CopyFastqFromLocal:
+    input:
+        R1 = GetFastqLocalFuncs('R1_local'),
+        R2 = GetFastqLocalFuncs('R2_local'),
+    output:
+        R1 = "Fastq/{Phenotype}/{IndID}/{Rep}.R1.fastq.gz",
+        R2 = "Fastq/{Phenotype}/{IndID}/{Rep}.R2.fastq.gz"
+    log:
+        "logs/MoveFastqFromLTS/{Phenotype}.{IndID}.{Rep}.log"
+    shell:
+        """
+        cat {input.R1} > {output.R1} 2> {log}
+        cat {input.R2} > {output.R2} 2>> {log}
+        """
+
+rule DownloadFastqFromLink:
+    input:
+        aspera_key = config['aspera_key']
+    output:
+        R1 = "Fastq/{Phenotype}/{IndID}/{Rep}.R1.fastq.gz",
+        R2 = "Fastq/{Phenotype}/{IndID}/{Rep}.R2.fastq.gz"
+    log:
+        "logs/DownloadFastqFromAsperaLink/{Phenotype}.{IndID}.{Rep}.log"
+    params:
+        R1_ftp = GetDownloadLinkFuncs('R1_ftp'),
+        R2_ftp = GetDownloadLinkFuncs('R2_ftp'),
+        R1_aspera = GetDownloadLinkFuncs('R1_aspera'),
+        R2_aspera = GetDownloadLinkFuncs('R2_aspera'),
+    shell:
+        """
+        #Use aspera if aspera key file and aspera links parameters are defined (not empty strings)
+        if [[ ! -z "{input.aspera_key}" && ! -z "{params.R1_aspera}" && ! -z "{params.R2_aspera}" ]]
+        then
+            ascp -v -QT -l 300m -P33001 -i {input.aspera_key} era-fasp@{params.R1_aspera} {output.R1} &> {log}
+            ascp -v -QT -l 300m -P33001 -i {input.aspera_key} era-fasp@{params.R2_aspera} {output.R2} &> {log}
+        else
+            wget -O {output.R1} {params.R1_ftp} &> {log}
+            wget -O {output.R2} {params.R2_ftp} &>> {log}
+        fi
+        """
+
+rule fastp:
+    """
+    clips adapters, can handle UMIs
+    """
+    input:
+        R1 = "Fastq/{Phenotype}/{IndID}/{Rep}.R1.fastq.gz",
+        R2 = "Fastq/{Phenotype}/{IndID}/{Rep}.R2.fastq.gz"
+    output:
+        R1 = "FastqFastp/{Phenotype}/{IndID}/{Rep}.R1.fastq.gz",
+        R2 = "FastqFastp/{Phenotype}/{IndID}/{Rep}.R2.fastq.gz",
+        html = "FastqFastp/{Phenotype}/{IndID}/{Rep}.fastp.html",
+        json = "FastqFastp/{Phenotype}/{IndID}/{Rep}.fastp.json"
+    params:
+    log:
+        "logs/fastp/{Phenotype}.{IndID}.{Rep}.log"
+    conda:
+        "envs/fastp.yml"
+    shell:
+        """
+        fastp -i {input.R1} -I {input.R2} -o {output.R1} -O {output.R2} --html {output.html} --json {output.json} {params} &> {log}
+        """
+
+rule MakeHisat2Index:
+    input:
+        "ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa"
+    output:
+        ht1 = "ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa.1.ht2"
+    log:
+        "logs/MakeIndex.log"
+    conda:
+        "envs/hisat2.yml"
+    threads: 8
+    resources:
+        mem_mb = 42000
+    shell:
+        """
+        hisat2-build {input} {input} -p {threads} &> {log}
+        """
+
+rule AlignPE_NoSplicing:
+    """
+    Alin with hisat, sort, and markdups bsaed on identical PE mappings
+    """
+    input:
+        index = "ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa.1.ht2",
+        Ref = "ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa",
+        R1 = "FastqFastp/{Phenotype}/{IndID}/{Rep}.R1.fastq.gz",
+        R2 = "FastqFastp/{Phenotype}/{IndID}/{Rep}.R2.fastq.gz",
+    output:
+        bam = "Alignments_perSample/{Phenotype}/{IndID}.{Rep}.bam",
+        bai = "Alignments_perSample/{Phenotype}/{IndID}.{Rep}.bam.bai"
+    log:
+        "logs/AlignPE_NoSplicing/{Phenotype}.{IndID}.{Rep}.log"
+    conda:
+        "envs/hisat2.yml"
+    shell:
+        """
+        (hisat2 -x {input.Ref} --no-spliced-alignment --no-discordant -p {threads} | samtools sort -n | samtools fixmate -m - - |   samtools sort | samtools markdup - -  > {output.bam}) &> {log}
+        samtools index {output.bam}
+        """
+
+rule STAR_make_index:
+    """
+    did not work on bigmem2. Never figured out why (the log file didn't
+    indicate anything). Ran on login node with success.
+    """
+    input:
+        fasta = "ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa",
+        gtf = "ReferenceGenome/Annotations/gencode.v34.primary_assembly.annotation.gtf",
+    output:
+        index = "ReferenceGenome/STARIndex/chrLength.txt",
+    log:
+        "logs/STAR_make_index.log"
+    params:
+        genomeDir = "ReferenceGenome/STARIndex/"
+    threads: 4
+    resources:
+        mem_mb = "2G",
+        partition = "bigmem2",
+        ntasks = 5
+    shell:
+        """
+        STAR --runMode genomeGenerate --genomeSAsparseD 2 --runThreadN {threads} --genomeDir {params.genomeDir} --sjdbGTFfile {input.gtf} --genomeFastaFiles {input.fasta} &> {log}
+        """
+
+rule MakeDummyVcfForSTAR_WASP_MODE:
+    """
+    https://github.com/alexdobin/STAR/issues/772
+    The vcf for STAR WASP mode should contain genotypes for a single
+    (personalized) sample, or contain genotypes for a dummy sample with
+    heterozygous genotypes at all variant positions.
+    """
+    input:
+        "Genotypes/1KG_GRCh38/{chrom}.vcf.gz"
+    params:
+        IndIDs = lambda wildcards: ",".join(Fastq_samples.loc[(Fastq_samples['Include']==True) & (Fastq_samples['Phenotype']==wildcards.Phenotype), ['IndID']].drop_duplicates()['IndID'])
+    log:
+        "logs/MakeDummyVcfForSTAR_WASP_MODE/{Phenotype}/{chrom}.log"
+    output:
+        vcf = "ReferenceGenome/STAR_WASP_Vcfs/{Phenotype}/{chrom}.vcf.gz",
+        tbi = "ReferenceGenome/STAR_WASP_Vcfs/{Phenotype}/{chrom}.vcf.gz.tbi"
+    shell:
+        """
+        (bcftools view -s {params.IndIDs} --force-samples -c 1:minor {input} | awk -F'\\t' '$1~"^##" {{print}} $1=="#CHROM" {{print $1,$2,$3,$4,$5,$6,$7,$8,$9,"DummyID"}} $1!~"^#" {{print $1,$2,$3,$4,$5,$6,$7,$8,$9,"0|1"}}' | bgzip -c /dev/stdin > {output}) &> {log}
+        tabix -p vcf {output.vcf}
+        """
+
+rule MergeVcfForSTAR_WASP_MODE:
+    input:
+        vcf = expand("ReferenceGenome/STAR_WASP_Vcfs/{{Phenotype}}/{chrom}.vcf.gz", chrom=autosomes),
+        tbi = expand("ReferenceGenome/STAR_WASP_Vcfs/{{Phenotype}}/{chrom}.vcf.gz.tbi", chrom=autosomes)
+    output:
+        vcf = "ReferenceGenome/STAR_WASP_Vcfs/{Phenotype}/WholeGenome.vcf",
+    shell:
+        """
+        bcftools concat -O v {input.vcf} > {output.vcf}
+        """
+
+#rule STAR_Align:
+#    input:
+#        index = "ReferenceGenome/STARIndex/chrLength.txt",
+#        R1 = "FastqFastp/{Phenotype}/{IndID}/{Rep}.R1.fastq.gz",
+#        R2 = "FastqFastp/{Phenotype}/{IndID}/{Rep}.R2.fastq.gz",
+#        #function that return empty string if skipping wasp
+#        vcf = #Func
+#    output:
+#        bam = "Alignments/STAR_Align/{Phenotype}/{IndID}/{Rep}/Aligned.sortedByCoord.bam"
+#    params:
+#        #function that return empty string if skipping wasp
+#        wasp = #Func
+#        extra = #Func
+#        readMapNumber = 250000
+#    shell:
+#        """
+#        STAR --waspOutputMode SAMtag --readMapNumber {params.readMapNumber} --genomeDir ../ReferenceGenome/STARIndex/ --readFilesIn {input.R1} {input.R2} {params.wasp} {input.vcf} --outSAMtype BAM SortedByCoordinate --readFilesCommand zcat
+#        """
+
+# rule FilterBAM_WaspTags:
+
+
+
+#STAR --waspOutputMode SAMtag --readMapNumber 250000 --genomeDir ../ReferenceGenome/STARIndex/ --readFilesIn ../FastqFastp/Expression.Splicing/HG00096/1.R1.fastq.gz --varVCFfile ../ReferenceGenome/STAR_WASP_Vcfs/Geuvadis.chr22.vcf --outSAMtype BAM SortedByCoordinate --readFilesCommand zcat
+
+# rule PostAlignmentBAMFiltering
+# samtools view -H {input.bam}

@@ -1,0 +1,30 @@
+name: hisat2
+channels:
+  - bioconda
+  - defaults
+  - conda-forge
+dependencies:
+  - _libgcc_mutex=0.1=conda_forge
+  - _openmp_mutex=4.5=1_gnu
+  - ca-certificates=2021.4.13=h06a4308_1
+  - certifi=2020.12.5=py39h06a4308_0
+  - hisat2=2.2.1=h1b792b2_3
+  - ld_impl_linux-64=2.33.1=h53a641e_7
+  - libffi=3.3=he6710b0_2
+  - libgcc-ng=9.3.0=h2828fa1_19
+  - libgomp=9.3.0=h2828fa1_19
+  - libstdcxx-ng=9.3.0=h6de172a_19
+  - ncurses=6.2=he6710b0_1
+  - openssl=1.1.1k=h27cfd23_0
+  - perl=5.26.2=h14c3975_0
+  - pip=21.0.1=py39h06a4308_0
+  - python=3.9.4=hdb3f193_0
+  - readline=8.1=h27cfd23_0
+  - setuptools=52.0.0=py39h06a4308_0
+  - sqlite=3.35.4=hdfb4753_0
+  - tk=8.6.10=hbc83047_0
+  - tzdata=2020f=h52ac0ba_0
+  - wheel=0.36.2=pyhd3eb1b0_0
+  - xz=5.2.5=h7b6447c_0
+  - zlib=1.2.11=h7b6447c_3
+prefix: /project2/gilad/bjf79_project1/envs/hisat2

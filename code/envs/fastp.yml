@@ -1,0 +1,14 @@
+name: fastp
+channels:
+  - bioconda
+  - defaults
+  - conda-forge
+dependencies:
+  - _libgcc_mutex=0.1=conda_forge
+  - _openmp_mutex=4.5=1_gnu
+  - fastp=0.20.1=h2e03b76_1
+  - libgcc-ng=9.3.0=h2828fa1_19
+  - libgomp=9.3.0=h2828fa1_19
+  - libstdcxx-ng=9.3.0=h6de172a_19
+  - zlib=1.2.11=h7b6447c_3
+prefix: /project2/gilad/bjf79_project1/envs/fastp
