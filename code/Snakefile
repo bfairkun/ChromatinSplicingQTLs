@@ -2,18 +2,24 @@
 configfile: "config/config.yaml"
 
 include: "rules/common.smk"
-include: "rules/other.smk"
-include: "rules/DownloadData.smk"
-include: "rules/RNASeqProcessing.smk"
-include: "rules/Genotypes.smk"
-include: "rules/ChIPSeqProcessing.smk"
-include: "rules/PlotGruberExamples.smk"
+# include: "rules/other.smk"
+# include: "rules/DownloadData.smk"
+# include: "rules/RNASeqProcessing.smk"
+# include: "rules/Genotypes.smk"
+# include: "rules/ChIPSeqProcessing.smk"
+# include: "rules/PlotGruberExamples.smk"
 # include: "rules/RASQUAL.smk"
 
 wildcard_constraints:
-    chrom="|".join(autosomes)
+    chrom="|".join(autosomes),
+    IndID="|".join(Fastq_samples['IndID']),
+    rep="\d+"
+
 localrules: all, CopyFastqFromLocal, DownloadFastqFromLink, Download1KG_GRCh38, STAR_make_index
 ruleorder: CopyFastqFromLocal > DownloadFastqFromLink
+
+ChromatinProfilingPhenotypes = Fastq_samples.loc[ (Fastq_samples['Assay'].isin(["ChIP-seq", "CutAndTag"]))  ]['Phenotype'].unique()
+RNASeqPhenotypes = Fastq_samples.loc[ (Fastq_samples['Assay']=="RNA-seq")  ]['Phenotype'].unique()
 
 
 rule all:
@@ -33,6 +39,7 @@ rule all:
         "ReferenceGenome/STARIndex/chrLength.txt",
         # expand("ReferenceGenome/STAR_WASP_Vcfs/{Phenotype}/{chrom}.vcf", Phenotype=['Expression.Splicing'], chrom=autosomes),
         "ReferenceGenome/STAR_WASP_Vcfs/Expression.Splicing/WholeGenome.vcf",
+        expand("ReferenceGenome/HornetSnpLists/{Phenotype}/chr{chrom}.snps.txt.gz", Phenotype="CTCF", chrom=autosomes)
 
 rule Download1KG_GRCh38:
     output:
@@ -111,6 +118,9 @@ rule fastp:
         html = "FastqFastp/{Phenotype}/{IndID}/{Rep}.fastp.html",
         json = "FastqFastp/{Phenotype}/{IndID}/{Rep}.fastp.json"
     params:
+        GetFastpParams
+    resources:
+        mem_mb = 8000
     log:
         "logs/fastp/{Phenotype}.{IndID}.{Rep}.log"
     conda:
@@ -151,11 +161,14 @@ rule AlignPE_NoSplicing:
         bai = "Alignments_perSample/{Phenotype}/{IndID}.{Rep}.bam.bai"
     log:
         "logs/AlignPE_NoSplicing/{Phenotype}.{IndID}.{Rep}.log"
+    params:
+        MaxPE_InsertLen = 1000
+        #1000 for CTCF
     conda:
         "envs/hisat2.yml"
     shell:
         """
-        (hisat2 -x {input.Ref} --no-spliced-alignment --no-discordant -p {threads} | samtools sort -n | samtools fixmate -m - - |   samtools sort | samtools markdup - -  > {output.bam}) &> {log}
+        (hisat2 -x {input.Ref} --no-spliced-alignment --no-discordant --maxins {params.MaxPE_InsertLen} -p {threads} | samtools sort -n | samtools fixmate -m - - |   samtools sort | samtools markdup - -  > {output.bam}) &> {log}
         samtools index {output.bam}
         """
 
@@ -175,7 +188,7 @@ rule STAR_make_index:
         genomeDir = "ReferenceGenome/STARIndex/"
     threads: 4
     resources:
-        mem_mb = "2G",
+        mem = "42G",
         partition = "bigmem2",
         ntasks = 5
     shell:
@@ -201,7 +214,7 @@ rule MakeDummyVcfForSTAR_WASP_MODE:
         tbi = "ReferenceGenome/STAR_WASP_Vcfs/{Phenotype}/{chrom}.vcf.gz.tbi"
     shell:
         """
-        (bcftools view -s {params.IndIDs} --force-samples -c 1:minor {input} | awk -F'\\t' '$1~"^##" {{print}} $1=="#CHROM" {{print $1,$2,$3,$4,$5,$6,$7,$8,$9,"DummyID"}} $1!~"^#" {{print $1,$2,$3,$4,$5,$6,$7,$8,$9,"0|1"}}' | bgzip -c /dev/stdin > {output}) &> {log}
+        (bcftools view -s {params.IndIDs} --force-samples -c 1:minor {input} | awk -F'\\t' -v OFS='\\t' '$1~"^##" {{print}} $1=="#CHROM" {{print $1,$2,$3,$4,$5,$6,$7,$8,$9,"DummyID"}} $1!~"^#" {{print $1,$2,$3,$4,$5,$6,$7,$8,$9,"0|1"}}' | bgzip -c /dev/stdin > {output}) &> {log}
         tabix -p vcf {output.vcf}
         """
 
@@ -216,30 +229,145 @@ rule MergeVcfForSTAR_WASP_MODE:
         bcftools concat -O v {input.vcf} > {output.vcf}
         """
 
-#rule STAR_Align:
-#    input:
-#        index = "ReferenceGenome/STARIndex/chrLength.txt",
-#        R1 = "FastqFastp/{Phenotype}/{IndID}/{Rep}.R1.fastq.gz",
-#        R2 = "FastqFastp/{Phenotype}/{IndID}/{Rep}.R2.fastq.gz",
-#        #function that return empty string if skipping wasp
-#        vcf = #Func
-#    output:
-#        bam = "Alignments/STAR_Align/{Phenotype}/{IndID}/{Rep}/Aligned.sortedByCoord.bam"
-#    params:
-#        #function that return empty string if skipping wasp
-#        wasp = #Func
-#        extra = #Func
-#        readMapNumber = 250000
-#    shell:
-#        """
-#        STAR --waspOutputMode SAMtag --readMapNumber {params.readMapNumber} --genomeDir ../ReferenceGenome/STARIndex/ --readFilesIn {input.R1} {input.R2} {params.wasp} {input.vcf} --outSAMtype BAM SortedByCoordinate --readFilesCommand zcat
-#        """
+rule STAR_Align_WASP:
+    input:
+        index = "ReferenceGenome/STARIndex/chrLength.txt",
+        R1 = "FastqFastp/{Phenotype}/{IndID}/{Rep}.R1.fastq.gz",
+        R2 = "FastqFastp/{Phenotype}/{IndID}/{Rep}.R2.fastq.gz",
+        vcf = "ReferenceGenome/STAR_WASP_Vcfs/{Phenotype}/WholeGenome.vcf"
+    output:
+        bam = "Alignments/STAR_Align/{Phenotype}/{IndID}/{Rep}/Aligned.sortedByCoord.bam"
+    threads: 8
+    params:
+        mem_mb = 58000,
+        readMapNumber = 250000
+    resources:
+        cpus_per_node = 9
+    wildcard_constraints:
+        Phenotype = "Expression.Splicing|chRNA.Expression.Splicing"
+    shell:
+        """
+        STAR --waspOutputMode SAMtag --readMapNumber {params.readMapNumber} --genomeDir ../ReferenceGenome/STARIndex/ --readFilesIn {input.R1} {input.R2} --varVCFfile {input.vcf} --outSAMtype BAM SortedByCoordinate --readFilesCommand zcat --waspOutputMode SAMtag --outSAMattributes vW vG --runThreadN {threads}
+        """
 
-# rule FilterBAM_WaspTags:
+rule FilterBAM_WaspTags:
+    input:
+        bam = "Alignments/STAR_Align/{Phenotype}/{IndID}/{Rep}/Aligned.sortedByCoord.bam"
+    output:
+        bam = "Alinments/STAR_Align/{Phenotype}/{IndID}/{Rep}/Filtered.bam",
+        bai = "Alinments/STAR_Align/{Phenotype}/{IndID}/{Rep}/Filtered.bam.bai",
+    log:
+        "logs/FilterBAM_WaspTags/{Phenotype}/{IndID}.{Rep}.log"
+    shell:
+        """
+        cat <(samtools view -H {input.bam}) <(samtools view {input.bam} | grep -v "vW:i:[2-7]") | samtools view -bh > {output.bam}
+        samtools index {output.bam}
+        """
+
+rule Hisat2_Align:
+    input:
+        Ref = "ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa",
+        ht1 = "ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa.1.ht2",
+        R1 = "FastqFastp/{Phenotype}/{IndID}/{Rep}.R1.fastq.gz",
+        R2 = "FastqFastp/{Phenotype}/{IndID}/{Rep}.R2.fastq.gz",
+    output:
+        bam = "Alinments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.bam",
+        bai = "Alinments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.bam.bai"
+    threads: 8
+    resources:
+        mem_mb = 58000,
+        cpus_per_node = 9
+    shell:
+        """
+        (hisat2 -x ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa -p {threads} --no-spliced-alignment --no-discordant -p {threads} | samtools sort -n | samtools fixmate -m - - |   samtools sort | samtools markdup - -  > {output.bam}) &> {log}
+        """
+
+rule FilterHisat2PE_dups:
+    input:
+        bam = "Alinments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.bam",
+        bai = "Alinments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.bam.bai"
+    output:
+        bam = "Alinments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.dedup.bam",
+        bai = "Alinments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.dedup.bam.bai"
+    log:
+        "logs/FilterHisat2PE_dups/{Phenotype}/{IndID}.{Rep}.log"
+    shell:
+        """
+        samtools view -bh -F 1024 {input.bam} > {output.bam}
+        samtools index {output.bam}
+        """
+
+rule MakeHornetSnpList:
+    input:
+        "Genotypes/1KG_GRCh38/{chrom}.vcf.gz"
+    params:
+        IndIDs = lambda wildcards: ",".join(Fastq_samples.loc[(Fastq_samples['Include']==True) & (Fastq_samples['Phenotype']==wildcards.Phenotype), ['IndID']].drop_duplicates()['IndID'])
+    log:
+        "logs/MakeHornetSnpList/{Phenotype}/{chrom}.log"
+    output:
+        snps = "ReferenceGenome/HornetSnpLists/{Phenotype}/chr{chrom}.snps.txt.gz",
+    shell:
+        """
+        (bcftools view -H -s {params.IndIDs} -m2 -M2 -v snps --force-samples -c 1:minor {input} | awk -F'\\t' '{{ print $2, $4, $5 }}' | gzip - > {output} ) &> {log}
+        """
+
+# rule Hornet_find_intersecting_snps:
+#     input:
+#         bam = "Alinments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.dedup.bam",
+#         bai = "Alinments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.dedup.bam.bai",
+#         snp_lists = expand("ReferenceGenome/HornetSnpLists/{{Phenotype}}/{chrom}.txt.gz", chrom=autosomes)
+#     output:
+
+# rule ChromatinProfilingToBigwig:
+#     input:
+#         input
+#     output:
+#         output
+#     log:
+#         "logs/ChromatinProfilingToBigwig.log"
+#     shell:
+#         """
+#         shell
+#         """
+
+# rule RNASeqToBigwig:
+#     input:
+#         input
+#     output:
+#         output
+#     log:
+#         "logs/RNASeqToBigwig.log"
+#     shell:
+#         """
+#         shell
+#         """
+
+# def GetReplicateBams(wildcards):
+#     if wildcards.P
+
+# rule MergeReplicates:
+#     input:
+#         bams = GetReplicateBams
+#     output:
+#         bam = "Alignments/{Phenotype}/{IndID}.bam"
+#         bai = "Alignments/{Phenotype}/{IndID}.bam.bai"
+#     log:
+#         "logs/MergeReplicates/{Phenotype}/{IndID}.log"
+#     shell:
+#         """
+#         samtools merge {output.bam} {input} &> {log}
+#         samtools index {output.bam}
+#         """
 
 
-
-#STAR --waspOutputMode SAMtag --readMapNumber 250000 --genomeDir ../ReferenceGenome/STARIndex/ --readFilesIn ../FastqFastp/Expression.Splicing/HG00096/1.R1.fastq.gz --varVCFfile ../ReferenceGenome/STAR_WASP_Vcfs/Geuvadis.chr22.vcf --outSAMtype BAM SortedByCoordinate --readFilesCommand zcat
-
-# rule PostAlignmentBAMFiltering
-# samtools view -H {input.bam}
+# rule Macs2PeakCalling:
+#     input:
+#         bams = expand()
+#     output:
+#         peaks = "PeakCalling/H3K36me3/H3K36me3_peaks.broadPeak",
+#         saf = "PeakCalling/H3K36me3/H3K36me3_peaks.broadPeak.saf"
+#     shell:
+#         """
+#         macs2 callpeak --broad --name H3K36me3 --outdir PeakCalling/H3K36me3/ -t {input.bamsInCorrectPlace}
+#         awk -F'\\t' -v OFS='\\t' 'BEGIN {{ print "GeneID", "Chr", "Start", "End", "Strand" }} {{ print $4, $1, $2, $3, $6 }}' {output.peaks} > {output.saf}
+#         """
