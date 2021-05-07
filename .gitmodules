@@ -1,0 +1,3 @@
+[submodule "code/scripts/Hornet"]
+	path = code/scripts/Hornet
+	url = https://github.com/TheFraserLab/Hornet.git

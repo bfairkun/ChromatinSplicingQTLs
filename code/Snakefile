@@ -13,13 +13,15 @@ include: "rules/common.smk"
 wildcard_constraints:
     chrom="|".join(autosomes),
     IndID="|".join(Fastq_samples['IndID']),
-    rep="\d+"
+    Rep="\d+"
 
 localrules: all, CopyFastqFromLocal, DownloadFastqFromLink, Download1KG_GRCh38, STAR_make_index
 ruleorder: CopyFastqFromLocal > DownloadFastqFromLink
 
 ChromatinProfilingPhenotypes = Fastq_samples.loc[ (Fastq_samples['Assay'].isin(["ChIP-seq", "CutAndTag"]))  ]['Phenotype'].unique()
 RNASeqPhenotypes = Fastq_samples.loc[ (Fastq_samples['Assay']=="RNA-seq")  ]['Phenotype'].unique()
+ChromatinProfilingSamples_df = Fastq_samples.loc[ (Fastq_samples['Assay'].isin(["ChIP-seq", "CutAndTag"])) , ['Phenotype', 'IndID', 'RepNumber'] ].drop_duplicates()
+RNASeqSamples_df = Fastq_samples.loc[ (Fastq_samples['Assay']=="RNA-seq") , ['Phenotype', 'IndID', 'RepNumber'] ].drop_duplicates()
 
 
 rule all:
@@ -34,12 +36,12 @@ rule all:
         # "Phenotypes/GEUVADIS_RNAseq/leafcutter/SplicingPhenotypesQQNormed.bed.gz",
         # # "QTLs/sQTLs/permuations_pass.txt.gz",
         # "QTLs/sQTLs/permutation_pass_chunks/1.1000.txt.gz",
-        expand("FastqFastp/{Phenotype}/{IndID}/{Rep}.R2.fastq.gz", zip, Phenotype=Fastq_samples['Phenotype'], IndID=Fastq_samples['IndID'], Rep=Fastq_samples['RepNumber']),
-        # expand("Alignments_perSample/{Phenotype}/{IndID}.{Rep}.bam", zip, Phenotype=Fastq_samples['Phenotype'], IndID=Fastq_samples['IndID'], Rep=Fastq_samples['RepNumber'])
-        "ReferenceGenome/STARIndex/chrLength.txt",
+        # expand("FastqFastp/{Phenotype}/{IndID}/{Rep}.R2.fastq.gz", zip, Phenotype=Fastq_samples['Phenotype'], IndID=Fastq_samples['IndID'], Rep=Fastq_samples['RepNumber']),
         # expand("ReferenceGenome/STAR_WASP_Vcfs/{Phenotype}/{chrom}.vcf", Phenotype=['Expression.Splicing'], chrom=autosomes),
-        "ReferenceGenome/STAR_WASP_Vcfs/Expression.Splicing/WholeGenome.vcf",
-        expand("ReferenceGenome/HornetSnpLists/{Phenotype}/chr{chrom}.snps.txt.gz", Phenotype="CTCF", chrom=autosomes)
+        # "ReferenceGenome/STAR_WASP_Vcfs/Expression.Splicing/WholeGenome.vcf",
+        # expand("ReferenceGenome/HornetSnpLists/{Phenotype}/chr{chrom}.snps.txt.gz", Phenotype="CTCF", chrom=autosomes)
+        expand("Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.dedup.wasp_filterd.sorted.bam", zip, Phenotype= ChromatinProfilingSamples_df['Phenotype'], IndID=ChromatinProfilingSamples_df['IndID'], Rep=ChromatinProfilingSamples_df['RepNumber']),
+        expand("Alignments/STAR_Align/{Phenotype}/{IndID}/{Rep}/Filtered.bam", zip, Phenotype=RNASeqSamples_df['Phenotype'], IndID=RNASeqSamples_df['IndID'], Rep=RNASeqSamples_df['RepNumber'])
 
 rule Download1KG_GRCh38:
     output:
@@ -69,8 +71,8 @@ rule CopyFastqFromLocal:
         R1 = GetFastqLocalFuncs('R1_local'),
         R2 = GetFastqLocalFuncs('R2_local'),
     output:
-        R1 = "Fastq/{Phenotype}/{IndID}/{Rep}.R1.fastq.gz",
-        R2 = "Fastq/{Phenotype}/{IndID}/{Rep}.R2.fastq.gz"
+        R1 = temp("Fastq/{Phenotype}/{IndID}/{Rep}.R1.fastq.gz"),
+        R2 = temp("Fastq/{Phenotype}/{IndID}/{Rep}.R2.fastq.gz")
     log:
         "logs/MoveFastqFromLTS/{Phenotype}.{IndID}.{Rep}.log"
     shell:
@@ -83,8 +85,8 @@ rule DownloadFastqFromLink:
     input:
         aspera_key = config['aspera_key']
     output:
-        R1 = "Fastq/{Phenotype}/{IndID}/{Rep}.R1.fastq.gz",
-        R2 = "Fastq/{Phenotype}/{IndID}/{Rep}.R2.fastq.gz"
+        R1 = temp("Fastq/{Phenotype}/{IndID}/{Rep}.R1.fastq.gz"),
+        R2 = temp("Fastq/{Phenotype}/{IndID}/{Rep}.R2.fastq.gz")
     log:
         "logs/DownloadFastqFromAsperaLink/{Phenotype}.{IndID}.{Rep}.log"
     params:
@@ -147,30 +149,6 @@ rule MakeHisat2Index:
         hisat2-build {input} {input} -p {threads} &> {log}
         """
 
-rule AlignPE_NoSplicing:
-    """
-    Alin with hisat, sort, and markdups bsaed on identical PE mappings
-    """
-    input:
-        index = "ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa.1.ht2",
-        Ref = "ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa",
-        R1 = "FastqFastp/{Phenotype}/{IndID}/{Rep}.R1.fastq.gz",
-        R2 = "FastqFastp/{Phenotype}/{IndID}/{Rep}.R2.fastq.gz",
-    output:
-        bam = "Alignments_perSample/{Phenotype}/{IndID}.{Rep}.bam",
-        bai = "Alignments_perSample/{Phenotype}/{IndID}.{Rep}.bam.bai"
-    log:
-        "logs/AlignPE_NoSplicing/{Phenotype}.{IndID}.{Rep}.log"
-    params:
-        MaxPE_InsertLen = 1000
-        #1000 for CTCF
-    conda:
-        "envs/hisat2.yml"
-    shell:
-        """
-        (hisat2 -x {input.Ref} --no-spliced-alignment --no-discordant --maxins {params.MaxPE_InsertLen} -p {threads} | samtools sort -n | samtools fixmate -m - - |   samtools sort | samtools markdup - -  > {output.bam}) &> {log}
-        samtools index {output.bam}
-        """
 
 rule STAR_make_index:
     """
@@ -236,26 +214,29 @@ rule STAR_Align_WASP:
         R2 = "FastqFastp/{Phenotype}/{IndID}/{Rep}.R2.fastq.gz",
         vcf = "ReferenceGenome/STAR_WASP_Vcfs/{Phenotype}/WholeGenome.vcf"
     output:
-        bam = "Alignments/STAR_Align/{Phenotype}/{IndID}/{Rep}/Aligned.sortedByCoord.bam"
+        bam = temp("Alignments/STAR_Align/{Phenotype}/{IndID}/{Rep}/Aligned.sortedByCoord.out.bam")
     threads: 8
+    log: "logs/STAR_Align_WASP/{Phenotype}/{IndID}.{Rep}.log"
     params:
-        mem_mb = 58000,
-        readMapNumber = 250000
+        readMapNumber = -1,
+        ENCODE_params = "--outFilterType BySJout --outFilterMultimapNmax 20  --alignSJoverhangMin 8 --alignSJDBoverhangMin 1 --outFilterMismatchNmax 999 --outFilterMismatchNoverReadLmax 0.04 --alignIntronMin 20 --alignIntronMax 1000000 --alignMatesGapMax 1000000",
+        WASP_params = "--waspOutputMode SAMtag --outSAMattributes vW vG --varVCFfile"
     resources:
-        cpus_per_node = 9
+        cpus_per_node = 9,
+        mem = 58000,
     wildcard_constraints:
         Phenotype = "Expression.Splicing|chRNA.Expression.Splicing"
     shell:
         """
-        STAR --waspOutputMode SAMtag --readMapNumber {params.readMapNumber} --genomeDir ../ReferenceGenome/STARIndex/ --readFilesIn {input.R1} {input.R2} --varVCFfile {input.vcf} --outSAMtype BAM SortedByCoordinate --readFilesCommand zcat --waspOutputMode SAMtag --outSAMattributes vW vG --runThreadN {threads}
+        STAR --readMapNumber {params.readMapNumber} --outFileNamePrefix Alignments/STAR_Align/{wildcards.Phenotype}/{wildcards.IndID}/{wildcards.Rep}/ --genomeDir ReferenceGenome/STARIndex/ --readFilesIn {input.R1} {input.R2} --outSAMtype BAM SortedByCoordinate --readFilesCommand zcat --runThreadN {threads} --outSAMmultNmax 1 {params.WASP_params} {input.vcf} --limitBAMsortRAM 10000000000 {params.ENCODE_params} &> {log}
         """
 
 rule FilterBAM_WaspTags:
     input:
-        bam = "Alignments/STAR_Align/{Phenotype}/{IndID}/{Rep}/Aligned.sortedByCoord.bam"
+        bam = "Alignments/STAR_Align/{Phenotype}/{IndID}/{Rep}/Aligned.sortedByCoord.out.bam"
     output:
-        bam = "Alinments/STAR_Align/{Phenotype}/{IndID}/{Rep}/Filtered.bam",
-        bai = "Alinments/STAR_Align/{Phenotype}/{IndID}/{Rep}/Filtered.bam.bai",
+        bam = "Alignments/STAR_Align/{Phenotype}/{IndID}/{Rep}/Filtered.bam",
+        bai = "Alignments/STAR_Align/{Phenotype}/{IndID}/{Rep}/Filtered.bam.bai",
     log:
         "logs/FilterBAM_WaspTags/{Phenotype}/{IndID}.{Rep}.log"
     shell:
@@ -271,29 +252,36 @@ rule Hisat2_Align:
         R1 = "FastqFastp/{Phenotype}/{IndID}/{Rep}.R1.fastq.gz",
         R2 = "FastqFastp/{Phenotype}/{IndID}/{Rep}.R2.fastq.gz",
     output:
-        bam = "Alinments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.bam",
-        bai = "Alinments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.bam.bai"
+        bam = "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.bam",
+        bai = "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.bam.bai"
     threads: 8
+    conda:
+        "envs/hisat2.yml"
+    params:
+        MaxPE_InsertLen = 1000
+    log:
+        "logs/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.log"
     resources:
-        mem_mb = 58000,
+        mem = 58000,
         cpus_per_node = 9
     shell:
         """
-        (hisat2 -x ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa -p {threads} --no-spliced-alignment --no-discordant -p {threads} | samtools sort -n | samtools fixmate -m - - |   samtools sort | samtools markdup - -  > {output.bam}) &> {log}
+        (hisat2 -1 {input.R1} -2 {input.R2} -x ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa -p {threads} --no-spliced-alignment --no-discordant --maxins {params.MaxPE_InsertLen} | samtools view -bh -F256 | samtools sort -n | samtools fixmate -m - - |   samtools sort | samtools markdup - -  > {output.bam}) &> {log}
+        samtools index {output.bam}
         """
 
 rule FilterHisat2PE_dups:
     input:
-        bam = "Alinments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.bam",
-        bai = "Alinments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.bam.bai"
+        bam = "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.bam",
+        bai = "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.bam.bai"
     output:
-        bam = "Alinments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.dedup.bam",
-        bai = "Alinments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.dedup.bam.bai"
+        bam = "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.dedup.bam",
+        bai = "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.dedup.bam.bai"
     log:
         "logs/FilterHisat2PE_dups/{Phenotype}/{IndID}.{Rep}.log"
     shell:
         """
-        samtools view -bh -F 1024 {input.bam} > {output.bam}
+        samtools view -bh -F 3072 {input.bam} > {output.bam} 2> {log}
         samtools index {output.bam}
         """
 
@@ -311,12 +299,67 @@ rule MakeHornetSnpList:
         (bcftools view -H -s {params.IndIDs} -m2 -M2 -v snps --force-samples -c 1:minor {input} | awk -F'\\t' '{{ print $2, $4, $5 }}' | gzip - > {output} ) &> {log}
         """
 
-# rule Hornet_find_intersecting_snps:
-#     input:
-#         bam = "Alinments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.dedup.bam",
-#         bai = "Alinments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.dedup.bam.bai",
-#         snp_lists = expand("ReferenceGenome/HornetSnpLists/{{Phenotype}}/{chrom}.txt.gz", chrom=autosomes)
-#     output:
+rule Hornet_find_intersecting_snps:
+    """
+    keep: reads to keep that do not intersect snps
+    remap: reads to remap. In fastq, the snp allele is switched
+    """
+    input:
+        bam = "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.dedup.bam",
+        bai = "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.dedup.bam.bai",
+        snp_lists = expand("ReferenceGenome/HornetSnpLists/{{Phenotype}}/chr{chrom}.snps.txt.gz", chrom=autosomes)
+    output:
+        R1 = "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.dedup.remap.fq1.gz",
+        R2 = "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.dedup.remap.fq2.gz",
+        keep = "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.dedup.keep.bam",
+        remap = "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.dedup.to.remap.bam"
+    log:
+        "logs/Hornet_find_intersecting_snps/{Phenotype}/{IndID}.{Rep}.log"
+    resources:
+        mem = 12000
+    shell:
+        """
+        python scripts/Hornet/mapping/find_intersecting_snps.py -p {input.bam} ReferenceGenome/HornetSnpLists/{wildcards.Phenotype} &> {log}
+        """
+
+use rule Hisat2_Align as Hornet_Hisat2_Align with:
+    input:
+        Ref = "ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa",
+        ht1 = "ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa.1.ht2",
+        R1 = "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.dedup.remap.fq1.gz",
+        R2 = "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.dedup.remap.fq2.gz",
+    output:
+        bam = "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.hornet.remapped.bam",
+        bai = "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.hornet.remapped.bam.bai"
+    log:
+        "logs/Horney_Hisat2_Align/{Phenotype}/{IndID}.{Rep}.log"
+
+rule Hornet_filter_remapped:
+    """
+    check that remapped reads with allele siwtched map to same place. If they
+    do, write to kept. Merge kept with keep from Hornet_find_intersecting_snps
+    rule
+    """
+    input:
+        remap_bam = "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.hornet.remapped.bam",
+        keep_bam = "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.dedup.keep.bam",
+        to_remap_bam = "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.dedup.to.remap.bam"
+    output:
+        kept_bam = "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.hornet.remapped.kept.bam",
+        keep_bam_sorted = "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.dedup.keep.sorted.bam",
+        kept_bam_sorted = "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.dedup.kept.sorted.bam",
+        merged_bam = "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.dedup.wasp_filterd.sorted.bam",
+        merged_bai = "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.dedup.wasp_filterd.sorted.bam.bai",
+    log:
+        "logs/Hornet_filter_remapped/{Phenotype}/{IndID}.{Rep}.log"
+    shell:
+        """
+        python scripts/Hornet/mapping/filter_remapped_reads.py {input.remap_bam} {input.to_remap_bam} {output.kept_bam} &> {log}
+        samtools sort {input.keep_bam} -o {output.keep_bam_sorted}
+        samtools sort {output.kept_bam} -o {output.kept_bam_sorted}
+        samtools merge {output.merged_bam} {output.kept_bam_sorted} {output.keep_bam_sorted}
+        samtools index {output.merged_bam}
+        """
 
 # rule ChromatinProfilingToBigwig:
 #     input:
