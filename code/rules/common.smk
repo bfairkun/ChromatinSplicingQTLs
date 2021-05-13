@@ -3,19 +3,18 @@ import os
 
 autosomes = [str(i) for i in range(1,23)]
 
-# ## GEUVADIS RNA-seq info
-# GEUVADIS_samples = pd.read_csv("../data/E-GEUV-1.sdrf.txt", sep='\t')
-# GEUVADIS_sample_links_dict = dict(zip(GEUVADIS_samples["Scan Name"], GEUVADIS_samples["Comment[FASTQ_URI]"]))
-# GEUVADIS_line_fastq_dict = dict([(k.split(".")[0], k[:-10]) for k in GEUVADIS_sample_links_dict.keys()])
-
-# ## Grubert et al ChIP-seq info
-# Grubert_samples = pd.read_csv("../data/PRJNA268086_SraRunTable.GrubertEtAl.csv")
-# # df containing only antibody, SRR accession, and cell line
-# Grubert_ChIP_seq = Grubert_samples[Grubert_samples['Assay Type']=="ChIP-Seq"][['Run', 'Antibody', 'Cell_Line']]
-# Grubert_ChIP_seq_dict = dict(zip(zip(Grubert_ChIP_seq['Antibody'], Grubert_ChIP_seq['Cell_Line']), Grubert_ChIP_seq['Run']))
-
 ## All Fastq samples
 Fastq_samples = pd.read_csv("config/samples.tsv", sep='\t')
+
+# Define some df subsets from the samples df as useful global variables
+ChromatinProfilingPhenotypes = Fastq_samples.loc[ (Fastq_samples['Assay'].isin(["ChIP-seq", "CutAndTag"]))  ]['Phenotype'].unique().tolist()
+RNASeqPhenotypes = Fastq_samples.loc[ (Fastq_samples['Assay']=="RNA-seq")  ]['Phenotype'].unique().tolist()
+RNASeqExpressionPhenotypes = ['polyA.Expression', 'chRNA.Expression']
+RNASeqPhenotypes_extended = RNASeqPhenotypes + RNASeqExpressionPhenotypes
+ChromatinProfilingSamples_df = Fastq_samples.loc[ (Fastq_samples['Assay'].isin(["ChIP-seq", "CutAndTag"])) , ['Phenotype', 'IndID', 'RepNumber'] ].drop_duplicates()
+RNASeqSamples_df = Fastq_samples.loc[ (Fastq_samples['Assay']=="RNA-seq") , ['Phenotype', 'IndID', 'RepNumber'] ].drop_duplicates()
+
+
 # Retrieve samples where
 # Fastq_samples.loc[(Fastq_samples['IndID'] == "NA18489") & (Fastq_samples['Phenotype'] == "H3K27AC") & (Fastq_samples['Include']==True)]
 # Get unique samples by group
@@ -81,3 +80,14 @@ def GetReadsForAlignmentFuncs(Read):
             return "Fastq/{wildcards.Phenotype}/{wildcards.IndID}/{wildcards.Rep}.{Read}.fastq.gz".format(wildcards=wildcards, Read=Read)
     return F
 
+def GetBamForBigwig(wildcards):
+    if wildcards.Phenotype in RNASeqPhenotypes:
+        return "Alignments/STAR_Align/{Phenotype}/{IndID}/{Rep}/Filtered.bam"
+    elif wildcards.Phenotype in ChromatinProfilingPhenotypes:
+        return "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.wasp_filterd.markdup.sorted.bam"
+
+def GetBigwigParams(wildcards):
+    if wildcards.Phenotype in RNASeqPhenotypes:
+        return "-split"
+    elif wildcards.Phenotype in ChromatinProfilingPhenotypes:
+        return "-pc"

@@ -1,3 +1,9 @@
 [submodule "code/scripts/Hornet"]
 	path = code/scripts/Hornet
 	url = https://github.com/TheFraserLab/Hornet.git
+[submodule "code/scripts/GenometracksByGenotype"]
+	path = code/scripts/GenometracksByGenotype
+	url = https://github.com/bfairkun/GenometracksByGenotype.git
+[submodule "code/scripts/leafcutter"]
+	path = code/scripts/leafcutter
+	url = https://github.com/davidaknowles/leafcutter.git
