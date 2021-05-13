@@ -33,7 +33,8 @@ rule all:
         expand("bigwigs/{Phenotype}/{IndID}.{Rep}.bw", zip, Phenotype=Fastq_samples['Phenotype'], IndID=Fastq_samples['IndID'], Rep=Fastq_samples['RepNumber']),
         multiext("ReferenceGenome/Annotations/gencode.v34.primary_assembly.annotation.gtf", "_all_exons.txt.gz", "_all_introns.bed.gz", "_fiveprime.bed.gz", "_threeprime.bed.gz"),
         # expand("PeakCalling/{Phenotype}.peaks.saf", Phenotype=ChromatinProfilingPhenotypes)
-        expand("SplicingAnalysis/leafcutter/clustering/chr{chrom}/leafcutter_perind.counts.gz", chrom=autosomes),
+        # expand("SplicingAnalysis/leafcutter/clustering/chr{chrom}/leafcutter_perind.counts.gz", chrom=autosomes),
+        "SplicingAnalysis/leafcutter/clustering/autosomes/leafcutter_perind.counts.gz", 
         expand("featureCounts/{Phenotype}/Counts.txt", Phenotype=RNASeqExpressionPhenotypes + ChromatinProfilingPhenotypes)
 
 
@@ -49,7 +50,7 @@ rule ExtractJuncs:
         bai = GetBaiForBigwig
     output:
         junc = temp(expand("SplicingAnalysis/leafcutter/juncfiles/chr{chrom}/{{Phenotype}}_{{IndID}}_{{Rep}}.junc", chrom=autosomes)),
-        junc_autosomes = "SplicingAnalysis/leafcutter/juncfiles/autosomes/{{Phenotype}}_{{IndID}}_{{Rep}}",
+        junc_autosomes = "SplicingAnalysis/leafcutter/juncfiles/autosomes/{Phenotype}_{IndID}_{Rep}.junc",
     params:
         # strand = GetLibStrandForRegtools
         strand = 0
@@ -110,15 +111,15 @@ rule leafcutter_cluster:
         juncs = expand ("SplicingAnalysis/leafcutter/juncfiles/autosomes/{Phenotype}_{IndID}_{Rep}.junc",  zip, Phenotype=RNASeqSamples_df['Phenotype'], IndID=RNASeqSamples_df['IndID'], Rep=RNASeqSamples_df['RepNumber']),
         juncfile_list = "SplicingAnalysis/leafcutter/juncfilelist.autosomes.txt"
     output:
-        "SplicingAnalysis/leafcutter/clustering/chr{chrom}/leafcutter_perind.counts.gz",
-        "SplicingAnalysis/leafcutter/clustering/chr{chrom}/leafcutter_perind_numers.counts.gz"
+        "SplicingAnalysis/leafcutter/clustering/autosomes/leafcutter_perind.counts.gz",
+        "SplicingAnalysis/leafcutter/clustering/autosomes/leafcutter_perind_numers.counts.gz"
     resources:
         mem_mb = 16000
     log:
-        "logs/leafcutter_cluster/chr{chrom}.log"
+        "logs/leafcutter_cluster/autosomes.log"
     shell:
         """
-        python scripts/leafcutter/scripts/leafcutter_cluster_regtools_py3.py -j {input.juncfile_list} -r SplicingAnalysis/leafcutter/clustering/chr{wildcards.chrom}/ &> {log}
+        python scripts/leafcutter/scripts/leafcutter_cluster_regtools_py3.py -j {input.juncfile_list} -r SplicingAnalysis/leafcutter/clustering/autosomes/ &> {log}
         """
 
 # rule leafcutter_cluster:
