@@ -276,7 +276,7 @@ rule MakeBigwigs:
     log:
         "logs/MakeBigwigs/{Phenotype}/{IndID}.{Rep}.log"
     resources:
-        mem = 32000
+        mem = 48000
     shell:
         """
         scripts/GenometracksByGenotype/BamToBigwig.sh {input.fai} {input.bam} {output.bw} {params} -scale $(bc <<< "scale=3;1000000000/$(samtools idxstats {input.bam} | awk '$1 ~ "^chr" {{sum+=$2}} END{{printf sum}}')") &> {log}
