@@ -33,7 +33,7 @@ rule all:
         expand("bigwigs/{Phenotype}/{IndID}.{Rep}.bw", zip, Phenotype=Fastq_samples['Phenotype'], IndID=Fastq_samples['IndID'], Rep=Fastq_samples['RepNumber']),
         multiext("ReferenceGenome/Annotations/gencode.v34.primary_assembly.annotation.gtf", "_all_exons.txt.gz", "_all_introns.bed.gz", "_fiveprime.bed.gz", "_threeprime.bed.gz"),
         # expand("PeakCalling/{Phenotype}.peaks.saf", Phenotype=ChromatinProfilingPhenotypes)
-        # "SplicingAnalysis/leafcutter/clustering/leafcutter_perind.counts.gz",
+        expand("SplicingAnalysis/leafcutter/clustering/chr{chrom}/leafcutter_perind.counts.gz", chrom=autosomes),
         expand("featureCounts/{Phenotype}/Counts.txt", Phenotype=RNASeqExpressionPhenotypes + ChromatinProfilingPhenotypes)
 
 
@@ -45,19 +45,35 @@ def GetLibStrandForRegtools(wildcards):
 
 rule ExtractJuncs:
     input:
-        GetBamForBigwig
+        bam = GetBamForBigwig,
+        bai = GetBaiForBigwig
     output:
-        junc = "Alignments/STAR_Align/{Phenotype}/{IndID}/{Rep}/Filtered.junc",
+        junc = temp(expand("SplicingAnalysis/leafcutter/juncfiles/chr{chrom}/{{Phenotype}}_{{IndID}}_{{Rep}}.junc", chrom=autosomes)),
+        junc_autosomes = "SplicingAnalysis/leafcutter/juncfiles/autosomes/{{Phenotype}}_{{IndID}}_{{Rep}}",
     params:
-        GetLibStrandForRegtools
+        # strand = GetLibStrandForRegtools
+        strand = 0
     conda:
         "envs/regtools.yml"
     log:
         "logs/ExtractJuncs/{Phenotype}/{IndID}.{Rep}.log"
     shell:
         """
-        regtools junctions extract -m 20 -s {params} > {output}
+        for chrom in {autosomes}
+        do
+            (regtools junctions extract -m 20 -s {params.strand} -r chr${{chrom}} {input.bam} > SplicingAnalysis/leafcutter/juncfiles/chr${{chrom}}/{wildcards.Phenotype}_{wildcards.IndID}_{wildcards.Rep}.junc ) &> {log}
+        done
+        cat {output.junc} > {output.junc_autosomes}
         """
+
+#rule MergeJuncsByChrom:
+#    #TODO, use regtools junctions annotate
+#    input:
+#        junc = expand("Alignments/STAR_Align/{Phenotype}/{IndID}/{Rep}/Filtered.chr{chrom}.junc")
+#    output:
+#        junctions_bed = ,
+#        junctions_annotated_bed = 
+
 
 # rule ExtractIntrons:
 #     input:
@@ -72,9 +88,9 @@ rule ExtractJuncs:
 
 rule make_leafcutter_juncfile:
     input:
-        expand ("Alignments/STAR_Align/{Phenotype}/{IndID}/{Rep}/Filtered.junc",  zip, Phenotype=RNASeqSamples_df['Phenotype'], IndID=RNASeqSamples_df['IndID'], Rep=RNASeqSamples_df['RepNumber']),
+        expand ("SplicingAnalysis/leafcutter/juncfiles/autosomes/{Phenotype}_{IndID}_{Rep}.junc",  zip, Phenotype=RNASeqSamples_df['Phenotype'], IndID=RNASeqSamples_df['IndID'], Rep=RNASeqSamples_df['RepNumber']),
     output:
-        "SplicingAnalysis/leafcutter/juncfilelist.txt"
+        "SplicingAnalysis/leafcutter/juncfilelist.autosomes.txt"
     params:
         SamplesToRemove = ""
     run:
@@ -91,17 +107,33 @@ rule make_leafcutter_juncfile:
 
 rule leafcutter_cluster:
     input:
-        juncs = expand ("Alignments/STAR_Align/{Phenotype}/{IndID}/{Rep}/Filtered.junc",  zip, Phenotype=RNASeqSamples_df['Phenotype'], IndID=RNASeqSamples_df['IndID'], Rep=RNASeqSamples_df['RepNumber']),
-        juncfile_list = "SplicingAnalysis/leafcutter/juncfilelist.txt"
+        juncs = expand ("SplicingAnalysis/leafcutter/juncfiles/autosomes/{Phenotype}_{IndID}_{Rep}.junc",  zip, Phenotype=RNASeqSamples_df['Phenotype'], IndID=RNASeqSamples_df['IndID'], Rep=RNASeqSamples_df['RepNumber']),
+        juncfile_list = "SplicingAnalysis/leafcutter/juncfilelist.autosomes.txt"
     output:
-        "SplicingAnalysis/leafcutter/clustering/leafcutter_perind.counts.gz",
-        "SplicingAnalysis/leafcutter/clustering/leafcutter_perind_numers.counts.gz"
+        "SplicingAnalysis/leafcutter/clustering/chr{chrom}/leafcutter_perind.counts.gz",
+        "SplicingAnalysis/leafcutter/clustering/chr{chrom}/leafcutter_perind_numers.counts.gz"
+    resources:
+        mem_mb = 16000
     log:
-        "logs/leafcutter_cluster.log"
+        "logs/leafcutter_cluster/chr{chrom}.log"
     shell:
         """
-        python scripts/leafcutter/scripts/leafcutter_cluster_regtools_py3.py -j {input.juncfile_list} -r SplicingAnalysis/leafcutter/clustering/ -k &> {log}
+        python scripts/leafcutter/scripts/leafcutter_cluster_regtools_py3.py -j {input.juncfile_list} -r SplicingAnalysis/leafcutter/clustering/chr{wildcards.chrom}/ &> {log}
         """
+
+# rule leafcutter_cluster:
+#     input:
+#         juncs = expand ("SplicingAnalysis/leafcutter/juncfiles/chr{{chrom}}/{Phenotype}_{IndID}_{Rep}.junc",  zip, Phenotype=RNASeqSamples_df['Phenotype'], IndID=RNASeqSamples_df['IndID'], Rep=RNASeqSamples_df['RepNumber']),
+#         juncfile_list = "SplicingAnalysis/leafcutter/juncfilelist.chr{chrom}.txt"
+#     output:
+#         "SplicingAnalysis/leafcutter/clustering/chr{chrom}/leafcutter_perind.counts.gz",
+#         "SplicingAnalysis/leafcutter/clustering/chr{chrom}/leafcutter_perind_numers.counts.gz"
+#     log:
+#         "logs/leafcutter_cluster/chr{chrom}.log"
+#     shell:
+#         """
+#         python scripts/leafcutter/scripts/leafcutter_cluster_regtools_py3.py -j {input.juncfile_list} -r SplicingAnalysis/leafcutter/clustering/chr{wildcards.chrom}/ &> {log}
+#         """
 
 
 def GetBamForPhenotype(wildcards):

@@ -86,6 +86,12 @@ def GetBamForBigwig(wildcards):
     elif wildcards.Phenotype in ChromatinProfilingPhenotypes:
         return "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.wasp_filterd.markdup.sorted.bam"
 
+def GetBaiForBigwig(wildcards):
+    if wildcards.Phenotype in RNASeqPhenotypes:
+        return "Alignments/STAR_Align/{Phenotype}/{IndID}/{Rep}/Filtered.bam.bai"
+    elif wildcards.Phenotype in ChromatinProfilingPhenotypes:
+        return "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.wasp_filterd.markdup.sorted.bam.bai"
+
 def GetBigwigParams(wildcards):
     if wildcards.Phenotype in RNASeqPhenotypes:
         return "-split"
