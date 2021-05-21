@@ -26,5 +26,6 @@ scripts/.snakemake*
 !.test
 !snakemake.sbatch
 !cluster-config.json
+!.multiqc_config.yaml
 *.swp
 **__pycache__/

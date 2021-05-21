@@ -28,7 +28,9 @@ ColumnRenamerFunction <- args[2]
 Gtf_FileIn <- args[3]
 genesBed_FileIn <- args[4]
 GeneListOut <- args[5]
-PhenotypesBedOut <- args[6]
+PhenotypesBedOut_All <- args[6]
+PhenotypesBedOut_OnlyFirstReps <- args[7]
+
 
 
 ### helper "ColumnRenamer" functions to rename the filename column names from featureCounts to the sampleIDs as used in the vcf for qtl calling
@@ -105,7 +107,17 @@ Out <- dat %>%
                (dat.qqnormed %>% as.data.frame() %>% rownames_to_column("Geneid")),
                by = "Geneid") %>%
     mutate(start= as.numeric(Start)) %>%
-    dplyr::select(`#Chr`=Chr, start, end=End, pid=Geneid, gid=Geneid, strand=Strand, everything())
+    mutate(across(where(is.numeric), round, 5)) %>%
+    dplyr::select(`#Chr`=Chr, start, end=End, pid=Geneid, gid=Geneid, strand=Strand, everything()) %>%
+    arrange(`#Chr`, start)
+
+# Write all samples out
+write_tsv(Out, "QTLs/QTLTools/Expression.Splicing/AllReps.qqnorm.bed.gz")
+
+Out %>%
+    select(1:6, matches("\\.1$")) %>%
+    rename_with(~str_remove(., '\\.1$')) %>%
+    write_tsv("QTLs/QTLTools/Expression.Splicing/OnlyFirstReps.qqnorm.bed.gz")
 
 
 #library(magrittr)

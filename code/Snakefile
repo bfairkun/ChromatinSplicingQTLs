@@ -1,9 +1,16 @@
 
 configfile: "config/config.yaml"
 
-include: "rules/common.smk"
+include: "rules/common.py"
 include: "rules/DownloadAndPreprocess.smk"
 include: "rules/Alignment.smk"
+include: "rules/MakeBigwigs.smk"
+include: "rules/CutAndTagChecks.smk"
+include: "rules/QC.smk"
+include: "rules/ExpressionAnalysis.smk"
+include: "rules/SplicingAnalysis.smk"
+include: "rules/ChromatinPehnotypesAnalysis.smk"
+include: "rules/QTLTools.smk"
 # include: "rules/other.smk"
 # include: "rules/DownloadData.smk"
 # include: "rules/RNASeqProcessing.smk"
@@ -17,141 +24,32 @@ wildcard_constraints:
     IndID="|".join(Fastq_samples['IndID']),
     Rep="\d+"
 
-localrules: all, CopyFastqFromLocal, DownloadFastqFromLink, Download1KG_GRCh38, STAR_make_index
+localrules: all, CopyFastqFromLocal, DownloadFastqFromLink, Download1KG_GRCh38, STAR_make_index, DownloadHg38Ref
 ruleorder: CopyFastqFromLocal > DownloadFastqFromLink
 
-
-
+MyPhenotypes = ["chRNA.IR", "Expression.Splicing", "H3K4ME1", "H3K27AC", "CTCF", "H3K4ME3", "chRNA.Splicing", "polyA.Splicing"]
 rule all:
     input:
-        # # "Phenotypes/GEUVADIS_RNAseq/leafcutter/clustering/leafcutter_perind.counts.gz.PCs",
         # expand("logs/PlotGruberQTLs/PlotFromShellScript.{pheno}.log", pheno=["H3K4ME3", "H3K27AC", "H3K4ME1"]),
         # "QTLs/sQTLs/permutation_pass_chunks/1.1000.txt.gz",
         # expand("FastqFastp/{Phenotype}/{IndID}/{Rep}.R2.fastq.gz", zip, Phenotype=Fastq_samples['Phenotype'], IndID=Fastq_samples['IndID'], Rep=Fastq_samples['RepNumber']),
         # expand("Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.wasp_filterd.markdup.sorted.bam", zip, Phenotype= ChromatinProfilingSamples_df['Phenotype'], IndID=ChromatinProfilingSamples_df['IndID'], Rep=ChromatinProfilingSamples_df['RepNumber']),
         # expand("Alignments/STAR_Align/{Phenotype}/{IndID}/{Rep}/Filtered.bam", zip, Phenotype=RNASeqSamples_df['Phenotype'], IndID=RNASeqSamples_df['IndID'], Rep=RNASeqSamples_df['RepNumber']),
-        expand("bigwigs/{Phenotype}/{IndID}.{Rep}.bw", zip, Phenotype=Fastq_samples['Phenotype'], IndID=Fastq_samples['IndID'], Rep=Fastq_samples['RepNumber']),
+        # expand("bigwigs/{Phenotype}/{IndID}.{Rep}.bw", zip, Phenotype=Fastq_samples['Phenotype'], IndID=Fastq_samples['IndID'], Rep=Fastq_samples['RepNumber']),
+        #Make bigwigs from test cut and tag
+        # "../output/QC/AutosomeCountsPerSamples.tsv",
+        expand("bigwigs_FromNonWASPFilteredReads/{Phenotype}/{IndID}.{Rep}.bw", Phenotype=["POL2S5", "POL2S2", "H3K9ME3", "H3K36ME3", "H3K79ME2"], IndID="NA19210", Rep="1"),
         multiext("ReferenceGenome/Annotations/gencode.v34.primary_assembly.annotation.gtf", "_all_exons.txt.gz", "_all_introns.bed.gz", "_fiveprime.bed.gz", "_threeprime.bed.gz"),
+        expand("SplicingAnalysis/IR/{Phenotype}/Counts.txt", Phenotype=RNASeqPhenotypes),
         # expand("PeakCalling/{Phenotype}.peaks.saf", Phenotype=ChromatinProfilingPhenotypes)
         # expand("SplicingAnalysis/leafcutter/clustering/chr{chrom}/leafcutter_perind.counts.gz", chrom=autosomes),
-        "SplicingAnalysis/leafcutter/clustering/autosomes/leafcutter_perind.counts.gz", 
-        expand("featureCounts/{Phenotype}/Counts.txt", Phenotype=RNASeqExpressionPhenotypes + ChromatinProfilingPhenotypes)
-
-
-def GetLibStrandForRegtools(wildcards):
-    if wildcards.Phenotype == "Expression.Splicing":
-        return 0
-    elif wildcards.Phenotype == "chRNA.Expression.Splicing":
-        return 2
-
-rule ExtractJuncs:
-    input:
-        bam = GetBamForBigwig,
-        bai = GetBaiForBigwig
-    output:
-        junc = temp(expand("SplicingAnalysis/leafcutter/juncfiles/chr{chrom}/{{Phenotype}}_{{IndID}}_{{Rep}}.junc", chrom=autosomes)),
-        junc_autosomes = "SplicingAnalysis/leafcutter/juncfiles/autosomes/{Phenotype}_{IndID}_{Rep}.junc",
-    params:
-        # strand = GetLibStrandForRegtools
-        strand = 0
-    conda:
-        "envs/regtools.yml"
-    log:
-        "logs/ExtractJuncs/{Phenotype}/{IndID}.{Rep}.log"
-    shell:
-        """
-        for chrom in {autosomes}
-        do
-            (regtools junctions extract -m 20 -s {params.strand} -r chr${{chrom}} {input.bam} > SplicingAnalysis/leafcutter/juncfiles/chr${{chrom}}/{wildcards.Phenotype}_{wildcards.IndID}_{wildcards.Rep}.junc ) &> {log}
-        done
-        cat {output.junc} > {output.junc_autosomes}
-        """
-
-#rule MergeJuncsByChrom:
-#    #TODO, use regtools junctions annotate
-#    input:
-#        junc = expand("Alignments/STAR_Align/{Phenotype}/{IndID}/{Rep}/Filtered.chr{chrom}.junc")
-#    output:
-#        junctions_bed = ,
-#        junctions_annotated_bed = 
-
-
-# rule ExtractIntrons:
-#     input:
-#     output:
-#         output
-#     log:
-#         "logs/ExtractIntrons.log"
-#     shell:
-#         """
-#         shell
-#         """
-
-rule make_leafcutter_juncfile:
-    input:
-        expand ("SplicingAnalysis/leafcutter/juncfiles/autosomes/{Phenotype}_{IndID}_{Rep}.junc",  zip, Phenotype=RNASeqSamples_df['Phenotype'], IndID=RNASeqSamples_df['IndID'], Rep=RNASeqSamples_df['RepNumber']),
-    output:
-        "SplicingAnalysis/leafcutter/juncfilelist.autosomes.txt"
-    params:
-        SamplesToRemove = ""
-    run:
-        import os
-        if params.SamplesToRemove:
-            SamplesToRemove = open(params.SamplesToRemove, 'r').read().split('\n')
-        else:
-            SamplesToRemove=[]
-        with open(output[0], "w") as out:
-            for filepath in input:
-                samplename = os.path.basename(filepath).split(".junc")[0]
-                if samplename not in  SamplesToRemove:
-                    out.write(filepath + '\n')
-
-rule leafcutter_cluster:
-    input:
-        juncs = expand ("SplicingAnalysis/leafcutter/juncfiles/autosomes/{Phenotype}_{IndID}_{Rep}.junc",  zip, Phenotype=RNASeqSamples_df['Phenotype'], IndID=RNASeqSamples_df['IndID'], Rep=RNASeqSamples_df['RepNumber']),
-        juncfile_list = "SplicingAnalysis/leafcutter/juncfilelist.autosomes.txt"
-    output:
         "SplicingAnalysis/leafcutter/clustering/autosomes/leafcutter_perind.counts.gz",
-        "SplicingAnalysis/leafcutter/clustering/autosomes/leafcutter_perind_numers.counts.gz"
-    resources:
-        mem_mb = 16000
-    log:
-        "logs/leafcutter_cluster/autosomes.log"
-    shell:
-        """
-        python scripts/leafcutter/scripts/leafcutter_cluster_regtools_py3.py -j {input.juncfile_list} -r SplicingAnalysis/leafcutter/clustering/autosomes/ &> {log}
-        """
+        expand("featureCounts/{Phenotype}/Counts.txt", Phenotype=RNASeqExpressionPhenotypes + ["H3K4ME3", "H3K4ME1", "H3K27AC"]),
+        expand("QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.pca", Phenotype=["chRNA.IR", "Expression.Splicing", "H3K4ME1", "H3K27AC", "CTCF", "H3K4ME3"]),
+        "QTLs/QTLTools/Expression.Splicing/Genotypes/WholeGenome.vcf.gz",
+        # "Multiqc/multiqc_report.html",
+        expand("QTLs/QTLTools/{Phenotype}/PermutationPass.FDR_Added.txt.gz", Phenotype=MyPhenotypes),
 
-# rule leafcutter_cluster:
-#     input:
-#         juncs = expand ("SplicingAnalysis/leafcutter/juncfiles/chr{{chrom}}/{Phenotype}_{IndID}_{Rep}.junc",  zip, Phenotype=RNASeqSamples_df['Phenotype'], IndID=RNASeqSamples_df['IndID'], Rep=RNASeqSamples_df['RepNumber']),
-#         juncfile_list = "SplicingAnalysis/leafcutter/juncfilelist.chr{chrom}.txt"
-#     output:
-#         "SplicingAnalysis/leafcutter/clustering/chr{chrom}/leafcutter_perind.counts.gz",
-#         "SplicingAnalysis/leafcutter/clustering/chr{chrom}/leafcutter_perind_numers.counts.gz"
-#     log:
-#         "logs/leafcutter_cluster/chr{chrom}.log"
-#     shell:
-#         """
-#         python scripts/leafcutter/scripts/leafcutter_cluster_regtools_py3.py -j {input.juncfile_list} -r SplicingAnalysis/leafcutter/clustering/chr{wildcards.chrom}/ &> {log}
-#         """
-
-
-def GetBamForPhenotype(wildcards):
-    df_subset = Fastq_samples.loc[
-                (Fastq_samples['Phenotype'] == wildcards.Phenotype)]
-    if wildcards.Phenotype in RNASeqPhenotypes:
-        return expand("Alignments/STAR_Align/{{Phenotype}}/{IndID}/{Rep}/Filtered.bam", zip, IndID=df_subset['IndID'], Rep=df_subset['RepNumber'])
-    elif wildcards.Phenotype == "polyA.Expression":
-        df_subset = Fastq_samples.loc[
-                    (Fastq_samples['Phenotype'] == "Expression.Splicing")]
-        return expand("Alignments/STAR_Align/Expression.Splicing/{IndID}/{Rep}/Filtered.bam", zip, IndID=df_subset['IndID'], Rep=df_subset['RepNumber'])
-    elif wildcards.Phenotype == "chRNA.Expression":
-        df_subset = Fastq_samples.loc[
-                    (Fastq_samples['Phenotype'] == "chRNA.Expression.Splicing")]
-        return expand("Alignments/STAR_Align/chRNA.Expression.Splicing/{IndID}/{Rep}/Filtered.bam", zip, IndID=df_subset['IndID'], Rep=df_subset['RepNumber'])
-    elif wildcards.Phenotype in ChromatinProfilingPhenotypes:
-        return expand("Alignments/Hisat2_Align/{{Phenotype}}/{IndID}.{Rep}.wasp_filterd.markdup.sorted.bam", zip, IndID=df_subset['IndID'], Rep=df_subset['RepNumber'])
 
 rule Macs2PeakCalling_narrow:
     input:
@@ -201,22 +99,6 @@ use rule Macs2PeakCalling_narrow as Macs2PeakCalling_broad_perind with:
         "--tempdir /scratch/midway2/bjf79/ --outdir PeakCallingPerInd/{Phenotype}/ --name {IndID}.{Rep} --broad"
     log:
         "logs/Macs2PeakCalling_broad_perind/{Phenotype}/{IndID}.{Rep}.log"
-
-def GetAnnotationsForPhenotype(wildcards):
-    if wildcards.Phenotype in RNASeqPhenotypes_extended:
-        return "ReferenceGenome/Annotations/gencode.v34.primary_assembly.annotation.gtf"
-    elif wildcards.Phenotype in ["H3K27AC", "H3K4ME1", "CTCF"]:
-        return "PeakCalling/{Phenotype}_peaks.narrowPeak.saf"
-    elif wildcards.Phenotype in ["H3K4ME3", "H3K36ME3"]:
-        return "PeakCalling/{Phenotype}_peaks.broadPeak.saf"
-
-def GetFeatureCountsParams(wildcards):
-    if wildcards.Phenotype == "chRNA.Expression":
-        return "-s 1"
-    elif wildcards.Phenotype in ChromatinProfilingPhenotypes:
-        return "-F SAF"
-    else:
-        return ""
 
 rule featureCounts:
     input:

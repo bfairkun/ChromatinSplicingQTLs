@@ -1,0 +1,31 @@
+#!/usr/bin/env python2
+import signal
+import sys
+import argparse
+signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+
+parser = argparse.ArgumentParser(prog='transpose', usage = '''
+USAGE: transpose [options] [FileToTranspose]
+'''.format(myfile=sys.argv[0])
+)
+parser.add_argument('FileIn', default='stdin', nargs='?', metavar = "[filepath]", help="file to transpose. Default = stdin")
+parser.add_argument('-d', '--delimeter', metavar = "[string]", help="The delimiter of fields. Default = '\t'", default="\t")
+parser.add_argument("--quiet", help="OPTIONAL. quiet the output verbosity", action="store_true")
+args = parser.parse_args()
+
+# Read all Tab-delimited rows from stdin.
+all_data = []
+for line in sys.stdin:
+    all_data.append(line.strip('\n').split(args.delimeter))
+
+# Transpose it.
+transposed = []
+for row_i in range(len(all_data[0])):
+    new_row = []
+    for col_i in range(len(all_data)):
+        new_row.append(all_data[col_i][row_i])
+    transposed.append(new_row)
+
+# Write it back out.
+for row in transposed:
+    print args.delimeter.join(row)

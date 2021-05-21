@@ -50,15 +50,14 @@ Will have data for all the following assays for YRI panel (and geuvadis has euro
 - For ChIP-seq, same process with the macs2 peak calls.
 - For H3K36me, (don't have data yet) I may test out a couple ideas for determining test features. Like just using the same 14000 expressed gene regions, and then breaking those regions into 1000bp windows
 - Splicing junctions quantified with leafcutter pipeline.
+- For intron retention took constitutive introns (annotated introns that do not overlap any annotated exons) in the 14000 expressed genes and calculated a the coverage (reads per feature length) of the intron over coverage of the host gene exon regions. Also filtered out introns where this ratio is >10 or <1/100. ~77,000 introns.
 - Intron slope thing that I showed before. I wonder how much of those slope affects are more related to transcription initiation than elongation rate.
 
 #### association testing
-- QTL testing done with QTLtools, grouping splicing phenotypes by cluster to get Cluster-level tests (if I turn out breaking broad H3K36me3 phenotypes into windows, will group these too).
+- QTL testing done with QTLtools, grouping splicing phenotypes by cluster to get Cluster-level tests (if I turn out breaking broad H3K36me3 phenotypes into windows, will group these too). All phenotypes standardized and inverse-normalized.
 - Will include 0, 1, 2 or 3 genotype PCs as covariates, after manually inspecting PC plots for stratification. Will include expression PCs too: Planning to include the number of PCs for which the variance explained by a PC exceeds the variance explained from PCA on a permuted phenotype matrix (each row randomly shuffled). This is what [Rasqual paper](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5098600/) did, and from my testing this seems to give a reasonable number of PCs.
-- For intron retention I will try simple approach: What makes sense to me is just testing constitutive introns (that don't overlap any annotated exons), then summing unspliced read counts over the intron, to quantify, and then filtering for well-expressed introns that are also efficiently spliced in standard RNA-seq, and standardizing and inverse-normalizing phenotypes like above before testing.
 - For chromatin phenotypes I could consider doing the rasqual pipeline which I have working, I'll have to see how much more power it gets.
 
 
 #### colocalization
-- testing a lot of the questions will involve looking for colocalizing molQTLs. I'm not yet sure of how best to do this with all the different assays we have. could do this formally using coloc software in pairwise combinations? I know a multi-trait version of coloc exists as well. thoughts?
-
+- testing a lot of the questions will involve looking for colocalizing molQTLs. Probably worth using a formal colocalization stats method for this. I'm not yet sure of how best to do this with all the different assays we have. [HyPrColoc](https://www.nature.com/articles/s41467-020-20885-8) looks promising

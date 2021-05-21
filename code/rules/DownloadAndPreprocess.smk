@@ -1,3 +1,35 @@
+rule DownloadHg38Ref:
+    output:
+        fa = "ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa",
+        primary_gtf = "ReferenceGenome/Annotations/gencode.v34.primary_assembly.annotation.gtf",
+        chr_gtf = "ReferenceGenome/Annotations/gencode.v34.chromasomal.annotation.gtf"
+    shell:
+        """
+        wget -O- ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_34/GRCh38.primary_assembly.genome.fa.gz | zcat > {output.fa}
+        wget -O- ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_34/gencode.v34.primary_assembly.annotation.gtf.gz | zcat > {output.primary_gtf}
+        wget -O- ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_34/gencode.v34.annotation.gtf.gz | zcat > {output.chr_gtf}
+        """
+
+rule indexHg38Ref:
+    input:
+        fa = "ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa",
+    output:
+        fai = "ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa.fai",
+    shell:
+        """
+        samtools faidx {input.fa}
+        """
+
+rule DownloadHg38Gencode_basic:
+    """
+    only transcripts flagged as basic
+    """
+    output:
+        "ReferenceGenome/Annotations/gencode.v34.chromasomal.basic.annotation.gtf"
+    shell:
+        """
+        wget -O- http://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_34/gencode.v34.basic.annotation.gtf.gz | zcat > {output}
+        """
 
 rule Download1KG_GRCh38:
     output:
@@ -12,13 +44,17 @@ rule Download1KG_GRCh38:
         #Use aspera if aspera key file and aspera links parameters are defined (not empty strings)
         if [[ ! -z "{params.aspera_key}" ]]
         then
-            ascp -i {params.aspera_key} -Tr -Q -l 100M -P33001 -L- fasp-g1k@fasp.1000genomes.ebi.ac.uk:vol1/ftp/data_collections/1000_genomes_project/release/20181203_biallelic_SNV/ALL.chr{wildcards.chrom}.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.gz {output.vcf} &> {log}
-            ascp -i {params.aspera_key} -Tr -Q -l 100M -P33001 -L- fasp-g1k@fasp.1000genomes.ebi.ac.uk:vol1/ftp/data_collections/1000_genomes_project/release/20181203_biallelic_SNV/ALL.chr{wildcards.chrom}.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.gz.tbi {output.tbi} &>> {log}
+            ascp -i {params.aspera_key} -Tr -Q -l 100M -P33001 -L- fasp-g1k@fasp.1000genomes.ebi.ac.uk:vol1/ftp/data_collections/1000G_2504_high_coverage/working/20201028_3202_phased/CCDG_14151_B01_GRM_WGS_2020-08-05_chr{wildcards.chrom}.filtered.shapeit2-duohmm-phased.vcf.gz {output.vcf} &> {log}
+            ascp -i {params.aspera_key} -Tr -Q -l 100M -P33001 -L- fasp-g1k@fasp.1000genomes.ebi.ac.uk:vol1/ftp/data_collections/1000G_2504_high_coverage/working/20201028_3202_phased/CCDG_14151_B01_GRM_WGS_2020-08-05_chr{wildcards.chrom}.filtered.shapeit2-duohmm-phased.vcf.gz.tbi {output.tbi} &>> {log}
         else
-            curl -f -o {output.vcf} "http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000_genomes_project/release/20181203_biallelic_SNV/ALL.chr{wildcards.chrom}.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.gz" &> {log}
-            curl -f -o {output.tbi} "http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000_genomes_project/release/20181203_biallelic_SNV/ALL.chr{wildcards.chrom}.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.gz.tbi" &>> {log}
+            curl -f -o {output.vcf} "http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000G_2504_high_coverage/working/20201028_3202_phased/CCDG_14151_B01_GRM_WGS_2020-08-05_chr{wildcards.chrom}.filtered.shapeit2-duohmm-phased.vcf.gz" &> {log}
+            curl -f -o {output.tbi} "http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000G_2504_high_coverage/working/20201028_3202_phased/CCDG_14151_B01_GRM_WGS_2020-08-05_chr{wildcards.chrom}.filtered.shapeit2-duohmm-phased.vcf.gz.tbi" &>> {log}
         fi
         """
+
+rule Gather1KGData:
+    input:
+        expand("Genotypes/1KG_GRCh38/{chrom}.vcf.gz", chrom=autosomes),
 
 rule CopyFastqFromLocal:
     input:
@@ -80,9 +116,8 @@ rule fastp:
     log:
         "logs/fastp/{Phenotype}.{IndID}.{Rep}.log"
     conda:
-        "envs/fastp.yml"
+        "../envs/fastp.yml"
     shell:
         """
         fastp -i {input.R1} -I {input.R2} -o {output.R1} -O {output.R2} --html {output.html} --json {output.json} {params} &> {log}
         """
-

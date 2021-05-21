@@ -1,0 +1,4 @@
+bcftools:
+    collapse_complementary_changes: true,
+fastp:
+  fn: 'logs/fastp/*.log'

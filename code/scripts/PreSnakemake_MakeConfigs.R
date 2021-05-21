@@ -28,6 +28,7 @@ DingEtAl_CTCF <- read_tsv("config/ExternalFastqDataAccessions/DingSampleList.tsv
     separate(fastq_aspera, into=c("R1_aspera", "R2_aspera"), sep=';') %>%
     rename(notes=sample_alias)
 
+#Only Rep1 samples will be used in QTL calling
 Table.out <-
     bind_rows(Geuvadis, GrubertEtAl_ChIPSeq, DingEtAl_CTCF) %>%
     mutate(IndID=case_when(
@@ -47,7 +48,7 @@ Table.out <-
                                )) %>%
     select(IndID, Assay, Phenotype, study_accession, R1_ftp, R2_ftp, R1_aspera, R2_aspera, R1_local, R2_local, notes, IsIn1KG.Phase3, Include, RepNumber)
 
-write_tsv(Table.out, "config/samples.tsv")
+# write_tsv(Table.out, "config/samples.tsv")
 
 ####
 #Append rows for homemade samples
@@ -77,3 +78,16 @@ Sequenced.202104 <- data.frame(path=Sys.glob("/cds/yangili1/bjf79/Fastq/20210427
 
 Table.out.w.InHouseSamples <- bind_rows(Table.out, Sequenced.202104)
 write_tsv(Table.out.w.InHouseSamples, "config/samples.tsv")
+
+### Add in house cut and tag tests
+data.frame(path=Sys.glob("/cds/yangili1/bjf79/Fastq/20210427_NovaSeq_chRNASeq/*/FastQ/*BF-[HL]*.fastq.gz")) %>%
+    mutate(Lane_Antibody_Amount_Read = str_replace(path, ".+?/(21042.+?)/.+?-BF-[HL]-(.+?)-(.+?)_S\\d+_(R[12])_.+$", "\\1.NA19210 \\2 \\3 \\4")) %>%
+    separate(Lane_Antibody_Amount_Read, into=c("Lane.IndID", "Phenotype","notes", "Read"), sep=" ") %>%
+    pivot_wider(names_from=Read, values_from=path) %>%
+    separate(Lane.IndID, into=c("Lane", "IndID"), sep="\\.") %>%
+    mutate(RepNumber = 1) %>%
+    rename(R1_local=R1, R2_local=R2) %>%
+    select(-Lane) %>%
+    mutate(Phenotype=toupper(Phenotype), Assay="CutAndTag", Include=F) %>%
+    bind_rows(Table.out.w.InHouseSamples, .) %>%
+    write_tsv("config/samples.tsv")

@@ -28,6 +28,25 @@ rule gtf2leafcutter:
         scripts/leafcutter/leafviz/gtf2leafcutter.pl -o {input.gtf} {input.gtf} &> {log}
         """
 
+rule GTFTools:
+    input:
+        "ReferenceGenome/Annotations/gencode.v34.chromasomal.annotation.gtf",
+    output:
+        tss = "ReferenceGenome/Annotations/GTFTools/gencode.v34.chromasomal.tss.bed",
+        exons = "ReferenceGenome/Annotations/GTFTools/gencode.v34.chromasomal.exons.bed",
+        introns  = "ReferenceGenome/Annotations/GTFTools/gencode.v34.chromasomal.introns.bed",
+        genes = "ReferenceGenome/Annotations/GTFTools/gencode.v34.chromasomal.genes.bed",
+        splicesite  = "ReferenceGenome/Annotations/GTFTools/gencode.v34.chromasomal.splicesite.bed",
+        utr  = "ReferenceGenome/Annotations/GTFTools/gencode.v34.chromasomal.utr.bed",
+        maskedint  = "ReferenceGenome/Annotations/GTFTools/gencode.v34.chromasomal.maskedint.bed",
+        independentintron  = "ReferenceGenome/Annotations/GTFTools/gencode.v34.chromasomal.independentintron.bed",
+    log:
+        "logs/GTFTools.log"
+    shell:
+        """
+        python2.7 scripts/GTFtools_0.8.0/gtftools.py -e {output.exons} -i {output.introns} -d {output.independentintron} -k {output.maskedint} --splice_site {output.splicesite} -u {output.utr} -g {output.genes} -t {output.tss} -w 1 {input} 2> {log}
+        """
+
 rule STAR_make_index:
     """
     did not work on bigmem2. Never figured out why (the log file didn't
@@ -93,7 +112,8 @@ rule STAR_Align_WASP:
         vcf = "ReferenceGenome/STAR_WASP_Vcfs/{Phenotype}/WholeGenome.vcf"
     output:
         # bam = temp("Alignments/STAR_Align/{Phenotype}/{IndID}/{Rep}/Aligned.sortedByCoord.out.bam")
-        bam = "Alignments/STAR_Align/{Phenotype}/{IndID}/{Rep}/Aligned.sortedByCoord.out.bam"
+        bam = "Alignments/STAR_Align/{Phenotype}/{IndID}/{Rep}/Aligned.sortedByCoord.out.bam",
+        align_log = "Alignments/STAR_Align/{Phenotype}/{IndID}/{Rep}/Log.final.out"
     threads: 8
     log: "logs/STAR_Align_WASP/{Phenotype}/{IndID}.{Rep}.log"
     params:
@@ -191,10 +211,10 @@ rule Hornet_find_intersecting_snps:
         bai = "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.bam.bai",
         snp_lists = expand("ReferenceGenome/HornetSnpLists/{{Phenotype}}/chr{chrom}.snps.txt.gz", chrom=autosomes)
     output:
-        R1 = "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.remap.fq1.gz",
-        R2 = "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.remap.fq2.gz",
-        keep = "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.keep.bam",
-        remap = "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.to.remap.bam",
+        R1 = temp("Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.remap.fq1.gz"),
+        R2 = temp("Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.remap.fq2.gz"),
+        keep = temp("Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.keep.bam"),
+        remap = temp("Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.to.remap.bam"),
     log:
         "logs/Hornet_find_intersecting_snps/{Phenotype}/{IndID}.{Rep}.log"
     resources:
@@ -211,8 +231,8 @@ use rule Hisat2_Align as Hornet_Hisat2_Align with:
         R1 = "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.remap.fq1.gz",
         R2 = "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.remap.fq2.gz",
     output:
-        bam = "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.hornet.remapped.bam",
-        bai = "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.hornet.remapped.bam.bai"
+        bam = temp("Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.hornet.remapped.bam"),
+        bai = temp("Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.hornet.remapped.bam.bai")
     log:
         "logs/Horney_Hisat2_Align/{Phenotype}/{IndID}.{Rep}.log"
 
@@ -227,22 +247,22 @@ rule Hornet_filter_remapped:
         keep_bam = "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.keep.bam",
         to_remap_bam = "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.to.remap.bam",
     output:
-        remap_bam_name_sorted = "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.hornet.remapped.namesorted.bam",
-        kept_bam = "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.hornet.remapped.kept.bam",
-        keep_bam_sorted = "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.keep.sorted.bam",
-        kept_bam_sorted = "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.kept.sorted.bam",
-        merged_bam = "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.wasp_filterd.sorted.bam",
-        merged_bai = "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.wasp_filterd.sorted.bam.bai",
+        remap_bam_name_sorted = temp("Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.hornet.remapped.namesorted.bam"),
+        kept_bam = temp("Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.hornet.remapped.kept.bam"),
+        keep_bam_sorted = temp("Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.keep.sorted.bam"),
+        kept_bam_sorted = temp("Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.kept.sorted.bam"),
+        merged_bam = temp("Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.wasp_filterd.sorted.bam"),
+        merged_bai = temp("Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.wasp_filterd.sorted.bam.bai"),
     log:
         "logs/Hornet_filter_remapped/{Phenotype}/{IndID}.{Rep}.log"
     resources:
         mem = 16000
     shell:
         """
-        samtools sort -n {input.remap_bam} -o {output.remap_bam_name_sorted} &> {log}
+        (samtools sort -n {input.remap_bam} > {output.remap_bam_name_sorted}) &> {log}
         python scripts/Hornet/mapping/filter_remapped_reads.py {input.to_remap_bam} {output.remap_bam_name_sorted} {output.kept_bam} &>> {log}
-        samtools sort {output.kept_bam} -o {output.kept_bam_sorted} &>> {log}
-        samtools sort {input.keep_bam} -o {output.keep_bam_sorted} &>> {log}
+        (samtools sort {output.kept_bam} > {output.kept_bam_sorted}) &>> {log}
+        (samtools sort {input.keep_bam} > {output.keep_bam_sorted}) &>> {log}
         samtools merge {output.merged_bam} {output.kept_bam_sorted} {output.keep_bam_sorted} &>> {log}
         samtools index {output.merged_bam} &>> {log}
         """
@@ -262,22 +282,4 @@ rule MarkDups:
         samtools index {output.bam}
         """
 
-rule MakeBigwigs:
-    """
-    Scale bigwig to base coverage per billion chromosomal reads
-    """
-    input:
-        fai = "ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa.fai",
-        bam = GetBamForBigwig
-    params:
-        GetBigwigParams
-    output:
-        bw = "bigwigs/{Phenotype}/{IndID}.{Rep}.bw"
-    log:
-        "logs/MakeBigwigs/{Phenotype}/{IndID}.{Rep}.log"
-    resources:
-        mem = 48000
-    shell:
-        """
-        scripts/GenometracksByGenotype/BamToBigwig.sh {input.fai} {input.bam} {output.bw} {params} -scale $(bc <<< "scale=3;1000000000/$(samtools idxstats {input.bam} | awk '$1 ~ "^chr" {{sum+=$2}} END{{printf sum}}')") &> {log}
-        """
+

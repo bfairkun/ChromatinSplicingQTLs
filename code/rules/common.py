@@ -3,6 +3,8 @@ import os
 
 autosomes = [str(i) for i in range(1,23)]
 
+N_PermutationChunks = 50
+
 ## All Fastq samples
 Fastq_samples = pd.read_csv("config/samples.tsv", sep='\t')
 
