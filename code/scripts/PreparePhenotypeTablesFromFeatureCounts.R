@@ -13,7 +13,7 @@
 #Use hard coded arguments in interactive R session, else use command line args
 if(interactive()){
     args <- scan(text=
-                 "featureCounts/polyA.Expression/Counts.txt rename_STAR_alignment_samples ReferenceGenome/Annotations/gencode.v34.primary_assembly.annotation.gtf scratch/genes.bed", what='character')
+                 "featureCounts/polyA.Expression/Counts.txt rename_STAR_alignment_samples ReferenceGenome/Annotations/gencode.v34.primary_assembly.annotation.gtf ReferenceGenome/Annotations/GTFTools/gencode.v34.chromasomal.genes.bed ExpressionAnalysis/polyA/ExpressedGeneList.txt QTLs/QTLTools/Expression.Splicing/AllReps.qqnorm.bed.gz QTLs/QTLTools/Expression.Splicing/OnlyFirstReps.qqnorm.bed.gz", what='character')
 } else{
     args <- commandArgs(trailingOnly=TRUE)
 }
@@ -64,7 +64,7 @@ gtf$gene_id <- unlist(lapply(gtf$attribute, extract_attributes, "gene_id"))
 gtf$gene_type <- unlist(lapply(gtf$attribute, extract_attributes, "gene_type"))
 ProteinCodingGenes <- filter(gtf, gene_type=="protein_coding") %>% pull(gene_id)
 
-genes_bed <- read_tsv(genesBed_FileIn, col_names=c("Chr", "Start", "End", "Strand", "Geneid", "geneName")) %>% select(-geneName)
+genes_bed <- read_tsv(genesBed_FileIn, col_names=c("Chr", "Start", "End", "Strand", "Geneid", "geneName"), col_types='cnnccc') %>% select(-geneName)
 
 dat <- read_tsv(featureCounts_FileIn, comment = "#") %>%
     rename_with(get(ColumnRenamerFunction), starts_with("Alignments")) %>%
@@ -112,13 +112,20 @@ Out <- dat %>%
     arrange(`#Chr`, start)
 
 # Write all samples out
-write_tsv(Out, "QTLs/QTLTools/Expression.Splicing/AllReps.qqnorm.bed.gz")
+write_tsv(Out, PhenotypesBedOut_All )
 
 Out %>%
     select(1:6, matches("\\.1$")) %>%
     rename_with(~str_remove(., '\\.1$')) %>%
-    write_tsv("QTLs/QTLTools/Expression.Splicing/OnlyFirstReps.qqnorm.bed.gz")
+    write_tsv(PhenotypesBedOut_OnlyFirstReps)
 
+#Write out genes included in analysis
+data.frame(Geneid = GenesToInclude) %>%
+    inner_join(genes_bed, by="Geneid") %>%
+    mutate(Chr=paste0("chr", Chr), Score=".") %>%
+    select(Chr, Start, End, Geneid, Score, Strand) %>%
+    arrange(Chr, Start) %>%
+    write_tsv(GeneListOut, col_names=F)
 
 #library(magrittr)
 
