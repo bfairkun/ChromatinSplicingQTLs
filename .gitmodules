@@ -4,3 +4,6 @@
 [submodule "code/scripts/GenometracksByGenotype"]
 	path = code/scripts/GenometracksByGenotype
 	url = https://github.com/bfairkun/GenometracksByGenotype.git
+[submodule "code/scripts/leafcutter"]
+	path = code/scripts/leafcutter
+	url = https://github.com/mdshw5/leafcutter.git
