@@ -1,25 +1,24 @@
-rule idxstats:
+
+rule CountReadsPerSample:
     input:
-        bam = GetBamForBigwig,
-        bai=GetBaiForBigwig
+        bam = AllBams,
+        bai = AllBais
     output:
-        "QC/idxstats/{Phenotype}/{IndID}.{Rep}.txt"
+        "../output/QC/ReadCountsAndJunctionsPerSamples.tsv"
     log:
-        "logs/idxstats/{Phenotype}/{IndID}.{Rep}.log"
+        "logs/CountReadsPerSample.log"
     shell:
         """
-        samtools idxstats {input.bam} > {output} 2> {log}
+        # exec > {log} 2>&1
+        # set -x
+        for f in {input.bam}
+        do
+           printf "%s\\t%s\\n" $f $(samtools idxstats $f | awk -F'\\t' '$1~"^chr[1-9]" {{sum+=$3}} END {{print sum}}') >> {output}
+        done
         """
 
-rule CountAutosomalReadsPerSample:
-    input:
-        expand("QC/idxstats/{Phenotype}/{IndID}.{Rep}.txt", zip, Phenotype=Fastq_samples['Phenotype'], IndID=Fastq_samples['IndID'], Rep=Fastq_samples['RepNumber'])
-    output:
-        "../output/QC/AutosomeCountsPerSamples.tsv"
-    shell:
-        """
-        awk -F'\\t' '{{ print $1, $2, $3, FILENAME }}' {input} > {output}
-        """
+# rule CountJunctionsPerSample:
+#     input:
 
 rule QualimapRnaseq:
     input:
@@ -40,6 +39,39 @@ rule QualimapRnaseq:
         """
         unset DISPLAY
         qualimap rnaseq -bam {input.bam} -gtf {input.gtf} {params.libtype} --java-mem-size=12G -outdir QC/QualimapRnaseq/{wildcards.Phenotype}.{wildcards.IndID}.{wildcards.Rep}/ &> {log}
+        """
+
+rule GetCommonSnpsForMbv:
+    input:
+        "Genotypes/1KG_GRCh38/22.vcf.gz"
+    output:
+        vcf = "QC/mbv/chr22.vcf.gz",
+        tbi = "QC/mbv/chr22.vcf.gz.tbi"
+    log:
+        "logs/GetCommonSnpsForMbv.log"
+    shell:
+        """
+        bcftools view -O z -q 0.01:minor {input} > {output.vcf} 2> {log}
+        tabix -p vcf {output.vcf} 2>> {log}
+        """
+
+
+rule mbv:
+    input:
+        bam = GetBamForBigwig,
+        vcf = "QC/mbv/chr22.vcf.gz",
+        tbi = "QC/mbv/chr22.vcf.gz.tbi"
+    output:
+        text ="QC/mbv/data/{Phenotype}/{IndID}.{Rep}.txt",
+        plot = "QC/mbv/plots/{Phenotype}/{IndID}.{Rep}.pdf"
+    log:
+        "logs/mbv/{Phenotype}/{IndID}.{Rep}.log"
+    conda:
+        "../envs/r_essentials.yml"
+    shell:
+        """
+        QTLtools_1.2_CentOS7.8_x86_64 mbv --vcf {input.vcf} --bam {input.bam} --out {output.text}  --reg chr22 &> {log}
+        Rscript scripts/Plot_mbv.R {output.text} {output.plot} {wildcards.IndID} &>> {log}
         """
 
 rule MultiQC:

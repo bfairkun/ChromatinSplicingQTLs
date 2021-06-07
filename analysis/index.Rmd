@@ -13,3 +13,18 @@ Welcome to my research website.
 This project will investigate the correlation of genetic effects on chromatin, splicing, transcription, and complex phenotypes, using naturally occuring human genetic variation.
 
 We are still collecting data, but I have also been perusing around published data a bit.
+
+Here are links to all of my rendered analysis Rmarkdowns (code [here](https://github.com/bfairkun/ChromatinSplicingQTLs/tree/master/analysis)):
+
+```{r, results = 'asis'}
+library(tidyverse)
+rmds <- list.files(path = "../analysis/", pattern="^\\d+.+")
+rmd_htmls <- str_replace(rmds, "Rmd$", "html")
+
+for(i in rmd_htmls){
+  cat("[", i, "](", i,")\n")
+}
+```
+
+
+

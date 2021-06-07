@@ -1,0 +1,136 @@
+---
+title: "20210604_Check_chRNASeq_Genotypes"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F)
+```
+
+## Motivation
+
+From our first batch of chRNA-seq samples (~40 YRI lines), I found no eQTLs which was a bit concerning. I want to verify that there were no sample swaps. Therefore, I ran [QTLtools](https://qtltools.github.io/qtltools/) `mbv` command on each bam to see which 1000 genome's sample matches best, and saved the results to a file included in this repo. Here I will analyze those results, and figure out if there were any sample swaps.
+
+## analysis
+
+first load libraries and data
+
+```{r}
+library(tidyverse)
+library(knitr)
+
+dat <- read_tsv("../output/QC/20210604_mbv.summary.txt.gz")
+
+head(dat) %>% kable()
+
+
+```
+
+Now tidy the data a bit plot the results for one example
+
+```{r}
+# Extract sample name from filename (fn)
+dat <- dat %>%
+  mutate(ExpectedSampleID = str_replace(fn, ".+Splicing\\/(.+?)\\..+$", "\\1"))
+
+dat %>%
+  filter(ExpectedSampleID=="NA19130") %>%
+  mutate(IsExpectedSample= (ExpectedSampleID == SampleID)) %>%
+  arrange(IsExpectedSample) %>%
+  ggplot(aes(x=perc_het_consistent, y=perc_hom_consistent, color=IsExpectedSample, label=SampleID)) +
+  geom_text(size=2) +
+  theme_classic() +
+  theme(legend.position = "none")
+
+```
+
+Ok, at least for that one sample, the data looks great and as expected. The expected sample (line NA19130) is a clear outlier with a higher fraction of concordant reads matching the expected genotypes for line NA19130 at both homozygous and heterozygous sites. Let's make this plot for all sequenced samples...
+
+```{r, fig.width=10, fig.height=10}
+dat %>%
+  mutate(IsExpectedSample= (ExpectedSampleID == SampleID)) %>%
+  arrange(IsExpectedSample) %>%
+  ggplot(aes(x=perc_het_consistent, y=perc_hom_consistent, color=IsExpectedSample, label=SampleID)) +
+  geom_text(size=2) +
+  facet_wrap(~ExpectedSampleID, scale="free") +
+  theme_classic() +
+  theme(legend.position = "none")
+```
+
+Ok, clearly there a lot of sample swaps where the best match is clear and is not the expected sample. Though there a lot of 'good' samples that look like the first example I plotted, and there are also some samples that just don't have enough data to make a reliable plot. I am noting that all of the samples where there is a clear match that is not the expected sample, match to a different sample in this batch of samples we made libraries for. This is most consistent with sample swapping during our cell prep or library prep, rather than the cell lines that we thawed being some other cell line.
+
+Let's write some quick rules to output the best match for each line, so we can systematically correct the sample swapping... For example, something along the lines of this algorithm:
+
+1. If there less than x sites considered for calculating percent concordant sites, then the plot is unreliable and let's say the best match is 'undetermined'. Will have to determine what x is in a bit...
+2. If the line that has the highest percent_het_consistent is also the line with the highest percent_hom_consistent, then that is the best match. Else, the best match is 'undetermined'.
+
+First, let's look at the plot above, and compare it to the sum of `n_het_covered` field for each sample as a proxy for good the data is and whether we should exclude certain samples (Point #1)
+
+```{r}
+
+dat.x <- dat %>%
+  group_by(ExpectedSampleID) %>%
+  summarise(n_het_covered_sum = sum(n_het_covered, na.rm=T)) %>%
+  arrange(n_het_covered_sum)
+
+ggplot(dat.x, aes(x=reorder(ExpectedSampleID, n_het_covered_sum), y=n_het_covered_sum)) +
+  geom_col() +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90))
+
+head(dat.x, 10)
+```
+
+Ok, let's consider all those samples with less n_het_covered_sum than sample 19119 as samples to drop and automatically call unknown.
+
+```{r}
+
+SamplesToDrop <- dat.x %>%
+  filter(n_het_covered_sum < 80334) %>%
+  pull(ExpectedSampleID)
+
+SamplesToDrop
+
+```
+
+Now let's find the best match for the rest...
+
+```{r}
+BestMatches <- dat %>%
+  filter(!ExpectedSampleID %in% SamplesToDrop) %>%
+  group_by(fn) %>%
+  mutate( BestHit_het = (perc_het_consistent == max(perc_het_consistent, na.rm = T)),
+          BestHit_hom = (perc_hom_consistent == max(perc_hom_consistent, na.rm=T))) %>%
+  ungroup() %>%
+  filter(BestHit_hom & BestHit_het) %>%
+  right_join(
+    dat %>% select(ExpectedSampleID) %>% unique(),
+    by = "ExpectedSampleID"
+  ) %>%
+  select(ExpectedSampleID, BestMatch = SampleID, fn) %>%
+  mutate(IsSwapped = !ExpectedSampleID == BestMatch)
+
+kable(BestMatches)
+
+
+```
+
+Also, write out these results to a file... It might be handy if I want to fix the sample labels in my snakemake with a script. These exact results will be hard to replicate once I fix the sample labels in my snakemake, so I'll save them to the data folder where I tend to not write to files to be overwritten. This block is just code that I intend to step through once as I wrote the file...
+
+```{r, eval=F}
+
+write_tsv(BestMatches, "../data/20210604_chRNA_SampleIDs_FromBamToFix.txt")
+
+read_tsv("../code/scratch/samples.tsv") %>%
+  mutate(ExpectedSampleID = paste0("NA", `Cell Line`)) %>%
+  left_join(BestMatches, by = "ExpectedSampleID") %>%
+  mutate(BestMatch2 = case_when(
+    !is.na(SequencingPoolID) ~ BestMatch,
+    is.na(SequencingPoolID) ~ "NA"
+  )) %>%
+  select(BestMatch2) %>%
+  write_tsv("../code/scratch/samples.2.tsv")
+  
+
+```
+

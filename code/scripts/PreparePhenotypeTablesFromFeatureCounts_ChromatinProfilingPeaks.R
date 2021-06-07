@@ -13,7 +13,7 @@
 #Use hard coded arguments in interactive R session, else use command line args
 if(interactive()){
     args <- scan(text=
-                 "featureCounts/H3K4ME3/Counts.txt 1000000 QTLs/QTLTools/H3K4ME3/AllReps.qqnorm.bed.gz QTLs/QTLTools/H3K4ME3/OnlyFirstReps.qqnorm.bed.gz", what='character')
+                 "featureCounts/H3K27AC/Counts.txt 1000000 QTLs/QTLTools/H3K27AC/AllReps.qqnorm.bed.gz QTLs/QTLTools/H3K27AC/OnlyFirstReps.qqnorm.bed.gz", what='character')
 } else{
     args <- commandArgs(trailingOnly=TRUE)
 }
@@ -55,12 +55,12 @@ dat.cpm <- dat %>%
 #Filter for top N autosomal genes based on median expression
 MedCpm <- sort(apply(dat.cpm, 1, median), decreasing=T)
 GenesToInclude <- MedCpm %>% head(MaxFeatures) %>% names()
-dat.cpm.filtered <- dat.cpm[GenesToInclude,] %>% as.matrix()
+dat.cpm.filtered <- dat.cpm[GenesToInclude,] %>%  as.matrix()
 print(paste("The ", length(GenesToInclude), " included genes are a cutoff of", 2**(MedCpm %>% head(MaxFeatures) %>% tail(1)), "cpm"))
 
 
 #Standardize across individuals (rows),
-dat.standardized <- dat.cpm.filtered %>% t() %>% scale() %>% t()
+dat.standardized <- dat.cpm.filtered %>% t() %>% scale() %>% t() %>% as.data.frame() %>% drop_na() %>% as.matrix()
 #then qqnorm across genes (columns)
 dat.qqnormed <- apply(dat.standardized, 2, rankNorm)
 

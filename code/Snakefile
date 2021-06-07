@@ -5,11 +5,12 @@ include: "rules/common.py"
 include: "rules/DownloadAndPreprocess.smk"
 include: "rules/Alignment.smk"
 include: "rules/MakeBigwigs.smk"
-include: "rules/CutAndTagChecks.smk"
+# include: "rules/CutAndTagChecks.smk"
 include: "rules/QC.smk"
 include: "rules/ExpressionAnalysis.smk"
 include: "rules/SplicingAnalysis.smk"
 include: "rules/ChromatinPehnotypesAnalysis.smk"
+include: "rules/ProSeqAnalysis.smk"
 include: "rules/QTLTools.smk"
 # include: "rules/other.smk"
 # include: "rules/DownloadData.smk"
@@ -27,7 +28,8 @@ wildcard_constraints:
 localrules: all, CopyFastqFromLocal, DownloadFastqFromLink, Download1KG_GRCh38, STAR_make_index, DownloadHg38Ref
 ruleorder: CopyFastqFromLocal > DownloadFastqFromLink
 
-MyPhenotypes = ["chRNA.IR", "Expression.Splicing", "H3K4ME1", "H3K27AC", "CTCF", "H3K4ME3", "chRNA.Splicing", "polyA.Splicing"]
+MyPhenotypes = ["chRNA.IR", "Expression.Splicing", "chRNA.Expression.Splicing", "H3K4ME1", "H3K27AC", "CTCF", "H3K4ME3", "chRNA.Splicing", "polyA.Splicing"]
+
 rule all:
     input:
         # expand("logs/PlotGruberQTLs/PlotFromShellScript.{pheno}.log", pheno=["H3K4ME3", "H3K27AC", "H3K4ME1"]),
@@ -36,9 +38,10 @@ rule all:
         # expand("Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.wasp_filterd.markdup.sorted.bam", zip, Phenotype= ChromatinProfilingSamples_df['Phenotype'], IndID=ChromatinProfilingSamples_df['IndID'], Rep=ChromatinProfilingSamples_df['RepNumber']),
         # expand("Alignments/STAR_Align/{Phenotype}/{IndID}/{Rep}/Filtered.bam", zip, Phenotype=RNASeqSamples_df['Phenotype'], IndID=RNASeqSamples_df['IndID'], Rep=RNASeqSamples_df['RepNumber']),
         # expand("bigwigs/{Phenotype}/{IndID}.{Rep}.bw", zip, Phenotype=Fastq_samples['Phenotype'], IndID=Fastq_samples['IndID'], Rep=Fastq_samples['RepNumber']),
+        expand("QC/mbv/plots/{Phenotype}/{IndID}.{Rep}.pdf", zip, Phenotype=chRNASeqSamples_df['Phenotype'], IndID=chRNASeqSamples_df['IndID'], Rep=chRNASeqSamples_df['RepNumber']),
         #Make bigwigs from test cut and tag
         # "../output/QC/AutosomeCountsPerSamples.tsv",
-        expand("bigwigs_FromNonWASPFilteredReads/{Phenotype}/{IndID}.{Rep}.bw", Phenotype=["POL2S5", "POL2S2", "H3K9ME3", "H3K36ME3", "H3K79ME2"], IndID="NA19210", Rep="1"),
+        # expand("bigwigs_FromNonWASPFilteredReads/{Phenotype}/{IndID}.{Rep}.bw", Phenotype=["POL2S5", "POL2S2", "H3K9ME3", "H3K36ME3", "H3K79ME2"], IndID="NA19210", Rep="1"),
         multiext("ReferenceGenome/Annotations/gencode.v34.primary_assembly.annotation.gtf", "_all_exons.txt.gz", "_all_introns.bed.gz", "_fiveprime.bed.gz", "_threeprime.bed.gz"),
         expand("SplicingAnalysis/IR/{Phenotype}/Counts.txt", Phenotype=RNASeqPhenotypes),
         # expand("PeakCalling/{Phenotype}.peaks.saf", Phenotype=ChromatinProfilingPhenotypes)
@@ -49,6 +52,7 @@ rule all:
         "QTLs/QTLTools/Expression.Splicing/Genotypes/WholeGenome.vcf.gz",
         # "Multiqc/multiqc_report.html",
         expand("QTLs/QTLTools/{Phenotype}/PermutationPass.FDR_Added.txt.gz", Phenotype=MyPhenotypes),
+        expand("featureCounts/{Phenotype}/NormFactors.tsv", Phenotype=["chRNA.Expression.Splicing", "Expression.Splicing", "H3K4ME1", "H3K4ME3", "H3K27AC", "CTCF"])
 
 
 rule Macs2PeakCalling_narrow:

@@ -6,6 +6,8 @@ rule SortQTLtoolsPhenotypeTable:
         tbi = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.gz.tbi"
     log:
         "logs/SortQTLtoolsPhenotypeTable/{Phenotype}.log"
+    resources:
+        mem_mb = 12000
     shell:
         """
         bedtools sort -header -i {input} | bgzip /dev/stdin -c > {output.bed}
@@ -33,6 +35,24 @@ rule PhenotypePCs:
         """
         Rscript scripts/PermuteAndPCA.R {input} {output} &> {log}
         """
+
+rule PlotPhenotypePCs:
+    """
+    Plot PCs manually to check for outliers
+    """
+    input:
+        "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.gz",
+    output:
+        "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.pca.pdf"
+    conda:
+        "../envs/r_essentials.yml"
+    log:
+        "logs/PlotPhenotypePCs/{Phenotype}.log"
+    shell:
+        """
+        Rscript {input} {output} &> {log}
+        """
+
 
 rule GetSamplesVcfByChrom:
     input:

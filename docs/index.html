@@ -1,18 +1,19 @@
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
 
 <head>
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
 
 
 <title>Home</title>
 
+<script src="site_libs/header-attrs-2.6/header-attrs.js"></script>
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
@@ -23,13 +24,14 @@
 <link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
 
-<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/master/img/reproducible.png">
-<!-- Add a small amount of space between sections. -->
 <style type="text/css">
-div.section {
-  padding-top: 12px;
-}
-</style>
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
 
 <style type="text/css">code{white-space: pre;}</style>
 <style type="text/css">
@@ -79,6 +81,7 @@ h6 {
 
 
 
+
 <style type = "text/css">
 .main-container {
   max-width: 940px;
@@ -91,7 +94,6 @@ code {
 }
 img {
   max-width:100%;
-  height: auto;
 }
 .tabbed-pane {
   padding-top: 12px;
@@ -240,6 +242,7 @@ $(document).ready(function () {
   border: none;
   display: inline-block;
   border-radius: 4px;
+  background-color: transparent;
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li {
@@ -251,18 +254,6 @@ $(document).ready(function () {
   display: none;
 }
 </style>
-
-<script>
-$(document).ready(function () {
-  window.buildTabsets("TOC");
-});
-
-$(document).ready(function () {
-  $('.tabset-dropdown > .nav-tabs > li').click(function () {
-    $(this).parent().toggleClass('nav-tabs-open')
-  });
-});
-</script>
 
 <!-- code folding -->
 
@@ -308,6 +299,15 @@ $(document).ready(function () {
   </div><!--/.container -->
 </div><!--/.navbar -->
 
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
 <div class="fluid-row" id="header">
 
 
@@ -337,17 +337,17 @@ $(document).ready(function () {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2020-08-21
+<strong>Last updated:</strong> 2021-06-07
 </p>
 <p>
-<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 0 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 1
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 1
 </p>
 <p>
 <strong>Knit directory:</strong> <code>ChromatinSplicingQTLs/analysis/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
 </p>
 <p>
 This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
-  href="https://github.com/jdblischak/workflowr">workflowr</a> (version 1.6.2). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+  href="https://github.com/jdblischak/workflowr">workflowr</a> (version 1.5.0). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
 </p>
 <hr>
 </div>
@@ -356,12 +356,171 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongnoversioncontrol"> <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> <strong>Repository version:</strong> no version control </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges"> <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted changes </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongnoversioncontrol" class="panel-collapse collapse">
+<div id="strongRMarkdownfilestronguncommittedchanges" class="panel-collapse collapse">
 <div class="panel-body">
-<p>Tracking code development and connecting the code version to the results is critical for reproducibility. To start using Git, open the Terminal and type <code>git init</code> in your project directory.</p>
+<p>The R Markdown file has unstaged changes. To know which version of the R Markdown file created these results, you’ll want to first commit it to the Git repo. If you’re still working on the analysis, you can ignore this warning. When you’re finished, you can run <code>wflow_publish</code> to commit the R Markdown file and build the HTML.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20191126code"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Seed:</strong> <code>set.seed(20191126)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20191126code" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20191126)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Session information:</strong> recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be confident that you successfully produced the results during this run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstreed908cecd8af9abe62d8777837b416f71e9358639targetblankd908ceca"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/d908cecd8af9abe62d8777837b416f71e9358639" target="_blank">d908cec</a> </a>
+</p>
+</div>
+<div id="strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstreed908cecd8af9abe62d8777837b416f71e9358639targetblankd908ceca" class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility. The version displayed above was the version of the Git repository at the time these results were generated. <br><br> Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    ._.DS_Store
+    Ignored:    analysis/.Rhistory
+    Ignored:    code/.DS_Store
+    Ignored:    code/.Rhistory
+    Ignored:    code/._.DS_Store
+    Ignored:    code/.snakemake/
+    Ignored:    code/Alignments/
+    Ignored:    code/ENCODE/
+    Ignored:    code/ExpressionAnalysis/
+    Ignored:    code/Fastq/
+    Ignored:    code/FastqFastp/
+    Ignored:    code/Genotypes/
+    Ignored:    code/Log.out
+    Ignored:    code/Log.progress.out
+    Ignored:    code/Multiqc/
+    Ignored:    code/MyOutput.sam
+    Ignored:    code/PeakCalling/
+    Ignored:    code/Phenotypes/
+    Ignored:    code/PlotGruberQTLs/
+    Ignored:    code/ProCapAnalysis/
+    Ignored:    code/QC/
+    Ignored:    code/QTLs/
+    Ignored:    code/ReferenceGenome/
+    Ignored:    code/Session.vim
+    Ignored:    code/SplicingAnalysis/
+    Ignored:    code/TODO
+    Ignored:    code/_STARtmp/
+    Ignored:    code/bigwigs/
+    Ignored:    code/bigwigs_FromNonWASPFilteredReads/
+    Ignored:    code/config/.DS_Store
+    Ignored:    code/config/._.DS_Store
+    Ignored:    code/config/ExternalFastqDataAccessions/
+    Ignored:    code/config/OldSamplesConfig/
+    Ignored:    code/fasterq.tmp.midway2-login1.rcc.local.35588/
+    Ignored:    code/fasterq.tmp.midway2-login1.rcc.local.36061/
+    Ignored:    code/featureCounts/
+    Ignored:    code/logs/
+    Ignored:    code/output/
+    Ignored:    code/rules/OldRules/
+    Ignored:    code/scratch/
+    Ignored:    code/scripts/GTFtools_0.8.0/
+    Ignored:    code/scripts/liftOverBedpe/liftOverBedpe.py
+    Ignored:    code/snakemake.log
+    Ignored:    code/snakemake.sbatch.log
+    Ignored:    data/._PRJEB1350_RunTable.Ding_etal_CTCF.txt
+
+Untracked files:
+    Untracked:  analysis/20210604_CheckSampleGenotypes.Rmd
+    Untracked:  code/envs/deeptools.yml
+    Untracked:  code/rules/ProSeqAnalysis.smk
+    Untracked:  code/scripts/PlotPCA_FromPhenotypeTable.R
+    Untracked:  code/scripts/Plot_mbv.R
+    Untracked:  code/scripts/PreSnakemake_MakeConfigs_v1.R
+    Untracked:  code/scripts/PreSnakemake_MakeConfigs_v2.R
+    Untracked:  code/scripts/PreparePhenotypeTableFromFeatureCounts_SubsetGeneList.R
+    Untracked:  code/scripts/PreparePhenotypeTable_ProCap.R
+    Untracked:  code/snakemake_profiles/slurm/__pycache__/
+    Untracked:  data/20210604_chRNA_SampleIDs_FromBamToFix.txt
+    Untracked:  output/QC/
+
+Unstaged changes:
+    Modified:   analysis/index.Rmd
+    Modified:   code/Snakefile
+    Modified:   code/config/samples.tsv
+    Modified:   code/rules/ExpressionAnalysis.smk
+    Modified:   code/rules/MakeBigwigs.smk
+    Modified:   code/rules/QC.smk
+    Modified:   code/rules/QTLTools.smk
+    Modified:   code/rules/common.py
+    Modified:   code/scripts/CalculateNormFactorsForBigwig.R
+    Modified:   code/scripts/PreparePhenotypeTablesFromFeatureCounts_ChromatinProfilingPeaks.R
+
+Staged changes:
+    Modified:   .gitmodules
+    New:        code/scripts/qtltools
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+</p>
 </div>
 </div>
 </div>
@@ -369,9 +528,69 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <hr>
 </div>
 <div id="versions" class="tab-pane fade">
+
 <p>
-This project is not being versioned with Git. To obtain the full reproducibility benefits of using workflowr, please see <code>?wflow_start</code>.
+These are the previous versions of the R Markdown and HTML files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view them.
 </p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/dd0eadbb209caea66e98ef74baf13cd7a9268eca/analysis/index.Rmd" target="_blank">dd0eadb</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2020-08-21
+</td>
+<td>
+initial commit
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/dd0eadbb209caea66e98ef74baf13cd7a9268eca/docs/index.html" target="_blank">dd0eadb</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2020-08-21
+</td>
+<td>
+initial commit
+</td>
+</tr>
+</tbody>
+</table>
+</div>
 <hr>
 </div>
 </div>
@@ -379,6 +598,70 @@ This project is not being versioned with Git. To obtain the full reproducibility
 <p>Welcome to my research website.</p>
 <p>This project will investigate the correlation of genetic effects on chromatin, splicing, transcription, and complex phenotypes, using naturally occuring human genetic variation.</p>
 <p>We are still collecting data, but I have also been perusing around published data a bit.</p>
+<p>Here are links to all of my rendered analysis Rmarkdowns (code <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/master/analysis">here</a>):</p>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>── Attaching packages ─────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>✔ ggplot2 3.2.1     ✔ purrr   0.3.3
+✔ tibble  3.0.4     ✔ dplyr   1.0.2
+✔ tidyr   1.1.2     ✔ stringr 1.4.0
+✔ readr   1.4.0     ✔ forcats 0.5.0</code></pre>
+<pre><code>── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>rmds &lt;- list.files(path = &quot;../analysis/&quot;, pattern=&quot;^\\d+.+&quot;)
+rmd_htmls &lt;- str_replace(rmds, &quot;Rmd$&quot;, &quot;html&quot;)
+
+for(i in rmd_htmls){
+  cat(&quot;[&quot;, i, &quot;](&quot;, i,&quot;)\n&quot;)
+}</code></pre>
+<p><a href="20200110_PickSamplesForGrowth.html">20200110_PickSamplesForGrowth.html</a> <a href="20200210_PickSamplesToOrder.html">20200210_PickSamplesToOrder.html</a> <a href="20210604_CheckSampleGenotypes.html">20210604_CheckSampleGenotypes.html</a></p>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.4.3 (2017-11-30)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Scientific Linux 7.4 (Nitrogen)
+
+Matrix products: default
+BLAS/LAPACK: /software/openblas-0.2.19-el7-x86_64/lib/libopenblas_haswellp-r0.2.19.so
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+ [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] forcats_0.5.0   stringr_1.4.0   dplyr_1.0.2     purrr_0.3.3    
+[5] readr_1.4.0     tidyr_1.1.2     tibble_3.0.4    ggplot2_3.2.1  
+[9] tidyverse_1.2.1
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_1.0.3        cellranger_1.1.0  compiler_3.4.3    pillar_1.4.7     
+ [5] later_1.0.0       git2r_0.26.1      workflowr_1.5.0   tools_3.4.3      
+ [9] digest_0.6.27     lubridate_1.7.9.2 jsonlite_1.6      evaluate_0.14    
+[13] lifecycle_0.2.0   gtable_0.3.0      pkgconfig_2.0.3   rlang_0.4.9      
+[17] cli_2.0.0         rstudioapi_0.10   yaml_2.2.0        haven_2.3.1      
+[21] xfun_0.20         withr_2.1.2       xml2_1.2.0        httr_1.4.2       
+[25] knitr_1.26        hms_0.5.3         generics_0.1.0    fs_1.3.1         
+[29] vctrs_0.3.6       rprojroot_1.3-2   grid_3.4.3        tidyselect_1.1.0 
+[33] glue_1.4.2        R6_2.4.1          fansi_0.4.0       readxl_1.3.1     
+[37] rmarkdown_2.6     modelr_0.1.8      magrittr_1.5      whisker_0.3-2    
+[41] backports_1.1.5   scales_1.1.0      promises_1.1.0    htmltools_0.4.0  
+[45] ellipsis_0.3.0    assertthat_0.2.1  rvest_0.3.6       colorspace_2.0-0 
+[49] httpuv_1.5.2      stringi_1.4.3     lazyeval_0.2.2    munsell_0.5.0    
+[53] broom_0.7.3       crayon_1.3.4     </code></pre>
+</div>
 
 
 <!-- Adjust MathJax settings so that all math formulae are shown using
@@ -395,13 +678,15 @@ footer is added to webpages before the MathJax javascript. -->
 
 
 
+
+
 </div>
 
 <script>
 
 // add bootstrap table styles to pandoc tables
 function bootstrapStylePandocTables() {
-  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
 }
 $(document).ready(function () {
   bootstrapStylePandocTables();
@@ -409,6 +694,23 @@ $(document).ready(function () {
 
 
 </script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
 
 <!-- dynamically load mathjax for compatibility with self-contained -->
 <script>

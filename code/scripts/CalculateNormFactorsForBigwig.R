@@ -40,6 +40,7 @@ mat <- read_tsv(featureCounts_f, comment="#") %>%
 
 if (!is.na(args[3])){
     Geneids <- read_tsv(optional_genes_to_include_f) %>% pull(as.numeric(column_number_with_Geneid))
+    head(Geneids)
     mat <- mat[Geneids,]
 }
 

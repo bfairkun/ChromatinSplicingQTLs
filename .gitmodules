@@ -7,3 +7,6 @@
 [submodule "code/scripts/leafcutter"]
 	path = code/scripts/leafcutter
 	url = https://github.com/mdshw5/leafcutter.git
+[submodule "code/scripts/qtltools"]
+	path = code/scripts/qtltools
+	url = https://github.com/qtltools/qtltools.git

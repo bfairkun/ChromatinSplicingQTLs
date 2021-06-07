@@ -6,7 +6,7 @@ autosomes = [str(i) for i in range(1,23)]
 N_PermutationChunks = 50
 
 ## All Fastq samples
-Fastq_samples = pd.read_csv("config/samples.tsv", sep='\t')
+Fastq_samples = pd.read_csv("config/samples.tsv", sep='\t', comment='#')
 
 # Define some df subsets from the samples df as useful global variables
 ChromatinProfilingPhenotypes = Fastq_samples.loc[ (Fastq_samples['Assay'].isin(["ChIP-seq", "CutAndTag"]))  ]['Phenotype'].unique().tolist()
@@ -15,6 +15,13 @@ RNASeqExpressionPhenotypes = ['polyA.Expression', 'chRNA.Expression']
 RNASeqPhenotypes_extended = RNASeqPhenotypes + RNASeqExpressionPhenotypes
 ChromatinProfilingSamples_df = Fastq_samples.loc[ (Fastq_samples['Assay'].isin(["ChIP-seq", "CutAndTag"])) , ['Phenotype', 'IndID', 'RepNumber'] ].drop_duplicates()
 RNASeqSamples_df = Fastq_samples.loc[ (Fastq_samples['Assay']=="RNA-seq") , ['Phenotype', 'IndID', 'RepNumber'] ].drop_duplicates()
+
+#Other useful lists
+AllChromatinProfilingBams = expand("Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.wasp_filterd.markdup.sorted.bam", zip, Phenotype= ChromatinProfilingSamples_df['Phenotype'], IndID=ChromatinProfilingSamples_df['IndID'], Rep=ChromatinProfilingSamples_df['RepNumber'])
+AllRNASeqBams = expand("Alignments/STAR_Align/{Phenotype}/{IndID}/{Rep}/Filtered.bam", zip, Phenotype=RNASeqSamples_df['Phenotype'], IndID=RNASeqSamples_df['IndID'], Rep=RNASeqSamples_df['RepNumber'])
+AllBams = AllChromatinProfilingBams + AllRNASeqBams
+AllBais = [fn + ".bai" for fn in AllChromatinProfilingBams]
+chRNASeqSamples_df = Fastq_samples.loc[ (Fastq_samples['Phenotype']=="chRNA.Expression.Splicing") , ['Phenotype', 'IndID', 'RepNumber'] ].drop_duplicates()
 
 # print(ChromatinProfilingPhenotypes)
 
