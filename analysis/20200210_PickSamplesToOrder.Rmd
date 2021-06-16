@@ -350,7 +350,7 @@ AllCoriellSamples %>%
   write_excel_csv("../data/GiladStrains/20210411_CoriellOrder2.BF.csv" )
 
 set.seed(0)
-AllCoriellSamples %>%
+SecondCoriellOrder <- AllCoriellSamples %>%
   filter(CellLine %in% AllUnrelatedSamplesLeftToDo$CellLine) %>%
   filter(!CellLine %in% GiladLabLinesToPick) %>%
   filter(Is1KGP) %>%
@@ -359,6 +359,40 @@ AllCoriellSamples %>%
   sample_n(16) %>%
   ungroup() %>%
   pull(ID)
+
+SecondCoriellOrder
+
+```
+
+## Update 06/15/2021
+
+Ok, the sequencing results from the first batch of ~40 samples are back. Some of them had sample swaps or too low read depth to confidently identify the sample, resulting a total of ~30 usable samples. Let's plan on attempting to regrow all samples that we have in the gilad lab freezer that were not covered in the last two batches and were not among the 30 samples with already usable data.
+
+```{r}
+#Lines for which qtltools mbv could confidently identify the individual from RNA-seq data
+LinesWithQualityData <-
+  read_tsv("../data/20210604_chRNA_SampleIDs_FromBamToFix.txt") %>%
+  drop_na() %>%
+  pull(BestMatch) %>%
+  str_replace("NA", "")
+
+
+SamplesToThawAgain <- AllCoriellSamples %>%
+  # filter out related samples (ie not children, since parents are assumed unrelated)
+  filter(!`Relationship to Proband` == "child") %>%
+  # filter for samples in gilad freezer
+  filter(IsInGiladLabYRI.Inventory) %>%
+  # filter out first batch of coriell order
+  filter(! CellLine %in% SamplesToOrder) %>%
+  # filter out the 6 gilad lab lines not yet attempted library prep but done in last batch
+  filter(! CellLine %in% GiladLabLinesToPick) %>%
+  # filter out the second batch coriell order
+  filter( ! CellLine %in%  str_replace(SecondCoriellOrder, "GM", "")) %>%
+  # filter out the lines that we already have quality data for
+  filter (! CellLine %in% LinesWithQualityData) %>%
+  pull(CellLine)
+
+SamplesToThawAgain
 
 ```
 
