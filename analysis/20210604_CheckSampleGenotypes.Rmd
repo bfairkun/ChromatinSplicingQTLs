@@ -51,7 +51,7 @@ dat %>%
   mutate(IsExpectedSample= (ExpectedSampleID == SampleID)) %>%
   arrange(IsExpectedSample) %>%
   ggplot(aes(x=perc_het_consistent, y=perc_hom_consistent, color=IsExpectedSample, label=SampleID)) +
-  geom_text(size=2) +
+  geom_text(size=1) +
   facet_wrap(~ExpectedSampleID, scale="free") +
   theme_classic() +
   theme(legend.position = "none")
@@ -62,7 +62,7 @@ Ok, clearly there a lot of sample swaps where the best match is clear and is not
 Let's write some quick rules to output the best match for each line, so we can systematically correct the sample swapping... For example, something along the lines of this algorithm:
 
 1. If there less than x sites considered for calculating percent concordant sites, then the plot is unreliable and let's say the best match is 'undetermined'. Will have to determine what x is in a bit...
-2. If the line that has the highest percent_het_consistent is also the line with the highest percent_hom_consistent, then that is the best match. Else, the best match is 'undetermined'.
+2. If the line that has the highest percent_het_consistent is also the line with the highest percent_hom_consistent, and the percent_hom_consistent is over 0.9, then that is the best match. Else, the best match is 'undetermined'.
 
 First, let's look at the plot above, and compare it to the sum of `n_het_covered` field for each sample as a proxy for good the data is and whether we should exclude certain samples (Point #1)
 
@@ -102,12 +102,12 @@ BestMatches <- dat %>%
   mutate( BestHit_het = (perc_het_consistent == max(perc_het_consistent, na.rm = T)),
           BestHit_hom = (perc_hom_consistent == max(perc_hom_consistent, na.rm=T))) %>%
   ungroup() %>%
-  filter(BestHit_hom & BestHit_het) %>%
+  filter(BestHit_hom & BestHit_het & perc_hom_consistent >= 0.9) %>%
   right_join(
-    dat %>% select(ExpectedSampleID) %>% unique(),
+    dat %>% dplyr::select(ExpectedSampleID) %>% unique(),
     by = "ExpectedSampleID"
   ) %>%
-  select(ExpectedSampleID, BestMatch = SampleID, fn) %>%
+  dplyr::select(ExpectedSampleID, BestMatch = SampleID, fn) %>%
   mutate(IsSwapped = !ExpectedSampleID == BestMatch)
 
 kable(BestMatches)
@@ -128,7 +128,7 @@ read_tsv("../code/scratch/samples.tsv") %>%
     !is.na(SequencingPoolID) ~ BestMatch,
     is.na(SequencingPoolID) ~ "NA"
   )) %>%
-  select(BestMatch2) %>%
+  dplyr::select(BestMatch2) %>%
   write_tsv("../code/scratch/samples.2.tsv")
   
 
