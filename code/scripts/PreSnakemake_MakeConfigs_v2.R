@@ -19,28 +19,34 @@ chRNA.SampleSwaps <- read_tsv("../data/20210604_chRNA_SampleIDs_FromBamToFix.txt
 
 SampleSwapKey <- chRNA.SampleSwaps %>%
     mutate(BestMatchNoNa = case_when(
-                                 is.na(BestMatch) ~ ExpectedSampleID,
+                                 is.na(BestMatch) ~ paste0(ExpectedSampleID,"Unchecked"),
                                  TRUE ~ BestMatch
                                  )) %>%
     select(ExpectedSampleID, BestMatchNoNa) %>%
+    # select(ExpectedSampleID, BestMatch) %>%
     deframe()
 
-chRNA.SampleSwaps %>%
-    dplyr::count(BestMatch) %>%
-    print(n=Inf)
+
+LiEtAlTable <- read_csv("config/ExternalFastqDataAccessions/LiSampleList_SraRunTable_4sU_PRJNA302818.txt") %>%
+    select(incubated_with_4su_for, IndID = cell_line_id, SRA_Run=Run) %>%
+    mutate(
+           Phenotype = paste0("MetabolicLabelled.", incubated_with_4su_for),
+           Assay = "RNA-seq",
+           PairedEnd = FALSE,
+           SRA_Project = "PRJNA302818",
+           RepNumber = 1
+            ) %>%
+    select(Phenotype, Assay, PairedEnd, SRA_Run, SRA_Project, IndID, RepNumber)
+
 
 
 samples %>%
-    filter(Phenotype == "chRNA.Expression.Splicing" & IndID=="NA19130") %>%
-    select(R1_local, IndID) %>%
-    pull(R1_local)
-
-test <- samples %>%
-    mutate(IndID2 = case_when(
+    mutate(IndID = case_when(
                               Phenotype == "chRNA.Expression.Splicing" ~ recode(IndID, !!!SampleSwapKey),
                               TRUE ~ IndID
                               )) %>%
-    filter(Phenotype == "chRNA.Expression.Splicing" & IndID2=="NA19130") %>%
-    select(R1_local, IndID2)
-test$R1_local
-test$IndID2
+    mutate(PairedEnd = TRUE) %>%
+    bind_rows(LiEtAlTable) %>%
+    mutate(Include = T) %>%
+    write_tsv("config/samples.tsv")
+

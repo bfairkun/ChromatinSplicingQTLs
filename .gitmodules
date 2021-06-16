@@ -10,3 +10,6 @@
 [submodule "code/scripts/qtltools"]
 	path = code/scripts/qtltools
 	url = https://github.com/qtltools/qtltools.git
+[submodule "code/scripts/davidaknowles_leafcutter"]
+	path = code/scripts/davidaknowles_leafcutter
+	url = https://github.com/davidaknowles/leafcutter.git

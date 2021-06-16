@@ -74,7 +74,7 @@ def GetDownloadLinkFuncs(ColName):
         return df_subset[ColName].fillna('').tolist()
     return F
 
-def GetFastpParams(wildcards):
+def GetFastpParamsUmi(wildcards):
     if wildcards.Phenotype == "chRNA.Expression.Splicing":
         return "--umi --umi_loc read1 --umi_len 12"
 

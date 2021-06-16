@@ -72,6 +72,9 @@ rule CopyFastqFromLocal:
         """
 
 rule DownloadFastqFromLink:
+    """
+    Download w aspera if possible, then try ftp link, then try fasterq-dump
+    """
     input:
         aspera_key = config['aspera_key']
     output:
@@ -97,6 +100,46 @@ rule DownloadFastqFromLink:
         fi
         """
 
+# def GetFastqR2(wildcards):
+#     """
+#     return empty list single ended
+#     """
+#     df_subset = Fastq_samples.loc[
+#             (Fastq_samples['IndID'] == wildcards.IndID) &
+#             (Fastq_samples['Phenotype'] == wildcards.Phenotype) &
+#             (Fastq_samples['RepNumber'] == wildcards.Rep)]
+#     if sum(df_subset['PairedEnd']) > 0:
+#         return
+
+SingleEnd_df = Fastq_samples.loc[ Fastq_samples['PairedEnd']==False, ['Phenotype', 'IndID', 'RepNumber'] ].drop_duplicates()
+rule GatherAllFasterqDump_SE:
+    input:
+        expand("FastqSE/{Phenotype}/{IndID}/{Rep}.SE.fastq.gz", zip, Phenotype=SingleEnd_df['Phenotype'], IndID=SingleEnd_df['IndID'], Rep=SingleEnd_df['RepNumber'])
+
+rule DownloadFasterqDump_SE:
+    "For single end read datasets"
+    output:
+        "FastqSE/{Phenotype}/{IndID}/{Rep}.SE.fastq.gz"
+    log:
+        "logs/DownloadFasterqDump_SE/{Phenotype}/{IndID}.{Rep}.log"
+    params:
+        SRA_Run = GetDownloadLinkFuncs('SRA_Run'),
+    shadow: "shallow"
+    threads: 1
+    resources:
+        tasks_per_node = 7
+    shell:
+        """
+        fasterq-dump -S -v -e {threads} {params.SRA_Run} &> {log}
+        for accession in {params.SRA_Run};
+        do
+            gzip -c $accession.fastq >> {output}
+            rm $accession.fastq
+        done
+        """
+
+
+
 rule fastp:
     """
     clips adapters, can handle UMIs
@@ -110,7 +153,9 @@ rule fastp:
         html = "FastqFastp/{Phenotype}/{IndID}/{Rep}.fastp.html",
         json = "FastqFastp/{Phenotype}/{IndID}/{Rep}.fastp.json"
     params:
-        GetFastpParams
+        umi = GetFastpParamsUmi,
+        I = "-I",
+        O = "-O"
     resources:
         mem_mb = 8000
     log:
@@ -119,5 +164,21 @@ rule fastp:
         "../envs/fastp.yml"
     shell:
         """
-        fastp -i {input.R1} -I {input.R2} -o {output.R1} -O {output.R2} --html {output.html} --json {output.json} {params} &> {log}
+        fastp -i {input.R1} {params.I} {input.R2} -o {output.R1} {params.O} {output.R2} --html {output.html} --json {output.json} {params.umi} &> {log}
         """
+
+use rule fastp as fastp_SE with:
+    input:
+        R1 = "FastqSE/{Phenotype}/{IndID}/{Rep}.SE.fastq.gz",
+        R2 = []
+    output:
+        R1 = "FastqFastpSE/{Phenotype}/{IndID}/{Rep}.SE.fastq.gz",
+        R2 = [],
+        html = "FastqFastpSE/{Phenotype}/{IndID}/{Rep}.fastp.html",
+        json = "FastqFastpSE/{Phenotype}/{IndID}/{Rep}.fastp.json"
+    log:
+        "logs/fastpSE/{Phenotype}.{IndID}.{Rep}.log"
+    params:
+        umi = GetFastpParamsUmi,
+        I = "",
+        O = ""

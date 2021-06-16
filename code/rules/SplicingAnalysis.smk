@@ -54,7 +54,7 @@ rule leafcutter_cluster:
         "logs/leafcutter_cluster/autosomes.log"
     shell:
         """
-        python scripts/leafcutter/scripts/leafcutter_cluster_regtools_py3.py -j {input.juncfile_list} -r SplicingAnalysis/leafcutter/clustering/autosomes/ &> {log}
+        python scripts/davidaknowles_leafcutter/scripts/leafcutter_cluster_regtools_py3.py -j {input.juncfile_list} -r SplicingAnalysis/leafcutter/clustering/autosomes/ &> {log}
         """
 
 rule annotate_juncfiles:

@@ -25,7 +25,7 @@ wildcard_constraints:
     IndID="|".join(Fastq_samples['IndID']),
     Rep="\d+"
 
-localrules: all, CopyFastqFromLocal, DownloadFastqFromLink, Download1KG_GRCh38, STAR_make_index, DownloadHg38Ref
+localrules: all, CopyFastqFromLocal, DownloadFastqFromLink, Download1KG_GRCh38, STAR_make_index, DownloadHg38Ref, DownloadFasterqDump_SE
 ruleorder: CopyFastqFromLocal > DownloadFastqFromLink
 
 MyPhenotypes = ["chRNA.IR", "Expression.Splicing", "chRNA.Expression.Splicing", "H3K4ME1", "H3K27AC", "CTCF", "H3K4ME3", "chRNA.Splicing", "polyA.Splicing"]
@@ -54,6 +54,13 @@ rule all:
         expand("QTLs/QTLTools/{Phenotype}/PermutationPass.FDR_Added.txt.gz", Phenotype=MyPhenotypes),
         expand("featureCounts/{Phenotype}/NormFactors.tsv", Phenotype=["chRNA.Expression.Splicing", "Expression.Splicing", "H3K4ME1", "H3K4ME3", "H3K27AC", "CTCF"])
 
+rule Gather_chRNASeq_Fastq:
+    """
+    Useful to force rexecution of all chRNAseq related analysis after
+    identifying sample swaps and correcting them in samples.tsv config
+    """
+    input:
+        expand("Fastq/{Phenotype}/{IndID}/{Rep}.R1.fastq.gz", zip, Phenotype=chRNASeqSamples_df['Phenotype'], IndID=chRNASeqSamples_df['IndID'], Rep=chRNASeqSamples_df['RepNumber']),
 
 rule Macs2PeakCalling_narrow:
     input:
