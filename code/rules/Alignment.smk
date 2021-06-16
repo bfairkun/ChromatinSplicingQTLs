@@ -111,7 +111,6 @@ rule STAR_Align_WASP:
         R2 = "FastqFastp/{Phenotype}/{IndID}/{Rep}.R2.fastq.gz",
         vcf = "ReferenceGenome/STAR_WASP_Vcfs/{Phenotype}/WholeGenome.vcf"
     output:
-        # bam = temp("Alignments/STAR_Align/{Phenotype}/{IndID}/{Rep}/Aligned.sortedByCoord.out.bam")
         bam = "Alignments/STAR_Align/{Phenotype}/{IndID}/{Rep}/Aligned.sortedByCoord.out.bam",
         align_log = "Alignments/STAR_Align/{Phenotype}/{IndID}/{Rep}/Log.final.out"
     threads: 8
@@ -129,6 +128,15 @@ rule STAR_Align_WASP:
         """
         STAR --readMapNumber {params.readMapNumber} --outFileNamePrefix Alignments/STAR_Align/{wildcards.Phenotype}/{wildcards.IndID}/{wildcards.Rep}/ --genomeDir ReferenceGenome/STARIndex/ --readFilesIn {input.R1} {input.R2} --outSAMtype BAM SortedByCoordinate --readFilesCommand zcat --runThreadN {threads} --outSAMmultNmax 1 {params.WASP_params} {input.vcf} --limitBAMsortRAM 16000000000 {params.ENCODE_params} --outSAMstrandField intronMotif  &> {log}
         """
+
+use rule STAR_Align_WASP as STAR_Align_WASP_SE with:
+    input:
+        index = "ReferenceGenome/STARIndex/chrLength.txt",
+        R1 = "FastqFastpSE/{Phenotype}/{IndID}/{Rep}.SE.fastq.gz",
+        R2 = [],
+        vcf = "ReferenceGenome/STAR_WASP_Vcfs/{Phenotype}/WholeGenome.vcf"
+    wildcard_constraints:
+        Phenotype = "MetabolicLabelled.30min|MetabolicLabelled.60min"
 
 rule FilterBAM_WaspTags:
     input:
