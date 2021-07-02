@@ -109,7 +109,7 @@ def GetQTLtoolsVcfTbi(wildcards):
 
 # def GetQTLtoolsWindowSize(wildcards):
 #     if wildcards.Phenotype in ChromatinProfilingPhenotypes:
-#         return 
+#         return
 
 def GetQTLtoolsFlags(wildcards):
     if wildcards.Phenotype in ["polyA.Splicing", "chRNA.Splicing"]:

@@ -71,6 +71,7 @@ rule CopyFastqFromLocal:
         cat {input.R2} > {output.R2} 2>> {log}
         """
 
+
 rule DownloadFastqFromLink:
     """
     Download w aspera if possible, then try ftp link, then try fasterq-dump
@@ -78,27 +79,47 @@ rule DownloadFastqFromLink:
     input:
         aspera_key = config['aspera_key']
     output:
-        R1 = temp("Fastq/{Phenotype}/{IndID}/{Rep}.R1.fastq.gz"),
-        R2 = temp("Fastq/{Phenotype}/{IndID}/{Rep}.R2.fastq.gz")
+        fastq = temp("Fastq/{Phenotype}/{IndID}/{Rep}.{Read}.fastq.gz"),
     log:
-        "logs/DownloadFastqFromAsperaLink/{Phenotype}.{IndID}.{Rep}.log"
+        "logs/DownloadFastqFromAsperaLink/{Phenotype}.{IndID}.{Rep}.{Read}.log"
+    wildcard_constraints:
+        Read = "R1|R2"
+    shadow: "shallow"
     params:
-        R1_ftp = GetDownloadLinkFuncs('R1_ftp'),
-        R2_ftp = GetDownloadLinkFuncs('R2_ftp'),
-        R1_aspera = GetDownloadLinkFuncs('R1_aspera'),
-        R2_aspera = GetDownloadLinkFuncs('R2_aspera'),
+        ftp_link = GetDownloadLinkFuncs('ftp'),
+        aspera_link  = GetDownloadLinkFuncs('aspera'),
     shell:
         """
         #Use aspera if aspera key file and aspera links parameters are defined (not empty strings)
-        if [[ ! -z "{input.aspera_key}" && ! -z "{params.R1_aspera}" && ! -z "{params.R2_aspera}" ]]
-        then
-            ascp -v -QT -l 300m -P33001 -i {input.aspera_key} era-fasp@{params.R1_aspera} {output.R1} &> {log}
-            ascp -v -QT -l 300m -P33001 -i {input.aspera_key} era-fasp@{params.R2_aspera} {output.R2} &> {log}
+        if [[ ! -z "{input.aspera_key}" && ! -z "{params.aspera_link}" ]]; then
+            for link in {params.aspera_link}
+            do
+                tmpfile=$(mktemp -p . tmp.download.XXXXXXXX.fastq.gz)
+                ascp -v -QT -l 300m -P33001 -i {input.aspera_key} era-fasp@${{link}} $tmpfile &>> {log}
+                cat $tmpfile >> {output.fastq}
+                rm $tmpfile
+            done
         else
-            wget -O {output.R1} {params.R1_ftp} &> {log}
-            wget -O {output.R2} {params.R2_ftp} &>> {log}
+            for link in {params.ftp_link}
+            do
+                tmpfile=$(mktemp -p . tmp.download.XXXXXXXX.fastq.gz)
+                wget -O $tmpfile ${{link}} &>> {log}
+                cat $tmpfile >> {output.fastq}
+                rm $tmpfile
+            done
         fi
         """
+
+use rule DownloadFastqFromLink as DownloadFastqFromLink_SE with:
+    output:
+        fastq = "FastqSE/{Phenotype}/{IndID}/{Rep}.{Read}.fastq.gz",
+    log:
+        "logs/DownloadFastqFromAsperaLink_SE/{Phenotype}.{IndID}.{Rep}.{Read}.log"
+    wildcard_constraints:
+        Read = "SE"
+
+
+# TODO: make Download per fastq, and make inherited rule for SE
 
 # def GetFastqR2(wildcards):
 #     """
@@ -116,27 +137,6 @@ rule GatherAllFasterqDump_SE:
     input:
         expand("FastqSE/{Phenotype}/{IndID}/{Rep}.SE.fastq.gz", zip, Phenotype=SingleEnd_df['Phenotype'], IndID=SingleEnd_df['IndID'], Rep=SingleEnd_df['RepNumber'])
 
-rule DownloadFasterqDump_SE:
-    "For single end read datasets"
-    output:
-        "FastqSE/{Phenotype}/{IndID}/{Rep}.SE.fastq.gz"
-    log:
-        "logs/DownloadFasterqDump_SE/{Phenotype}/{IndID}.{Rep}.log"
-    params:
-        SRA_Run = GetDownloadLinkFuncs('SRA_Run'),
-    shadow: "shallow"
-    threads: 1
-    resources:
-        tasks_per_node = 7
-    shell:
-        """
-        fasterq-dump -S -v -e {threads} {params.SRA_Run} &> {log}
-        for accession in {params.SRA_Run};
-        do
-            gzip -c $accession.fastq >> {output}
-            rm $accession.fastq
-        done
-        """
 
 
 

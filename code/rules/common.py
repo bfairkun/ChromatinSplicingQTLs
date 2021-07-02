@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+import glob
 
 autosomes = [str(i) for i in range(1,23)]
 
@@ -65,13 +66,15 @@ def GetFastqLocalFuncs(Read):
         return require_at_least_one(df_subset[Read].tolist())
     return F
 
-def GetDownloadLinkFuncs(ColName):
+def GetDownloadLinkFuncs(LinkType):
     def F(wildcards):
+        if wildcards.Read == "SE":
+            wildcards.Read = "R1"
         df_subset = Fastq_samples.loc[
                 (Fastq_samples['IndID'] == wildcards.IndID) &
                 (Fastq_samples['Phenotype'] == wildcards.Phenotype) &
                 (Fastq_samples['RepNumber'] == int(wildcards.Rep))]
-        return df_subset[ColName].fillna('').tolist()
+        return df_subset[wildcards.Read + '_' + LinkType].fillna('').tolist()
     return F
 
 def GetFastpParamsUmi(wildcards):

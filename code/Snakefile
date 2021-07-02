@@ -14,13 +14,14 @@ include: "rules/SplicingAnalysis.smk"
 include: "rules/ChromatinPehnotypesAnalysis.smk"
 include: "rules/ProSeqAnalysis.smk"
 include: "rules/QTLTools.smk"
+include: "rules/report.smk"
 
 wildcard_constraints:
     chrom="|".join(autosomes),
     IndID="|".join(Fastq_samples['IndID']),
     Rep="\d+"
 
-localrules: all, CopyFastqFromLocal, DownloadFastqFromLink, Download1KG_GRCh38, STAR_make_index, DownloadHg38Ref, DownloadFasterqDump_SE
+localrules: all, CopyFastqFromLocal, DownloadFastqFromLink, Download1KG_GRCh38, STAR_make_index, DownloadHg38Ref, DownloadFastqFromLink_SE
 ruleorder: CopyFastqFromLocal > DownloadFastqFromLink
 
 MyPhenotypes = ["chRNA.IR", "Expression.Splicing", "chRNA.Expression.Splicing", "H3K4ME1", "H3K27AC", "CTCF", "H3K4ME3", "chRNA.Splicing", "polyA.Splicing"]

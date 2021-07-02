@@ -27,17 +27,29 @@ SampleSwapKey <- chRNA.SampleSwaps %>%
     deframe()
 
 
-LiEtAlTable <- read_csv("config/ExternalFastqDataAccessions/LiSampleList_SraRunTable_4sU_PRJNA302818.txt") %>%
-    select(incubated_with_4su_for, IndID = cell_line_id, SRA_Run=Run) %>%
+# LiEtAlTable <- read_csv("config/ExternalFastqDataAccessions/LiSampleList_SraRunTable_4sU_PRJNA302818.txt") %>%
+#     select(incubated_with_4su_for, IndID = cell_line_id, SRA_Run=Run) %>%
+#     mutate(
+#            Phenotype = paste0("MetabolicLabelled.", incubated_with_4su_for),
+#            Assay = "RNA-seq",
+#            PairedEnd = FALSE,
+#            SRA_Project = "PRJNA302818",
+#            RepNumber = 1
+#             ) %>%
+#     select(Phenotype, Assay, PairedEnd, SRA_Run, SRA_Project, IndID, RepNumber)
+
+
+LiEtAlTable <- read_tsv("config/ExternalFastqDataAccessions/LiSampleList_ENARunTable_4sU_PRJNA302818.txt") %>%
+    select(study_accession, R1_ftp = fastq_ftp, R1_aspera = fastq_aspera, sample_title) %>%
+    mutate(IndID.Time = str_replace(sample_title, ".+?\\[(.+?)-(\\d+)-.+", "NA\\1.\\2")) %>%
+    separate(IndID.Time, into=c("IndID", "incubated_with_4su_for"), sep="\\.") %>%
     mutate(
-           Phenotype = paste0("MetabolicLabelled.", incubated_with_4su_for),
+           Phenotype = paste0("MetabolicLabelled.", incubated_with_4su_for, "min"),
            Assay = "RNA-seq",
            PairedEnd = FALSE,
-           SRA_Project = "PRJNA302818",
            RepNumber = 1
             ) %>%
-    select(Phenotype, Assay, PairedEnd, SRA_Run, SRA_Project, IndID, RepNumber)
-
+    select(Phenotype, study_accession,  Assay, PairedEnd, IndID, RepNumber, R1_ftp, R1_aspera)
 
 
 samples %>%
