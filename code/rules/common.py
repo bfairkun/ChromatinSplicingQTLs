@@ -5,6 +5,7 @@ import glob
 autosomes = [str(i) for i in range(1,23)]
 
 N_PermutationChunks = 50
+MyPhenotypes = ["chRNA.IR", "Expression.Splicing", "chRNA.Expression.Splicing", "H3K4ME1", "H3K27AC", "CTCF", "H3K4ME3", "chRNA.Splicing", "polyA.Splicing"]
 
 ## All Fastq samples
 Fastq_samples = pd.read_csv("config/samples.tsv", sep='\t', comment='#')

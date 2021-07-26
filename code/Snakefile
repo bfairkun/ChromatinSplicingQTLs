@@ -1,4 +1,3 @@
-
 configfile: "config/config.yaml"
 
 include: "rules/common.py"
@@ -24,7 +23,6 @@ wildcard_constraints:
 localrules: all, CopyFastqFromLocal, DownloadFastqFromLink, Download1KG_GRCh38, STAR_make_index, DownloadHg38Ref, DownloadFastqFromLink_SE
 ruleorder: CopyFastqFromLocal > DownloadFastqFromLink
 
-MyPhenotypes = ["chRNA.IR", "Expression.Splicing", "chRNA.Expression.Splicing", "H3K4ME1", "H3K27AC", "CTCF", "H3K4ME3", "chRNA.Splicing", "polyA.Splicing"]
 
 rule all:
     input:
@@ -48,6 +46,8 @@ rule all:
         "QTLs/QTLTools/Expression.Splicing/Genotypes/WholeGenome.vcf.gz",
         # "Multiqc/multiqc_report.html",
         expand("QTLs/QTLTools/{Phenotype}/PermutationPass.FDR_Added.txt.gz", Phenotype=MyPhenotypes),
+        expand("QTLs/QTLTools/{Phenotype}/NominalPass_ForColoc.txt.gz", Phenotype=MyPhenotypes),
+        expand("QTLs/QTLTools/{Phenotype}/OnlyFirstRepsForColoc.sorted.qqnorm.bed.gz", Phenotype=MyPhenotypes),
         expand("featureCounts/{Phenotype}/NormFactors.tsv", Phenotype=["chRNA.Expression.Splicing", "Expression.Splicing", "H3K4ME1", "H3K4ME3", "H3K27AC", "CTCF"])
 
 rule Gather_chRNASeq_Fastq:

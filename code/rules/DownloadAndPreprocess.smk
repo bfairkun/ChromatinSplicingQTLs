@@ -20,6 +20,14 @@ rule indexHg38Ref:
         samtools faidx {input.fa}
         """
 
+rule Download_hg19_to_hg38_chain:
+    output:
+        "ReferenceGenome/Chains/hg19ToHg38.over.chain.gz"
+    shell:
+        """
+        wget -O {output} "https://hgdownload.cse.ucsc.edu/goldenpath/hg19/liftOver/hg19ToHg38.over.chain.gz"
+        """
+
 rule DownloadHg38Gencode_basic:
     """
     only transcripts flagged as basic

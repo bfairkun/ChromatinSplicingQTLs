@@ -44,6 +44,7 @@ p <- bind_rows(pid_lengths, gid_lengths) %>%
     geom_histogram() +
     scale_x_continuous(trans="log10") +
     facet_wrap(~FeatureType, scales="free_y") +
-    theme_classic()
+    theme_classic() +
+    theme(axis.text.x=element_text(angle = 90, vjust = 0.5))
 
 ggsave(plot_out, p, height=3, width=3)

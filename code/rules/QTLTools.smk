@@ -113,9 +113,11 @@ def GetQTLtoolsVcfTbi(wildcards):
 
 def GetQTLtoolsFlags(wildcards):
     if wildcards.Phenotype in ["polyA.Splicing", "chRNA.Splicing"]:
-        return "--grp-best"
+        return "--grp-best --window 10000"
+    elif wildcards.Phenotype in ["chRNA.IR", "polyA.IR", "chRNA.Expression.Splicing"]:
+        return "--window 10000"
     else:
-        return ""
+        return "--window 100000"
 
 rule QTLtools_cis_permutation_pass:
     input:
@@ -125,14 +127,14 @@ rule QTLtools_cis_permutation_pass:
         bed_tbi = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.gz.tbi",
         cov = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.pca"
     output:
-        "QTLs/QTLTools/{Phenotype}/PermutationPassChunks/{n}.txt"
+        temp("QTLs/QTLTools/{Phenotype}/PermutationPassChunks/{n}.txt")
     log:
         "logs/QTLtools_cis_permutation_pass/{Phenotype}/{n}.log"
     params:
         Flags = GetQTLtoolsFlags
     shell:
         """
-        QTLtools_1.2_CentOS7.8_x86_64 cis --chunk {wildcards.n} {N_PermutationChunks} --vcf {input.vcf} --bed {input.bed} --cov {input.cov} --out {output} {params.Flags} --permute 1000 --window 100000 &> {log}
+        QTLtools_1.2_CentOS7.8_x86_64 cis --chunk {wildcards.n} {N_PermutationChunks} --vcf {input.vcf} --bed {input.bed} --cov {input.cov} --out {output} {params.Flags} --permute 1000  &> {log}
         """
 
 rule Gather_QTLtools_cis_permutation_pass:
@@ -152,7 +154,6 @@ rule AddQValueToPermutationPass:
         "QTLs/QTLTools/{Phenotype}/PermutationPass.txt.gz"
     output:
         table = "QTLs/QTLTools/{Phenotype}/PermutationPass.FDR_Added.txt.gz",
-        PvalPlot = "QTLs/QTLTools/{Phenotype}/PermutationPass.Pvals.pdf"
     log:
         "logs/AddQValueToPermutationPass/{Phenotype}.log"
     conda:
@@ -161,5 +162,75 @@ rule AddQValueToPermutationPass:
         10
     shell:
         """
-        Rscript scripts/AddQvalueToQTLtoolsOutput.R {input} {output.table} {output.PvalPlot} &> {log}
+        Rscript scripts/AddQvalueToQTLtoolsOutput.R {input} {output.table} &> {log}
         """
+
+
+rule MakePhenotypeTableToColocPeaksWithGenes:
+    input:
+        bed = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.gz",
+        fai = "ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa.fai",
+        genes = "ExpressionAnalysis/polyA/ExpressedGeneList.txt"
+    output:
+        bed = "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsForColoc.sorted.qqnorm.bed.gz",
+        tbi = "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsForColoc.sorted.qqnorm.bed.gz.tbi"
+    params:
+        #max distance between gene and peaks to attempt coloc
+        cis_window = 100000,
+        bedtools_intersect_params = "",
+        #coloc window from gene
+        coloc_window = 100000
+    log:
+        "logs/MakePhenotypeTableToColocPeaksWithGenes/{Phenotype}.log"
+    resources:
+        mem_mb = 12000
+    wildcard_constraints:
+        Phenotype = "H3K4ME3|H3K27AC|H3K4ME1|CTCF"
+    shell:
+        """
+        cat <(zcat {input.bed} | head -1) <(bedtools slop -i {input.genes} -b {params.cis_window} -g {input.fai} | bedtools intersect -b {input.bed} -a - -sorted -wo {params.bedtools_intersect_params} | awk -F'\\t' -v OFS='\\t' '{{$10="{wildcards.Phenotype}:"$4":"$10; $11=$4; print $0}}' | rev | cut -d$'\\t' -f2- | rev | cut -d$'\\t' -f 4,7- | sort | join -t$'\\t' <(awk -F'\\t' -v OFS='\\t' '{{print $4, $0}}' {input.genes} | sort) - | cut -d$'\\t' -f 2-4,11- | bedtools slop -i - -b {params.coloc_window} -g {input.fai} ) | bedtools sort -i - -header | bgzip /dev/stdin -c > {output.bed}
+        tabix -p bed {output.bed}
+        """
+
+use rule MakePhenotypeTableToColocPeaksWithGenes as MakePhenotypeTableToColocIntronsWithGenes with:
+    wildcard_constraints:
+        Phenotype = "chRNA.IR|chRNA.Splicing|polyA.Splicing|polyA.IR"
+    params:
+        cis_window = 0,
+        bedtools_intersect_params = "-s",
+        coloc_window = 100000,
+
+use rule MakePhenotypeTableToColocPeaksWithGenes as MakePhenotypeTableToColocGenes with:
+    wildcard_constraints:
+        Phenotype = "Expression.Splicing|chRNA.Expression.Splicing"
+    params:
+        cis_window = 0,
+        bedtools_intersect_params = "-s -f 1 -r",
+        coloc_window = 100000,
+
+rule QTLtools_cis_nominal_pass_for_coloc:
+    input:
+        vcf = GetQTLtoolsVcf,
+        tbi = GetQTLtoolsVcfTbi,
+        bed = "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsForColoc.sorted.qqnorm.bed.gz",
+        bed_tbi = "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsForColoc.sorted.qqnorm.bed.gz.tbi",
+        cov = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.pca"
+    output:
+        "QTLs/QTLTools/{Phenotype}/NominalPass_ForColoc.txt.gz",
+    log:
+        "logs/QTLtools_cis_nominal_pass_for_coloc/{Phenotype}.log"
+    params:
+        # extra = ""
+        extra = "--chunk 1 500"
+    shell:
+        """
+        QTLtools_1.2_CentOS7.8_x86_64 cis  --vcf {input.vcf} --bed {input.bed} --cov {input.cov} --out QTLs/QTLTools/{wildcards.Phenotype}/NominalPass_ForColoc.txt  --nominal 1 --window 0 {params.extra} &> {log}
+        gzip QTLs/QTLTools/{wildcards.Phenotype}/NominalPass_ForColoc.txt
+        """
+
+# rule ShortenQTLToolsOutput:
+#     input:
+#         "QTLs/QTLTools/{Phenotype}/NominalPass_ForColoc.txt.gz",
+#     output:
+
+# use rule QTLtools_cis_permutation_pass as QTLtools_cis_nominal_pass_for_coloc with:
