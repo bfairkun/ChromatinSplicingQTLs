@@ -13,6 +13,7 @@ include: "rules/SplicingAnalysis.smk"
 include: "rules/ChromatinPehnotypesAnalysis.smk"
 include: "rules/ProSeqAnalysis.smk"
 include: "rules/QTLTools.smk"
+include: "rules/Coloc.smk"
 include: "rules/report.smk"
 
 wildcard_constraints:
@@ -46,9 +47,8 @@ rule all:
         "QTLs/QTLTools/Expression.Splicing/Genotypes/WholeGenome.vcf.gz",
         # "Multiqc/multiqc_report.html",
         expand("QTLs/QTLTools/{Phenotype}/PermutationPass.FDR_Added.txt.gz", Phenotype=MyPhenotypes),
-        expand("QTLs/QTLTools/{Phenotype}/NominalPass_ForColoc.txt.gz", Phenotype=MyPhenotypes),
-        expand("QTLs/QTLTools/{Phenotype}/OnlyFirstRepsForColoc.sorted.qqnorm.bed.gz", Phenotype=MyPhenotypes),
-        expand("featureCounts/{Phenotype}/NormFactors.tsv", Phenotype=["chRNA.Expression.Splicing", "Expression.Splicing", "H3K4ME1", "H3K4ME3", "H3K27AC", "CTCF"])
+        expand("featureCounts/{Phenotype}/NormFactors.tsv", Phenotype=["chRNA.Expression.Splicing", "Expression.Splicing", "H3K4ME1", "H3K4ME3", "H3K27AC", "CTCF"]),
+        "hyprcoloc/GenewiseSummaryStatsInput"
 
 rule Gather_chRNASeq_Fastq:
     """

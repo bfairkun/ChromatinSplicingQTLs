@@ -24,7 +24,7 @@ def cmdline_args(Args=None):
             description=__doc__,
             formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("QTLsIn",
-            metavar="<QTLtoolsNominalOutput.gz>>")
+            metavar="<QTLtoolsNominalOutput.gz>")
     p.add_argument("Covariates",
             metavar="<space delimited QTLtools covariates file>")
     p.add_argument("vcf",
@@ -68,9 +68,10 @@ df = N - CovariateCount - 1
 with gzip.open(args.QTLsIn, "rt") as f_in, gzip.open(args.FileOut, "wt") as f_out:
     f_out.write("phenotype\tsnp\tbeta\tbeta_se\tp\n")
     for i,line in enumerate(f_in):
-        if i < 100:
+        if i >= 0:
             l = line.split(' ')
             phenotype, snp, p, beta = [l[0], l[7], l[11], l[12]]
             tval = t.ppf(float(p)/2, df=df)
             beta_se = abs(float(beta)/tval)
-            f_out.write("{}\t{}\t{}\t{}\t{}\n".format(phenotype, snp, beta, beta_se, p))
+            f_out.write("{}\t{}\t{}\t{:.6}\t{}\n".format(phenotype, snp, beta, beta_se, p))
+

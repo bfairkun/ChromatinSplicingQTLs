@@ -220,13 +220,35 @@ rule QTLtools_cis_nominal_pass_for_coloc:
     log:
         "logs/QTLtools_cis_nominal_pass_for_coloc/{Phenotype}.log"
     params:
-        # extra = ""
-        extra = "--chunk 1 500"
+        extra = ""
+        # extra = "--chunk 1 500"
     shell:
         """
         QTLtools_1.2_CentOS7.8_x86_64 cis  --vcf {input.vcf} --bed {input.bed} --cov {input.cov} --out QTLs/QTLTools/{wildcards.Phenotype}/NominalPass_ForColoc.txt  --nominal 1 --window 0 {params.extra} &> {log}
         gzip QTLs/QTLTools/{wildcards.Phenotype}/NominalPass_ForColoc.txt
         """
+
+use rule QTLtools_cis_permutation_pass as QTLtools_cis_permutation_pass_for_coloc with:
+    input:
+        vcf = GetQTLtoolsVcf,
+        tbi = GetQTLtoolsVcfTbi,
+        bed = "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsForColoc.sorted.qqnorm.bed.gz",
+        bed_tbi = "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsForColoc.sorted.qqnorm.bed.gz.tbi",
+        cov = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.pca"
+    output:
+        temp("QTLs/QTLTools/{Phenotype}/PermutationPassForColocChunks/{n}.txt")
+    log:
+        "logs/QTLtools_cis_permutation_passForColoc/{Phenotype}/{n}.log"
+    params:
+        Flags = "--window 0"
+
+use rule Gather_QTLtools_cis_permutation_pass as Gather_QTLtools_cis_permutation_pass_ForColoc with:
+    input:
+        expand( "QTLs/QTLTools/{{Phenotype}}/PermutationPassForColocChunks/{n}.txt", n=range(0, 1+N_PermutationChunks) )
+    output:
+        "QTLs/QTLTools/{Phenotype}/PermutationPassForColoc.txt.gz"
+    log:
+        "logs/Gather_QTLtools_cis_permutation_pass_ForColoc/{Phenotype}.log"
 
 # rule ShortenQTLToolsOutput:
 #     input:
