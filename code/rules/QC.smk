@@ -55,6 +55,21 @@ rule GetCommonSnpsForMbv:
         tabix -p vcf {output.vcf} 2>> {log}
         """
 
+rule PlotMultiPhenotypeHeatmap:
+    input:
+        Genes = "ExpressionAnalysis/polyA/ExpressedGeneList.txt",
+        Counts = expand("featureCounts/{PhenotypeRegion}/Counts.txt", PhenotypeRegion=["polyA.Expression", "chRNA.Expression", "AtTSS/H3K27AC", "AtTSS/H3K4ME3", "MetabolicLabelled.30min", "MetabolicLabelled.60min"])
+    output:
+        "QC/MultiphenotypeSpearmanHeatmap.pdf"
+    log:
+        "logs/PlotMultiPhenotypeHeatmap.log"
+    conda:
+        "../envs/r_essentials.yml"
+    shell:
+        """
+        Rscript scripts/PlotSequentialPhenotypeHeatmap.R {input.Genes} {output} {input.Counts} &> {log}
+        """
+
 
 rule mbv:
     input:

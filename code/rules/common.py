@@ -5,13 +5,14 @@ import glob
 autosomes = [str(i) for i in range(1,23)]
 
 N_PermutationChunks = 50
-MyPhenotypes = ["chRNA.IR", "Expression.Splicing", "chRNA.Expression.Splicing", "H3K4ME1", "H3K27AC", "CTCF", "H3K4ME3", "chRNA.Splicing", "polyA.Splicing"]
-
+MyPhenotypes = ["chRNA.IR", "Expression.Splicing", "chRNA.Expression.Splicing",  "H3K27AC", "CTCF", "H3K4ME3", "chRNA.Splicing", "polyA.Splicing", "MetabolicLabelled.30min", "MetabolicLabelled.60min"]
 PhenotypesToColoc = [p for p in MyPhenotypes if p not in ["chRNA.Splicing", "polyA.Splicing"]]
+
 ## All Fastq samples
 Fastq_samples = pd.read_csv("config/samples.tsv", sep='\t', comment='#')
 
 # Define some df subsets from the samples df as useful global variables
+PhenotypeSet = Fastq_samples['Phenotype'].unique().tolist() + ["chRNA.IR",  "polyA.Splicing", "chRNA.Expression"]
 ChromatinProfilingPhenotypes = Fastq_samples.loc[ (Fastq_samples['Assay'].isin(["ChIP-seq", "CutAndTag"]))  ]['Phenotype'].unique().tolist()
 RNASeqPhenotypes = Fastq_samples.loc[ (Fastq_samples['Assay']=="RNA-seq")  ]['Phenotype'].unique().tolist()
 RNASeqExpressionPhenotypes = ['polyA.Expression', 'chRNA.Expression']
@@ -170,3 +171,7 @@ def GetBamForPhenotype(wildcards):
         return expand("Alignments/STAR_Align/chRNA.Expression.Splicing/{IndID}/{Rep}/Filtered.bam", zip, IndID=df_subset['IndID'], Rep=df_subset['RepNumber'])
     elif wildcards.Phenotype in ChromatinProfilingPhenotypes:
         return expand("Alignments/Hisat2_Align/{{Phenotype}}/{IndID}.{Rep}.wasp_filterd.markdup.sorted.bam", zip, IndID=df_subset['IndID'], Rep=df_subset['RepNumber'])
+
+def GetAnnotationsForRegion(wildcards):
+    if wildcards.Region == "AtTSS":
+        return "ReferenceGenome/Annotations/TSSRegions.saf"

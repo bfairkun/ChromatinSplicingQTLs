@@ -16,18 +16,26 @@ rule Prepare_polyA_RNA_seq_PhenotypeTable:
         Rscript scripts/PreparePhenotypeTablesFromFeatureCounts.R {input.featureCounts} rename_STAR_alignment_samples {input.gtf} {input.genes} {output.GeneList} {output.PhenotypesBed} {output.FirstReps}
         """
 
+def GetFeatureCountsForRNASeqExpressionPhenotype(wildcards):
+    if wildcards.Phenotype == "chRNA.Expression.Splicing":
+        return "featureCounts/chRNA.Expression/Counts.txt"
+    else:
+        return "featureCounts/{Phenotype}/Counts.txt"
+
 rule Prepare_chrRNA_RNA_seq_ExpressionPhenotypeTable:
     input:
-        featureCounts = "featureCounts/chRNA.Expression/Counts.txt",
+        featureCounts = GetFeatureCountsForRNASeqExpressionPhenotype,
         GeneList = "ExpressionAnalysis/polyA/ExpressedGeneList.txt",
     output:
-        FirstReps = "QTLs/QTLTools/chRNA.Expression.Splicing/OnlyFirstReps.qqnorm.bed.gz"
+        FirstReps = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.qqnorm.bed.gz"
+    wildcard_constraints:
+        Phenotype = "|".join(RNASeqPhenotypes)
     log:
-        "logs/Prepare_chrRNA_RNA_seq_ExpressionPhenotypeTable.log"
+        "logs/Prepare_chrRNA_RNA_seq_ExpressionPhenotypeTable/{Phenotype}.log"
     conda:
         "../envs/r_essentials.yml"
     shell:
         """
-        Rscript scripts/PreparePhenotypeTableFromFeatureCounts_SubsetGeneList.R {input.featureCounts} {input.GeneList} {output.FirstReps}
+        Rscript scripts/PreparePhenotypeTableFromFeatureCounts_SubsetGeneList.R {input.featureCounts} {input.GeneList} {output.FirstReps} &> {log}
         """
 

@@ -216,17 +216,25 @@ rule QTLtools_cis_nominal_pass_for_coloc:
         bed_tbi = "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsForColoc.sorted.qqnorm.bed.gz.tbi",
         cov = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.pca"
     output:
-        "QTLs/QTLTools/{Phenotype}/NominalPass_ForColoc.txt.gz",
+        temp("QTLs/QTLTools/{Phenotype}/NominalPass_ForColocChunks/{n}.txt"),
     log:
-        "logs/QTLtools_cis_nominal_pass_for_coloc/{Phenotype}.log"
+        "logs/QTLtools_cis_nominal_pass_for_coloc/{Phenotype}/{n}.log"
+    resources:
+        mem_mb = 16000
     params:
         extra = ""
-        # extra = "--chunk 1 500"
     shell:
         """
-        QTLtools_1.2_CentOS7.8_x86_64 cis  --vcf {input.vcf} --bed {input.bed} --cov {input.cov} --out QTLs/QTLTools/{wildcards.Phenotype}/NominalPass_ForColoc.txt  --nominal 1 --window 0 {params.extra} &> {log}
-        gzip QTLs/QTLTools/{wildcards.Phenotype}/NominalPass_ForColoc.txt
+        QTLtools_1.2_CentOS7.8_x86_64 cis  --vcf {input.vcf} --bed {input.bed} --cov {input.cov} --out {output}  --nominal 1 --window 0 --chunk {wildcards.n} {N_PermutationChunks} {params.extra} &> {log}
         """
+
+use rule Gather_QTLtools_cis_permutation_pass as Gather_QTLtools_cis_nominal_pass_ForColoc with:
+    input:
+        expand("QTLs/QTLTools/{{Phenotype}}/NominalPass_ForColocChunks/{n}.txt", n=range(0, 1+N_PermutationChunks) )
+    output:
+        "QTLs/QTLTools/{Phenotype}/NominalPass_ForColoc.txt.gz"
+    log:
+        "logs/Gather_QTLtools_cis_nominal_pass_ForColoc/{Phenotype}.log"
 
 use rule QTLtools_cis_permutation_pass as QTLtools_cis_permutation_pass_for_coloc with:
     input:

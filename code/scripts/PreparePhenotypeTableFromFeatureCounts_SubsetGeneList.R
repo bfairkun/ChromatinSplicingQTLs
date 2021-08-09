@@ -50,7 +50,7 @@ dat.cpm <- dat.genes %>%
 #Standardize across individuals (rows),
 dat.standardized <- dat.cpm %>% t() %>% scale() %>% t() %>% as.data.frame() %>% drop_na() %>% as.matrix()
 #then qqnorm across genes (columns)
-dat.qqnormed <- apply(dat.standardized, 2, rankNorm)
+dat.qqnormed <- apply(dat.standardized, 2, RankNorm)
 
 
 Out <- gene.list %>%

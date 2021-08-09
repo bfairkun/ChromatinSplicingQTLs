@@ -48,7 +48,10 @@ rule all:
         # "Multiqc/multiqc_report.html",
         expand("QTLs/QTLTools/{Phenotype}/PermutationPass.FDR_Added.txt.gz", Phenotype=MyPhenotypes),
         expand("featureCounts/{Phenotype}/NormFactors.tsv", Phenotype=["chRNA.Expression.Splicing", "Expression.Splicing", "H3K4ME1", "H3K4ME3", "H3K27AC", "CTCF"]),
-        "hyprcoloc/GenewiseSummaryStatsInput"
+        "hyprcoloc/GenewiseSummaryStatsInput",
+        "ReferenceGenome/Annotations/GTFTools_BasicAnnotations/gencode.v34.chromasomal.tss.bed",
+        expand("featureCounts/AtTSS/{Phenotype}/Counts.txt", Phenotype=["H3K27AC", "H3K4ME3"]),
+        expand("featureCounts/{Phenotype}/Counts.txt", Phenotype=["MetabolicLabelled.30min", "MetabolicLabelled.60min"])
 
 rule Gather_chRNASeq_Fastq:
     """

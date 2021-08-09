@@ -28,20 +28,28 @@ rule gtf2leafcutter:
         scripts/leafcutter/leafviz/gtf2leafcutter.pl -o {input.gtf} {input.gtf} &> {log}
         """
 
+def GetGTFToolsAnnotation(wildcards):
+    if wildcards.GTFTools == "GTFTools":
+        return "ReferenceGenome/Annotations/gencode.v34.chromasomal.annotation.gtf"
+    elif wildcards.GTFTools == "GTFTools_BasicAnnotations":
+        return "ReferenceGenome/Annotations/gencode.v34.chromasomal.basic.annotation.gtf"
+
 rule GTFTools:
     input:
-        "ReferenceGenome/Annotations/gencode.v34.chromasomal.annotation.gtf",
+        GetGTFToolsAnnotation
     output:
-        tss = "ReferenceGenome/Annotations/GTFTools/gencode.v34.chromasomal.tss.bed",
-        exons = "ReferenceGenome/Annotations/GTFTools/gencode.v34.chromasomal.exons.bed",
-        introns  = "ReferenceGenome/Annotations/GTFTools/gencode.v34.chromasomal.introns.bed",
-        genes = "ReferenceGenome/Annotations/GTFTools/gencode.v34.chromasomal.genes.bed",
-        splicesite  = "ReferenceGenome/Annotations/GTFTools/gencode.v34.chromasomal.splicesite.bed",
-        utr  = "ReferenceGenome/Annotations/GTFTools/gencode.v34.chromasomal.utr.bed",
-        maskedint  = "ReferenceGenome/Annotations/GTFTools/gencode.v34.chromasomal.maskedint.bed",
-        independentintron  = "ReferenceGenome/Annotations/GTFTools/gencode.v34.chromasomal.independentintron.bed",
+        tss = "ReferenceGenome/Annotations/{GTFTools}/gencode.v34.chromasomal.tss.bed",
+        exons = "ReferenceGenome/Annotations/{GTFTools}/gencode.v34.chromasomal.exons.bed",
+        introns  = "ReferenceGenome/Annotations/{GTFTools}/gencode.v34.chromasomal.introns.bed",
+        genes = "ReferenceGenome/Annotations/{GTFTools}/gencode.v34.chromasomal.genes.bed",
+        splicesite  = "ReferenceGenome/Annotations/{GTFTools}/gencode.v34.chromasomal.splicesite.bed",
+        utr  = "ReferenceGenome/Annotations/{GTFTools}/gencode.v34.chromasomal.utr.bed",
+        maskedint  = "ReferenceGenome/Annotations/{GTFTools}/gencode.v34.chromasomal.maskedint.bed",
+        independentintron  = "ReferenceGenome/Annotations/{GTFTools}/gencode.v34.chromasomal.independentintron.bed",
+    wildcard_constraints:
+        GTFTools = "GTFTools|GTFTools_BasicAnnotations"
     log:
-        "logs/GTFTools.log"
+        "logs/{GTFTools}.log"
     shell:
         """
         python2.7 scripts/GTFtools_0.8.0/gtftools.py -e {output.exons} -i {output.introns} -d {output.independentintron} -k {output.maskedint} --splice_site {output.splicesite} -u {output.utr} -g {output.genes} -t {output.tss} -w 1 {input} 2> {log}

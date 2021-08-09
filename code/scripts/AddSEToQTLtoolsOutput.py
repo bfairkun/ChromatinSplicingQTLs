@@ -39,7 +39,7 @@ def main(some_args):
 if __name__ == '__main__':
     # I like to script and debug with an interactive interpreter. If using
     # interactive interpreter, parse_args with hardcoded args below
-    if(sys.ps1):
+    if hasattr(sys, 'ps1'):
         Args = ["QTLs/QTLTools/H3K4ME3/NominalPass_ForColoc.txt.gz", "QTLs/QTLTools/H3K4ME3/OnlyFirstReps.sorted.qqnorm.bed.pca", "QTLs/QTLTools/H3K4ME3/Genotypes/WholeGenome.vcf.gz", "scratch/FileOut.test.gz"]
         args = cmdline_args(Args=Args)
     else:
@@ -68,10 +68,13 @@ df = N - CovariateCount - 1
 with gzip.open(args.QTLsIn, "rt") as f_in, gzip.open(args.FileOut, "wt") as f_out:
     f_out.write("phenotype\tsnp\tbeta\tbeta_se\tp\n")
     for i,line in enumerate(f_in):
-        if i >= 0:
+        if i >= 1:
             l = line.split(' ')
             phenotype, snp, p, beta = [l[0], l[7], l[11], l[12]]
-            tval = t.ppf(float(p)/2, df=df)
-            beta_se = abs(float(beta)/tval)
-            f_out.write("{}\t{}\t{}\t{:.6}\t{}\n".format(phenotype, snp, beta, beta_se, p))
+            try:
+                tval = t.ppf(float(p)/2, df=df)
+                beta_se = abs(float(beta)/tval)
+                f_out.write("{}\t{}\t{}\t{:.6}\t{}\n".format(phenotype, snp, beta, beta_se, p))
+            except ValueError:
+                print(i)
 

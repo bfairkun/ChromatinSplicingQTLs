@@ -20,35 +20,41 @@
 
 import sys
 import gzip
+import pathlib
+import os
 # I like to script and debug with an interactive interpreter. If using
 # interactive interpreter, parse_args with hardcoded args below
 if hasattr(sys, 'ps1'):
-    sys.argv = ["", "scratch/testcolocfiles/" ,"scratch/FileOut.test.gz"]
+    sys.argv = ["", "scratch/testcolocfiles/" ,"scratch/FileOut.test.gz", "scratch/FileOut.test.gz"]
 
 FilesOutPrefix = sys.argv[1]
 SummaryStatFilesIn = sys.argv[2:]
 print(SummaryStatFilesIn)
 
-# FilesOpened = set([])
+FilesOutPrefixDir = os.path.dirname(FilesOutPrefix)
+if FilesOutPrefixDir:
+    pathlib.Path(FilesOutPrefixDir).mkdir(parents=True, exist_ok=True)
 
-# OpenFile = None
-# for FileIn in SummaryStatFilesIn:
-#     with gzip.open(FileIn, 'rt') as fh:
-#         for i, line in enumerate(fh):
-#             if i>= 1:
-#                 l = line.strip('\n').split('\t')
-#                 gene = l[0].split(':')[1]
-#                 FileOut = FilesOutPrefix + gene + ".txt.gz"
-#                 if FileOut not in FilesOpened:
-#                     with gzip.open(FileOut, 'wt') as fh_out:
-#                         _ = fh_out.write("phenotype\tsnp\tbeta\tbeta_se\tp\n")
-#                     FilesOpened.add(FileOut)
-#                 if FileOut != OpenFile:
-#                     try: fh_out.close()
-#                     except: pass
-#                     fh_out = gzip.open(FileOut, 'at')
-#                 _ = fh_out.write(line)
-#                 OpenFile = FileOut
-#         fh_out.close()
+FilesOpened = set([])
+
+for FileIn in SummaryStatFilesIn:
+    with gzip.open(FileIn, 'rt') as fh:
+        OpenFileOut = None
+        for i, line in enumerate(fh):
+            if i>= 1:
+                l = line.strip('\n').split('\t')
+                gene = l[0].split(':')[1]
+                FileOut = FilesOutPrefix + gene + ".txt.gz"
+                if FileOut != OpenFileOut:
+                    try: fh_out.close()
+                    except: pass
+                    if FileOut not in FilesOpened:
+                        with gzip.open(FileOut, 'wt') as fh_out:
+                            _ = fh_out.write("phenotype\tsnp\tbeta\tbeta_se\tp\n")
+                        FilesOpened.add(FileOut)
+                    fh_out = gzip.open(FileOut, 'at')
+                _ = fh_out.write(line)
+                OpenFileOut = FileOut
+        fh_out.close()
 
 

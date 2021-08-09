@@ -8,7 +8,7 @@ rule ParseQTLtoolsOutputAndGetSE:
         tbi = GetQTLtoolsVcfTbi,
         cov = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.pca"
     output:
-        "hyprcoloc/{Phenotype}/summarystats.txt.gz",
+        "hyprcoloc/summarystats/{Phenotype}.txt.gz",
     log:
         "logs/ParseQTLtoolsOutputAndGetSE/{Phenotype}.log"
     shell:
@@ -16,10 +16,9 @@ rule ParseQTLtoolsOutputAndGetSE:
         python scripts/AddSEToQTLtoolsOutput.py {input.QTLtools_nominal_output} {input.cov} {input.vcf} {output} &> {log}
         """
 
-#TODO: make a script to split/combine all summary statistics into a separate for each gene (each hyprcoloc attampt)
 rule SplitAndCombineSummaryStatsPerGene:
     input:
-        QTLtools_nominal_output = expand("QTLs/QTLTools/{Phenotype}/NominalPass_ForColoc.txt.gz", Phenotype=PhenotypesToColoc)
+        QTLtools_nominal_output = expand("hyprcoloc/summarystats/{Phenotype}.txt.gz", Phenotype=PhenotypesToColoc)
     output:
         directory("hyprcoloc/GenewiseSummaryStatsInput")
     log:
@@ -27,4 +26,20 @@ rule SplitAndCombineSummaryStatsPerGene:
     shell:
         """
         python scripts/CombineAndSplitSummaryStatsForColoc.py {output}/ {input} &> {log}
+        """
+
+rule InstallHyprcoloc:
+    """
+    hyprcoloc r package is not on conda. This rule installs it on the conda environment. Here is a command to recreate the conda environment with dependencies (without hyprcoloc)
+    mamba create --name r_hyprcoloc -c r r-rmpfr r-iterpc r-tidyverse r-devtools r-pheatmap r-rcppeigen
+    """
+    output:
+        touch("hyprcoloc/hyprcoloc_installed.touchfile")
+    log:
+        "logs/InstallHyprcoloc.log"
+    conda:
+        "../envs/r_hyprcoloc.yml"
+    shell:
+        """
+        Rscript -e 'devtools::install_github("jrs95/hyprcoloc", build_opts = c("--resave-data", "--no-manual"), build_vignettes = TRUE, dependencies=F)' &> {log}
         """
