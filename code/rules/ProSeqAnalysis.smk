@@ -14,6 +14,22 @@ rule DownloadKristjansdottirSupplementData2:
         wget -O {output} https://static-content.springer.com/esm/art%3A10.1038%2Fs41467-020-19829-z/MediaObjects/41467_2020_19829_MOESM6_ESM.csv
         """
 
+rule ProSeqCountTable:
+    input:
+        SupDat = "ProCapAnalysis/SupplementDat2.csv",
+        chain = "ReferenceGenome/Chains/hg19ToHg38.over.chain.gz"
+    output:
+        "ProCapAnalysis/ProCap.CountTable.hg38.bed"
+    shadow: "shallow"
+    shell:
+        """
+        awk -F, -v OFS=',' 'NR>1 && $8=="TRUE" {{print $1"_"$2, $0}}' {input.SupDat} | cut -d, --complement -f2-9 | sed 's/,/\\t/g' | sort > ProCapAnalysis/CountTable.values.tsv
+        awk -F, -v OFS='\\t' 'NR>1 && $8=="TRUE" {{print $1, $2, $2+1, $1"_"$2, $5, $4}}' {input.SupDat} | sed 's/,/\\t/g' | CrossMap.py bed {input.chain} /dev/stdin ProCapAnalysis/CountTable.hg38.features.bed
+        join --nocheck-order <(awk -F'\\t' -v OFS='\\t' '{{print $4, $0}}' ProCapAnalysis/CountTable.hg38.features.bed | sort) <(cat ProCapAnalysis/CountTable.values.tsv | sort) > ProCapAnalysis/Output.headerless
+        cat <(cat {input.SupDat} | awk -F, -v OFS="," 'NR==1 {{ print "pid", "#Chr", "start", "end", "pid", "gid", "strand", $0 }}' | sed 's/,/\\t/g' | cut --complement -f8-15) <(cat ProCapAnalysis/Output.headerless | sed 's/ /\\t/g' ) | cut --complement -f1 | awk -F'\\t' -v OFS='\\t' 'NR==1 {{print}} NR>1 {{$4=$5"_"$1"_"$2; $5=$4;  print $0}}' > {output}
+        """
+
+
 rule GetRefSeqtTRE_beds:
     input:
         SupDat = "ProCapAnalysis/SupplementDat2.csv",
@@ -65,13 +81,13 @@ rule MergeProSeqIntoUnstrandedBigwig:
         bedGraphToBigWig union.bedgraph {input.chromSizes} {output.bw}
         """
 
-rule MakeProCapPhenotypeTable:
+rule NormalizeProCapPhenotypeTable:
     input:
-        "ProCapAnalysis/SupplementDat2.csv"
+        "ProCapAnalysis/ProCap.CountTable.hg38.bed"
     output:
         "QTLs/QTLTools/ProCap/OnlyFirstReps.qqnorm.bed.gz"
     log:
-        "logs/MakeProCapPhenotypeTable.log"
+        "logs/NormalizeProCapPhenotypeTable.log"
     conda:
         "../envs/r_essentials.yml"
     shell:
@@ -95,7 +111,6 @@ rule DownloadEnhancerAtlas:
     shell:
         """
         wget -O-  http://www.enhanceratlas.org/data/download/enhancer/hs/GM18505.bed | CrossMap.py bed {input.chain} /dev/stdin {output}
-
         """
 
 rule DownloadSlideBaseBCellEnhancers:

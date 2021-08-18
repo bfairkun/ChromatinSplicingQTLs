@@ -36,7 +36,7 @@ rule DownloadHg38Gencode_basic:
         "ReferenceGenome/Annotations/gencode.v34.chromasomal.basic.annotation.gtf"
     shell:
         """
-        wget -O- http://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_34/gencode.v34.basic.annotation.gtf.gz | zcat > {output}
+        curl http://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_34/gencode.v34.basic.annotation.gtf.gz | zcat > {output}
         """
 
 rule Download1KG_GRCh38:
@@ -78,6 +78,7 @@ rule CopyFastqFromLocal:
         cat {input.R1} > {output.R1} 2> {log}
         cat {input.R2} > {output.R2} 2>> {log}
         """
+
 
 
 rule DownloadFastqFromLink:

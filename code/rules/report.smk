@@ -30,14 +30,16 @@ rule PlotNumQTLs:
     input:
         expand("QTLs/QTLTools/{Phenotype}/PermutationPass.FDR_Added.txt.gz", Phenotype=MyPhenotypes)
     output:
-        report("QC/NumQTLsPerPhenotype.pdf", category="QTLMapping_QC")
+        pdf = report("QC/NumQTLsPerPhenotype.pdf", category="QTLMapping_QC"),
+        bed = "QC/AllQTLPhenotypes.PermutationTest.bed.gz"
     log:
         "logs/PlotNumQTLs.log"
     conda:
         "../envs/r_essentials.yml"
     shell:
         """
-        Rscript scripts/Plot_QTLPermutationTestNumSig.R {output} {input} &> {log}
+        Rscript scripts/Plot_QTLPermutationTestNumSig.R {output.pdf}
+        {output.bed} {input} &> {log}
         """
 
 rule PlotQTLsPermutationPvalsHist:

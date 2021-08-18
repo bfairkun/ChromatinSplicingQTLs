@@ -1,4 +1,4 @@
-rule Prepare_polyA_RNA_seq_PhenotypeTable:
+rule Prepare_polyA_RNA_seq_PhenotypeTable_AndMakeGeneList:
     input:
         featureCounts = "featureCounts/polyA.Expression/Counts.txt",
         gtf = "ReferenceGenome/Annotations/gencode.v34.primary_assembly.annotation.gtf",
@@ -19,23 +19,33 @@ rule Prepare_polyA_RNA_seq_PhenotypeTable:
 def GetFeatureCountsForRNASeqExpressionPhenotype(wildcards):
     if wildcards.Phenotype == "chRNA.Expression.Splicing":
         return "featureCounts/chRNA.Expression/Counts.txt"
+    elif wildcards.Phenotype == "Expression.Splicing.Subset_YRI":
+        return "featureCounts/Expression.Splicing/Counts.txt"
     else:
         return "featureCounts/{Phenotype}/Counts.txt"
 
-rule Prepare_chrRNA_RNA_seq_ExpressionPhenotypeTable:
+def Get1KGMetadataFile(wildcards):
+    if "YRI" in wildcards.Phenotype:
+        return "../data/igsr_samples.tsv.gz"
+    else:
+        return []
+
+rule Prepare_RNA_seq_ExpressionPhenotypeTable_ForGenesInList:
     input:
         featureCounts = GetFeatureCountsForRNASeqExpressionPhenotype,
         GeneList = "ExpressionAnalysis/polyA/ExpressedGeneList.txt",
+        YRI_List = Get1KGMetadataFile
     output:
         FirstReps = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.qqnorm.bed.gz"
     wildcard_constraints:
-        Phenotype = "|".join(RNASeqPhenotypes)
+        Phenotype = "|".join(RNASeqPhenotypes_extended)
     log:
         "logs/Prepare_chrRNA_RNA_seq_ExpressionPhenotypeTable/{Phenotype}.log"
     conda:
         "../envs/r_essentials.yml"
     shell:
         """
-        Rscript scripts/PreparePhenotypeTableFromFeatureCounts_SubsetGeneList.R {input.featureCounts} {input.GeneList} {output.FirstReps} &> {log}
+        Rscript scripts/PreparePhenotypeTableFromFeatureCounts_SubsetGeneList.R {input.featureCounts} {input.GeneList} {output.FirstReps} {input.YRI_List} &> {log}
         """
+
 

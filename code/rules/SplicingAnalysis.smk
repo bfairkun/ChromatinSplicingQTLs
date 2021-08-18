@@ -94,6 +94,30 @@ rule GetIntronFeatures:
         (bedtools sort -i {input.AllIntron} | bedtools intersect -a {input.IndependentIntrons} -b - -f 1 -r  -sorted -wo | awk -F'\\t' '$4==$10 {{print $1, $2, $3, $4, $5, $11}}' | sort | uniq | grep -F -f <(zcat {input.eQTL_genes_qqnorm} | awk -F'\\t' '{{print $4}}') - | awk -v OFS='\\t' '{{$1="chr"$1; print $0}}' |  bedtools slop -b -3 -i - -g {input.fai} | awk -F'\\t' -v OFS='\\t' 'BEGIN {{ print "GeneID", "Chr", "Start", "End", "Strand" }} {{print $4"_IntID."NR, $1, $2, $3, $6}}' > {output} ) &> {log}
         """
 
+rule GetIntronRetentionSpliceSitesAndIntronsBed:
+    input:
+        "SplicingAnalysis/Annotations/IntronRetentionTargets.saf"
+    output:
+        "SplicingAnalysis/Annotations/IntronRetentionTargets.bed"
+    shell:
+        """
+        awk -v OFS='\\t' -F'\\t' 'NR>1 {{print $2, $3,$4,$1, ".", $5}}' {input} > {output}
+        """
+
+rule CountSpliceSitesOverIR_Intron_Features:
+    input:
+        IRFeatures = "SplicingAnalysis/Annotations/IntronRetentionTargets.bed",
+        fai = "ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa.fai",
+        vcf = "QTLs/QTLTools/Expression.Splicing.Subset_YRI/Genotypes/WholeGenome.vcf.gz"
+    output:
+        ss_bed = "SplicingAnalysis/Annotations/IntronRetentionTargets_ss.bed",
+        vcf = "SplicingAnalysis/Annotations/YRI.Snps.OverInts.vcf.gz"
+    shell:
+        """
+        bedtools slop -b 1 -i {input.IRFeatures} -g {input.fai} | bedtools flank -b 2 -g {input.fai} -i - | bedtools sort -i - > {output.ss_bed}
+        bcftools view -O z -R {output.ss_bed} {input.vcf} > {output.vcf}
+        """
+
 rule featureCounts_IR:
     input:
         bam = GetBamForPhenotype,

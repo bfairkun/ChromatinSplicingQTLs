@@ -3,13 +3,13 @@ rule GatherNormFactors:
         expand("featureCounts/{Phenotype}/NormFactors.tsv", Phenotype=["polyA.Expression", "chRNA.Expression"])
 
 def GetGeneList(wildcards):
-    if wildcards.Phenotype in ["polyA.Expression", "chRNA.Expression"]:
+    if wildcards.Phenotype in RNASeqPhenotypes_extended:
         return "ExpressionAnalysis/polyA/ExpressedGeneList.txt"
     else:
         return []
 
 def GetGeneListCol(wildcards):
-    if wildcards.Phenotype in ["polyA.Expression", "chRNA.Expression"]:
+    if wildcards.Phenotype in RNASeqPhenotypes:
         return "4"
     else:
         return ""
@@ -26,6 +26,7 @@ rule CalculateNormFactorsForBigwig:
         OptionalGeneListCol = GetGeneListCol
     conda:
         "../envs/r_essentials.yml"
+    priority: 1
     shell:
         """
         Rscript scripts/CalculateNormFactorsForBigwig.R {input.Counts} {output} {input.OptionalGeneList} {params.OptionalGeneListCol} &> {log}

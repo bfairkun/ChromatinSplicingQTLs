@@ -42,7 +42,6 @@ rule all:
         # expand("PeakCalling/{Phenotype}.peaks.saf", Phenotype=ChromatinProfilingPhenotypes)
         # expand("SplicingAnalysis/leafcutter/clustering/chr{chrom}/leafcutter_perind.counts.gz", chrom=autosomes),
         "SplicingAnalysis/leafcutter/clustering/autosomes/leafcutter_perind.counts.gz",
-        expand("featureCounts/{Phenotype}/Counts.txt", Phenotype=RNASeqExpressionPhenotypes + ["H3K4ME3", "H3K4ME1", "H3K27AC"]),
         expand("QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.pca", Phenotype=["chRNA.IR", "Expression.Splicing", "H3K4ME1", "H3K27AC", "CTCF", "H3K4ME3"]),
         "QTLs/QTLTools/Expression.Splicing/Genotypes/WholeGenome.vcf.gz",
         # "Multiqc/multiqc_report.html",

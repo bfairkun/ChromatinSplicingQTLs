@@ -89,6 +89,7 @@ rule mbv:
         Rscript scripts/Plot_mbv.R {output.text} {output.plot} {wildcards.IndID} &>> {log}
         """
 
+
 rule MultiQC:
     input:
         expand("QC/QualimapRnaseq/{Phenotype}.{IndID}.{Rep}/rnaseq_qc_results.txt",  zip, Phenotype=RNASeqSamples_df['Phenotype'], IndID=RNASeqSamples_df['IndID'], Rep=RNASeqSamples_df['RepNumber']),

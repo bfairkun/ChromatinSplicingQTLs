@@ -11,7 +11,7 @@
 #Use hard coded arguments in interactive R session, else use command line args
 if(interactive()){
     args <- scan(text=
-                 "featureCounts/chRNA.Expression/Counts.txt ExpressionAnalysis/polyA/ExpressedGeneList.txt scratch/chRNA.Expression.all.bed.gz scratch/chRNA.Expression.OnlyFirstReps.bed.gz", what='character')
+                 "featureCounts/chRNA.Expression/Counts.txt ExpressionAnalysis/polyA/ExpressedGeneList.txt scratch/chRNA.Expression.all.bed.gz ../data/igsr_samples.tsv.gz", what='character')
 } else{
     args <- commandArgs(trailingOnly=TRUE)
 }
@@ -24,6 +24,7 @@ library(RNOmni)
 GeneCounts_f_in <- args[1]
 Genes_bed_f_in <- args[2]
 f_out <- args[3]
+OptionalGeuvadisInToSubsetYRI <- args[4]
 
 ### helper "ColumnRenamer" functions to rename the filename column names from featureCounts to the sampleIDs as used in the vcf for qtl calling
 rename_STAR_alignment_samples <- function(MyString){
@@ -46,6 +47,13 @@ dat.cpm <- dat.genes %>%
     column_to_rownames("Geneid") %>%
     select(everything(), -c("Chr", "Start", "End", "Strand", "Length")) %>%
     cpm(log=T, prior.count=0.1)
+
+if (!is.na(OptionalGeuvadisInToSubsetYRI)) {
+    YRI.List <- read_tsv(OptionalGeuvadisInToSubsetYRI) %>%
+        filter(`Population code`=="YRI") %>%
+        pull(`Sample name`)
+    dat.cpm <- dat.cpm[, intersect(YRI.List, colnames(dat.cpm))]
+}
 
 #Standardize across individuals (rows),
 dat.standardized <- dat.cpm %>% t() %>% scale() %>% t() %>% as.data.frame() %>% drop_na() %>% as.matrix()

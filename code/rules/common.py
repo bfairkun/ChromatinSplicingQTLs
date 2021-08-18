@@ -1,11 +1,12 @@
 import pandas as pd
+import numpy as np
 import os
 import glob
 
 autosomes = [str(i) for i in range(1,23)]
 
 N_PermutationChunks = 50
-MyPhenotypes = ["chRNA.IR", "Expression.Splicing", "chRNA.Expression.Splicing",  "H3K27AC", "CTCF", "H3K4ME3", "chRNA.Splicing", "polyA.Splicing", "MetabolicLabelled.30min", "MetabolicLabelled.60min"]
+MyPhenotypes = ["chRNA.IR", "Expression.Splicing", "chRNA.Expression.Splicing",  "H3K27AC", "CTCF", "H3K4ME3", "chRNA.Splicing", "polyA.Splicing", "MetabolicLabelled.30min", "MetabolicLabelled.60min", "Expression.Splicing.Subset_YRI", "ProCap"]
 PhenotypesToColoc = [p for p in MyPhenotypes if p not in ["chRNA.Splicing", "polyA.Splicing"]]
 
 ## All Fastq samples
@@ -15,7 +16,7 @@ Fastq_samples = pd.read_csv("config/samples.tsv", sep='\t', comment='#')
 PhenotypeSet = Fastq_samples['Phenotype'].unique().tolist() + ["chRNA.IR",  "polyA.Splicing", "chRNA.Expression"]
 ChromatinProfilingPhenotypes = Fastq_samples.loc[ (Fastq_samples['Assay'].isin(["ChIP-seq", "CutAndTag"]))  ]['Phenotype'].unique().tolist()
 RNASeqPhenotypes = Fastq_samples.loc[ (Fastq_samples['Assay']=="RNA-seq")  ]['Phenotype'].unique().tolist()
-RNASeqExpressionPhenotypes = ['polyA.Expression', 'chRNA.Expression']
+RNASeqExpressionPhenotypes = ['polyA.Expression', 'chRNA.Expression', 'Expression.Splicing.Subset_YRI']
 RNASeqPhenotypes_extended = RNASeqPhenotypes + RNASeqExpressionPhenotypes
 ChromatinProfilingSamples_df = Fastq_samples.loc[ (Fastq_samples['Assay'].isin(["ChIP-seq", "CutAndTag"])) , ['Phenotype', 'IndID', 'RepNumber'] ].drop_duplicates()
 RNASeqSamples_df = Fastq_samples.loc[ (Fastq_samples['Assay']=="RNA-seq") , ['Phenotype', 'IndID', 'RepNumber'] ].drop_duplicates()
@@ -26,6 +27,9 @@ AllRNASeqBams = expand("Alignments/STAR_Align/{Phenotype}/{IndID}/{Rep}/Filtered
 AllBams = AllChromatinProfilingBams + AllRNASeqBams
 AllBais = [fn + ".bai" for fn in AllChromatinProfilingBams]
 chRNASeqSamples_df = Fastq_samples.loc[ (Fastq_samples['Phenotype']=="chRNA.Expression.Splicing") , ['Phenotype', 'IndID', 'RepNumber'] ].drop_duplicates()
+
+# Get random sample for each phenotype
+Fastq_samples.groupby('Phenotype').apply(lambda x: x.sample(2, random_state=1)).reset_index(drop=True)
 
 # print(ChromatinProfilingPhenotypes)
 
@@ -127,7 +131,10 @@ def GetBigwigParams(wildcards):
     if wildcards.Phenotype in RNASeqPhenotypes:
         return "-split"
     elif wildcards.Phenotype in ChromatinProfilingPhenotypes:
-        return "-pc"
+        return ""
+        # return "-pc"
+    else:
+        return ""
 
 def GetLibStrandForRegtools(wildcards):
     if wildcards.Phenotype == "Expression.Splicing":
