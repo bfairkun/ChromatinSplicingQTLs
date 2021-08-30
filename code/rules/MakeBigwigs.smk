@@ -59,7 +59,7 @@ def GetFeatureCountsNormFactorsFile(wildcards):
     if wildcards.Phenotype == "Expression.Splicing":
         return "featureCounts/polyA.Expression/NormFactors.tsv"
     elif wildcards.Phenotype == "chRNA.Expression.Splicing":
-        return "featureCounts/chRNA.Expression/NormFactors.tsv"
+        return "featureCounts/chRNA.Expression.Splicing/NormFactors.tsv"
     else:
         return "featureCounts/{Phenotype}/NormFactors.tsv"
 
@@ -81,7 +81,7 @@ rule MakeBigwigs_NormalizedToEdgeRFeatureCounts:
     log:
         "logs/MakeBigwigs/{Phenotype}/{IndID}.{Rep}.log"
     resources:
-        mem = 48000
+        mem = 52000
     shell:
         """
         scripts/GenometracksByGenotype/BamToBigwig.sh {input.fai} {input.bam} {output.bw} {params} -scale $(bc <<< "scale=3;1000000000/$(grep '{input.bam}' {input.NormFactorsFile} | awk '{{print $2}}')") &> {log}
