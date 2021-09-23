@@ -66,9 +66,9 @@ print("{} samples intersect both vcf and covariates file".format(N))
 df = N - CovariateCount - 1
 
 with gzip.open(args.QTLsIn, "rt") as f_in, gzip.open(args.FileOut, "wt") as f_out:
-    f_out.write("phenotype\tsnp\tbeta\tbeta_se\tp\n")
+    # f_out.write("phenotype\tsnp\tbeta\tbeta_se\tp\n")
     for i,line in enumerate(f_in):
-        if i >= 1:
+        if i >= 0:
             l = line.split(' ')
             phenotype, snp, p, beta = [l[0], l[7], l[11], l[12]]
             try:

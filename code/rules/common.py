@@ -41,6 +41,12 @@ Fastq_samples.groupby('Phenotype').apply(lambda x: x.sample(2, random_state=1)).
 #Fastq_samples.loc[(Fastq_samples['Include']==True) ,['IndID', 'Phenotype'] ].drop_duplicates
 # If any lines are identical for IndID, Phenotype, and RepNumber, combine fastq
 
+def much_more_mem_after_first_attempt(wildcards, attempt):
+    if int(attempt) == 1:
+        return 4000
+    else:
+        return 40000
+
 def require_at_least_one(filelist):
     """
     https://stackoverflow.com/questions/65227729/how-to-make-snakemake-input-optional-but-not-empty
