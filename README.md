@@ -61,3 +61,12 @@ Will have data for all the following assays for YRI panel (and geuvadis has euro
 
 #### colocalization
 - testing a lot of the questions will involve looking for colocalizing molQTLs. Probably worth using a formal colocalization stats method for this. I'm not yet sure of how best to do this with all the different assays we have. [HyPrColoc](https://www.nature.com/articles/s41467-020-20885-8) looks promising
+
+short term TODO:
+- choose hyprcoloc parameters and colocalize trait clusters by gene.
+- more critically investigate intron retention qtl pipeline. I have performed this on polyA RNA-seq (GEAUVADIS) and chRNA-seq. I haven't spent much time manually inspecting the hits.
+- Fix the [pygenometracks scripts](https://github.com/bfairkun/GenometracksByGenotype) that I have been using to plot QTLs
+- Repeat splice site SNP enrichment analysis for sQTLs for YRI GEAUVADIS subset.
+- Something like McVicker's correlation of splice site PWM changes to chromatin phenotype changes
+- Redo heatmap of temporal phenotypes, using intronic coverage for chRNA. Also, similarly plot temporal phenotypes in PC space
+- more general enrichment analysis for QTLs; chromHMM and other regional annotations.
