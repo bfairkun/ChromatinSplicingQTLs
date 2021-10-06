@@ -11,10 +11,13 @@ rule Count_sQTLs_with_SpliceSiteSNPs:
         "QTLs/QTLTools/Expression.Splicing/Genotypes/WholeGenome.vcf.gz"
     output:
         # And the notebook can write out output files
-        "QTLs/QTLTools/polyA.Splicing/PermutationPass.FDR_Added.txt.gz",
+        # Use snakemake touch function for notebooks without output files
+        "QTLs/QTLTools/polyA.Splicing/PermutationPass.FDR_Added.SS_SNPs.Annotated.txt.gz",
     log:
-        # Save a copy of the ipynb to ..docs to render on the website for easy sharing
-        notebook = "../docs/Untitled.py.ipynb"
+        # Optionally Save a copy of the ipynb to ran notebook.
+        # If this is somewhere tracked by git, share a link to the github
+        # (github links show rendered ipnyb files)
+        notebook = "../docs/20210921_CountSpliceSiteSNPsInSQTLs.py.ipynb"
     conda:
         # Use a conda env defined in yml to run notebook
         # Unlike input, output, and log directives, the path to yml needs to be
@@ -22,11 +25,10 @@ rule Count_sQTLs_with_SpliceSiteSNPs:
         # /code/rules/*.smk)
         "../envs/jupyter.yml"
     notebook:
-        # Path to notebook needs to be relative to the .smk file (eg in /code/rules/*.smk)
-        # Unlike input, output, and log directives, the path to notebook  needs to be
-        # relative to the .smk file containing this rule (eg in
-        # /code/rules/*.smk).
-        # (But reference relative paths in notebook relative to the code
-        # directory (eg the working directory that snakemake gets executed in)
-        "../notebooks/Untitled.py.ipynb"
+        # Unlike input, output, and log directives, the path to notebook  needs
+        # to be relative to the .smk file containing this rule (eg in
+        # /code/rules/*.smk).  (But reference relative paths in notebook
+        # relative to the code directory (eg the working directory that
+        # snakemake gets executed in)
+        "../notebooks/20210921_CountSpliceSiteSNPsInSQTLs.py.ipynb"
 
