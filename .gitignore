@@ -9,3 +9,28 @@ analysis/*png
 analysis/*html
 analysis/*_cache
 analysis/site_libs
+
+.DS_Store
+._.DS_Store
+**/.DS_Store
+**/._.DS_Store
+._*
+**/._*
+.*.swp
+**.pyc
+
+# Word temporary
+~$*.doc*
+
+# Word Auto Backup File
+Backup of *.doc*
+
+# Excel temporary
+~$*.xls*
+
+# Excel Backup File
+*.xlk
+
+# PowerPoint temporary
+~$*.ppt*
+
