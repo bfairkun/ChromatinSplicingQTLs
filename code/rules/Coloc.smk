@@ -1,16 +1,23 @@
+# rule SplitNominalPassBeforeCalculatingSE:
+#     input:
+#         QTLtools_nominal_output = "QTLs/QTLTools/{Phenotype}/NominalPass{QTLsGenotypeSet}_ForColoc.txt.gz",
+#     output:
+# [str(i).zfill(2) for i in list(range(0,100))]
+
+
 rule ParseQTLtoolsOutputAndGetSE:
     """
     hyprcoloc needs beta and standard error for each snp/phenotype pair. QTLtools outputs beta, and a nominal P-value, from which we can calculate t-statistic and get SE. The covariates used in QTL mapping are needed to count the degrees of freedom to get appropriate t-distribution.
     """
     input:
-        QTLtools_nominal_output = "QTLs/QTLTools/{Phenotype}/NominalPass_ForColoc.txt.gz",
+        QTLtools_nominal_output = "QTLs/QTLTools/{Phenotype}/NominalPass{QTLsGenotypeSet}_ForColoc.txt.gz",
         vcf = GetQTLtoolsVcf,
         tbi = GetQTLtoolsVcfTbi,
         cov = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.pca"
     output:
-        "hyprcoloc/summarystats/{Phenotype}.txt.gz",
+        "hyprcoloc/summarystats{QTLsGenotypeSet}/{Phenotype}.txt.gz",
     log:
-        "logs/ParseQTLtoolsOutputAndGetSE/{Phenotype}.log"
+        "logs/ParseQTLtoolsOutputAndGetSE/{Phenotype}/{QTLsGenotypeSet}.log"
     shell:
         """
         python scripts/AddSEToQTLtoolsOutput.py {input.QTLtools_nominal_output} {input.cov} {input.vcf} {output} &> {log}
@@ -18,11 +25,11 @@ rule ParseQTLtoolsOutputAndGetSE:
 
 rule SplitAndCombineSummaryStatsPerGene:
     input:
-        QTLtools_nominal_output = expand("hyprcoloc/summarystats/{Phenotype}.txt.gz", Phenotype=PhenotypesToColoc)
+        QTLtools_nominal_output = expand("hyprcoloc/summarystats{{QTLsGenotypeSet}}/{Phenotype}.txt.gz", Phenotype=PhenotypesToColoc)
     output:
-        directory("hyprcoloc/GenewiseSummaryStatsInput")
+        directory("hyprcoloc/GenewiseSummaryStatsInput{QTLsGenotypeSet}")
     log:
-        "logs/SplitAndCombineSummaryStatsPerGene.log"
+        "logs/SplitAndCombineSummaryStatsPerGene.{QTLsGenotypeSet}.log"
     shell:
         """
         python scripts/CombineAndSplitSummaryStatsForColoc.py {output}/ {input} &> {log}

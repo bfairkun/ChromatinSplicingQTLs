@@ -15,11 +15,13 @@ include: "rules/ProSeqAnalysis.smk"
 include: "rules/QTLTools.smk"
 include: "rules/Coloc.smk"
 include: "rules/report.smk"
+include: "rules/BensJupyterNotebookRules.smk"
 
 wildcard_constraints:
     chrom="|".join(autosomes),
     IndID="|".join(Fastq_samples['IndID']),
-    Rep="\d+"
+    Rep="\d+",
+    QTLsGenotypeSet="|".join(['', 'HarmonizedSNPs'])
 
 localrules: all, CopyFastqFromLocal, DownloadFastqFromLink, Download1KG_GRCh38, STAR_make_index, DownloadHg38Ref, DownloadFastqFromLink_SE
 ruleorder: CopyFastqFromLocal > DownloadFastqFromLink
@@ -32,7 +34,7 @@ rule all:
         # expand("FastqFastp/{Phenotype}/{IndID}/{Rep}.R2.fastq.gz", zip, Phenotype=Fastq_samples['Phenotype'], IndID=Fastq_samples['IndID'], Rep=Fastq_samples['RepNumber']),
         # expand("Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.wasp_filterd.markdup.sorted.bam", zip, Phenotype= ChromatinProfilingSamples_df['Phenotype'], IndID=ChromatinProfilingSamples_df['IndID'], Rep=ChromatinProfilingSamples_df['RepNumber']),
         # expand("Alignments/STAR_Align/{Phenotype}/{IndID}/{Rep}/Filtered.bam", zip, Phenotype=RNASeqSamples_df['Phenotype'], IndID=RNASeqSamples_df['IndID'], Rep=RNASeqSamples_df['RepNumber']),
-        expand("bigwigs/{Phenotype}/{IndID}.{Rep}.bw", zip, Phenotype=Fastq_samples['Phenotype'], IndID=Fastq_samples['IndID'], Rep=Fastq_samples['RepNumber']),
+        # expand("bigwigs/{Phenotype}/{IndID}.{Rep}.bw", zip, Phenotype=Fastq_samples['Phenotype'], IndID=Fastq_samples['IndID'], Rep=Fastq_samples['RepNumber']),
         expand("QC/mbv/plots/{Phenotype}/{IndID}.{Rep}.pdf", zip, Phenotype=chRNASeqSamples_df['Phenotype'], IndID=chRNASeqSamples_df['IndID'], Rep=chRNASeqSamples_df['RepNumber']),
         #Make bigwigs from test cut and tag
         # "../output/QC/AutosomeCountsPerSamples.tsv",
@@ -48,9 +50,11 @@ rule all:
         expand("QTLs/QTLTools/{Phenotype}/PermutationPass.FDR_Added.txt.gz", Phenotype=MyPhenotypes),
         expand("featureCounts/{Phenotype}/NormFactors.tsv", Phenotype=["chRNA.Expression.Splicing", "Expression.Splicing", "H3K4ME1", "H3K4ME3", "H3K27AC", "CTCF"]),
         "hyprcoloc/GenewiseSummaryStatsInput",
+        "hyprcoloc/GenewiseSummaryStatsInputHarmonizedSNPs",
         "ReferenceGenome/Annotations/GTFTools_BasicAnnotations/gencode.v34.chromasomal.tss.bed",
         expand("featureCounts/AtTSS/{Phenotype}/Counts.txt", Phenotype=["H3K27AC", "H3K4ME3"]),
-        expand("featureCounts/{Phenotype}/Counts.txt", Phenotype=["MetabolicLabelled.30min", "MetabolicLabelled.60min"])
+        expand("featureCounts/{Phenotype}/Counts.txt", Phenotype=["MetabolicLabelled.30min", "MetabolicLabelled.60min"]),
+        expand("QTLs/QTLTools/{Phenotype}/PermutationPass{QTLsGenotypeSet}ForColoc.txt.gz", Phenotype=PhenotypesToColoc, QTLsGenotypeSet=['', 'HarmonizedSNPs'])
 
 rule Gather_chRNASeq_Fastq:
     """

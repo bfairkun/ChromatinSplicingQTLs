@@ -48,6 +48,7 @@ rule leafcutter_cluster:
     output:
         "SplicingAnalysis/leafcutter/clustering/autosomes/leafcutter_perind.counts.gz",
         "SplicingAnalysis/leafcutter/clustering/autosomes/leafcutter_perind_numers.counts.gz"
+    shadow: "shallow"
     resources:
         mem_mb = 16000
     log:
@@ -221,3 +222,12 @@ rule leafcutter_PreparePhenotypes:
         python2.7 scripts/prepare_phenotype_table.py {input} -p 20 &> {log}
         (awk -F'\\t' -v OFS='\\t' 'NR==1 {{$4="pid\\tgid\\tstrand"; print $0}} FNR!=1 {{$1="chr"$1; split($4, a, ":"); split(a[4], b, "_"); $4=$4"\\t"$1"_"a[4]"\\t"b[3]; print $0}}' {input}.qqnorm_chr* | gzip - > {output} ) &>> {log}
         """
+
+# rule Subset_YRI_leafcutter_phenotype_table:
+#     input:
+#         "QTLs/QTLTools/polyA.Splicing/OnlyFirstReps.qqnorm.bed.gz"
+#     output:
+#         "QTLs/QTLTools/polyA.Splicing.Subset_YRI/OnlyFirstReps.qqnorm.bed.gz"
+#     shell:
+
+

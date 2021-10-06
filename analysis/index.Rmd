@@ -22,8 +22,19 @@ rmds <- list.files(path = "../analysis/", pattern="^\\d+.+")
 rmd_htmls <- str_replace(rmds, "Rmd$", "html")
 
 for(i in rmd_htmls){
-  cat("[", i, "](", i,")\n")
+  cat("[", i, "](", i,")\n\n", sep="")
 }
+```
+
+Also, a list of links to ipynb files that were incorporated into the snakemake. Since github renders ipynbs directly, this is not a relative link from the site folder, but rather links directly to the file to view on github (code [here](https://github.com/bfairkun/ChromatinSplicingQTLs/tree/master/code/notebooks)):
+
+```{r, results = 'asis'}
+ipynbs <- list.files(path = "../docs/", pattern="^\\d+.+ipynb$")
+
+for(i in ipynbs){
+  cat("[", i, "](","https://github.com/bfairkun/ChromatinSplicingQTLs/blob/master/docs/", i,")\n\n", sep="")
+}
+
 ```
 
 
