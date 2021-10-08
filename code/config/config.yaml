@@ -17,3 +17,14 @@ aspera_key: "/home/bjf79/.aspera/connect/etc/asperaweb_id_dsa.openssh"
 
 #Parrallelization of sQTL mapping with QTLtools
 sQTL_chunks: 1000
+
+# Parameters for slopes
+
+MinIntronLength: 500
+minIntronCounts: 10
+minCoverageCounts: 1
+minCoverage: 0.25
+WinLen: 50
+minIntronPercent: 0.5
+minCellPercent: 0.25
+permutations: 10000

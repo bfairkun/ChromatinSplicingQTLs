@@ -1,3 +1,4 @@
+include: "rules/common.smk"
 configfile: "config/config.yaml"
 
 include: "rules/common.py"
@@ -16,6 +17,10 @@ include: "rules/QTLTools.smk"
 include: "rules/Coloc.smk"
 include: "rules/report.smk"
 include: "rules/BensJupyterNotebookRules.smk"
+
+## Inserted by Carlos
+include: "rules/chRNASeqSlopes.smk"
+#include: "rules/slopeQTLs.smk"
 
 wildcard_constraints:
     chrom="|".join(autosomes),
@@ -44,17 +49,27 @@ rule all:
         # expand("PeakCalling/{Phenotype}.peaks.saf", Phenotype=ChromatinProfilingPhenotypes)
         # expand("SplicingAnalysis/leafcutter/clustering/chr{chrom}/leafcutter_perind.counts.gz", chrom=autosomes),
         "SplicingAnalysis/leafcutter/clustering/autosomes/leafcutter_perind.counts.gz",
-        expand("QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.pca", Phenotype=["chRNA.IR", "Expression.Splicing", "H3K4ME1", "H3K27AC", "CTCF", "H3K4ME3"]),
-        "QTLs/QTLTools/Expression.Splicing/Genotypes/WholeGenome.vcf.gz",
+        #expand("QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.pca", Phenotype=["chRNA.IR", "Expression.Splicing", "H3K4ME1", "H3K27AC", "CTCF", "H3K4ME3"]),
+        #"QTLs/QTLTools/Expression.Splicing/Genotypes/WholeGenome.vcf.gz",
         # "Multiqc/multiqc_report.html",
-        expand("QTLs/QTLTools/{Phenotype}/PermutationPass.FDR_Added.txt.gz", Phenotype=MyPhenotypes),
+        #expand("QTLs/QTLTools/{Phenotype}/PermutationPass.FDR_Added.txt.gz", Phenotype=MyPhenotypes),
         expand("featureCounts/{Phenotype}/NormFactors.tsv", Phenotype=["chRNA.Expression.Splicing", "Expression.Splicing", "H3K4ME1", "H3K4ME3", "H3K27AC", "CTCF"]),
         "hyprcoloc/GenewiseSummaryStatsInput",
         "hyprcoloc/GenewiseSummaryStatsInputHarmonizedSNPs",
         "ReferenceGenome/Annotations/GTFTools_BasicAnnotations/gencode.v34.chromasomal.tss.bed",
         expand("featureCounts/AtTSS/{Phenotype}/Counts.txt", Phenotype=["H3K27AC", "H3K4ME3"]),
         expand("featureCounts/{Phenotype}/Counts.txt", Phenotype=["MetabolicLabelled.30min", "MetabolicLabelled.60min"]),
-        expand("QTLs/QTLTools/{Phenotype}/PermutationPass{QTLsGenotypeSet}ForColoc.txt.gz", Phenotype=PhenotypesToColoc, QTLsGenotypeSet=['', 'HarmonizedSNPs'])
+        #expand("QTLs/QTLTools/{Phenotype}/PermutationPass{QTLsGenotypeSet}ForColoc.txt.gz", Phenotype=PhenotypesToColoc, QTLsGenotypeSet=['', 'HarmonizedSNPs']),
+        #### Inserted by Carlos
+        expand(
+            "IntronWindowCounts/{sample}.{windowStyle}.bed.gz",
+            sample=NaRNASeq.index,
+            windowStyle=["IntronWindows_equalLength", "IntronWindows"],
+        ),
+        expand(
+            "slopes/{sample}.tab.gz",
+            sample=NaRNASeq.index,
+        ),
 
 rule Gather_chRNASeq_Fastq:
     """

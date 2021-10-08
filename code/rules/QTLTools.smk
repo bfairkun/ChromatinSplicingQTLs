@@ -281,21 +281,21 @@ use rule Gather_QTLtools_cis_permutation_pass as Gather_QTLtools_cis_nominal_pas
     log:
         "logs/Gather_QTLtools_cis_nominal_pass_ForColoc/{Phenotype}.{QTLsGenotypeSet}.log"
 
-use rule QTLtools_cis_permutation_pass as QTLtools_cis_permutation_pass_for_coloc with:
-    input:
-        vcf = GetQTLtoolsVcf,
-        tbi = GetQTLtoolsVcfTbi,
-        bed = "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsForColoc.sorted.qqnorm.bed.gz",
-        bed_tbi = "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsForColoc.sorted.qqnorm.bed.gz.tbi",
-        cov = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.pca"
-    output:
-        temp("QTLs/QTLTools/{Phenotype}/PermutationPass{QTLsGenotypeSet}ForColocChunks/{n}.txt")
-    log:
-        "logs/QTLtools_cis_permutation_passForColoc{QTLsGenotypeSet}/{Phenotype}/{n}.log"
-    resources:
-        mem_mb = much_more_mem_after_first_attempt
-    params:
-        Flags = "--window 0"
+#use rule QTLtools_cis_permutation_pass as QTLtools_cis_permutation_pass_for_coloc with:
+#    input:
+#        vcf = GetQTLtoolsVcf,
+#        tbi = GetQTLtoolsVcfTbi,
+#        bed = "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsForColoc.sorted.qqnorm.bed.gz",
+#        bed_tbi = "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsForColoc.sorted.qqnorm.bed.gz.tbi",
+#        cov = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.pca"
+#    output:
+#        temp("QTLs/QTLTools/{Phenotype}/PermutationPass{QTLsGenotypeSet}ForColocChunks/{n}.txt")
+#    log:
+#        "logs/QTLtools_cis_permutation_passForColoc{QTLsGenotypeSet}/{Phenotype}/{n}.log"
+#    resources:
+#        mem_mb = much_more_mem_after_first_attempt
+#    params:
+#        Flags = "--window 0"
 
 use rule Gather_QTLtools_cis_permutation_pass as Gather_QTLtools_cis_permutation_pass_ForColoc with:
     input:
