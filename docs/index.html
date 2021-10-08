@@ -13,16 +13,35 @@
 
 <title>Home</title>
 
-<script src="site_libs/header-attrs-2.6/header-attrs.js"></script>
+<script src="site_libs/header-attrs-2.9/header-attrs.js"></script>
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
 <script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/master/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
 
 <style type="text/css">
   code{white-space: pre-wrap;}
@@ -34,11 +53,6 @@
     </style>
 
 <style type="text/css">code{white-space: pre;}</style>
-<style type="text/css">
-  pre:not([class]) {
-    background-color: white;
-  }
-</style>
 <script type="text/javascript">
 if (window.hljs) {
   hljs.configure({languages: []});
@@ -51,32 +65,6 @@ if (window.hljs) {
 
 
 
-<style type="text/css">
-h1 {
-  font-size: 34px;
-}
-h1.title {
-  font-size: 38px;
-}
-h2 {
-  font-size: 30px;
-}
-h3 {
-  font-size: 24px;
-}
-h4 {
-  font-size: 18px;
-}
-h5 {
-  font-size: 16px;
-}
-h6 {
-  font-size: 12px;
-}
-.table th:not([align]) {
-  text-align: left;
-}
-</style>
 
 
 
@@ -87,10 +75,6 @@ h6 {
   max-width: 940px;
   margin-left: auto;
   margin-right: auto;
-}
-code {
-  color: inherit;
-  background-color: rgba(0, 0, 0, 0.04);
 }
 img {
   max-width:100%;
@@ -107,40 +91,13 @@ button.code-folding-btn:focus {
 summary {
   display: list-item;
 }
+pre code {
+  padding: 0;
+}
 </style>
 
 
 <style type="text/css">
-/* padding for bootstrap navbar */
-body {
-  padding-top: 51px;
-  padding-bottom: 40px;
-}
-/* offset scroll position for anchor links (for fixed navbar)  */
-.section h1 {
-  padding-top: 56px;
-  margin-top: -56px;
-}
-.section h2 {
-  padding-top: 56px;
-  margin-top: -56px;
-}
-.section h3 {
-  padding-top: 56px;
-  margin-top: -56px;
-}
-.section h4 {
-  padding-top: 56px;
-  margin-top: -56px;
-}
-.section h5 {
-  padding-top: 56px;
-  margin-top: -56px;
-}
-.section h6 {
-  padding-top: 56px;
-  margin-top: -56px;
-}
 .dropdown-submenu {
   position: relative;
 }
@@ -168,7 +125,7 @@ body {
   margin-right: -10px;
 }
 .dropdown-submenu:hover>a:after {
-  border-left-color: #ffffff;
+  border-left-color: #adb5bd;
 }
 .dropdown-submenu.pull-left {
   float: none;
@@ -180,7 +137,7 @@ body {
 }
 </style>
 
-<script>
+<script type="text/javascript">
 // manage active state of menu based on current page
 $(document).ready(function () {
   // active menu anchor
@@ -191,10 +148,23 @@ $(document).ready(function () {
   var menuAnchor = $('a[href="' + href + '"]');
 
   // mark it active
-  menuAnchor.parent().addClass('active');
+  menuAnchor.tab('show');
 
   // if it's got a parent navbar menu mark it active as well
   menuAnchor.closest('li.dropdown').addClass('active');
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
 });
 </script>
 
@@ -206,7 +176,6 @@ $(document).ready(function () {
   max-height: 500px;
   min-height: 44px;
   overflow-y: auto;
-  background: white;
   border: 1px solid #ddd;
   border-radius: 4px;
 }
@@ -299,16 +268,7 @@ $(document).ready(function () {
   </div><!--/.container -->
 </div><!--/.navbar -->
 
-<!-- Add a small amount of space between sections. -->
-<style type="text/css">
-div.section {
-  padding-top: 12px;
-}
-</style>
-
-
-
-<div class="fluid-row" id="header">
+<div id="header">
 
 
 
@@ -319,7 +279,7 @@ div.section {
 
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
-<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span>
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
 </button>
 </p>
 <div id="workflowr-report" class="collapse">
@@ -328,7 +288,7 @@ div.section {
 <a data-toggle="tab" href="#summary">Summary</a>
 </li>
 <li>
-<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> </a>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> </a>
 </li>
 <li>
 <a data-toggle="tab" href="#versions">Past versions</a>
@@ -337,17 +297,17 @@ div.section {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2021-06-07
+<strong>Last updated:</strong> 2021-10-06
 </p>
 <p>
-<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 1
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
 </p>
 <p>
 <strong>Knit directory:</strong> <code>ChromatinSplicingQTLs/analysis/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
 </p>
 <p>
 This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
-  href="https://github.com/jdblischak/workflowr">workflowr</a> (version 1.5.0). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+  href="https://github.com/jdblischak/workflowr">workflowr</a> (version 1.6.2). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
 </p>
 <hr>
 </div>
@@ -356,12 +316,12 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges"> <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted changes </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date </a>
 </p>
 </div>
-<div id="strongRMarkdownfilestronguncommittedchanges" class="panel-collapse collapse">
+<div id="strongRMarkdownfilestronguptodate" class="panel-collapse collapse">
 <div class="panel-body">
-<p>The R Markdown file has unstaged changes. To know which version of the R Markdown file created these results, you’ll want to first commit it to the Git repo. If you’re still working on the analysis, you can ignore this warning. When you’re finished, you can run <code>wflow_publish</code> to commit the R Markdown file and build the HTML.</p>
+<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
 </div>
 </div>
 </div>
@@ -428,13 +388,19 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstreed908cecd8af9abe62d8777837b416f71e9358639targetblankd908ceca"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/d908cecd8af9abe62d8777837b416f71e9358639" target="_blank">d908cec</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstree6e6856effd3c93d1e5ab8165bca874d89ff04f5btargetblank6e6856ea"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/6e6856effd3c93d1e5ab8165bca874d89ff04f5b" target="_blank">6e6856e</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstreed908cecd8af9abe62d8777837b416f71e9358639targetblankd908ceca" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstree6e6856effd3c93d1e5ab8165bca874d89ff04f5btargetblank6e6856ea" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
-Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility. The version displayed above was the version of the Git repository at the time these results were generated. <br><br> Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/6e6856effd3c93d1e5ab8165bca874d89ff04f5b" target="_blank">6e6856e</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
 </p>
 <pre><code>
 Ignored files:
@@ -446,17 +412,20 @@ Ignored files:
     Ignored:    code/.DS_Store
     Ignored:    code/.Rhistory
     Ignored:    code/._.DS_Store
+    Ignored:    code/._README.md
+    Ignored:    code/._report.html
+    Ignored:    code/.ipynb_checkpoints/
     Ignored:    code/.snakemake/
     Ignored:    code/Alignments/
     Ignored:    code/ENCODE/
     Ignored:    code/ExpressionAnalysis/
     Ignored:    code/Fastq/
     Ignored:    code/FastqFastp/
+    Ignored:    code/FastqFastpSE/
+    Ignored:    code/FastqSE/
     Ignored:    code/Genotypes/
-    Ignored:    code/Log.out
-    Ignored:    code/Log.progress.out
     Ignored:    code/Multiqc/
-    Ignored:    code/MyOutput.sam
+    Ignored:    code/Multiqc_chRNA/
     Ignored:    code/PeakCalling/
     Ignored:    code/Phenotypes/
     Ignored:    code/PlotGruberQTLs/
@@ -467,55 +436,37 @@ Ignored files:
     Ignored:    code/Session.vim
     Ignored:    code/SplicingAnalysis/
     Ignored:    code/TODO
-    Ignored:    code/_STARtmp/
     Ignored:    code/bigwigs/
     Ignored:    code/bigwigs_FromNonWASPFilteredReads/
     Ignored:    code/config/.DS_Store
     Ignored:    code/config/._.DS_Store
     Ignored:    code/config/ExternalFastqDataAccessions/
     Ignored:    code/config/OldSamplesConfig/
-    Ignored:    code/fasterq.tmp.midway2-login1.rcc.local.35588/
-    Ignored:    code/fasterq.tmp.midway2-login1.rcc.local.36061/
     Ignored:    code/featureCounts/
+    Ignored:    code/hyprcoloc/
     Ignored:    code/logs/
-    Ignored:    code/output/
+    Ignored:    code/notebooks/.ipynb_checkpoints/
+    Ignored:    code/report.html
+    Ignored:    code/rules/.BensJupyterNotebookRules.smk.swp
     Ignored:    code/rules/OldRules/
+    Ignored:    code/rules/notebooks/
     Ignored:    code/scratch/
     Ignored:    code/scripts/GTFtools_0.8.0/
     Ignored:    code/scripts/liftOverBedpe/liftOverBedpe.py
     Ignored:    code/snakemake.log
     Ignored:    code/snakemake.sbatch.log
     Ignored:    data/._PRJEB1350_RunTable.Ding_etal_CTCF.txt
+    Ignored:    data/._igsr_samples.tsv
+    Ignored:    data/GrowthNotes/._20210830_GrowthNotes_chRNA.ConcentrationsToReplate.txt
 
 Untracked files:
-    Untracked:  analysis/20210604_CheckSampleGenotypes.Rmd
-    Untracked:  code/envs/deeptools.yml
-    Untracked:  code/rules/ProSeqAnalysis.smk
-    Untracked:  code/scripts/PlotPCA_FromPhenotypeTable.R
-    Untracked:  code/scripts/Plot_mbv.R
-    Untracked:  code/scripts/PreSnakemake_MakeConfigs_v1.R
-    Untracked:  code/scripts/PreSnakemake_MakeConfigs_v2.R
-    Untracked:  code/scripts/PreparePhenotypeTableFromFeatureCounts_SubsetGeneList.R
-    Untracked:  code/scripts/PreparePhenotypeTable_ProCap.R
     Untracked:  code/snakemake_profiles/slurm/__pycache__/
-    Untracked:  data/20210604_chRNA_SampleIDs_FromBamToFix.txt
-    Untracked:  output/QC/
 
 Unstaged changes:
-    Modified:   analysis/index.Rmd
-    Modified:   code/Snakefile
-    Modified:   code/config/samples.tsv
-    Modified:   code/rules/ExpressionAnalysis.smk
-    Modified:   code/rules/MakeBigwigs.smk
-    Modified:   code/rules/QC.smk
-    Modified:   code/rules/QTLTools.smk
-    Modified:   code/rules/common.py
-    Modified:   code/scripts/CalculateNormFactorsForBigwig.R
-    Modified:   code/scripts/PreparePhenotypeTablesFromFeatureCounts_ChromatinProfilingPeaks.R
+    Modified:   code/scripts/GenometracksByGenotype
 
 Staged changes:
-    Modified:   .gitmodules
-    New:        code/scripts/qtltools
+    Modified:   code/rules/BensJupyterNotebookRules.smk
 
 </code></pre>
 <p>
@@ -530,7 +481,7 @@ Note that any generated files, e.g. HTML, png, CSS, etc., are not included in t
 <div id="versions" class="tab-pane fade">
 
 <p>
-These are the previous versions of the R Markdown and HTML files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view them.
+These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/index.Rmd</code>) and HTML (<code>docs/index.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
 </p>
 <div class="table-responsive">
 <table class="table table-condensed table-hover">
@@ -554,6 +505,125 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/24331d7a50d3f935aeb26b9060bc539f194eabc2/analysis/index.Rmd" target="_blank">24331d7</a>
+</td>
+<td>
+cfbuenabadn
+</td>
+<td>
+2021-09-23
+</td>
+<td>
+adding chRNA-seq processing smk
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/24331d7a50d3f935aeb26b9060bc539f194eabc2/docs/index.html" target="_blank">24331d7</a>
+</td>
+<td>
+cfbuenabadn
+</td>
+<td>
+2021-09-23
+</td>
+<td>
+adding chRNA-seq processing smk
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/ee655cce83b515ff67db7b95a4a7158019356acf/docs/index.html" target="_blank">ee655cc</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2021-09-23
+</td>
+<td>
+fixed site links
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/afc10fbdc9952caeecd2639f070f357cef548aeb/docs/index.html" target="_blank">afc10fb</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2021-09-23
+</td>
+<td>
+fixed ipynb links on site homepage
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/91f067a6c30ae94dca690c73bd30d82f56d237e0/docs/index.html" target="_blank">91f067a</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2021-09-23
+</td>
+<td>
+added example ipynb to site
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/53ba92f62702392ecd229616e12d4c4be32e2472/analysis/index.Rmd" target="_blank">53ba92f</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2021-06-07
+</td>
+<td>
+update side and check sample swapping
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/53ba92f62702392ecd229616e12d4c4be32e2472/docs/index.html" target="_blank">53ba92f</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2021-06-07
+</td>
+<td>
+update side and check sample swapping
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -600,11 +670,11 @@ initial commit
 <p>We are still collecting data, but I have also been perusing around published data a bit.</p>
 <p>Here are links to all of my rendered analysis Rmarkdowns (code <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/master/analysis">here</a>):</p>
 <pre class="r"><code>library(tidyverse)</code></pre>
-<pre><code>── Attaching packages ─────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
-<pre><code>✔ ggplot2 3.2.1     ✔ purrr   0.3.3
-✔ tibble  3.0.4     ✔ dplyr   1.0.2
-✔ tidyr   1.1.2     ✔ stringr 1.4.0
-✔ readr   1.4.0     ✔ forcats 0.5.0</code></pre>
+<pre><code>── Attaching packages ─────────────────────────────────────── tidyverse 1.3.1 ──</code></pre>
+<pre><code>✔ ggplot2 3.3.5     ✔ purrr   0.3.4
+✔ tibble  3.1.2     ✔ dplyr   1.0.7
+✔ tidyr   1.1.3     ✔ stringr 1.4.0
+✔ readr   1.4.0     ✔ forcats 0.5.1</code></pre>
 <pre><code>── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
 ✖ dplyr::filter() masks stats::filter()
 ✖ dplyr::lag()    masks stats::lag()</code></pre>
@@ -612,9 +682,18 @@ initial commit
 rmd_htmls &lt;- str_replace(rmds, &quot;Rmd$&quot;, &quot;html&quot;)
 
 for(i in rmd_htmls){
-  cat(&quot;[&quot;, i, &quot;](&quot;, i,&quot;)\n&quot;)
+  cat(&quot;[&quot;, i, &quot;](&quot;, i,&quot;)\n\n&quot;, sep=&quot;&quot;)
 }</code></pre>
-<p><a href="20200110_PickSamplesForGrowth.html">20200110_PickSamplesForGrowth.html</a> <a href="20200210_PickSamplesToOrder.html">20200210_PickSamplesToOrder.html</a> <a href="20210604_CheckSampleGenotypes.html">20210604_CheckSampleGenotypes.html</a></p>
+<p><a href="20200110_PickSamplesForGrowth.html">20200110_PickSamplesForGrowth.html</a></p>
+<p><a href="20200210_PickSamplesToOrder.html">20200210_PickSamplesToOrder.html</a></p>
+<p><a href="20210604_CheckSampleGenotypes.html">20210604_CheckSampleGenotypes.html</a></p>
+<p>Also, a list of links to ipynb files that were incorporated into the snakemake. Since github renders ipynbs directly, this is not a relative link from the site folder, but rather links directly to the file to view on github (code <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/master/code/notebooks">here</a>):</p>
+<pre class="r"><code>ipynbs &lt;- list.files(path = &quot;../docs/&quot;, pattern=&quot;^\\d+.+ipynb$&quot;)
+
+for(i in ipynbs){
+  cat(&quot;[&quot;, i, &quot;](&quot;,&quot;https://github.com/bfairkun/ChromatinSplicingQTLs/blob/master/docs/&quot;, i,&quot;)\n\n&quot;, sep=&quot;&quot;)
+}</code></pre>
+<p><a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/master/docs/20210921_CountSpliceSiteSNPsInSQTLs.py.ipynb">20210921_CountSpliceSiteSNPsInSQTLs.py.ipynb</a></p>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
@@ -623,12 +702,12 @@ for(i in rmd_htmls){
 </p>
 <div id="workflowr-sessioninfo" class="collapse">
 <pre class="r"><code>sessionInfo()</code></pre>
-<pre><code>R version 3.4.3 (2017-11-30)
-Platform: x86_64-pc-linux-gnu (64-bit)
+<pre><code>R version 4.1.0 (2021-05-18)
+Platform: x86_64-conda-linux-gnu (64-bit)
 Running under: Scientific Linux 7.4 (Nitrogen)
 
 Matrix products: default
-BLAS/LAPACK: /software/openblas-0.2.19-el7-x86_64/lib/libopenblas_haswellp-r0.2.19.so
+BLAS/LAPACK: /project2/gilad/bjf79_project1/envs/r_essentials/lib/libopenblasp-r0.3.10.so
 
 locale:
  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
@@ -642,25 +721,26 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] forcats_0.5.0   stringr_1.4.0   dplyr_1.0.2     purrr_0.3.3    
-[5] readr_1.4.0     tidyr_1.1.2     tibble_3.0.4    ggplot2_3.2.1  
-[9] tidyverse_1.2.1
+[1] forcats_0.5.1   stringr_1.4.0   dplyr_1.0.7     purrr_0.3.4    
+[5] readr_1.4.0     tidyr_1.1.3     tibble_3.1.2    ggplot2_3.3.5  
+[9] tidyverse_1.3.1
 
 loaded via a namespace (and not attached):
- [1] Rcpp_1.0.3        cellranger_1.1.0  compiler_3.4.3    pillar_1.4.7     
- [5] later_1.0.0       git2r_0.26.1      workflowr_1.5.0   tools_3.4.3      
- [9] digest_0.6.27     lubridate_1.7.9.2 jsonlite_1.6      evaluate_0.14    
-[13] lifecycle_0.2.0   gtable_0.3.0      pkgconfig_2.0.3   rlang_0.4.9      
-[17] cli_2.0.0         rstudioapi_0.10   yaml_2.2.0        haven_2.3.1      
-[21] xfun_0.20         withr_2.1.2       xml2_1.2.0        httr_1.4.2       
-[25] knitr_1.26        hms_0.5.3         generics_0.1.0    fs_1.3.1         
-[29] vctrs_0.3.6       rprojroot_1.3-2   grid_3.4.3        tidyselect_1.1.0 
-[33] glue_1.4.2        R6_2.4.1          fansi_0.4.0       readxl_1.3.1     
-[37] rmarkdown_2.6     modelr_0.1.8      magrittr_1.5      whisker_0.3-2    
-[41] backports_1.1.5   scales_1.1.0      promises_1.1.0    htmltools_0.4.0  
-[45] ellipsis_0.3.0    assertthat_0.2.1  rvest_0.3.6       colorspace_2.0-0 
-[49] httpuv_1.5.2      stringi_1.4.3     lazyeval_0.2.2    munsell_0.5.0    
-[53] broom_0.7.3       crayon_1.3.4     </code></pre>
+ [1] tidyselect_1.1.1  xfun_0.24         bslib_0.2.5.1     haven_2.4.1      
+ [5] colorspace_2.0-2  vctrs_0.3.8       generics_0.1.0    htmltools_0.5.1.1
+ [9] yaml_2.2.1        utf8_1.2.1        rlang_0.4.11      jquerylib_0.1.4  
+[13] later_1.2.0       pillar_1.6.1      withr_2.4.2       glue_1.4.2       
+[17] DBI_1.1.1         dbplyr_2.1.1      readxl_1.3.1      modelr_0.1.8     
+[21] lifecycle_1.0.0   cellranger_1.1.0  munsell_0.5.0     gtable_0.3.0     
+[25] workflowr_1.6.2   rvest_1.0.0       evaluate_0.14     knitr_1.33       
+[29] httpuv_1.6.1      fansi_0.4.2       broom_0.7.8       Rcpp_1.0.7       
+[33] promises_1.2.0.1  backports_1.2.1   scales_1.1.1      jsonlite_1.7.2   
+[37] fs_1.5.0          hms_1.1.0         digest_0.6.27     stringi_1.6.2    
+[41] rprojroot_2.0.2   grid_4.1.0        cli_3.0.0         tools_4.1.0      
+[45] magrittr_2.0.1    sass_0.4.0        crayon_1.4.1      whisker_0.4      
+[49] pkgconfig_2.0.3   ellipsis_0.3.2    xml2_1.3.2        reprex_2.0.0     
+[53] lubridate_1.7.10  rstudioapi_0.13   assertthat_0.2.1  rmarkdown_2.9    
+[57] httr_1.4.2        R6_2.5.0          git2r_0.28.0      compiler_4.1.0   </code></pre>
 </div>
 
 
@@ -704,7 +784,7 @@ $(document).ready(function () {
 
 $(document).ready(function () {
   $('.tabset-dropdown > .nav-tabs > li').click(function () {
-    $(this).parent().toggleClass('nav-tabs-open')
+    $(this).parent().toggleClass('nav-tabs-open');
   });
 });
 </script>

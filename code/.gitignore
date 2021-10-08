@@ -2,6 +2,8 @@
 !config/
 !snakemake_profiles
 !snakemake_profiles/**
+!notebooks
+!notebooks/**
 !scripts
 !scripts/*
 !scripts/common
@@ -29,3 +31,5 @@ scripts/.snakemake*
 !.multiqc_config.yaml
 *.swp
 **__pycache__/
+*/.ipynb_checkpoints
+*/.ipynb_checkpoints/*
