@@ -8,28 +8,30 @@ rule GetGenomeElements:
         grep -v protein_coding {input.gtf} | tail -n+6 | awk -F'\t' '{{print $1"\t"$4"\t"$5"\t"$3"\t"$6"\t"$7}}' > {output} && grep protein_coding {input.gtf} | awk -F'\t' '$3=="exon"' | awk -F'\t' '{{print $1"\t"$4"\t"$5"\tprotein_coding_"$3"\t"$6"\t"$7}}' >> {output}
         """
     
-rule FeatureCounts:
-    input:
-        gtf = "ReferenceGenome/Annotations/gencode.v34.primary_assembly.annotation.gtf",
-        bams = NaRNASeq['Bam'].tolist(),
-    output:
-        "chRNAseq/CountTable.txt"
-    shell:
-        """
-        featureCounts --primary -s 2 -p -P -B -a {input.gtf} -o {output} {input.bams}
-        """
+#rule FeatureCounts:
+#    input:
+#        gtf = "ReferenceGenome/Annotations/gencode.v34.primary_assembly.annotation.gtf",
+#        bams = NaRNASeq['Bam'].tolist(),
+#    output:
+#        "chRNAseq/CountTable.txt"
+#    shell:
+#        """
+#        featureCounts --primary -s 2 -p -P -B -a {input.gtf} -o {output} {input.bams}
+#        """
 
 rule GetLogRPKM:
     input:
         gtf = "ReferenceGenome/Annotations/gencode.v34.primary_assembly.annotation.gtf",
-        CountTable = "chRNAseq/CountTable.txt",
+        CountTable = "featureCounts/chRNA.Expression.Splicing/Counts.txt",
         bed = "ReferenceGenome/Annotations/Introns.GencodeV34.hg38.UCSC.bed.gz",
     output:
-        "chRNAseq/CountTable.MeanLogRPKM.txt.gz",
+        "featureCounts/chRNA.Expression.Splicing/CountTable.MeanLogRPKM.txt.gz",
         "Misc/GencodeHg38_all_introns.expressedHostGenes.bed.gz"
+    conda:
+        "../envs/r_essentials.yml"
     shell:
         """
-        /software/R-3.6.1-el7-x86_64/bin/Rscript scripts/chRNA-seq_FilterForExpressedGenes.R
+        Rscript scripts/chRNA-seq_FilterForExpressedGenes.R
         """
 
 rule GetUniqIntrons:
@@ -92,16 +94,20 @@ rule CountReadsInIntronWindows:
     input:
         bed = "Misc/GencodeHg38_all_introns.corrected.uniq.bed.{windowStyle}.bed",
         faidx = "ReferenceGenome/Annotations/Chrome.sizes",
-        bam = lambda wildcards: NaRNASeq.at[wildcards.sample, "Bam"],
-        bai =  lambda wildcards: NaRNASeq.at[wildcards.sample, "Bam"] + ".bai"
+        bam = 'Alignments/STAR_Align/chRNA.Expression.Splicing/{IndID}/1/Filtered.bam'
     log:
-        "logs/CountReadsInIntronWindows/{sample}.{windowStyle}.log"
+        "logs/CountReadsInIntronWindows/{IndID}.{windowStyle}.log"
     output:
-        bed = "IntronWindowCounts/{sample}.{windowStyle}.bed.gz"
+        bed = "IntronWindowCounts/{IndID}.{windowStyle}.bed.gz"
     wildcard_constraints:
-        sample = "|".join(NaRNASeq.index)
+        IndID = "|".join(chRNASeqSamples_df['IndID'].unique()),
+        windowStyle="|".join(["IntronWindows_equalLength", "IntronWindows"])
     shell:
         """
+        echo {input.bam};
+        echo {input.faidx};
+        echo {input.bed};
+        echo {output};
         set +o pipefail;
         (samtools view -bh -F 256 {input.bam} | bedtools intersect -sorted -S -g {input.faidx} -a {input.bed} -b - -c -split -F 0.5 | gzip - > {output}) &> {log}
         """
@@ -109,17 +115,19 @@ rule CountReadsInIntronWindows:
 
 rule GetSlopes:
     input:
-        bed = "IntronWindowCounts/{sample}.IntronWindows_equalLength.bed.gz"
+        bed = "IntronWindowCounts/{IndID}.IntronWindows_equalLength.bed.gz"
     params:
         WinLen = config["WinLen"],
         minIntronCounts = config["minIntronCounts"],
         minCoverageCounts = config["minCoverageCounts"],
         minCoverage = config["minCoverage"]
     output:
-        "slopes/{sample}.tab.gz"
+        "slopes/{IndID}.tab.gz"
+    conda:
+        "../envs/r_essentials.yml"
     wildcard_constraints:
-        sample = "|".join(NaRNASeq.index)
+        IndID = "|".join(chRNASeqSamples_df['IndID'].unique()),
     shell:
         """
-        /software/R-3.6.1-el7-x86_64/bin/Rscript scripts/GetSlopes.R {input.bed} {params.minIntronCounts} {params.minCoverageCounts} {params.minCoverage} {params.WinLen}
+        Rscript scripts/GetSlopes.R {input.bed} {params.minIntronCounts} {params.minCoverageCounts} {params.minCoverage} {params.WinLen}
         """

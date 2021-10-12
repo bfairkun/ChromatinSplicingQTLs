@@ -19,6 +19,8 @@ scripts/.snakemake*
 !environment.yaml
 !LICENSE
 !README.md
+!ReferenceGenome/Annotations/Chrome.sizes
+!ReferenceGenome/Annotations/Introns.GencodeV34.hg38.UCSC.bed.gz
 !rules
 !rules/*
 !.gitignore

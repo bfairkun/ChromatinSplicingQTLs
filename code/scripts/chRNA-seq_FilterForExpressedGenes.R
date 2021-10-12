@@ -6,8 +6,10 @@ library(gplots)
 # Rscript to filter introns bed for introns in expressed host genes
 # """
 
-CountTable  <- read_delim("chRNAseq/CountTable.txt", delim='\t', comment='#') %>%
-    rename_if(str_detect(names(.), "/"), funs(str_replace(., ".+/(.+)$", "\\1")))
+print('hola como estas')
+
+CountTable  <- read_delim("featureCounts/chRNA.Expression.Splicing/Counts.txt", delim='\t', comment='#')# %>%
+#    rename_if(str_detect(names(.), "/"), funs(str_replace(., ".+/(.+)$", "\\1")))
 
 Gtf <- read_delim("ReferenceGenome/Annotations/gencode.v34.primary_assembly.annotation.gtf", comment='#', delim='\t', col_names=c("Chr", "Source", "feature", "start", "end", "score", "strand", "frame", "attribute"))
 
@@ -45,7 +47,7 @@ LogRPKM %>%
   # pull(Mean) %>% hist()
   arrange(desc(Mean)) %>% 
   # head(10000) %>%
-  write_delim("chRNAseq/CountTable.MeanLogRPKM.txt.gz", delim='\t')
+  write_delim("featureCounts/chRNA.Expression.Splicing/CountTable.MeanLogRPKM.txt.gz", delim='\t')
 
 #Read in intron bed
 Intron.bed  <- read_delim("ReferenceGenome/Annotations/Introns.GencodeV34.hg38.UCSC.bed.gz", delim='\t', col_names=c("Chrom", "Start", "Stop", "Name", "Score", "Strand")) %>%
