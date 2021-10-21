@@ -51,7 +51,7 @@ rule all:
         #expand("QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.pca", Phenotype=["chRNA.IR", "Expression.Splicing", "H3K4ME1", "H3K27AC", "CTCF", "H3K4ME3"]),
         #"QTLs/QTLTools/Expression.Splicing/Genotypes/WholeGenome.vcf.gz",
         # "Multiqc/multiqc_report.html",
-        #expand("QTLs/QTLTools/{Phenotype}/PermutationPass.FDR_Added.txt.gz", Phenotype=MyPhenotypes),
+        expand("QTLs/QTLTools/{Phenotype}/{Pass}.FDR_Added.txt.gz", Phenotype=MyPhenotypes, Pass=["PermutationPass", "NominalPass"]),
         expand("featureCounts/{Phenotype}/NormFactors.tsv", Phenotype=["chRNA.Expression.Splicing", "Expression.Splicing", "H3K4ME1", "H3K4ME3", "H3K27AC", "CTCF"]),
         "hyprcoloc/GenewiseSummaryStatsInput",
         "hyprcoloc/GenewiseSummaryStatsInputHarmonizedSNPs",

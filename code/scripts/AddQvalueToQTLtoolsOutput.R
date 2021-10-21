@@ -18,12 +18,18 @@ if(interactive()){
 
 FileIn <- args[1]
 FileOut <- args[2]
+Pass <- args[3]
 
 library(tidyverse)
 library(qvalue)
 
 dat.in <- read_delim(FileIn, delim=' ')
+
+if (Pass == 'PermutationPass'){
 dat.in$q <- signif(qvalue(dat.in$adj_beta_pval)$qvalues, 5)
+} else {
+dat.in$q <- signif(qvalue(dat.in$nom_pval)$qvalues, 5)
+}
 
 
 write_delim(dat.in, FileOut, delim=' ')
