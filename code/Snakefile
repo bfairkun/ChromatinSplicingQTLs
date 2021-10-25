@@ -69,6 +69,10 @@ rule all:
             "slopes/{IndID}.tab.gz",
             IndID = chRNASeqSamples_df['IndID'].unique(),
         ),
+        expand(
+            "slopes/{IndID}_glm.nb.tab.gz",
+            IndID = chRNASeqSamples_df['IndID'].unique(),
+        ),
 
 rule Gather_chRNASeq_Fastq:
     """

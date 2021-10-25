@@ -122,12 +122,15 @@ rule GetSlopes:
         minCoverageCounts = config["minCoverageCounts"],
         minCoverage = config["minCoverage"]
     output:
-        "slopes/{IndID}.tab.gz"
+        "slopes/{IndID}.tab.gz",
+        "slopes/{IndID}_glm.nb.tab.gz"
     conda:
         "../envs/r_essentials.yml"
     wildcard_constraints:
         IndID = "|".join(chRNASeqSamples_df['IndID'].unique()),
+    log:
+        "logs/slopes/{IndID}.slope.log"
     shell:
         """
-        Rscript scripts/GetSlopes.R {input.bed} {params.minIntronCounts} {params.minCoverageCounts} {params.minCoverage} {params.WinLen}
+        (Rscript scripts/GetSlopes.R {input.bed} {params.minIntronCounts} {params.minCoverageCounts} {params.minCoverage} {params.WinLen}) &> {log}
         """

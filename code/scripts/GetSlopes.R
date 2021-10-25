@@ -44,13 +44,6 @@ IntronCountSums <- Counts.EqualSizeBins %>%
   group_by(IntronName) %>%
   summarise(IntronSum=sum(Readcount), IntronObsSum=sum(Readcount>0), IntronCoverage=mean(Readcount>=minCoverageCounts))
 
-
-#This plot should look similar if not identical...
-#ggplot(IntronCountSums, aes(x=IntronSum)) +
-#  geom_histogram() +
-#  scale_x_continuous(trans="log10") +
-#  theme_bw()
-
 # Hard-coded IntronObsSum minimum of 2, despite min Intron Coverage, to ensure rlm can run
 IntronsToGetSlope <- IntronCountSums %>% filter((IntronSum>=minIntronCounts), (IntronObsSum>=2), (IntronCoverage>=minCoverage)) %>% pull(IntronName)
 
@@ -99,9 +92,12 @@ CoverageFits.error.tidy <- CoverageFits.df %>%
 CoverageFits.df.tidy['std.error'] <- CoverageFits.error.tidy$RelativeIntronPosInBp
 
 colnames(CoverageFits.df.tidy)[8] <- 'slope'
-
-CoverageFits.df.tidy['counts'] <- IntronCountSums[rownames(CoverageFits.df.tidy),]$IntronSum
-CoverageFits.df.tidy['coverageMean'] <- IntronCountSums[rownames(CoverageFits.df.tidy),]$IntronCoverage
+            
+IntronCountSums_filtered <- IntronCountSums[IntronCountSums$IntronName %in% CoverageFits.df.tidy$IntronName,]
+IntronCountSums_filtered <- IntronCountSums_filtered %>% column_to_rownames(., var = "IntronName")
+            
+CoverageFits.df.tidy['counts'] <- IntronCountSums_filtered[CoverageFits.df.tidy$IntronName,]$IntronSum
+CoverageFits.df.tidy['coverageMean'] <- IntronCountSums_filtered[CoverageFits.df.tidy$IntronName,]$IntronCoverage
 
 CoverageFits.df.tidy <- CoverageFits.df.tidy %>%
   filter(IntronName %in% IntronsToGetSlope)
@@ -130,6 +126,69 @@ CoverageFits.df.tidy %>%
                   coverageMean = character(),
                   IsSlopeNegative = character(),
                   stringsAsFactors=FALSE) %>% write_delim(paste('slopes/', SampleName, '.tab.gz', sep=''), delim = '\t')
+       
+        })
+
+
+
+#### GLM NB slopes
+
+
+tryCatch(
+        {
+set.seed(0)
+
+CoverageFits.nb.glm.df <- Counts.EqualSizeBins %>%
+  filter(IntronName %in% IntronsToGetSlope) %>% filter(Readcount >= 1) %>%
+  mutate(RelativeIntronPosInBp = Window*WinLen) %>%
+  group_by(IntronName) %>%
+  do(CoverageFit = possibly(glm.nb, otherwise = NA)(Readcount ~ RelativeIntronPosInBp, data = ., link="identity")) %>%
+  tidy(CoverageFit)
+
+CoverageFits.df.tidy <- CoverageFits.nb.glm.df %>%
+  ungroup() %>%
+  dplyr::select(-c("std.error", "statistic", "p.value", "x")) %>%
+  spread(key="term", value="estimate") %>%
+  separate(IntronName, into = c("gene", "IntChr", "IntStart", "IntStop", "IntStrand"),convert=T, sep = "_", remove = F) %>%
+  mutate(IntronLength = IntStop - IntStart) %>% 
+     dplyr::select(c("IntronName", "gene", "IntChr", "IntStart", "IntStop", "IntStrand", "(Intercept)",
+                    "RelativeIntronPosInBp", "IntronLength"))
+
+colnames(CoverageFits.df.tidy) <- c("IntronName", "Gene", "IntChr", "IntStart", "IntStop", "IntStrand", "Intercept",
+                    "Slope", "IntronLength")
+
+CoverageFits.df.tidy['Slope.p.value'] = CoverageFits.nb.glm.df[CoverageFits.nb.glm.df$term == "RelativeIntronPosInBp",]$p.value
+CoverageFits.df.tidy['Intercept.p.value'] = CoverageFits.nb.glm.df[CoverageFits.nb.glm.df$term == "(Intercept)",]$p.value
+
+IntronCountSums_filtered <- IntronCountSums[IntronCountSums$IntronName %in% CoverageFits.df.tidy$IntronName,]
+IntronCountSums_filtered <- IntronCountSums_filtered %>% column_to_rownames(., var = "IntronName")
+            
+CoverageFits.df.tidy['counts'] <- IntronCountSums_filtered[CoverageFits.df.tidy$IntronName,]$IntronSum
+CoverageFits.df.tidy['coverageMean'] <- IntronCountSums_filtered[CoverageFits.df.tidy$IntronName,]$IntronCoverage
+            
+print(paste('slopes/', SampleName, '_glm.nb.tab.gz', sep=''))
+
+CoverageFits.df.tidy %>%
+  mutate(IsSlopeNegative = Slope <= 0 ) %>%
+  write_delim(paste('slopes/', SampleName, '_glm.nb.tab.gz', sep=''), delim = '\t')
+            
+},
+    error = function(e) {
+        
+        data.frame(IntronName=character(),
+                  gene=character(),
+                  IntChr=character(),
+                  IntStart=character(),
+                  IntStop=character(),
+                  IntStrand=character(),
+                  Intercept=character(),
+                  slope=character(),
+                  IntronLength=character(),
+                  std.error = character(),
+                  counts = character(),
+                  coverageMean = character(),
+                  IsSlopeNegative = character(),
+                  stringsAsFactors=FALSE) %>% write_delim(paste('slopes/', SampleName, '_glm.nb.tab.gz', sep=''), delim = '\t')
        
         })
 
