@@ -91,7 +91,8 @@ CoverageFits.error.tidy <- CoverageFits.df %>%
 
 CoverageFits.df.tidy['std.error'] <- CoverageFits.error.tidy$RelativeIntronPosInBp
 
-colnames(CoverageFits.df.tidy)[8] <- 'slope'
+colnames(CoverageFits.df.tidy)[1] <- 'IntronName'
+colnames(CoverageFits.df.tidy)[8] <- 'Slope'
             
 IntronCountSums_filtered <- IntronCountSums[IntronCountSums$IntronName %in% CoverageFits.df.tidy$IntronName,]
 IntronCountSums_filtered <- IntronCountSums_filtered %>% column_to_rownames(., var = "IntronName")
@@ -106,7 +107,7 @@ CoverageFits.df.tidy <- CoverageFits.df.tidy %>%
 print(paste('slopes/', SampleName, '.tab.gz', sep=''))
 
 CoverageFits.df.tidy %>%
-  mutate(IsSlopeNegative = slope <= 0 ) %>%
+  mutate(IsSlopeNegative = Slope < 0 ) %>%
   write_delim(paste('slopes/', SampleName, '.tab.gz', sep=''), delim = '\t')
             
 },
@@ -169,7 +170,7 @@ CoverageFits.df.tidy['coverageMean'] <- IntronCountSums_filtered[CoverageFits.df
 print(paste('slopes/', SampleName, '_glm.nb.tab.gz', sep=''))
 
 CoverageFits.df.tidy %>%
-  mutate(IsSlopeNegative = Slope <= 0 ) %>%
+  mutate(IsSlopeNegative = Slope < 0 ) %>%
   write_delim(paste('slopes/', SampleName, '_glm.nb.tab.gz', sep=''), delim = '\t')
             
 },

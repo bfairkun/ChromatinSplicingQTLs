@@ -8,17 +8,6 @@ rule GetGenomeElements:
         grep -v protein_coding {input.gtf} | tail -n+6 | awk -F'\t' '{{print $1"\t"$4"\t"$5"\t"$3"\t"$6"\t"$7}}' > {output} && grep protein_coding {input.gtf} | awk -F'\t' '$3=="exon"' | awk -F'\t' '{{print $1"\t"$4"\t"$5"\tprotein_coding_"$3"\t"$6"\t"$7}}' >> {output}
         """
     
-#rule FeatureCounts:
-#    input:
-#        gtf = "ReferenceGenome/Annotations/gencode.v34.primary_assembly.annotation.gtf",
-#        bams = NaRNASeq['Bam'].tolist(),
-#    output:
-#        "chRNAseq/CountTable.txt"
-#    shell:
-#        """
-#        featureCounts --primary -s 2 -p -P -B -a {input.gtf} -o {output} {input.bams}
-#        """
-
 rule GetLogRPKM:
     input:
         gtf = "ReferenceGenome/Annotations/gencode.v34.primary_assembly.annotation.gtf",
