@@ -128,18 +128,6 @@ use rule DownloadFastqFromLink as DownloadFastqFromLink_SE with:
         Read = "SE"
 
 
-# TODO: make Download per fastq, and make inherited rule for SE
-
-# def GetFastqR2(wildcards):
-#     """
-#     return empty list single ended
-#     """
-#     df_subset = Fastq_samples.loc[
-#             (Fastq_samples['IndID'] == wildcards.IndID) &
-#             (Fastq_samples['Phenotype'] == wildcards.Phenotype) &
-#             (Fastq_samples['RepNumber'] == wildcards.Rep)]
-#     if sum(df_subset['PairedEnd']) > 0:
-#         return
 
 SingleEnd_df = Fastq_samples.loc[ Fastq_samples['PairedEnd']==False, ['Phenotype', 'IndID', 'RepNumber'] ].drop_duplicates()
 rule GatherAllFasterqDump_SE:
@@ -147,6 +135,17 @@ rule GatherAllFasterqDump_SE:
         expand("FastqSE/{Phenotype}/{IndID}/{Rep}.SE.fastq.gz", zip, Phenotype=SingleEnd_df['Phenotype'], IndID=SingleEnd_df['IndID'], Rep=SingleEnd_df['RepNumber'])
 
 
+rule DownloadGWAS_SummaryStats:
+    output:
+        "gwas_summary_stats/full_data/{accession}.tsv.gz"
+    params:
+        ftp_link = lambda wildcards: gwas_df.loc[wildcards.accession]['FTP Path'][7:]
+    log:
+        "logs/DownloadGWAS_SummaryStats/{accession}.log"
+    shell:
+        """
+        (curl -f -o {output}  {params.ftp_link}/harmonised/$(curl -l {params.ftp_link}/harmonised/ | grep '.h.tsv.gz') ) &> {log}
+        """
 
 
 rule fastp:

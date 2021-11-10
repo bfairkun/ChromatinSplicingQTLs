@@ -31,6 +31,11 @@ chRNASeqSamples_df = Fastq_samples.loc[ (Fastq_samples['Phenotype']=="chRNA.Expr
 # Get random sample for each phenotype
 Fastq_samples.groupby('Phenotype').apply(lambda x: x.sample(2, random_state=1)).reset_index(drop=True)
 
+# Read in table of GWAS summary stat links (obtained from GWAS catalog's online
+# interface)
+gwas_df = pd.read_csv("../data/list_gwas_summary_statistics_PMID27863252.csv", index_col='Study accession')
+
+
 # print(ChromatinProfilingPhenotypes)
 
 # Retrieve samples where
