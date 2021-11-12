@@ -2,15 +2,16 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
 #
-#
-#
-######################################################################
-# @author      : bjf79 (bjf79@midway2-login1.rcc.local)
-# @file        : GetGWASLeadVariantWindows
-# @created     : Tuesday Nov 09, 2021 11:11:23 CST
-#
-# @description :
-######################################################################
+"""
+GetGWASLeadVariantWindows
+
+main function returns a dataframe and optionally writes it out of lead snp rows
+of summary stats for harmonized summary stats from gwas catalog as described in
+Pheonix's paper
+
+usage: python GetGWASLeadVariantWindows.py <Input.h.tsv.gz> [<FileOut>
+        <PvalueThreshold>]
+"""
 
 import sys
 import pandas as pd
@@ -26,7 +27,11 @@ if hasattr(sys, "ps1"):
     ]
 
 
-def main(GWASCatalogHarmonizedSummaryStats_f, FileOut=None, threshold=1e-7):
+def main(
+    GWASCatalogHarmonizedSummaryStats_f,
+    FileOut=None,
+    threshold=5e-8,
+):
     """main script function used to read in a file downloaded from GWAS
     catalog of harmonized summary stats, and return a pandas data frame of the
     lead SNPs for each genomewide significant locus"""
@@ -43,7 +48,7 @@ def main(GWASCatalogHarmonizedSummaryStats_f, FileOut=None, threshold=1e-7):
 
     # Filter rows for significant P-value and no problematic NAs
     df = df.loc[
-        (df["p_value"] < threshold)
+        (df["p_value"] < float(threshold))
         & pd.notna(df["hm_chrom"])
         & (pd.notna(df["p_value"]))
     ]
@@ -62,7 +67,7 @@ def main(GWASCatalogHarmonizedSummaryStats_f, FileOut=None, threshold=1e-7):
                 (df["hm_chrom"] == LeadSNPChr)
                 & (
                     df["hm_pos"].between(
-                        LeadSNPPos - 5e5, LeadSNPPos + 5e5, inclusive=False
+                        LeadSNPPos - 5e5, LeadSNPPos + 5e5
                     )
                 )
             )
@@ -71,11 +76,9 @@ def main(GWASCatalogHarmonizedSummaryStats_f, FileOut=None, threshold=1e-7):
 
     LeadSnps = pd.DataFrame(LeadSNPList)
     if FileOut:
-        LeadSnps.to_csv(FileOut, sep="\t")
+        LeadSnps.to_csv(FileOut, sep="\t", index=False)
     return LeadSnps
 
 
 if __name__ == "__main__":
-    _, GWASCatalogHarmonizedSummaryStats_f = sys.argv
-    BlacklistRegions = [("6", "28510120", "33,480,577")]
     main(*sys.argv[1:])

@@ -17,11 +17,10 @@ include: "rules/QTLTools.smk"
 include: "rules/Coloc.smk"
 include: "rules/report.smk"
 include: "rules/BensJupyterNotebookRules.smk"
+include: "rules/GWAS_PrepForColoc.smk"
 ## Inserted by Carlos
 include: "rules/chRNASeqSlopes.smk"
 
-
-# include: "rules/slopeQTLs.smk"
 
 
 wildcard_constraints:
@@ -29,6 +28,8 @@ wildcard_constraints:
     IndID="|".join(Fastq_samples["IndID"]),
     Rep="\d+",
     QTLsGenotypeSet="|".join(["", "HarmonizedSNPs"]),
+    FeatureCoordinatesRedefinedFor="|".join(["", "_ForColoc", "ForGWASColoc"]),
+    Pass="|".join(["PermutationPass", "NominalPass"]),
 
 
 localrules:
@@ -39,7 +40,7 @@ localrules:
     STAR_make_index,
     DownloadHg38Ref,
     DownloadFastqFromLink_SE,
-    DownloadGWAS_SummaryStats
+    DownloadGWAS_SummaryStats,
 
 
 ruleorder: CopyFastqFromLocal > DownloadFastqFromLink
@@ -71,7 +72,7 @@ rule all:
         expand(
             "QTLs/QTLTools/{Phenotype}/{Pass}.FDR_Added.txt.gz",
             Phenotype=MyPhenotypes,
-            Pass=["PermutationPass", "NominalPass"],
+            Pass=["PermutationPass"],
         ),
         expand(
             "featureCounts/{Phenotype}/NormFactors.tsv",
@@ -98,7 +99,13 @@ rule all:
         expand(
             "gwas_summary_stats/full_data/{accession}.tsv.gz", accession=gwas_df.index
         ),
-        #expand("QTLs/QTLTools/{Phenotype}/PermutationPass{QTLsGenotypeSet}ForColoc.txt.gz", Phenotype=PhenotypesToColoc, QTLsGenotypeSet=['', 'HarmonizedSNPs']),
+        expand(
+            "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.gz",
+            Phenotype=PhenotypesToColoc,
+            QTLsGenotypeSet=["", "HarmonizedSNPs"],
+            FeatureCoordinatesRedefinedFor=["", "_ForColoc", "ForGWASColoc"],
+            Pass=["NominalPass", "PermutationPass"],
+        ),
         #### Inserted by Carlos
         expand(
             "IntronWindowCounts/{IndID}.{windowStyle}.bed.gz",
@@ -129,6 +136,7 @@ rule Gather_chRNASeq_Fastq:
             Rep=chRNASeqSamples_df["RepNumber"],
         ),
 
+
 rule Gather_gwas_summary_stats:
     """
     invoke this as the target rule to download gwas summary stats. See the
@@ -136,5 +144,6 @@ rule Gather_gwas_summary_stats:
     """
     input:
         expand(
-            "gwas_summary_stats/full_data/{accession}.tsv.gz", accession=gwas_df.index
+            "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsForGWASColoc.sorted.qqnorm.bed.gz",
+            Phenotype=MyPhenotypes,
         ),
