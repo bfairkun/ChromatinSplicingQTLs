@@ -28,7 +28,7 @@ wildcard_constraints:
     IndID="|".join(Fastq_samples["IndID"]),
     Rep="\d+",
     QTLsGenotypeSet="|".join(["", "HarmonizedSNPs"]),
-    FeatureCoordinatesRedefinedFor="|".join(["", "_ForColoc", "ForGWASColoc"]),
+    FeatureCoordinatesRedefinedFor="|".join(["", "ForColoc", "ForGWASColoc"]),
     Pass="|".join(["PermutationPass", "NominalPass"]),
 
 
@@ -85,8 +85,6 @@ rule all:
                 "CTCF",
             ],
         ),
-        "hyprcoloc/GenewiseSummaryStatsInput",
-        "hyprcoloc/GenewiseSummaryStatsInputHarmonizedSNPs",
         "ReferenceGenome/Annotations/GTFTools_BasicAnnotations/gencode.v34.chromasomal.tss.bed",
         expand(
             "featureCounts/AtTSS/{Phenotype}/Counts.txt",
@@ -103,23 +101,24 @@ rule all:
             "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.gz",
             Phenotype=PhenotypesToColoc,
             QTLsGenotypeSet=["", "HarmonizedSNPs"],
-            FeatureCoordinatesRedefinedFor=["", "_ForColoc", "ForGWASColoc"],
+            FeatureCoordinatesRedefinedFor=["", "ForColoc", "ForGWASColoc"],
             Pass=["NominalPass", "PermutationPass"],
         ),
+        expand("hyprcoloc/LociWiseSummaryStatsInput/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}", QTLsGenotypeSet = [""], FeatureCoordinatesRedefinedFor=["ForColoc", "ForGWASColoc"])
         #### Inserted by Carlos
-        expand(
-            "IntronWindowCounts/{IndID}.{windowStyle}.bed.gz",
-            IndID=chRNASeqSamples_df["IndID"].unique(),
-            windowStyle=["IntronWindows_equalLength", "IntronWindows"],
-        ),
-        expand(
-            "slopes/{IndID}.tab.gz",
-            IndID=chRNASeqSamples_df["IndID"].unique(),
-        ),
-        expand(
-            "slopes/{IndID}_glm.nb.tab.gz",
-            IndID=chRNASeqSamples_df["IndID"].unique(),
-        ),
+        # expand(
+        #     "IntronWindowCounts/{IndID}.{windowStyle}.bed.gz",
+        #     IndID=chRNASeqSamples_df["IndID"].unique(),
+        #     windowStyle=["IntronWindows_equalLength", "IntronWindows"],
+        # ),
+        # expand(
+        #     "slopes/{IndID}.tab.gz",
+        #     IndID=chRNASeqSamples_df["IndID"].unique(),
+        # ),
+        # expand(
+        #     "slopes/{IndID}_glm.nb.tab.gz",
+        #     IndID=chRNASeqSamples_df["IndID"].unique(),
+        # ),
 
 
 rule Gather_chRNASeq_Fastq:
@@ -145,5 +144,5 @@ rule Gather_gwas_summary_stats:
     input:
         expand(
             "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsForGWASColoc.sorted.qqnorm.bed.gz",
-            Phenotype=MyPhenotypes,
+            Phenotype=PhenotypesToColoc,
         ),

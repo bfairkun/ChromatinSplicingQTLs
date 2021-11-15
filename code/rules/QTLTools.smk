@@ -154,7 +154,7 @@ def GetQTLtoolsVcfTbi(wildcards):
 def GetQTLtoolsBed(wildcards):
     if wildcards.FeatureCoordinatesRedefinedFor == "":
         return "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.gz"
-    elif wildcards.FeatureCoordinatesRedefinedFor == "_ForColoc":
+    elif wildcards.FeatureCoordinatesRedefinedFor == "ForColoc":
         return "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsForColoc.sorted.qqnorm.bed.gz"
     elif wildcards.FeatureCoordinatesRedefinedFor == "ForGWASColoc":
         return "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsForGWASColoc.sorted.qqnorm.bed.gz"
@@ -162,13 +162,13 @@ def GetQTLtoolsBed(wildcards):
 def GetQTLtoolsBedTbi(wildcards):
     if wildcards.FeatureCoordinatesRedefinedFor == "":
         return "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.gz.tbi"
-    elif wildcards.FeatureCoordinatesRedefinedFor == "_ForColoc":
+    elif wildcards.FeatureCoordinatesRedefinedFor == "ForColoc":
         return "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsForColoc.sorted.qqnorm.bed.gz.tbi"
     elif wildcards.FeatureCoordinatesRedefinedFor == "ForGWASColoc":
         return "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsForGWASColoc.sorted.qqnorm.bed.gz.tbi"
 
 def GetQTLtoolsFlags(wildcards):
-    if wildcards.FeatureCoordinatesRedefinedFor in ["_ForColoc", "ForGWASColoc" ]:
+    if wildcards.FeatureCoordinatesRedefinedFor in ["ForColoc", "ForGWASColoc" ]:
         return "--window 0"
     else:
         if wildcards.Phenotype in ["polyA.Splicing", "chRNA.Splicing", "polyA.Splicing.Subset_YRI"]:

@@ -7,7 +7,7 @@ autosomes = [str(i) for i in range(1,23)]
 
 N_PermutationChunks = 50
 MyPhenotypes = ["chRNA.IR", "Expression.Splicing", "chRNA.Expression.Splicing",  "H3K27AC", "CTCF", "H3K4ME3", "chRNA.Splicing", "polyA.Splicing", "MetabolicLabelled.30min", "MetabolicLabelled.60min", "Expression.Splicing.Subset_YRI", "polyA.Splicing.Subset_YRI"]
-PhenotypesToColoc = [p for p in MyPhenotypes if p not in ["chRNA.Splicing", "polyA.Splicing"]]
+PhenotypesToColoc = [p for p in MyPhenotypes if p not in ["chRNA.Splicing", "polyA.Splicing", "CTCF", "chRNA.IR"]]
 
 ## All Fastq samples
 Fastq_samples = pd.read_csv("config/samples.tsv", sep='\t', comment='#')
