@@ -1,5 +1,6 @@
 configfile: "config/config.yaml"
 
+
 include: "rules/common.py"
 include: "rules/DownloadAndPreprocess.smk"
 include: "rules/Alignment.smk"
@@ -17,62 +18,91 @@ include: "rules/Coloc.smk"
 include: "rules/report.smk"
 include: "rules/BensJupyterNotebookRules.smk"
 include: "rules/getNonCodingRNA.smk"
-
-## Inserted by Carlos
+include: "rules/GWAS_PrepForColoc.smk"
 include: "rules/chRNASeqSlopes.smk"
-#include: "rules/slopeQTLs.smk"
+
+
 
 wildcard_constraints:
     chrom="|".join(autosomes),
-    IndID="|".join(Fastq_samples['IndID']),
+    IndID="|".join(Fastq_samples["IndID"]),
     Rep="\d+",
-    QTLsGenotypeSet="|".join(['', 'HarmonizedSNPs'])
+    QTLsGenotypeSet="|".join(["", "HarmonizedSNPs"]),
+    FeatureCoordinatesRedefinedFor="|".join(["", "ForColoc", "ForGWASColoc"]),
+    Pass="|".join(["PermutationPass", "NominalPass"]),
 
-localrules: all, CopyFastqFromLocal, DownloadFastqFromLink, Download1KG_GRCh38, STAR_make_index, DownloadHg38Ref, DownloadFastqFromLink_SE
+
+localrules:
+    all,
+    CopyFastqFromLocal,
+    DownloadFastqFromLink,
+    Download1KG_GRCh38,
+    STAR_make_index,
+    DownloadHg38Ref,
+    DownloadFastqFromLink_SE,
+    DownloadGWAS_SummaryStats,
+
+
 ruleorder: CopyFastqFromLocal > DownloadFastqFromLink
 
 
 rule all:
     input:
         # expand("logs/PlotGruberQTLs/PlotFromShellScript.{pheno}.log", pheno=["H3K4ME3", "H3K27AC", "H3K4ME1"]),
-        # "QTLs/sQTLs/permutation_pass_chunks/1.1000.txt.gz",
-        # expand("FastqFastp/{Phenotype}/{IndID}/{Rep}.R2.fastq.gz", zip, Phenotype=Fastq_samples['Phenotype'], IndID=Fastq_samples['IndID'], Rep=Fastq_samples['RepNumber']),
-        # expand("Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.wasp_filterd.markdup.sorted.bam", zip, Phenotype= ChromatinProfilingSamples_df['Phenotype'], IndID=ChromatinProfilingSamples_df['IndID'], Rep=ChromatinProfilingSamples_df['RepNumber']),
-        # expand("Alignments/STAR_Align/{Phenotype}/{IndID}/{Rep}/Filtered.bam", zip, Phenotype=RNASeqSamples_df['Phenotype'], IndID=RNASeqSamples_df['IndID'], Rep=RNASeqSamples_df['RepNumber']),
-        # expand("bigwigs/{Phenotype}/{IndID}.{Rep}.bw", zip, Phenotype=Fastq_samples['Phenotype'], IndID=Fastq_samples['IndID'], Rep=Fastq_samples['RepNumber']),
-        expand("QC/mbv/plots/{Phenotype}/{IndID}.{Rep}.pdf", zip, Phenotype=chRNASeqSamples_df['Phenotype'], IndID=chRNASeqSamples_df['IndID'], Rep=chRNASeqSamples_df['RepNumber']),
+        expand(
+            "QC/mbv/plots/{Phenotype}/{IndID}.{Rep}.pdf",
+            zip,
+            Phenotype=chRNASeqSamples_df["Phenotype"],
+            IndID=chRNASeqSamples_df["IndID"],
+            Rep=chRNASeqSamples_df["RepNumber"],
+        ),
         #Make bigwigs from test cut and tag
         # "../output/QC/AutosomeCountsPerSamples.tsv",
         # expand("bigwigs_FromNonWASPFilteredReads/{Phenotype}/{IndID}.{Rep}.bw", Phenotype=["POL2S5", "POL2S2", "H3K9ME3", "H3K36ME3", "H3K79ME2"], IndID="NA19210", Rep="1"),
-        multiext("ReferenceGenome/Annotations/gencode.v34.primary_assembly.annotation.gtf", "_all_exons.txt.gz", "_all_introns.bed.gz", "_fiveprime.bed.gz", "_threeprime.bed.gz"),
+        multiext(
+            "ReferenceGenome/Annotations/gencode.v34.primary_assembly.annotation.gtf",
+            "_all_exons.txt.gz",
+            "_all_introns.bed.gz",
+            "_fiveprime.bed.gz",
+            "_threeprime.bed.gz",
+        ),
         expand("SplicingAnalysis/IR/{Phenotype}/Counts.txt", Phenotype=RNASeqPhenotypes),
-        # expand("PeakCalling/{Phenotype}.peaks.saf", Phenotype=ChromatinProfilingPhenotypes)
-        # expand("SplicingAnalysis/leafcutter/clustering/chr{chrom}/leafcutter_perind.counts.gz", chrom=autosomes),
         "SplicingAnalysis/leafcutter/clustering/autosomes/leafcutter_perind.counts.gz",
-        #expand("QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.pca", Phenotype=["chRNA.IR", "Expression.Splicing", "H3K4ME1", "H3K27AC", "CTCF", "H3K4ME3"]),
-        #"QTLs/QTLTools/Expression.Splicing/Genotypes/WholeGenome.vcf.gz",
         # "Multiqc/multiqc_report.html",
-        expand("QTLs/QTLTools/{Phenotype}/{Pass}.FDR_Added.txt.gz", Phenotype=MyPhenotypes, Pass=["PermutationPass", "NominalPass"]),
-        expand("featureCounts/{Phenotype}/NormFactors.tsv", Phenotype=["chRNA.Expression.Splicing", "Expression.Splicing", "H3K4ME1", "H3K4ME3", "H3K27AC", "CTCF"]),
-        "hyprcoloc/GenewiseSummaryStatsInput",
-        "hyprcoloc/GenewiseSummaryStatsInputHarmonizedSNPs",
+        expand(
+            "QTLs/QTLTools/{Phenotype}/{Pass}.FDR_Added.txt.gz",
+            Phenotype=MyPhenotypes,
+            Pass=["PermutationPass"],
+        ),
+        expand(
+            "featureCounts/{Phenotype}/NormFactors.tsv",
+            Phenotype=[
+                "chRNA.Expression.Splicing",
+                "Expression.Splicing",
+                "H3K4ME1",
+                "H3K4ME3",
+                "H3K27AC",
+                "CTCF",
+            ],
+        ),
         "ReferenceGenome/Annotations/GTFTools_BasicAnnotations/gencode.v34.chromasomal.tss.bed",
-        expand("featureCounts/AtTSS/{Phenotype}/Counts.txt", Phenotype=["H3K27AC", "H3K4ME3"]),
-        expand("featureCounts/{Phenotype}/Counts.txt", Phenotype=["MetabolicLabelled.30min", "MetabolicLabelled.60min"]),
-        #expand("QTLs/QTLTools/{Phenotype}/PermutationPass{QTLsGenotypeSet}ForColoc.txt.gz", Phenotype=PhenotypesToColoc, QTLsGenotypeSet=['', 'HarmonizedSNPs']),
-        #### Inserted by Carlos
         expand(
-            "IntronWindowCounts/{IndID}.{windowStyle}.bed.gz",
-            IndID = chRNASeqSamples_df['IndID'].unique(),
-            windowStyle=["IntronWindows_equalLength", "IntronWindows"],
+            "featureCounts/AtTSS/{Phenotype}/Counts.txt",
+            Phenotype=["H3K27AC", "H3K4ME3"],
         ),
         expand(
-            "slopes/{IndID}.tab.gz",
-            IndID = chRNASeqSamples_df['IndID'].unique(),
+            "featureCounts/{Phenotype}/Counts.txt",
+            Phenotype=["MetabolicLabelled.30min", "MetabolicLabelled.60min"],
         ),
         expand(
-            "slopes/{IndID}_glm.nb.tab.gz",
-            IndID = chRNASeqSamples_df['IndID'].unique(),
+            "gwas_summary_stats/full_data/{accession}.tsv.gz", accession=gwas_df.index
+        ),
+        expand(
+            "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.gz",
+            Phenotype=PhenotypesToColoc,
+            QTLsGenotypeSet=["", "HarmonizedSNPs"],
+            FeatureCoordinatesRedefinedFor=["", "ForColoc", "ForGWASColoc"],
+            Pass=["NominalPass", "PermutationPass"],
         ),
         "featureCounts/chRNA.Expression.Splicing/CountsExons.txt",
         "featureCounts/chRNA.Expression.Splicing/CountTable.MeanLogRPKM.txt.gz",
@@ -81,6 +111,22 @@ rule all:
             Phenotype = ["polyA.Expression", "chRNA.Expression", "MetabolicLabelled.30min", "MetabolicLabelled.60min"],
             ncRNA = ["eRNA", "cheRNA"]
         ),
+        expand("hyprcoloc/LociWiseSummaryStatsInput/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}", QTLsGenotypeSet = [""], FeatureCoordinatesRedefinedFor=["ForColoc", "ForGWASColoc"])
+        #### Inserted by Carlos
+        # expand(
+        #     "IntronWindowCounts/{IndID}.{windowStyle}.bed.gz",
+        #     IndID=chRNASeqSamples_df["IndID"].unique(),
+        #     windowStyle=["IntronWindows_equalLength", "IntronWindows"],
+        # ),
+        # expand(
+        #     "slopes/{IndID}.tab.gz",
+        #     IndID=chRNASeqSamples_df["IndID"].unique(),
+        # ),
+        # expand(
+        #     "slopes/{IndID}_glm.nb.tab.gz",
+        #     IndID=chRNASeqSamples_df["IndID"].unique(),
+        # ),
+
 
 rule Gather_chRNASeq_Fastq:
     """
@@ -88,5 +134,22 @@ rule Gather_chRNASeq_Fastq:
     identifying sample swaps and correcting them in samples.tsv config
     """
     input:
-        expand("Fastq/{Phenotype}/{IndID}/{Rep}.R1.fastq.gz", zip, Phenotype=chRNASeqSamples_df['Phenotype'], IndID=chRNASeqSamples_df['IndID'], Rep=chRNASeqSamples_df['RepNumber']),
+        expand(
+            "Fastq/{Phenotype}/{IndID}/{Rep}.R1.fastq.gz",
+            zip,
+            Phenotype=chRNASeqSamples_df["Phenotype"],
+            IndID=chRNASeqSamples_df["IndID"],
+            Rep=chRNASeqSamples_df["RepNumber"],
+        ),
 
+
+rule Gather_gwas_summary_stats:
+    """
+    invoke this as the target rule to download gwas summary stats. See the
+    gwas_df dataframe assigned in common.py.
+    """
+    input:
+        expand(
+            "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsForGWASColoc.sorted.qqnorm.bed.gz",
+            Phenotype=PhenotypesToColoc,
+        ),

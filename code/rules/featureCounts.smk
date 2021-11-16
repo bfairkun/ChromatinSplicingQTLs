@@ -20,7 +20,6 @@ rule featureCounts:
         featureCounts -p {params.extraParams} -T {threads} --ignoreDup --primary -a {input.annotations} -o {output} {input.bam} &> {log}
         """
 
-
 use rule featureCounts as featureCountsAtRegion with:
     input:
         bam = GetBamForPhenotype,

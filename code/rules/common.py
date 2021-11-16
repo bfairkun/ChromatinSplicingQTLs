@@ -7,7 +7,7 @@ autosomes = [str(i) for i in range(1,23)]
 
 N_PermutationChunks = 50
 MyPhenotypes = ["chRNA.IR", "Expression.Splicing", "chRNA.Expression.Splicing",  "H3K27AC", "CTCF", "H3K4ME3", "chRNA.Splicing", "polyA.Splicing", "MetabolicLabelled.30min", "MetabolicLabelled.60min", "Expression.Splicing.Subset_YRI", "polyA.Splicing.Subset_YRI"]
-PhenotypesToColoc = [p for p in MyPhenotypes if p not in ["chRNA.Splicing", "polyA.Splicing"]]
+PhenotypesToColoc = [p for p in MyPhenotypes if p not in ["chRNA.Splicing", "polyA.Splicing", "CTCF", "chRNA.IR"]]
 
 ## All Fastq samples
 Fastq_samples = pd.read_csv("config/samples.tsv", sep='\t', comment='#')
@@ -30,6 +30,11 @@ chRNASeqSamples_df = Fastq_samples.loc[ (Fastq_samples['Phenotype']=="chRNA.Expr
 
 # Get random sample for each phenotype
 Fastq_samples.groupby('Phenotype').apply(lambda x: x.sample(2, random_state=1)).reset_index(drop=True)
+
+# Read in table of GWAS summary stat links (obtained from GWAS catalog's online
+# interface)
+gwas_df = pd.read_csv("../data/list_gwas_summary_statistics_PMID27863252.csv", index_col='Study accession')
+
 
 # print(ChromatinProfilingPhenotypes)
 

@@ -10,14 +10,16 @@ rule ParseQTLtoolsOutputAndGetSE:
     hyprcoloc needs beta and standard error for each snp/phenotype pair. QTLtools outputs beta, and a nominal P-value, from which we can calculate t-statistic and get SE. The covariates used in QTL mapping are needed to count the degrees of freedom to get appropriate t-distribution.
     """
     input:
-        QTLtools_nominal_output = "QTLs/QTLTools/{Phenotype}/NominalPass{QTLsGenotypeSet}_ForColoc.txt.gz",
+        QTLtools_nominal_output = "QTLs/QTLTools/{Phenotype}/NominalPass{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.gz",
         vcf = GetQTLtoolsVcf,
         tbi = GetQTLtoolsVcfTbi,
         cov = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.pca"
     output:
-        "hyprcoloc/summarystats{QTLsGenotypeSet}/{Phenotype}.txt.gz",
+        "hyprcoloc/summarystats/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}/{Phenotype}.txt.gz",
+    wildcard_constraints:
+        FeatureCoordinatesRedefinedFor="|".join(["ForColoc", "ForGWASColoc"]),
     log:
-        "logs/ParseQTLtoolsOutputAndGetSE/{Phenotype}/{QTLsGenotypeSet}.log"
+        "logs/ParseQTLtoolsOutputAndGetSE/{FeatureCoordinatesRedefinedFor}/{Phenotype}/{QTLsGenotypeSet}.log"
     shell:
         """
         python scripts/AddSEToQTLtoolsOutput.py {input.QTLtools_nominal_output} {input.cov} {input.vcf} {output} &> {log}
@@ -25,11 +27,11 @@ rule ParseQTLtoolsOutputAndGetSE:
 
 rule SplitAndCombineSummaryStatsPerGene:
     input:
-        QTLtools_nominal_output = expand("hyprcoloc/summarystats{{QTLsGenotypeSet}}/{Phenotype}.txt.gz", Phenotype=PhenotypesToColoc)
+        QTLtools_nominal_output = expand("hyprcoloc/summarystats/{{QTLsGenotypeSet}}{{FeatureCoordinatesRedefinedFor}}/{Phenotype}.txt.gz", Phenotype=PhenotypesToColoc)
     output:
-        directory("hyprcoloc/GenewiseSummaryStatsInput{QTLsGenotypeSet}")
+        directory("hyprcoloc/LociWiseSummaryStatsInput/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}")
     log:
-        "logs/SplitAndCombineSummaryStatsPerGene.{QTLsGenotypeSet}.log"
+        "logs/SplitAndCombineSummaryStatsPerGene.{QTLsGenotypeSet}.{FeatureCoordinatesRedefinedFor}.log"
     shell:
         """
         python scripts/CombineAndSplitSummaryStatsForColoc.py {output}/ {input} &> {log}
