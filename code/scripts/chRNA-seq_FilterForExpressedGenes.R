@@ -6,8 +6,6 @@ library(gplots)
 # Rscript to filter introns bed for introns in expressed host genes
 # """
 
-print('hola como estas')
-
 CountTable  <- read_delim("featureCounts/chRNA.Expression.Splicing/Counts.txt", delim='\t', comment='#')# %>%
 #    rename_if(str_detect(names(.), "/"), funs(str_replace(., ".+/(.+)$", "\\1")))
 
@@ -20,7 +18,7 @@ Gtf <- read_delim("ReferenceGenome/Annotations/gencode.v34.primary_assembly.anno
 ProteinCodingGenes <-
     Gtf %>%
     filter(feature=="transcript") %>%
-    filter(str_detect(attribute, 'gene_type "protein_coding"')) %>%
+#     filter(str_detect(attribute, 'gene_type "protein_coding"')) %>%
     mutate(gene = str_replace(attribute, 'gene_id "(.+?)".+', "\\1")) %>%
     mutate(transcript = str_replace(attribute, '.+?transcript_id "(.+?)".+$', "\\1")) %>%
     dplyr::select(gene, transcript)

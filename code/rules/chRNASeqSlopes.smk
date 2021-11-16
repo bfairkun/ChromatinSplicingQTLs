@@ -1,3 +1,25 @@
+rule featureCountsExons:
+    input:
+        bam = GetBamForPhenotype,
+        annotations = GetAnnotationsForPhenotype
+    output:
+        "featureCounts/{Phenotype}/CountsExons.txt"
+    params:
+        extraParams = GetFeatureCountsParams,
+    threads:
+        8
+    wildcard_constraints:
+        Phenotype = "chRNA.Expression.Splicing"
+    resources:
+        mem = 12000,
+        cpus_per_node = 9,
+    log:
+        "logs/featureCounts/{Phenotype}.log"
+    shell:
+        """
+        featureCounts -p {params.extraParams} -f -t exon -g exon_id -T {threads} --ignoreDup --primary -a {input.annotations} -o {output} {input.bam} &> {log}
+        """
+
 rule GetGenomeElements:
     input: 
         gtf = "ReferenceGenome/Annotations/gencode.v34.primary_assembly.annotation.gtf",

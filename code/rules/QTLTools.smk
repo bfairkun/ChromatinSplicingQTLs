@@ -323,25 +323,25 @@ use rule MakePhenotypeTableToColocPeaksWithGenes as MakePhenotypeTableToColocGen
         bedtools_intersect_params = "-s -f 1 -r",
         coloc_window = 100000,
 
-#rule QTLtools_cis_nominal_pass_for_coloc:
-#    input:
-#        vcf = GetQTLtoolsVcf,
-#        tbi = GetQTLtoolsVcfTbi,
-#        bed = "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsForColoc.sorted.qqnorm.bed.gz",
-#        bed_tbi = "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsForColoc.sorted.qqnorm.bed.gz.tbi",
-#        cov = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.pca"
-#    output:
-#        temp("QTLs/QTLTools/{Phenotype}/NominalPass{QTLsGenotypeSet}_ForColocChunks/{n}.txt"),
-#    log:
-#        "logs/QTLtools_cis_nominal_pass_for_coloc/{Phenotype}.{QTLsGenotypeSet}/{n}.log"
-#    resources:
-#        mem_mb = 16000
-#    params:
-#        extra = ""
-#    shell:
-#        """
-#        QTLtools_1.2_CentOS7.8_x86_64 cis  --vcf {input.vcf} --bed {input.bed} --cov {input.cov} --out {output}  --nominal 1 --window 0 --#chunk {wildcards.n} {N_PermutationChunks} {params.extra} &> {log}
-#        """
+rule QTLtools_cis_nominal_pass_for_coloc:
+    input:
+        vcf = GetQTLtoolsVcf,
+        tbi = GetQTLtoolsVcfTbi,
+        bed = "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsForColoc.sorted.qqnorm.bed.gz",
+        bed_tbi = "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsForColoc.sorted.qqnorm.bed.gz.tbi",
+        cov = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.pca"
+    output:
+        temp("QTLs/QTLTools/{Phenotype}/NominalPass{QTLsGenotypeSet}_ForColocChunks/{n}.txt"),
+    log:
+        "logs/QTLtools_cis_nominal_pass_for_coloc/{Phenotype}.{QTLsGenotypeSet}/{n}.log"
+    resources:
+        mem_mb = 16000
+    params:
+        extra = ""
+    shell:
+        """
+        QTLtools_1.2_CentOS7.8_x86_64 cis  --vcf {input.vcf} --bed {input.bed} --cov {input.cov} --out {output}  --nominal 1 --window 0 --chunk {wildcards.n} {N_PermutationChunks} {params.extra} &> {log}
+        """
 
 #use rule Gather_QTLtools_cis_permutation_pass as Gather_QTLtools_cis_nominal_pass_ForColoc with:
 #    input:

@@ -159,6 +159,14 @@ def GetAnnotationsForPhenotype(wildcards):
         return "PeakCalling/{Phenotype}_peaks.narrowPeak.saf"
     elif wildcards.Phenotype in ["H3K4ME3", "H3K36ME3", "POL2S2", "POL2S5", "H3K9ME3", "H3K79ME2"]:
         return "PeakCalling/{Phenotype}_peaks.broadPeak.saf"
+    
+    
+def PairedEndParams(wildcards):
+    if wildcards.Phenotype in ["MetabolicLabelled.30min", "MetabolicLabelled.60min"]:
+        return ""
+    else:
+        return "-p"
+
 
 def GetFeatureCountsParams(wildcards):
     if wildcards.Phenotype == "chRNA.Expression":

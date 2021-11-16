@@ -16,6 +16,7 @@ include: "rules/QTLTools.smk"
 include: "rules/Coloc.smk"
 include: "rules/report.smk"
 include: "rules/BensJupyterNotebookRules.smk"
+include: "rules/getNonCodingRNA.smk"
 
 ## Inserted by Carlos
 include: "rules/chRNASeqSlopes.smk"
@@ -72,6 +73,13 @@ rule all:
         expand(
             "slopes/{IndID}_glm.nb.tab.gz",
             IndID = chRNASeqSamples_df['IndID'].unique(),
+        ),
+        "featureCounts/chRNA.Expression.Splicing/CountsExons.txt",
+        "featureCounts/chRNA.Expression.Splicing/CountTable.MeanLogRPKM.txt.gz",
+        expand(
+            "featureCounts/{Phenotype}_{ncRNA}/Counts.txt",
+            Phenotype = ["polyA.Expression", "chRNA.Expression", "MetabolicLabelled.30min", "MetabolicLabelled.60min"],
+            ncRNA = ["eRNA", "cheRNA"]
         ),
 
 rule Gather_chRNASeq_Fastq:
