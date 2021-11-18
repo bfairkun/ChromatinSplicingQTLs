@@ -33,3 +33,20 @@ rule ConcatGwasLeadSnpWindows:
         """
         cat {input} | bedtools sort -i - > {output}
         """
+
+rule GetGWASSummaryStatsAtLeadSNPWindows:
+    """
+    # TODO: a bedtools command to get the summary stats for snps over the lead
+    # snp windows, since eventually we will want to read into R to run
+    # hyprcoloc, and it will be unweildy and memory intensive to have to read
+    # in huge genomewide summary stats and filter for the snps in R
+    """
+    input:
+        signif_loci = "gwas_summary_stats/leadSnps/{accession}.bed"
+    output:
+        signif_loci = "gwas_summary_stats/leadSnpWindowStats/{accession}.bed"
+    log:
+        "logs/GetGWASSummaryStatsAtLeadSNPWindows.log"
+    shell:
+        """
+        """

@@ -199,6 +199,8 @@ rule QTLtools_generalized:
         "logs/QTLtools_cis_permutation_pass/{Phenotype}.{Pass}.{QTLsGenotypeSet}.{FeatureCoordinatesRedefinedFor}/{n}.log"
     resources:
         mem_mb = 8000
+    envmodules:
+        "gsl/2.5"
     params:
         Flags = GetQTLtoolsFlags,
         PassFlags = GetQTLtoolsPassFlags
@@ -221,11 +223,11 @@ rule Gather_QTLtools_cis_pass:
 
 rule AddQValueToPermutationPass:
     input:
-        "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}.txt.gz"
+        "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.gz"
     output:
-        table = "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}.FDR_Added.txt.gz",
+        table = "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.FDR_Added.txt.gz",
     log:
-        "logs/AddQValueToPermutationPass/{Phenotype}.{Pass}.{QTLsGenotypeSet}.log"
+        "logs/AddQValueToPermutationPass/{Phenotype}.{Pass}.{QTLsGenotypeSet}.{FeatureCoordinatesRedefinedFor}.log"
     conda:
         "../envs/r_essentials.yml"
     priority:
@@ -302,7 +304,7 @@ rule MakePhenotypeTableToColocFeaturesWithGWASLoci:
         "logs/MakePhenotypeTableToColocFeaturesWithGWASLoci/{Phenotype}.log"
     shell:
         """
-        cat <(zcat {input.bed} | head -1) <(  bedtools intersect  -wo -a {input.bed} -b {input.loci} -sorted | awk -F'\\t' -v OFS='\\t' '{{$4=$4":"$(NF-1); $5=$(NF-1); $2=$(NF-3); $3=$(NF-2); print $0}}' | rev | cut -f 6- | rev ) | tr ' ' '\\t' | bedtools sort -i - -header | bgzip /dev/stdin -c > {output.bed}
+        (cat <(zcat {input.bed} | head -1) <(  bedtools intersect  -wo -a {input.bed} -b {input.loci} -sorted | awk -F'\\t' -v OFS='\\t' '{{$4=$4":"$(NF-1); $5=$(NF-1); $2=$(NF-3); $3=$(NF-2); print $0}}' | rev | cut -f 6- | rev ) | tr ' ' '\\t' | bedtools sort -i - -header | bgzip /dev/stdin -c > {output.bed} ) &> {log}
         tabix -p bed {output.bed}
         """
 

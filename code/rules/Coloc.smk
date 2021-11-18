@@ -1,10 +1,3 @@
-# rule SplitNominalPassBeforeCalculatingSE:
-#     input:
-#         QTLtools_nominal_output = "QTLs/QTLTools/{Phenotype}/NominalPass{QTLsGenotypeSet}_ForColoc.txt.gz",
-#     output:
-# [str(i).zfill(2) for i in list(range(0,100))]
-
-
 rule ParseQTLtoolsOutputAndGetSE:
     """
     hyprcoloc needs beta and standard error for each snp/phenotype pair. QTLtools outputs beta, and a nominal P-value, from which we can calculate t-statistic and get SE. The covariates used in QTL mapping are needed to count the degrees of freedom to get appropriate t-distribution.

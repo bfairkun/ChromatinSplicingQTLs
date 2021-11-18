@@ -152,4 +152,4 @@ rule Gather_gwas_summary_stats:
             "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsForGWASColoc.sorted.qqnorm.bed.gz",
             Phenotype=PhenotypesToColoc,
         ),
-        expand("QTLs/QTLTools/{Phenotype}/NominalPass{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.gz", Phenotype=PhenotypesToColoc, QTLsGenotypeSet="", FeatureCoordinatesRedefinedFor="ForGWASColoc"),
+        expand("QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.gz", Pass=["NominalPass", "PermutationPass"], Phenotype=PhenotypesToColoc, QTLsGenotypeSet="", FeatureCoordinatesRedefinedFor="ForGWASColoc"),
