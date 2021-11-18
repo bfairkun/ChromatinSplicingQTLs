@@ -111,7 +111,6 @@ rule all:
             Phenotype = ["polyA.Expression", "chRNA.Expression", "MetabolicLabelled.30min", "MetabolicLabelled.60min"],
             ncRNA = ["eRNA", "cheRNA"]
         ),
-        expand("hyprcoloc/LociWiseSummaryStatsInput/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}", QTLsGenotypeSet = [""], FeatureCoordinatesRedefinedFor=["ForColoc", "ForGWASColoc"])
         #### Inserted by Carlos
         # expand(
         #     "IntronWindowCounts/{IndID}.{windowStyle}.bed.gz",
@@ -153,3 +152,4 @@ rule Gather_gwas_summary_stats:
             "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsForGWASColoc.sorted.qqnorm.bed.gz",
             Phenotype=PhenotypesToColoc,
         ),
+        expand("QTLs/QTLTools/{Phenotype}/NominalPass{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.gz", Phenotype=PhenotypesToColoc, QTLsGenotypeSet="", FeatureCoordinatesRedefinedFor="ForGWASColoc"),

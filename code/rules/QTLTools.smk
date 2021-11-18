@@ -169,7 +169,8 @@ def GetQTLtoolsBedTbi(wildcards):
 
 def GetQTLtoolsFlags(wildcards):
     if wildcards.FeatureCoordinatesRedefinedFor in ["ForColoc", "ForGWASColoc" ]:
-        return "--window 0"
+        # using --window 0 sometimes results in errors (exit code 139). No idea why
+        return "--window 1"
     else:
         if wildcards.Phenotype in ["polyA.Splicing", "chRNA.Splicing", "polyA.Splicing.Subset_YRI"]:
             return "--grp-best --window 10000"
@@ -203,7 +204,7 @@ rule QTLtools_generalized:
         PassFlags = GetQTLtoolsPassFlags
     shell:
         """
-        QTLtools_1.2_CentOS7.8_x86_64 cis --chunk {wildcards.n} {N_PermutationChunks} --vcf {input.vcf} --bed {input.bed} --cov {input.cov} --out {output} {params.Flags} {params.PassFlags} &> {log}
+        {config[QTLtools]} cis --std-err --chunk {wildcards.n} {N_PermutationChunks} --vcf {input.vcf} --bed {input.bed} --cov {input.cov} --out {output} {params.Flags} {params.PassFlags} &> {log}
         """
 
 rule Gather_QTLtools_cis_pass:
@@ -301,7 +302,7 @@ rule MakePhenotypeTableToColocFeaturesWithGWASLoci:
         "logs/MakePhenotypeTableToColocFeaturesWithGWASLoci/{Phenotype}.log"
     shell:
         """
-        cat <(zcat {input.bed} | head -1) <(  bedtools intersect  -wo -a {input.bed} -b {input.loci} -sorted | awk -F'\\t' -v OFS='\\t' '{{$4=$4":"$(NF-1); $5=$(NF-1); $2=$(NF-3); $3=$(NF-2); print $0}}' | rev | cut -f 6- | rev | head  ) | tr ' ' '\\t' | bgzip /dev/stdin -c > {output.bed}
+        cat <(zcat {input.bed} | head -1) <(  bedtools intersect  -wo -a {input.bed} -b {input.loci} -sorted | awk -F'\\t' -v OFS='\\t' '{{$4=$4":"$(NF-1); $5=$(NF-1); $2=$(NF-3); $3=$(NF-2); print $0}}' | rev | cut -f 6- | rev ) | tr ' ' '\\t' | bedtools sort -i - -header | bgzip /dev/stdin -c > {output.bed}
         tabix -p bed {output.bed}
         """
 

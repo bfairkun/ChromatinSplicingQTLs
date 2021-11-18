@@ -9,6 +9,11 @@ scratch: "/scratch/midway2/bjf79/"
 #Define fastq samples to process
 samples: samples.tsv
 
+# QTLtools v1.3 executable path
+# This executable was compiled on RCC Midway and requires `module load
+# gsl/2.5`. I put that module load statement in my bashrc
+QTLtools: "scripts/QTLtools"
+
 # key for faster downloading of public fastq samples with aspera instead of
 # ftp.  Leave blank if not using aspera. wget/curl can be used with ftp/http
 # links can be used instead if defined in samples, but aspera tends to just
