@@ -22,7 +22,6 @@ include: "rules/GWAS_PrepForColoc.smk"
 include: "rules/chRNASeqSlopes.smk"
 
 
-
 wildcard_constraints:
     chrom="|".join(autosomes),
     IndID="|".join(Fastq_samples["IndID"]),
@@ -108,8 +107,13 @@ rule all:
         "featureCounts/chRNA.Expression.Splicing/CountTable.MeanLogRPKM.txt.gz",
         expand(
             "featureCounts/{Phenotype}_{ncRNA}/Counts.txt",
-            Phenotype = ["polyA.Expression", "chRNA.Expression", "MetabolicLabelled.30min", "MetabolicLabelled.60min"],
-            ncRNA = ["eRNA", "cheRNA"]
+            Phenotype=[
+                "polyA.Expression",
+                "chRNA.Expression",
+                "MetabolicLabelled.30min",
+                "MetabolicLabelled.60min",
+            ],
+            ncRNA=["eRNA", "cheRNA"],
         ),
         #### Inserted by Carlos
         # expand(
@@ -149,7 +153,13 @@ rule Gather_gwas_summary_stats:
     """
     input:
         expand(
-            "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsForGWASColoc.sorted.qqnorm.bed.gz",
-            Phenotype=PhenotypesToColoc,
+            "gwas_summary_stats/leadSnpWindowStats/{accession}.tsv.gz",
+            accession=gwas_df.index,
         ),
-        expand("QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.gz", Pass=["NominalPass", "PermutationPass"], Phenotype=PhenotypesToColoc, QTLsGenotypeSet="", FeatureCoordinatesRedefinedFor="ForGWASColoc"),
+        expand(
+            "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.gz",
+            Pass=["NominalPass", "PermutationPass"],
+            Phenotype=PhenotypesToColoc,
+            QTLsGenotypeSet="",
+            FeatureCoordinatesRedefinedFor="ForGWASColoc",
+        ),
