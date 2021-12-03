@@ -17,7 +17,7 @@ include: "rules/QTLTools.smk"
 include: "rules/Coloc.smk"
 include: "rules/report.smk"
 include: "rules/BensJupyterNotebookRules.smk"
-include: "rules/getNonCodingRNA.smk"
+include: "rules/GetNonCodingRNA.smk"
 include: "rules/GWAS_PrepForColoc.smk"
 include: "rules/chRNASeqSlopes.smk"
 
@@ -94,9 +94,9 @@ rule all:
             "featureCounts/{Phenotype}/Counts.txt",
             Phenotype=["MetabolicLabelled.30min", "MetabolicLabelled.60min"],
         ),
-        expand(
-            "gwas_summary_stats/full_data/{accession}.tsv.gz", accession=gwas_df.index
-        ),
+        ###expand(
+        ###    "gwas_summary_stats/full_data/{accession}.tsv.gz", accession=gwas_df.index
+        ###),
         expand(
             "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.gz",
             Phenotype=PhenotypesToColoc,
@@ -111,7 +111,7 @@ rule all:
             Phenotype = ["polyA.Expression", "chRNA.Expression", "MetabolicLabelled.30min", "MetabolicLabelled.60min"],
             ncRNA = ["eRNA", "cheRNA"]
         ),
-        expand("hyprcoloc/LociWiseSummaryStatsInput/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}", QTLsGenotypeSet = [""], FeatureCoordinatesRedefinedFor=["ForColoc", "ForGWASColoc"])
+        ###expand("hyprcoloc/LociWiseSummaryStatsInput/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}", QTLsGenotypeSet = [""], FeatureCoordinatesRedefinedFor=["ForColoc", "ForGWASColoc"])
         #### Inserted by Carlos
         # expand(
         #     "IntronWindowCounts/{IndID}.{windowStyle}.bed.gz",

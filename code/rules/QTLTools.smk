@@ -279,6 +279,9 @@ use rule MakePhenotypeTableToColocPeaksWithGenes as MakePhenotypeTableToColocGen
         bedtools_intersect_params = "-s -f 1 -r",
         coloc_window = 100000,
 
+#"|".join(['Expression.Splicing.Subset_YRI', 'chRNA.Expression.Splicing', 'Expression.Splicing', 'MetabolicLabelled.30min', 
+#          'MetabolicLabelled.60min', 'polyA.Expression.AllRNA.Subset_YRI', 'MetabolicLabelled.30min.AllRNA.Subset_YRI',
+#          'MetabolicLabelled.60min.AllRNA.Subset_YRI', 'chRNA.Expression.AllRNA.Subset_YRI'])
 
 rule MakePhenotypeTableToColocFeaturesWithGWASLoci:
     """
