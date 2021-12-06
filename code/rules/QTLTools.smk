@@ -169,7 +169,8 @@ def GetQTLtoolsBedTbi(wildcards):
 
 def GetQTLtoolsFlags(wildcards):
     if wildcards.FeatureCoordinatesRedefinedFor in ["ForColoc", "ForGWASColoc" ]:
-        return "--window 0"
+        # using --window 0 sometimes results in errors (exit code 139). No idea why
+        return "--window 1"
     else:
         if wildcards.Phenotype in ["polyA.Splicing", "chRNA.Splicing", "polyA.Splicing.Subset_YRI"]:
             return "--grp-best --window 10000"
@@ -198,12 +199,14 @@ rule QTLtools_generalized:
         "logs/QTLtools_cis_permutation_pass/{Phenotype}.{Pass}.{QTLsGenotypeSet}.{FeatureCoordinatesRedefinedFor}/{n}.log"
     resources:
         mem_mb = 8000
+    envmodules:
+        "gsl/2.5"
     params:
         Flags = GetQTLtoolsFlags,
         PassFlags = GetQTLtoolsPassFlags
     shell:
         """
-        QTLtools_1.2_CentOS7.8_x86_64 cis --chunk {wildcards.n} {N_PermutationChunks} --vcf {input.vcf} --bed {input.bed} --cov {input.cov} --out {output} {params.Flags} {params.PassFlags} &> {log}
+        {config[QTLtools]} cis --std-err --chunk {wildcards.n} {N_PermutationChunks} --vcf {input.vcf} --bed {input.bed} --cov {input.cov} --out {output} {params.Flags} {params.PassFlags} &> {log}
         """
 
 rule Gather_QTLtools_cis_pass:
@@ -220,11 +223,11 @@ rule Gather_QTLtools_cis_pass:
 
 rule AddQValueToPermutationPass:
     input:
-        "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}.txt.gz"
+        "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.gz"
     output:
-        table = "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}.FDR_Added.txt.gz",
+        table = "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.FDR_Added.txt.gz",
     log:
-        "logs/AddQValueToPermutationPass/{Phenotype}.{Pass}.{QTLsGenotypeSet}.log"
+        "logs/AddQValueToPermutationPass/{Phenotype}.{Pass}.{QTLsGenotypeSet}.{FeatureCoordinatesRedefinedFor}.log"
     conda:
         "../envs/r_essentials.yml"
     priority:
@@ -259,7 +262,7 @@ rule MakePhenotypeTableToColocPeaksWithGenes:
         Phenotype = "H3K4ME3|H3K27AC|H3K4ME1|CTCF"
     shell:
         """
-        cat <(zcat {input.bed} | head -1) <(bedtools slop -i {input.genes} -b {params.cis_window} -g {input.fai} | bedtools intersect -b {input.bed} -a - -sorted -wo {params.bedtools_intersect_params} | awk -F'\\t' -v OFS='\\t' '{{$10="{wildcards.Phenotype}:"$4":"$10; $11=$4; print $0}}' | rev | cut -d$'\\t' -f2- | rev | cut -d$'\\t' -f 4,7- | sort | join -t$'\\t' <(awk -F'\\t' -v OFS='\\t' '{{print $4, $0}}' {input.genes} | sort) - | cut -d$'\\t' -f 2-4,11- | bedtools slop -i - -b {params.coloc_window} -g {input.fai} ) | bedtools sort -i - -header | bgzip /dev/stdin -c > {output.bed}
+        cat <(zcat {input.bed} | head -1) <(bedtools slop -i {input.genes} -b {params.cis_window} -g {input.fai} | bedtools intersect -b {input.bed} -a - -sorted -wo {params.bedtools_intersect_params} | awk -F'\\t' -v OFS='\\t' '{{$10=$4":"$10; $11=$4; print $0}}' | rev | cut -d$'\\t' -f2- | rev | cut -d$'\\t' -f 4,7- | sort | join -t$'\\t' <(awk -F'\\t' -v OFS='\\t' '{{print $4, $0}}' {input.genes} | sort) - | cut -d$'\\t' -f 2-4,11- | bedtools slop -i - -b {params.coloc_window} -g {input.fai} ) | bedtools sort -i - -header | bgzip /dev/stdin -c > {output.bed}
         tabix -p bed {output.bed}
         """
 
@@ -304,7 +307,7 @@ rule MakePhenotypeTableToColocFeaturesWithGWASLoci:
         "logs/MakePhenotypeTableToColocFeaturesWithGWASLoci/{Phenotype}.log"
     shell:
         """
-        cat <(zcat {input.bed} | head -1) <(  bedtools intersect  -wo -a {input.bed} -b {input.loci} -sorted | awk -F'\\t' -v OFS='\\t' '{{$4=$4":"$(NF-1); $5=$(NF-1); $2=$(NF-3); $3=$(NF-2); print $0}}' | rev | cut -f 6- | rev | head  ) | tr ' ' '\\t' | bgzip /dev/stdin -c > {output.bed}
+        (cat <(zcat {input.bed} | head -1) <(  bedtools intersect  -wo -a {input.bed} -b {input.loci} -sorted | awk -F'\\t' -v OFS='\\t' '{{$4=$4":"$(NF-1); $5=$(NF-1); $2=$(NF-3); $3=$(NF-2); print $0}}' | rev | cut -f 6- | rev ) | tr ' ' '\\t' | bedtools sort -i - -header | bgzip /dev/stdin -c > {output.bed} ) &> {log}
         tabix -p bed {output.bed}
         """
 

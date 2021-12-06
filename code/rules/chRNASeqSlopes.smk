@@ -111,7 +111,7 @@ rule CountReadsInIntronWindows:
     output:
         bed = "IntronWindowCounts/{IndID}.{windowStyle}.bed.gz"
     wildcard_constraints:
-        IndID = "|".join(chRNASeqSamples_df['IndID'].unique()),
+        IndID = "|".join(chRNASeqSamples),
         windowStyle="|".join(["IntronWindows_equalLength", "IntronWindows"])
     shell:
         """
@@ -138,7 +138,7 @@ rule GetSlopes:
     conda:
         "../envs/r_essentials.yml"
     wildcard_constraints:
-        IndID = "|".join(chRNASeqSamples_df['IndID'].unique()),
+        IndID = "|".join(chRNASeqSamples),
     log:
         "logs/slopes/{IndID}.slope.log"
     shell:

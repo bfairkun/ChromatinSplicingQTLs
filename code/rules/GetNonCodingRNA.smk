@@ -4,7 +4,7 @@ rule get_eRNA_saf:
     input:
         "QTLs/QTLTools/ProCap/OnlyFirstReps.qqnorm.bed.gz",
     output:
-        "ReferenceGenome/Annotations/eRNA.saf",
+        "../eRNA.saf",
     log:
         "logs/eRNA_reference.log"
     shell:
@@ -15,8 +15,8 @@ rule get_eRNA_saf:
 rule featureCountsNonCoding:
     input:
         bam = GetBamForPhenotype,
-        eRNA = "ReferenceGenome/Annotations/eRNA.saf",
-        cheRNA = "ReferenceGenome/Annotations/cheRNA_K562_GSE83531.saf",
+        eRNA = "../data/eRNA.saf",
+        cheRNA = "../data/cheRNA_K562_GSE83531.saf",
     output:
         "featureCounts/{Phenotype}_eRNA/Counts.txt",
         "featureCounts/{Phenotype}_cheRNA/Counts.txt",
@@ -102,6 +102,8 @@ rule PrepareAllRNACountsForQTLTools:
     wildcard_constraints:
         Phenotype = "|".join(["polyA.Expression", "chRNA.Expression", "MetabolicLabelled.30min", "MetabolicLabelled.60min"]),
         ncRNA = "|".join(["eRNA", "cheRNA", "snoRNA", "lncRNA"])
+    conda:
+        "../envs/r_essentials.yml"
     shell:
         """
         Rscript scripts/PreparePhenotypeTablesNonCodingRNA.R {input.featureCounts} {output.FirstReps} &> {log}

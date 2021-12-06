@@ -42,6 +42,10 @@ AllBams = AllChromatinProfilingBams + AllRNASeqBams
 AllBais = [fn + ".bai" for fn in AllChromatinProfilingBams]
 chRNASeqSamples_df = Fastq_samples.loc[ (Fastq_samples['Phenotype']=="chRNA.Expression.Splicing") , ['Phenotype', 'IndID', 'RepNumber'] ].drop_duplicates()
 
+
+igsr_samples = pd.read_csv('../data/igsr_samples.tsv.gz', sep='\t', index_col=0)
+chRNASeqSamples = list(pd.Index(chRNASeqSamples_df['IndID'].unique()).intersection(igsr_samples.index))
+
 # Get random sample for each phenotype
 Fastq_samples.groupby('Phenotype').apply(lambda x: x.sample(2, random_state=1)).reset_index(drop=True)
 

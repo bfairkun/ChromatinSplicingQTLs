@@ -12,4 +12,4 @@ eRNA_SAF['Start'] = list(ProCap_enhancer.start - 200)
 eRNA_SAF['End'] = list(ProCap_enhancer.end + 200)
 eRNA_SAF['Strand'] = list(ProCap_enhancer.strand)
 
-eRNA_SAF.to_csv('ReferenceGenome/Annotations/eRNA.saf', index=False, header=True, sep='\t')
+eRNA_SAF.to_csv('../data/eRNA.saf', index=False, header=True, sep='\t')

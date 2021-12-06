@@ -1,40 +1,38 @@
-# rule SplitNominalPassBeforeCalculatingSE:
-#     input:
-#         QTLtools_nominal_output = "QTLs/QTLTools/{Phenotype}/NominalPass{QTLsGenotypeSet}_ForColoc.txt.gz",
-#     output:
-# [str(i).zfill(2) for i in list(range(0,100))]
-
-
-rule ParseQTLtoolsOutputAndGetSE:
+rule SplitAndCombineSummaryStatsPerLocus:
     """
-    hyprcoloc needs beta and standard error for each snp/phenotype pair. QTLtools outputs beta, and a nominal P-value, from which we can calculate t-statistic and get SE. The covariates used in QTL mapping are needed to count the degrees of freedom to get appropriate t-distribution.
+    since hyprcoloc will require reading in summary stat data in R, it will be
+    more convenient if the summary stats were organized into smaller files so
+    we don't have to read in huge files into R. Also, it is sort of pointless
+    to attempt colocalization on molecular traits that don't have an QTL
+    signal. Therefore, this script reads the QTLtools output files for multiple
+    phenotypes, and writes out the necessary summary stats for all phenotypes
+    to new smaller files (one file for each gwas trait or gene) if they pass
+    some minimum Pvalue treshold from the QTLtools permutation test.  TODO:
+    This rule takes a long time to run. It might be convenient to parallelize
+    computation somehow
     """
     input:
-        QTLtools_nominal_output = "QTLs/QTLTools/{Phenotype}/NominalPass{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.gz",
-        vcf = GetQTLtoolsVcf,
-        tbi = GetQTLtoolsVcfTbi,
-        cov = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.pca"
-    output:
-        "hyprcoloc/summarystats/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}/{Phenotype}.txt.gz",
-    wildcard_constraints:
-        FeatureCoordinatesRedefinedFor="|".join(["ForColoc", "ForGWASColoc"]),
-    log:
-        "logs/ParseQTLtoolsOutputAndGetSE/{FeatureCoordinatesRedefinedFor}/{Phenotype}/{QTLsGenotypeSet}.log"
-    shell:
-        """
-        python scripts/AddSEToQTLtoolsOutput.py {input.QTLtools_nominal_output} {input.cov} {input.vcf} {output} &> {log}
-        """
-
-rule SplitAndCombineSummaryStatsPerGene:
-    input:
-        QTLtools_nominal_output = expand("hyprcoloc/summarystats/{{QTLsGenotypeSet}}{{FeatureCoordinatesRedefinedFor}}/{Phenotype}.txt.gz", Phenotype=PhenotypesToColoc)
+        zip( expand(
+            "QTLs/QTLTools/{Phenotype}/{Pass}{{QTLsGenotypeSet}}{{FeatureCoordinatesRedefinedFor}}.txt.gz",
+            Pass="PermutationPass",
+            Phenotype=PhenotypesToColoc,
+        ),
+        expand(
+            "QTLs/QTLTools/{Phenotype}/{Pass}{{QTLsGenotypeSet}}{{FeatureCoordinatesRedefinedFor}}.txt.gz",
+            Pass="NominalPass",
+            Phenotype=PhenotypesToColoc,
+        ))
     output:
         directory("hyprcoloc/LociWiseSummaryStatsInput/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}")
     log:
         "logs/SplitAndCombineSummaryStatsPerGene.{QTLsGenotypeSet}.{FeatureCoordinatesRedefinedFor}.log"
+    params:
+        MinNominalP = 0.01
+    wildcard_constraints:
+        FeatureCoordinatesRedefinedFor = "ForGWASColoc|ForColoc"
     shell:
         """
-        python scripts/CombineAndSplitSummaryStatsForColoc.py {output}/ {input} &> {log}
+        python scripts/CombineAndSplitSummaryStatsForGWASColoc.py {output}/ {params.MinNominalP} {input} &> {log}
         """
 
 rule InstallHyprcoloc:

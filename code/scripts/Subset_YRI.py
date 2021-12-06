@@ -14,13 +14,13 @@ if __name__ == '__main__':
                                  sep='\t', skiprows=1, index_col=0)
     
     ncRNA_counts = ncRNA_counts[[x for x in ncRNA_counts.columns if x[-5:-1] != 'bam.']]
-    RNA_cols = [x for x in ncRNA_counts.columns if (('/2/' not in x) and ('/3/' not in x))]
+    RNA_cols = [x for x in ncRNA_counts.columns if (('/2/' not in x) and ('/3/' not in x) and ('Unchecked' not in x))]
     ncRNA_counts = ncRNA_counts[RNA_cols]
     
     ncRNA_counts.columns = [x if x[-3:] != 'bam' else x.split('/')[-3] for x in ncRNA_counts.columns]
     
-    RNA_cols = list(ncRNA_counts.columns[:6])
-    samples = ncRNA_counts.columns[6:]
+    RNA_cols = list(ncRNA_counts.columns[:5])
+    samples = ncRNA_counts.columns[5:]
     
     
     Fastq_samples = pd.read_csv('config/samples.tsv', sep='\t', comment='#')

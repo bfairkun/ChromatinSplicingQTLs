@@ -79,7 +79,6 @@ dependencies:
   - libffi=3.3=he6710b0_2
   - libgcc-devel_linux-64=9.3.0=hb95220a_17
   - libgcc-ng=9.3.0=h2828fa1_19
-  - libgfortran-ng=9.3.0=ha5ec8a7_17
   - libgfortran5=9.3.0=ha5ec8a7_17
   - libglib=2.68.2=h3e27bee_0
   - libgomp=9.3.0=h2828fa1_19
