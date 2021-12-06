@@ -34,7 +34,7 @@ rule GetLogRPKM:
     input:
         gtf = "ReferenceGenome/Annotations/gencode.v34.primary_assembly.annotation.gtf",
         CountTable = "featureCounts/chRNA.Expression.Splicing/Counts.txt",
-        bed = "ReferenceGenome/Annotations/Introns.GencodeV34.hg38.UCSC.bed.gz",
+        bed = "../data/Introns.GencodeV34.hg38.UCSC.bed.gz",
     output:
         "featureCounts/chRNA.Expression.Splicing/CountTable.MeanLogRPKM.txt.gz",
         "Misc/GencodeHg38_all_introns.expressedHostGenes.bed.gz"

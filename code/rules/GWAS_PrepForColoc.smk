@@ -51,5 +51,5 @@ rule GetGWASSummaryStatsAtLeadSNPWindows:
         "logs/GetGWASSummaryStatsAtLeadSNPWindows/{accession}.log"
     shell:
         """
-        (cat <(zcat {input.summarystats} | head -1 | cut -f1-12 ) <(zcat {input.summarystats} | cut -f1-12 | awk -F'\\t' -v OFS='\\t' '$1!="NA" && NR>1 {{print "chr"$3, $4, $4+1, $0}}' |  bedtools intersect -a - -wa -b {input.signif_loci} | cut --complement -f1-3) | gzip - > {output}) &> {log}
+        (cat <(zcat {input.summarystats} | head -1 | cut -f1-12,22-23 | awk -F'\\t' -v OFS='\\t' '{{ print $0, "lead_snp" }}' ) <(zcat {input.summarystats} | cut -f1-12,22-23 | awk -F'\\t' -v OFS='\\t' '$1!="NA" && NR>1 {{print "chr"$3, $4, $4+1, $0}}' |  bedtools intersect -a - -wo -b {input.signif_loci} | cut -f4-17,21) | gzip - > {output}) &> {log}
         """
