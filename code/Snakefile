@@ -22,7 +22,6 @@ include: "rules/GWAS_PrepForColoc.smk"
 include: "rules/chRNASeqSlopes.smk"
 
 
-
 wildcard_constraints:
     chrom="|".join(autosomes),
     IndID="|".join(Fastq_samples["IndID"]),
@@ -41,6 +40,10 @@ localrules:
     DownloadHg38Ref,
     DownloadFastqFromLink_SE,
     DownloadGWAS_SummaryStats,
+    InstallHyprcoloc,
+    Download_hg19_to_hg38_chain,
+    DownloadHg38Gencode_basic,
+    DownloadKristjansdottirSupplementData2,
 
 
 ruleorder: CopyFastqFromLocal > DownloadFastqFromLink
@@ -108,8 +111,13 @@ rule all:
         "featureCounts/chRNA.Expression.Splicing/CountTable.MeanLogRPKM.txt.gz",
         expand(
             "featureCounts/{Phenotype}_{ncRNA}/Counts.txt",
-            Phenotype = ["polyA.Expression", "chRNA.Expression", "MetabolicLabelled.30min", "MetabolicLabelled.60min"],
-            ncRNA = ["eRNA", "cheRNA"]
+            Phenotype=[
+                "polyA.Expression",
+                "chRNA.Expression",
+                "MetabolicLabelled.30min",
+                "MetabolicLabelled.60min",
+            ],
+            ncRNA=["eRNA", "cheRNA"],
         ),
         #### Inserted by Carlos
         # expand(
@@ -148,5 +156,10 @@ rule Gather_gwas_summary_stats:
     gwas_df dataframe assigned in common.py.
     """
     input:
-        expand("gwas_summary_stats/leadSnpWindowStats/{accession}.tsv.gz", accession=gwas_df.index),
-        expand("hyprcoloc/LociWiseSummaryStatsInput/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}",  QTLsGenotypeSet="", FeatureCoordinatesRedefinedFor=["ForGWASColoc", "ForColoc"]),
+        # expand("gwas_summary_stats/leadSnpWindowStats/{accession}.tsv.gz", accession=gwas_df.index),
+        # expand("hyprcoloc/LociWiseSummaryStatsInput/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}",  QTLsGenotypeSet="", FeatureCoordinatesRedefinedFor=["ForGWASColoc", "ForColoc"]),
+        expand(
+            "../output/hyprcoloc_results/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}/hyprcoloc.results.txt.gz",
+            QTLsGenotypeSet="",
+            FeatureCoordinatesRedefinedFor="ForGWASColoc",
+        ),
