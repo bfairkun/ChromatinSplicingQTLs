@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+
+
+<title>Explore GWAS colocalizations</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/master/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">myproject</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Explore GWAS colocalizations</h1>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2021-12-07
+</p>
+<p>
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 1
+</p>
+<p>
+<strong>Knit directory:</strong> <code>ChromatinSplicingQTLs/analysis/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
+</p>
+<p>
+This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
+  href="https://github.com/jdblischak/workflowr">workflowr</a> (version 1.6.2). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges"> <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted changes </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguncommittedchanges" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The R Markdown is untracked by Git. To know which version of the R Markdown file created these results, you’ll want to first commit it to the Git repo. If you’re still working on the analysis, you can ignore this warning. When you’re finished, you can run <code>wflow_publish</code> to commit the R Markdown file and build the HTML.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20191126code"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Seed:</strong> <code>set.seed(20191126)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20191126code" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20191126)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Session information:</strong> recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be confident that you successfully produced the results during this run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstreed51681b07870389377c042156769f4f0ce12758dtargetblankd51681ba"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/d51681b07870389377c042156769f4f0ce12758d" target="_blank">d51681b</a> </a>
+</p>
+</div>
+<div id="strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstreed51681b07870389377c042156769f4f0ce12758dtargetblankd51681ba" class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/d51681b07870389377c042156769f4f0ce12758d" target="_blank">d51681b</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    ._.DS_Store
+    Ignored:    analysis/.Rhistory
+    Ignored:    code/.DS_Store
+    Ignored:    code/.Rhistory
+    Ignored:    code/._.DS_Store
+    Ignored:    code/._README.md
+    Ignored:    code/._dag.pdf
+    Ignored:    code/._report.html
+    Ignored:    code/.ipynb_checkpoints/
+    Ignored:    code/.snakemake/
+    Ignored:    code/Alignments/
+    Ignored:    code/ENCODE/
+    Ignored:    code/ExpressionAnalysis/
+    Ignored:    code/Fastq/
+    Ignored:    code/FastqFastp/
+    Ignored:    code/FastqFastpSE/
+    Ignored:    code/FastqSE/
+    Ignored:    code/Gather_gwas_summary_stats/
+    Ignored:    code/Genotypes/
+    Ignored:    code/Multiqc/
+    Ignored:    code/Multiqc_chRNA/
+    Ignored:    code/PeakCalling/
+    Ignored:    code/Phenotypes/
+    Ignored:    code/PlotGruberQTLs/
+    Ignored:    code/ProCapAnalysis/
+    Ignored:    code/QC/
+    Ignored:    code/QTLs/
+    Ignored:    code/ReferenceGenome/
+    Ignored:    code/Session.vim
+    Ignored:    code/SplicingAnalysis/
+    Ignored:    code/TODO
+    Ignored:    code/bigwigs/
+    Ignored:    code/bigwigs_FromNonWASPFilteredReads/
+    Ignored:    code/config/.DS_Store
+    Ignored:    code/config/._.DS_Store
+    Ignored:    code/config/ExternalFastqDataAccessions/
+    Ignored:    code/config/OldSamplesConfig/
+    Ignored:    code/dag.pdf
+    Ignored:    code/featureCounts/
+    Ignored:    code/gwas_summary_stats/
+    Ignored:    code/hyprcoloc/
+    Ignored:    code/logs/
+    Ignored:    code/notebooks/.ipynb_checkpoints/
+    Ignored:    code/out.hap.ld
+    Ignored:    code/out.log
+    Ignored:    code/report.html
+    Ignored:    code/rules/OldRules/
+    Ignored:    code/scratch/
+    Ignored:    code/scripts/GTFtools_0.8.0/
+    Ignored:    code/scripts/__pycache__/
+    Ignored:    code/scripts/liftOverBedpe/liftOverBedpe.py
+    Ignored:    code/snakemake.log
+    Ignored:    code/snakemake.sbatch.log
+    Ignored:    data/._PRJEB1350_RunTable.Ding_etal_CTCF.txt
+    Ignored:    data/._igsr_samples.tsv
+    Ignored:    data/._list_gwas_summary_statistics_PMID27863252.csv
+    Ignored:    data/GrowthNotes/._20210830_GrowthNotes_chRNA.ConcentrationsToReplate.txt
+
+Untracked files:
+    Untracked:  analysis/20211207_ExploreColocalizations.Rmd
+    Untracked:  code/snakemake_profiles/slurm/__pycache__/
+
+Unstaged changes:
+    Modified:   code/scripts/GenometracksByGenotype
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+<p>
+There are no past versions. Publish this analysis with <code>wflow_publish()</code> to start tracking its development.
+</p>
+<hr>
+</div>
+</div>
+</div>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>This analysis is a first pass at some molecularQTL/GWAS colocalization results I performed using <a href="https://www.nature.com/articles/s41467-020-20885-8">hyprcoloc</a> with default settings. In brief, I took GWAS results (mostly/all from <a href="https://pubmed.ncbi.nlm.nih.gov/27863252/">Astle et al</a>; summary stats downloaded from <a href="https://www.ebi.ac.uk/gwas/">GWAS catalog</a>) and identified lead SNPs for genome wide significant loci and considered a 1MB window centered on the lead SNP. Then I had a bunch of molecular QTLs for various phenotypes collected mostly from 50-100 Yoruban-ancestry LCL samples (eg, splicing, expression, H3K27AC, etc, many of which aren’t the most interesting but I will include more interseting ones later) and attempted to colocalize any molecular QTLs that are nominally significant (permutation pass P&lt;0.01) and intersect the 1MB GWAS locus window. All of this data processing is part of the Snakemake in this repo. Here I will explore some things about the colocalization results to better understand the basics of these results and how they are formatted.</p>
+</div>
+<div id="results" class="section level2">
+<h2>Results</h2>
+<p>First load necessary libraries and read in colocalization results data…</p>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>── Attaching packages ────────────────────────────────── tidyverse 1.3.0 ──</code></pre>
+<pre><code>✓ ggplot2 3.3.3     ✓ purrr   0.3.4
+✓ tibble  2.1.3     ✓ dplyr   0.8.3
+✓ tidyr   1.1.0     ✓ stringr 1.4.0
+✓ readr   1.3.1     ✓ forcats 0.4.0</code></pre>
+<pre><code>── Conflicts ───────────────────────────────────── tidyverse_conflicts() ──
+x dplyr::filter() masks stats::filter()
+x dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code># table of gwas considered
+gwas &lt;- read_csv(&quot;../data/list_gwas_summary_statistics_PMID27863252.csv&quot;) %&gt;%
+  select(`Study accession`, `Trait(s)`)</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  `First Author` = col_character(),
+  `PubMed ID` = col_double(),
+  `Study accession` = col_character(),
+  `Publication date` = col_date(format = &quot;&quot;),
+  Journal = col_character(),
+  Title = col_character(),
+  `Trait(s)` = col_character(),
+  `Reported trait` = col_character(),
+  `FTP Path` = col_character(),
+  `Usage License` = col_character()
+)</code></pre>
+<pre class="r"><code># hyprcoloc results
+dat &lt;- read_tsv(&quot;../output/hyprcoloc_results/ForGWASColoc/hyprcoloc.results.txt.gz&quot;) %&gt;%
+  rename(Locus=GWASLeadSnpChrom_Pos_RefAllele_AltAllele_rsID_trait) %&gt;%
+  separate(Locus, into=c(&quot;GWAS.Chr&quot;, &quot;GWAS.Pos&quot;, &quot;GWAS.Ref&quot;, &quot;GWAS.Alt&quot;, &quot;GWAS.rsID&quot;, &quot;trait&quot;), remove=F) %&gt;%
+  inner_join(gwas, by=c(&#39;trait&#39;=&#39;Study accession&#39;)) %&gt;%
+  rename(accession=trait) %&gt;%
+  rename(trait=`Trait(s)`)</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  GWASLeadSnpChrom_Pos_RefAllele_AltAllele_rsID_trait = col_character(),
+  HyprcolocIteration = col_double(),
+  ColocalizedTraits = col_character(),
+  PosteriorColocalizationPr = col_double(),
+  RegionalAssociationPr = col_double(),
+  TopCandidateSNP = col_character(),
+  ProportionPosteriorPrExplainedByTopSNP = col_double(),
+  DroppedTrait = col_character()
+)</code></pre>
+<pre class="r"><code>head(dat)</code></pre>
+<pre><code># A tibble: 6 x 15
+  Locus GWAS.Chr GWAS.Pos GWAS.Ref GWAS.Alt GWAS.rsID accession
+  &lt;chr&gt; &lt;chr&gt;    &lt;chr&gt;    &lt;chr&gt;    &lt;chr&gt;    &lt;chr&gt;     &lt;chr&gt;    
+1 1_88… 1        8853597  A        G        rs127528… GCST0046…
+2 1_88… 1        8853597  A        G        rs127528… GCST0046…
+3 1_88… 1        8853597  A        G        rs127528… GCST0046…
+4 1_88… 1        8853597  A        G        rs127528… GCST0046…
+5 1_88… 1        8853597  A        G        rs127528… GCST0046…
+6 1_88… 1        8853597  A        G        rs127528… GCST0046…
+# … with 8 more variables: HyprcolocIteration &lt;dbl&gt;,
+#   ColocalizedTraits &lt;chr&gt;, PosteriorColocalizationPr &lt;dbl&gt;,
+#   RegionalAssociationPr &lt;dbl&gt;, TopCandidateSNP &lt;chr&gt;,
+#   ProportionPosteriorPrExplainedByTopSNP &lt;dbl&gt;, DroppedTrait &lt;chr&gt;,
+#   trait &lt;chr&gt;</code></pre>
+<p>First question:</p>
+<p>How many molQTL where attempted to colocalize for each GWAS locus. Some manual inspection of the output makes it clear to me that hyprcoloc either clusters colocalized traits or drops a single trait with each iteration, until there is only one trait left which won’t be included (not in dropped trait column nor the colocalized traits column). This means that I can get the total number of traits attempted to colocalize by summing the dropped traits and clustered traits for each locus and adding 1. Not adding 1 will be the number of molecular traits (not including the gwas trait itself).</p>
+<pre class="r"><code>dat %&gt;%
+  mutate(NumTraits = str_count(ColocalizedTraits, &quot;,&quot;) + 1) %&gt;%
+  group_by(Locus) %&gt;%
+  summarise(TotalTraitsAttemptedColocalization = sum(NumTraits)) %&gt;%
+  ggplot(aes(x=TotalTraitsAttemptedColocalization)) +
+  stat_ecdf() +
+  ylab(&quot;cumulative fraction&quot;) +
+  xlab(&quot;Number molecular traits attempted to colocalize for each gwas locus&quot;)</code></pre>
+<p><img src="figure/20211207_ExploreColocalizations.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok, a median of about 17 traits attempted to colocalize for each GWAS locus, and there are a very small fraction of traits (a percent or so it looks like) where I am only attempting to colocalizing one trait with the gwas locus.</p>
+<p>Now, how many gwas loci have anything colocalizing with them?</p>
+<pre class="r"><code># Bar plot of number of loci, filled by color if they colocalize with at least 1 molQTL
+dat %&gt;%
+  mutate(ColocalizedTraitsContainGWAS = str_detect(ColocalizedTraits, Locus)) %&gt;%
+  group_by(Locus, trait) %&gt;%
+  summarise(DoesLocusColocalizeWithAnything = sum(ColocalizedTraitsContainGWAS)) %&gt;%
+  ggplot(aes(x=trait, fill=factor(DoesLocusColocalizeWithAnything))) +
+  geom_bar(position=&quot;stack&quot;) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))</code></pre>
+<p><img src="figure/20211207_ExploreColocalizations.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># Same plot but as percentage of loci
+dat %&gt;%
+  mutate(ColocalizedTraitsContainGWAS = str_detect(ColocalizedTraits, Locus)) %&gt;%
+  group_by(Locus, trait) %&gt;%
+  summarise(DoesLocusColocalizeWithAnything = sum(ColocalizedTraitsContainGWAS)) %&gt;%
+  ggplot(aes(x=trait, fill=factor(DoesLocusColocalizeWithAnything))) +
+  geom_bar(position=&quot;fill&quot;) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))</code></pre>
+<p><img src="figure/20211207_ExploreColocalizations.Rmd/unnamed-chunk-3-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok so about 20% of gwas loci colocalize with something.</p>
+<p>I wonder if there is a correlation between whether the gwas colocalized with something versus how many molecular traits I attempted colocalization.</p>
+<pre class="r"><code>dat %&gt;%
+  mutate(ColocalizedTraitsContainGWAS = str_detect(ColocalizedTraits, Locus)) %&gt;%
+  mutate(NumTraits = str_count(ColocalizedTraits, &quot;,&quot;) + 1) %&gt;%
+  group_by(Locus, trait) %&gt;%
+  summarise(DoesLocusColocalizeWithAnything = sum(ColocalizedTraitsContainGWAS),
+            TotalTraitsAttemptedColocalization = sum(NumTraits)) %&gt;%
+  ggplot(aes(x=factor(DoesLocusColocalizeWithAnything), y=TotalTraitsAttemptedColocalization)) +
+  geom_boxplot()</code></pre>
+<p><img src="figure/20211207_ExploreColocalizations.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>yes, there is clearly a trend wherein the gwas loci that colocalize with something are ones where we attempted to colocalize with more things. To my knowledge, there isn’t really a framework for thinking about multiple test correction in the context of colocalization analysis, and I wonder about false/chance colocalizations. On the other hand, I think gwas loci with more molecular traits around them are more likely to harbor a true colocalization. Should I be thinking about multiple test correction as I interpret these results? I think <a href="https://stats.stackexchange.com/questions/203378/why-dont-bayesian-methods-require-multiple-testing-corrections">this stackexchange question</a> is relevant but I haven’t fully digested the answer. I’ll think more about that later or discuss with someone smarter than I…</p>
+<p>Moving on… let’s see what type of molQTL tend to colocalize with the gwas loci (out of the molecular traits I attemped, obviously).</p>
+<pre class="r"><code>dat %&gt;%
+    select(trait, Locus, ColocalizedTraits) %&gt;%
+    filter(str_detect(ColocalizedTraits, Locus)) %&gt;%
+    mutate(trait_families = str_replace(str_replace_all(ColocalizedTraits, &quot;;.+?,&quot;, &quot;&quot;), &quot;;.+$&quot;, &quot;&quot;)) %&gt;%
+    mutate(trait_families = str_replace(trait_families, paste0(Locus, &quot;, &quot;), &quot;&quot;)) %&gt;%
+    mutate(trait_families = case_when(
+                                      str_detect(trait_families, &quot; &quot;) ~ &quot;More than one&quot;,
+                                      TRUE ~ trait_families
+                                      )) %&gt;%
+    ggplot(aes(x=trait, fill=trait_families)) +
+    geom_bar(position=&quot;stack&quot;)+
+    ylab(&quot;Number colocalized loci&quot;) +
+    labs(fill=&quot;Molecular trait category&quot;) +
+    theme_classic() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))</code></pre>
+<p><img src="figure/20211207_ExploreColocalizations.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>dat %&gt;%
+    select(trait, Locus, ColocalizedTraits) %&gt;%
+    filter(str_detect(ColocalizedTraits, Locus)) %&gt;%
+    mutate(trait_families = str_replace(str_replace_all(ColocalizedTraits, &quot;;.+?,&quot;, &quot;&quot;), &quot;;.+$&quot;, &quot;&quot;)) %&gt;%
+    mutate(trait_families = str_replace(trait_families, paste0(Locus, &quot;, &quot;), &quot;&quot;)) %&gt;%
+    mutate(trait_families = case_when(
+                                      str_detect(trait_families, &quot; &quot;) ~ &quot;More than one&quot;,
+                                      TRUE ~ trait_families
+                                      )) %&gt;%
+    ggplot(aes(x=trait, fill=trait_families)) +
+    geom_bar(position=&quot;fill&quot;)+
+    ylab(&quot;Fraction colocalized loci&quot;) +
+    labs(fill=&quot;Molecular trait category&quot;) +
+    theme_classic() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))</code></pre>
+<p><img src="figure/20211207_ExploreColocalizations.Rmd/unnamed-chunk-5-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>In these plots, “More than one” just means more than one thing colocalized, even if it is two different molecular traits from the same trait class (eg, two sQTLs). Maybe it would be worthwhile replotting where two different eQTLs would still just be “eQTL” rather than “more than one”.</p>
+<pre class="r"><code>dat %&gt;%
+    select(trait, Locus, ColocalizedTraits) %&gt;%
+    filter(str_detect(ColocalizedTraits, Locus)) %&gt;%
+    mutate(trait_families = str_replace(str_replace_all(ColocalizedTraits, &quot;;.+?,&quot;, &quot;&quot;), &quot;;.+$&quot;, &quot;&quot;)) %&gt;%
+    mutate(trait_families = str_replace(trait_families, paste0(Locus, &quot;, &quot;), &quot;&quot;)) %&gt;%
+    mutate(split = str_split(trait_families, &quot; &quot;)) %&gt;% # split
+    mutate(split = map(.$split, ~ unique(.x))) %&gt;% # drop duplicates
+    mutate(split = map_chr(.$split, ~paste(.x, collapse = &quot; &quot;))) %&gt;%
+    mutate(trait_families = case_when(
+                                      str_detect(split, &quot; &quot;) ~ &quot;More than one&quot;,
+                                      TRUE ~ split
+                                      )) %&gt;%
+    ggplot(aes(x=trait, fill=trait_families)) +
+    geom_bar(position=&quot;fill&quot;)+
+    ylab(&quot;Fraction colocalized loci&quot;) +
+    labs(fill=&quot;Molecular trait category&quot;) +
+    theme_classic() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))</code></pre>
+<p><img src="figure/20211207_ExploreColocalizations.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok the difference is pretty subtle. Maybe splicing went up a little. And that is unsurprising since splice events within a cluster covary by design, so when a sQTL trait colocalizes with GWAS, it may be common to have more than one sQTL trait colocalize.</p>
+<p>Ok, let’s get a sense of the posterior probability values for colocalizations</p>
+<pre class="r"><code>dat %&gt;%
+    filter(str_detect(ColocalizedTraits, Locus)) %&gt;%
+    select(trait, Locus, ColocalizedTraits, RegionalAssociationPr, PosteriorColocalizationPr) %&gt;%
+  ggplot(aes(x=trait, y=PosteriorColocalizationPr)) +
+  geom_violin() +
+  geom_jitter(width=0.2) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))</code></pre>
+<p><img src="figure/20211207_ExploreColocalizations.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Note that as recommended by the authors, we used the default posterior probability threshold of 0.25 for colocalization.</p>
+<p>Let’s also look the proportion of the posterior probability explained by the top variant for colocalizations (which represents the HyPrColoc multi-trait fine-mapping probability).</p>
+<pre class="r"><code>dat %&gt;%
+    filter(str_detect(ColocalizedTraits, Locus)) %&gt;%
+    select(trait, Locus, ColocalizedTraits, ProportionPosteriorPrExplainedByTopSNP) %&gt;%
+  ggplot(aes(x=trait, y=ProportionPosteriorPrExplainedByTopSNP)) +
+  geom_violin() +
+  geom_jitter(width=0.2) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))</code></pre>
+<p><img src="figure/20211207_ExploreColocalizations.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>dat %&gt;%
+    filter(str_detect(ColocalizedTraits, Locus)) %&gt;%
+    select(trait, Locus, ColocalizedTraits, ProportionPosteriorPrExplainedByTopSNP) %&gt;%
+  ggplot(aes(x=ProportionPosteriorPrExplainedByTopSNP)) +
+  geom_histogram() +
+  theme_classic()</code></pre>
+<pre><code>`stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</code></pre>
+<p><img src="figure/20211207_ExploreColocalizations.Rmd/unnamed-chunk-8-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Most top SNPs for a colocalization don’t have a very high fine-mapping probability, meaning we can’t confidently fine-map it down to a single SNP, though there are a few with very high fine mapping probability near 1. I will have to tell hyprcoloc to output more information to get a full set of credible snps (See <a href="https://rdrr.io/github/jrs95/hyprcoloc/f/vignettes/hyprcoloc.Rmd">hyprcoloc vignette</a>, <code>res &lt;- hyprcoloc(betas, ses, trait.names=traits, snp.id=rsid, snpscores = TRUE);</code>). This finemapping output could be particularly useful for future analyses to explore effects of splicing on chromatin. For example, if we have SNPs where chromatin and splicing phenotypes colocalize and there is high fine-mapping probability over splice sites it will be more reasonable to assume directionality of splicing –&gt; chromatin effects.</p>
+</div>
+<div id="conclusions" class="section level2">
+<h2>Conclusions</h2>
+<p>A bunch of stuff colocalizes with something (20-30% of GWAS loci), roughly on par with expectations from other papers (eg, <a href="https://genomebiology.biomedcentral.com/articles/10.1186/s13059-021-02334-x">Mu et al</a>). Next I will repeat molecular colocalizations for every gene (excluding GWAS summary stats) in attempt to learn more about molecular mechanisms thru colocalizing molecular phenotypes.</p>
+<div id="todo" class="section level4">
+<h4>TODO:</h4>
+<ul>
+<li>I will have to start incorporating more interesting molecular phenotypes (eg intron retention, chRNA-expression, eRNA expression, etc).</li>
+<li>I want to know what effect if any the molecular QTL/ GWAS ancestry mismatches has on colocalization. All these GWAS are from European descent, mostly from individuals in UKBioBank, while most all of the molecular QTL data is from Yoruban (YRI) African donors, with different LD blocks and allele frequency differences. I can look at this empirically by doing colocalizations with subsets of the GEUVADIS RNA-seq data. Perhaps I attempt colocalization with eQTL called from ~100 YRI in Geauvadis, and compare it to (two replicate) non-overlapping random subset of ~100 Central European (CEU) individuals.</li>
+<li>Incorporate more GWAS into this analysis. It will be nice to have some negative control GWAS like Phoenix had (eg unrelated traits whose heritbility isn’t expected to be well captured by LCLs)</li>
+</ul>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.6.1 (2019-07-05)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Scientific Linux 7.4 (Nitrogen)
+
+Matrix products: default
+BLAS/LAPACK: /software/openblas-0.2.19-el7-x86_64/lib/libopenblas_haswellp-r0.2.19.so
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+ [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] forcats_0.4.0   stringr_1.4.0   dplyr_0.8.3     purrr_0.3.4    
+[5] readr_1.3.1     tidyr_1.1.0     tibble_2.1.3    ggplot2_3.3.3  
+[9] tidyverse_1.3.0
+
+loaded via a namespace (and not attached):
+ [1] tidyselect_1.1.0 xfun_0.8         haven_2.3.1      lattice_0.20-38 
+ [5] colorspace_1.4-1 vctrs_0.3.1      generics_0.0.2   htmltools_0.3.6 
+ [9] yaml_2.2.0       utf8_1.1.4       rlang_0.4.10     later_0.8.0     
+[13] pillar_1.4.2     withr_2.4.1      glue_1.3.1       DBI_1.1.0       
+[17] dbplyr_1.4.2     modelr_0.1.8     readxl_1.3.1     lifecycle_0.1.0 
+[21] munsell_0.5.0    gtable_0.3.0     workflowr_1.6.2  cellranger_1.1.0
+[25] rvest_0.3.5      evaluate_0.14    labeling_0.3     knitr_1.23      
+[29] httpuv_1.5.1     fansi_0.4.0      broom_0.5.2      Rcpp_1.0.5      
+[33] promises_1.0.1   backports_1.1.4  scales_1.1.0     jsonlite_1.6    
+[37] farver_2.1.0     fs_1.3.1         hms_0.5.3        digest_0.6.20   
+[41] stringi_1.4.3    grid_3.6.1       rprojroot_2.0.2  cli_2.2.0       
+[45] tools_3.6.1      magrittr_1.5     crayon_1.3.4     pkgconfig_2.0.2 
+[49] ellipsis_0.2.0.1 xml2_1.3.2       reprex_0.3.0     lubridate_1.7.4 
+[53] rstudioapi_0.10  assertthat_0.2.1 rmarkdown_1.13   httr_1.4.1      
+[57] R6_2.4.0         nlme_3.1-140     git2r_0.26.1     compiler_3.6.1  </code></pre>
+</div>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+http://docs.mathjax.org/en/latest/configuration.html.  This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,214 @@
+---
+title: "Explore GWAS colocalizations"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F)
+```
+
+## Introduction
+
+This analysis is a first pass at some molecularQTL/GWAS colocalization results I performed using [hyprcoloc](https://www.nature.com/articles/s41467-020-20885-8) with default settings. In brief, I took GWAS results (mostly/all from [Astle et al](https://pubmed.ncbi.nlm.nih.gov/27863252/); summary stats downloaded from [GWAS catalog](https://www.ebi.ac.uk/gwas/)) and identified lead SNPs for genome wide significant loci and considered a 1MB window centered on the lead SNP. Then I had a bunch of molecular QTLs for various phenotypes collected mostly from 50-100 Yoruban-ancestry LCL samples (eg, splicing, expression, H3K27AC, etc, many of which aren't the most interesting but I will include more interseting ones later) and attempted to colocalize any molecular QTLs that are nominally significant (permutation pass P<0.01) and intersect the 1MB GWAS locus window. All of this data processing is part of the Snakemake in this repo. Here I will explore some things about the colocalization results to better understand the basics of these results and how they are formatted.
+
+## Results
+
+First load necessary libraries and read in colocalization results data...
+
+```{r}
+library(tidyverse)
+
+# table of gwas considered
+gwas <- read_csv("../data/list_gwas_summary_statistics_PMID27863252.csv") %>%
+  select(`Study accession`, `Trait(s)`)
+
+# hyprcoloc results
+dat <- read_tsv("../output/hyprcoloc_results/ForGWASColoc/hyprcoloc.results.txt.gz") %>%
+  rename(Locus=GWASLeadSnpChrom_Pos_RefAllele_AltAllele_rsID_trait) %>%
+  separate(Locus, into=c("GWAS.Chr", "GWAS.Pos", "GWAS.Ref", "GWAS.Alt", "GWAS.rsID", "trait"), remove=F) %>%
+  inner_join(gwas, by=c('trait'='Study accession')) %>%
+  rename(accession=trait) %>%
+  rename(trait=`Trait(s)`)
+  
+
+head(dat)
+
+
+```
+
+First question:
+
+How many molQTL where attempted to colocalize for each GWAS locus. Some manual inspection of the output makes it clear to me that hyprcoloc either clusters colocalized traits or drops a single trait with each iteration, until there is only one trait left which won't be included (not in dropped trait column nor the colocalized traits column). This means that I can get the total number of traits attempted to colocalize by summing the dropped traits and clustered traits for each locus and adding 1. Not adding 1 will be the number of molecular traits (not including the gwas trait itself).
+
+
+```{r}
+dat %>%
+  mutate(NumTraits = str_count(ColocalizedTraits, ",") + 1) %>%
+  group_by(Locus) %>%
+  summarise(TotalTraitsAttemptedColocalization = sum(NumTraits)) %>%
+  ggplot(aes(x=TotalTraitsAttemptedColocalization)) +
+  stat_ecdf() +
+  ylab("cumulative fraction") +
+  xlab("Number molecular traits attempted to colocalize for each gwas locus")
+
+  
+```
+
+Ok, a median of about 17 traits attempted to colocalize for each GWAS locus, and there are a very small fraction of traits (a percent or so it looks like) where I am only attempting to colocalizing one trait with the gwas locus.
+
+Now, how many gwas loci have anything colocalizing with them?
+
+```{r}
+# Bar plot of number of loci, filled by color if they colocalize with at least 1 molQTL
+dat %>%
+  mutate(ColocalizedTraitsContainGWAS = str_detect(ColocalizedTraits, Locus)) %>%
+  group_by(Locus, trait) %>%
+  summarise(DoesLocusColocalizeWithAnything = sum(ColocalizedTraitsContainGWAS)) %>%
+  ggplot(aes(x=trait, fill=factor(DoesLocusColocalizeWithAnything))) +
+  geom_bar(position="stack") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+# Same plot but as percentage of loci
+dat %>%
+  mutate(ColocalizedTraitsContainGWAS = str_detect(ColocalizedTraits, Locus)) %>%
+  group_by(Locus, trait) %>%
+  summarise(DoesLocusColocalizeWithAnything = sum(ColocalizedTraitsContainGWAS)) %>%
+  ggplot(aes(x=trait, fill=factor(DoesLocusColocalizeWithAnything))) +
+  geom_bar(position="fill") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+
+Ok so about 20% of gwas loci colocalize with something.
+
+I wonder if there is a correlation between whether the gwas colocalized with something versus how many molecular traits I attempted colocalization.
+
+```{r}
+dat %>%
+  mutate(ColocalizedTraitsContainGWAS = str_detect(ColocalizedTraits, Locus)) %>%
+  mutate(NumTraits = str_count(ColocalizedTraits, ",") + 1) %>%
+  group_by(Locus, trait) %>%
+  summarise(DoesLocusColocalizeWithAnything = sum(ColocalizedTraitsContainGWAS),
+            TotalTraitsAttemptedColocalization = sum(NumTraits)) %>%
+  ggplot(aes(x=factor(DoesLocusColocalizeWithAnything), y=TotalTraitsAttemptedColocalization)) +
+  geom_boxplot()
+```
+
+
+
+yes, there is clearly a trend wherein the gwas loci that colocalize with something are ones where we attempted to colocalize with more things. To my knowledge, there isn't really a framework for thinking about multiple test correction in the context of colocalization analysis, and I wonder about false/chance colocalizations. On the other hand, I think gwas loci with more molecular traits around them are more likely to harbor a true colocalization. Should I be thinking about multiple test correction as I interpret these results? I think [this stackexchange question](https://stats.stackexchange.com/questions/203378/why-dont-bayesian-methods-require-multiple-testing-corrections) is relevant but I haven't fully digested the answer. I'll think more about that later or discuss with someone smarter than I...
+
+Moving on...  let's see what type of molQTL tend to colocalize with the gwas loci (out of the molecular traits I attemped,  obviously).
+
+```{r}
+
+dat %>%
+    select(trait, Locus, ColocalizedTraits) %>%
+    filter(str_detect(ColocalizedTraits, Locus)) %>%
+    mutate(trait_families = str_replace(str_replace_all(ColocalizedTraits, ";.+?,", ""), ";.+$", "")) %>%
+    mutate(trait_families = str_replace(trait_families, paste0(Locus, ", "), "")) %>%
+    mutate(trait_families = case_when(
+                                      str_detect(trait_families, " ") ~ "More than one",
+                                      TRUE ~ trait_families
+                                      )) %>%
+    ggplot(aes(x=trait, fill=trait_families)) +
+    geom_bar(position="stack")+
+    ylab("Number colocalized loci") +
+    labs(fill="Molecular trait category") +
+    theme_classic() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+
+dat %>%
+    select(trait, Locus, ColocalizedTraits) %>%
+    filter(str_detect(ColocalizedTraits, Locus)) %>%
+    mutate(trait_families = str_replace(str_replace_all(ColocalizedTraits, ";.+?,", ""), ";.+$", "")) %>%
+    mutate(trait_families = str_replace(trait_families, paste0(Locus, ", "), "")) %>%
+    mutate(trait_families = case_when(
+                                      str_detect(trait_families, " ") ~ "More than one",
+                                      TRUE ~ trait_families
+                                      )) %>%
+    ggplot(aes(x=trait, fill=trait_families)) +
+    geom_bar(position="fill")+
+    ylab("Fraction colocalized loci") +
+    labs(fill="Molecular trait category") +
+    theme_classic() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+```
+
+In these plots, "More than one" just means more than one thing colocalized, even if it is two different molecular traits from the same trait class (eg, two sQTLs). Maybe it would be worthwhile replotting where two different eQTLs would still just be "eQTL" rather than "more than one".
+
+```{r}
+dat %>%
+    select(trait, Locus, ColocalizedTraits) %>%
+    filter(str_detect(ColocalizedTraits, Locus)) %>%
+    mutate(trait_families = str_replace(str_replace_all(ColocalizedTraits, ";.+?,", ""), ";.+$", "")) %>%
+    mutate(trait_families = str_replace(trait_families, paste0(Locus, ", "), "")) %>%
+    mutate(split = str_split(trait_families, " ")) %>% # split
+    mutate(split = map(.$split, ~ unique(.x))) %>% # drop duplicates
+    mutate(split = map_chr(.$split, ~paste(.x, collapse = " "))) %>%
+    mutate(trait_families = case_when(
+                                      str_detect(split, " ") ~ "More than one",
+                                      TRUE ~ split
+                                      )) %>%
+    ggplot(aes(x=trait, fill=trait_families)) +
+    geom_bar(position="fill")+
+    ylab("Fraction colocalized loci") +
+    labs(fill="Molecular trait category") +
+    theme_classic() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+```
+
+Ok the difference is pretty subtle. Maybe splicing went up a little. And that is unsurprising since splice events within a cluster covary by design, so when a sQTL trait colocalizes with GWAS, it may be common to have more than one sQTL trait colocalize.
+
+Ok, let's get a sense of the posterior probability values for colocalizations
+
+```{r}
+dat %>%
+    filter(str_detect(ColocalizedTraits, Locus)) %>%
+    select(trait, Locus, ColocalizedTraits, RegionalAssociationPr, PosteriorColocalizationPr) %>%
+  ggplot(aes(x=trait, y=PosteriorColocalizationPr)) +
+  geom_violin() +
+  geom_jitter(width=0.2) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+
+```
+
+Note that as recommended by the authors, we used the default posterior probability threshold of 0.25 for colocalization.
+
+Let's also look the proportion of the posterior probability explained by the top variant for colocalizations (which represents the HyPrColoc multi-trait fine-mapping probability).
+
+```{r}
+
+dat %>%
+    filter(str_detect(ColocalizedTraits, Locus)) %>%
+    select(trait, Locus, ColocalizedTraits, ProportionPosteriorPrExplainedByTopSNP) %>%
+  ggplot(aes(x=trait, y=ProportionPosteriorPrExplainedByTopSNP)) +
+  geom_violin() +
+  geom_jitter(width=0.2) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+dat %>%
+    filter(str_detect(ColocalizedTraits, Locus)) %>%
+    select(trait, Locus, ColocalizedTraits, ProportionPosteriorPrExplainedByTopSNP) %>%
+  ggplot(aes(x=ProportionPosteriorPrExplainedByTopSNP)) +
+  geom_histogram() +
+  theme_classic()
+
+```
+
+Most top SNPs for a colocalization don't have a very high fine-mapping probability, meaning we can't confidently fine-map it down to a single SNP, though there are a few with very high fine mapping probability near 1. I will have to tell hyprcoloc to output more information to get a full set of credible snps (See [hyprcoloc vignette](https://rdrr.io/github/jrs95/hyprcoloc/f/vignettes/hyprcoloc.Rmd), `res <- hyprcoloc(betas, ses, trait.names=traits, snp.id=rsid, snpscores = TRUE);`). This finemapping output could be particularly useful for future analyses to explore effects of splicing on chromatin. For example, if we have SNPs where chromatin and splicing phenotypes colocalize and there is high fine-mapping probability over splice sites it will be more reasonable to assume directionality of splicing --> chromatin effects.
+
+## Conclusions
+
+A bunch of stuff colocalizes with something (20-30% of GWAS loci), roughly on par with expectations from other papers (eg, [Mu et al](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-021-02334-x)). Next I will repeat molecular colocalizations for every gene (excluding GWAS summary stats) in attempt to learn more about molecular mechanisms thru colocalizing molecular phenotypes. 
+
+#### TODO:
+- I will have to start incorporating more interesting molecular phenotypes (eg intron retention, chRNA-expression, eRNA expression, etc).
+- I want to know what effect if any the molecular QTL/ GWAS ancestry mismatches has on colocalization. All these GWAS are from European descent, mostly from individuals in UKBioBank, while most all of the molecular QTL data is from Yoruban (YRI) African donors, with different LD blocks and allele frequency differences. I can look at this empirically by doing colocalizations with subsets of the GEUVADIS RNA-seq data. Perhaps I attempt colocalization with eQTL called from ~100 YRI in Geauvadis, and compare it to (two replicate) non-overlapping random subset of ~100 Central European (CEU) individuals.
+- Incorporate more GWAS into this analysis. It will be nice to have some negative control GWAS like Phoenix had (eg unrelated traits whose heritbility isn't expected to be well captured by LCLs)
