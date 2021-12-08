@@ -4,13 +4,24 @@ rule get_eRNA_saf:
     input:
         "QTLs/QTLTools/ProCap/OnlyFirstReps.qqnorm.bed.gz",
     output:
-        "../eRNA.saf",
+        "../data/eRNA.saf",
     log:
         "logs/eRNA_reference.log"
     shell:
         """
         python scripts/get_eRNA_saf.py &> {log}
         """
+
+rule get_cheRNA_saf:
+    output:
+        "../data/cheRNA_K562_GSE83531.saf",
+    log:
+        "logs/cheRNA_reference.log"
+    shell:
+        """
+        python scripts/get_cheRNA_saf.py &> {log}
+        """
+
 
 rule featureCountsNonCoding:
     input:
