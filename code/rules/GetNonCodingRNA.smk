@@ -12,17 +12,6 @@ rule get_eRNA_saf:
         python scripts/get_eRNA_saf.py &> {log}
         """
 
-rule get_cheRNA_saf:
-    output:
-        "../data/cheRNA_K562_GSE83531.saf",
-    log:
-        "logs/cheRNA_reference.log"
-    shell:
-        """
-        python scripts/get_cheRNA_saf.py &> {log}
-        """
-
-
 rule featureCountsNonCoding:
     input:
         bam = GetBamForPhenotype,
