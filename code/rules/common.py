@@ -9,7 +9,7 @@ N_PermutationChunks = 50
 
 ncRNA_Phenotypes = []
 
-for pheno in ["polyA.Expression", "chRNA.Expression", "MetabolicLabelled.30min", "MetabolicLabelled.60min"]:
+for pheno in ["polyA.Expression", "chRNA.Expression", "MetabolicLabelled.30min", "MetabolicLabelled.60min", "ProCap"]:
     for ncRNA in ['cheRNA', 'eRNA', 'lncRNA', 'snoRNA']:
         ncRNA_Phenotypes.append(pheno + '_' + ncRNA + '.Subset_YRI')
     

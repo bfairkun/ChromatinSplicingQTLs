@@ -2,7 +2,7 @@
 
 rule get_eRNA_saf:
     input:
-        "QTLs/QTLTools/ProCap/OnlyFirstReps.qqnorm.bed.gz",
+        "ProCapAnalysis/CountTable.hg38.features.bed",
     output:
         "../data/eRNA.saf",
     log:
@@ -36,7 +36,7 @@ rule featureCountsNonCoding:
     threads:
         8
     wildcard_constraints:
-        Phenotype = "|".join(["polyA.Expression", "chRNA.Expression", "MetabolicLabelled.30min", "MetabolicLabelled.60min"])
+        Phenotype = "|".join(["polyA.Expression", "chRNA.Expression", "MetabolicLabelled.30min", "MetabolicLabelled.60min", "ProCap"])
     resources:
         mem = 12000,
         cpus_per_node = 9,
@@ -56,7 +56,7 @@ rule GetAdditionalNonCodingRNAFromFeatureCounts:
         "featureCounts/{Phenotype}_snoRNA.Subset_YRI/Counts.txt",
         "featureCounts/{Phenotype}_lncRNA.Subset_YRI/Counts.txt"
     wildcard_constraints:
-        Phenotype = "|".join(["polyA.Expression", "chRNA.Expression", "MetabolicLabelled.30min", "MetabolicLabelled.60min"]),
+        Phenotype = "|".join(["polyA.Expression", "chRNA.Expression", "MetabolicLabelled.30min", "MetabolicLabelled.60min", "ProCap"]),
         #ncRNA = "|".join(["snoRNA", "lncRNA"])
     log:
         snoRNA_log = "logs/{Phenotype}.get_snoRNA.log",
@@ -74,7 +74,7 @@ rule SubsetYRIncRNA:
     output:
         "featureCounts/{Phenotype}_{ncRNA}.Subset_YRI/Counts.txt",
     wildcard_constraints:
-        Phenotype = "|".join(["polyA.Expression", "chRNA.Expression", "MetabolicLabelled.30min", "MetabolicLabelled.60min"]),
+        Phenotype = "|".join(["polyA.Expression", "chRNA.Expression", "MetabolicLabelled.30min", "MetabolicLabelled.60min", "ProCap"]),
         ncRNA = "|".join(["cheRNA", "eRNA"])
     log:
         "logs/{Phenotype}_{ncRNA}.Subset_YRI.log",
@@ -93,7 +93,7 @@ rule SubsetYRIncRNA:
 #    output:
 #        "QTLs/QTLTools/{Phenotype}.AllRNA.Subset_YRI/Counts.txt",
 #    wildcard_constraints:
-#        Phenotype = "|".join(["polyA.Expression", "chRNA.Expression", "MetabolicLabelled.30min", "MetabolicLabelled.60min"])
+#        Phenotype = "|".join(["polyA.Expression", "chRNA.Expression", "MetabolicLabelled.30min", "MetabolicLabelled.60min", "ProCap"])
 #    log:
 #        "logs/MergeFeatureCountsAllRNA.{Phenotype}.log"
 #    shell:
@@ -111,7 +111,7 @@ rule PrepareAllRNACountsForQTLTools:
     conda:
         "../envs/r_essentials.yml"
     wildcard_constraints:
-        Phenotype = "|".join(["polyA.Expression", "chRNA.Expression", "MetabolicLabelled.30min", "MetabolicLabelled.60min"]),
+        Phenotype = "|".join(["polyA.Expression", "chRNA.Expression", "MetabolicLabelled.30min", "MetabolicLabelled.60min", "ProCap"]),
         ncRNA = "|".join(["eRNA", "cheRNA", "snoRNA", "lncRNA"])
     conda:
         "../envs/r_essentials.yml"

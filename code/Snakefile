@@ -109,6 +109,7 @@ rule all:
         ),
         "featureCounts/chRNA.Expression.Splicing/CountsExons.txt",
         "featureCounts/chRNA.Expression.Splicing/CountTable.MeanLogRPKM.txt.gz",
+        "../data/eRNA.saf",
         expand(
             "featureCounts/{Phenotype}_{ncRNA}/Counts.txt",
             Phenotype=[
@@ -116,9 +117,11 @@ rule all:
                 "chRNA.Expression",
                 "MetabolicLabelled.30min",
                 "MetabolicLabelled.60min",
+                "ProCap"
             ],
             ncRNA=["eRNA", "cheRNA"],
         ),
+        "featureCounts/ProCap/Counts.txt",
         #### Inserted by Carlos
         # expand(
         #     "IntronWindowCounts/{IndID}.{windowStyle}.bed.gz",

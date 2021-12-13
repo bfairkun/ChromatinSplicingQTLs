@@ -144,7 +144,7 @@ use rule STAR_Align_WASP as STAR_Align_WASP_SE with:
         R2 = [],
         vcf = "ReferenceGenome/STAR_WASP_Vcfs/{Phenotype}/WholeGenome.vcf"
     wildcard_constraints:
-        Phenotype = "MetabolicLabelled.30min|MetabolicLabelled.60min"
+        Phenotype = "MetabolicLabelled.30min|MetabolicLabelled.60min|ProCap"
 
 rule FilterBAM_WaspTags:
     input:
