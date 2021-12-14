@@ -101,6 +101,9 @@ rule SubsetYRIncRNA:
 #        python scripts/MergeFeatureCountsAllRNA.py --phenotype {wildcards.Phenotype} &> {log}
 #        """
 
+
+### Excluding ProCap to avoid confusion
+
 rule PrepareAllRNACountsForQTLTools:
     input:
         featureCounts = "featureCounts/{Phenotype}_{ncRNA}.Subset_YRI/Counts.txt",
@@ -111,7 +114,7 @@ rule PrepareAllRNACountsForQTLTools:
     conda:
         "../envs/r_essentials.yml"
     wildcard_constraints:
-        Phenotype = "|".join(["polyA.Expression", "chRNA.Expression", "MetabolicLabelled.30min", "MetabolicLabelled.60min", "ProCap"]),
+        Phenotype = "|".join(["polyA.Expression", "chRNA.Expression", "MetabolicLabelled.30min", "MetabolicLabelled.60min"]),
         ncRNA = "|".join(["eRNA", "cheRNA", "snoRNA", "lncRNA"])
     conda:
         "../envs/r_essentials.yml"
