@@ -1,24 +1,34 @@
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
 
 <head>
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
 
 
 <title>Home</title>
 
+<script src="site_libs/header-attrs-2.7/header-attrs.js"></script>
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
 <script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
@@ -31,12 +41,18 @@ div.section {
 }
 </style>
 
-<style type="text/css">code{white-space: pre;}</style>
+
+
 <style type="text/css">
-  pre:not([class]) {
-    background-color: white;
-  }
-</style>
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
 <script type="text/javascript">
 if (window.hljs) {
   hljs.configure({languages: []});
@@ -49,32 +65,7 @@ if (window.hljs) {
 
 
 
-<style type="text/css">
-h1 {
-  font-size: 34px;
-}
-h1.title {
-  font-size: 38px;
-}
-h2 {
-  font-size: 30px;
-}
-h3 {
-  font-size: 24px;
-}
-h4 {
-  font-size: 18px;
-}
-h5 {
-  font-size: 16px;
-}
-h6 {
-  font-size: 12px;
-}
-.table th:not([align]) {
-  text-align: left;
-}
-</style>
+
 
 
 
@@ -85,13 +76,8 @@ h6 {
   margin-left: auto;
   margin-right: auto;
 }
-code {
-  color: inherit;
-  background-color: rgba(0, 0, 0, 0.04);
-}
 img {
   max-width:100%;
-  height: auto;
 }
 .tabbed-pane {
   padding-top: 12px;
@@ -105,40 +91,13 @@ button.code-folding-btn:focus {
 summary {
   display: list-item;
 }
+pre code {
+  padding: 0;
+}
 </style>
 
 
 <style type="text/css">
-/* padding for bootstrap navbar */
-body {
-  padding-top: 51px;
-  padding-bottom: 40px;
-}
-/* offset scroll position for anchor links (for fixed navbar)  */
-.section h1 {
-  padding-top: 56px;
-  margin-top: -56px;
-}
-.section h2 {
-  padding-top: 56px;
-  margin-top: -56px;
-}
-.section h3 {
-  padding-top: 56px;
-  margin-top: -56px;
-}
-.section h4 {
-  padding-top: 56px;
-  margin-top: -56px;
-}
-.section h5 {
-  padding-top: 56px;
-  margin-top: -56px;
-}
-.section h6 {
-  padding-top: 56px;
-  margin-top: -56px;
-}
 .dropdown-submenu {
   position: relative;
 }
@@ -166,7 +125,7 @@ body {
   margin-right: -10px;
 }
 .dropdown-submenu:hover>a:after {
-  border-left-color: #ffffff;
+  border-left-color: #adb5bd;
 }
 .dropdown-submenu.pull-left {
   float: none;
@@ -178,7 +137,7 @@ body {
 }
 </style>
 
-<script>
+<script type="text/javascript">
 // manage active state of menu based on current page
 $(document).ready(function () {
   // active menu anchor
@@ -189,10 +148,23 @@ $(document).ready(function () {
   var menuAnchor = $('a[href="' + href + '"]');
 
   // mark it active
-  menuAnchor.parent().addClass('active');
+  menuAnchor.tab('show');
 
   // if it's got a parent navbar menu mark it active as well
   menuAnchor.closest('li.dropdown').addClass('active');
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
 });
 </script>
 
@@ -204,7 +176,6 @@ $(document).ready(function () {
   max-height: 500px;
   min-height: 44px;
   overflow-y: auto;
-  background: white;
   border: 1px solid #ddd;
   border-radius: 4px;
 }
@@ -240,6 +211,7 @@ $(document).ready(function () {
   border: none;
   display: inline-block;
   border-radius: 4px;
+  background-color: transparent;
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li {
@@ -251,18 +223,6 @@ $(document).ready(function () {
   display: none;
 }
 </style>
-
-<script>
-$(document).ready(function () {
-  window.buildTabsets("TOC");
-});
-
-$(document).ready(function () {
-  $('.tabset-dropdown > .nav-tabs > li').click(function () {
-    $(this).parent().toggleClass('nav-tabs-open')
-  });
-});
-</script>
 
 <!-- code folding -->
 
@@ -308,7 +268,7 @@ $(document).ready(function () {
   </div><!--/.container -->
 </div><!--/.navbar -->
 
-<div class="fluid-row" id="header">
+<div id="header">
 
 
 
@@ -337,7 +297,7 @@ $(document).ready(function () {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2021-12-07
+<strong>Last updated:</strong> 2021-12-08
 </p>
 <p>
 <strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
@@ -385,7 +345,7 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 </div>
 <div id="strongSeedstrongcodesetseed20191126code" class="panel-collapse collapse">
 <div class="panel-body">
-<p>The command <code>set.seed(20191126)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+<p>The command <code>set.seed(20191126)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
 </div>
 </div>
 </div>
@@ -428,16 +388,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstreed51681b07870389377c042156769f4f0ce12758dtargetblankd51681ba"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/d51681b07870389377c042156769f4f0ce12758d" target="_blank">d51681b</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstree50ad81859f449c21a41bd45eac46c7208976dca3targetblank50ad818a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/50ad81859f449c21a41bd45eac46c7208976dca3" target="_blank">50ad818</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstreed51681b07870389377c042156769f4f0ce12758dtargetblankd51681ba" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstree50ad81859f449c21a41bd45eac46c7208976dca3targetblank50ad818a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/d51681b07870389377c042156769f4f0ce12758d" target="_blank">d51681b</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/50ad81859f449c21a41bd45eac46c7208976dca3" target="_blank">50ad818</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -493,6 +453,7 @@ Ignored files:
     Ignored:    code/out.hap.ld
     Ignored:    code/out.log
     Ignored:    code/report.html
+    Ignored:    code/rules/.report.smk.swp
     Ignored:    code/rules/OldRules/
     Ignored:    code/scratch/
     Ignored:    code/scripts/GTFtools_0.8.0/
@@ -506,10 +467,11 @@ Ignored files:
     Ignored:    data/GrowthNotes/._20210830_GrowthNotes_chRNA.ConcentrationsToReplate.txt
 
 Untracked files:
-    Untracked:  analysis/20211207_ExploreColocalizations.Rmd
     Untracked:  code/snakemake_profiles/slurm/__pycache__/
 
 Unstaged changes:
+    Modified:   code/envs/r.yml
+    Modified:   code/rules/report.smk
     Modified:   code/scripts/GenometracksByGenotype
 
 </code></pre>
@@ -549,6 +511,23 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/50ad81859f449c21a41bd45eac46c7208976dca3/docs/index.html" target="_blank">50ad818</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2021-12-07
+</td>
+<td>
+update site
+</td>
+</tr>
 <tr>
 <td>
 html
@@ -731,24 +710,32 @@ initial commit
 <p>We are still collecting data, but I have also been perusing around published data a bit.</p>
 <p>Here are links to all of my rendered analysis Rmarkdowns (code <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/master/analysis">here</a>):</p>
 <pre class="r"><code>library(tidyverse)</code></pre>
-<pre><code>── Attaching packages ────────────────────────────────── tidyverse 1.3.0 ──</code></pre>
-<pre><code>✓ ggplot2 3.3.3     ✓ purrr   0.3.4
-✓ tibble  2.1.3     ✓ dplyr   0.8.3
-✓ tidyr   1.1.0     ✓ stringr 1.4.0
-✓ readr   1.3.1     ✓ forcats 0.4.0</code></pre>
-<pre><code>── Conflicts ───────────────────────────────────── tidyverse_conflicts() ──
-x dplyr::filter() masks stats::filter()
-x dplyr::lag()    masks stats::lag()</code></pre>
+<pre><code>Warning: package &#39;tidyverse&#39; was built under R version 3.6.3</code></pre>
+<pre><code>── Attaching packages ─────────────────────────────────────── tidyverse 1.3.0 ──</code></pre>
+<pre><code>✔ ggplot2 3.3.3     ✔ purrr   0.3.4
+✔ tibble  3.1.0     ✔ dplyr   1.0.5
+✔ tidyr   1.1.3     ✔ stringr 1.4.0
+✔ readr   1.4.0     ✔ forcats 0.5.1</code></pre>
+<pre><code>Warning: package &#39;ggplot2&#39; was built under R version 3.6.3</code></pre>
+<pre><code>Warning: package &#39;tibble&#39; was built under R version 3.6.3</code></pre>
+<pre><code>Warning: package &#39;tidyr&#39; was built under R version 3.6.3</code></pre>
+<pre><code>Warning: package &#39;readr&#39; was built under R version 3.6.3</code></pre>
+<pre><code>Warning: package &#39;purrr&#39; was built under R version 3.6.3</code></pre>
+<pre><code>Warning: package &#39;dplyr&#39; was built under R version 3.6.3</code></pre>
+<pre><code>Warning: package &#39;forcats&#39; was built under R version 3.6.3</code></pre>
+<pre><code>── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()</code></pre>
 <pre class="r"><code>rmds &lt;- list.files(path = &quot;../analysis/&quot;, pattern=&quot;^\\d+.+&quot;)
 rmd_htmls &lt;- str_replace(rmds, &quot;Rmd$&quot;, &quot;html&quot;)
 
 for(i in rmd_htmls){
   cat(&quot;[&quot;, i, &quot;](&quot;, i,&quot;)\n\n&quot;, sep=&quot;&quot;)
 }</code></pre>
-<p><a href="20200110_PickSamplesForGrowth.html" class="uri">20200110_PickSamplesForGrowth.html</a></p>
-<p><a href="20200210_PickSamplesToOrder.html" class="uri">20200210_PickSamplesToOrder.html</a></p>
-<p><a href="20210604_CheckSampleGenotypes.html" class="uri">20210604_CheckSampleGenotypes.html</a></p>
-<p><a href="20211207_ExploreColocalizations.html" class="uri">20211207_ExploreColocalizations.html</a></p>
+<p><a href="20200110_PickSamplesForGrowth.html">20200110_PickSamplesForGrowth.html</a></p>
+<p><a href="20200210_PickSamplesToOrder.html">20200210_PickSamplesToOrder.html</a></p>
+<p><a href="20210604_CheckSampleGenotypes.html">20210604_CheckSampleGenotypes.html</a></p>
+<p><a href="20211207_ExploreColocalizations.html">20211207_ExploreColocalizations.html</a></p>
 <p>Also, a list of links to ipynb files that were incorporated into the snakemake. Since github renders ipynbs directly, this is not a relative link from the site folder, but rather links directly to the file to view on github (code <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/master/code/notebooks">here</a>):</p>
 <pre class="r"><code>ipynbs &lt;- list.files(path = &quot;../docs/&quot;, pattern=&quot;^\\d+.+ipynb$&quot;)
 
@@ -765,11 +752,11 @@ for(i in ipynbs){
 <div id="workflowr-sessioninfo" class="collapse">
 <pre class="r"><code>sessionInfo()</code></pre>
 <pre><code>R version 3.6.1 (2019-07-05)
-Platform: x86_64-pc-linux-gnu (64-bit)
+Platform: x86_64-conda_cos6-linux-gnu (64-bit)
 Running under: Scientific Linux 7.4 (Nitrogen)
 
 Matrix products: default
-BLAS/LAPACK: /software/openblas-0.2.19-el7-x86_64/lib/libopenblas_haswellp-r0.2.19.so
+BLAS/LAPACK: /project2/yangili1/bjf79/ChromatinSplicingQTLs/code/.snakemake/conda/4480a43d58942cece9fb73087fc984b8/lib/R/lib/libRblas.so
 
 locale:
  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
@@ -783,26 +770,27 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] forcats_0.4.0   stringr_1.4.0   dplyr_0.8.3     purrr_0.3.4    
-[5] readr_1.3.1     tidyr_1.1.0     tibble_2.1.3    ggplot2_3.3.3  
+[1] forcats_0.5.1   stringr_1.4.0   dplyr_1.0.5     purrr_0.3.4    
+[5] readr_1.4.0     tidyr_1.1.3     tibble_3.1.0    ggplot2_3.3.3  
 [9] tidyverse_1.3.0
 
 loaded via a namespace (and not attached):
- [1] tidyselect_1.1.0 xfun_0.8         haven_2.3.1      lattice_0.20-38 
- [5] colorspace_1.4-1 vctrs_0.3.1      generics_0.0.2   htmltools_0.3.6 
- [9] yaml_2.2.0       rlang_0.4.10     later_0.8.0      pillar_1.4.2    
-[13] withr_2.4.1      glue_1.3.1       DBI_1.1.0        dbplyr_1.4.2    
-[17] modelr_0.1.8     readxl_1.3.1     lifecycle_0.1.0  munsell_0.5.0   
-[21] gtable_0.3.0     workflowr_1.6.2  cellranger_1.1.0 rvest_0.3.5     
-[25] evaluate_0.14    knitr_1.23       httpuv_1.5.1     fansi_0.4.0     
-[29] broom_0.5.2      Rcpp_1.0.5       promises_1.0.1   backports_1.1.4 
-[33] scales_1.1.0     jsonlite_1.6     fs_1.3.1         hms_0.5.3       
-[37] digest_0.6.20    stringi_1.4.3    grid_3.6.1       rprojroot_2.0.2 
-[41] cli_2.2.0        tools_3.6.1      magrittr_1.5     crayon_1.3.4    
-[45] whisker_0.3-2    pkgconfig_2.0.2  xml2_1.3.2       reprex_0.3.0    
-[49] lubridate_1.7.4  rstudioapi_0.10  assertthat_0.2.1 rmarkdown_1.13  
-[53] httr_1.4.1       R6_2.4.0         nlme_3.1-140     git2r_0.26.1    
-[57] compiler_3.6.1  </code></pre>
+ [1] tidyselect_1.1.0  xfun_0.20         bslib_0.2.4       haven_2.3.1      
+ [5] colorspace_2.0-0  vctrs_0.3.7       generics_0.1.0    htmltools_0.5.1.1
+ [9] yaml_2.2.1        utf8_1.2.1        rlang_0.4.10      jquerylib_0.1.3  
+[13] later_1.1.0.1     pillar_1.5.1      withr_2.4.1       glue_1.4.2       
+[17] DBI_1.1.1         dbplyr_2.1.1      readxl_1.3.1      modelr_0.1.8     
+[21] lifecycle_1.0.0   cellranger_1.1.0  munsell_0.5.0     gtable_0.3.0     
+[25] workflowr_1.6.2   rvest_1.0.0       evaluate_0.14     knitr_1.31       
+[29] ps_1.6.0          httpuv_1.5.5      fansi_0.4.2       broom_0.7.6      
+[33] Rcpp_1.0.6        promises_1.2.0.1  backports_1.2.1   scales_1.1.1     
+[37] jsonlite_1.7.2    fs_1.5.0          hms_1.0.0         digest_0.6.27    
+[41] stringi_1.4.3     rprojroot_2.0.2   grid_3.6.1        cli_2.4.0        
+[45] tools_3.6.1       magrittr_2.0.1    sass_0.3.1        crayon_1.4.1     
+[49] whisker_0.4       pkgconfig_2.0.3   ellipsis_0.3.1    xml2_1.3.2       
+[53] reprex_1.0.0      lubridate_1.7.10  rstudioapi_0.13   assertthat_0.2.1 
+[57] rmarkdown_2.7     httr_1.4.2        R6_2.5.0          git2r_0.28.0     
+[61] compiler_3.6.1   </code></pre>
 </div>
 
 
@@ -820,13 +808,15 @@ footer is added to webpages before the MathJax javascript. -->
 
 
 
+
+
 </div>
 
 <script>
 
 // add bootstrap table styles to pandoc tables
 function bootstrapStylePandocTables() {
-  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
 }
 $(document).ready(function () {
   bootstrapStylePandocTables();
@@ -834,6 +824,23 @@ $(document).ready(function () {
 
 
 </script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
 
 <!-- dynamically load mathjax for compatibility with self-contained -->
 <script>
