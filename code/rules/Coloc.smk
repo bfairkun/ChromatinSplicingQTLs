@@ -130,7 +130,8 @@ rule genewise_coloc_chunk:
     wildcard_constraints:
         FeatureCoordinatesRedefinedFor = "ForColoc"
     output:
-        "hyprcoloc/Results/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}/Chunks/{n}.txt.gz"
+        clusters = "hyprcoloc/Results/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}/Chunks/{n}.txt.gz",
+        snpscores = "hyprcoloc/Results/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}/Chunks/{n}.snpscores.txt.gz"
     resources:
         mem_mb = 16000
     log:
@@ -139,7 +140,7 @@ rule genewise_coloc_chunk:
         "../envs/r_hyprcoloc.yml"
     shell:
         """
-        Rscript scripts/hyprcoloc_genewise.R {input.summarystatslist} {output} &> {log}
+        Rscript scripts/hyprcoloc_genewise.R {input.summarystatslist} {output.clusters} {output.snpscores} &> {log}
         """
 
 rule Gather_gwas_coloc_chunks:
@@ -148,19 +149,28 @@ rule Gather_gwas_coloc_chunks:
     output:
         "../output/hyprcoloc_results/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}/hyprcoloc.results.txt.gz"
     params:
-        Col1_name = "GWASLeadSnpChrom_Pos_RefAllele_AltAllele_rsID_trait\tHyprcolocIteration\tColocalizedTraits\tPosteriorColocalizationPr\tRegionalAssociationPr\tTopCandidateSNP\tProportionPosteriorPrExplainedByTopSNP\tDroppedTrait"
+        header = "GWASLeadSnpChrom_Pos_RefAllele_AltAllele_rsID_trait\tHyprcolocIteration\tColocalizedTraits\tPosteriorColocalizationPr\tRegionalAssociationPr\tTopCandidateSNP\tProportionPosteriorPrExplainedByTopSNP\tDroppedTrait"
     wildcard_constraints:
         FeatureCoordinatesRedefinedFor = "ForGWASColoc"
     shell:
         """
-        cat <(echo "{params.Col1_name}") <(zcat {input}) | gzip - > {output}
+        cat <(echo "{params.header}") <(zcat {input}) | gzip - > {output}
         """
 
-use rule Gather_gwas_coloc_chunks as Gather_genewise_coloc_chunks with:
+use rule Gather_gwas_coloc_chunks as Gather_genewise_coloc_chunks_snpscores with:
     input:
         expand("hyprcoloc/Results/{{QTLsGenotypeSet}}{{FeatureCoordinatesRedefinedFor}}/Chunks/{n}.txt.gz", n=range(0, config["genewise_coloc_chunks"]))
     wildcard_constraints:
-        FeatureCoordinatesRedefinedFor = "ForColoc"
+        FeatureCoordinatesRedefinedFor = "ForColoc",
     params:
-        Col1_name = "GeneLocus"
+        header = "GeneLocus\tHyprcolocIteration\tColocalizedTraits\tPosteriorColocalizationPr\tRegionalAssociationPr\tTopCandidateSNP\tProportionPosteriorPrExplainedByTopSNP\tDroppedTrait"
 
+use rule Gather_gwas_coloc_chunks as Gather_genewise_coloc_chunks with:
+    input:
+        expand("hyprcoloc/Results/{{QTLsGenotypeSet}}{{FeatureCoordinatesRedefinedFor}}/Chunks/{n}.snpscores.txt.gz", n=range(0, config["genewise_coloc_chunks"]))
+    wildcard_constraints:
+        FeatureCoordinatesRedefinedFor = "ForColoc",
+    output:
+        "hyprcoloc/Results/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}/snpscores.txt.gz"
+    params:
+        header = "snp\tColocalizedCluster\tFinemapPr\tLocus"

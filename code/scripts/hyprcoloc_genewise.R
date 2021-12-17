@@ -11,7 +11,7 @@
 #Use hard coded arguments in interactive R session, else use command line args
 if(interactive()){
     args <- scan(text=
-                 " scratch/testfilelist.txt  scratch/test.txt.gz", what='character')
+                 " scratch/testfilelist.txt  scratch/test.txt.gz scratch/Finemappingscores.txt.gz", what='character')
 } else{
     args <- commandArgs(trailingOnly=TRUE)
 }
@@ -24,6 +24,7 @@ library(hyprcoloc)
 
 FilelistIn <- args[1]
 FileOut <- args[2]
+FinemappingOut <- args[3]
 
 Loci<- read_tsv(FilelistIn, col_names=c("f")) %>%
     filter(file.exists(f)) %>%
@@ -36,7 +37,7 @@ HyprcolocResults.list <- vector("list", length(Loci))
 
 for (i in seq_along(Loci)){
 
-    TestLocus <- Loci[1]
+    # TestLocus <- Loci[1]
     TestLocus <- Loci[i]
     print(paste0("running loci", i, " : ", names(TestLocus)))
 
@@ -90,12 +91,31 @@ for (i in seq_along(Loci)){
         print("Only one triat... skipping locus")
         next
     }
-    res <- hyprcoloc(betas, ses, trait.names=traits, snp.id=rsid)
+    res <- hyprcoloc(betas, ses, trait.names=traits, snp.id=rsid, snpscores=T)
+    print(dim(res[[1]]))
+    try(
+        res[[2]] %>%
+            setNames(1:length(res[[2]])) %>%
+            bind_rows() %>%
+            mutate(snps=rsid) %>%
+            gather(key="ColocalizedCluster", value="FinemappingPr", -snps) %>%
+            group_by(ColocalizedCluster) %>%
+            arrange(desc(FinemappingPr)) %>%
+            mutate(cumPr=cumsum(FinemappingPr)) %>%
+            mutate(lagcumPr=lag(cumPr)) %>%
+            filter((lagcumPr < 0.95) | is.na(lagcumPr)) %>%
+            ungroup() %>%
+            select(snps, ColocalizedCluster, FinemappingPr) %>%
+            mutate(Locus=names(TestLocus)) %>%
+            write_tsv(FinemappingOut, append=T)
+
+    )
 
     HyprcolocResults.list[[i]] <- 
          res[[1]] %>%
          as.data.frame()
 }
+
 HyprcolocResults.list <- setNames(HyprcolocResults.list, names(Loci))
 
 HyprcolocResults.df <-

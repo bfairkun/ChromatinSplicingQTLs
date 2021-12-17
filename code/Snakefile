@@ -164,3 +164,7 @@ rule Gather_gwas_summary_stats:
             QTLsGenotypeSet="",
             FeatureCoordinatesRedefinedFor=["ForGWASColoc", "ForColoc"],
         ),
+        expand("hyprcoloc/Results/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}/snpscores.txt.gz",
+            QTLsGenotypeSet="",
+            FeatureCoordinatesRedefinedFor=["ForColoc"],
+            )
