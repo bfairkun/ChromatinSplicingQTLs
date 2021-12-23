@@ -362,6 +362,8 @@ SecondCoriellOrder <- AllCoriellSamples %>%
 
 SecondCoriellOrder
 
+SecondCorellOrderNoGM <- str_remove(SecondCoriellOrder, "GM")
+
 ```
 
 ## Update 06/15/2021
@@ -393,6 +395,41 @@ SamplesToThawAgain <- AllCoriellSamples %>%
   pull(CellLine)
 
 SamplesToThawAgain
+
+```
+
+Finally, as per Genevieve's request, I should identify which of the strains I ordered are completly new to the lab, so others can prioritize those lines for creating new ipsc lines.
+
+```{r}
+
+#The lines Gilad lad previous had are either in this vector:
+length(GiladLabYRIRack.Lines)
+
+#... or in this vector:
+OtherLines <- read_tsv("../data/GiladStrains/Human_LCLs.txt") %>%
+  rename(CellLine=`Human LCL ID`) %>%
+  distinct(CellLine, .keep_all=T) %>%
+  pull(CellLine)
+
+
+#Now get the lines that we ordered that are not in those previous lines
+AllLinesOrderedThatAreNewToGiladLab <- data.frame(CellLine = c(str_remove(SecondCoriellOrder, "GM"), SamplesToOrder)) %>%
+  filter(!CellLine %in% c(OtherLines, GiladLabYRIRack.Lines)) %>%
+  mutate(CellLine = as.character(CellLine)) %>%
+  pull(CellLine)
+```
+
+Write out list for Genevieve...
+
+```{r, eval=F}
+read_tsv("../data/GiladStrains/AustinBankedCellList.txt") %>%
+  select(Line, Plate_In_LCL_Rack=Plate) %>%
+  mutate(Line = str_replace(Line, "(\\d+?)[AB*]", "\\1")) %>%
+  mutate(IsNewToGiladLab = Line %in% AllLinesOrderedThatAreNewToGiladLab) %>%
+  write_tsv("~/Desktop/ListOfLinesThatAustinStockedInLCLRack.tsv")
+  # mutate(IsOrderedFromCoriell = Line %in% c(str_remove(SecondCoriellOrder, "GM"), SamplesToOrder)) %>%
+  # drop_na() %>%
+  # pull(IsNewToGiladLab) %>% table()
 
 ```
 
