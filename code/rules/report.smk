@@ -82,7 +82,7 @@ rule BuildRmd:
     wildcard_constraints:
         fn = "|".join(Rmds)
     conda:
-        "../envs/r.yml"
+        "../envs/r_2.yaml"
     shell:
         """
         Rscript -e 'setwd("../analysis"); workflowr::wflow_build("{wildcards.fn}.Rmd")' &> {log}

@@ -11,7 +11,7 @@
 
 
 
-<title>Home</title>
+<title>20200110_PickSamplesForGrowth</title>
 
 <script src="site_libs/header-attrs-2.7/header-attrs.js"></script>
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
@@ -29,6 +29,9 @@
        h6 {font-size: 12px;}
        code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
        pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
@@ -228,6 +231,69 @@ $(document).ready(function () {
 
 
 
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
 
 </head>
 
@@ -235,6 +301,16 @@ $(document).ready(function () {
 
 
 <div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-sm-12 col-md-4 col-lg-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-sm-12 col-md-8 col-lg-9">
 
 
 
@@ -272,7 +348,7 @@ $(document).ready(function () {
 
 
 
-<h1 class="title toc-ignore">Home</h1>
+<h1 class="title toc-ignore">20200110_PickSamplesForGrowth</h1>
 
 </div>
 
@@ -485,7 +561,7 @@ Note that any generated files, e.g. HTML, png, CSS, etc., are not included in t
 <div id="versions" class="tab-pane fade">
 
 <p>
-These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/index.Rmd</code>) and HTML (<code>docs/index.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
+These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/20200110_PickSamplesForGrowth.Rmd</code>) and HTML (<code>docs/20200110_PickSamplesForGrowth.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
 </p>
 <div class="table-responsive">
 <table class="table table-condensed table-hover">
@@ -511,206 +587,19 @@ Message
 <tbody>
 <tr>
 <td>
-html
-</td>
-<td>
-<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/2f0181fdb772c14d30a0d7af03e5b3576d95903a/docs/index.html" target="_blank">2f0181f</a>
-</td>
-<td>
-Benjmain Fair
-</td>
-<td>
-2021-12-15
-</td>
-<td>
-Added genewise hyprcoloc rules
-</td>
-</tr>
-<tr>
-<td>
-html
-</td>
-<td>
-<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/50ad81859f449c21a41bd45eac46c7208976dca3/docs/index.html" target="_blank">50ad818</a>
-</td>
-<td>
-Benjmain Fair
-</td>
-<td>
-2021-12-07
-</td>
-<td>
-update site
-</td>
-</tr>
-<tr>
-<td>
-html
-</td>
-<td>
-<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/a166e86d926af346299e8ec527cd15b96a2ac932/docs/index.html" target="_blank">a166e86</a>
-</td>
-<td>
-Benjmain Fair
-</td>
-<td>
-2021-10-06
-</td>
-<td>
-added test notebook
-</td>
-</tr>
-<tr>
-<td>
 Rmd
 </td>
 <td>
-<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/24331d7a50d3f935aeb26b9060bc539f194eabc2/analysis/index.Rmd" target="_blank">24331d7</a>
-</td>
-<td>
-cfbuenabadn
-</td>
-<td>
-2021-09-23
-</td>
-<td>
-adding chRNA-seq processing smk
-</td>
-</tr>
-<tr>
-<td>
-html
-</td>
-<td>
-<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/24331d7a50d3f935aeb26b9060bc539f194eabc2/docs/index.html" target="_blank">24331d7</a>
-</td>
-<td>
-cfbuenabadn
-</td>
-<td>
-2021-09-23
-</td>
-<td>
-adding chRNA-seq processing smk
-</td>
-</tr>
-<tr>
-<td>
-html
-</td>
-<td>
-<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/ee655cce83b515ff67db7b95a4a7158019356acf/docs/index.html" target="_blank">ee655cc</a>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/304e9b71d38372d012263365ae4c32724ecccddf/analysis/20200110_PickSamplesForGrowth.Rmd" target="_blank">304e9b7</a>
 </td>
 <td>
 Benjmain Fair
 </td>
 <td>
-2021-09-23
+2021-02-11
 </td>
 <td>
-fixed site links
-</td>
-</tr>
-<tr>
-<td>
-html
-</td>
-<td>
-<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/afc10fbdc9952caeecd2639f070f357cef548aeb/docs/index.html" target="_blank">afc10fb</a>
-</td>
-<td>
-Benjmain Fair
-</td>
-<td>
-2021-09-23
-</td>
-<td>
-fixed ipynb links on site homepage
-</td>
-</tr>
-<tr>
-<td>
-html
-</td>
-<td>
-<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/91f067a6c30ae94dca690c73bd30d82f56d237e0/docs/index.html" target="_blank">91f067a</a>
-</td>
-<td>
-Benjmain Fair
-</td>
-<td>
-2021-09-23
-</td>
-<td>
-added example ipynb to site
-</td>
-</tr>
-<tr>
-<td>
-Rmd
-</td>
-<td>
-<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/53ba92f62702392ecd229616e12d4c4be32e2472/analysis/index.Rmd" target="_blank">53ba92f</a>
-</td>
-<td>
-Benjmain Fair
-</td>
-<td>
-2021-06-07
-</td>
-<td>
-update side and check sample swapping
-</td>
-</tr>
-<tr>
-<td>
-html
-</td>
-<td>
-<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/53ba92f62702392ecd229616e12d4c4be32e2472/docs/index.html" target="_blank">53ba92f</a>
-</td>
-<td>
-Benjmain Fair
-</td>
-<td>
-2021-06-07
-</td>
-<td>
-update side and check sample swapping
-</td>
-</tr>
-<tr>
-<td>
-Rmd
-</td>
-<td>
-<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/dd0eadbb209caea66e98ef74baf13cd7a9268eca/analysis/index.Rmd" target="_blank">dd0eadb</a>
-</td>
-<td>
-Benjmain Fair
-</td>
-<td>
-2020-08-21
-</td>
-<td>
-initial commit
-</td>
-</tr>
-<tr>
-<td>
-html
-</td>
-<td>
-<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/dd0eadbb209caea66e98ef74baf13cd7a9268eca/docs/index.html" target="_blank">dd0eadb</a>
-</td>
-<td>
-Benjmain Fair
-</td>
-<td>
-2020-08-21
-</td>
-<td>
-initial commit
+added data about picking samples
 </td>
 </tr>
 </tbody>
@@ -720,46 +609,175 @@ initial commit
 </div>
 </div>
 </div>
-<p>Welcome to my research website.</p>
-<p>This project will investigate the correlation of genetic effects on chromatin, splicing, transcription, and complex phenotypes, using naturally occuring human genetic variation.</p>
-<p>We are still collecting data, but I have also been perusing around published data a bit.</p>
-<p>Here are links to all of my rendered analysis Rmarkdowns (code <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/master/analysis">here</a>):</p>
-<pre class="r"><code>library(tidyverse)</code></pre>
-<pre><code>Warning: package &#39;tidyverse&#39; was built under R version 3.6.3</code></pre>
-<pre><code>── Attaching packages ─────────────────────────────────────── tidyverse 1.3.0 ──</code></pre>
-<pre><code>✔ ggplot2 3.3.3     ✔ purrr   0.3.4
-✔ tibble  3.1.0     ✔ dplyr   1.0.5
-✔ tidyr   1.1.3     ✔ stringr 1.4.0
-✔ readr   1.4.0     ✔ forcats 0.5.1</code></pre>
-<pre><code>Warning: package &#39;ggplot2&#39; was built under R version 3.6.3</code></pre>
-<pre><code>Warning: package &#39;tibble&#39; was built under R version 3.6.3</code></pre>
-<pre><code>Warning: package &#39;tidyr&#39; was built under R version 3.6.3</code></pre>
-<pre><code>Warning: package &#39;readr&#39; was built under R version 3.6.3</code></pre>
-<pre><code>Warning: package &#39;purrr&#39; was built under R version 3.6.3</code></pre>
-<pre><code>Warning: package &#39;dplyr&#39; was built under R version 3.6.3</code></pre>
-<pre><code>Warning: package &#39;forcats&#39; was built under R version 3.6.3</code></pre>
-<pre><code>── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
-✖ dplyr::filter() masks stats::filter()
-✖ dplyr::lag()    masks stats::lag()</code></pre>
-<pre class="r"><code>rmds &lt;- list.files(path = &quot;../analysis/&quot;, pattern=&quot;^\\d+.+&quot;)
-rmd_htmls &lt;- str_replace(rmds, &quot;Rmd$&quot;, &quot;html&quot;)
+<pre class="r"><code>library(tidyverse)
+library(readxl)
+library(knitr)
 
-for(i in rmd_htmls){
-  cat(&quot;[&quot;, i, &quot;](&quot;, i,&quot;)\n\n&quot;, sep=&quot;&quot;)
-}</code></pre>
-<p><a href="20200110_PickSamplesForGrowth.html">20200110_PickSamplesForGrowth.html</a></p>
-<p><a href="20200210_PickSamplesToOrder.html">20200210_PickSamplesToOrder.html</a></p>
-<p><a href="20210604_CheckSampleGenotypes.html">20210604_CheckSampleGenotypes.html</a></p>
-<p><a href="20211207_ExploreColocalizations.html">20211207_ExploreColocalizations.html</a></p>
-<p><a href="20211217_GenewiseColocFirstLook.knit.md">20211217_GenewiseColocFirstLook.knit.md</a></p>
-<p><a href="20211217_GenewiseColocFirstLook.html">20211217_GenewiseColocFirstLook.html</a></p>
-<p>Also, a list of links to ipynb files that were incorporated into the snakemake. Since github renders ipynbs directly, this is not a relative link from the site folder, but rather links directly to the file to view on github (code <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/master/code/notebooks">here</a>):</p>
-<pre class="r"><code>ipynbs &lt;- list.files(path = &quot;../docs/&quot;, pattern=&quot;^\\d+.+ipynb$&quot;)
+LCLs.1000Genomes.vec &lt;- read.table(&quot;../data/GiladStrains/YRI.list.from1000Genomes.txt&quot;, sep=&#39;\t&#39;) %&gt;% pull(V1) %&gt;%
+  gsub(&quot;^NA&quot;, &quot;&quot;, ., perl=T)
 
-for(i in ipynbs){
-  cat(&quot;[&quot;, i, &quot;](&quot;,&quot;https://github.com/bfairkun/ChromatinSplicingQTLs/blob/master/docs/&quot;, i,&quot;)\n\n&quot;, sep=&quot;&quot;)
-}</code></pre>
-<p><a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/master/docs/20210921_CountSpliceSiteSNPsInSQTLs.py.ipynb">20210921_CountSpliceSiteSNPsInSQTLs.py.ipynb</a></p>
+LCLs.GiladFreezer &lt;- read.table(&quot;../data/GiladStrains/Human_LCLs.txt&quot;, sep = &#39;\t&#39;, header = T, stringsAsFactors = F)
+
+LCLs.GiladFreezer.LCL.YRI.vec &lt;- read.table(&quot;../data/GiladStrains/LCL_YRI.GiladCryoSheetTab.list.txt&quot;, stringsAsFactors = F) %&gt;% pull(V1) %&gt;% as.character()
+
+GrowthNotes &lt;- read_delim(&quot;../data/GrowthNotes/GrowthNotes.tsv&quot;, delim = &#39;\t&#39;)
+
+SamplesToRestock.vec &lt;- read.table(&quot;../data/GiladStrains/Human_LCLs.ToRestock.txt&quot;, stringsAsFactors = F) %&gt;% pull(V1) %&gt;% as.character()</code></pre>
+<p>Ok now figure out which lines to pull</p>
+<pre class="r"><code>AlreadyDone.vec &lt;- GrowthNotes %&gt;%
+  filter(!is.na(`Raw Count1 (x10^6)`)) %&gt;%
+  pull(`Cell Line`) %&gt;% as.character()
+
+#Lines that I can replenish from Briana&#39;s stocks
+LinesToPutBack.vec &lt;- intersect(SamplesToRestock.vec, AlreadyDone.vec)
+
+LinesStillNeedToRestock.vec &lt;- setdiff(SamplesToRestock.vec, AlreadyDone.vec)
+
+#Are there any YRI lines in Gilad lab freezer that aren&#39;t in YRI box
+LCLs.GiladFreezer.MainTab.YRI.vec &lt;-  LCLs.GiladFreezer %&gt;%
+  filter(Human.LCL.ID %in% LCLs.1000Genomes.vec) %&gt;%
+  pull(Human.LCL.ID) %&gt;% as.character()
+setdiff(LCLs.GiladFreezer.MainTab.YRI.vec, LCLs.GiladFreezer.LCL.YRI.vec)</code></pre>
+<pre><code> [1] &quot;18489&quot; &quot;18498&quot; &quot;18501&quot; &quot;18503&quot; &quot;18504&quot; &quot;18509&quot; &quot;18511&quot; &quot;18516&quot; &quot;18518&quot;
+[10] &quot;18519&quot; &quot;18521&quot; &quot;18522&quot; &quot;18852&quot; &quot;18855&quot; &quot;18856&quot; &quot;18857&quot; &quot;18858&quot; &quot;18859&quot;
+[19] &quot;18860&quot; &quot;18861&quot; &quot;18862&quot; &quot;18871&quot; &quot;18872&quot; &quot;18907&quot; &quot;18909&quot; &quot;18912&quot; &quot;18913&quot;
+[28] &quot;18914&quot; &quot;18916&quot; &quot;19092&quot; &quot;19093&quot; &quot;19099&quot; &quot;19100&quot; &quot;19102&quot; &quot;19103&quot; &quot;19114&quot;
+[37] &quot;19116&quot; &quot;19119&quot; &quot;19120&quot; &quot;19127&quot; &quot;19129&quot; &quot;19130&quot; &quot;19131&quot; &quot;19132&quot; &quot;19137&quot;
+[46] &quot;19138&quot; &quot;19139&quot; &quot;19140&quot; &quot;19142&quot; &quot;19143&quot; &quot;19144&quot; &quot;19145&quot; &quot;19152&quot; &quot;19153&quot;
+[55] &quot;19159&quot; &quot;19161&quot; &quot;19171&quot; &quot;19173&quot; &quot;19190&quot; &quot;19201&quot; &quot;19202&quot; &quot;19203&quot; &quot;19204&quot;
+[64] &quot;19205&quot; &quot;19206&quot; &quot;19210&quot; &quot;19211&quot; &quot;19222&quot; &quot;18854&quot; &quot;19208&quot;</code></pre>
+<pre class="r"><code>#And the reverse?
+setdiff(LCLs.GiladFreezer.LCL.YRI.vec, LCLs.GiladFreezer.MainTab.YRI.vec)</code></pre>
+<pre><code>[1] &quot;19193&quot; &quot;19128&quot; &quot;18520&quot;</code></pre>
+<pre class="r"><code>BlacklistFromYang &lt;- c(&quot;18502&quot;, &quot;18516&quot;, &quot;18916&quot;, &quot;19012&quot;)
+BlacklistFromBriana &lt;- c(&quot;18517&quot;, &quot;19128&quot;)</code></pre>
+<p>Let’s include those reverse matches in this experiment. Let’s come up with a list of “StillToDo” strains based on the following points</p>
+<ol style="list-style-type: decimal">
+<li>Not already done</li>
+<li>Not in Yang or Briana’s blacklist</li>
+<li>Pull from the LinesStillNeedToRestock.vec first, and then from other lines in LCLs.GiladFreezer and not in LCLs.GiladFreezer.LCL.YRI.vec</li>
+<li>Should be in 1000Genome’s project (some samples are not, though they are clearly YRI from Coriell)</li>
+</ol>
+<pre class="r"><code>#Start with set of LCLs in GiladFreezer Main tab
+StillToDo.vec &lt;- LCLs.GiladFreezer.MainTab.YRI.vec %&gt;%
+  #Add list of LCLs in GiladFreezer YRI tab
+  union(LCLs.GiladFreezer.MainTab.YRI.vec) %&gt;%
+  #intersect with 1000Genome&#39;s YRI list
+  intersect(LCLs.1000Genomes.vec) %&gt;%
+  #Subtract out the blacklist strains and the ones we&#39;ve already done
+  setdiff(BlacklistFromYang) %&gt;%
+  setdiff(BlacklistFromBriana) %&gt;%
+  setdiff(AlreadyDone.vec) %&gt;% sort()
+length(StillToDo.vec)</code></pre>
+<pre><code>[1] 65</code></pre>
+<p>From that list, let’s prioritize a list of 30 strains for this experiment by</p>
+<ol style="list-style-type: decimal">
+<li>Including strains I still have to restock because I took a vial and didn’t replenish it from 2019</li>
+<li>The two lines that we need to redo because of swapped pellet</li>
+<li>Prioritize strains have more than 2 vials in the freezer</li>
+<li>Things that more published data already</li>
+</ol>
+<pre class="r"><code>NumVials &lt;- read_delim(&quot;../data/GiladStrains/Human_LCLs.NumberOfVials.counts.txt&quot;, delim = &#39;\t&#39;, col_names = c(&quot;Strain&quot;, &quot;Count&quot;))
+
+
+LinesStillNeedToRestock.vec</code></pre>
+<pre><code>[1] &quot;19209&quot; &quot;18870&quot; &quot;19222&quot; &quot;19143&quot; &quot;18510&quot; &quot;18499&quot; &quot;18498&quot;</code></pre>
+<pre class="r"><code>LinesToRedoFromBriannasStocks.vec &lt;- c(&quot;18861&quot;, &quot;19140&quot;)
+
+Points1And2 &lt;- union(LinesStillNeedToRestock.vec,LinesToRedoFromBriannasStocks.vec)
+
+#Points 3 and 4
+LinesWithMoreThan2Vials.vec &lt;- NumVials %&gt;%
+  filter(Strain %in% StillToDo.vec) %&gt;%
+  filter(Count &gt; 2) %&gt;%
+  pull(Strain) %&gt;%
+  setdiff(Points1And2)
+LinesWithMoreThan2Vials.vec</code></pre>
+<pre><code> [1] &quot;18486&quot; &quot;18497&quot; &quot;18500&quot; &quot;18501&quot; &quot;18503&quot; &quot;18504&quot; &quot;18505&quot; &quot;18508&quot; &quot;18509&quot;
+[10] &quot;18515&quot; &quot;18518&quot; &quot;18521&quot; &quot;18522&quot; &quot;18852&quot; &quot;18853&quot; &quot;18854&quot; &quot;18855&quot; &quot;18857&quot;
+[19] &quot;18859&quot; &quot;18860&quot; &quot;18862&quot; &quot;18871&quot; &quot;18872&quot; &quot;18914&quot; &quot;19100&quot; &quot;19102&quot; &quot;19103&quot;
+[28] &quot;19114&quot; &quot;19116&quot; &quot;19120&quot; &quot;19127&quot; &quot;19129&quot; &quot;19132&quot; &quot;19139&quot; &quot;19141&quot; &quot;19142&quot;
+[37] &quot;19144&quot; &quot;19145&quot; &quot;19147&quot; &quot;19159&quot; &quot;19161&quot; &quot;19173&quot; &quot;19190&quot; &quot;19201&quot; &quot;19202&quot;
+[46] &quot;19203&quot; &quot;19204&quot; &quot;19205&quot; &quot;19206&quot; &quot;19207&quot; &quot;19208&quot; &quot;19211&quot; &quot;19223&quot; &quot;19238&quot;
+[55] &quot;19239&quot; &quot;19257&quot;</code></pre>
+<pre class="r"><code>LCLs.PreviousMolecularDatasets &lt;- read_excel(&quot;../data/GiladStrains/individuals.data.types.xlsx&quot;, col_names =c(&quot;Line&quot;, &quot;NumberAssays&quot;, &quot;Assay1&quot;, &quot;Assay2&quot;, &quot;Assay3&quot;, &quot;Assay4&quot;, &quot;Assay5&quot;, &quot;Assay6&quot;, &quot;Assay7&quot;, &quot;Assay8&quot;))
+head(LCLs.PreviousMolecularDatasets)</code></pre>
+<pre><code># A tibble: 6 x 10
+   Line NumberAssays Assay1 Assay2 Assay3   Assay4  Assay5  Assay6 Assay7 Assay8
+  &lt;dbl&gt;        &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt;  &lt;chr&gt;    &lt;chr&gt;   &lt;chr&gt;   &lt;chr&gt;  &lt;chr&gt;  &lt;chr&gt; 
+1 18499            8 RNAseq Decay  prot     H3K27ac methyl… DNase  ribo   4su   
+2 18498            8 RNAseq Decay  prot     H3K27ac methyl… DNase  ribo   4su   
+3 19159            7 RNAseq Decay  methyla… H3K27ac DNase   ribo   4su    &lt;NA&gt;  
+4 19150            1 RNAseq &lt;NA&gt;   &lt;NA&gt;     &lt;NA&gt;    &lt;NA&gt;    &lt;NA&gt;   &lt;NA&gt;   &lt;NA&gt;  
+5 19153            7 RNAseq Decay  prot     H3K27ac DNase   ribo   4su    &lt;NA&gt;  
+6 19152            7 RNAseq Decay  prot     H3K27ac DNase   ribo   4su    &lt;NA&gt;  </code></pre>
+<pre class="r"><code>Points3And4 &lt;- LCLs.PreviousMolecularDatasets %&gt;%
+  filter(Line %in% LinesWithMoreThan2Vials.vec) %&gt;%
+  arrange(desc(NumberAssays)) %&gt;%
+  slice_head(n=32-length(Points1And2)) %&gt;%
+  pull(Line) %&gt;% as.character()
+
+LinesToThaw &lt;- union(Points3And4, Points1And2)
+length(LinesToThaw)</code></pre>
+<pre><code>[1] 32</code></pre>
+<p>Lastly, let’s obtain the exact location of these strains</p>
+<pre class="r"><code>#Read in location of strains
+GiladLabLinesLocation &lt;- read_delim(&quot;../data/GiladStrains/Large_Cryo_2019_Human_LCLs.tsv&quot;, delim = &#39;\t&#39;, comment = &#39;#&#39;)
+
+GiladLabLinesLocation %&gt;%
+  filter(Line %in% LinesToThaw) %&gt;%
+  # filter(is.na(Notes1)) %&gt;%
+  arrange(Box) %&gt;%
+  distinct(Line, .keep_all = T) %&gt;%
+  dplyr::select(Box, Position, Line, Notes1) %&gt;%
+  write_tsv(&quot;../data/GiladStrains/20200111_CellsToWake.tsv&quot;)
+
+
+GiladLabLinesLocation %&gt;%
+  filter(Line %in% c(&quot;18870&quot;, &quot;18510&quot;))</code></pre>
+<pre><code># A tibble: 12 x 11
+   LineRowNumber LineColumnNumber LineColumnLetter LineReferenceString
+           &lt;dbl&gt;            &lt;dbl&gt; &lt;chr&gt;            &lt;chr&gt;              
+ 1           149                2 B                Human LCLs&#39;!B149   
+ 2           149                3 C                Human LCLs&#39;!C149   
+ 3           149                4 D                Human LCLs&#39;!D149   
+ 4           149                5 E                Human LCLs&#39;!E149   
+ 5           149                6 F                Human LCLs&#39;!F149   
+ 6           149                7 G                Human LCLs&#39;!G149   
+ 7           149                8 H                Human LCLs&#39;!H149   
+ 8           149                9 I                Human LCLs&#39;!I149   
+ 9           149               10 J                Human LCLs&#39;!J149   
+10           152                2 B                Human LCLs&#39;!B152   
+11           152                3 C                Human LCLs&#39;!C152   
+12           261                4 D                Human LCLs&#39;!D261   
+# … with 7 more variables: Notes1ReferenceString &lt;chr&gt;,
+#   Notes2ReferenceString &lt;chr&gt;, Box &lt;dbl&gt;, Position &lt;dbl&gt;, Line &lt;chr&gt;,
+#   Notes1 &lt;chr&gt;, Notes2 &lt;lgl&gt;</code></pre>
+<div id="update" class="section level2">
+<h2>Update:</h2>
+<p>As of 1/19, only 14/32 strains that we woke up are growing well. therefore, let’s thaw 13 more strains, bringing the total to 27, which, assuming no more than three drop out due to poor growth, will leave us with a batch of 24 for fractionation.</p>
+<p>Let’s pick which ones to do by picking from the list of cell lines left to do, subtracting the 14 lines that are growing well, and then intersecting amongst the gilad lab YRI cryo rack strains which are probably stocked in better condition and I think will grow better…</p>
+<pre class="r"><code>GiladLabYRI.Rack &lt;- read_delim(&quot;../data/GiladStrains/LCL_YRI.Gilad.Positions2.txt&quot;, delim = &#39;\t&#39;) %&gt;%
+  mutate(Line=as.character(Line))
+
+FourteenLinesAlreadyGrowing &lt;- GrowthNotes %&gt;%
+  filter(Thawed == &quot;1/12/21&quot;) %&gt;%
+  filter(`CellFractionedAttempted?` == &quot;Y&quot;) %&gt;%
+  pull(`Cell Line`) %&gt;% as.character()
+
+CellLinesToThaw_Jan19 &lt;- LCLs.1000Genomes.vec %&gt;%
+  setdiff(AlreadyDone.vec) %&gt;%
+  setdiff(FourteenLinesAlreadyGrowing) %&gt;%
+  base::intersect(GiladLabYRI.Rack %&gt;% pull(Line))
+  
+CellLinesToThaw_Jan19</code></pre>
+<pre><code> [1] &quot;19225&quot; &quot;18500&quot; &quot;18505&quot; &quot;18517&quot; &quot;18497&quot; &quot;18853&quot; &quot;19128&quot; &quot;19147&quot; &quot;18508&quot;
+[10] &quot;18510&quot; &quot;18515&quot; &quot;18502&quot; &quot;19239&quot; &quot;19238&quot; &quot;19207&quot; &quot;19257&quot; &quot;19209&quot; &quot;19223&quot;
+[19] &quot;18520&quot;</code></pre>
+<pre class="r"><code>GiladLabYRI.Rack %&gt;%
+  filter(Line %in% CellLinesToThaw_Jan19) %&gt;%
+  slice_head(n=13) %&gt;%
+  write_tsv(&quot;../data/GiladStrains/20200119_CellsToWake.tsv&quot;)</code></pre>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
@@ -787,27 +805,27 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] forcats_0.5.1   stringr_1.4.0   dplyr_1.0.5     purrr_0.3.4    
-[5] readr_1.4.0     tidyr_1.1.3     tibble_3.1.0    ggplot2_3.3.3  
-[9] tidyverse_1.3.0
+ [1] knitr_1.31      readxl_1.3.1    forcats_0.5.1   stringr_1.4.0  
+ [5] dplyr_1.0.5     purrr_0.3.4     readr_1.4.0     tidyr_1.1.3    
+ [9] tibble_3.1.0    ggplot2_3.3.3   tidyverse_1.3.0
 
 loaded via a namespace (and not attached):
  [1] tidyselect_1.1.0  xfun_0.20         bslib_0.2.4       haven_2.3.1      
  [5] colorspace_2.0-0  vctrs_0.3.7       generics_0.1.0    htmltools_0.5.1.1
  [9] yaml_2.2.1        utf8_1.2.1        rlang_0.4.10      jquerylib_0.1.3  
 [13] later_1.1.0.1     pillar_1.5.1      withr_2.4.1       glue_1.4.2       
-[17] DBI_1.1.1         dbplyr_2.1.1      readxl_1.3.1      modelr_0.1.8     
-[21] lifecycle_1.0.0   cellranger_1.1.0  munsell_0.5.0     gtable_0.3.0     
-[25] workflowr_1.6.2   rvest_1.0.0       evaluate_0.14     knitr_1.31       
-[29] ps_1.6.0          httpuv_1.5.5      fansi_0.4.2       broom_0.7.6      
-[33] Rcpp_1.0.6        promises_1.2.0.1  backports_1.2.1   scales_1.1.1     
-[37] jsonlite_1.7.2    fs_1.5.0          hms_1.0.0         digest_0.6.27    
-[41] stringi_1.4.3     rprojroot_2.0.2   grid_3.6.1        cli_2.4.0        
-[45] tools_3.6.1       magrittr_2.0.1    sass_0.3.1        crayon_1.4.1     
-[49] whisker_0.4       pkgconfig_2.0.3   ellipsis_0.3.1    xml2_1.3.2       
-[53] reprex_1.0.0      lubridate_1.7.10  rstudioapi_0.13   assertthat_0.2.1 
-[57] rmarkdown_2.7     httr_1.4.2        R6_2.5.0          git2r_0.28.0     
-[61] compiler_3.6.1   </code></pre>
+[17] DBI_1.1.1         dbplyr_2.1.1      modelr_0.1.8      lifecycle_1.0.0  
+[21] cellranger_1.1.0  munsell_0.5.0     gtable_0.3.0      workflowr_1.6.2  
+[25] rvest_1.0.0       evaluate_0.14     ps_1.6.0          httpuv_1.5.5     
+[29] fansi_0.4.2       broom_0.7.6       Rcpp_1.0.6        promises_1.2.0.1 
+[33] backports_1.2.1   scales_1.1.1      jsonlite_1.7.2    fs_1.5.0         
+[37] hms_1.0.0         digest_0.6.27     stringi_1.4.3     rprojroot_2.0.2  
+[41] grid_3.6.1        cli_2.4.0         tools_3.6.1       magrittr_2.0.1   
+[45] sass_0.3.1        crayon_1.4.1      whisker_0.4       pkgconfig_2.0.3  
+[49] ellipsis_0.3.1    xml2_1.3.2        reprex_1.0.0      lubridate_1.7.10 
+[53] rstudioapi_0.13   assertthat_0.2.1  rmarkdown_2.7     httr_1.4.2       
+[57] R6_2.5.0          git2r_0.28.0      compiler_3.6.1   </code></pre>
+</div>
 </div>
 
 
@@ -826,6 +844,8 @@ footer is added to webpages before the MathJax javascript. -->
 
 
 
+</div>
+</div>
 
 </div>
 
@@ -858,6 +878,32 @@ $(document).ready(function () {
 
 <!-- code folding -->
 
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
 
 <!-- dynamically load mathjax for compatibility with self-contained -->
 <script>

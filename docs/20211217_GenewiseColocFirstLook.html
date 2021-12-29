@@ -9,9 +9,11 @@
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
+<meta name="author" content="Benjamin Fair" />
 
+<meta name="date" content="2021-12-28" />
 
-<title>Home</title>
+<title>Untitled</title>
 
 <script src="site_libs/header-attrs-2.7/header-attrs.js"></script>
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
@@ -29,6 +31,9 @@
        h6 {font-size: 12px;}
        code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
        pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
@@ -228,6 +233,69 @@ $(document).ready(function () {
 
 
 
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
 
 </head>
 
@@ -235,6 +303,16 @@ $(document).ready(function () {
 
 
 <div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-sm-12 col-md-4 col-lg-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-sm-12 col-md-8 col-lg-9">
 
 
 
@@ -272,7 +350,9 @@ $(document).ready(function () {
 
 
 
-<h1 class="title toc-ignore">Home</h1>
+<h1 class="title toc-ignore">Untitled</h1>
+<h4 class="author">Benjamin Fair</h4>
+<h4 class="date">December 28, 2021</h4>
 
 </div>
 
@@ -466,9 +546,11 @@ Ignored files:
     Ignored:    data/GrowthNotes/._20210830_GrowthNotes_chRNA.ConcentrationsToReplate.txt
 
 Untracked files:
+    Untracked:  code/envs/r_2.yaml
     Untracked:  code/snakemake_profiles/slurm/__pycache__/
 
 Unstaged changes:
+    Modified:   code/rules/report.smk
     Modified:   code/scripts/GenometracksByGenotype
     Modified:   output/hyprcoloc_results/ForColoc/hyprcoloc.results.txt.gz
 
@@ -485,7 +567,7 @@ Note that any generated files, e.g. HTML, png, CSS, etc., are not included in t
 <div id="versions" class="tab-pane fade">
 
 <p>
-These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/index.Rmd</code>) and HTML (<code>docs/index.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
+These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/20211217_GenewiseColocFirstLook.Rmd</code>) and HTML (<code>docs/20211217_GenewiseColocFirstLook.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
 </p>
 <div class="table-responsive">
 <table class="table table-condensed table-hover">
@@ -511,206 +593,19 @@ Message
 <tbody>
 <tr>
 <td>
-html
-</td>
-<td>
-<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/2f0181fdb772c14d30a0d7af03e5b3576d95903a/docs/index.html" target="_blank">2f0181f</a>
-</td>
-<td>
-Benjmain Fair
-</td>
-<td>
-2021-12-15
-</td>
-<td>
-Added genewise hyprcoloc rules
-</td>
-</tr>
-<tr>
-<td>
-html
-</td>
-<td>
-<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/50ad81859f449c21a41bd45eac46c7208976dca3/docs/index.html" target="_blank">50ad818</a>
-</td>
-<td>
-Benjmain Fair
-</td>
-<td>
-2021-12-07
-</td>
-<td>
-update site
-</td>
-</tr>
-<tr>
-<td>
-html
-</td>
-<td>
-<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/a166e86d926af346299e8ec527cd15b96a2ac932/docs/index.html" target="_blank">a166e86</a>
-</td>
-<td>
-Benjmain Fair
-</td>
-<td>
-2021-10-06
-</td>
-<td>
-added test notebook
-</td>
-</tr>
-<tr>
-<td>
 Rmd
 </td>
 <td>
-<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/24331d7a50d3f935aeb26b9060bc539f194eabc2/analysis/index.Rmd" target="_blank">24331d7</a>
-</td>
-<td>
-cfbuenabadn
-</td>
-<td>
-2021-09-23
-</td>
-<td>
-adding chRNA-seq processing smk
-</td>
-</tr>
-<tr>
-<td>
-html
-</td>
-<td>
-<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/24331d7a50d3f935aeb26b9060bc539f194eabc2/docs/index.html" target="_blank">24331d7</a>
-</td>
-<td>
-cfbuenabadn
-</td>
-<td>
-2021-09-23
-</td>
-<td>
-adding chRNA-seq processing smk
-</td>
-</tr>
-<tr>
-<td>
-html
-</td>
-<td>
-<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/ee655cce83b515ff67db7b95a4a7158019356acf/docs/index.html" target="_blank">ee655cc</a>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/89517ffeaecf50fe2639320bb002b1a5ce1b1858/analysis/20211217_GenewiseColocFirstLook.Rmd" target="_blank">89517ff</a>
 </td>
 <td>
 Benjmain Fair
 </td>
 <td>
-2021-09-23
+2021-12-22
 </td>
 <td>
-fixed site links
-</td>
-</tr>
-<tr>
-<td>
-html
-</td>
-<td>
-<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/afc10fbdc9952caeecd2639f070f357cef548aeb/docs/index.html" target="_blank">afc10fb</a>
-</td>
-<td>
-Benjmain Fair
-</td>
-<td>
-2021-09-23
-</td>
-<td>
-fixed ipynb links on site homepage
-</td>
-</tr>
-<tr>
-<td>
-html
-</td>
-<td>
-<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/91f067a6c30ae94dca690c73bd30d82f56d237e0/docs/index.html" target="_blank">91f067a</a>
-</td>
-<td>
-Benjmain Fair
-</td>
-<td>
-2021-09-23
-</td>
-<td>
-added example ipynb to site
-</td>
-</tr>
-<tr>
-<td>
-Rmd
-</td>
-<td>
-<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/53ba92f62702392ecd229616e12d4c4be32e2472/analysis/index.Rmd" target="_blank">53ba92f</a>
-</td>
-<td>
-Benjmain Fair
-</td>
-<td>
-2021-06-07
-</td>
-<td>
-update side and check sample swapping
-</td>
-</tr>
-<tr>
-<td>
-html
-</td>
-<td>
-<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/53ba92f62702392ecd229616e12d4c4be32e2472/docs/index.html" target="_blank">53ba92f</a>
-</td>
-<td>
-Benjmain Fair
-</td>
-<td>
-2021-06-07
-</td>
-<td>
-update side and check sample swapping
-</td>
-</tr>
-<tr>
-<td>
-Rmd
-</td>
-<td>
-<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/dd0eadbb209caea66e98ef74baf13cd7a9268eca/analysis/index.Rmd" target="_blank">dd0eadb</a>
-</td>
-<td>
-Benjmain Fair
-</td>
-<td>
-2020-08-21
-</td>
-<td>
-initial commit
-</td>
-</tr>
-<tr>
-<td>
-html
-</td>
-<td>
-<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/dd0eadbb209caea66e98ef74baf13cd7a9268eca/docs/index.html" target="_blank">dd0eadb</a>
-</td>
-<td>
-Benjmain Fair
-</td>
-<td>
-2020-08-21
-</td>
-<td>
-initial commit
+added genewise coloc rmd
 </td>
 </tr>
 </tbody>
@@ -720,46 +615,156 @@ initial commit
 </div>
 </div>
 </div>
-<p>Welcome to my research website.</p>
-<p>This project will investigate the correlation of genetic effects on chromatin, splicing, transcription, and complex phenotypes, using naturally occuring human genetic variation.</p>
-<p>We are still collecting data, but I have also been perusing around published data a bit.</p>
-<p>Here are links to all of my rendered analysis Rmarkdowns (code <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/master/analysis">here</a>):</p>
-<pre class="r"><code>library(tidyverse)</code></pre>
-<pre><code>Warning: package &#39;tidyverse&#39; was built under R version 3.6.3</code></pre>
-<pre><code>── Attaching packages ─────────────────────────────────────── tidyverse 1.3.0 ──</code></pre>
-<pre><code>✔ ggplot2 3.3.3     ✔ purrr   0.3.4
-✔ tibble  3.1.0     ✔ dplyr   1.0.5
-✔ tidyr   1.1.3     ✔ stringr 1.4.0
-✔ readr   1.4.0     ✔ forcats 0.5.1</code></pre>
-<pre><code>Warning: package &#39;ggplot2&#39; was built under R version 3.6.3</code></pre>
-<pre><code>Warning: package &#39;tibble&#39; was built under R version 3.6.3</code></pre>
-<pre><code>Warning: package &#39;tidyr&#39; was built under R version 3.6.3</code></pre>
-<pre><code>Warning: package &#39;readr&#39; was built under R version 3.6.3</code></pre>
-<pre><code>Warning: package &#39;purrr&#39; was built under R version 3.6.3</code></pre>
-<pre><code>Warning: package &#39;dplyr&#39; was built under R version 3.6.3</code></pre>
-<pre><code>Warning: package &#39;forcats&#39; was built under R version 3.6.3</code></pre>
-<pre><code>── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
-✖ dplyr::filter() masks stats::filter()
-✖ dplyr::lag()    masks stats::lag()</code></pre>
-<pre class="r"><code>rmds &lt;- list.files(path = &quot;../analysis/&quot;, pattern=&quot;^\\d+.+&quot;)
-rmd_htmls &lt;- str_replace(rmds, &quot;Rmd$&quot;, &quot;html&quot;)
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>I have colocalized a bunch of molecular phenotypes in the window of each gene (Locus). Chromatin phenotypes and other genes must be within +/- 100kb of the gene. Splicing events must be within the gene. Nominal permutation Pvalues must be under 0.01. The real results are subject to change, since there are many more molecular phenotypes I haven’t included in this analysis, due to computational impatience, and that I am still collecting data. So I will evenetually include more phenotype which will change the results. More details of the methods are embedded in the snakemake pipeline. Here I will get some intuitions about the results.</p>
+</div>
+<div id="analysis" class="section level2">
+<h2>Analysis</h2>
+<p>First, load necessary libraries</p>
+<pre class="r"><code>library(tidyverse)
+library(viridis)
 
-for(i in rmd_htmls){
-  cat(&quot;[&quot;, i, &quot;](&quot;, i,&quot;)\n\n&quot;, sep=&quot;&quot;)
-}</code></pre>
-<p><a href="20200110_PickSamplesForGrowth.html">20200110_PickSamplesForGrowth.html</a></p>
-<p><a href="20200210_PickSamplesToOrder.html">20200210_PickSamplesToOrder.html</a></p>
-<p><a href="20210604_CheckSampleGenotypes.html">20210604_CheckSampleGenotypes.html</a></p>
-<p><a href="20211207_ExploreColocalizations.html">20211207_ExploreColocalizations.html</a></p>
-<p><a href="20211217_GenewiseColocFirstLook.knit.md">20211217_GenewiseColocFirstLook.knit.md</a></p>
-<p><a href="20211217_GenewiseColocFirstLook.html">20211217_GenewiseColocFirstLook.html</a></p>
-<p>Also, a list of links to ipynb files that were incorporated into the snakemake. Since github renders ipynbs directly, this is not a relative link from the site folder, but rather links directly to the file to view on github (code <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/master/code/notebooks">here</a>):</p>
-<pre class="r"><code>ipynbs &lt;- list.files(path = &quot;../docs/&quot;, pattern=&quot;^\\d+.+ipynb$&quot;)
+dat &lt;- read_tsv(&quot;../output/hyprcoloc_results/ForColoc/hyprcoloc.results.txt.gz&quot;, col_names = c(&quot;Locus&quot;, &quot;iteration&quot;, &#39;ColocalizedTraits&#39;, &#39;ColocPr&#39;, &#39;RegionalPr&#39;, &quot;topSNP&quot;, &quot;TopSNPFinemapPr&quot;, &quot;DroppedTrait&quot;), skip=1)</code></pre>
+<p>First question:</p>
+<p>how many traits attempted to colocalized per gene:</p>
+<pre class="r"><code>dat %&gt;%
+  mutate(NumTraits = str_count(ColocalizedTraits, &quot;,&quot;) + 1) %&gt;%
+  group_by(Locus) %&gt;%
+  summarise(TotalTraitsAttemptedColocalization = sum(NumTraits)+1) %&gt;%
+  ggplot(aes(x=TotalTraitsAttemptedColocalization)) +
+  stat_ecdf() +
+  ylab(&quot;cumulative fraction&quot;) +
+  xlab(&quot;Number molecular traits attempted to colocalize for each gene locus&quot;) +
+  theme_light()</code></pre>
+<p><img src="figure/20211217_GenewiseColocFirstLook.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Now how many traits actually colocalized per gene:</p>
+<pre class="r"><code>dat %&gt;%
+  mutate(NumTraits = str_count(ColocalizedTraits, &quot;,&quot;) ) %&gt;%
+  mutate(NumColocalizedTraits  = case_when(
+    NumTraits &gt; 0 ~ NumTraits +1,
+    TRUE ~ 0
+  )) %&gt;%
+  group_by(Locus) %&gt;%
+  summarise(TotalTraitsColocalized = sum(NumColocalizedTraits)) %&gt;%
+  ggplot(aes(x=TotalTraitsColocalized)) +
+  stat_ecdf() +
+  ylab(&quot;cumulative fraction&quot;) +
+  xlab(&quot;Number molecular traits colocalize for each gene locus&quot;) +
+  theme_light()</code></pre>
+<p><img src="figure/20211217_GenewiseColocFirstLook.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Now how many colocalizations involve each type of molecular trait. I’m envisioning a matrix of how many colocalizations were attempted for each trait family pair, and how many times they were actually colocalized.</p>
+<pre class="r"><code>set.seed(0)
+ToSplit &lt;- dat %&gt;%
+  select(Locus, ColocalizedTraits, iteration, DroppedTrait) %&gt;%
+  # filter(Locus %in% (dat$Locus %&gt;% unique() %&gt;% head(200))) %&gt;%
+  mutate(ColocalizedTraits = str_replace(ColocalizedTraits, paste0(Locus, &quot;, &quot;), &quot;&quot;)) %&gt;%
+  separate_rows(ColocalizedTraits, sep = &#39; &#39;) %&gt;%
+  mutate(Trait = case_when(
+    ColocalizedTraits == &quot;None&quot; ~ DroppedTrait,
+    TRUE ~ ColocalizedTraits
+  )) %&gt;%
+  select(Locus, Trait, iteration) %&gt;%
+  group_by(Locus)
 
-for(i in ipynbs){
-  cat(&quot;[&quot;, i, &quot;](&quot;,&quot;https://github.com/bfairkun/ChromatinSplicingQTLs/blob/master/docs/&quot;, i,&quot;)\n\n&quot;, sep=&quot;&quot;)
-}</code></pre>
-<p><a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/master/docs/20210921_CountSpliceSiteSNPsInSQTLs.py.ipynb">20210921_CountSpliceSiteSNPsInSQTLs.py.ipynb</a></p>
+
+ToMat &lt;- function(df){
+  xp &lt;- df %&gt;%
+  select(Trait, iteration) %&gt;%
+  deframe()
+
+  mat &lt;- apply(as.matrix(xp), 1, 
+                   function(x) as.numeric(x==as.matrix(xp)))
+  rownames(mat) &lt;- colnames(mat)
+  # mat[upper.tri(mat, diag=T)] &lt;- NA
+  mat[diag(mat)] &lt;- NA
+return(mat)
+}
+
+SumColocsByPhenotypeClass &lt;- function(mat){
+  mat %&gt;%
+  as.data.frame() %&gt;%
+  rownames_to_column(&quot;Trait1&quot;) %&gt;%
+  gather(key=&quot;Trait2&quot;, value=&quot;IsColoc&quot;, -Trait1) %&gt;%
+  mutate(
+    Trait1 = str_replace(Trait1, &quot;(.+?);.+&quot;, &quot;\\1&quot;),
+    Trait2 = str_replace(Trait2, &quot;(.+?);.+&quot;, &quot;\\1&quot;)
+    ) %&gt;%
+  drop_na() %&gt;%
+  group_by(Trait1, Trait2) %&gt;%
+  summarise(NumColocs = sum(IsColoc)) %&gt;%
+  return()
+}
+
+SumColocAttemptsByPhenotypeClass &lt;- function(mat){
+  mat %&gt;%
+  as.data.frame() %&gt;%
+  rownames_to_column(&quot;Trait1&quot;) %&gt;%
+  gather(key=&quot;Trait2&quot;, value=&quot;IsColoc&quot;, -Trait1) %&gt;%
+  mutate(
+    Trait1 = str_replace(Trait1, &quot;(.+?);.+&quot;, &quot;\\1&quot;),
+    Trait2 = str_replace(Trait2, &quot;(.+?);.+&quot;, &quot;\\1&quot;)
+    ) %&gt;%
+  drop_na() %&gt;%
+  mutate(IsColoc=1) %&gt;%
+  group_by(Trait1, Trait2) %&gt;%
+  summarise(NumColocs = sum(IsColoc)) %&gt;%
+  return()
+}
+
+
+
+Split.list &lt;- setNames(group_split(ToSplit), deframe(group_keys(ToSplit)))
+
+Mat.list &lt;- lapply(Split.list, ToMat)
+
+## Some sanity checks that this code works as expected
+# Mat.list[[3]] %&gt;%
+#   write.table(row.names = F, col.names = F)
+
+
+SumColocs.list &lt;- lapply(Mat.list, SumColocsByPhenotypeClass)
+SumAttemptedColocs.list &lt;- lapply(Mat.list, SumColocAttemptsByPhenotypeClass)
+
+
+Coloc.ByClass.Summary &lt;- bind_rows(SumColocs.list, .id=&quot;Locus&quot;) %&gt;%
+  inner_join(
+    bind_rows(SumAttemptedColocs.list, .id=&quot;Locus&quot;),
+    by=c(&quot;Trait1&quot;, &quot;Trait2&quot;, &quot;Locus&quot;),
+    suffix = c(&quot;.Success&quot;, &quot;.Attemped&quot;)
+  ) %&gt;%
+  # filter(Locus == &quot;ENSG00000114378.17&quot;)
+  group_by(Trait1, Trait2) %&gt;%
+  summarise(
+    Colocs = sum(NumColocs.Success),
+    ColocAttempts = sum(NumColocs.Attemped))
+
+Coloc.ByClass.Summary %&gt;%
+  arrange(Trait1, Trait2) %&gt;%
+  gather(key=&quot;AttemptOrSuccess&quot;, value=&quot;NumColocs&quot;, Colocs, ColocAttempts) %&gt;%
+  mutate(NumColocs = NumColocs/2) %&gt;%
+  ggplot(aes(x=Trait1, y=Trait2, fill=NumColocs)) +
+  geom_raster() +
+  scale_fill_viridis(trans=&quot;log10&quot;, option=&quot;B&quot;) +
+  facet_wrap(~AttemptOrSuccess) +
+  theme_light() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))</code></pre>
+<p><img src="figure/20211217_GenewiseColocFirstLook.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#Plot fill color by rate
+Coloc.ByClass.Summary %&gt;%
+  mutate(ColocRate = Colocs/ColocAttempts * 100) %&gt;%
+  arrange(Trait1, Trait2) %&gt;%
+  ggplot(aes(x=Trait1, y=Trait2, fill=ColocRate)) +
+  geom_raster() +
+  scale_fill_viridis(option=&quot;B&quot;) +
+  theme_light() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))</code></pre>
+<p><img src="figure/20211217_GenewiseColocFirstLook.Rmd/unnamed-chunk-4-2.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="conclusions" class="section level2">
+<h2>Conclusions</h2>
+<p>Some thing make sense. polyA.splicing traits often colocalize with other polyA.Splicing traits, which is unsurprisingly biologically and also technically since intra-cluster introns are not independent quantifications. H3K27ME3 and H3K4ME3 also tend to colocalize.</p>
+<p>The colocalization rate might be more informative, in the sense that the results match by expectations for which traits might colocalize.</p>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
@@ -773,7 +778,7 @@ Platform: x86_64-conda_cos6-linux-gnu (64-bit)
 Running under: Scientific Linux 7.4 (Nitrogen)
 
 Matrix products: default
-BLAS/LAPACK: /project2/yangili1/bjf79/ChromatinSplicingQTLs/code/.snakemake/conda/4480a43d58942cece9fb73087fc984b8/lib/R/lib/libRblas.so
+BLAS/LAPACK: /project2/yangili1/bjf79/ChromatinSplicingQTLs/code/.snakemake/conda/c945d3ed441f0cb7ff83e43424561c95/lib/R/lib/libRblas.so
 
 locale:
  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
@@ -787,27 +792,29 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] forcats_0.5.1   stringr_1.4.0   dplyr_1.0.5     purrr_0.3.4    
-[5] readr_1.4.0     tidyr_1.1.3     tibble_3.1.0    ggplot2_3.3.3  
-[9] tidyverse_1.3.0
+ [1] viridis_0.5.1     viridisLite_0.3.0 forcats_0.5.1     stringr_1.4.0    
+ [5] dplyr_1.0.5       purrr_0.3.4       readr_1.4.0       tidyr_1.1.3      
+ [9] tibble_3.1.0      ggplot2_3.3.3     tidyverse_1.3.0  
 
 loaded via a namespace (and not attached):
- [1] tidyselect_1.1.0  xfun_0.20         bslib_0.2.4       haven_2.3.1      
- [5] colorspace_2.0-0  vctrs_0.3.7       generics_0.1.0    htmltools_0.5.1.1
- [9] yaml_2.2.1        utf8_1.2.1        rlang_0.4.10      jquerylib_0.1.3  
-[13] later_1.1.0.1     pillar_1.5.1      withr_2.4.1       glue_1.4.2       
-[17] DBI_1.1.1         dbplyr_2.1.1      readxl_1.3.1      modelr_0.1.8     
-[21] lifecycle_1.0.0   cellranger_1.1.0  munsell_0.5.0     gtable_0.3.0     
-[25] workflowr_1.6.2   rvest_1.0.0       evaluate_0.14     knitr_1.31       
-[29] ps_1.6.0          httpuv_1.5.5      fansi_0.4.2       broom_0.7.6      
-[33] Rcpp_1.0.6        promises_1.2.0.1  backports_1.2.1   scales_1.1.1     
-[37] jsonlite_1.7.2    fs_1.5.0          hms_1.0.0         digest_0.6.27    
-[41] stringi_1.4.3     rprojroot_2.0.2   grid_3.6.1        cli_2.4.0        
-[45] tools_3.6.1       magrittr_2.0.1    sass_0.3.1        crayon_1.4.1     
-[49] whisker_0.4       pkgconfig_2.0.3   ellipsis_0.3.1    xml2_1.3.2       
-[53] reprex_1.0.0      lubridate_1.7.10  rstudioapi_0.13   assertthat_0.2.1 
-[57] rmarkdown_2.7     httr_1.4.2        R6_2.5.0          git2r_0.28.0     
-[61] compiler_3.6.1   </code></pre>
+ [1] Rcpp_1.0.6        lubridate_1.7.10  ps_1.6.0          assertthat_0.2.1 
+ [5] rprojroot_2.0.2   digest_0.6.27     utf8_1.2.1        R6_2.5.0         
+ [9] cellranger_1.1.0  backports_1.2.1   reprex_1.0.0      evaluate_0.14    
+[13] highr_0.8         httr_1.4.2        pillar_1.5.1      rlang_0.4.10     
+[17] readxl_1.3.1      rstudioapi_0.13   whisker_0.4       jquerylib_0.1.3  
+[21] rmarkdown_2.7     labeling_0.4.2    munsell_0.5.0     broom_0.7.6      
+[25] compiler_3.6.1    httpuv_1.5.5      modelr_0.1.8      xfun_0.20        
+[29] pkgconfig_2.0.3   htmltools_0.5.1.1 tidyselect_1.1.0  gridExtra_2.3    
+[33] workflowr_1.6.2   fansi_0.4.2       crayon_1.4.1      dbplyr_2.1.1     
+[37] withr_2.4.1       later_1.1.0.1     grid_3.6.1        jsonlite_1.7.2   
+[41] gtable_0.3.0      lifecycle_1.0.0   DBI_1.1.1         git2r_0.28.0     
+[45] magrittr_2.0.1    scales_1.1.1      cli_2.4.0         stringi_1.4.3    
+[49] farver_2.1.0      fs_1.5.0          promises_1.2.0.1  xml2_1.3.2       
+[53] bslib_0.2.4       ellipsis_0.3.1    generics_0.1.0    vctrs_0.3.7      
+[57] tools_3.6.1       glue_1.4.2        hms_1.0.0         yaml_2.2.1       
+[61] colorspace_2.0-0  rvest_1.0.0       knitr_1.31        haven_2.3.1      
+[65] sass_0.3.1       </code></pre>
+</div>
 </div>
 
 
@@ -826,6 +833,8 @@ footer is added to webpages before the MathJax javascript. -->
 
 
 
+</div>
+</div>
 
 </div>
 
@@ -858,6 +867,32 @@ $(document).ready(function () {
 
 <!-- code folding -->
 
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
 
 <!-- dynamically load mathjax for compatibility with self-contained -->
 <script>
