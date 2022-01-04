@@ -38,11 +38,13 @@ rule GetLogRPKM:
     output:
         "featureCounts/chRNA.Expression.Splicing/CountTable.MeanLogRPKM.txt.gz",
         "Misc/GencodeHg38_all_introns.expressedHostGenes.bed.gz"
+    log:
+        "logs/chRNA-seq_FilterForExpressedGenes.log"
     conda:
         "../envs/r_essentials.yml"
     shell:
         """
-        Rscript scripts/chRNA-seq_FilterForExpressedGenes.R
+        Rscript scripts/chRNA-seq_FilterForExpressedGenes.R &> {log}
         """
 
 rule GetUniqIntrons:

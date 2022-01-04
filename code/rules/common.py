@@ -185,7 +185,7 @@ def GetAnnotationsForPhenotype(wildcards):
     
     
 def PairedEndParams(wildcards):
-    if wildcards.Phenotype in ["MetabolicLabelled.30min", "MetabolicLabelled.60min"]:
+    if wildcards.Phenotype in ["MetabolicLabelled.30min", "MetabolicLabelled.60min", "ProCap"]:
         return ""
     else:
         return "-p"
@@ -196,6 +196,12 @@ def GetFeatureCountsParams(wildcards):
         return "-s 1"
     elif wildcards.Phenotype in ChromatinProfilingPhenotypes:
         return "-F SAF"
+    else:
+        return ""
+    
+def GetSTARJunctionScoreParams(wildcards):
+    if wildcards.Phenotype == "ProCap":
+        return "--scoreGap -1000000"
     else:
         return ""
 
@@ -215,7 +221,7 @@ def GetBamForPhenotype(wildcards):
         return expand("Alignments/STAR_Align/chRNA.Expression.Splicing/{IndID}/{Rep}/Filtered.bam", zip, IndID=df_subset['IndID'], Rep=df_subset['RepNumber'])
     elif wildcards.Phenotype in ChromatinProfilingPhenotypes:
         return expand("Alignments/Hisat2_Align/{{Phenotype}}/{IndID}.{Rep}.wasp_filterd.markdup.sorted.bam", zip, IndID=df_subset['IndID'], Rep=df_subset['RepNumber'])
-
+    
 def GetAnnotationsForRegion(wildcards):
     if wildcards.Region == "AtTSS":
         return "ReferenceGenome/Annotations/TSSRegions.saf"

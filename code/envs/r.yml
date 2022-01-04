@@ -1,9 +1,9 @@
 name: r
 channels:
-  - r
   - bioconda
   - defaults
   - conda-forge
+  - r
 dependencies:
   - _libgcc_mutex=0.1=conda_forge
   - _openmp_mutex=4.5=1_gnu
@@ -24,7 +24,7 @@ dependencies:
   - c-ares=1.17.1=h27cfd23_0
   - ca-certificates=2021.4.13=h06a4308_1
   - cairo=1.16.0=hf32fb01_1
-  - certifi=2020.12.5=py39h06a4308_0
+  - certifi=2020.12.5=py39hf3d152e_1
   - cffi=1.14.5=py39h261ae71_0
   - curl=7.76.0=h979ede3_0
   - cyrus-sasl=2.1.27=h3274739_1
@@ -66,9 +66,9 @@ dependencies:
   - jinja2=2.11.3=pyhd3eb1b0_0
   - jpeg=9d=h516909a_0
   - jsonschema=3.2.0=py_2
-  - jupyter_client=6.2.0=pyhd8ed1ab_0
-  - jupyter_core=4.7.1=py39h06a4308_0
-  - jupyterlab_pygments=0.1.2=py_0
+  # - jupyter_client=6.2.0=pyhd8ed1ab_0
+  # - jupyter_core=4.7.1=py39h06a4308_0
+  # - jupyterlab_pygments=0.1.2=py_0
   - kernel-headers_linux-64=2.6.32=h77966d4_13
   - krb5=1.17.2=h926e7f8_0
   - lcms2=2.12=h3be6417_0
@@ -110,7 +110,7 @@ dependencies:
   - nest-asyncio=1.5.1=pyhd3eb1b0_0
   - notebook=6.3.0=py39h06a4308_0
   - openjdk=11.0.9.1=h5cc2fde_1
-  - openssl=1.1.1k=h27cfd23_0
+  - openssl=1.1.1k=h7f98852_0
   - packaging=20.9=pyhd3eb1b0_0
   - pandoc=2.12=h06a4308_0
   - pandocfilters=1.4.3=py39h06a4308_1
@@ -259,6 +259,9 @@ dependencies:
   - r-ps=1.6.0=r36hcfec24a_0
   - r-purrr=0.3.4=r36hcdcec82_1
   - r-quantmod=0.4.18=r36hc72bb7e_0
+  - r-r.methodss3=1.8.1=r36h6115d3f_0
+  - r-r.oo=1.24.0=r36h6115d3f_0
+  - r-r.utils=2.10.1=r36h6115d3f_0
   - r-r2d3=0.2.5=r36hc72bb7e_0
   - r-r6=2.5.0=r36hc72bb7e_0
   - r-randomforest=4.6_14=r36ha65eedd_0

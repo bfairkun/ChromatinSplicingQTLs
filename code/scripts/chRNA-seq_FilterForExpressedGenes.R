@@ -1,6 +1,6 @@
 library(tidyverse)
 library(edgeR)
-library(gplots)
+#library(gplots)
 
 # """
 # Rscript to filter introns bed for introns in expressed host genes
@@ -30,9 +30,9 @@ LogRPKM <- CountTable %>%
   rpkm(gene.length=CountTable$Length, prior.count=0.01, log=T)
 
 
-LogRPKM %>% as.data.frame() %>% cor() %>% heatmap.2(trace="none")
+#LogRPKM %>% as.data.frame() %>% cor() %>% heatmap.2(trace="none")
 
-LogRPKM %>% as.data.frame() %>% apply(1, mean) %>% hist()
+#LogRPKM %>% as.data.frame() %>% apply(1, mean) %>% hist()
 
 # Get top 10000 protein coding genes by expression.
 # Write out average LogRPKM of protein coding genes

@@ -76,6 +76,7 @@ rule STAR_make_index:
         ntasks = 5
     shell:
         """
+        module load STAR/2.7.7a
         STAR --runMode genomeGenerate --genomeSAsparseD 2 --runThreadN {threads} --genomeDir {params.genomeDir} --sjdbGTFfile {input.gtf} --genomeFastaFiles {input.fasta} &> {log}
         """
 
@@ -126,7 +127,8 @@ rule STAR_Align_WASP:
     params:
         readMapNumber = -1,
         ENCODE_params = "--outFilterType BySJout --outFilterMultimapNmax 20  --alignSJoverhangMin 8 --alignSJDBoverhangMin 1 --outFilterMismatchNmax 999 --outFilterMismatchNoverReadLmax 0.04 --alignIntronMin 20 --alignIntronMax 1000000 --alignMatesGapMax 1000000",
-        WASP_params = "--waspOutputMode SAMtag --outSAMattributes NH HI AS nM XS vW --varVCFfile"
+        WASP_params = "--waspOutputMode SAMtag --outSAMattributes NH HI AS nM XS vW --varVCFfile",
+        JunctionScore = GetSTARJunctionScoreParams
     resources:
         cpus_per_node = 9,
         mem = 58000,
@@ -134,7 +136,8 @@ rule STAR_Align_WASP:
         Phenotype = "Expression.Splicing|chRNA.Expression.Splicing"
     shell:
         """
-        STAR --readMapNumber {params.readMapNumber} --outFileNamePrefix Alignments/STAR_Align/{wildcards.Phenotype}/{wildcards.IndID}/{wildcards.Rep}/ --genomeDir ReferenceGenome/STARIndex/ --readFilesIn {input.R1} {input.R2} --outSAMtype BAM SortedByCoordinate --readFilesCommand zcat --runThreadN {threads} --outSAMmultNmax 1 {params.WASP_params} {input.vcf} --limitBAMsortRAM 16000000000 {params.ENCODE_params} --outSAMstrandField intronMotif  &> {log}
+        module load STAR/2.7.7a
+        STAR --readMapNumber {params.readMapNumber} {params.JunctionScore} --outFileNamePrefix Alignments/STAR_Align/{wildcards.Phenotype}/{wildcards.IndID}/{wildcards.Rep}/ --genomeDir ReferenceGenome/STARIndex/ --readFilesIn {input.R1} {input.R2} --outSAMtype BAM SortedByCoordinate --readFilesCommand zcat --runThreadN {threads} --outSAMmultNmax 1 {params.WASP_params} {input.vcf} --limitBAMsortRAM 16000000000 {params.ENCODE_params} --outSAMstrandField intronMotif  &> {log}
         """
 
 use rule STAR_Align_WASP as STAR_Align_WASP_SE with:
