@@ -5,54 +5,50 @@
 # @file        : hyprcoloc_scratch
 # @created     : Wednesday Aug 04, 2021 15:12:12 CDT
 #
-# @description : for loop thru gwas loci attempting to colocalize mol QTL
+# @description : for loop thru loci attempting to colocalize mol QTL
 ######################################################################
 
 #Use hard coded arguments in interactive R session, else use command line args
 if(interactive()){
     args <- scan(text=
-                 "hyprcoloc/LociWiseSummaryStatsInput/ForGWASColoc/GCST004599.txt.gz gwas_summary_stats/leadSnpWindowStats/GCST004599.tsv.gz scratch/test.txt.gz", what='character')
+                 " scratch/testfilelist.txt  scratch/test.txt.gz scratch/Finemappingscores.txt.gz", what='character')
 } else{
     args <- commandArgs(trailingOnly=TRUE)
 }
+
+# SummaryStatsInList FileOut
 
 library(data.table)
 library(tidyverse)
 library(hyprcoloc)
 
-FileIn <- args[1]
-FileIn_GWAS <- args[2]
-FileOut <- args[3]
+FilelistIn <- args[1]
+FileOut <- args[2]
+FinemappingOut <- args[3]
 
-SummaryStats <- fread(FileIn)
-
-Gwas_SummaryStats <- fread(FileIn_GWAS) %>%
-    mutate(snp=str_replace_all(hm_variant_id, "_", ":")) %>%
-    mutate(p=as.numeric(p_value)) %>%
-    select(snp, phenotype=lead_snp, beta=hm_beta, beta_se=standard_error, p)
-
-
-Loci <- SummaryStats$gwas_locus %>% unique()
+Loci<- read_tsv(FilelistIn, col_names=c("f")) %>%
+    filter(file.exists(f)) %>%
+    mutate(Loci_names = str_replace(f, "hyprcoloc/LociWiseSummaryStatsInput/ForColoc/(.+?)\\.txt\\.gz", "\\1")) %>%
+    select(Loci_names, f) %>%
+    deframe()
 
 
 HyprcolocResults.list <- vector("list", length(Loci))
 
 for (i in seq_along(Loci)){
 
-    TestLocus <- Loci[1]
+    # TestLocus <- Loci[1]
     TestLocus <- Loci[i]
-    print(paste0("running loci", i, " : ", TestLocus))
+    print(paste0("running loci", i, " : ", names(TestLocus)))
 
-    SummaryStats.filtered <- SummaryStats %>%
-        filter(gwas_locus == TestLocus) %>%
+
+    SummaryStats.filtered <- fread(TestLocus) %>%
+        filter(gwas_locus == names(TestLocus)) %>%
         mutate(phenotype_class = str_replace(source_file, "QTLs/QTLTools/(.+?)/(.+?)\\.txt\\.gz", "\\1")) %>%
         unite(phenotype, phenotype_class, phenotype, sep=";") %>%
         select(snp, phenotype, beta, beta_se, p) %>%
-        distinct(.keep_all=T) %>%
-        bind_rows(
-                  Gwas_SummaryStats %>%
-                      filter(phenotype == TestLocus)
-        )
+        distinct(.keep_all=T)
+
 
     # Make snp x phenotype matrix of betas
     betas <- SummaryStats.filtered %>%
@@ -91,13 +87,36 @@ for (i in seq_along(Loci)){
 
     traits <- colnames(betas)
     rsid <- rownames(betas)
-    res <- hyprcoloc(betas, ses, trait.names=traits, snp.id=rsid)
+    if (length(traits)==1){
+        print("Only one triat... skipping locus")
+        next
+    }
+    res <- hyprcoloc(betas, ses, trait.names=traits, snp.id=rsid, snpscores=T)
+    print(dim(res[[1]]))
+    try(
+        res[[2]] %>%
+            setNames(1:length(res[[2]])) %>%
+            bind_rows() %>%
+            mutate(snps=rsid) %>%
+            gather(key="ColocalizedCluster", value="FinemappingPr", -snps) %>%
+            group_by(ColocalizedCluster) %>%
+            arrange(desc(FinemappingPr)) %>%
+            mutate(cumPr=cumsum(FinemappingPr)) %>%
+            mutate(lagcumPr=lag(cumPr)) %>%
+            filter((lagcumPr < 0.95) | is.na(lagcumPr)) %>%
+            ungroup() %>%
+            select(snps, ColocalizedCluster, FinemappingPr) %>%
+            mutate(Locus=names(TestLocus)) %>%
+            write_tsv(FinemappingOut, append=T)
+
+    )
 
     HyprcolocResults.list[[i]] <- 
          res[[1]] %>%
          as.data.frame()
 }
-HyprcolocResults.list <- setNames(HyprcolocResults.list, Loci)
+
+HyprcolocResults.list <- setNames(HyprcolocResults.list, names(Loci))
 
 HyprcolocResults.df <-
     bind_rows(HyprcolocResults.list, .id="loci_name")

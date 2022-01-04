@@ -1,0 +1,183 @@
+---
+title: "Untitled"
+author: "Benjamin Fair"
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+output:
+  html_document:
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+## Introduction
+
+I have colocalized a bunch of molecular phenotypes in the window of each gene (Locus). Chromatin phenotypes and other genes must be within +/- 100kb of the gene. Splicing events must be within the gene. Nominal permutation Pvalues must be under 0.01. The real results are subject to change, since there are many more molecular phenotypes I haven't included in this analysis, due to computational impatience, and that I am still collecting data. So I will evenetually include more phenotype which will change the results. More details of the methods are embedded in the snakemake pipeline. Here I will get some intuitions about the results.
+
+## Analysis
+
+First, load necessary libraries
+```{r}
+library(tidyverse)
+library(viridis)
+
+dat <- read_tsv("../output/hyprcoloc_results/ForColoc/hyprcoloc.results.txt.gz", col_names = c("Locus", "iteration", 'ColocalizedTraits', 'ColocPr', 'RegionalPr', "topSNP", "TopSNPFinemapPr", "DroppedTrait"), skip=1)
+
+```
+
+First question:
+
+how many traits attempted to colocalized per gene:
+
+```{r}
+dat %>%
+  mutate(NumTraits = str_count(ColocalizedTraits, ",") + 1) %>%
+  group_by(Locus) %>%
+  summarise(TotalTraitsAttemptedColocalization = sum(NumTraits)+1) %>%
+  ggplot(aes(x=TotalTraitsAttemptedColocalization)) +
+  stat_ecdf() +
+  ylab("cumulative fraction") +
+  xlab("Number molecular traits attempted to colocalize for each gene locus") +
+  theme_light()
+```
+
+Now how many traits actually colocalized per gene:
+
+```{r}
+dat %>%
+  mutate(NumTraits = str_count(ColocalizedTraits, ",") ) %>%
+  mutate(NumColocalizedTraits  = case_when(
+    NumTraits > 0 ~ NumTraits +1,
+    TRUE ~ 0
+  )) %>%
+  group_by(Locus) %>%
+  summarise(TotalTraitsColocalized = sum(NumColocalizedTraits)) %>%
+  ggplot(aes(x=TotalTraitsColocalized)) +
+  stat_ecdf() +
+  ylab("cumulative fraction") +
+  xlab("Number molecular traits colocalize for each gene locus") +
+  theme_light()
+```
+
+
+Now how many colocalizations involve each type of molecular trait. I'm envisioning a matrix of how many colocalizations were attempted for each trait family pair, and how many times they were actually colocalized.
+
+
+```{r}
+set.seed(0)
+ToSplit <- dat %>%
+  select(Locus, ColocalizedTraits, iteration, DroppedTrait) %>%
+  # filter(Locus %in% (dat$Locus %>% unique() %>% head(200))) %>%
+  mutate(ColocalizedTraits = str_replace(ColocalizedTraits, paste0(Locus, ", "), "")) %>%
+  separate_rows(ColocalizedTraits, sep = ' ') %>%
+  mutate(Trait = case_when(
+    ColocalizedTraits == "None" ~ DroppedTrait,
+    TRUE ~ ColocalizedTraits
+  )) %>%
+  select(Locus, Trait, iteration) %>%
+  group_by(Locus)
+
+
+ToMat <- function(df){
+  xp <- df %>%
+  select(Trait, iteration) %>%
+  deframe()
+
+  mat <- apply(as.matrix(xp), 1, 
+                   function(x) as.numeric(x==as.matrix(xp)))
+  rownames(mat) <- colnames(mat)
+  mat <- as.matrix(mat)
+  diag(x=mat) <- NA
+return(mat)
+}
+
+SumColocsByPhenotypeClass <- function(mat){
+  mat %>%
+  as.data.frame() %>%
+  rownames_to_column("Trait1") %>%
+  gather(key="Trait2", value="IsColoc", -Trait1) %>%
+  mutate(
+    Trait1 = str_replace(Trait1, "(.+?);.+", "\\1"),
+    Trait2 = str_replace(Trait2, "(.+?);.+", "\\1")
+    ) %>%
+  drop_na() %>%
+  group_by(Trait1, Trait2) %>%
+  summarise(NumColocs = sum(IsColoc)) %>%
+  return()
+}
+
+SumColocAttemptsByPhenotypeClass <- function(mat){
+  mat %>%
+  as.data.frame() %>%
+  rownames_to_column("Trait1") %>%
+  gather(key="Trait2", value="IsColoc", -Trait1) %>%
+  mutate(
+    Trait1 = str_replace(Trait1, "(.+?);.+", "\\1"),
+    Trait2 = str_replace(Trait2, "(.+?);.+", "\\1")
+    ) %>%
+  drop_na() %>%
+  mutate(IsColoc=1) %>%
+  group_by(Trait1, Trait2) %>%
+  summarise(NumColocs = sum(IsColoc)) %>%
+  return()
+}
+
+
+
+Split.list <- setNames(group_split(ToSplit), deframe(group_keys(ToSplit)))
+
+Mat.list <- lapply(Split.list, ToMat)
+
+## Some sanity checks that this code works as expected
+Mat.list[[1]] %>%
+  write.table(row.names = F, col.names = F)
+
+
+SumColocs.list <- lapply(Mat.list, SumColocsByPhenotypeClass)
+SumAttemptedColocs.list <- lapply(Mat.list, SumColocAttemptsByPhenotypeClass)
+
+
+Coloc.ByClass.Summary <- bind_rows(SumColocs.list, .id="Locus") %>%
+  inner_join(
+    bind_rows(SumAttemptedColocs.list, .id="Locus"),
+    by=c("Trait1", "Trait2", "Locus"),
+    suffix = c(".Success", ".Attemped")
+  ) %>%
+  # filter(Locus == "ENSG00000114378.17")
+  group_by(Trait1, Trait2) %>%
+  summarise(
+    Colocs = sum(NumColocs.Success),
+    ColocAttempts = sum(NumColocs.Attemped))
+
+Coloc.ByClass.Summary %>%
+  arrange(Trait1, Trait2) %>%
+  gather(key="AttemptOrSuccess", value="NumColocs", Colocs, ColocAttempts) %>%
+  mutate(NumColocs = NumColocs/2) %>%
+  ggplot(aes(x=Trait1, y=Trait2, fill=NumColocs)) +
+  geom_raster() +
+  scale_fill_viridis(trans="log10", option="B") +
+  facet_wrap(~AttemptOrSuccess) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+#Plot fill color by rate
+Coloc.ByClass.Summary %>%
+  mutate(ColocRate = Colocs/ColocAttempts * 100) %>%
+  arrange(Trait1, Trait2) %>%
+  ggplot(aes(x=Trait1, y=Trait2, fill=ColocRate)) +
+  geom_raster() +
+  scale_fill_viridis(option="B") +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+  
+```
+
+
+
+## Conclusions
+
+Some thing make sense. polyA.splicing traits often colocalize with other polyA.Splicing traits, which is unsurprisingly biologically and also technically since intra-cluster introns are not independent quantifications. H3K27ME3 and H3K4ME3 also tend to colocalize.
+
+The colocalization rate might be more informative, in the sense that the results match by expectations for which traits might colocalize.
+

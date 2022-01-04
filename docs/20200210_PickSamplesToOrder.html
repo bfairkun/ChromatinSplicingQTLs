@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+
+<title>20200210_PickSamplesToOrder</title>
+
+<script src="site_libs/header-attrs-2.7/header-attrs.js"></script>
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/master/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.tab('show');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-sm-12 col-md-4 col-lg-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-sm-12 col-md-8 col-lg-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">myproject</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">20200210_PickSamplesToOrder</h1>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2021-12-28
+</p>
+<p>
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
+</p>
+<p>
+<strong>Knit directory:</strong> <code>ChromatinSplicingQTLs/analysis/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
+</p>
+<p>
+This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
+  href="https://github.com/jdblischak/workflowr">workflowr</a> (version 1.6.2). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20191126code"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Seed:</strong> <code>set.seed(20191126)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20191126code" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20191126)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Session information:</strong> recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be confident that you successfully produced the results during this run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstree89517ffeaecf50fe2639320bb002b1a5ce1b1858targetblank89517ffa"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/89517ffeaecf50fe2639320bb002b1a5ce1b1858" target="_blank">89517ff</a> </a>
+</p>
+</div>
+<div id="strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstree89517ffeaecf50fe2639320bb002b1a5ce1b1858targetblank89517ffa" class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/89517ffeaecf50fe2639320bb002b1a5ce1b1858" target="_blank">89517ff</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    ._.DS_Store
+    Ignored:    analysis/.Rhistory
+    Ignored:    code/.DS_Store
+    Ignored:    code/.Rhistory
+    Ignored:    code/._.DS_Store
+    Ignored:    code/._README.md
+    Ignored:    code/._dag.pdf
+    Ignored:    code/._report.html
+    Ignored:    code/.ipynb_checkpoints/
+    Ignored:    code/.snakemake/
+    Ignored:    code/Alignments/
+    Ignored:    code/ENCODE/
+    Ignored:    code/ExpressionAnalysis/
+    Ignored:    code/Fastq/
+    Ignored:    code/FastqFastp/
+    Ignored:    code/FastqFastpSE/
+    Ignored:    code/FastqSE/
+    Ignored:    code/Gather_gwas_summary_stats/
+    Ignored:    code/Genotypes/
+    Ignored:    code/Multiqc/
+    Ignored:    code/Multiqc_chRNA/
+    Ignored:    code/PeakCalling/
+    Ignored:    code/Phenotypes/
+    Ignored:    code/PlotGruberQTLs/
+    Ignored:    code/ProCapAnalysis/
+    Ignored:    code/QC/
+    Ignored:    code/QTLs/
+    Ignored:    code/ReferenceGenome/
+    Ignored:    code/Session.vim
+    Ignored:    code/SplicingAnalysis/
+    Ignored:    code/TODO
+    Ignored:    code/bigwigs/
+    Ignored:    code/bigwigs_FromNonWASPFilteredReads/
+    Ignored:    code/config/.DS_Store
+    Ignored:    code/config/._.DS_Store
+    Ignored:    code/config/ExternalFastqDataAccessions/
+    Ignored:    code/config/OldSamplesConfig/
+    Ignored:    code/dag.pdf
+    Ignored:    code/featureCounts/
+    Ignored:    code/gwas_summary_stats/
+    Ignored:    code/hyprcoloc/
+    Ignored:    code/logs/
+    Ignored:    code/notebooks/.ipynb_checkpoints/
+    Ignored:    code/out.hap.ld
+    Ignored:    code/out.log
+    Ignored:    code/report.html
+    Ignored:    code/rules/OldRules/
+    Ignored:    code/scratch/
+    Ignored:    code/scripts/GTFtools_0.8.0/
+    Ignored:    code/scripts/__pycache__/
+    Ignored:    code/scripts/liftOverBedpe/liftOverBedpe.py
+    Ignored:    code/snakemake.log
+    Ignored:    code/snakemake.sbatch.log
+    Ignored:    data/._PRJEB1350_RunTable.Ding_etal_CTCF.txt
+    Ignored:    data/._igsr_samples.tsv
+    Ignored:    data/._list_gwas_summary_statistics_PMID27863252.csv
+    Ignored:    data/GrowthNotes/._20210830_GrowthNotes_chRNA.ConcentrationsToReplate.txt
+
+Untracked files:
+    Untracked:  code/snakemake_profiles/slurm/__pycache__/
+
+Unstaged changes:
+    Modified:   code/scripts/GenometracksByGenotype
+    Modified:   output/hyprcoloc_results/ForColoc/hyprcoloc.results.txt.gz
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+
+<p>
+These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/20200210_PickSamplesToOrder.Rmd</code>) and HTML (<code>docs/20200210_PickSamplesToOrder.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/89517ffeaecf50fe2639320bb002b1a5ce1b1858/analysis/20200210_PickSamplesToOrder.Rmd" target="_blank">89517ff</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2021-12-22
+</td>
+<td>
+added genewise coloc rmd
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/d78107630f32bc56a36e93fff311b1239f70eeb6/analysis/20200210_PickSamplesToOrder.Rmd" target="_blank">d781076</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2021-06-15
+</td>
+<td>
+added to strains picking rmd
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/cf3d158e4d1fd5b86d0619ef7f1e45e45f3ac6aa/analysis/20200210_PickSamplesToOrder.Rmd" target="_blank">cf3d158</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2021-04-12
+</td>
+<td>
+added samples to order
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/304e9b71d38372d012263365ae4c32724ecccddf/analysis/20200210_PickSamplesToOrder.Rmd" target="_blank">304e9b7</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2021-02-11
+</td>
+<td>
+added data about picking samples
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div id="motivation" class="section level1">
+<h1>motivation</h1>
+<p>So far, Austin and I have performed cell fractionation on ~50 YRI LCL lines. We have had dissappointing success at waking up some of the other YRI LCL lines that Gilad lab has frozen stocks of. So we will order most of the remaining YRI LCL lines that are available from <a href="https://www.coriell.org/1/NHGRI/Collections/1000-Genomes-Collections/Yoruba-in-Ibadan-Nigeria-YRI">Coriell cell repository</a>. Coriell has 31 unrelated individuals, 60 trios, and 9 duos. For this project, we want all of our samples to be unrelated, so I can pick one sample from each trio or duo. Ideally, I will order the child for each duo or trio since it probably has the most accurate phasing information in the published HapMap genotypes. I also want to exclude ordering samples from families that we have already done from Gilad lab stocks.</p>
+<p>Here I will read in data and use some R set functions to help me identify the cell lines that I should order for this experiment…</p>
+<pre class="r"><code>library(tidyverse)
+library(readxl)
+library(knitr)
+
+#Downloaded from Coriell
+CoriellLines &lt;- read_delim(&quot;../data/GiladStrains/Coriell-Catalog-Export-02-10-2021.csv&quot;, delim = &quot;,&quot;) %&gt;%
+  mutate(RowNumber = as.character(1:nrow(.))) %&gt;% #When family is blank, replace it with new identifier
+  mutate(Family=case_when(
+    is.na(Family) ~ RowNumber,
+    TRUE ~ Family
+  ))
+
+#Downloaded from 1000G
+FamilyRelationships &lt;- read_delim(&quot;../data/GiladStrains/1000G_Pedigree.txt&quot;, delim=&#39;\t&#39;)
+
+LCLs.1000Genomes.vec &lt;- read.table(&quot;../data/GiladStrains/YRI.list.from1000Genomes.txt&quot;, sep=&#39;\t&#39;) %&gt;% pull(V1) %&gt;%
+  gsub(&quot;^NA&quot;, &quot;&quot;, ., perl=T) %&gt;% as.numeric()
+
+GiladLabYRI.Rack &lt;- read_delim(&quot;../data/GiladStrains/LCL_YRI.Gilad.Positions2.txt&quot;, delim = &#39;\t&#39;) %&gt;%
+  mutate(Line=as.character(Line))
+
+GiladLabYRIRack.Lines &lt;- GiladLabYRI.Rack %&gt;% pull(Line) %&gt;% unique() %&gt;% as.numeric()
+
+GrowthNotes &lt;- read_delim(&quot;../data/GrowthNotes/20200210_GrowthNotes.tsv&quot;, delim = &#39;\t&#39;)
+
+SamplesAlreadyDone &lt;- GrowthNotes %&gt;%
+  filter(!is.na(`Date of chRNA-seq library Prep`)) %&gt;%
+  pull(`Cell Line`) %&gt;% unique()</code></pre>
+<p>What is the sample that we have already done twice?</p>
+<pre class="r"><code>GrowthNotes %&gt;%
+  filter(!is.na(`Date of chRNA-seq library Prep`)) %&gt;%
+  pull(`Cell Line`) %&gt;% table()</code></pre>
+<pre><code>.
+18486 18497 18499 18505 18508 18511 18519 18520 18522 18852 18855 18856 18858 
+    1     1     1     1     1     1     1     1     1     1     1     1     1 
+18870 18907 18909 18912 18913 19092 19093 19099 19101 19102 19114 19119 19127 
+    1     1     1     1     1     1     1     1     1     1     1     1     1 
+19128 19130 19131 19137 19138 19140 19141 19152 19153 19160 19171 19190 19200 
+    2     1     1     1     1     1     1     1     1     1     1     1     1 
+19201 19207 19209 19210 19223 19225 19238 19239 19257 
+    1     1     1     1     1     1     1     1     1 </code></pre>
+<p>19128 has two “good” samples. I should let Austin now. That would bring the total to 48 samples, which is more convenient for multichannelling anyway.</p>
+<p>Find these lines in the hapmap project. Make sure not to order additional lines from those families.</p>
+<p>This block of code is now irrelevant, now that I see Coriell has family info as well.</p>
+<pre class="r"><code>#Check that all 48 samples we have already done are represented in this family info. How many are the children?
+FamilyRelationships %&gt;%
+  filter(Population == &quot;YRI&quot;) %&gt;%
+  pull(Relationship) %&gt;% table()</code></pre>
+<pre><code>.
+               child               father               mother 
+                  58                   61                   64 
+          not father paternal grandmother 
+                   2                    1 </code></pre>
+<pre class="r"><code>FamilyRelationships %&gt;%
+  filter(Population == &quot;YRI&quot;) %&gt;%
+  count(`Family ID`)</code></pre>
+<pre><code># A tibble: 68 x 2
+   `Family ID`     n
+   &lt;chr&gt;       &lt;int&gt;
+ 1 Y001            3
+ 2 Y002            3
+ 3 Y003            3
+ 4 Y004            3
+ 5 Y005            3
+ 6 Y006            3
+ 7 Y007            3
+ 8 Y009            3
+ 9 Y010            2
+10 Y010a           1
+# … with 58 more rows</code></pre>
+<pre class="r"><code>FamilyRelationships %&gt;%
+  filter(Population == &quot;YRI&quot;) %&gt;%
+  mutate(CellLine = str_replace(`Individual ID`, &quot;NA(\\d{5})&quot;, &quot;\\1&quot;)) %&gt;%
+  mutate(IsAlreadyDone = CellLine %in% SamplesAlreadyDone) %&gt;%
+  filter(IsAlreadyDone) %&gt;%
+  pull(Relationship) %&gt;% table()</code></pre>
+<pre><code>.
+ child father mother 
+     1     20     27 </code></pre>
+<p>Let’s check that we get the same results from Coriell’s family info</p>
+<pre class="r"><code>CoriellLines %&gt;%
+  mutate(CellLine = str_replace(ID, &quot;GM(\\d{5})&quot;, &quot;\\1&quot;)) %&gt;%
+  mutate(IsAlreadyDone = CellLine %in% SamplesAlreadyDone) %&gt;%
+  filter(IsAlreadyDone) %&gt;%
+  pull(`Relationship to Proband`) %&gt;% table()</code></pre>
+<pre><code>.
+father mother 
+    20     27 </code></pre>
+<p>Ok. Close enough.</p>
+<p>I wonder why all the ones we have done so far are mother or father. Was Gilad lab deliberately choosing not the proband samples?</p>
+<pre class="r"><code>CoriellLines %&gt;% nrow()</code></pre>
+<pre><code>[1] 120</code></pre>
+<pre class="r"><code>CoriellLines %&gt;%
+  pull(`Relationship to Proband`) %&gt;% table()</code></pre>
+<pre><code>.
+  child  father  mother proband 
+      2      56      57       5 </code></pre>
+<pre class="r"><code>#How many singles, duos, and trios do I count?
+CoriellLines %&gt;%
+  count(Family) %&gt;%
+  pull(n) %&gt;% table()</code></pre>
+<pre><code>.
+ 1  2  3 
+10 52  2 </code></pre>
+<p>Ok, it seems that Coriell’s claim of 60 trios, 9 duos, and 31 unrelated individuals isn’t adding up.</p>
+<p>Let’s grab the list of all lines available from Coriell that found when I click the trios link.</p>
+<pre class="r"><code>CoriellLines_trios &lt;- read_delim(&quot;../data/GiladStrains/Coriell-Catalog-Export-02-10-2021-Trios.csv&quot;, delim = &quot;,&quot;) %&gt;%
+  mutate(RowNumber = as.character(1:nrow(.))) %&gt;% #When family is blank, replace it with new identifier
+  mutate(Family=case_when(
+    is.na(Family) ~ RowNumber,
+    TRUE ~ Family
+  ))
+
+CoriellLines_trios %&gt;% nrow()</code></pre>
+<pre><code>[1] 180</code></pre>
+<pre class="r"><code>CoriellLines_trios %&gt;% count(Family) %&gt;% 
+  pull(n) %&gt;% table()</code></pre>
+<pre><code>.
+ 3 
+60 </code></pre>
+<pre class="r"><code>CoriellLines_trios %&gt;%
+  filter(ID %in% CoriellLines$ID) %&gt;% nrow()</code></pre>
+<pre><code>[1] 113</code></pre>
+<p>Ok, it seems to me that the original link I clicked with 120 samples is a subset of the total available samples. I can probably see the full list of available samples by combining the trios, duos, and unrelated individuals.</p>
+<pre class="r"><code>CoriellLines_trios &lt;- read_delim(&quot;../data/GiladStrains/Coriell-Catalog-Export-02-10-2021-Trios.csv&quot;, delim = &quot;,&quot;)
+CoriellLines_duos &lt;- read_delim(&quot;../data/GiladStrains/Coriell-Catalog-Export-02-10-2021-Duos.csv&quot;, delim = &quot;,&quot;)
+CoriellLines_singles &lt;- read_delim(&quot;../data/GiladStrains/Coriell-Catalog-Export-02-10-2021-Singles.csv&quot;, delim = &quot;,&quot;)
+
+AllCoriellSamples &lt;- bind_rows(CoriellLines_singles, CoriellLines_duos, CoriellLines_trios, .id = &quot;Set&quot;) %&gt;%
+  mutate(CellLine = str_replace(ID, &quot;GM(\\d{5})&quot;, &quot;\\1&quot;)) %&gt;%
+  mutate(IsAlreadyDone = CellLine %in% SamplesAlreadyDone)
+
+AllCoriellSamples %&gt;% nrow()</code></pre>
+<pre><code>[1] 229</code></pre>
+<pre class="r"><code>AllCoriellSamples %&gt;% count(Family) %&gt;% 
+  pull(n) %&gt;% table()</code></pre>
+<pre><code>.
+ 2  3 31 
+ 9 60  1 </code></pre>
+<pre class="r"><code>AllCoriellSamples %&gt;%
+  filter(ID %in% CoriellLines$ID) %&gt;% nrow()</code></pre>
+<pre><code>[1] 120</code></pre>
+<pre class="r"><code>AllCoriellSamples %&gt;%
+  pull(`Relationship to Proband`) %&gt;% table()</code></pre>
+<pre><code>.
+  child  father  mother proband 
+     69      63      66      31 </code></pre>
+<p>Ok, now it is clear that those 120 samples are just a subset of all the ones that Coriell has for sale. Let’s check again about the proband relationship status of the 48 samples we have already done.</p>
+<pre class="r"><code>AllCoriellSamples %&gt;%
+  pull(`Relationship to Proband`) %&gt;% table()</code></pre>
+<pre><code>.
+  child  father  mother proband 
+     69      63      66      31 </code></pre>
+<p>Ok, that is interesting that most all the strains we have done so far are father or mother. Maybe that is just because at the time, in the earlier days of HapMap, the parents data were collected first, then as 1000G expanded, the children were collected later. I dunno. Anyway, let’s just go ahead and pick out more unrelated samples. I guess to be consistent with the lines we have already done, maybe we should avoid the children when possible, in case age of donor has some effect on gene expression. For all I know the children are babies. Maybe 1000 genome’s project has this info.</p>
+<p>Update: As per 1000G <a href="https://www.internationalgenome.org/faq/can-i-get-phenotype-gender-and-family-relationship-information-samples/">FAQ page</a>, all donors are &gt;=18 years of age.</p>
+<p>First let’s check that the sample we have already done are unrelated. Or at least, mother and father so still unrelated.</p>
+<pre class="r"><code>AllCoriellSamples %&gt;%
+  filter(CellLine %in% c(SamplesAlreadyDone)) %&gt;%
+  pull(Family) %&gt;% table() %&gt;% table()</code></pre>
+<pre><code>.
+ 1  2 
+20 14 </code></pre>
+<pre class="r"><code>AllCoriellSamples %&gt;%
+  filter(CellLine %in% c(SamplesAlreadyDone)) %&gt;%
+  dplyr::select(CellLine, `Relationship to Proband`, Family) %&gt;%
+  arrange(Family)</code></pre>
+<pre><code># A tibble: 48 x 3
+   CellLine `Relationship to Proband` Family
+   &lt;chr&gt;    &lt;chr&gt;                     &lt;chr&gt; 
+ 1 18486    father                    Y001  
+ 2 18497    child                     Y003  
+ 3 18499    mother                    Y003  
+ 4 18505    mother                    Y005  
+ 5 18508    mother                    Y009  
+ 6 18511    mother                    Y010  
+ 7 18858    mother                    Y012  
+ 8 18519    father                    Y014  
+ 9 18520    mother                    Y014  
+10 18522    father                    Y016  
+# … with 38 more rows</code></pre>
+<pre class="r"><code>AllCoriellSamples %&gt;%
+  add_count(Family, name = &quot;FamilySize&quot;) %&gt;%
+  count(FamilySize, `Relationship to Proband`)</code></pre>
+<pre><code># A tibble: 7 x 3
+  FamilySize `Relationship to Proband`     n
+       &lt;int&gt; &lt;chr&gt;                     &lt;int&gt;
+1          2 child                         9
+2          2 father                        3
+3          2 mother                        6
+4          3 child                        60
+5          3 father                       60
+6          3 mother                       60
+7         31 proband                      31</code></pre>
+<p>Hmm.. Ok, so this is making more sense…</p>
+<p>So firstly, it seems that the unrelated samples are labelled as ‘proband’ rather than ‘child’ under the ‘relationship to proband’, and those samples have NA as family. These are all probably safe to pick as unrelated individuals for this experiment.</p>
+<p>Also, it seems that out of the 48 samples we have already done, 20 are in a unique family, a there are 14 duos that are in the same family. Luckily since it seems that we have mostly picked mothers and fathers, these samples are mostly still genetically unrelated. (Except for a single mother-child relationship in family Y003). This is probably why Gilad lab generally picked fathers and mothers…. That way if someone who wasn’t careful (like me) and just picked seemingly random lines from the freezer for an experiment, they would still probably mostly be genetically unrelated.</p>
+<p>So let’s actually not pick children from the trios/duos, and pick parents in as many cases as possible. In the cases of trios, that will actually leave us more unrelated samples to pick from, as we can utilize both parents. Well, maybe that still isn’t the best idea in case shared family environment would violote the independence assumptions of linear modelling that QTL data. So perhaps still best to just pick parents, and only parents from different families. My guess is that the shared environment would have minimual effect (these are LCLs, quite removed from shared familial environments anyway), so it isn’t totally unreasonable to use both parents which would open up a larger potential sample size. But since we want to keep the experiment size manageable, lets still just prioritize one parent per family as the first cell lines to order.</p>
+<p>Also, let’s prioritize samples that are 1000G… After emailing Coriell customer service, I now realize that Coriell sells all samples in the union of HapMap and 1000G. The 120 samples that I was confused about before are just the 1000G samples (many of which are also HapMap). Given the choice, I would prefer to prioritize the 1000G samples since they probably have more complete and accurate genotype information (1000G generally used high coverage WholeGenomeSequencing, HapMap generally used SNP arrays). Also important to check, is that we have roughly equal numbers of male and female.</p>
+<pre class="r"><code>#Fist let&#39;s add a column for if a sample is in 1000 Genome project, and a column for if it is a line in Gilad lab freezer
+AllCoriellSamples &lt;-
+  AllCoriellSamples %&gt;%
+  mutate(IsInGiladLabYRI.Inventory = CellLine %in% GiladLabYRIRack.Lines) %&gt;%
+  mutate(Is1KGP = CellLine %in% LCLs.1000Genomes.vec)
+
+#Get list of samples that are fair game to do in the experiment, meaning they are either unrelated to the samples we have already done and are not the children in the case of trios. In the case of duos, children are fine, but let&#39;s just pick the parent anyway.
+AllUnrelatedSamplesLeftToDo &lt;- AllCoriellSamples %&gt;%
+  filter(! IsAlreadyDone) %&gt;%
+  filter(!`Relationship to Proband` == &quot;child&quot;)
+
+nrow(AllUnrelatedSamplesLeftToDo)</code></pre>
+<pre><code>[1] 113</code></pre>
+<p>Ok, there are a total of unrelated 113 samples we could potentially use.</p>
+<p>Now let’s choose the ones to order first. Let’s first use all the Gilad lab lines that we already have of the unrelated samples left to do, then select from the list of other unrelated samples and randomly pick a samples that are in 1000G and from unique families until we have a total batch size of 30. I figure 28 is a nice number since our past batches have been roughly this size.</p>
+<pre class="r"><code>#Get the lines we can just pick from Gilad lab freezer
+GiladLabLinesToPick &lt;- AllCoriellSamples %&gt;%
+  filter(CellLine %in% AllUnrelatedSamplesLeftToDo$CellLine) %&gt;%
+  filter(IsInGiladLabYRI.Inventory) %&gt;% pull(CellLine)
+
+GiladLabLinesToPick</code></pre>
+<pre><code>[1] &quot;18510&quot; &quot;19147&quot; &quot;18853&quot; &quot;18502&quot; &quot;18517&quot; &quot;19193&quot;</code></pre>
+<pre class="r"><code>NumGiladLinesToPick &lt;- length(GiladLabLinesToPick)
+
+FamaliesAlreadyDoneOrInGiladLinesToPick &lt;- AllCoriellSamples %&gt;%
+  filter(CellLine %in% c(SamplesAlreadyDone, GiladLabLinesToPick)) %&gt;%
+  pull(Family) %&gt;% na.omit()
+
+#Now get cell lines to order from Coriell
+PotentialSamplesToOrder &lt;- AllCoriellSamples %&gt;%
+  filter(CellLine %in% AllUnrelatedSamplesLeftToDo$CellLine) %&gt;%
+  filter(!CellLine %in% GiladLabLinesToPick) %&gt;%
+  filter(!Family %in% FamaliesAlreadyDoneOrInGiladLinesToPick)  %&gt;%
+  filter(Is1KGP) %&gt;%
+  distinct(Family, .keep_all = T) %&gt;%
+  pull(CellLine)
+
+PotentialSamplesToOrder %&gt;% length()</code></pre>
+<pre><code>[1] 23</code></pre>
+<p>Ok, that critera of requiring samples that we order are - Not already done - Not in Gilad lab freezer - Are in 1000 Genome’s project - Not in a family that we have already done - Only one sample per family</p>
+<p>results in a list of 23 samples. If we ordered those 23, we would have a total of 29 samples in this batch. Which is close to the 30 was shooting for… Let’s check that they are roughly sex-balanced.</p>
+<pre class="r"><code>AllCoriellSamples %&gt;%
+  filter(CellLine %in% PotentialSamplesToOrder) %&gt;%
+  pull(Sex) %&gt;% table()</code></pre>
+<pre><code>.
+Female   Male 
+    18      5 </code></pre>
+<p>Ok, not so much. Let’s relax the family requirements and then randomly pick some, hoping that we come up with a more sex balanced sex. But actually, let’s first check the sex of the samples we have already done:</p>
+<pre class="r"><code>AllCoriellSamples %&gt;%
+  filter(CellLine %in% c(SamplesAlreadyDone, GiladLabLinesToPick)) %&gt;%
+  pull(Sex) %&gt;% table()</code></pre>
+<pre><code>.
+Female   Male 
+    31     23 </code></pre>
+<p>Ok, not so balanced. let’s relax the family restriction, then randomly select 8 females and 16 males, leaving us with 39M + 39F at the conclusion of this next batch.</p>
+<pre class="r"><code>set.seed(0)
+PotentialSamplesToOrder.Male &lt;- AllCoriellSamples %&gt;%
+  filter(CellLine %in% AllUnrelatedSamplesLeftToDo$CellLine) %&gt;%
+  filter(!CellLine %in% GiladLabLinesToPick) %&gt;%
+  filter(Is1KGP) %&gt;%
+  filter(Sex == &quot;Male&quot;) %&gt;%
+  sample_n(16) %&gt;% pull(CellLine)
+
+set.seed(0)
+PotentialSamplesToOrder.Female &lt;- AllCoriellSamples %&gt;%
+  filter(CellLine %in% AllUnrelatedSamplesLeftToDo$CellLine) %&gt;%
+  filter(!CellLine %in% GiladLabLinesToPick) %&gt;%
+  filter(Is1KGP) %&gt;%
+  filter(Sex == &quot;Female&quot;) %&gt;%
+  sample_n(8) %&gt;% pull(CellLine)
+
+SamplesToOrder &lt;- c(PotentialSamplesToOrder.Female, PotentialSamplesToOrder.Male)
+SamplesToOrder</code></pre>
+<pre><code> [1] &quot;18873&quot; &quot;19254&quot; &quot;18878&quot; &quot;19196&quot; &quot;19222&quot; &quot;19214&quot; &quot;18924&quot; &quot;19143&quot; &quot;18487&quot;
+[10] &quot;19104&quot; &quot;18862&quot; &quot;18879&quot; &quot;18501&quot; &quot;19096&quot; &quot;18507&quot; &quot;18917&quot; &quot;18859&quot; &quot;19150&quot;
+[19] &quot;19144&quot; &quot;18868&quot; &quot;18874&quot; &quot;18504&quot; &quot;19184&quot; &quot;19189&quot;</code></pre>
+<p>Ok, let’s do a final sanity check before I purchase that these lines do not contain any children (implying no blood relation to other samples), that they do not overlap with any samples we have already done, and that they do not overlap with the 6 samples we can take from Gilad lab freezer…</p>
+<pre class="r"><code>AllCoriellSamples %&gt;%
+  filter(CellLine %in% SamplesToOrder) %&gt;%
+  pull(`Relationship to Proband`) %&gt;% table()</code></pre>
+<pre><code>.
+ father  mother proband 
+     14       5       5 </code></pre>
+<pre class="r"><code>intersect(SamplesToOrder, as.character(SamplesAlreadyDone))</code></pre>
+<pre><code>character(0)</code></pre>
+<pre class="r"><code>intersect(SamplesToOrder, GiladLabLinesToPick)</code></pre>
+<pre><code>character(0)</code></pre>
+<pre class="r"><code>SamplesToOrder</code></pre>
+<pre><code> [1] &quot;18873&quot; &quot;19254&quot; &quot;18878&quot; &quot;19196&quot; &quot;19222&quot; &quot;19214&quot; &quot;18924&quot; &quot;19143&quot; &quot;18487&quot;
+[10] &quot;19104&quot; &quot;18862&quot; &quot;18879&quot; &quot;18501&quot; &quot;19096&quot; &quot;18507&quot; &quot;18917&quot; &quot;18859&quot; &quot;19150&quot;
+[19] &quot;19144&quot; &quot;18868&quot; &quot;18874&quot; &quot;18504&quot; &quot;19184&quot; &quot;19189&quot;</code></pre>
+<p>All looks good. I will put these on the order sheet 2020-02-11. Let’s write them out to an excel that we can email to Claudia.</p>
+<pre class="r"><code>AllCoriellSamples %&gt;%
+  filter(CellLine %in% SamplesToOrder) %&gt;%
+  dplyr::select(-c(&quot;Set&quot;)) %&gt;%
+  dplyr::select(ID:Family) %&gt;%
+  write_excel_csv(&quot;../data/GiladStrains/20200211_CoriellOrder.BF.csv&quot; )</code></pre>
+<p>##Update 04/12/2021</p>
+<p>Going to order more cell lines, by the same critera.</p>
+<p>First out of curiosity, how many cell that we have already done or plan to do are not in 1KG?</p>
+<pre class="r"><code>AllCoriellSamples %&gt;%
+  filter(CellLine %in% c(SamplesAlreadyDone)) %&gt;%
+  mutate(In1KG = CellLine %in% LCLs.1000Genomes.vec) %&gt;%
+  pull(In1KG) %&gt;% table()</code></pre>
+<pre><code>.
+TRUE 
+  48 </code></pre>
+<pre class="r"><code># length(setdiff(as.character(LCLs.1000Genomes.vec), SamplesToOrder))
+# length(LCLs.1000Genomes.vec)</code></pre>
+<p>Ok it seems ALL the samples we have already done or have recently ordered are 1000 genome’s project. Now let’s get all the samples that we haven’t already done that are in 1KG that we could consider ordereing:</p>
+<pre class="r"><code>set.seed(0)
+AllCoriellSamples %&gt;%
+  filter(CellLine %in% AllUnrelatedSamplesLeftToDo$CellLine) %&gt;%
+  filter(!CellLine %in% GiladLabLinesToPick) %&gt;%
+  filter(Is1KGP) %&gt;%
+  filter(!CellLine %in% SamplesToOrder) %&gt;%
+  group_by(Sex) %&gt;%
+  sample_n(16) %&gt;%
+  ungroup() %&gt;%
+  dplyr::select(-c(&quot;Set&quot;)) %&gt;%
+  dplyr::select(ID:Family) %&gt;%
+  write_excel_csv(&quot;../data/GiladStrains/20210411_CoriellOrder2.BF.csv&quot; )
+
+set.seed(0)
+SecondCoriellOrder &lt;- AllCoriellSamples %&gt;%
+  filter(CellLine %in% AllUnrelatedSamplesLeftToDo$CellLine) %&gt;%
+  filter(!CellLine %in% GiladLabLinesToPick) %&gt;%
+  filter(Is1KGP) %&gt;%
+  filter(!CellLine %in% SamplesToOrder) %&gt;%
+  group_by(Sex) %&gt;%
+  sample_n(16) %&gt;%
+  ungroup() %&gt;%
+  pull(ID)
+
+SecondCoriellOrder</code></pre>
+<pre><code> [1] &quot;GM19176&quot; &quot;GM19204&quot; &quot;GM19166&quot; &quot;GM18916&quot; &quot;GM18864&quot; &quot;GM18881&quot; &quot;GM19118&quot;
+ [8] &quot;GM19116&quot; &quot;GM19197&quot; &quot;GM19206&quot; &quot;GM19247&quot; &quot;GM18489&quot; &quot;GM19108&quot; &quot;GM19185&quot;
+[15] &quot;GM19172&quot; &quot;GM18488&quot; &quot;GM19198&quot; &quot;GM19213&quot; &quot;GM18498&quot; &quot;GM19256&quot; &quot;GM19146&quot;
+[22] &quot;GM18516&quot; &quot;GM19121&quot; &quot;GM18865&quot; &quot;GM19226&quot; &quot;GM18871&quot; &quot;GM19098&quot; &quot;GM18923&quot;
+[29] &quot;GM19195&quot; &quot;GM18908&quot; &quot;GM18915&quot; &quot;GM18877&quot;</code></pre>
+<pre class="r"><code>SecondCorellOrderNoGM &lt;- str_remove(SecondCoriellOrder, &quot;GM&quot;)</code></pre>
+<div id="update-06152021" class="section level2">
+<h2>Update 06/15/2021</h2>
+<p>Ok, the sequencing results from the first batch of ~40 samples are back. Some of them had sample swaps or too low read depth to confidently identify the sample, resulting a total of ~30 usable samples. Let’s plan on attempting to regrow all samples that we have in the gilad lab freezer that were not covered in the last two batches and were not among the 30 samples with already usable data.</p>
+<pre class="r"><code>#Lines for which qtltools mbv could confidently identify the individual from RNA-seq data
+LinesWithQualityData &lt;-
+  read_tsv(&quot;../data/20210604_chRNA_SampleIDs_FromBamToFix.txt&quot;) %&gt;%
+  drop_na() %&gt;%
+  pull(BestMatch) %&gt;%
+  str_replace(&quot;NA&quot;, &quot;&quot;)
+
+
+SamplesToThawAgain &lt;- AllCoriellSamples %&gt;%
+  # filter out related samples (ie not children, since parents are assumed unrelated)
+  filter(!`Relationship to Proband` == &quot;child&quot;) %&gt;%
+  # filter for samples in gilad freezer
+  filter(IsInGiladLabYRI.Inventory) %&gt;%
+  # filter out first batch of coriell order
+  filter(! CellLine %in% SamplesToOrder) %&gt;%
+  # filter out the 6 gilad lab lines not yet attempted library prep but done in last batch
+  filter(! CellLine %in% GiladLabLinesToPick) %&gt;%
+  # filter out the second batch coriell order
+  filter( ! CellLine %in%  str_replace(SecondCoriellOrder, &quot;GM&quot;, &quot;&quot;)) %&gt;%
+  # filter out the lines that we already have quality data for
+  filter (! CellLine %in% LinesWithQualityData) %&gt;%
+  pull(CellLine)
+
+SamplesToThawAgain</code></pre>
+<pre><code>[1] &quot;19223&quot; &quot;18870&quot; &quot;19128&quot; &quot;19141&quot; &quot;19207&quot; &quot;19239&quot;</code></pre>
+<p>Finally, as per Genevieve’s request, I should identify which of the strains I ordered are completly new to the lab, so others can prioritize those lines for creating new ipsc lines.</p>
+<pre class="r"><code>#The lines Gilad lad previous had are either in this vector:
+length(GiladLabYRIRack.Lines)</code></pre>
+<pre><code>[1] 27</code></pre>
+<pre class="r"><code>#... or in this vector:
+OtherLines &lt;- read_tsv(&quot;../data/GiladStrains/Human_LCLs.txt&quot;) %&gt;%
+  rename(CellLine=`Human LCL ID`) %&gt;%
+  distinct(CellLine, .keep_all=T) %&gt;%
+  pull(CellLine)
+
+
+#Now get the lines that we ordered that are not in those previous lines
+AllLinesOrderedThatAreNewToGiladLab &lt;- data.frame(CellLine = c(str_remove(SecondCoriellOrder, &quot;GM&quot;), SamplesToOrder)) %&gt;%
+  filter(!CellLine %in% c(OtherLines, GiladLabYRIRack.Lines)) %&gt;%
+  mutate(CellLine = as.character(CellLine)) %&gt;%
+  pull(CellLine)</code></pre>
+<p>Write out list for Genevieve…</p>
+<pre class="r"><code>read_tsv(&quot;../data/GiladStrains/AustinBankedCellList.txt&quot;) %&gt;%
+  select(Line, Plate_In_LCL_Rack=Plate) %&gt;%
+  mutate(Line = str_replace(Line, &quot;(\\d+?)[AB*]&quot;, &quot;\\1&quot;)) %&gt;%
+  mutate(IsNewToGiladLab = Line %in% AllLinesOrderedThatAreNewToGiladLab) %&gt;%
+  write_tsv(&quot;~/Desktop/ListOfLinesThatAustinStockedInLCLRack.tsv&quot;)
+  # mutate(IsOrderedFromCoriell = Line %in% c(str_remove(SecondCoriellOrder, &quot;GM&quot;), SamplesToOrder)) %&gt;%
+  # drop_na() %&gt;%
+  # pull(IsNewToGiladLab) %&gt;% table()</code></pre>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.6.1 (2019-07-05)
+Platform: x86_64-conda_cos6-linux-gnu (64-bit)
+Running under: Scientific Linux 7.4 (Nitrogen)
+
+Matrix products: default
+BLAS/LAPACK: /project2/yangili1/bjf79/ChromatinSplicingQTLs/code/.snakemake/conda/4480a43d58942cece9fb73087fc984b8/lib/R/lib/libRblas.so
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+ [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] knitr_1.31      readxl_1.3.1    forcats_0.5.1   stringr_1.4.0  
+ [5] dplyr_1.0.5     purrr_0.3.4     readr_1.4.0     tidyr_1.1.3    
+ [9] tibble_3.1.0    ggplot2_3.3.3   tidyverse_1.3.0
+
+loaded via a namespace (and not attached):
+ [1] tidyselect_1.1.0  xfun_0.20         bslib_0.2.4       haven_2.3.1      
+ [5] colorspace_2.0-0  vctrs_0.3.7       generics_0.1.0    htmltools_0.5.1.1
+ [9] yaml_2.2.1        utf8_1.2.1        rlang_0.4.10      jquerylib_0.1.3  
+[13] later_1.1.0.1     pillar_1.5.1      withr_2.4.1       glue_1.4.2       
+[17] DBI_1.1.1         dbplyr_2.1.1      modelr_0.1.8      lifecycle_1.0.0  
+[21] cellranger_1.1.0  munsell_0.5.0     gtable_0.3.0      workflowr_1.6.2  
+[25] rvest_1.0.0       evaluate_0.14     ps_1.6.0          httpuv_1.5.5     
+[29] fansi_0.4.2       broom_0.7.6       Rcpp_1.0.6        promises_1.2.0.1 
+[33] backports_1.2.1   scales_1.1.1      jsonlite_1.7.2    fs_1.5.0         
+[37] hms_1.0.0         digest_0.6.27     stringi_1.4.3     rprojroot_2.0.2  
+[41] grid_3.6.1        cli_2.4.0         tools_3.6.1       magrittr_2.0.1   
+[45] sass_0.3.1        crayon_1.4.1      whisker_0.4       pkgconfig_2.0.3  
+[49] ellipsis_0.3.1    xml2_1.3.2        reprex_1.0.0      lubridate_1.7.10 
+[53] rstudioapi_0.13   assertthat_0.2.1  rmarkdown_2.7     httr_1.4.2       
+[57] R6_2.5.0          git2r_0.28.0      compiler_3.6.1   </code></pre>
+</div>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+http://docs.mathjax.org/en/latest/configuration.html.  This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

@@ -20,8 +20,11 @@ QTLtools: "scripts/QTLtools"
 # work better/faster
 aspera_key: "/home/bjf79/.aspera/connect/etc/asperaweb_id_dsa.openssh"
 
-# Parrellilization of GWAS hyprcoloc
+# Parrellilization of hyprcoloc. Suggested values 10-50 for RCC midway
 gwas_coloc_chunks: 10
+# If genewise_coloc_chunks is greater than the number of genes, the pipeline
+# might break. With 10,000+ genes this is not a problem.
+genewise_coloc_chunks: 10
 
 #Parrallelization of sQTL mapping with QTLtools
 sQTL_chunks: 1000

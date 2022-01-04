@@ -159,10 +159,12 @@ rule Gather_gwas_summary_stats:
     gwas_df dataframe assigned in common.py.
     """
     input:
-        # expand("gwas_summary_stats/leadSnpWindowStats/{accession}.tsv.gz", accession=gwas_df.index),
-        # expand("hyprcoloc/LociWiseSummaryStatsInput/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}",  QTLsGenotypeSet="", FeatureCoordinatesRedefinedFor=["ForGWASColoc", "ForColoc"]),
-        ####expand(
-        ####    "../output/hyprcoloc_results/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}/hyprcoloc.results.txt.gz",
-        ####    QTLsGenotypeSet="",
-        ####    FeatureCoordinatesRedefinedFor="ForGWASColoc",
-        ####),
+        expand(
+            "../output/hyprcoloc_results/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}/hyprcoloc.results.txt.gz",
+            QTLsGenotypeSet="",
+            FeatureCoordinatesRedefinedFor=["ForGWASColoc", "ForColoc"],
+        ),
+        expand("hyprcoloc/Results/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}/snpscores.txt.gz",
+            QTLsGenotypeSet="",
+            FeatureCoordinatesRedefinedFor=["ForColoc"],
+            )

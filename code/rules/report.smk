@@ -56,3 +56,38 @@ rule PlotQTLsPermutationPvalsHist:
         """
         Rscript scripts/Plot_QTLPermutationTestPvals.R {input} {output.qq} {output.hist} &> {log}
         """
+
+Rmds, = glob_wildcards("../analysis/{fn}.Rmd")
+rule BuildRmd:
+    """
+    Build site for easy sharing of analysis done with Rmarkdown. If possible,
+    make sure the Rmd only references relatively small files that are tracked
+    with git (eg in `../output/` or `../data/`) and use relative filepaths in
+    the Rmd. This way  one could succesfully run the Rmd files or use this rule
+    this rule to build Rmd files after pulling/cloning the repo. I think saving
+    could be useful to do exploratory data analysis between Carlos and I
+    without necessarily running the computationally intensive parts of the
+    Snakemake pipeline on each of our clones.  without running the rest of the
+    snakemake. I have been writing my Rmd files assuming `../analysis` is the
+    working directory.  Note that input files that might be referenced within an
+    Rmd are not specified in the snakemake. This rule might have to be manually
+    rerun if important input files referenced in the Rmd get updated.
+    """
+    input:
+        "../analysis/{fn}.Rmd",
+    output:
+        "../docs/{fn}.html"
+    log:
+        "logs/BuildRmd/{fn}.log"
+    wildcard_constraints:
+        fn = "|".join(Rmds)
+    conda:
+        "../envs/r_2.yaml"
+    shell:
+        """
+        Rscript -e 'setwd("../analysis"); workflowr::wflow_build("{wildcards.fn}.Rmd")' &> {log}
+        """
+
+rule CollectBuiltRmds:
+    input:
+        expand("../docs/{fn}.html", fn=Rmds)
