@@ -24,7 +24,7 @@ rule ExtractJuncs:
 
 rule make_leafcutter_juncfile:
     input:
-        expand ("SplicingAnalysis/leafcutter/juncfiles/autosomes/{Phenotype}_{IndID}_{Rep}.junc",  zip, Phenotype=RNASeqSamples_df['Phenotype'], IndID=RNASeqSamples_df['IndID'], Rep=RNASeqSamples_df['RepNumber']),
+        expand ("SplicingAnalysis/leafcutter/juncfiles/autosomes/{Phenotype}_{IndID}_{Rep}.junc",  zip, Phenotype=RNASeqSamplesNoProcap_df['Phenotype'], IndID=RNASeqSamplesNoProcap_df['IndID'], Rep=RNASeqSamplesNoProcap_df['RepNumber']),
     output:
         "SplicingAnalysis/leafcutter/juncfilelist.autosomes.txt"
     params:
@@ -43,7 +43,7 @@ rule make_leafcutter_juncfile:
 
 rule leafcutter_cluster:
     input:
-        juncs = expand ("SplicingAnalysis/leafcutter/juncfiles/autosomes/{Phenotype}_{IndID}_{Rep}.junc",  zip, Phenotype=RNASeqSamples_df['Phenotype'], IndID=RNASeqSamples_df['IndID'], Rep=RNASeqSamples_df['RepNumber']),
+        juncs = expand ("SplicingAnalysis/leafcutter/juncfiles/autosomes/{Phenotype}_{IndID}_{Rep}.junc",  zip, Phenotype=RNASeqSamplesNoProcap_df['Phenotype'], IndID=RNASeqSamplesNoProcap_df['IndID'], Rep=RNASeqSamplesNoProcap_df['RepNumber']),
         juncfile_list = "SplicingAnalysis/leafcutter/juncfilelist.autosomes.txt"
     output:
         "SplicingAnalysis/leafcutter/clustering/autosomes/leafcutter_perind.counts.gz",
@@ -233,3 +233,10 @@ rule Subset_YRI_leafcutter_phenotype_table:
         python scripts/subsample_polyA.Splicing_YRI.py
         """
 
+# rule ScoreSpliceSiteSNPs:
+#     input:
+#         vcf = ,
+#         introns = ,
+#     output:
+#     conda:
+#     shell:

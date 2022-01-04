@@ -87,8 +87,8 @@ ToMat <- function(df){
   mat <- apply(as.matrix(xp), 1, 
                    function(x) as.numeric(x==as.matrix(xp)))
   rownames(mat) <- colnames(mat)
-  # mat[upper.tri(mat, diag=T)] <- NA
-  mat[diag(mat)] <- NA
+  mat <- as.matrix(mat)
+  diag(x=mat) <- NA
 return(mat)
 }
 
@@ -130,8 +130,8 @@ Split.list <- setNames(group_split(ToSplit), deframe(group_keys(ToSplit)))
 Mat.list <- lapply(Split.list, ToMat)
 
 ## Some sanity checks that this code works as expected
-# Mat.list[[3]] %>%
-#   write.table(row.names = F, col.names = F)
+Mat.list[[1]] %>%
+  write.table(row.names = F, col.names = F)
 
 
 SumColocs.list <- lapply(Mat.list, SumColocsByPhenotypeClass)
@@ -158,7 +158,7 @@ Coloc.ByClass.Summary %>%
   geom_raster() +
   scale_fill_viridis(trans="log10", option="B") +
   facet_wrap(~AttemptOrSuccess) +
-  theme_light() +
+  theme_classic() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
 #Plot fill color by rate
@@ -168,7 +168,7 @@ Coloc.ByClass.Summary %>%
   ggplot(aes(x=Trait1, y=Trait2, fill=ColocRate)) +
   geom_raster() +
   scale_fill_viridis(option="B") +
-  theme_light() +
+  theme_classic() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
   
 ```
