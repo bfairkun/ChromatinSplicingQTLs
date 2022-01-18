@@ -157,7 +157,7 @@ rule Gather_gwas_coloc_chunks:
         cat <(echo "{params.header}") <(zcat {input}) | gzip - > {output}
         """
 
-use rule Gather_gwas_coloc_chunks as Gather_genewise_coloc_chunks_snpscores with:
+use rule Gather_gwas_coloc_chunks as Gather_genewise_coloc_chunks with:
     input:
         expand("hyprcoloc/Results/{{QTLsGenotypeSet}}{{FeatureCoordinatesRedefinedFor}}/Chunks/{n}.txt.gz", n=range(0, config["genewise_coloc_chunks"]))
     wildcard_constraints:
@@ -165,7 +165,7 @@ use rule Gather_gwas_coloc_chunks as Gather_genewise_coloc_chunks_snpscores with
     params:
         header = "GeneLocus\tHyprcolocIteration\tColocalizedTraits\tPosteriorColocalizationPr\tRegionalAssociationPr\tTopCandidateSNP\tProportionPosteriorPrExplainedByTopSNP\tDroppedTrait"
 
-use rule Gather_gwas_coloc_chunks as Gather_genewise_coloc_chunks with:
+use rule Gather_gwas_coloc_chunks as Gather_genewise_coloc_chunks_snpscores with:
     input:
         expand("hyprcoloc/Results/{{QTLsGenotypeSet}}{{FeatureCoordinatesRedefinedFor}}/Chunks/{n}.snpscores.txt.gz", n=range(0, config["genewise_coloc_chunks"]))
     wildcard_constraints:
@@ -174,3 +174,22 @@ use rule Gather_gwas_coloc_chunks as Gather_genewise_coloc_chunks with:
         "hyprcoloc/Results/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}/snpscores.txt.gz"
     params:
         header = "snp\tColocalizedCluster\tFinemapPr\tLocus"
+
+rule TidyColocalizedTraitsAndSummaryStats:
+    input:
+        ColocResults = "../output/hyprcoloc_results/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}/hyprcoloc.results.txt.gz",
+        MolQTLSummaryStats = "hyprcoloc/LociWiseSummaryStatsInput/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}",
+    log:
+        "logs/TidyColocalizedTraitsAndSummaryStats/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.log"
+    output:
+        "../output/hyprcoloc_results/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}/hyprcoloc.results.OnlyColocalized.Stats.txt.gz"
+    resources:
+        mem_mb = 16000
+    wildcard_constraints:
+        FeatureCoordinatesRedefinedFor = "ForColoc",
+    conda:
+        "../envs/r_2.yaml"
+    shell:
+        """
+        Rscript scripts/TidyGenewiseColocs.R {input.ColocResults} {input.MolQTLSummaryStats}/ {output}
+        """

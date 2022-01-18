@@ -167,4 +167,8 @@ rule Gather_gwas_summary_stats:
         expand("hyprcoloc/Results/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}/snpscores.txt.gz",
             QTLsGenotypeSet="",
             FeatureCoordinatesRedefinedFor=["ForColoc"],
+            ),
+        expand("../output/hyprcoloc_results/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}/hyprcoloc.results.OnlyColocalized.Stats.txt.gz",
+            QTLsGenotypeSet="",
+            FeatureCoordinatesRedefinedFor=["ForColoc"],
             )
