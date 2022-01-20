@@ -164,11 +164,12 @@ rule Gather_gwas_summary_stats:
             QTLsGenotypeSet="",
             FeatureCoordinatesRedefinedFor=["ForGWASColoc", "ForColoc"],
         ),
-        expand("hyprcoloc/Results/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}/snpscores.txt.gz",
+        expand("../output/hyprcoloc_results/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}/snpscores.txt.gz",
             QTLsGenotypeSet="",
             FeatureCoordinatesRedefinedFor=["ForColoc"],
             ),
         expand("../output/hyprcoloc_results/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}/hyprcoloc.results.OnlyColocalized.Stats.txt.gz",
             QTLsGenotypeSet="",
             FeatureCoordinatesRedefinedFor=["ForColoc"],
-            )
+            ),
+        expand("QTLs/QTLTools/{Phenotype}/OnlyFirstReps.PSI.bed.gz", Phenotype="polyA.Splicing")

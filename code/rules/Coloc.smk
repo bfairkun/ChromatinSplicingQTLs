@@ -171,7 +171,7 @@ use rule Gather_gwas_coloc_chunks as Gather_genewise_coloc_chunks_snpscores with
     wildcard_constraints:
         FeatureCoordinatesRedefinedFor = "ForColoc",
     output:
-        "hyprcoloc/Results/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}/snpscores.txt.gz"
+        "../output/hyprcoloc_results/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}/snpscores.txt.gz"
     params:
         header = "snp\tColocalizedCluster\tFinemapPr\tLocus"
 

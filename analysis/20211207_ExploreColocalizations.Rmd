@@ -50,7 +50,8 @@ dat %>%
   ggplot(aes(x=TotalTraitsAttemptedColocalization)) +
   stat_ecdf() +
   ylab("cumulative fraction") +
-  xlab("Number molecular traits attempted to colocalize for each gwas locus")
+  xlab("Number molecular traits attempted to colocalize for each gwas locus") +
+  theme_bw()
 
   
 ```
@@ -67,6 +68,7 @@ dat %>%
   summarise(DoesLocusColocalizeWithAnything = sum(ColocalizedTraitsContainGWAS)) %>%
   ggplot(aes(x=trait, fill=factor(DoesLocusColocalizeWithAnything))) +
   geom_bar(position="stack") +
+  theme_classic() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
 # Same plot but as percentage of loci
@@ -76,7 +78,11 @@ dat %>%
   summarise(DoesLocusColocalizeWithAnything = sum(ColocalizedTraitsContainGWAS)) %>%
   ggplot(aes(x=trait, fill=factor(DoesLocusColocalizeWithAnything))) +
   geom_bar(position="fill") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+  ylab('Fraction GWAS loci colocalized') +
+  scale_y_continuous(expand=c(0,0)) +
+  coord_flip() +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), legend.position="bottom")
 ```
 
 Ok so about 20% of gwas loci colocalize with something.
@@ -128,12 +134,18 @@ dat %>%
                                       str_detect(trait_families, " ") ~ "More than one",
                                       TRUE ~ trait_families
                                       )) %>%
+    mutate(trait_families = recode(trait_families,
+                                   Expression.Splicing = "Expression (Geuvadis)",
+                                   Expression.Splicing.Subset_YRI = "Expression; YRI Subset",
+                                   polyA.Splicing.Subset_YRI = "Splicing; leafcutter; YRI Subset")) %>%
     ggplot(aes(x=trait, fill=trait_families)) +
     geom_bar(position="fill")+
     ylab("Fraction colocalized loci") +
-    labs(fill="Molecular trait category") +
+    scale_y_continuous(expand=c(0,0)) +
+    labs(fill="molecular QTL type") +
+    coord_flip() +
     theme_classic() +
-    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), legend.position="bottom")
 
 ```
 
@@ -152,12 +164,18 @@ dat %>%
                                       str_detect(split, " ") ~ "More than one",
                                       TRUE ~ split
                                       )) %>%
+    mutate(trait_families = recode(trait_families,
+                                   Expression.Splicing = "Expression (Geuvadis)",
+                                   Expression.Splicing.Subset_YRI = "Expression; YRI Subset",
+                                   polyA.Splicing.Subset_YRI = "Splicing; leafcutter; YRI Subset")) %>%
     ggplot(aes(x=trait, fill=trait_families)) +
     geom_bar(position="fill")+
     ylab("Fraction colocalized loci") +
-    labs(fill="Molecular trait category") +
+    scale_y_continuous(expand=c(0,0)) +
+    labs(fill="molecular QTL type") +
+    coord_flip() +
     theme_classic() +
-    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), legend.position="bottom")
 
 ```
 
