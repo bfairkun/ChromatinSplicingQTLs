@@ -12,6 +12,18 @@ rule get_eRNA_saf:
         python scripts/get_eRNA_saf.py &> {log}
         """
 
+rule get_introns_saf:
+    input:
+        "Misc/GencodeHg38_all_introns.corrected.uniq.bed",
+    output:
+        "../data/introns.saf"
+    log:
+        "logs/introns_reference.log"
+    shell:
+        """
+        python scripts/get_introns_saf.py &> {log}
+        """
+
 rule get_cheRNA_saf:
     output:
         "../data/cheRNA_K562_GSE83531.saf",
@@ -47,6 +59,47 @@ rule featureCountsNonCoding:
         featureCounts {params.extraParams} -F SAF -T {threads} --ignoreDup --primary -a {input.eRNA} -o featureCounts/{wildcards.Phenotype}_eRNA/Counts.txt {input.bam} &> {log}.eRNA.log;
         featureCounts {params.extraParams} -F SAF -T {threads} --ignoreDup --primary -a {input.cheRNA} -o featureCounts/{wildcards.Phenotype}_cheRNA/Counts.txt {input.bam} &> {log}.cheRNA.log
         """
+
+
+
+
+
+
+
+
+
+rule featureCountsIntrons:
+    input:
+        bam = GetBamForPhenotype,
+        introns = "../data/introns.saf",
+    output:
+        "featureCounts/{Phenotype}_introns/Counts.txt",
+    params:
+        extraParams = PairedEndParams,
+    threads:
+        8
+    wildcard_constraints:
+        Phenotype = "|".join(["polyA.Expression", "chRNA.Expression", "MetabolicLabelled.30min", "MetabolicLabelled.60min", "ProCap"])
+    resources:
+        mem = 12000,
+        cpus_per_node = 9,
+    log:
+        "logs/featureCounts/{Phenotype}_introns.log"
+    shell:
+        """
+        featureCounts {params.extraParams} -F SAF -T {threads} --ignoreDup --primary -a {input.introns} -o featureCounts/{wildcards.Phenotype}_introns/Counts.txt {input.bam} &> {log};
+        """
+
+
+
+
+
+
+
+
+
+
+
  
 rule GetAdditionalNonCodingRNAFromFeatureCounts:
     input:

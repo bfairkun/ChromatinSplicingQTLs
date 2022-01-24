@@ -1,4 +1,4 @@
-library(plyr)
+library(dplyr)
 library(tidyverse)
 library(data.table)
 library(gtools)
@@ -70,7 +70,7 @@ CoverageFits.df <- Counts.EqualSizeBins %>%
   # sample_n_of(9, IntronName) %>%
   group_by(IntronName) %>%
   do(CoverageFit = rlm(Readcount ~ RelativeIntronPosInBp, data = ., maxit=40)) %>%
-  tidy(CoverageFit)
+  summarise(IntronName, tidy(CoverageFit))
 
 #Let's tidy the data so there is one row per intron
 CoverageFits.df.tidy <- CoverageFits.df %>%
@@ -144,7 +144,7 @@ CoverageFits.nb.glm.df <- Counts.EqualSizeBins %>%
   mutate(RelativeIntronPosInBp = Window*WinLen) %>%
   group_by(IntronName) %>%
   do(CoverageFit = possibly(glm.nb, otherwise = NA)(Readcount ~ RelativeIntronPosInBp, data = ., link="identity")) %>%
-  tidy(CoverageFit)
+  summarise(IntronName, tidy(CoverageFit)) #tidy(CoverageFit)
 
 CoverageFits.df.tidy <- CoverageFits.nb.glm.df %>%
   ungroup() %>%

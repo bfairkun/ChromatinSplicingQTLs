@@ -119,23 +119,22 @@ rule all:
                 "MetabolicLabelled.60min",
                 "ProCap"
             ],
-            ncRNA=["eRNA", "cheRNA"],
+            ncRNA=["eRNA", "cheRNA", "introns"],
         ),
         "featureCounts/ProCap/Counts.txt",
-        #### Inserted by Carlos
-        # expand(
-        #     "IntronWindowCounts/{IndID}.{windowStyle}.bed.gz",
-        #     IndID=chRNASeqSamples_df["IndID"].unique(),
-        #     windowStyle=["IntronWindows_equalLength", "IntronWindows"],
-        # ),
-        # expand(
-        #     "slopes/{IndID}.tab.gz",
-        #     IndID=chRNASeqSamples_df["IndID"].unique(),
-        # ),
-        # expand(
-        #     "slopes/{IndID}_glm.nb.tab.gz",
-        #     IndID=chRNASeqSamples_df["IndID"].unique(),
-        # ),
+        expand(
+            "IntronWindowCounts/{IndID}.{windowStyle}.bed.gz",
+            IndID=chRNASeqSamples,
+            windowStyle=["IntronWindows_equalLength", "IntronWindows"],
+        ),
+        expand(
+            "slopes/{IndID}.tab.gz",
+            IndID=chRNASeqSamples,
+        ),
+        expand(
+            "slopes/{IndID}_glm.nb.tab.gz",
+            IndID=chRNASeqSamples,
+        ),
 
 
 rule Gather_chRNASeq_Fastq:

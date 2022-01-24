@@ -6,6 +6,7 @@ rule featureCounts:
         "featureCounts/{Phenotype}/Counts.txt"
     params:
         extraParams = GetFeatureCountsParams,
+        paired = PairedEndParams
     threads:
         8
     wildcard_constraints:
@@ -17,7 +18,7 @@ rule featureCounts:
         "logs/featureCounts/{Phenotype}.log"
     shell:
         """
-        featureCounts -p {params.extraParams} -T {threads} --ignoreDup --primary -a {input.annotations} -o {output} {input.bam} &> {log}
+        featureCounts {params.paired} {params.extraParams} -T {threads} --ignoreDup --primary -a {input.annotations} -o {output} {input.bam} &> {log}
         """
 
 use rule featureCounts as featureCountsAtRegion with:
