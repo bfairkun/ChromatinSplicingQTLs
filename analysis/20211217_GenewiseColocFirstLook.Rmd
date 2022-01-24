@@ -21,6 +21,8 @@ First, load necessary libraries
 ```{r}
 library(tidyverse)
 library(viridis)
+library(gplots)
+library(data.table)
 
 dat <- read_tsv("../output/hyprcoloc_results/ForColoc/hyprcoloc.results.txt.gz", col_names = c("Locus", "iteration", 'ColocalizedTraits', 'ColocPr', 'RegionalPr', "topSNP", "TopSNPFinemapPr", "DroppedTrait"), skip=1)
 
@@ -31,20 +33,44 @@ First question:
 how many traits attempted to colocalized per gene:
 
 ```{r}
+
+Median <- dat %>%
+  mutate(NumTraits = str_count(ColocalizedTraits, ",") + 1) %>%
+  group_by(Locus) %>%
+  summarise(TotalTraitsAttemptedColocalization = sum(NumTraits)+1) %>%
+  pull(TotalTraitsAttemptedColocalization) %>% median()
+
 dat %>%
   mutate(NumTraits = str_count(ColocalizedTraits, ",") + 1) %>%
   group_by(Locus) %>%
   summarise(TotalTraitsAttemptedColocalization = sum(NumTraits)+1) %>%
   ggplot(aes(x=TotalTraitsAttemptedColocalization)) +
-  stat_ecdf() +
+  geom_bar() +
   ylab("cumulative fraction") +
   xlab("Number molecular traits attempted to colocalize for each gene locus") +
+  xlim(c(-1,20)) +
+  geom_vline(xintercept=Median) +
   theme_light()
-```
 
-Now how many traits actually colocalized per gene:
+
+```
+Median of 4 traits attempted to colocalize
+
+Now how many traits actually colocalized per gene, and how many clusters
 
 ```{r}
+#How many traits colocalizes for each gene
+Median <- dat %>%
+  mutate(NumTraits = str_count(ColocalizedTraits, ",") ) %>%
+  mutate(NumColocalizedTraits  = case_when(
+    NumTraits > 0 ~ NumTraits +1,
+    TRUE ~ 0
+  )) %>%
+  group_by(Locus) %>%
+  summarise(TotalTraitsColocalized = sum(NumColocalizedTraits)) %>%
+  pull(TotalTraitsColocalized) %>% median()
+
+#How many traits colocalizes for each gene
 dat %>%
   mutate(NumTraits = str_count(ColocalizedTraits, ",") ) %>%
   mutate(NumColocalizedTraits  = case_when(
@@ -54,9 +80,25 @@ dat %>%
   group_by(Locus) %>%
   summarise(TotalTraitsColocalized = sum(NumColocalizedTraits)) %>%
   ggplot(aes(x=TotalTraitsColocalized)) +
-  stat_ecdf() +
-  ylab("cumulative fraction") +
+  # stat_ecdf() +
+  # geom_histogram(binwidth = 1) +
+  geom_bar() +
+  ylab("Count") +
+  xlim(c(-1,20)) +
   xlab("Number molecular traits colocalize for each gene locus") +
+  geom_vline(xintercept=Median) +
+  theme_light()
+
+#How many clusters
+dat %>%
+  mutate(Cluster = !ColocalizedTraits == "None") %>%
+  group_by(Locus) %>%
+  summarize(NumColocClusters = sum(Cluster)) %>%
+  ggplot(aes(x=as.factor(NumColocClusters))) +
+  geom_bar() +
+  ylab("Count") +
+  # xlim(c(-1,10)) +
+  xlab("Number colocalized clusters per gene") +
   theme_light()
 ```
 
@@ -71,12 +113,24 @@ ToSplit <- dat %>%
   # filter(Locus %in% (dat$Locus %>% unique() %>% head(200))) %>%
   mutate(ColocalizedTraits = str_replace(ColocalizedTraits, paste0(Locus, ", "), "")) %>%
   separate_rows(ColocalizedTraits, sep = ' ') %>%
+  # recode for better labelling
   mutate(Trait = case_when(
     ColocalizedTraits == "None" ~ DroppedTrait,
     TRUE ~ ColocalizedTraits
   )) %>%
   select(Locus, Trait, iteration) %>%
   group_by(Locus)
+
+# Phenoclasses <- dat %>%
+#   pull(pheno_class) %>% unique()
+# 
+# files <- paste0("../code/QTLs/QTLTools/", Phenoclasses, "/OnlyFirstReps.sorted.qqnorm.bed.gz")
+# 
+# bed.list <- lapply(files, fread, sep='\t', select=2:6) %>%
+#   setNames(Phenoclasses)
+# positions <- bind_rows(bed.list, .id="source") %>%
+#   unite(phenotype_full, source, pid, sep = ";") %>%
+#   select(-gid)
 
 
 ToMat <- function(df){
@@ -130,8 +184,11 @@ Split.list <- setNames(group_split(ToSplit), deframe(group_keys(ToSplit)))
 Mat.list <- lapply(Split.list, ToMat)
 
 ## Some sanity checks that this code works as expected
-Mat.list[[1]] %>%
+Mat.list[["ENSG00000196735.13"]] %>%
   write.table(row.names = F, col.names = F)
+
+Mat.list[[100]] %>%
+  write.table(row.names = T, col.names = F)
 
 
 SumColocs.list <- lapply(Mat.list, SumColocsByPhenotypeClass)
@@ -170,10 +227,189 @@ Coloc.ByClass.Summary %>%
   scale_fill_viridis(option="B") +
   theme_classic() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+
+Coloc.ByClass.Summary.ForHeatmap <- Coloc.ByClass.Summary %>%
+  mutate(ColocRate = Colocs/ColocAttempts * 100) %>%
+  select(Trait1, Trait2, ColocRate)
+
+Coloc.ByClass.Summary.ForHeatmap %>%
+  rename(Trait1=Trait2, Trait2=Trait1) %>%
+  bind_rows(Coloc.ByClass.Summary.ForHeatmap) %>%
+  distinct(.keep_all=T) %>%
+  pivot_wider(names_from = "Trait1", values_from = "ColocRate", values_fill=NA, names_sort=T) %>%
+  column_to_rownames("Trait2") %>%
+  as.matrix() %>%
+  # heatmap.2(trace="none", col=brewer.pal(51,"Spectral"))
+  # heatmap.2(trace="none", col=colorpanel(75, "blue", "black", "yellow"), cexRow = 1, cexCol = 1, offsetRow=0, offsetCol = 0, margins=c(11,11), dendrogram = "column")
+  heatmap.2(trace="none", col=viridis(15, option="B"), cexRow = 1, cexCol = 1, offsetRow=0, offsetCol = 0, margins=c(11,11), dendrogram = "column")
+
   
 ```
 
+Now let's look at the distance between colocalized trait pairs, for different phenotype classes
 
+```{r}
+DatToPlotDist <- dat %>%
+  select(Locus, ColocalizedTraits, iteration, DroppedTrait) %>%
+  separate_rows(ColocalizedTraits, sep = ', ') %>%
+  gather(key = "ColocalizationStatus", value="phenotype_full", ColocalizedTraits, DroppedTrait) %>%
+  filter(!is.na(phenotype_full)) %>%
+  filter(!phenotype_full == "None") %>%
+  mutate(pheno_class = str_replace(phenotype_full, "(.+?);.+$", "\\1"))
+
+
+Phenoclasses <- DatToPlotDist %>%
+  pull(pheno_class) %>% unique()
+
+files <- paste0("../code/QTLs/QTLTools/", Phenoclasses, "/OnlyFirstReps.sorted.qqnorm.bed.gz")
+
+bed.list <- lapply(files, fread, sep='\t', select=2:6) %>%
+  setNames(Phenoclasses)
+positions <- bind_rows(bed.list, .id="source") %>%
+  unite(phenotype_full, source, pid, sep = ";") %>%
+  select(-gid)
+
+head(positions)
+
+DatToPlotDist <- DatToPlotDist %>%
+  left_join(positions, by="phenotype_full")
+
+GeneWithPromoterPhenotypes <- c("Expression.Splicing", "Expression.Splicing.Subset_YRI", "chRNA.Expression.Splicing", "MetabolicLabelled.60min", "MetabolicLabelled.30min")
+
+PairwiseColocalizedPhenotypes <- DatToPlotDist %>%
+  # head(1000) %>%
+  mutate(start = case_when(
+    (pheno_class %in% GeneWithPromoterPhenotypes) & (strand=="-") ~ as.integer(end-1),
+    TRUE ~ start
+  )) %>%
+  mutate(end = case_when(
+    (pheno_class %in% GeneWithPromoterPhenotypes) & (strand=="+") ~ as.integer(start+1),
+    TRUE ~ end
+  )) %>%
+  mutate(pheno_class = recode(pheno_class,
+                                   Expression.Splicing = "Expression (Geuvadis)",
+                                   Expression.Splicing.Subset_YRI = "Expression (YRI.Subset)",
+                                   polyA.Splicing.Subset_YRI = "Splicing (leafcutter.YRI.Subset)",
+                                   chRNA.Expression.Splicing = "Expression (chRNA)")) %>%
+  # filter(Locus_snp == "ENSG00000002822.15_7:1998126:G:A") %>%
+  left_join(., ., by = c("Locus", "iteration")) %>% 
+  filter(phenotype_full.x != phenotype_full.y) %>% 
+  rowwise() %>%
+  mutate(name = toString(sort(c(phenotype_full.x,phenotype_full.y)))) %>% 
+  distinct(Locus_snp, name, .keep_all = T) %>%
+  mutate(pheno_class_name = toString(sort(c(pheno_class.x,pheno_class.y)))) %>%
+  mutate(Distance_between = case_when(
+    # If features overlap
+    ((start.x >= start.y) & (start.x <= end.y)) |
+    ((end.x >= start.y) & (end.x <= end.y)) |
+    ((start.x <= start.y) & (end.x >= end.y)) ~ as.integer(0),
+    TRUE ~ min(abs(end.x - start.y), abs(start.x - end.y))
+  )) %>%
+  mutate(PairwiseColocClass="Colocalized")
+
+
+PairwiseColocalizedPhenotypes %>%
+  mutate(ColocStatus = paste(ColocalizationStatus.x, ColocalizationStatus.y)) %>%
+  pull(ColocStatus) %>% table()
+
+PairwiseAllPhenotypes <- DatToPlotDist %>%
+  # head(1000) %>%
+  mutate(start = case_when(
+    (pheno_class %in% GeneWithPromoterPhenotypes) & (strand=="-") ~ as.integer(end-1),
+    TRUE ~ start
+  )) %>%
+  mutate(end = case_when(
+    (pheno_class %in% GeneWithPromoterPhenotypes) & (strand=="+") ~ as.integer(start+1),
+    TRUE ~ end
+  )) %>%
+  mutate(pheno_class = recode(pheno_class,
+                                   Expression.Splicing = "Expression (Geuvadis)",
+                                   Expression.Splicing.Subset_YRI = "Expression (YRI.Subset)",
+                                   polyA.Splicing.Subset_YRI = "Splicing (leafcutter.YRI.Subset)",
+                                   chRNA.Expression.Splicing = "Expression (chRNA)")) %>%
+  # filter(Locus_snp == "ENSG00000002822.15_7:1998126:G:A") %>%
+  left_join(., ., by = c("Locus")) %>% 
+  filter(phenotype_full.x != phenotype_full.y) %>% 
+  rowwise() %>%
+  mutate(name = toString(sort(c(phenotype_full.x,phenotype_full.y)))) %>% 
+  distinct(Locus_snp, name, .keep_all = T) %>%
+  mutate(pheno_class_name = toString(sort(c(pheno_class.x,pheno_class.y)))) %>%
+  mutate(Distance_between = case_when(
+    # If features overlap
+    ((start.x >= start.y) & (start.x <= end.y)) |
+    ((end.x >= start.y) & (end.x <= end.y)) |
+    ((start.x <= start.y) & (end.x >= end.y)) ~ as.integer(0),
+    TRUE ~ min(abs(end.x - start.y), abs(start.x - end.y))
+  )) %>%
+  mutate(PairwiseColocClass="AllAttemped")
+
+PairwiseAllPhenotypes %>%
+  mutate(ColocStatus = paste(ColocalizationStatus.x, ColocalizationStatus.y)) %>%
+  pull(ColocStatus) %>% table()
+
+
+bind_rows(PairwiseAllPhenotypes, PairwiseColocalizedPhenotypes) %>%
+  mutate(Distance_between = Distance_between+1) %>%
+  ggplot(aes(x=Distance_between, color=PairwiseColocClass)) +
+  geom_boxplot(outlier.shape =NA) +
+  # geom_density() +
+  # scale_x_continuous(trans="log10") +
+  coord_cartesian(xlim=c(1,100000)) +
+  facet_wrap(~pheno_class_name) +
+  theme_classic()
+```
+
+
+Ok as expected, trait pairs that colocalize, for most all types of phenotypes, are closer than those that do not colocalize (compared to all traits that I attempted colocalization)... These plots might be kind of hard to interpret. Maybe a simpler summary is to present the median distance for those that do colocalize, versus those that I attempted colocalization for.
+
+```{r}
+# 
+bind_rows(PairwiseAllPhenotypes, PairwiseColocalizedPhenotypes) %>%
+  group_by(pheno_class_name, PairwiseColocClass) %>%
+  summarize(MedianDistanceBetweenTraitPairs = median(Distance_between)) %>%
+  ggplot(aes(x=PairwiseColocClass, y=MedianDistanceBetweenTraitPairs, fill=PairwiseColocClass)) +
+  geom_col() +
+  # facet_wrap(~pheno_class_name) +
+  theme_bw()
+
+DistancesToPlot <-bind_rows(PairwiseAllPhenotypes, PairwiseColocalizedPhenotypes) %>%
+  mutate(Distance_between = Distance_between+1) %>%
+  group_by(pheno_class.x, pheno_class.y, PairwiseColocClass) %>%
+  summarize(MedianDistanceBetweenTraitPairs = median(Distance_between))
+
+DistancesToPlot %>%
+  rename(pheno_class.x=pheno_class.y, pheno_class.y=pheno_class.x) %>%
+  bind_rows(DistancesToPlot) %>%
+  ggplot(aes(x=pheno_class.x, y=pheno_class.y, fill=MedianDistanceBetweenTraitPairs)) +
+  geom_raster() +
+  # scale_fill_continuous(trans="log10") +
+  scale_fill_viridis(trans="log10", option="B", direction = -1) +
+  facet_wrap(~PairwiseColocClass) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+AsFacetsPlot <- DistancesToPlot %>%
+  rename(pheno_class.x=pheno_class.y, pheno_class.y=pheno_class.x) %>%
+  bind_rows(DistancesToPlot) %>%
+  mutate(MedianDistanceBetweenTraitPairs= MedianDistanceBetweenTraitPairs/1000) %>%
+  arrange(desc(pheno_class.x), pheno_class.y) %>%
+  ggplot(aes(x=PairwiseColocClass, y=MedianDistanceBetweenTraitPairs, fill=PairwiseColocClass)) +
+  geom_col() +
+  facet_grid(rows = vars(pheno_class.x), cols = vars(pheno_class.y), switch="y",labeller = label_wrap_gen(width=10)) +
+  ylab("Median distance between trait pairs (kb)") +
+  theme_bw() +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  theme(strip.text = element_text(size = 6))
+
+```
+
+
+```{r, eval=F}
+ggsave("../code/scratch/PairwiseDistances.pdf", AsFacetsPlot, height=5, width=7)
+```
 
 ## Conclusions
 

@@ -20,7 +20,7 @@ if [ "$1" == "-h" ]; then
   exit 0
 fi
 
-# set -xe
+set -xe
 
 fai=$1
 bam=$2
@@ -30,7 +30,7 @@ ExtraFlags=$*
 
 temp_bgfile=$(mktemp)
 
-samtools view -bh -F256 $bam | bedtools genomecov -ibam - -bga $ExtraFlags | bedtools sort -i - > $temp_bgfile
+samtools view -bh -F256 $bam | bedtools genomecov -ibam - -bga $ExtraFlags | sort -k 1,1 -k2,2n > $temp_bgfile
 bedGraphToBigWig $temp_bgfile $fai $bw
 
 rm ${temp_bgfile}

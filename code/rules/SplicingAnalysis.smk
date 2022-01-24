@@ -199,6 +199,35 @@ def GetSplitLeafcutterCountTablesForPhenotype(wildcards):
     elif wildcards.Phenotype == "chRNA.Splicing":
         return "SplicingAnalysis/leafcutter/clustering/autosomes/leafcutter_perind.counts.gz.chRNA.Expression.Splicing.gz"
 
+rule Leafcutter_countsTable_toPSI:
+    input:
+        GetSplitLeafcutterCountTablesForPhenotype
+    output:
+        temp("QTLs/QTLTools/{Phenotype}/OnlyFirstReps.PSI.bed")
+    wildcard_constraints:
+        Phenotype = "|".join(["polyA.Splicing", "chRNA.Splicing"])
+    log:
+        "logs/Leafcutter_countsTable_toPSI/{Phenotype}.log"
+    conda:
+        "envs/r_2.yaml"
+    shell:
+        """
+        Rscript scripts/LeafcutterToPSIBed.R {input} {output} &> {log}
+        """
+
+rule sortAndIndexPSITable:
+    input:
+        "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.PSI.bed"
+    output:
+        bed = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.PSI.bed.gz",
+        tbi = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.PSI.bed.gz.tbi"
+    wildcard_constraints:
+        Phenotype = "|".join(["polyA.Splicing", "chRNA.Splicing"])
+    shell:
+        """
+        bedtools sort -header -i {input} | bgzip /dev/stdin -c > {output.bed}
+        tabix -p bed {output.bed}
+        """
 
 rule leafcutter_PreparePhenotypes:
     """

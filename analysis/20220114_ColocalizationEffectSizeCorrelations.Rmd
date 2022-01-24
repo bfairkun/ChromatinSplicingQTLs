@@ -1,0 +1,296 @@
+---
+title: "Explore GWAS colocalizations"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F)
+```
+
+## Introduction
+
+I have previously colocalized molecular traits gene-wise using hyprcoloc and saved the important summary stats, including beta values for each molecular trait for the top SNP for the hyprcoloc cluster, to file. Here I aim to check how those beta values correlate among different trait types for colocalized traits. For example, among H3K27Ac QTL peaks that colocalize with gene expression QTLs in polyA RNA-seq, are the beta values correlated. Since the paridigm is that H2K27Ac enahncers are activating, such that increase in enhancer signal would result in increase in target gene expression, I expect a generally positive correlation. More interstingly will be to check these kinds of correlations for splicing phenotypes. There are some reports that splicing (via the spliceosome) activates H3K4me3 writers nearby for example ([EMATS mechanism](https://pubmed.ncbi.nlm.nih.gov/31787377/)), though Li et al did not see enrichment of sQTLs among H3K4me3 QTLs. So it would be interseting to see if we do or do not see these correlations among colocalization traits.
+
+```{r}
+library(tidyverse)
+library(gplots)
+library(data.table)
+
+
+dat <- read_tsv("../output/hyprcoloc_results/ForColoc/hyprcoloc.results.OnlyColocalized.Stats.txt.gz") %>%
+  select(-iteration) %>%
+  unite(Locus_snp, Locus, snp) %>%
+  mutate(pheno_class = str_replace(phenotype_full, "(.+?);.+$", "\\1"))
+
+  
+head(dat)
+```
+
+Let's also read in the positions of these molecular phenotypes... later I will look at how effect sizes correlate for differing distances between phenotype pairs...
+
+```{r}
+
+
+Phenoclasses <- dat %>%
+  pull(pheno_class) %>% unique()
+
+files <- paste0("../code/QTLs/QTLTools/", Phenoclasses, "/OnlyFirstReps.sorted.qqnorm.bed.gz")
+
+bed.list <- lapply(files, fread, sep='\t', select=2:6) %>%
+  setNames(Phenoclasses)
+positions <- bind_rows(bed.list, .id="source") %>%
+  unite(phenotype_full, source, pid, sep = ";") %>%
+  select(-gid)
+
+head(positions)
+
+dat <- dat %>%
+  left_join(positions, by="phenotype_full")
+
+dat$pheno_class %>% unique()
+
+```
+
+Ok, now lets do some data tidy-ing to match up all pairs of within-cluster colocalized traits and their beta values
+
+```{r}
+
+#Let's recode the gene phenotypes to just be the promoter positions which is more relevent when evaluating how distance effects correlations between phenotype classes
+GeneWithPromoterPhenotypes <- c("Expression.Splicing", "Expression.Splicing.Subset_YRI", "chRNA.Expression.Splicing", "MetabolicLabelled.60min", "MetabolicLabelled.30min")
+
+dat.tidy.for.cor <- dat %>%
+  mutate(start = case_when(
+    (pheno_class %in% GeneWithPromoterPhenotypes) & (strand=="-") ~ as.integer(end-1),
+    TRUE ~ start
+  )) %>%
+  mutate(end = case_when(
+    (pheno_class %in% GeneWithPromoterPhenotypes) & (strand=="+") ~ as.integer(start+1),
+    TRUE ~ end
+  )) %>%
+  mutate(pheno_class = recode(pheno_class,
+                                   Expression.Splicing = "Expression (Geuvadis)",
+                                   Expression.Splicing.Subset_YRI = "Expression (YRI.Subset)",
+                                   polyA.Splicing.Subset_YRI = "Splicing (leafcutter.YRI.Subset)",
+                                   chRNA.Expression.Splicing = "Expression (chRNA)")) %>%
+  # filter(Locus_snp == "ENSG00000002822.15_7:1998126:G:A") %>%
+  left_join(., ., by = c("Locus_snp", "ColocPr", "RegionalPr", "TopSNPFinemapPr")) %>% 
+  filter(phenotype_full.x != phenotype_full.y) %>% 
+  rowwise() %>%
+  mutate(name = toString(sort(c(phenotype_full.x,phenotype_full.y)))) %>% 
+  distinct(Locus_snp, name, .keep_all = T) %>%
+  mutate(pheno_class_name = toString(sort(c(pheno_class.x,pheno_class.y)))) %>%
+  mutate(Distance_between = case_when(
+    # If features overlap
+    ((start.x >= start.y) & (start.x <= end.y)) |
+    ((end.x >= start.y) & (end.x <= end.y)) |
+    ((start.x <= start.y) & (end.x >= end.y)) ~ as.integer(0),
+    TRUE ~ min(abs(end.x - start.y), abs(start.x - end.y))
+  ))
+
+
+PhenotypeClassPairs <- dat.tidy.for.cor %>%
+  pull(pheno_class_name) %>% unique()
+PhenotypeClassPairs
+
+
+
+```
+
+Ok, now let's plot the correlation of beta values for certain classes of phenotypes (eg Expression QTLs and H3K27Ac QTLs), and more generally for all pairs of phenotype classes
+
+```{r}
+dat.tidy.for.cor %>%
+  filter(pheno_class_name == "Expression (Geuvadis), H3K27AC") %>%
+  ggplot(aes(x=beta.x, y=beta.y)) +
+  geom_point() +
+  facet_wrap(~pheno_class_name) +
+  theme_classic()
+
+dat.tidy.for.cor %>%
+  filter(pheno_class_name == "MetabolicLabelled.30min, MetabolicLabelled.60min") %>%
+  ggplot(aes(x=beta.x, y=beta.y)) +
+  geom_point() +
+  facet_wrap(~pheno_class_name) +
+  theme_classic()
+
+dat.tidy.for.cor %>%
+  filter(pheno_class_name == "Splicing (leafcutter.YRI.Subset), Splicing (leafcutter.YRI.Subset)") %>%
+  ggplot(aes(x=beta.x, y=beta.y)) +
+  geom_point() +
+  facet_wrap(~pheno_class_name) +
+  theme_classic()
+
+
+dat.tidy.for.cor %>%
+  ggplot(aes(x=beta.x, y=beta.y)) +
+  geom_point(alpha=0.05) +
+  facet_wrap(~pheno_class_name) +
+  theme_classic()
+
+```
+
+Ok wow. That is nice. H3K27Ac beta values are very strongly positively correlated with eQTL betas, as expected. We can look at other pairs of traits too, and if there is an effect, I think this is a very powerful way to assess it. But unsurprisingly, the way we have quantified splicing here with leafcutter, splicing is not really obviously correlated with anything, since a leafcutter intron excision ratio PSI that goes up for one intron necessarily means some other introns went down. Perhaps if we looked at intron retention, the effects would be more interpretable. That will be on the future to do list once we get better chRNA-seq data.
+
+Also, let's replot these as a clustered heatmap for matrix of correlation coefficients.
+
+```{r}
+library(RColorBrewer)
+# my_palette <- colorRampPalette(c("blue", "black", "yellow"))(n = 1000)
+
+dat.tidy.for.cor %>%
+  group_by(pheno_class_name) %>%
+  summarise(cor = cor.test(beta.x, beta.y, method="pearson")$p.value) %>%
+  separate(pheno_class_name, into=c("PhenotypeClass1", "PhenotypeClass2"), sep = ", ")
+
+dat.cor <- dat.tidy.for.cor %>%
+  group_by(pheno_class_name) %>%
+  summarise(cor = cor(beta.x, beta.y, method="spearman")) %>%
+  separate(pheno_class_name, into=c("PhenotypeClass1", "PhenotypeClass2"), sep = ", ")
+  
+dat.cor %>%
+  rename(PhenotypeClass1=PhenotypeClass2, PhenotypeClass2=PhenotypeClass1) %>%
+  bind_rows(dat.cor) %>%
+  distinct(.keep_all=T) %>%
+  # mutate(cor = as.numeric(cor)) %>%
+  pivot_wider(names_from = "PhenotypeClass1", values_from = "cor", values_fill=NA, names_sort=T) %>%
+  column_to_rownames("PhenotypeClass2") %>%
+  as.matrix() %>%
+  # heatmap.2(trace="none", col=brewer.pal(51,"Spectral"))
+  heatmap.2(trace="none", col=colorpanel(75, "blue", "black", "yellow"), cexRow = 1, cexCol = 1, offsetRow=0, offsetCol = 0, margins=c(11,11), dendrogram = "column")
+
+  
+  
+```
+
+The slight negative correlation between leafcutter splicing and other phenotypes is interesting. I wonder if there is a technical explanation. For example, perhaps many of the colocalizing sQTLs are actually alt TSS, such that the measured decrease in expression if a downstream TSS is used (shorter isoform), results in general upregulation of within-cluster introns which would occur if the cluster had a few introns only present in the long isoform that go down, and the other introns necessarily go up.
+
+Another informative thing would be to look at the distribution of distances between colocalized traits, and the effect sizes between colocalized traits that are close versus far. First let's plot the distribution of distances for each type of pair of colocalizes traits:
+
+```{r}
+
+dat.tidy.for.cor %>%
+  #Add a psueodcount so we can still plot things that are distance=0 overlapping
+  mutate(Distance_between = Distance_between+1) %>%
+  ggplot(aes(x=Distance_between)) +
+  stat_ecdf() +
+  scale_x_continuous(trans="log10") +
+  facet_wrap(~pheno_class_name) +
+  theme_classic()
+
+```
+
+Ok now let's look at some examples. For example, looking at splicing and H3K4me3 traits that colocalizes, if we look at the ones that are close together (eg <1000bp), do we see any positive correlation like what might be expected with EMATs?
+
+```{r}
+
+dat.tidy.for.cor %>%
+  filter(pheno_class_name == "H3K4ME3, Splicing (leafcutter.YRI.Subset)") %>%
+  mutate(Distance_between = Distance_between+1) %>%
+  ggplot(aes(x=Distance_between)) +
+  stat_ecdf() +
+  scale_x_continuous(trans="log10") +
+  facet_wrap(~pheno_class_name) +
+  theme_classic()
+
+
+dat.tidy.for.cor %>%
+  filter(pheno_class_name == "H3K4ME3, Splicing (leafcutter.YRI.Subset)") %>%
+  mutate(DistanceClass = cut(Distance_between, breaks = c(0, 1, 500, 1000, 5000, 10000, Inf), include.lowest = T, right=T)) %>%
+  mutate(DistanceClass = recode(DistanceClass, `[0,1]` = "Overlapping")) %>%
+  ggplot(aes(x=beta.x, y=beta.y)) +
+  geom_point() +
+  # geom_smooth(method='lm') +
+  facet_wrap(~DistanceClass) +
+  theme_classic()
+
+```
+
+Not so much. Again, maybe we need to look at intron retention instead of leafcutter splicing.
+
+Let's explore how leafcutter splicing phenotypes are correlated with the same plots...
+
+```{r}
+
+dat.tidy.for.cor %>%
+  filter(pheno_class_name == "Splicing (leafcutter.YRI.Subset), Splicing (leafcutter.YRI.Subset)") %>%
+  mutate(Distance_between = Distance_between+1) %>%
+  ggplot(aes(x=Distance_between)) +
+  stat_ecdf() +
+  ylab("Cumulative fraction") +
+  xlab("Distance b/n features") +
+  scale_x_continuous(trans="log10") +
+  facet_wrap(~pheno_class_name) +
+  theme_classic()
+
+
+dat.tidy.for.cor %>%
+  filter(pheno_class_name == "Splicing (leafcutter.YRI.Subset), Splicing (leafcutter.YRI.Subset)") %>%
+  mutate(DistanceClass = cut(Distance_between, breaks = c(0, 1, 500, 1000, 5000, 10000, Inf), include.lowest = T, right=T)) %>%
+  mutate(DistanceClass = recode(DistanceClass, `[0,1]` = "Overlapping")) %>%
+  ggplot(aes(x=beta.x, y=beta.y)) +
+  geom_point(alpha=0.3) +
+  # geom_smooth(method='lm') +
+  facet_wrap(~DistanceClass) +
+  theme_classic()
+
+
+```
+
+Ok that actually sort of makes sense... Within a single molecule, overlapping introns are mutually exclusive and we see that they are anticorrelated. Also, for introns that are 1-500 bp apart (the size of typical exons), effect sizes are actually positively correlated, which might reflect QTLs for cassette exons.
+
+Lastly, let's check H3K27AC mark and gene expression. And also H3K27AC vs H3K4ME3
+
+```{r}
+
+dat.tidy.for.cor %>%
+  filter(pheno_class_name == "Expression (Geuvadis), H3K27AC") %>%
+  mutate(Distance_between = Distance_between+1) %>%
+  ggplot(aes(x=Distance_between)) +
+  stat_ecdf() +
+  ylab("Cumulative fraction") +
+  xlab("Distance b/n features") +
+  scale_x_continuous(trans="log10") +
+  facet_wrap(~pheno_class_name) +
+  theme_classic()
+
+
+dat.tidy.for.cor %>%
+  filter(pheno_class_name == "Expression (Geuvadis), H3K27AC") %>%
+  mutate(DistanceClass = cut(Distance_between, breaks = c(0, 1000, 5000, 10000, 50000, 100000, Inf), include.lowest = T, right=T)) %>%
+  mutate(DistanceClass = recode(DistanceClass, `[0,1]` = "Overlapping")) %>%
+  ggplot(aes(x=beta.x, y=beta.y)) +
+  geom_point(alpha=0.3) +
+  # geom_smooth(method='lm') +
+  facet_wrap(~DistanceClass) +
+  theme_classic()
+
+
+dat.tidy.for.cor %>%
+  filter(pheno_class_name == "H3K27AC, H3K4ME3") %>%
+  mutate(Distance_between = Distance_between+1) %>%
+  ggplot(aes(x=Distance_between)) +
+  stat_ecdf() +
+  ylab("Cumulative fraction") +
+  xlab("Distance b/n features") +
+  scale_x_continuous(trans="log10") +
+  facet_wrap(~pheno_class_name) +
+  theme_classic()
+
+
+dat.tidy.for.cor %>%
+  filter(pheno_class_name == "H3K27AC, H3K4ME3") %>%
+  mutate(DistanceClass = cut(Distance_between, breaks = c(0, 1000, 5000, 10000, 50000, 100000, Inf), include.lowest = T, right=T)) %>%
+  mutate(DistanceClass = recode(DistanceClass, `[0,1]` = "Overlapping")) %>%
+  ggplot(aes(x=beta.x, y=beta.y)) +
+  geom_point(alpha=0.3) +
+  # geom_smooth(method='lm') +
+  facet_wrap(~DistanceClass) +
+  theme_classic()
+
+
+
+```
+
+
+

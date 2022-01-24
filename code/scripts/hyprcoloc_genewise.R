@@ -33,7 +33,7 @@ Loci<- read_tsv(FilelistIn, col_names=c("f")) %>%
     deframe()
 
 
-HyprcolocResults.list <- vector("list", length(Loci))
+# HyprcolocResults.list <- vector("list", length(Loci))
 
 for (i in seq_along(Loci)){
 
@@ -111,14 +111,13 @@ for (i in seq_along(Loci)){
 
     )
 
-    HyprcolocResults.list[[i]] <- 
-         res[[1]] %>%
-         as.data.frame()
+    # HyprcolocResults.list[[i]] <- 
+    #      res[[1]] %>%
+    #      as.data.frame()
+    res[[1]] %>%
+         as.data.frame() %>%
+         mutate(Loci = names(TestLocus)) %>%
+         select(Loci, everything()) %>%
+         write_tsv(FileOut, append=T)
+
 }
-
-HyprcolocResults.list <- setNames(HyprcolocResults.list, names(Loci))
-
-HyprcolocResults.df <-
-    bind_rows(HyprcolocResults.list, .id="loci_name")
-
-write_tsv(HyprcolocResults.df, FileOut, append=T)

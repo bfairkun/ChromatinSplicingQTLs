@@ -1,36 +1,26 @@
 <!DOCTYPE html>
 
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
 
 <head>
 
 <meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
-<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
 <meta name="author" content="Benjamin Fair" />
 
-<meta name="date" content="2021-12-28" />
+<meta name="date" content="2022-01-24" />
 
 <title>Untitled</title>
 
-<script src="site_libs/header-attrs-2.7/header-attrs.js"></script>
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
 <script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
-<style>h1 {font-size: 34px;}
-       h1.title {font-size: 38px;}
-       h2 {font-size: 30px;}
-       h3 {font-size: 24px;}
-       h4 {font-size: 18px;}
-       h5 {font-size: 16px;}
-       h6 {font-size: 12px;}
-       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
-       pre:not([class]) { background-color: white }</style>
 <script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
 <link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
 <script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
@@ -46,18 +36,12 @@ div.section {
 }
 </style>
 
-
-
-<style type="text/css">
-  code{white-space: pre-wrap;}
-  span.smallcaps{font-variant: small-caps;}
-  span.underline{text-decoration: underline;}
-  div.column{display: inline-block; vertical-align: top; width: 50%;}
-  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
-  ul.task-list{list-style: none;}
-    </style>
-
 <style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
 <script type="text/javascript">
 if (window.hljs) {
   hljs.configure({languages: []});
@@ -70,7 +54,32 @@ if (window.hljs) {
 
 
 
-
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
 
 
 
@@ -81,8 +90,13 @@ if (window.hljs) {
   margin-left: auto;
   margin-right: auto;
 }
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
 img {
   max-width:100%;
+  height: auto;
 }
 .tabbed-pane {
   padding-top: 12px;
@@ -96,13 +110,40 @@ button.code-folding-btn:focus {
 summary {
   display: list-item;
 }
-pre code {
-  padding: 0;
-}
 </style>
 
 
 <style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
 .dropdown-submenu {
   position: relative;
 }
@@ -130,7 +171,7 @@ pre code {
   margin-right: -10px;
 }
 .dropdown-submenu:hover>a:after {
-  border-left-color: #adb5bd;
+  border-left-color: #ffffff;
 }
 .dropdown-submenu.pull-left {
   float: none;
@@ -142,7 +183,7 @@ pre code {
 }
 </style>
 
-<script type="text/javascript">
+<script>
 // manage active state of menu based on current page
 $(document).ready(function () {
   // active menu anchor
@@ -153,23 +194,10 @@ $(document).ready(function () {
   var menuAnchor = $('a[href="' + href + '"]');
 
   // mark it active
-  menuAnchor.tab('show');
+  menuAnchor.parent().addClass('active');
 
   // if it's got a parent navbar menu mark it active as well
   menuAnchor.closest('li.dropdown').addClass('active');
-
-  // Navbar adjustments
-  var navHeight = $(".navbar").first().height() + 15;
-  var style = document.createElement('style');
-  var pt = "padding-top: " + navHeight + "px; ";
-  var mt = "margin-top: -" + navHeight + "px; ";
-  var css = "";
-  // offset scroll position for anchor links (for fixed navbar)
-  for (var i = 1; i <= 6; i++) {
-    css += ".section h" + i + "{ " + pt + mt + "}\n";
-  }
-  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
-  document.head.appendChild(style);
 });
 </script>
 
@@ -181,6 +209,7 @@ $(document).ready(function () {
   max-height: 500px;
   min-height: 44px;
   overflow-y: auto;
+  background: white;
   border: 1px solid #ddd;
   border-radius: 4px;
 }
@@ -216,7 +245,6 @@ $(document).ready(function () {
   border: none;
   display: inline-block;
   border-radius: 4px;
-  background-color: transparent;
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li {
@@ -229,9 +257,48 @@ $(document).ready(function () {
 }
 </style>
 
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
 <!-- code folding -->
 
 
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
 
 <style type="text/css">
 
@@ -245,12 +312,6 @@ $(document).ready(function () {
 }
 }
 
-@media print {
-.toc-content {
-  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
-  float: right;
-}
-}
 
 .toc-content {
   padding-left: 30px;
@@ -306,13 +367,13 @@ div.tocify {
 
 
 <!-- setup 3col/9col grid for toc_float and main content  -->
-<div class="row">
-<div class="col-sm-12 col-md-4 col-lg-3">
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
 <div id="TOC" class="tocify">
 </div>
 </div>
 
-<div class="toc-content col-sm-12 col-md-8 col-lg-9">
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
 
 
 
@@ -346,20 +407,20 @@ div.tocify {
   </div><!--/.container -->
 </div><!--/.navbar -->
 
-<div id="header">
+<div class="fluid-row" id="header">
 
 
 
 <h1 class="title toc-ignore">Untitled</h1>
 <h4 class="author">Benjamin Fair</h4>
-<h4 class="date">December 28, 2021</h4>
+<h4 class="date">January 24, 2022</h4>
 
 </div>
 
 
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
-<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span>
 </button>
 </p>
 <div id="workflowr-report" class="collapse">
@@ -368,7 +429,7 @@ div.tocify {
 <a data-toggle="tab" href="#summary">Summary</a>
 </li>
 <li>
-<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> </a>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> </a>
 </li>
 <li>
 <a data-toggle="tab" href="#versions">Past versions</a>
@@ -377,10 +438,10 @@ div.tocify {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2021-12-28
+<strong>Last updated:</strong> 2022-01-24
 </p>
 <p>
-<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 1
 </p>
 <p>
 <strong>Knit directory:</strong> <code>ChromatinSplicingQTLs/analysis/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
@@ -396,12 +457,12 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges"> <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted changes </a>
 </p>
 </div>
-<div id="strongRMarkdownfilestronguptodate" class="panel-collapse collapse">
+<div id="strongRMarkdownfilestronguncommittedchanges" class="panel-collapse collapse">
 <div class="panel-body">
-<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
+<p>The R Markdown file has unstaged changes. To know which version of the R Markdown file created these results, you’ll want to first commit it to the Git repo. If you’re still working on the analysis, you can ignore this warning. When you’re finished, you can run <code>wflow_publish</code> to commit the R Markdown file and build the HTML.</p>
 </div>
 </div>
 </div>
@@ -425,7 +486,7 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 </div>
 <div id="strongSeedstrongcodesetseed20191126code" class="panel-collapse collapse">
 <div class="panel-body">
-<p>The command <code>set.seed(20191126)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+<p>The command <code>set.seed(20191126)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
 </div>
 </div>
 </div>
@@ -468,16 +529,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstree89517ffeaecf50fe2639320bb002b1a5ce1b1858targetblank89517ffa"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/89517ffeaecf50fe2639320bb002b1a5ce1b1858" target="_blank">89517ff</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstreecc1c333631f88b8b65947c07e7a1032b2a016ae2targetblankcc1c333a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/cc1c333631f88b8b65947c07e7a1032b2a016ae2" target="_blank">cc1c333</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstree89517ffeaecf50fe2639320bb002b1a5ce1b1858targetblank89517ffa" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstreecc1c333631f88b8b65947c07e7a1032b2a016ae2targetblankcc1c333a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/89517ffeaecf50fe2639320bb002b1a5ce1b1858" target="_blank">89517ff</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/cc1c333631f88b8b65947c07e7a1032b2a016ae2" target="_blank">cc1c333</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -546,13 +607,14 @@ Ignored files:
     Ignored:    data/GrowthNotes/._20210830_GrowthNotes_chRNA.ConcentrationsToReplate.txt
 
 Untracked files:
-    Untracked:  code/envs/r_2.yaml
     Untracked:  code/snakemake_profiles/slurm/__pycache__/
 
 Unstaged changes:
+    Modified:   analysis/20211217_GenewiseColocFirstLook.Rmd
+    Modified:   analysis/20220114_ColocalizationEffectSizeCorrelations.Rmd
     Modified:   code/rules/report.smk
+    Modified:   code/scripts/BamToBigwig.sh
     Modified:   code/scripts/GenometracksByGenotype
-    Modified:   output/hyprcoloc_results/ForColoc/hyprcoloc.results.txt.gz
 
 </code></pre>
 <p>
@@ -596,6 +658,40 @@ Message
 Rmd
 </td>
 <td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/a6be25f31d620baf3752385a3c95b6fc9c8a66eb/analysis/20211217_GenewiseColocFirstLook.Rmd" target="_blank">a6be25f</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-01-04
+</td>
+<td>
+remove pro-cap from leafcutter cluster rule
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/237b54974507ae639dd505ca0019ae3c6c854af2/docs/20211217_GenewiseColocFirstLook.html" target="_blank">237b549</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2021-12-28
+</td>
+<td>
+rebuilt some site analyses
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
 <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/89517ffeaecf50fe2639320bb002b1a5ce1b1858/analysis/20211217_GenewiseColocFirstLook.Rmd" target="_blank">89517ff</a>
 </td>
 <td>
@@ -624,22 +720,82 @@ added genewise coloc rmd
 <p>First, load necessary libraries</p>
 <pre class="r"><code>library(tidyverse)
 library(viridis)
+library(gplots)
+library(data.table)
 
 dat &lt;- read_tsv(&quot;../output/hyprcoloc_results/ForColoc/hyprcoloc.results.txt.gz&quot;, col_names = c(&quot;Locus&quot;, &quot;iteration&quot;, &#39;ColocalizedTraits&#39;, &#39;ColocPr&#39;, &#39;RegionalPr&#39;, &quot;topSNP&quot;, &quot;TopSNPFinemapPr&quot;, &quot;DroppedTrait&quot;), skip=1)</code></pre>
 <p>First question:</p>
 <p>how many traits attempted to colocalized per gene:</p>
-<pre class="r"><code>dat %&gt;%
+<pre class="r"><code>Median &lt;- dat %&gt;%
+  mutate(NumTraits = str_count(ColocalizedTraits, &quot;,&quot;) + 1) %&gt;%
+  group_by(Locus) %&gt;%
+  summarise(TotalTraitsAttemptedColocalization = sum(NumTraits)+1) %&gt;%
+  pull(TotalTraitsAttemptedColocalization) %&gt;% median()
+
+dat %&gt;%
   mutate(NumTraits = str_count(ColocalizedTraits, &quot;,&quot;) + 1) %&gt;%
   group_by(Locus) %&gt;%
   summarise(TotalTraitsAttemptedColocalization = sum(NumTraits)+1) %&gt;%
   ggplot(aes(x=TotalTraitsAttemptedColocalization)) +
-  stat_ecdf() +
+  geom_bar() +
   ylab(&quot;cumulative fraction&quot;) +
   xlab(&quot;Number molecular traits attempted to colocalize for each gene locus&quot;) +
+  xlim(c(-1,20)) +
+  geom_vline(xintercept=Median) +
   theme_light()</code></pre>
 <p><img src="figure/20211217_GenewiseColocFirstLook.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p>Now how many traits actually colocalized per gene:</p>
-<pre class="r"><code>dat %&gt;%
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-1">
+Past versions of unnamed-chunk-2-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/237b54974507ae639dd505ca0019ae3c6c854af2/docs/figure/20211217_GenewiseColocFirstLook.Rmd/unnamed-chunk-2-1.png" target="_blank">237b549</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2021-12-28
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Median of 4 traits attempted to colocalize</p>
+<p>Now how many traits actually colocalized per gene, and how many clusters</p>
+<pre class="r"><code>#How many traits colocalizes for each gene
+Median &lt;- dat %&gt;%
+  mutate(NumTraits = str_count(ColocalizedTraits, &quot;,&quot;) ) %&gt;%
+  mutate(NumColocalizedTraits  = case_when(
+    NumTraits &gt; 0 ~ NumTraits +1,
+    TRUE ~ 0
+  )) %&gt;%
+  group_by(Locus) %&gt;%
+  summarise(TotalTraitsColocalized = sum(NumColocalizedTraits)) %&gt;%
+  pull(TotalTraitsColocalized) %&gt;% median()
+
+#How many traits colocalizes for each gene
+dat %&gt;%
   mutate(NumTraits = str_count(ColocalizedTraits, &quot;,&quot;) ) %&gt;%
   mutate(NumColocalizedTraits  = case_when(
     NumTraits &gt; 0 ~ NumTraits +1,
@@ -648,11 +804,64 @@ dat &lt;- read_tsv(&quot;../output/hyprcoloc_results/ForColoc/hyprcoloc.results.
   group_by(Locus) %&gt;%
   summarise(TotalTraitsColocalized = sum(NumColocalizedTraits)) %&gt;%
   ggplot(aes(x=TotalTraitsColocalized)) +
-  stat_ecdf() +
-  ylab(&quot;cumulative fraction&quot;) +
+  # stat_ecdf() +
+  # geom_histogram(binwidth = 1) +
+  geom_bar() +
+  ylab(&quot;Count&quot;) +
+  xlim(c(-1,20)) +
   xlab(&quot;Number molecular traits colocalize for each gene locus&quot;) +
+  geom_vline(xintercept=Median) +
   theme_light()</code></pre>
 <p><img src="figure/20211217_GenewiseColocFirstLook.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-3-1">
+Past versions of unnamed-chunk-3-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-3-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/237b54974507ae639dd505ca0019ae3c6c854af2/docs/figure/20211217_GenewiseColocFirstLook.Rmd/unnamed-chunk-3-1.png" target="_blank">237b549</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2021-12-28
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>#How many clusters
+dat %&gt;%
+  mutate(Cluster = !ColocalizedTraits == &quot;None&quot;) %&gt;%
+  group_by(Locus) %&gt;%
+  summarize(NumColocClusters = sum(Cluster)) %&gt;%
+  ggplot(aes(x=as.factor(NumColocClusters))) +
+  geom_bar() +
+  ylab(&quot;Count&quot;) +
+  # xlim(c(-1,10)) +
+  xlab(&quot;Number colocalized clusters per gene&quot;) +
+  theme_light()</code></pre>
+<p><img src="figure/20211217_GenewiseColocFirstLook.Rmd/unnamed-chunk-3-2.png" width="672" style="display: block; margin: auto;" /></p>
 <p>Now how many colocalizations involve each type of molecular trait. I’m envisioning a matrix of how many colocalizations were attempted for each trait family pair, and how many times they were actually colocalized.</p>
 <pre class="r"><code>set.seed(0)
 ToSplit &lt;- dat %&gt;%
@@ -660,12 +869,24 @@ ToSplit &lt;- dat %&gt;%
   # filter(Locus %in% (dat$Locus %&gt;% unique() %&gt;% head(200))) %&gt;%
   mutate(ColocalizedTraits = str_replace(ColocalizedTraits, paste0(Locus, &quot;, &quot;), &quot;&quot;)) %&gt;%
   separate_rows(ColocalizedTraits, sep = &#39; &#39;) %&gt;%
+  # recode for better labelling
   mutate(Trait = case_when(
     ColocalizedTraits == &quot;None&quot; ~ DroppedTrait,
     TRUE ~ ColocalizedTraits
   )) %&gt;%
   select(Locus, Trait, iteration) %&gt;%
   group_by(Locus)
+
+# Phenoclasses &lt;- dat %&gt;%
+#   pull(pheno_class) %&gt;% unique()
+# 
+# files &lt;- paste0(&quot;../code/QTLs/QTLTools/&quot;, Phenoclasses, &quot;/OnlyFirstReps.sorted.qqnorm.bed.gz&quot;)
+# 
+# bed.list &lt;- lapply(files, fread, sep=&#39;\t&#39;, select=2:6) %&gt;%
+#   setNames(Phenoclasses)
+# positions &lt;- bind_rows(bed.list, .id=&quot;source&quot;) %&gt;%
+#   unite(phenotype_full, source, pid, sep = &quot;;&quot;) %&gt;%
+#   select(-gid)
 
 
 ToMat &lt;- function(df){
@@ -676,8 +897,8 @@ ToMat &lt;- function(df){
   mat &lt;- apply(as.matrix(xp), 1, 
                    function(x) as.numeric(x==as.matrix(xp)))
   rownames(mat) &lt;- colnames(mat)
-  # mat[upper.tri(mat, diag=T)] &lt;- NA
-  mat[diag(mat)] &lt;- NA
+  mat &lt;- as.matrix(mat)
+  diag(x=mat) &lt;- NA
 return(mat)
 }
 
@@ -719,11 +940,55 @@ Split.list &lt;- setNames(group_split(ToSplit), deframe(group_keys(ToSplit)))
 Mat.list &lt;- lapply(Split.list, ToMat)
 
 ## Some sanity checks that this code works as expected
-# Mat.list[[3]] %&gt;%
-#   write.table(row.names = F, col.names = F)
-
-
-SumColocs.list &lt;- lapply(Mat.list, SumColocsByPhenotypeClass)
+Mat.list[[&quot;ENSG00000196735.13&quot;]] %&gt;%
+  write.table(row.names = F, col.names = F)</code></pre>
+<pre><code>NA 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+1 NA 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+1 1 NA 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+1 1 1 NA 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 NA 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 NA 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 1 NA 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 1 1 NA 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 1 1 1 NA 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 NA 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 1 NA 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 1 1 NA 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 NA 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 1 NA 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 1 1 NA 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 NA 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 NA 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 NA 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 NA 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 NA 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 NA 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 NA 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 NA 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 NA 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 NA 1 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 NA 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 NA 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 NA 1 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 NA 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 NA 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 NA 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 NA 1 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 NA 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 NA 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 NA 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 NA 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 NA 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 NA 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 NA</code></pre>
+<pre class="r"><code>Mat.list[[100]] %&gt;%
+  write.table(row.names = T, col.names = F)</code></pre>
+<pre><code>&quot;Expression.Splicing;H3K4ME3;H3K4ME3_peak_17313,&quot; NA 1 0 0 0
+&quot;polyA.Splicing.Subset_YRI;16:579180:580858:clu_32206_+&quot; 1 NA 0 0 0
+&quot;H3K27AC;H3K27AC_peak_34486,&quot; 0 0 NA 1 0
+&quot;H3K4ME3;H3K4ME3_peak_17317&quot; 0 0 1 NA 0
+&quot;H3K4ME3;H3K4ME3_peak_17316&quot; 0 0 0 0 NA</code></pre>
+<pre class="r"><code>SumColocs.list &lt;- lapply(Mat.list, SumColocsByPhenotypeClass)
 SumAttemptedColocs.list &lt;- lapply(Mat.list, SumColocAttemptsByPhenotypeClass)
 
 
@@ -747,9 +1012,46 @@ Coloc.ByClass.Summary %&gt;%
   geom_raster() +
   scale_fill_viridis(trans=&quot;log10&quot;, option=&quot;B&quot;) +
   facet_wrap(~AttemptOrSuccess) +
-  theme_light() +
+  theme_classic() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))</code></pre>
 <p><img src="figure/20211217_GenewiseColocFirstLook.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-4-1">
+Past versions of unnamed-chunk-4-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-4-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/237b54974507ae639dd505ca0019ae3c6c854af2/docs/figure/20211217_GenewiseColocFirstLook.Rmd/unnamed-chunk-4-1.png" target="_blank">237b549</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2021-12-28
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>#Plot fill color by rate
 Coloc.ByClass.Summary %&gt;%
   mutate(ColocRate = Colocs/ColocAttempts * 100) %&gt;%
@@ -757,9 +1059,223 @@ Coloc.ByClass.Summary %&gt;%
   ggplot(aes(x=Trait1, y=Trait2, fill=ColocRate)) +
   geom_raster() +
   scale_fill_viridis(option=&quot;B&quot;) +
-  theme_light() +
+  theme_classic() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))</code></pre>
 <p><img src="figure/20211217_GenewiseColocFirstLook.Rmd/unnamed-chunk-4-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-4-2">
+Past versions of unnamed-chunk-4-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-4-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/237b54974507ae639dd505ca0019ae3c6c854af2/docs/figure/20211217_GenewiseColocFirstLook.Rmd/unnamed-chunk-4-2.png" target="_blank">237b549</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2021-12-28
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>Coloc.ByClass.Summary.ForHeatmap &lt;- Coloc.ByClass.Summary %&gt;%
+  mutate(ColocRate = Colocs/ColocAttempts * 100) %&gt;%
+  select(Trait1, Trait2, ColocRate)
+
+Coloc.ByClass.Summary.ForHeatmap %&gt;%
+  rename(Trait1=Trait2, Trait2=Trait1) %&gt;%
+  bind_rows(Coloc.ByClass.Summary.ForHeatmap) %&gt;%
+  distinct(.keep_all=T) %&gt;%
+  pivot_wider(names_from = &quot;Trait1&quot;, values_from = &quot;ColocRate&quot;, values_fill=NA, names_sort=T) %&gt;%
+  column_to_rownames(&quot;Trait2&quot;) %&gt;%
+  as.matrix() %&gt;%
+  # heatmap.2(trace=&quot;none&quot;, col=brewer.pal(51,&quot;Spectral&quot;))
+  # heatmap.2(trace=&quot;none&quot;, col=colorpanel(75, &quot;blue&quot;, &quot;black&quot;, &quot;yellow&quot;), cexRow = 1, cexCol = 1, offsetRow=0, offsetCol = 0, margins=c(11,11), dendrogram = &quot;column&quot;)
+  heatmap.2(trace=&quot;none&quot;, col=viridis(15, option=&quot;B&quot;), cexRow = 1, cexCol = 1, offsetRow=0, offsetCol = 0, margins=c(11,11), dendrogram = &quot;column&quot;)</code></pre>
+<p><img src="figure/20211217_GenewiseColocFirstLook.Rmd/unnamed-chunk-4-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Now let’s look at the distance between colocalized trait pairs, for different phenotype classes</p>
+<pre class="r"><code>DatToPlotDist &lt;- dat %&gt;%
+  select(Locus, ColocalizedTraits, iteration, DroppedTrait) %&gt;%
+  separate_rows(ColocalizedTraits, sep = &#39;, &#39;) %&gt;%
+  gather(key = &quot;ColocalizationStatus&quot;, value=&quot;phenotype_full&quot;, ColocalizedTraits, DroppedTrait) %&gt;%
+  filter(!is.na(phenotype_full)) %&gt;%
+  filter(!phenotype_full == &quot;None&quot;) %&gt;%
+  mutate(pheno_class = str_replace(phenotype_full, &quot;(.+?);.+$&quot;, &quot;\\1&quot;))
+
+
+Phenoclasses &lt;- DatToPlotDist %&gt;%
+  pull(pheno_class) %&gt;% unique()
+
+files &lt;- paste0(&quot;../code/QTLs/QTLTools/&quot;, Phenoclasses, &quot;/OnlyFirstReps.sorted.qqnorm.bed.gz&quot;)
+
+bed.list &lt;- lapply(files, fread, sep=&#39;\t&#39;, select=2:6) %&gt;%
+  setNames(Phenoclasses)
+positions &lt;- bind_rows(bed.list, .id=&quot;source&quot;) %&gt;%
+  unite(phenotype_full, source, pid, sep = &quot;;&quot;) %&gt;%
+  select(-gid)
+
+head(positions)</code></pre>
+<pre><code>                                    phenotype_full start   end strand
+1: polyA.Splicing.Subset_YRI;1:15947:16607:clu_1_- 15947 16607      -
+2: polyA.Splicing.Subset_YRI;1:16310:16607:clu_1_- 16310 16607      -
+3: polyA.Splicing.Subset_YRI;1:17055:17233:clu_2_- 17055 17233      -
+4: polyA.Splicing.Subset_YRI;1:17055:17915:clu_2_- 17055 17915      -
+5: polyA.Splicing.Subset_YRI;1:17368:17606:clu_2_- 17368 17606      -
+6: polyA.Splicing.Subset_YRI;1:17368:17915:clu_2_- 17368 17915      -</code></pre>
+<pre class="r"><code>DatToPlotDist &lt;- DatToPlotDist %&gt;%
+  left_join(positions, by=&quot;phenotype_full&quot;)
+
+GeneWithPromoterPhenotypes &lt;- c(&quot;Expression.Splicing&quot;, &quot;Expression.Splicing.Subset_YRI&quot;, &quot;chRNA.Expression.Splicing&quot;, &quot;MetabolicLabelled.60min&quot;, &quot;MetabolicLabelled.30min&quot;)
+
+PairwiseColocalizedPhenotypes &lt;- DatToPlotDist %&gt;%
+  # head(1000) %&gt;%
+  mutate(start = case_when(
+    (pheno_class %in% GeneWithPromoterPhenotypes) &amp; (strand==&quot;-&quot;) ~ as.integer(end-1),
+    TRUE ~ start
+  )) %&gt;%
+  mutate(end = case_when(
+    (pheno_class %in% GeneWithPromoterPhenotypes) &amp; (strand==&quot;+&quot;) ~ as.integer(start+1),
+    TRUE ~ end
+  )) %&gt;%
+  mutate(pheno_class = recode(pheno_class,
+                                   Expression.Splicing = &quot;Expression (Geuvadis)&quot;,
+                                   Expression.Splicing.Subset_YRI = &quot;Expression (YRI.Subset)&quot;,
+                                   polyA.Splicing.Subset_YRI = &quot;Splicing (leafcutter.YRI.Subset)&quot;,
+                                   chRNA.Expression.Splicing = &quot;Expression (chRNA)&quot;)) %&gt;%
+  # filter(Locus_snp == &quot;ENSG00000002822.15_7:1998126:G:A&quot;) %&gt;%
+  left_join(., ., by = c(&quot;Locus&quot;, &quot;iteration&quot;)) %&gt;% 
+  filter(phenotype_full.x != phenotype_full.y) %&gt;% 
+  rowwise() %&gt;%
+  mutate(name = toString(sort(c(phenotype_full.x,phenotype_full.y)))) %&gt;% 
+  distinct(Locus_snp, name, .keep_all = T) %&gt;%
+  mutate(pheno_class_name = toString(sort(c(pheno_class.x,pheno_class.y)))) %&gt;%
+  mutate(Distance_between = case_when(
+    # If features overlap
+    ((start.x &gt;= start.y) &amp; (start.x &lt;= end.y)) |
+    ((end.x &gt;= start.y) &amp; (end.x &lt;= end.y)) |
+    ((start.x &lt;= start.y) &amp; (end.x &gt;= end.y)) ~ as.integer(0),
+    TRUE ~ min(abs(end.x - start.y), abs(start.x - end.y))
+  )) %&gt;%
+  mutate(PairwiseColocClass=&quot;Colocalized&quot;)
+
+
+PairwiseColocalizedPhenotypes %&gt;%
+  mutate(ColocStatus = paste(ColocalizationStatus.x, ColocalizationStatus.y)) %&gt;%
+  pull(ColocStatus) %&gt;% table()</code></pre>
+<pre><code>.
+ColocalizedTraits ColocalizedTraits 
+                              25421 </code></pre>
+<pre class="r"><code>PairwiseAllPhenotypes &lt;- DatToPlotDist %&gt;%
+  # head(1000) %&gt;%
+  mutate(start = case_when(
+    (pheno_class %in% GeneWithPromoterPhenotypes) &amp; (strand==&quot;-&quot;) ~ as.integer(end-1),
+    TRUE ~ start
+  )) %&gt;%
+  mutate(end = case_when(
+    (pheno_class %in% GeneWithPromoterPhenotypes) &amp; (strand==&quot;+&quot;) ~ as.integer(start+1),
+    TRUE ~ end
+  )) %&gt;%
+  mutate(pheno_class = recode(pheno_class,
+                                   Expression.Splicing = &quot;Expression (Geuvadis)&quot;,
+                                   Expression.Splicing.Subset_YRI = &quot;Expression (YRI.Subset)&quot;,
+                                   polyA.Splicing.Subset_YRI = &quot;Splicing (leafcutter.YRI.Subset)&quot;,
+                                   chRNA.Expression.Splicing = &quot;Expression (chRNA)&quot;)) %&gt;%
+  # filter(Locus_snp == &quot;ENSG00000002822.15_7:1998126:G:A&quot;) %&gt;%
+  left_join(., ., by = c(&quot;Locus&quot;)) %&gt;% 
+  filter(phenotype_full.x != phenotype_full.y) %&gt;% 
+  rowwise() %&gt;%
+  mutate(name = toString(sort(c(phenotype_full.x,phenotype_full.y)))) %&gt;% 
+  distinct(Locus_snp, name, .keep_all = T) %&gt;%
+  mutate(pheno_class_name = toString(sort(c(pheno_class.x,pheno_class.y)))) %&gt;%
+  mutate(Distance_between = case_when(
+    # If features overlap
+    ((start.x &gt;= start.y) &amp; (start.x &lt;= end.y)) |
+    ((end.x &gt;= start.y) &amp; (end.x &lt;= end.y)) |
+    ((start.x &lt;= start.y) &amp; (end.x &gt;= end.y)) ~ as.integer(0),
+    TRUE ~ min(abs(end.x - start.y), abs(start.x - end.y))
+  )) %&gt;%
+  mutate(PairwiseColocClass=&quot;AllAttemped&quot;)
+
+PairwiseAllPhenotypes %&gt;%
+  mutate(ColocStatus = paste(ColocalizationStatus.x, ColocalizationStatus.y)) %&gt;%
+  pull(ColocStatus) %&gt;% table()</code></pre>
+<pre><code>.
+ColocalizedTraits ColocalizedTraits      ColocalizedTraits DroppedTrait 
+                              40632                               25184 
+          DroppedTrait DroppedTrait 
+                              12858 </code></pre>
+<pre class="r"><code>bind_rows(PairwiseAllPhenotypes, PairwiseColocalizedPhenotypes) %&gt;%
+  mutate(Distance_between = Distance_between+1) %&gt;%
+  ggplot(aes(x=Distance_between, color=PairwiseColocClass)) +
+  geom_boxplot(outlier.shape =NA) +
+  # geom_density() +
+  # scale_x_continuous(trans=&quot;log10&quot;) +
+  coord_cartesian(xlim=c(1,100000)) +
+  facet_wrap(~pheno_class_name) +
+  theme_classic()</code></pre>
+<p><img src="figure/20211217_GenewiseColocFirstLook.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok as expected, trait pairs that colocalize, for most all types of phenotypes, are closer than those that do not colocalize (compared to all traits that I attempted colocalization)… These plots might be kind of hard to interpret. Maybe a simpler summary is to present the median distance for those that do colocalize, versus those that I attempted colocalization for.</p>
+<pre class="r"><code># 
+bind_rows(PairwiseAllPhenotypes, PairwiseColocalizedPhenotypes) %&gt;%
+  group_by(pheno_class_name, PairwiseColocClass) %&gt;%
+  summarize(MedianDistanceBetweenTraitPairs = median(Distance_between)) %&gt;%
+  ggplot(aes(x=PairwiseColocClass, y=MedianDistanceBetweenTraitPairs, fill=PairwiseColocClass)) +
+  geom_col() +
+  # facet_wrap(~pheno_class_name) +
+  theme_bw()</code></pre>
+<p><img src="figure/20211217_GenewiseColocFirstLook.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>DistancesToPlot &lt;-bind_rows(PairwiseAllPhenotypes, PairwiseColocalizedPhenotypes) %&gt;%
+  mutate(Distance_between = Distance_between+1) %&gt;%
+  group_by(pheno_class.x, pheno_class.y, PairwiseColocClass) %&gt;%
+  summarize(MedianDistanceBetweenTraitPairs = median(Distance_between))
+
+DistancesToPlot %&gt;%
+  rename(pheno_class.x=pheno_class.y, pheno_class.y=pheno_class.x) %&gt;%
+  bind_rows(DistancesToPlot) %&gt;%
+  ggplot(aes(x=pheno_class.x, y=pheno_class.y, fill=MedianDistanceBetweenTraitPairs)) +
+  geom_raster() +
+  # scale_fill_continuous(trans=&quot;log10&quot;) +
+  scale_fill_viridis(trans=&quot;log10&quot;, option=&quot;B&quot;, direction = -1) +
+  facet_wrap(~PairwiseColocClass) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))</code></pre>
+<p><img src="figure/20211217_GenewiseColocFirstLook.Rmd/unnamed-chunk-6-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>AsFacetsPlot &lt;- DistancesToPlot %&gt;%
+  rename(pheno_class.x=pheno_class.y, pheno_class.y=pheno_class.x) %&gt;%
+  bind_rows(DistancesToPlot) %&gt;%
+  mutate(MedianDistanceBetweenTraitPairs= MedianDistanceBetweenTraitPairs/1000) %&gt;%
+  arrange(desc(pheno_class.x), pheno_class.y) %&gt;%
+  ggplot(aes(x=PairwiseColocClass, y=MedianDistanceBetweenTraitPairs, fill=PairwiseColocClass)) +
+  geom_col() +
+  facet_grid(rows = vars(pheno_class.x), cols = vars(pheno_class.y), switch=&quot;y&quot;,labeller = label_wrap_gen(width=10)) +
+  ylab(&quot;Median distance between trait pairs (kb)&quot;) +
+  theme_bw() +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  theme(strip.text = element_text(size = 6))</code></pre>
+<pre class="r"><code>ggsave(&quot;../code/scratch/PairwiseDistances.pdf&quot;, AsFacetsPlot, height=5, width=7)</code></pre>
 </div>
 <div id="conclusions" class="section level2">
 <h2>Conclusions</h2>
@@ -774,11 +1290,11 @@ Coloc.ByClass.Summary %&gt;%
 <div id="workflowr-sessioninfo" class="collapse">
 <pre class="r"><code>sessionInfo()</code></pre>
 <pre><code>R version 3.6.1 (2019-07-05)
-Platform: x86_64-conda_cos6-linux-gnu (64-bit)
+Platform: x86_64-pc-linux-gnu (64-bit)
 Running under: Scientific Linux 7.4 (Nitrogen)
 
 Matrix products: default
-BLAS/LAPACK: /project2/yangili1/bjf79/ChromatinSplicingQTLs/code/.snakemake/conda/c945d3ed441f0cb7ff83e43424561c95/lib/R/lib/libRblas.so
+BLAS/LAPACK: /software/openblas-0.2.19-el7-x86_64/lib/libopenblas_haswellp-r0.2.19.so
 
 locale:
  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
@@ -792,28 +1308,36 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
- [1] viridis_0.5.1     viridisLite_0.3.0 forcats_0.5.1     stringr_1.4.0    
- [5] dplyr_1.0.5       purrr_0.3.4       readr_1.4.0       tidyr_1.1.3      
- [9] tibble_3.1.0      ggplot2_3.3.3     tidyverse_1.3.0  
+ [1] data.table_1.13.2 gplots_3.0.1.1    viridis_0.5.1    
+ [4] viridisLite_0.3.0 forcats_0.4.0     stringr_1.4.0    
+ [7] dplyr_0.8.3       purrr_0.3.4       readr_1.3.1      
+[10] tidyr_1.1.0       tibble_2.1.3      ggplot2_3.3.3    
+[13] tidyverse_1.3.0  
 
 loaded via a namespace (and not attached):
- [1] Rcpp_1.0.6        lubridate_1.7.10  ps_1.6.0          assertthat_0.2.1 
- [5] rprojroot_2.0.2   digest_0.6.27     utf8_1.2.1        R6_2.5.0         
- [9] cellranger_1.1.0  backports_1.2.1   reprex_1.0.0      evaluate_0.14    
-[13] highr_0.8         httr_1.4.2        pillar_1.5.1      rlang_0.4.10     
-[17] readxl_1.3.1      rstudioapi_0.13   whisker_0.4       jquerylib_0.1.3  
-[21] rmarkdown_2.7     labeling_0.4.2    munsell_0.5.0     broom_0.7.6      
-[25] compiler_3.6.1    httpuv_1.5.5      modelr_0.1.8      xfun_0.20        
-[29] pkgconfig_2.0.3   htmltools_0.5.1.1 tidyselect_1.1.0  gridExtra_2.3    
-[33] workflowr_1.6.2   fansi_0.4.2       crayon_1.4.1      dbplyr_2.1.1     
-[37] withr_2.4.1       later_1.1.0.1     grid_3.6.1        jsonlite_1.7.2   
-[41] gtable_0.3.0      lifecycle_1.0.0   DBI_1.1.1         git2r_0.28.0     
-[45] magrittr_2.0.1    scales_1.1.1      cli_2.4.0         stringi_1.4.3    
-[49] farver_2.1.0      fs_1.5.0          promises_1.2.0.1  xml2_1.3.2       
-[53] bslib_0.2.4       ellipsis_0.3.1    generics_0.1.0    vctrs_0.3.7      
-[57] tools_3.6.1       glue_1.4.2        hms_1.0.0         yaml_2.2.1       
-[61] colorspace_2.0-0  rvest_1.0.0       knitr_1.31        haven_2.3.1      
-[65] sass_0.3.1       </code></pre>
+ [1] Rcpp_1.0.5         lubridate_1.7.4    lattice_0.20-38   
+ [4] gtools_3.8.1       assertthat_0.2.1   rprojroot_2.0.2   
+ [7] digest_0.6.20      R6_2.4.0           cellranger_1.1.0  
+[10] backports_1.1.4    reprex_0.3.0       evaluate_0.14     
+[13] httr_1.4.1         pillar_1.4.2       rlang_0.4.10      
+[16] readxl_1.3.1       rstudioapi_0.10    gdata_2.18.0      
+[19] whisker_0.3-2      R.oo_1.22.0        R.utils_2.9.0     
+[22] rmarkdown_1.13     labeling_0.3       munsell_0.5.0     
+[25] broom_0.5.2        compiler_3.6.1     httpuv_1.5.1      
+[28] modelr_0.1.8       xfun_0.8           pkgconfig_2.0.2   
+[31] htmltools_0.3.6    tidyselect_1.1.0   gridExtra_2.3     
+[34] workflowr_1.6.2    fansi_0.4.0        crayon_1.3.4      
+[37] dbplyr_1.4.2       withr_2.4.1        later_0.8.0       
+[40] R.methodsS3_1.7.1  bitops_1.0-6       grid_3.6.1        
+[43] nlme_3.1-140       jsonlite_1.6       gtable_0.3.0      
+[46] lifecycle_0.1.0    DBI_1.1.0          git2r_0.26.1      
+[49] magrittr_1.5       scales_1.1.0       KernSmooth_2.23-15
+[52] cli_2.2.0          stringi_1.4.3      farver_2.1.0      
+[55] fs_1.3.1           promises_1.0.1     xml2_1.3.2        
+[58] ellipsis_0.2.0.1   generics_0.0.2     vctrs_0.3.1       
+[61] tools_3.6.1        glue_1.3.1         hms_0.5.3         
+[64] yaml_2.2.0         colorspace_1.4-1   caTools_1.17.1.2  
+[67] rvest_0.3.5        knitr_1.23         haven_2.3.1       </code></pre>
 </div>
 </div>
 
@@ -831,8 +1355,6 @@ footer is added to webpages before the MathJax javascript. -->
 </script>
 
 
-
-
 </div>
 </div>
 
@@ -842,56 +1364,13 @@ footer is added to webpages before the MathJax javascript. -->
 
 // add bootstrap table styles to pandoc tables
 function bootstrapStylePandocTables() {
-  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
 }
 $(document).ready(function () {
   bootstrapStylePandocTables();
 });
 
 
-</script>
-
-<!-- tabsets -->
-
-<script>
-$(document).ready(function () {
-  window.buildTabsets("TOC");
-});
-
-$(document).ready(function () {
-  $('.tabset-dropdown > .nav-tabs > li').click(function () {
-    $(this).parent().toggleClass('nav-tabs-open');
-  });
-});
-</script>
-
-<!-- code folding -->
-
-<script>
-$(document).ready(function ()  {
-
-    // move toc-ignore selectors from section div to header
-    $('div.section.toc-ignore')
-        .removeClass('toc-ignore')
-        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
-
-    // establish options
-    var options = {
-      selectors: "h1,h2,h3",
-      theme: "bootstrap3",
-      context: '.toc-content',
-      hashGenerator: function (text) {
-        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
-      },
-      ignoreSelector: ".toc-ignore",
-      scrollTo: 0
-    };
-    options.showAndHide = true;
-    options.smoothScroll = true;
-
-    // tocify
-    var toc = $("#TOC").tocify(options).data("toc-tocify");
-});
 </script>
 
 <!-- dynamically load mathjax for compatibility with self-contained -->
