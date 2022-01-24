@@ -28,6 +28,7 @@ rule PlotFeatureSize:
 
 rule PlotNumQTLs:
     input:
+        # expand("QTLs/QTLTools/{Phenotype}/PermutationPass.FDR_Added.txt.gz", Phenotype=MyPhenotypes)
         expand("QTLs/QTLTools/{Phenotype}/PermutationPass.FDR_Added.txt.gz", Phenotype=MyPhenotypes)
     output:
         pdf = report("QC/NumQTLsPerPhenotype.pdf", category="QTLMapping_QC"),

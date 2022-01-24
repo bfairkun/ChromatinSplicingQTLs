@@ -434,7 +434,7 @@ div.tocify {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2022-01-18
+<strong>Last updated:</strong> 2022-01-24
 </p>
 <p>
 <strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 1
@@ -458,7 +458,7 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 </div>
 <div id="strongRMarkdownfilestronguncommittedchanges" class="panel-collapse collapse">
 <div class="panel-body">
-<p>The R Markdown is untracked by Git. To know which version of the R Markdown file created these results, you’ll want to first commit it to the Git repo. If you’re still working on the analysis, you can ignore this warning. When you’re finished, you can run <code>wflow_publish</code> to commit the R Markdown file and build the HTML.</p>
+<p>The R Markdown file has unstaged changes. To know which version of the R Markdown file created these results, you’ll want to first commit it to the Git repo. If you’re still working on the analysis, you can ignore this warning. When you’re finished, you can run <code>wflow_publish</code> to commit the R Markdown file and build the HTML.</p>
 </div>
 </div>
 </div>
@@ -525,16 +525,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstreec7ac75265e78e2602706a1a9e4fe05a5c501001atargetblankc7ac752a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/c7ac75265e78e2602706a1a9e4fe05a5c501001a" target="_blank">c7ac752</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstreecc1c333631f88b8b65947c07e7a1032b2a016ae2targetblankcc1c333a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/cc1c333631f88b8b65947c07e7a1032b2a016ae2" target="_blank">cc1c333</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstreec7ac75265e78e2602706a1a9e4fe05a5c501001atargetblankc7ac752a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstreecc1c333631f88b8b65947c07e7a1032b2a016ae2targetblankcc1c333a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/c7ac75265e78e2602706a1a9e4fe05a5c501001a" target="_blank">c7ac752</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/cc1c333631f88b8b65947c07e7a1032b2a016ae2" target="_blank">cc1c333</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -603,17 +603,14 @@ Ignored files:
     Ignored:    data/GrowthNotes/._20210830_GrowthNotes_chRNA.ConcentrationsToReplate.txt
 
 Untracked files:
-    Untracked:  analysis/20220114_ColocalizationEffectSizeCorrelations.Rmd
-    Untracked:  code/scripts/TidyGenewiseColocs.R
     Untracked:  code/snakemake_profiles/slurm/__pycache__/
-    Untracked:  output/hyprcoloc_results/ForColoc/hyprcoloc.results.OnlyColocalized.Stats.txt.gz
 
 Unstaged changes:
-    Modified:   code/Snakefile
-    Modified:   code/rules/Coloc.smk
+    Modified:   analysis/20211217_GenewiseColocFirstLook.Rmd
+    Modified:   analysis/20220114_ColocalizationEffectSizeCorrelations.Rmd
+    Modified:   code/rules/report.smk
+    Modified:   code/scripts/BamToBigwig.sh
     Modified:   code/scripts/GenometracksByGenotype
-    Modified:   code/scripts/hyprcoloc_genewise.R
-    Modified:   output/hyprcoloc_results/ForColoc/hyprcoloc.results.txt.gz
 
 </code></pre>
 <p>
@@ -626,9 +623,69 @@ Note that any generated files, e.g. HTML, png, CSS, etc., are not included in t
 <hr>
 </div>
 <div id="versions" class="tab-pane fade">
+
 <p>
-There are no past versions. Publish this analysis with <code>wflow_publish()</code> to start tracking its development.
+These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/20220114_ColocalizationEffectSizeCorrelations.Rmd</code>) and HTML (<code>docs/20220114_ColocalizationEffectSizeCorrelations.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
 </p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/0c8ee9c65abd3ee8c00bed55cfafcfd2caa5bdbd/analysis/20220114_ColocalizationEffectSizeCorrelations.Rmd" target="_blank">0c8ee9c</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-01-18
+</td>
+<td>
+update site
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/0c8ee9c65abd3ee8c00bed55cfafcfd2caa5bdbd/docs/20220114_ColocalizationEffectSizeCorrelations.html" target="_blank">0c8ee9c</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-01-18
+</td>
+<td>
+update site
+</td>
+</tr>
+</tbody>
+</table>
+</div>
 <hr>
 </div>
 </div>
@@ -651,6 +708,15 @@ Attaching package: &#39;gplots&#39;</code></pre>
 <pre><code>The following object is masked from &#39;package:stats&#39;:
 
     lowess</code></pre>
+<pre class="r"><code>library(data.table)</code></pre>
+<pre><code>
+Attaching package: &#39;data.table&#39;</code></pre>
+<pre><code>The following objects are masked from &#39;package:dplyr&#39;:
+
+    between, first, last</code></pre>
+<pre><code>The following object is masked from &#39;package:purrr&#39;:
+
+    transpose</code></pre>
 <pre class="r"><code>dat &lt;- read_tsv(&quot;../output/hyprcoloc_results/ForColoc/hyprcoloc.results.OnlyColocalized.Stats.txt.gz&quot;) %&gt;%
   select(-iteration) %&gt;%
   unite(Locus_snp, Locus, snp) %&gt;%
@@ -679,64 +745,170 @@ cols(
 5 ENSG0000… -0.605  0.104  1.75e-7 H3K27AC;H3K27…   0.377      0.690
 6 ENSG0000… -0.455  0.121  3.57e-4 H3K4ME3;H3K4M…   0.377      0.690
 # … with 2 more variables: TopSNPFinemapPr &lt;dbl&gt;, pheno_class &lt;chr&gt;</code></pre>
+<p>Let’s also read in the positions of these molecular phenotypes… later I will look at how effect sizes correlate for differing distances between phenotype pairs…</p>
+<pre class="r"><code>Phenoclasses &lt;- dat %&gt;%
+  pull(pheno_class) %&gt;% unique()
+
+files &lt;- paste0(&quot;../code/QTLs/QTLTools/&quot;, Phenoclasses, &quot;/OnlyFirstReps.sorted.qqnorm.bed.gz&quot;)
+
+bed.list &lt;- lapply(files, fread, sep=&#39;\t&#39;, select=2:6) %&gt;%
+  setNames(Phenoclasses)</code></pre>
+<pre><code>Registered S3 method overwritten by &#39;R.oo&#39;:
+  method        from       
+  throw.default R.methodsS3</code></pre>
+<pre class="r"><code>positions &lt;- bind_rows(bed.list, .id=&quot;source&quot;) %&gt;%
+  unite(phenotype_full, source, pid, sep = &quot;;&quot;) %&gt;%
+  select(-gid)
+
+head(positions)</code></pre>
+<pre><code>                               phenotype_full   start     end strand
+1: MetabolicLabelled.30min;ENSG00000188976.11  944202  959309      -
+2: MetabolicLabelled.30min;ENSG00000187961.14  960583  965719      +
+3: MetabolicLabelled.30min;ENSG00000187583.11  966481  975865      +
+4: MetabolicLabelled.30min;ENSG00000188290.11  998961 1000172      -
+5: MetabolicLabelled.30min;ENSG00000187608.10 1001137 1014540      +
+6: MetabolicLabelled.30min;ENSG00000188157.15 1020119 1056118      +</code></pre>
+<pre class="r"><code>dat &lt;- dat %&gt;%
+  left_join(positions, by=&quot;phenotype_full&quot;)
+
+dat$pheno_class %&gt;% unique()</code></pre>
+<pre><code>[1] &quot;MetabolicLabelled.30min&quot;        &quot;MetabolicLabelled.60min&quot;       
+[3] &quot;H3K27AC&quot;                        &quot;H3K4ME3&quot;                       
+[5] &quot;Expression.Splicing&quot;            &quot;Expression.Splicing.Subset_YRI&quot;
+[7] &quot;polyA.Splicing.Subset_YRI&quot;      &quot;chRNA.Expression.Splicing&quot;     </code></pre>
 <p>Ok, now lets do some data tidy-ing to match up all pairs of within-cluster colocalized traits and their beta values</p>
-<pre class="r"><code>dat.tidy.for.cor &lt;- dat %&gt;%
+<pre class="r"><code>#Let&#39;s recode the gene phenotypes to just be the promoter positions which is more relevent when evaluating how distance effects correlations between phenotype classes
+GeneWithPromoterPhenotypes &lt;- c(&quot;Expression.Splicing&quot;, &quot;Expression.Splicing.Subset_YRI&quot;, &quot;chRNA.Expression.Splicing&quot;, &quot;MetabolicLabelled.60min&quot;, &quot;MetabolicLabelled.30min&quot;)
+
+dat.tidy.for.cor &lt;- dat %&gt;%
+  mutate(start = case_when(
+    (pheno_class %in% GeneWithPromoterPhenotypes) &amp; (strand==&quot;-&quot;) ~ as.integer(end-1),
+    TRUE ~ start
+  )) %&gt;%
+  mutate(end = case_when(
+    (pheno_class %in% GeneWithPromoterPhenotypes) &amp; (strand==&quot;+&quot;) ~ as.integer(start+1),
+    TRUE ~ end
+  )) %&gt;%
+  mutate(pheno_class = recode(pheno_class,
+                                   Expression.Splicing = &quot;Expression (Geuvadis)&quot;,
+                                   Expression.Splicing.Subset_YRI = &quot;Expression (YRI.Subset)&quot;,
+                                   polyA.Splicing.Subset_YRI = &quot;Splicing (leafcutter.YRI.Subset)&quot;,
+                                   chRNA.Expression.Splicing = &quot;Expression (chRNA)&quot;)) %&gt;%
   # filter(Locus_snp == &quot;ENSG00000002822.15_7:1998126:G:A&quot;) %&gt;%
   left_join(., ., by = c(&quot;Locus_snp&quot;, &quot;ColocPr&quot;, &quot;RegionalPr&quot;, &quot;TopSNPFinemapPr&quot;)) %&gt;% 
   filter(phenotype_full.x != phenotype_full.y) %&gt;% 
   rowwise() %&gt;%
   mutate(name = toString(sort(c(phenotype_full.x,phenotype_full.y)))) %&gt;% 
   distinct(Locus_snp, name, .keep_all = T) %&gt;%
-  mutate(pheno_class_name = toString(sort(c(pheno_class.x,pheno_class.y))))
+  mutate(pheno_class_name = toString(sort(c(pheno_class.x,pheno_class.y)))) %&gt;%
+  mutate(Distance_between = case_when(
+    # If features overlap
+    ((start.x &gt;= start.y) &amp; (start.x &lt;= end.y)) |
+    ((end.x &gt;= start.y) &amp; (end.x &lt;= end.y)) |
+    ((start.x &lt;= start.y) &amp; (end.x &gt;= end.y)) ~ as.integer(0),
+    TRUE ~ min(abs(end.x - start.y), abs(start.x - end.y))
+  ))
 
 
-dat.tidy.for.cor %&gt;%
-  pull(pheno_class_name) %&gt;% unique()</code></pre>
-<pre><code> [1] &quot;MetabolicLabelled.30min, MetabolicLabelled.60min&quot;         
- [2] &quot;H3K27AC, H3K27AC&quot;                                         
- [3] &quot;H3K27AC, H3K4ME3&quot;                                         
- [4] &quot;H3K4ME3, H3K4ME3&quot;                                         
- [5] &quot;Expression.Splicing, MetabolicLabelled.30min&quot;             
- [6] &quot;Expression.Splicing, Expression.Splicing.Subset_YRI&quot;      
- [7] &quot;Expression.Splicing.Subset_YRI, MetabolicLabelled.30min&quot;  
- [8] &quot;Expression.Splicing, H3K27AC&quot;                             
- [9] &quot;Expression.Splicing, H3K4ME3&quot;                             
-[10] &quot;Expression.Splicing, polyA.Splicing.Subset_YRI&quot;           
-[11] &quot;Expression.Splicing.Subset_YRI, H3K27AC&quot;                  
-[12] &quot;H3K27AC, polyA.Splicing.Subset_YRI&quot;                       
-[13] &quot;Expression.Splicing.Subset_YRI, H3K4ME3&quot;                  
-[14] &quot;H3K4ME3, polyA.Splicing.Subset_YRI&quot;                       
-[15] &quot;Expression.Splicing.Subset_YRI, polyA.Splicing.Subset_YRI&quot;
-[16] &quot;polyA.Splicing.Subset_YRI, polyA.Splicing.Subset_YRI&quot;     
-[17] &quot;H3K4ME3, MetabolicLabelled.30min&quot;                         
-[18] &quot;MetabolicLabelled.30min, polyA.Splicing.Subset_YRI&quot;       
-[19] &quot;Expression.Splicing, MetabolicLabelled.60min&quot;             
-[20] &quot;H3K4ME3, MetabolicLabelled.60min&quot;                         
-[21] &quot;H3K27AC, MetabolicLabelled.30min&quot;                         
-[22] &quot;H3K27AC, MetabolicLabelled.60min&quot;                         
-[23] &quot;Expression.Splicing.Subset_YRI, MetabolicLabelled.60min&quot;  
-[24] &quot;MetabolicLabelled.60min, polyA.Splicing.Subset_YRI&quot;       
-[25] &quot;chRNA.Expression.Splicing, H3K27AC&quot;                       
-[26] &quot;chRNA.Expression.Splicing, H3K4ME3&quot;                       
-[27] &quot;chRNA.Expression.Splicing, MetabolicLabelled.30min&quot;       
-[28] &quot;chRNA.Expression.Splicing, polyA.Splicing.Subset_YRI&quot;     
-[29] &quot;chRNA.Expression.Splicing, Expression.Splicing&quot;           
-[30] &quot;chRNA.Expression.Splicing, MetabolicLabelled.60min&quot;       
-[31] &quot;chRNA.Expression.Splicing, Expression.Splicing.Subset_YRI&quot;</code></pre>
+PhenotypeClassPairs &lt;- dat.tidy.for.cor %&gt;%
+  pull(pheno_class_name) %&gt;% unique()
+PhenotypeClassPairs</code></pre>
+<pre><code> [1] &quot;MetabolicLabelled.30min, MetabolicLabelled.60min&quot;                  
+ [2] &quot;H3K27AC, H3K27AC&quot;                                                  
+ [3] &quot;H3K27AC, H3K4ME3&quot;                                                  
+ [4] &quot;H3K4ME3, H3K4ME3&quot;                                                  
+ [5] &quot;Expression (Geuvadis), MetabolicLabelled.30min&quot;                    
+ [6] &quot;Expression (Geuvadis), Expression (YRI.Subset)&quot;                    
+ [7] &quot;Expression (YRI.Subset), MetabolicLabelled.30min&quot;                  
+ [8] &quot;Expression (Geuvadis), H3K27AC&quot;                                    
+ [9] &quot;Expression (Geuvadis), H3K4ME3&quot;                                    
+[10] &quot;Expression (Geuvadis), Splicing (leafcutter.YRI.Subset)&quot;           
+[11] &quot;Expression (YRI.Subset), H3K27AC&quot;                                  
+[12] &quot;H3K27AC, Splicing (leafcutter.YRI.Subset)&quot;                         
+[13] &quot;Expression (YRI.Subset), H3K4ME3&quot;                                  
+[14] &quot;H3K4ME3, Splicing (leafcutter.YRI.Subset)&quot;                         
+[15] &quot;Expression (YRI.Subset), Splicing (leafcutter.YRI.Subset)&quot;         
+[16] &quot;Splicing (leafcutter.YRI.Subset), Splicing (leafcutter.YRI.Subset)&quot;
+[17] &quot;H3K4ME3, MetabolicLabelled.30min&quot;                                  
+[18] &quot;MetabolicLabelled.30min, Splicing (leafcutter.YRI.Subset)&quot;         
+[19] &quot;Expression (Geuvadis), MetabolicLabelled.60min&quot;                    
+[20] &quot;H3K4ME3, MetabolicLabelled.60min&quot;                                  
+[21] &quot;H3K27AC, MetabolicLabelled.30min&quot;                                  
+[22] &quot;H3K27AC, MetabolicLabelled.60min&quot;                                  
+[23] &quot;Expression (YRI.Subset), MetabolicLabelled.60min&quot;                  
+[24] &quot;MetabolicLabelled.60min, Splicing (leafcutter.YRI.Subset)&quot;         
+[25] &quot;Expression (chRNA), H3K27AC&quot;                                       
+[26] &quot;Expression (chRNA), H3K4ME3&quot;                                       
+[27] &quot;Expression (chRNA), MetabolicLabelled.30min&quot;                       
+[28] &quot;Expression (chRNA), Splicing (leafcutter.YRI.Subset)&quot;              
+[29] &quot;Expression (chRNA), Expression (Geuvadis)&quot;                         
+[30] &quot;Expression (chRNA), MetabolicLabelled.60min&quot;                       
+[31] &quot;Expression (chRNA), Expression (YRI.Subset)&quot;                       </code></pre>
 <p>Ok, now let’s plot the correlation of beta values for certain classes of phenotypes (eg Expression QTLs and H3K27Ac QTLs), and more generally for all pairs of phenotype classes</p>
 <pre class="r"><code>dat.tidy.for.cor %&gt;%
-  filter(pheno_class_name == &quot;Expression.Splicing, H3K27AC&quot;) %&gt;%
+  filter(pheno_class_name == &quot;Expression (Geuvadis), H3K27AC&quot;) %&gt;%
   ggplot(aes(x=beta.x, y=beta.y)) +
   geom_point() +
   facet_wrap(~pheno_class_name) +
   theme_classic()</code></pre>
-<p><img src="figure/20220114_ColocalizationEffectSizeCorrelations.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/20220114_ColocalizationEffectSizeCorrelations.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-4-1">
+Past versions of unnamed-chunk-4-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-4-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/0c8ee9c65abd3ee8c00bed55cfafcfd2caa5bdbd/docs/figure/20220114_ColocalizationEffectSizeCorrelations.Rmd/unnamed-chunk-4-1.png" target="_blank">0c8ee9c</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-01-18
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>dat.tidy.for.cor %&gt;%
+  filter(pheno_class_name == &quot;MetabolicLabelled.30min, MetabolicLabelled.60min&quot;) %&gt;%
+  ggplot(aes(x=beta.x, y=beta.y)) +
+  geom_point() +
+  facet_wrap(~pheno_class_name) +
+  theme_classic()</code></pre>
+<p><img src="figure/20220114_ColocalizationEffectSizeCorrelations.Rmd/unnamed-chunk-4-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>dat.tidy.for.cor %&gt;%
+  filter(pheno_class_name == &quot;Splicing (leafcutter.YRI.Subset), Splicing (leafcutter.YRI.Subset)&quot;) %&gt;%
+  ggplot(aes(x=beta.x, y=beta.y)) +
+  geom_point() +
+  facet_wrap(~pheno_class_name) +
+  theme_classic()</code></pre>
+<p><img src="figure/20220114_ColocalizationEffectSizeCorrelations.Rmd/unnamed-chunk-4-3.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>dat.tidy.for.cor %&gt;%
   ggplot(aes(x=beta.x, y=beta.y)) +
   geom_point(alpha=0.05) +
   facet_wrap(~pheno_class_name) +
   theme_classic()</code></pre>
-<p><img src="figure/20220114_ColocalizationEffectSizeCorrelations.Rmd/unnamed-chunk-3-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/20220114_ColocalizationEffectSizeCorrelations.Rmd/unnamed-chunk-4-4.png" width="672" style="display: block; margin: auto;" /></p>
 <p>Ok wow. That is nice. H3K27Ac beta values are very strongly positively correlated with eQTL betas, as expected. We can look at other pairs of traits too, and if there is an effect, I think this is a very powerful way to assess it. But unsurprisingly, the way we have quantified splicing here with leafcutter, splicing is not really obviously correlated with anything, since a leafcutter intron excision ratio PSI that goes up for one intron necessarily means some other introns went down. Perhaps if we looked at intron retention, the effects would be more interpretable. That will be on the future to do list once we get better chRNA-seq data.</p>
 <p>Also, let’s replot these as a clustered heatmap for matrix of correlation coefficients.</p>
 <pre class="r"><code>library(RColorBrewer)
@@ -747,18 +919,18 @@ dat.tidy.for.cor %&gt;%
   summarise(cor = cor.test(beta.x, beta.y, method=&quot;pearson&quot;)$p.value) %&gt;%
   separate(pheno_class_name, into=c(&quot;PhenotypeClass1&quot;, &quot;PhenotypeClass2&quot;), sep = &quot;, &quot;)</code></pre>
 <pre><code># A tibble: 31 x 3
-   PhenotypeClass1           PhenotypeClass2                      cor
-   &lt;chr&gt;                     &lt;chr&gt;                              &lt;dbl&gt;
- 1 chRNA.Expression.Splicing Expression.Splicing            1.27e-  5
- 2 chRNA.Expression.Splicing Expression.Splicing.Subset_YRI 3.07e-  5
- 3 chRNA.Expression.Splicing H3K27AC                        2.18e-  6
- 4 chRNA.Expression.Splicing H3K4ME3                        1.05e-  3
- 5 chRNA.Expression.Splicing MetabolicLabelled.30min        1.79e-  8
- 6 chRNA.Expression.Splicing MetabolicLabelled.60min        3.96e-  7
- 7 chRNA.Expression.Splicing polyA.Splicing.Subset_YRI      6.29e-  1
- 8 Expression.Splicing       Expression.Splicing.Subset_YRI 0.       
- 9 Expression.Splicing       H3K27AC                        0.       
-10 Expression.Splicing       H3K4ME3                        2.47e-177
+   PhenotypeClass1       PhenotypeClass2                        cor
+   &lt;chr&gt;                 &lt;chr&gt;                                &lt;dbl&gt;
+ 1 Expression (chRNA)    Expression (Geuvadis)            1.27e-  5
+ 2 Expression (chRNA)    Expression (YRI.Subset)          3.07e-  5
+ 3 Expression (chRNA)    H3K27AC                          2.18e-  6
+ 4 Expression (chRNA)    H3K4ME3                          1.05e-  3
+ 5 Expression (chRNA)    MetabolicLabelled.30min          1.79e-  8
+ 6 Expression (chRNA)    MetabolicLabelled.60min          3.96e-  7
+ 7 Expression (chRNA)    Splicing (leafcutter.YRI.Subset) 6.29e-  1
+ 8 Expression (Geuvadis) Expression (YRI.Subset)          0.       
+ 9 Expression (Geuvadis) H3K27AC                          0.       
+10 Expression (Geuvadis) H3K4ME3                          2.47e-177
 # … with 21 more rows</code></pre>
 <pre class="r"><code>dat.cor &lt;- dat.tidy.for.cor %&gt;%
   group_by(pheno_class_name) %&gt;%
@@ -774,9 +946,106 @@ dat.cor %&gt;%
   column_to_rownames(&quot;PhenotypeClass2&quot;) %&gt;%
   as.matrix() %&gt;%
   # heatmap.2(trace=&quot;none&quot;, col=brewer.pal(51,&quot;Spectral&quot;))
-  heatmap.2(trace=&quot;none&quot;, col=colorpanel(75, &quot;blue&quot;, &quot;black&quot;, &quot;yellow&quot;), cexRow = 0.5, cexCol = 0.5)</code></pre>
-<p><img src="figure/20220114_ColocalizationEffectSizeCorrelations.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+  heatmap.2(trace=&quot;none&quot;, col=colorpanel(75, &quot;blue&quot;, &quot;black&quot;, &quot;yellow&quot;), cexRow = 1, cexCol = 1, offsetRow=0, offsetCol = 0, margins=c(11,11), dendrogram = &quot;column&quot;)</code></pre>
+<p><img src="figure/20220114_ColocalizationEffectSizeCorrelations.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>The slight negative correlation between leafcutter splicing and other phenotypes is interesting. I wonder if there is a technical explanation. For example, perhaps many of the colocalizing sQTLs are actually alt TSS, such that the measured decrease in expression if a downstream TSS is used (shorter isoform), results in general upregulation of within-cluster introns which would occur if the cluster had a few introns only present in the long isoform that go down, and the other introns necessarily go up.</p>
+<p>Another informative thing would be to look at the distribution of distances between colocalized traits, and the effect sizes between colocalized traits that are close versus far. First let’s plot the distribution of distances for each type of pair of colocalizes traits:</p>
+<pre class="r"><code>dat.tidy.for.cor %&gt;%
+  #Add a psueodcount so we can still plot things that are distance=0 overlapping
+  mutate(Distance_between = Distance_between+1) %&gt;%
+  ggplot(aes(x=Distance_between)) +
+  stat_ecdf() +
+  scale_x_continuous(trans=&quot;log10&quot;) +
+  facet_wrap(~pheno_class_name) +
+  theme_classic()</code></pre>
+<p><img src="figure/20220114_ColocalizationEffectSizeCorrelations.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok now let’s look at some examples. For example, looking at splicing and H3K4me3 traits that colocalizes, if we look at the ones that are close together (eg &lt;1000bp), do we see any positive correlation like what might be expected with EMATs?</p>
+<pre class="r"><code>dat.tidy.for.cor %&gt;%
+  filter(pheno_class_name == &quot;H3K4ME3, Splicing (leafcutter.YRI.Subset)&quot;) %&gt;%
+  mutate(Distance_between = Distance_between+1) %&gt;%
+  ggplot(aes(x=Distance_between)) +
+  stat_ecdf() +
+  scale_x_continuous(trans=&quot;log10&quot;) +
+  facet_wrap(~pheno_class_name) +
+  theme_classic()</code></pre>
+<p><img src="figure/20220114_ColocalizationEffectSizeCorrelations.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>dat.tidy.for.cor %&gt;%
+  filter(pheno_class_name == &quot;H3K4ME3, Splicing (leafcutter.YRI.Subset)&quot;) %&gt;%
+  mutate(DistanceClass = cut(Distance_between, breaks = c(0, 1, 500, 1000, 5000, 10000, Inf), include.lowest = T, right=T)) %&gt;%
+  mutate(DistanceClass = recode(DistanceClass, `[0,1]` = &quot;Overlapping&quot;)) %&gt;%
+  ggplot(aes(x=beta.x, y=beta.y)) +
+  geom_point() +
+  # geom_smooth(method=&#39;lm&#39;) +
+  facet_wrap(~DistanceClass) +
+  theme_classic()</code></pre>
+<p><img src="figure/20220114_ColocalizationEffectSizeCorrelations.Rmd/unnamed-chunk-7-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Not so much. Again, maybe we need to look at intron retention instead of leafcutter splicing.</p>
+<p>Let’s explore how leafcutter splicing phenotypes are correlated with the same plots…</p>
+<pre class="r"><code>dat.tidy.for.cor %&gt;%
+  filter(pheno_class_name == &quot;Splicing (leafcutter.YRI.Subset), Splicing (leafcutter.YRI.Subset)&quot;) %&gt;%
+  mutate(Distance_between = Distance_between+1) %&gt;%
+  ggplot(aes(x=Distance_between)) +
+  stat_ecdf() +
+  ylab(&quot;Cumulative fraction&quot;) +
+  xlab(&quot;Distance b/n features&quot;) +
+  scale_x_continuous(trans=&quot;log10&quot;) +
+  facet_wrap(~pheno_class_name) +
+  theme_classic()</code></pre>
+<p><img src="figure/20220114_ColocalizationEffectSizeCorrelations.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>dat.tidy.for.cor %&gt;%
+  filter(pheno_class_name == &quot;Splicing (leafcutter.YRI.Subset), Splicing (leafcutter.YRI.Subset)&quot;) %&gt;%
+  mutate(DistanceClass = cut(Distance_between, breaks = c(0, 1, 500, 1000, 5000, 10000, Inf), include.lowest = T, right=T)) %&gt;%
+  mutate(DistanceClass = recode(DistanceClass, `[0,1]` = &quot;Overlapping&quot;)) %&gt;%
+  ggplot(aes(x=beta.x, y=beta.y)) +
+  geom_point(alpha=0.3) +
+  # geom_smooth(method=&#39;lm&#39;) +
+  facet_wrap(~DistanceClass) +
+  theme_classic()</code></pre>
+<p><img src="figure/20220114_ColocalizationEffectSizeCorrelations.Rmd/unnamed-chunk-8-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok that actually sort of makes sense… Within a single molecule, overlapping introns are mutually exclusive and we see that they are anticorrelated. Also, for introns that are 1-500 bp apart (the size of typical exons), effect sizes are actually positively correlated, which might reflect QTLs for cassette exons.</p>
+<p>Lastly, let’s check H3K27AC mark and gene expression. And also H3K27AC vs H3K4ME3</p>
+<pre class="r"><code>dat.tidy.for.cor %&gt;%
+  filter(pheno_class_name == &quot;Expression (Geuvadis), H3K27AC&quot;) %&gt;%
+  mutate(Distance_between = Distance_between+1) %&gt;%
+  ggplot(aes(x=Distance_between)) +
+  stat_ecdf() +
+  ylab(&quot;Cumulative fraction&quot;) +
+  xlab(&quot;Distance b/n features&quot;) +
+  scale_x_continuous(trans=&quot;log10&quot;) +
+  facet_wrap(~pheno_class_name) +
+  theme_classic()</code></pre>
+<p><img src="figure/20220114_ColocalizationEffectSizeCorrelations.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>dat.tidy.for.cor %&gt;%
+  filter(pheno_class_name == &quot;Expression (Geuvadis), H3K27AC&quot;) %&gt;%
+  mutate(DistanceClass = cut(Distance_between, breaks = c(0, 1000, 5000, 10000, 50000, 100000, Inf), include.lowest = T, right=T)) %&gt;%
+  mutate(DistanceClass = recode(DistanceClass, `[0,1]` = &quot;Overlapping&quot;)) %&gt;%
+  ggplot(aes(x=beta.x, y=beta.y)) +
+  geom_point(alpha=0.3) +
+  # geom_smooth(method=&#39;lm&#39;) +
+  facet_wrap(~DistanceClass) +
+  theme_classic()</code></pre>
+<p><img src="figure/20220114_ColocalizationEffectSizeCorrelations.Rmd/unnamed-chunk-9-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>dat.tidy.for.cor %&gt;%
+  filter(pheno_class_name == &quot;H3K27AC, H3K4ME3&quot;) %&gt;%
+  mutate(Distance_between = Distance_between+1) %&gt;%
+  ggplot(aes(x=Distance_between)) +
+  stat_ecdf() +
+  ylab(&quot;Cumulative fraction&quot;) +
+  xlab(&quot;Distance b/n features&quot;) +
+  scale_x_continuous(trans=&quot;log10&quot;) +
+  facet_wrap(~pheno_class_name) +
+  theme_classic()</code></pre>
+<p><img src="figure/20220114_ColocalizationEffectSizeCorrelations.Rmd/unnamed-chunk-9-3.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>dat.tidy.for.cor %&gt;%
+  filter(pheno_class_name == &quot;H3K27AC, H3K4ME3&quot;) %&gt;%
+  mutate(DistanceClass = cut(Distance_between, breaks = c(0, 1000, 5000, 10000, 50000, 100000, Inf), include.lowest = T, right=T)) %&gt;%
+  mutate(DistanceClass = recode(DistanceClass, `[0,1]` = &quot;Overlapping&quot;)) %&gt;%
+  ggplot(aes(x=beta.x, y=beta.y)) +
+  geom_point(alpha=0.3) +
+  # geom_smooth(method=&#39;lm&#39;) +
+  facet_wrap(~DistanceClass) +
+  theme_classic()</code></pre>
+<p><img src="figure/20220114_ColocalizationEffectSizeCorrelations.Rmd/unnamed-chunk-9-4.png" width="672" style="display: block; margin: auto;" /></p>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
@@ -804,34 +1073,35 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
- [1] RColorBrewer_1.1-2 gplots_3.0.1.1     forcats_0.4.0     
- [4] stringr_1.4.0      dplyr_0.8.3        purrr_0.3.4       
- [7] readr_1.3.1        tidyr_1.1.0        tibble_2.1.3      
-[10] ggplot2_3.3.3      tidyverse_1.3.0   
+ [1] RColorBrewer_1.1-2 data.table_1.13.2  gplots_3.0.1.1    
+ [4] forcats_0.4.0      stringr_1.4.0      dplyr_0.8.3       
+ [7] purrr_0.3.4        readr_1.3.1        tidyr_1.1.0       
+[10] tibble_2.1.3       ggplot2_3.3.3      tidyverse_1.3.0   
 
 loaded via a namespace (and not attached):
  [1] Rcpp_1.0.5         lubridate_1.7.4    lattice_0.20-38   
- [4] gtools_3.8.1       assertthat_0.2.1   rprojroot_2.0.2   
- [7] digest_0.6.20      utf8_1.1.4         R6_2.4.0          
+ [4] gtools_3.8.1       utf8_1.1.4         assertthat_0.2.1  
+ [7] rprojroot_2.0.2    digest_0.6.20      R6_2.4.0          
 [10] cellranger_1.1.0   backports_1.1.4    reprex_0.3.0      
 [13] evaluate_0.14      httr_1.4.1         pillar_1.4.2      
 [16] rlang_0.4.10       readxl_1.3.1       rstudioapi_0.10   
-[19] gdata_2.18.0       rmarkdown_1.13     labeling_0.3      
-[22] munsell_0.5.0      broom_0.5.2        compiler_3.6.1    
-[25] httpuv_1.5.1       modelr_0.1.8       xfun_0.8          
-[28] pkgconfig_2.0.2    htmltools_0.3.6    tidyselect_1.1.0  
-[31] workflowr_1.6.2    fansi_0.4.0        crayon_1.3.4      
-[34] dbplyr_1.4.2       withr_2.4.1        later_0.8.0       
-[37] bitops_1.0-6       grid_3.6.1         nlme_3.1-140      
-[40] jsonlite_1.6       gtable_0.3.0       lifecycle_0.1.0   
-[43] DBI_1.1.0          git2r_0.26.1       magrittr_1.5      
-[46] scales_1.1.0       KernSmooth_2.23-15 cli_2.2.0         
-[49] stringi_1.4.3      farver_2.1.0       fs_1.3.1          
-[52] promises_1.0.1     xml2_1.3.2         ellipsis_0.2.0.1  
-[55] generics_0.0.2     vctrs_0.3.1        tools_3.6.1       
-[58] glue_1.3.1         hms_0.5.3          yaml_2.2.0        
-[61] colorspace_1.4-1   caTools_1.17.1.2   rvest_0.3.5       
-[64] knitr_1.23         haven_2.3.1       </code></pre>
+[19] gdata_2.18.0       whisker_0.3-2      R.oo_1.22.0       
+[22] R.utils_2.9.0      rmarkdown_1.13     labeling_0.3      
+[25] munsell_0.5.0      broom_0.5.2        compiler_3.6.1    
+[28] httpuv_1.5.1       modelr_0.1.8       xfun_0.8          
+[31] pkgconfig_2.0.2    htmltools_0.3.6    tidyselect_1.1.0  
+[34] workflowr_1.6.2    fansi_0.4.0        crayon_1.3.4      
+[37] dbplyr_1.4.2       withr_2.4.1        later_0.8.0       
+[40] R.methodsS3_1.7.1  bitops_1.0-6       grid_3.6.1        
+[43] nlme_3.1-140       jsonlite_1.6       gtable_0.3.0      
+[46] lifecycle_0.1.0    DBI_1.1.0          git2r_0.26.1      
+[49] magrittr_1.5       scales_1.1.0       KernSmooth_2.23-15
+[52] cli_2.2.0          stringi_1.4.3      farver_2.1.0      
+[55] fs_1.3.1           promises_1.0.1     xml2_1.3.2        
+[58] ellipsis_0.2.0.1   generics_0.0.2     vctrs_0.3.1       
+[61] tools_3.6.1        glue_1.3.1         hms_0.5.3         
+[64] yaml_2.2.0         colorspace_1.4-1   caTools_1.17.1.2  
+[67] rvest_0.3.5        knitr_1.23         haven_2.3.1       </code></pre>
 </div>
 </div>
 
