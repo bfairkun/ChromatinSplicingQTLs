@@ -14,7 +14,7 @@ rule GetGWAS_LeadSnpWindows:
     log:
         "logs/GetGWAS_LeadSnpWindows/{accession}.log"
     resources:
-        mem_mb = 48000
+        mem_mb = 50000
     shell:
         """
         (python scripts/GetGWASLeadVariantWindows.py {input.summarystats} /dev/stdout {params.PvalThreshold} | awk -F'\\t' -v OFS='\\t' 'NR>1 && $3~/[0-9]+/ {{split($1, a, "_"); print "chr"$3, a[2], a[2], $1"_"$2"_{wildcards.accession}" }}' | bedtools slop -i - -g {input.chromsizes} -b 500000 | bedtools sort -i - | bedtools intersect -a - -b {input.blacklistregions} -wa -sorted -v > {output} ) &> {log}
