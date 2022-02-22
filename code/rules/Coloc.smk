@@ -16,12 +16,12 @@ rule SplitAndCombineSummaryStatsPerLocus:
         zip( expand(
             "QTLs/QTLTools/{Phenotype}/{Pass}{{QTLsGenotypeSet}}{{FeatureCoordinatesRedefinedFor}}.txt.gz",
             Pass="PermutationPass",
-            Phenotype=PhenotypesToColoc,
+            Phenotype=MyPhenotypes,
         ),
         expand(
             "QTLs/QTLTools/{Phenotype}/{Pass}{{QTLsGenotypeSet}}{{FeatureCoordinatesRedefinedFor}}.txt.gz",
             Pass="NominalPass",
-            Phenotype=PhenotypesToColoc,
+            Phenotype=MyPhenotypes,
         ))
     output:
         directory("hyprcoloc/LociWiseSummaryStatsInput/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}")
@@ -86,12 +86,14 @@ rule create_gwascoloc_bash_scripts:
         expand("hyprcoloc/Results/{{QTLsGenotypeSet}}{{FeatureCoordinatesRedefinedFor}}/Chunks/{n}.sh", n=range(0,config["gwas_coloc_chunks"]))
     wildcard_constraints:
         FeatureCoordinatesRedefinedFor = "ForGWASColoc"
+    params:
+        PhenotypesToColoc = " ".join(PhenotypesToColoc)
     run:
         from itertools import cycle
         gwas_bashscript_pairs = zip(gwas_df.index, cycle(output))
         for accession, out_f in gwas_bashscript_pairs:
             with open(out_f, 'a') as f:
-                _ = f.write(f'Rscript scripts/hyprcoloc_gwas.R hyprcoloc/LociWiseSummaryStatsInput/ForGWASColoc/{accession}.txt.gz gwas_summary_stats/leadSnpWindowStats/{accession}.tsv.gz {out_f.rstrip(".sh")}.txt.gz\n')
+                _ = f.write(f'Rscript scripts/hyprcoloc_gwas.R hyprcoloc/LociWiseSummaryStatsInput/ForGWASColoc/{accession}.txt.gz gwas_summary_stats/leadSnpWindowStats/{accession}.tsv.gz {out_f.rstrip(".sh")}.txt.gz "{params.PhenotypesToColoc}"\n')
         # If there are more output files than accession numbers, the extra
         # output files won't get made in the previous loop and snakemake will
         # complain of missing output files. as a fail safe, let's append to
@@ -134,13 +136,15 @@ rule genewise_coloc_chunk:
         snpscores = "hyprcoloc/Results/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}/Chunks/{n}.snpscores.txt.gz"
     resources:
         mem_mb = 16000
+    params:
+        PhenotypesToColoc = " ".join(PhenotypesToColoc)
     log:
         "logs/gwas_coloc_chunk/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}/{n}.log"
     conda:
         "../envs/r_hyprcoloc.yml"
     shell:
         """
-        Rscript scripts/hyprcoloc_genewise.R {input.summarystatslist} {output.clusters} {output.snpscores} &> {log}
+        Rscript scripts/hyprcoloc_genewise.R {input.summarystatslist} {output.clusters} {output.snpscores} '{params.PhenotypesToColoc}' &> {log}
         """
 
 rule Gather_gwas_coloc_chunks:

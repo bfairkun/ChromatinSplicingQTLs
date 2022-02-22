@@ -11,7 +11,7 @@
 #Use hard coded arguments in interactive R session, else use command line args
 if(interactive()){
     args <- scan(text=
-                 "hyprcoloc/LociWiseSummaryStatsInput/ForGWASColoc/GCST004599.txt.gz gwas_summary_stats/leadSnpWindowStats/GCST004599.tsv.gz scratch/test.txt.gz", what='character')
+                 'hyprcoloc/LociWiseSummaryStatsInput/ForGWASColoc/GCST004599.txt.gz gwas_summary_stats/leadSnpWindowStats/GCST004599.tsv.gz scratch/test.txt.gz "H2K27AC H3K4ME3"', what='character')
 } else{
     args <- commandArgs(trailingOnly=TRUE)
 }
@@ -23,6 +23,13 @@ library(hyprcoloc)
 FileIn <- args[1]
 FileIn_GWAS <- args[2]
 FileOut <- args[3]
+
+if (args[4] == '' | is.na(args[4])){
+    TraitClassesRestrictions = NA
+} else {
+    TraitClassesRestrictions <- 
+        unlist(strsplit(args[4], ' '))
+}
 
 SummaryStats <- fread(FileIn)
 
@@ -46,6 +53,7 @@ for (i in seq_along(Loci)){
     SummaryStats.filtered <- SummaryStats %>%
         filter(gwas_locus == TestLocus) %>%
         mutate(phenotype_class = str_replace(source_file, "QTLs/QTLTools/(.+?)/(.+?)\\.txt\\.gz", "\\1")) %>%
+        filter( if (is.na(TraitClassesRestrictions) ) TRUE else phenotype_class %in% TraitClassesRestrictions ) %>%
         unite(phenotype, phenotype_class, phenotype, sep=";") %>%
         select(snp, phenotype, beta, beta_se, p) %>%
         distinct(.keep_all=T) %>%
@@ -53,6 +61,7 @@ for (i in seq_along(Loci)){
                   Gwas_SummaryStats %>%
                       filter(phenotype == TestLocus)
         )
+    SummaryStats.filtered %>% pull(phenotype) %>% unique()
 
     # Make snp x phenotype matrix of betas
     betas <- SummaryStats.filtered %>%
@@ -91,6 +100,10 @@ for (i in seq_along(Loci)){
 
     traits <- colnames(betas)
     rsid <- rownames(betas)
+    if (length(traits)==1){
+        print("Only one trait... skipping locus")
+        next
+    }
     res <- hyprcoloc(betas, ses, trait.names=traits, snp.id=rsid)
 
     HyprcolocResults.list[[i]] <- 
@@ -100,6 +113,8 @@ for (i in seq_along(Loci)){
 HyprcolocResults.list <- setNames(HyprcolocResults.list, Loci)
 
 HyprcolocResults.df <-
-    bind_rows(HyprcolocResults.list, .id="loci_name")
+    bind_rows(HyprcolocResults.list, .id="loci_name") %>%
+    # skipped gwas loci will still contain a row, but with NAs for hyprcoloc fields
+    complete(loci_name = names(HyprcolocResults.list))
 
-write_tsv(HyprcolocResults.df, FileOut, append=T)
+write_tsv(HyprcolocResults.df, FileOut, append=F)

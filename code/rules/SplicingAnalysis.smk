@@ -261,11 +261,3 @@ rule Subset_YRI_leafcutter_phenotype_table:
         """
         python scripts/subsample_polyA.Splicing_YRI.py
         """
-
-# rule ScoreSpliceSiteSNPs:
-#     input:
-#         vcf = ,
-#         introns = ,
-#     output:
-#     conda:
-#     shell:

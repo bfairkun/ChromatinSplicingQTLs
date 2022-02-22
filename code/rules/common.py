@@ -12,7 +12,6 @@ ncRNA_Phenotypes = []
 for pheno in ["polyA.Expression", "chRNA.Expression", "MetabolicLabelled.30min", "MetabolicLabelled.60min"]:
     for ncRNA in ['cheRNA', 'eRNA', 'lncRNA', 'snoRNA']:
         ncRNA_Phenotypes.append(pheno + '_' + ncRNA + '.Subset_YRI')
-    
 
 MyPhenotypes = ["chRNA.IR", "Expression.Splicing", "chRNA.Expression.Splicing",  "H3K27AC", "CTCF", "H3K4ME3", "chRNA.Splicing", "polyA.Splicing", "MetabolicLabelled.30min", "MetabolicLabelled.60min", "Expression.Splicing.Subset_YRI", "polyA.Splicing.Subset_YRI"]
 # "polyA.Expression.AllRNA.Subset_YRI", "MetabolicLabelled.30min.AllRNA.Subset_YRI", 
@@ -114,22 +113,6 @@ def GetDownloadLinkFuncs(LinkType):
         return df_subset[wildcards.Read + '_' + LinkType].fillna('').tolist()
     return F
 
-def GetFastpParamsUmi(wildcards):
-    if wildcards.Phenotype == "chRNA.Expression.Splicing":
-        return "--umi --umi_loc read1 --umi_len 12"
-
-def GetReadsForAlignmentFuncs(Read):
-    """
-    Not used
-    Rules to align reads need cutadapt reads, depending on the phenotype
-    """
-    def F(wildcards):
-        if wildcards.Phenotype in ['CTCF']:
-            return "FastqCutadapt/{wildcards.Phenotype}/{wildcards.IndID}/{wildcards.Rep}.{Read}.fastq.gz".format(wildcards=wildcards, Read=Read)
-        else:
-            return "Fastq/{wildcards.Phenotype}/{wildcards.IndID}/{wildcards.Rep}.{Read}.fastq.gz".format(wildcards=wildcards, Read=Read)
-    return F
-
 def GetBamForBigwig(wildcards):
     if wildcards.Phenotype in RNASeqPhenotypes:
         return "Alignments/STAR_Align/{Phenotype}/{IndID}/{Rep}/Filtered.bam"
@@ -174,7 +157,7 @@ def GetLibStrandForRegtools(wildcards):
 
 def GetQualimapLibtype(wildcards):
     if wildcards.Phenotype == "chRNA.Expression.Splicing":
-        return "-p strand-specific-forward"
+        return "-p strand-specific-reverse"
 
 def GetAnnotationsForPhenotype(wildcards):
     if wildcards.Phenotype in RNASeqPhenotypes_extended:
@@ -183,29 +166,26 @@ def GetAnnotationsForPhenotype(wildcards):
         return "PeakCalling/{Phenotype}_peaks.narrowPeak.saf"
     elif wildcards.Phenotype in ["H3K4ME3", "H3K36ME3", "POL2S2", "POL2S5", "H3K9ME3", "H3K79ME2"]:
         return "PeakCalling/{Phenotype}_peaks.broadPeak.saf"
-    
-    
+
 def PairedEndParams(wildcards):
     if wildcards.Phenotype in ["MetabolicLabelled.30min", "MetabolicLabelled.60min", "ProCap"]:
         return ""
     else:
         return "-p"
 
-
 def GetFeatureCountsParams(wildcards):
     if wildcards.Phenotype == "chRNA.Expression":
-        return "-s 1"
+        return "-s 2"
     elif wildcards.Phenotype in ChromatinProfilingPhenotypes:
         return "-F SAF"
     else:
         return ""
-    
+
 def GetSTARJunctionScoreParams(wildcards):
     if wildcards.Phenotype == "ProCap":
         return "--scoreGap -1000000"
     else:
         return ""
-
 
 def GetBamForPhenotype(wildcards):
     df_subset = Fastq_samples.loc[
@@ -222,7 +202,7 @@ def GetBamForPhenotype(wildcards):
         return expand("Alignments/STAR_Align/chRNA.Expression.Splicing/{IndID}/{Rep}/Filtered.bam", zip, IndID=df_subset['IndID'], Rep=df_subset['RepNumber'])
     elif wildcards.Phenotype in ChromatinProfilingPhenotypes:
         return expand("Alignments/Hisat2_Align/{{Phenotype}}/{IndID}.{Rep}.wasp_filterd.markdup.sorted.bam", zip, IndID=df_subset['IndID'], Rep=df_subset['RepNumber'])
-    
+
 def GetAnnotationsForRegion(wildcards):
     if wildcards.Region == "AtTSS":
         return "ReferenceGenome/Annotations/TSSRegions.saf"

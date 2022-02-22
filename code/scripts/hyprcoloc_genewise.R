@@ -55,8 +55,6 @@ for (i in seq_along(Loci)){
         filter(gwas_locus == names(TestLocus)) %>%
         mutate(phenotype_class = str_replace(source_file, "QTLs/QTLTools/(.+?)/(.+?)\\.txt\\.gz", "\\1")) %>%
         filter( if (is.na(TraitClassesRestrictions) ) TRUE else phenotype_class %in% TraitClassesRestrictions )  %>%
-        # {if (rlang::is_empty(TraitClassesRestrictions)) | (is.na(TraitClassesRestrictions)) filter(.) else filter(., phenotype_class %in% TraitClassesRestrictions)} %>%
-        pull(phenotype_class) %>% unique()
         unite(phenotype, phenotype_class, phenotype, sep=";") %>%
         select(snp, phenotype, beta, beta_se, p) %>%
         distinct(.keep_all=T)
@@ -100,7 +98,7 @@ for (i in seq_along(Loci)){
     traits <- colnames(betas)
     rsid <- rownames(betas)
     if (length(traits)==1){
-        print("Only one triat... skipping locus")
+        print("Only one trait... skipping locus")
         next
     }
     res <- hyprcoloc(betas, ses, trait.names=traits, snp.id=rsid, snpscores=T)

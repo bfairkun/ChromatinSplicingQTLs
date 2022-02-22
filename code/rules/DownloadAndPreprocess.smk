@@ -161,7 +161,6 @@ rule fastp:
         html = "FastqFastp/{Phenotype}/{IndID}/{Rep}.fastp.html",
         json = "FastqFastp/{Phenotype}/{IndID}/{Rep}.fastp.json"
     params:
-        umi = GetFastpParamsUmi,
         I = "-I",
         O = "-O"
     resources:
@@ -172,7 +171,7 @@ rule fastp:
         "../envs/fastp.yml"
     shell:
         """
-        fastp -i {input.R1} {params.I} {input.R2} -o {output.R1} {params.O} {output.R2} --html {output.html} --json {output.json} {params.umi} &> {log}
+        fastp -i {input.R1} {params.I} {input.R2} -o {output.R1} {params.O} {output.R2} --html {output.html} --json {output.json} &> {log}
         """
 
 use rule fastp as fastp_SE with:
@@ -187,6 +186,5 @@ use rule fastp as fastp_SE with:
     log:
         "logs/fastpSE/{Phenotype}.{IndID}.{Rep}.log"
     params:
-        umi = GetFastpParamsUmi,
         I = "",
         O = ""
