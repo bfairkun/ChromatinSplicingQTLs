@@ -97,18 +97,18 @@ rule all:
         ####    "featureCounts/{Phenotype}/Counts.txt",
         ####    Phenotype=["MetabolicLabelled.30min", "MetabolicLabelled.60min"],
         ####),
-        ###expand(
-        ###    "gwas_summary_stats/full_data/{accession}.tsv.gz", accession=gwas_df.index
-        ###),
-        ###############expand(
+        expand(
+           "gwas_summary_stats/full_data/{accession}.tsv.gz", accession=gwas_df.index
+        ),
+        ####expand(
         ####    "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.gz",
         ####    Phenotype=PhenotypesToColoc,
         ####    QTLsGenotypeSet=["", "HarmonizedSNPs"],
         ####    FeatureCoordinatesRedefinedFor=["", "ForColoc", "ForGWASColoc"],
         ####    Pass=["NominalPass", "PermutationPass"],
-        ################),
-        "featureCounts/chRNA.Expression.Splicing/CountsExons.txt",
-        "featureCounts/chRNA.Expression.Splicing/CountTable.MeanLogRPKM.txt.gz",
+        ####),
+        ####"featureCounts/chRNA.Expression.Splicing/CountsExons.txt",
+        ####"featureCounts/chRNA.Expression.Splicing/CountTable.MeanLogRPKM.txt.gz",
         "../data/eRNA.saf",
         expand(
             "featureCounts/{Phenotype}_{ncRNA}/Counts.txt",

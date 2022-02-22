@@ -24,6 +24,9 @@ FileIn <- args[1]
 FileIn_GWAS <- args[2]
 FileOut <- args[3]
 
+print(FileIn)
+print(FileIn_GWAS)
+
 SummaryStats <- fread(FileIn)
 
 Gwas_SummaryStats <- fread(FileIn_GWAS) %>%
