@@ -303,6 +303,8 @@ rule MakePhenotypeTableToColocFeaturesWithGWASLoci:
     output:
         bed = "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsForGWASColoc.sorted.qqnorm.bed.gz",
         tbi = "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsForGWASColoc.sorted.qqnorm.bed.gz.tbi"
+    resources:
+        mem_mb = 48000
     log:
         "logs/MakePhenotypeTableToColocFeaturesWithGWASLoci/{Phenotype}.log"
     shell:

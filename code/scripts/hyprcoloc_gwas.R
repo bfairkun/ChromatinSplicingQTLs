@@ -117,4 +117,4 @@ HyprcolocResults.df <-
     # skipped gwas loci will still contain a row, but with NAs for hyprcoloc fields
     complete(loci_name = names(HyprcolocResults.list))
 
-write_tsv(HyprcolocResults.df, FileOut, append=F)
+write_tsv(HyprcolocResults.df, FileOut, append=T)

@@ -13,7 +13,7 @@ rule Prepare_polyA_RNA_seq_PhenotypeTable_AndMakeGeneList:
         "../envs/r_essentials.yml"
     shell:
         """
-        Rscript scripts/PreparePhenotypeTablesFromFeatureCounts.R {input.featureCounts} rename_STAR_alignment_samples {input.gtf} {input.genes} {output.GeneList} {output.PhenotypesBed} {output.FirstReps}
+        Rscript scripts/PreparePhenotypeTablesFromFeatureCounts.R {input.featureCounts} rename_STAR_alignment_samples {input.gtf} {input.genes} {output.GeneList} {output.PhenotypesBed} {output.FirstReps} &> {log}
         """
 
 def GetFeatureCountsForRNASeqExpressionPhenotype(wildcards):
