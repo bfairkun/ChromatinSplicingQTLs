@@ -9,9 +9,10 @@
 ######################################################################
 
 #Use hard coded arguments in interactive R session, else use command line args
+# Usage: <Filelist of loci-wise summary stats files> <Fileout_clusters> <Fileout_finemappingScores> '[Optional list of space delimited phenotype classes to include, surrounded by single quotes]' 
 if(interactive()){
     args <- scan(text=
-                 " scratch/testfilelist.txt  scratch/test.txt.gz scratch/Finemappingscores.txt.gz", what='character')
+                 " scratch/testfilelist.txt  scratch/test.txt.gz scratch/Finemappingscores.txt.gz 'H2K27AC H3K4ME3'", what='character')
 } else{
     args <- commandArgs(trailingOnly=TRUE)
 }
@@ -26,6 +27,14 @@ FilelistIn <- args[1]
 FileOut <- args[2]
 FinemappingOut <- args[3]
 
+if (args[4] == '' | is.na(args[4])){
+    TraitClassesRestrictions = NA
+} else {
+    TraitClassesRestrictions <- 
+        unlist(strsplit(args[4], ' '))
+}
+
+
 Loci<- read_tsv(FilelistIn, col_names=c("f")) %>%
     filter(file.exists(f)) %>%
     mutate(Loci_names = str_replace(f, "hyprcoloc/LociWiseSummaryStatsInput/ForColoc/(.+?)\\.txt\\.gz", "\\1")) %>%
@@ -37,7 +46,7 @@ Loci<- read_tsv(FilelistIn, col_names=c("f")) %>%
 
 for (i in seq_along(Loci)){
 
-    # TestLocus <- Loci[1]
+    TestLocus <- Loci[1]
     TestLocus <- Loci[i]
     print(paste0("running loci", i, " : ", names(TestLocus)))
 
@@ -45,6 +54,9 @@ for (i in seq_along(Loci)){
     SummaryStats.filtered <- fread(TestLocus) %>%
         filter(gwas_locus == names(TestLocus)) %>%
         mutate(phenotype_class = str_replace(source_file, "QTLs/QTLTools/(.+?)/(.+?)\\.txt\\.gz", "\\1")) %>%
+        filter( if (is.na(TraitClassesRestrictions) ) TRUE else phenotype_class %in% TraitClassesRestrictions )  %>%
+        # {if (rlang::is_empty(TraitClassesRestrictions)) | (is.na(TraitClassesRestrictions)) filter(.) else filter(., phenotype_class %in% TraitClassesRestrictions)} %>%
+        pull(phenotype_class) %>% unique()
         unite(phenotype, phenotype_class, phenotype, sep=";") %>%
         select(snp, phenotype, beta, beta_se, p) %>%
         distinct(.keep_all=T)

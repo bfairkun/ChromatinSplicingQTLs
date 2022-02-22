@@ -121,7 +121,7 @@ rule DownloadFastqFromLink:
 
 use rule DownloadFastqFromLink as DownloadFastqFromLink_SE with:
     output:
-        fastq = "FastqSE/{Phenotype}/{IndID}/{Rep}.{Read}.fastq.gz",
+        fastq = temp("FastqSE/{Phenotype}/{IndID}/{Rep}.{Read}.fastq.gz"),
     log:
         "logs/DownloadFastqFromAsperaLink_SE/{Phenotype}.{IndID}.{Rep}.{Read}.log"
     wildcard_constraints:
@@ -156,8 +156,8 @@ rule fastp:
         R1 = "Fastq/{Phenotype}/{IndID}/{Rep}.R1.fastq.gz",
         R2 = "Fastq/{Phenotype}/{IndID}/{Rep}.R2.fastq.gz"
     output:
-        R1 = "FastqFastp/{Phenotype}/{IndID}/{Rep}.R1.fastq.gz",
-        R2 = "FastqFastp/{Phenotype}/{IndID}/{Rep}.R2.fastq.gz",
+        R1 = temp("FastqFastp/{Phenotype}/{IndID}/{Rep}.R1.fastq.gz"),
+        R2 = temp("FastqFastp/{Phenotype}/{IndID}/{Rep}.R2.fastq.gz"),
         html = "FastqFastp/{Phenotype}/{IndID}/{Rep}.fastp.html",
         json = "FastqFastp/{Phenotype}/{IndID}/{Rep}.fastp.json"
     params:
@@ -180,7 +180,7 @@ use rule fastp as fastp_SE with:
         R1 = "FastqSE/{Phenotype}/{IndID}/{Rep}.SE.fastq.gz",
         R2 = []
     output:
-        R1 = "FastqFastpSE/{Phenotype}/{IndID}/{Rep}.SE.fastq.gz",
+        R1 = temp("FastqFastpSE/{Phenotype}/{IndID}/{Rep}.SE.fastq.gz"),
         R2 = [],
         html = "FastqFastpSE/{Phenotype}/{IndID}/{Rep}.fastp.html",
         json = "FastqFastpSE/{Phenotype}/{IndID}/{Rep}.fastp.json"

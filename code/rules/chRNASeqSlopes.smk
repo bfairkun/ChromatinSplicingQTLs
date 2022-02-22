@@ -51,7 +51,7 @@ rule GetUniqIntrons:
     input:
         bed = "Misc/GencodeHg38_all_introns.expressedHostGenes.bed.gz",
         elements = "Misc/genome_elements.bed",
-        faidx = "ReferenceGenome/Annotations/Chrome.sizes"
+        faidx = "../data/Chrome.sizes"
     output:
         "Misc/GencodeHg38_all_introns.corrected.uniq.bed"
     shell:
@@ -66,7 +66,7 @@ rule MakeWindowsForIntrons:
     """
     input:
         bed = "Misc/GencodeHg38_all_introns.corrected.uniq.bed",
-        faidx = "ReferenceGenome/Annotations/Chrome.sizes"
+        faidx = "../data/Chrome.sizes"
     params:
         MinIntronLength = config["MinIntronLength"],
     output:
@@ -85,7 +85,7 @@ rule MakeWindowsForIntrons_equalSized:
     """
     input:
         bed = "Misc/GencodeHg38_all_introns.corrected.uniq.bed",
-        faidx = "ReferenceGenome/Annotations/Chrome.sizes"
+        faidx = "../data/Chrome.sizes"
     params:
         WinLen = config["WinLen"],
         MinIntronLength = config["MinIntronLength"],
@@ -106,7 +106,7 @@ rule CountReadsInIntronWindows:
     """
     input:
         bed = "Misc/GencodeHg38_all_introns.corrected.uniq.bed.{windowStyle}.bed",
-        faidx = "ReferenceGenome/Annotations/Chrome.sizes",
+        faidx = "../data/Chrome.sizes",
         bam = 'Alignments/STAR_Align/chRNA.Expression.Splicing/{IndID}/1/Filtered.bam'
     log:
         "logs/CountReadsInIntronWindows/{IndID}.{windowStyle}.log"
