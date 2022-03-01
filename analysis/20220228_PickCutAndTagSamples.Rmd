@@ -1,0 +1,46 @@
+---
+title: "20220228_PickCutAndTagSamples.Rmd"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F)
+```
+
+## Introduction
+
+```{r}
+library(tidyverse)
+
+Samples.Done <- read_tsv("../data/GrowthNotes/20210830_GrowthNotes_chRNA.ConcentrationsToReplate.txt") %>%
+  filter(!is.na(NewID)) %>%
+  arrange(NewID) %>%
+  add_count(Line.x)
+
+TestStripSamples <- Samples.Done %>%
+  filter(str_detect(NewID, "Test")) %>% 
+  pull(Line.x)
+
+Samples.From.Sequencing <- read_tsv("../code/config/samples.tsv") %>%
+  filter(Phenotype == "chRNA.Expression.Splicing") %>%
+  mutate(Line = as.numeric(str_remove(IndID, "NA"))) %>%
+  mutate(WellID = str_replace(R1_local, "^.+?BF1-(.+?)_.+$", "\\1")) %>%
+  select(WellID, Line, RepNumber, R1_local)
+
+Samples.From.Sequencing.vec <- Samples.From.Sequencing %>%
+  pull(Line) %>% unique()
+
+LinesDuplicatedFromSequencing <- Samples.From.Sequencing %>%
+  filter(RepNumber==2) %>%
+  pull(Line) %>% unique()
+
+Samples.From.Sequencing %>%
+  add_count(Line) %>%
+  filter(n==2)
+
+#samples that were not already sequenced, but could be included for cut&tag
+setdiff(c(18861, 19140, 18870, 19141, 18877, 18910, 19108, 19193, 19128, 19196), Samples.From.Sequencing.vec)
+
+
+```
+To D09, F02, B09
