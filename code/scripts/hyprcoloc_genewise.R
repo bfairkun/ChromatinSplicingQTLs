@@ -97,7 +97,8 @@ for (i in seq_along(Loci)){
 
     traits <- colnames(betas)
     rsid <- rownames(betas)
-    if (length(traits)==1){
+    # changed == to <= to account for when we are not colocalizing some traits
+    if (length(traits)<=1){
         print("Only one trait... skipping locus")
         next
     }

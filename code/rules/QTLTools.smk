@@ -198,7 +198,7 @@ rule QTLtools_generalized:
     log:
         "logs/QTLtools_cis_permutation_pass/{Phenotype}.{Pass}.{QTLsGenotypeSet}.{FeatureCoordinatesRedefinedFor}/{n}.log"
     resources:
-        mem_mb = 8000
+        mem_mb = 58000
     envmodules:
         "gsl/2.5"
     params:

@@ -126,7 +126,7 @@ m <- Filtered.out %>%
     t() %>% scale() %>% t()
 m.qqnorm <- m[rowSums(is.na(m)) != ncol(m), ] %>%
     #inverse normalize across columns
-    apply(2, rankNorm)
+    apply(2, RankNorm)
 
 print("How many introns out:")
 print(dim(m.qqnorm))

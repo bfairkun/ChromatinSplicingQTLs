@@ -10,18 +10,14 @@ args <- commandArgs(trailingOnly=TRUE)
 featureCounts_FileIn <- args[1]
 PhenotypesBedOut_OnlyFirstReps <- args[2]
 
-print('hola')
 table_genes <- read_tsv(featureCounts_FileIn) #%>% select(Chr, Start, End, Strand, Geneid)
 
-print('como')
 
 genes_bed <- table_genes %>% select(Chr, Start, End, Strand, Geneid)
 
-print('estan')
 
 dat <- table_genes %>% select(-c("Strand", "Chr", "Start", "End")) %>% inner_join(genes_bed, ., by="Geneid")
 
-print('todos')
 
 #genes_bed <- table_genes %>% select(Chr, Start, End, Strand, Geneid)
 
@@ -31,14 +27,12 @@ print('todos')
 #    select(-c("Strand", "Chr", "Start", "End")) %>%
 #    inner_join(genes_bed, ., by="Geneid") 
 
-print('aqui')
 dat.cpm <- dat %>%
     filter(Chr %in% paste0("chr", 1:22)) %>%
     column_to_rownames("Geneid") %>%
     select(everything(), -c("Chr", "Start", "End", "Strand", "Length")) %>%
     cpm(log=T, prior.count=0.1)
 
-print('en')
 #Filter for top N autosomal genes based on median expression
 MedCpm <- sort(apply(dat.cpm, 1, median), decreasing=T)
 NGenesToInclude <- min(14000, dim(dat.cpm)[1])
@@ -47,13 +41,11 @@ GenesToInclude <- MedCpm[1:NGenesToInclude] %>% names()
 dat.cpm.filtered <- dat.cpm[GenesToInclude,] %>% as.matrix()
 print(paste("The ", NGenesToInclude, " included genes are a cutoff of", 2**MedCpm[NGenesToInclude], "cpm"))
 
-print('este')
 #Standardize across individuals (rows),
 dat.standardized <- dat.cpm.filtered %>% t() %>% scale() %>% t() %>% na.omit()
 #then qqnorm across genes (columns)
 dat.qqnormed <- apply(dat.standardized, 2, RankNorm)
 
-print('hermoso')
 
 Out <- dat %>%
     select(Geneid, Chr, Start, End, Strand) %>%
@@ -66,7 +58,6 @@ Out <- dat %>%
     select(-c('Start')) %>%
     arrange(`#Chr`, start)
 
-print('dia')
 
 write_tsv(Out, PhenotypesBedOut_OnlyFirstReps)
 

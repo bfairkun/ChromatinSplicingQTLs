@@ -98,7 +98,7 @@ print(paste("The ", NGenesToInclude, " included genes are a cutoff of", 2**MedCp
 #Standardize across individuals (rows),
 dat.standardized <- dat.cpm.filtered %>% t() %>% scale() %>% t()
 #then qqnorm across genes (columns)
-dat.qqnormed <- apply(dat.standardized, 2, rankNorm)
+dat.qqnormed <- apply(dat.standardized, 2, RankNorm)
 
 
 Out <- dat %>%

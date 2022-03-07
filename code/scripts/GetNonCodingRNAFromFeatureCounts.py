@@ -20,32 +20,32 @@ if __name__ == '__main__':
     
     ncRNA_counts = counts.loc[ncRNA_genes]
     
-    ncRNA_counts = ncRNA_counts[[x for x in ncRNA_counts.columns if x[-5:-1] != 'bam.']]
-    RNA_cols = [x for x in ncRNA_counts.columns if (('/2/' not in x) and ('/3/' not in x) and ('Unchecked' not in x))]
-    ncRNA_counts = ncRNA_counts[RNA_cols]
+#     ncRNA_counts = ncRNA_counts[[x for x in ncRNA_counts.columns if x[-5:-1] != 'bam.']]
+#     RNA_cols = [x for x in ncRNA_counts.columns if (('/2/' not in x) and ('/3/' not in x) and ('Unchecked' not in x))]
+#     ncRNA_counts = ncRNA_counts[RNA_cols]
     
-    ncRNA_counts.columns = [x if x[-3:] != 'bam' else x.split('/')[-3] for x in ncRNA_counts.columns]
+#     ncRNA_counts.columns = [x if x[-3:] != 'bam' else x.split('/')[-3] for x in ncRNA_counts.columns]
     
-    RNA_cols = list(ncRNA_counts.columns[:5])
-    samples = ncRNA_counts.columns[5:]
-    
-    
-    Fastq_samples = pd.read_csv('config/samples.tsv', sep='\t', comment='#')
-    igsr_samples = pd.read_csv('../data/igsr_samples.tsv.gz', sep='\t', index_col=0)
-    
-    samples = pd.Index(samples).intersection(igsr_samples.index)
-    
-    print(len(samples))
-    
-    igsr_samples = igsr_samples.loc[samples]
+#     RNA_cols = list(ncRNA_counts.columns[:5])
+#     samples = ncRNA_counts.columns[5:]
     
     
-    YRI_samples = list(igsr_samples.loc[igsr_samples['Population code'] == 'YRI'].index)
+#     Fastq_samples = pd.read_csv('config/samples.tsv', sep='\t', comment='#')
+#     igsr_samples = pd.read_csv('../data/igsr_samples.tsv.gz', sep='\t', index_col=0)
     
-    RNA_columns = RNA_cols + YRI_samples
+#     samples = pd.Index(samples).intersection(igsr_samples.index)
     
-    ncRNA_counts = ncRNA_counts[RNA_columns]
+#     print(len(samples))
+    
+#     igsr_samples = igsr_samples.loc[samples]
     
     
-    ncRNA_counts.to_csv('featureCounts/{phenotype}_{ncRNA}.Subset_YRI/Counts.txt'.format(phenotype=phenotype, ncRNA=ncRNA), sep='\t',
+#     YRI_samples = list(igsr_samples.loc[igsr_samples['Population code'] == 'YRI'].index)
+    
+#     RNA_columns = RNA_cols + YRI_samples
+    
+#     ncRNA_counts = ncRNA_counts[RNA_columns]
+    
+    
+    ncRNA_counts.to_csv('featureCounts/{phenotype}_{ncRNA}/Counts.txt'.format(phenotype=phenotype, ncRNA=ncRNA), sep='\t',
                       index=True, header=True)

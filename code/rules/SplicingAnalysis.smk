@@ -209,7 +209,7 @@ rule Leafcutter_countsTable_toPSI:
     log:
         "logs/Leafcutter_countsTable_toPSI/{Phenotype}.log"
     conda:
-        "envs/r_2.yaml"
+        "../envs/r_2.yaml"
     shell:
         """
         Rscript scripts/LeafcutterToPSIBed.R {input} {output} &> {log}

@@ -62,7 +62,7 @@ print(paste("The ", length(GenesToInclude), " included genes are a cutoff of", 2
 #Standardize across individuals (rows),
 dat.standardized <- dat.cpm.filtered %>% t() %>% scale() %>% t() %>% as.data.frame() %>% drop_na() %>% as.matrix()
 #then qqnorm across genes (columns)
-dat.qqnormed <- apply(dat.standardized, 2, rankNorm)
+dat.qqnormed <- apply(dat.standardized, 2, RankNorm)
 
 
 Out <- dat %>%
