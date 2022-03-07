@@ -9,7 +9,8 @@ rule GatherReportFiles:
     input:
         expand("QTLs/QTLTools/{Phenotype}/FeatureSizes.pdf", Phenotype=MyPhenotypes),
         "QC/NumQTLsPerPhenotype.pdf",
-        expand("QTLs/QTLTools/{Phenotype}/PermutationPass.FDR_Added.Pvals_{Plot}.pdf", Phenotype=MyPhenotypes, Plot=["hist", "qq"])
+        expand("QTLs/QTLTools/{Phenotype}/PermutationPass.FDR_Added.Pvals_{Plot}.pdf", Phenotype=MyPhenotypes, Plot=["hist", "qq"]),
+        "Multiqc/multiqc_report.html"
 
 rule PlotFeatureSize:
     input:
