@@ -84,16 +84,6 @@ rule featureCountsIntrons:
         featureCounts {params.extraParams} -F SAF -T {threads} --ignoreDup --primary -a {input.introns} -o featureCounts/{wildcards.Phenotype}_introns/Counts.txt {input.bam} &> {log};
         """
 
-
-
-
-
-
-
-
-
-
-
  
 rule GetAdditionalNonCodingRNAFromFeatureCounts:
     input:

@@ -13,17 +13,23 @@ args = commandArgs(trailingOnly=TRUE)
 intronFile = args[1]
 
 SampleName <- strsplit(intronFile, ".IntronWindows")[[1]][1]
-SampleName <- strsplit(SampleName, "/")[[1]][2]
+SampleName <- strsplit(SampleName, "/")[[1]][3]
 
+#dir.create(file.path('IntronSlopes', 'slopes', showWarnings = FALSE)
+
+print(SampleName)
 
 minIntronCounts = as.integer(args[2])
 minCoverageCounts = as.integer(args[3])
 minCoverage = as.numeric(args[4])
 WinLen = as.integer(args[5])
 
+print('loaded params')
+
 tryCatch(
         {
-    
+    print('maybe it crashes when loading data')
+            print(intronFile)
 Counts.EqualSizeBins <- fread(intronFile, #fread(paste(equalLengthDir, intronFile, sep=''), 
                               sep = '\t', col.names = c("chr", "start", "stop", "name", "score", "strand", "Readcount"), header=F) %>%
 
@@ -39,14 +45,17 @@ Counts.EqualSizeBins <- fread(intronFile, #fread(paste(equalLengthDir, intronFil
   )) %>%
   dplyr::select(chr, start, stop, Window, IntronName, Readcount, IntronLength)
 
-
+print('or when processing')
+            
 IntronCountSums <- Counts.EqualSizeBins %>%
   group_by(IntronName) %>%
   summarise(IntronSum=sum(Readcount), IntronObsSum=sum(Readcount>0), IntronCoverage=mean(Readcount>=minCoverageCounts))
 
+print('or when filtering')
 # Hard-coded IntronObsSum minimum of 2, despite min Intron Coverage, to ensure rlm can run
 IntronsToGetSlope <- IntronCountSums %>% filter((IntronSum>=minIntronCounts), (IntronObsSum>=2), (IntronCoverage>=minCoverage)) %>% pull(IntronName)
 
+print('or when whatever this is')
 
 sample_n_of <- function(data, size, ...) {
   dots <- quos(...)
@@ -63,14 +72,19 @@ sample_n_of <- function(data, size, ...) {
 
 set.seed(0)
 
+print('or getting coverage fits')
+            
 CoverageFits.df <- Counts.EqualSizeBins %>%
-  filter(IntronName %in% IntronsToGetSlope) %>% filter(Readcount >= 1) %>%
+  filter(IntronName %in% IntronsToGetSlope) %>% #filter(Readcount >= 1) %>%
    ## See if we can make length independent
-  mutate(RelativeIntronPosInBp = Window*WinLen) %>%
+  #mutate(RelativeIntronPosInBp = Window*WinLen) %>%
+  mutate(RelativeIntronPosInBp = (Window*WinLen)/(stop - start)) %>%
   # sample_n_of(9, IntronName) %>%
   group_by(IntronName) %>%
   do(CoverageFit = rlm(Readcount ~ RelativeIntronPosInBp, data = ., maxit=40)) %>%
   summarise(IntronName, tidy(CoverageFit))
+            
+print('or when tidying up')
 
 #Let's tidy the data so there is one row per intron
 CoverageFits.df.tidy <- CoverageFits.df %>%
@@ -104,11 +118,11 @@ CoverageFits.df.tidy <- CoverageFits.df.tidy %>%
   filter(IntronName %in% IntronsToGetSlope)
             
             
-print(paste('slopes/', SampleName, '.tab.gz', sep=''))
+print(paste('IntronSlopes/slopes/', SampleName, '.tab.gz', sep=''))
 
 CoverageFits.df.tidy %>%
   mutate(IsSlopeNegative = Slope < 0 ) %>%
-  write_delim(paste('slopes/', SampleName, '.tab.gz', sep=''), delim = '\t')
+  write_delim(paste('IntronSlopes/slopes/', SampleName, '.tab.gz', sep=''), delim = '\t')
             
 },
     error = function(e) {
@@ -140,8 +154,9 @@ tryCatch(
 set.seed(0)
 
 CoverageFits.nb.glm.df <- Counts.EqualSizeBins %>%
-  filter(IntronName %in% IntronsToGetSlope) %>% filter(Readcount >= 1) %>%
-  mutate(RelativeIntronPosInBp = Window*WinLen) %>%
+  filter(IntronName %in% IntronsToGetSlope) %>% #filter(Readcount >= 1) %>%
+  mutate(RelativeIntronPosInBp = (Window*WinLen)/(stop - start)) %>%
+  #mutate(RelativeIntronPosInBp = Window*WinLen) %>%
   group_by(IntronName) %>%
   do(CoverageFit = possibly(glm.nb, otherwise = NA)(Readcount ~ RelativeIntronPosInBp, data = ., link="identity")) %>%
   summarise(IntronName, tidy(CoverageFit)) #tidy(CoverageFit)
@@ -167,11 +182,11 @@ IntronCountSums_filtered <- IntronCountSums_filtered %>% column_to_rownames(., v
 CoverageFits.df.tidy['counts'] <- IntronCountSums_filtered[CoverageFits.df.tidy$IntronName,]$IntronSum
 CoverageFits.df.tidy['coverageMean'] <- IntronCountSums_filtered[CoverageFits.df.tidy$IntronName,]$IntronCoverage
             
-print(paste('slopes/', SampleName, '_glm.nb.tab.gz', sep=''))
+print(paste('IntronSlopes/slopes/', SampleName, '_glm.nb.tab.gz', sep=''))
 
 CoverageFits.df.tidy %>%
   mutate(IsSlopeNegative = Slope < 0 ) %>%
-  write_delim(paste('slopes/', SampleName, '_glm.nb.tab.gz', sep=''), delim = '\t')
+  write_delim(paste('IntronSlopes/slopes/', SampleName, '_glm.nb.tab.gz', sep=''), delim = '\t')
             
 },
     error = function(e) {
@@ -189,7 +204,7 @@ CoverageFits.df.tidy %>%
                   counts = character(),
                   coverageMean = character(),
                   IsSlopeNegative = character(),
-                  stringsAsFactors=FALSE) %>% write_delim(paste('slopes/', SampleName, '_glm.nb.tab.gz', sep=''), delim = '\t')
+                  stringsAsFactors=FALSE) %>% write_delim(paste('IntronSlopes/slopes/', SampleName, '_glm.nb.tab.gz', sep=''), delim = '\t')
        
         })
 

@@ -1,62 +1,44 @@
-rule featureCountsExons:
-    input:
-        bam = GetBamForPhenotype,
-        annotations = GetAnnotationsForPhenotype
-    output:
-        "featureCounts/{Phenotype}/CountsExons.txt"
-    params:
-        extraParams = GetFeatureCountsParams,
-    threads:
-        8
-    wildcard_constraints:
-        Phenotype = "chRNA.Expression.Splicing"
-    resources:
-        mem = 12000,
-        cpus_per_node = 9,
-    log:
-        "logs/featureCounts/{Phenotype}.log"
-    shell:
-        """
-        featureCounts -p {params.extraParams} -f -t exon -g exon_id -T {threads} --ignoreDup --primary -a {input.annotations} -o {output} {input.bam} &> {log}
-        """
-
 rule GetGenomeElements:
     input: 
         gtf = "ReferenceGenome/Annotations/gencode.v34.primary_assembly.annotation.gtf",
     output:
-        "Misc/genome_elements.bed"
+        "IntronSlopes/Annotation/genome_exons.bed"
     shell:
         """
-        grep -v protein_coding {input.gtf} | tail -n+6 | awk -F'\t' '{{print $1"\t"$4"\t"$5"\t"$3"\t"$6"\t"$7}}' > {output} && grep protein_coding {input.gtf} | awk -F'\t' '$3=="exon"' | awk -F'\t' '{{print $1"\t"$4"\t"$5"\tprotein_coding_"$3"\t"$6"\t"$7}}' >> {output}
+        awk -F'\t' '$3=="exon"' {input.gtf} | awk -F'\t' '{{print $1"\t"$4"\t"$5"\t"$3"\t"$6"\t"$7}}' >> {output}
         """
+
+#grep -v protein_coding {input.gtf} | tail -n+6 | awk -F'\t' '{{print $1"\t"$4"\t"$5"\t"$3"\t"$6"\t"$7}}' > {output} && grep protein_coding {input.gtf} | awk -F'\t' '$3=="exon"' | awk -F'\t' '{{print $1"\t"$4"\t"$5"\tprotein_coding_"$3"\t"$6"\t"$7}}' >> {output}
     
-rule GetLogRPKM:
+    
+rule GetIntronsInExpressedGenes:
     input:
         gtf = "ReferenceGenome/Annotations/gencode.v34.primary_assembly.annotation.gtf",
-        CountTable = "featureCounts/chRNA.Expression.Splicing/Counts.txt",
         bed = "../data/Introns.GencodeV34.hg38.UCSC.bed.gz",
+        genelist = "ExpressionAnalysis/polyA/ExpressedGeneList.txt"
     output:
-        "featureCounts/chRNA.Expression.Splicing/CountTable.MeanLogRPKM.txt.gz",
-        "Misc/GencodeHg38_all_introns.expressedHostGenes.bed.gz"
+        "IntronSlopes/Annotation/GencodeHg38_all_introns.expressedHostGenes.bed.gz"
     log:
         "logs/chRNA-seq_FilterForExpressedGenes.log"
     conda:
         "../envs/r_essentials.yml"
     shell:
         """
-        Rscript scripts/chRNA-seq_FilterForExpressedGenes.R &> {log}
+        Rscript scripts/chRNA-seq_FilterForExpressedGenes.R {input} {output} &> {log}
         """
 
 rule GetUniqIntrons:
     input:
-        bed = "Misc/GencodeHg38_all_introns.expressedHostGenes.bed.gz",
-        elements = "Misc/genome_elements.bed",
+        bed = "IntronSlopes/Annotation/GencodeHg38_all_introns.expressedHostGenes.bed.gz",
+        elements = "IntronSlopes/Annotation/genome_exons.bed",
         faidx = "../data/Chrome.sizes"
     output:
-        "Misc/GencodeHg38_all_introns.corrected.uniq.bed"
+        "IntronSlopes/Annotation/GencodeHg38_all_introns.corrected.uniq.bed"
+    params:
+        max_overlap = 0.01,
     shell:
         """
-        zcat {input.bed} | awk -F'\\t' -v OFS='\\t' '$1 !~ "_" {{ print $1, $2, $3,$7"_"$1"_"$2"_"$3"_"$6,".", $6 }}' | sort | uniq | bedtools sort -i - -faidx {input.faidx} | bedtools intersect -v -a - -b {input.elements} > {output}
+        zcat {input.bed} | awk -F'\\t' -v OFS='\\t' '$1 !~ "_" {{ print $1, $2, $3,$7"_"$1"_"$2"_"$3"_"$6,".", $6 }}' | sort | uniq | bedtools sort -i - -faidx {input.faidx} | bedtools intersect -s -v -f {params.max_overlap} -r -a - -b {input.elements} > {output}
         """        
         
 rule MakeWindowsForIntrons:
@@ -65,12 +47,12 @@ rule MakeWindowsForIntrons:
     introns into equal number of bins
     """
     input:
-        bed = "Misc/GencodeHg38_all_introns.corrected.uniq.bed",
+        bed = "IntronSlopes/Annotation/GencodeHg38_all_introns.corrected.uniq.bed",
         faidx = "../data/Chrome.sizes"
     params:
-        MinIntronLength = config["MinIntronLength"],
+        MinIntronLength = 500,
     output:
-        "Misc/GencodeHg38_all_introns.corrected.uniq.bed.IntronWindows.bed"
+        "IntronSlopes/Annotation/GencodeHg38_all_introns.corrected.uniq.bed.IntronWindows.bed"
     shell:
         """
         set +o pipefail;
@@ -84,13 +66,13 @@ rule MakeWindowsForIntrons_equalSized:
     introns into equal length bins
     """
     input:
-        bed = "Misc/GencodeHg38_all_introns.corrected.uniq.bed",
+        bed = "IntronSlopes/Annotation/GencodeHg38_all_introns.corrected.uniq.bed",
         faidx = "../data/Chrome.sizes"
     params:
-        WinLen = config["WinLen"],
-        MinIntronLength = config["MinIntronLength"],
+        WinLen = 50,
+        MinIntronLength = 500,
     output:
-        "Misc/GencodeHg38_all_introns.corrected.uniq.bed.IntronWindows_equalLength.bed"
+        "IntronSlopes/Annotation/GencodeHg38_all_introns.corrected.uniq.bed.IntronWindows_equalLength.bed"
     shell:
         """
         set +o pipefail;
@@ -105,13 +87,13 @@ rule CountReadsInIntronWindows:
     library prep method)
     """
     input:
-        bed = "Misc/GencodeHg38_all_introns.corrected.uniq.bed.{windowStyle}.bed",
+        bed = "IntronSlopes/Annotation/GencodeHg38_all_introns.corrected.uniq.bed.{windowStyle}.bed",
         faidx = "../data/Chrome.sizes",
         bam = 'Alignments/STAR_Align/chRNA.Expression.Splicing/{IndID}/1/Filtered.bam'
     log:
         "logs/CountReadsInIntronWindows/{IndID}.{windowStyle}.log"
     output:
-        bed = "IntronWindowCounts/{IndID}.{windowStyle}.bed.gz"
+        bed = "IntronSlopes/IntronWindowCounts/{IndID}.{windowStyle}.bed.gz"
     wildcard_constraints:
         IndID = "|".join(chRNASeqSamples),
         windowStyle="|".join(["IntronWindows_equalLength", "IntronWindows"])
@@ -128,17 +110,19 @@ rule CountReadsInIntronWindows:
 
 rule GetSlopes:
     input:
-        bed = "IntronWindowCounts/{IndID}.IntronWindows_equalLength.bed.gz"
+        bed = "IntronSlopes/IntronWindowCounts/{IndID}.IntronWindows_equalLength.bed.gz"
     params:
-        WinLen = config["WinLen"],
-        minIntronCounts = config["minIntronCounts"],
-        minCoverageCounts = config["minCoverageCounts"],
-        minCoverage = config["minCoverage"]
+        WinLen = "50",
+        minIntronCounts = "10",
+        minCoverageCounts = "1",
+        minCoverage = "0.25"
     output:
-        "slopes/{IndID}.tab.gz",
-        "slopes/{IndID}_glm.nb.tab.gz"
+        "IntronSlopes/slopes/{IndID}.tab.gz",
+        "IntronSlopes/slopes/{IndID}_glm.nb.tab.gz"
+    resources:
+        mem_mb = 16000
     conda:
-        "../envs/r_essentials.yml"
+        "../envs/r_slopes.yml"
     wildcard_constraints:
         IndID = "|".join(chRNASeqSamples),
     log:
