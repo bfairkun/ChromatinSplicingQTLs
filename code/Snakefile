@@ -121,6 +121,10 @@ rule all:
             ],
             ncRNA=["eRNA", "cheRNA", "lncRNA", "snoRNA", "introns"],
         ),
+        expand(
+          "QTLs/QTLTools/chRNA.Expression_{ncRNA}/OnlyFirstReps.qqnorm.bed.gz",
+          ncRNA = ["eRNA", "cheRNA", "snoRNA", "lncRNA"]
+        ),
         "featureCounts/ProCap/Counts.txt",
 
 
@@ -172,10 +176,10 @@ rule chRNAGetSlopes:
             windowStyle=["IntronWindows_equalLength", "IntronWindows"],
         ),
         expand(
-            "IntronSlopes/slopes/{IndID}.tab.gz",
-            IndID=chRNASeqSamples,
+            "IntronSlopes/slopes/{IndID}.{windowStyle}.tab.gz",
+            IndID=chRNASeqSamples, windowStyle = ["IntronWindows_equalLength", "IntronWindows"]
         ),
         expand(
-            "IntronSlopes/slopes/{IndID}_glm.nb.tab.gz",
-            IndID=chRNASeqSamples,
+            "IntronSlopes/slopes/{IndID}.{windowStyle}.glm_nb.tab.gz",
+            IndID=chRNASeqSamples, windowStyle = ["IntronWindows_equalLength", "IntronWindows"]
         )

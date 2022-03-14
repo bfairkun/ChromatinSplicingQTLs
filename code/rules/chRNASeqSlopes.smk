@@ -69,7 +69,7 @@ rule MakeWindowsForIntrons_equalSized:
         bed = "IntronSlopes/Annotation/GencodeHg38_all_introns.corrected.uniq.bed",
         faidx = "../data/Chrome.sizes"
     params:
-        WinLen = 50,
+        WinLen = 200,
         MinIntronLength = 500,
     output:
         "IntronSlopes/Annotation/GencodeHg38_all_introns.corrected.uniq.bed.IntronWindows_equalLength.bed"
@@ -96,7 +96,7 @@ rule CountReadsInIntronWindows:
         bed = "IntronSlopes/IntronWindowCounts/{IndID}.{windowStyle}.bed.gz"
     wildcard_constraints:
         IndID = "|".join(chRNASeqSamples),
-        windowStyle="|".join(["IntronWindows_equalLength", "IntronWindows"])
+        windowStyle="IntronWindows_equalLength|IntronWindows"
     shell:
         """
         echo {input.bam};
@@ -110,23 +110,25 @@ rule CountReadsInIntronWindows:
 
 rule GetSlopes:
     input:
-        bed = "IntronSlopes/IntronWindowCounts/{IndID}.IntronWindows_equalLength.bed.gz"
+        bed = "IntronSlopes/IntronWindowCounts/{IndID}.{windowStyle}.bed.gz"
+        #bed = "IntronSlopes/IntronWindowCounts/{IndID}.IntronWindows_equalLength.bed.gz"
     params:
-        WinLen = "50",
+        WinLen = "200",
         minIntronCounts = "10",
         minCoverageCounts = "1",
         minCoverage = "0.25"
     output:
-        "IntronSlopes/slopes/{IndID}.tab.gz",
-        "IntronSlopes/slopes/{IndID}_glm.nb.tab.gz"
+        "IntronSlopes/slopes/{IndID}.{windowStyle}.tab.gz",
+        "IntronSlopes/slopes/{IndID}.{windowStyle}.glm_nb.tab.gz"
     resources:
         mem_mb = 16000
     conda:
         "../envs/r_slopes.yml"
     wildcard_constraints:
         IndID = "|".join(chRNASeqSamples),
+        windowStyle = "IntronWindows_equalLength|IntronWindows"
     log:
-        "logs/slopes/{IndID}.slope.log"
+        "logs/slopes/{IndID}.{windowStyle}.slope.log"
     shell:
         """
         (Rscript scripts/GetSlopes.R {input.bed} {params.minIntronCounts} {params.minCoverageCounts} {params.minCoverage} {params.WinLen}) &> {log}
