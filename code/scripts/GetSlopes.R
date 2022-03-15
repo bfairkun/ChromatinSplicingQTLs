@@ -67,7 +67,7 @@ IntronCountSums <- Counts.EqualSizeBins %>%
 
 print('or when filtering')
 # Hard-coded IntronObsSum minimum of 2, despite min Intron Coverage, to ensure rlm can run
-IntronsToGetSlope <- IntronCountSums %>% filter((IntronSum>=minIntronCounts), (IntronObsSum>=2), (IntronCoverage>=minCoverage)) %>% pull(IntronName)
+IntronsToGetSlope <- IntronCountSums %>% filter((IntronSum>=minIntronCounts), (IntronObsSum>=2), ((IntronObsSum>=20) | (IntronCoverage>=minCoverage))) %>% pull(IntronName)
 
 print('or when whatever this is')
 

@@ -182,4 +182,5 @@ rule chRNAGetSlopes:
         expand(
             "IntronSlopes/slopes/{IndID}.{windowStyle}.glm_nb.tab.gz",
             IndID=chRNASeqSamples, windowStyle = ["IntronWindows_equalLength", "IntronWindows"]
-        )
+        ),
+        "QTLs/QTLTools/chRNA.Slopes/OnlyFirstReps.qqnorm.bed.gz"

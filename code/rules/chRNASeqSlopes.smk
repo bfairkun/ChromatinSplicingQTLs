@@ -133,3 +133,25 @@ rule GetSlopes:
         """
         (Rscript scripts/GetSlopes.R {input.bed} {params.minIntronCounts} {params.minCoverageCounts} {params.minCoverage} {params.WinLen}) &> {log}
         """
+        
+rule SlopesPreparePhenotypes:
+    input: 
+        expand("IntronSlopes/IntronWindowCounts/{IndID}.IntronWindows.bed.gz", IndID=chRNASeqSamples)
+    output:
+        "QTLs/QTLTools/chRNA.Slopes/OnlyFirstReps.qqnorm.bed.gz"
+    conda:
+        "../envs/py_tools.yml"
+    params:
+        FDR = "0.25"
+    log:
+        "logs/slopes/OnlyFirstReps.log"
+    shell:
+        """
+        python scripts/PreparePhenotypeTablesSlopes.py --windowStyle IntronWindows --FDR {params.FDR} &> {log}
+        """
+        
+
+
+
+
+
