@@ -119,13 +119,18 @@ rule all:
                 "MetabolicLabelled.60min",
                 "ProCap"
             ],
-            ncRNA=["eRNA", "cheRNA", "lncRNA", "snoRNA", "introns"],
+            ncRNA=["eRNA", "cheRNA", "lncRNA", "snoRNA"],#, "introns"],
         ),
         expand(
           "QTLs/QTLTools/chRNA.Expression_{ncRNA}/OnlyFirstReps.qqnorm.bed.gz",
           ncRNA = ["eRNA", "cheRNA", "snoRNA", "lncRNA"]
         ),
         "featureCounts/ProCap/Counts.txt",
+        #"SplicingAnalysis/IR/chRNA.IR/Counts.txt",
+        #"SplicingAnalysis/IR/polyA.IR/Counts.txt",
+        "QTLs/QTLTools/chRNA.IR/OnlyFirstReps.qqnorm.bed.gz",
+        "QTLs/QTLTools/polyA.IR/OnlyFirstReps.qqnorm.bed.gz",
+        "SplicingAnalysis/IR/ProCap/Counts.txt"
 
 
 rule Gather_chRNASeq_Fastq:
