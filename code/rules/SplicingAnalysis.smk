@@ -171,7 +171,7 @@ rule featureCounts_IR_to_bedgz:
     params:
         SampleMinimumIR_Counts = SampleMinimumIR_Counts
     resources:
-        mem_mb = 16000
+        mem_mb = 32000
     conda:
         "../envs/r_essentials.yml"
     shell:
