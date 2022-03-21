@@ -10,13 +10,28 @@ args <- commandArgs(trailingOnly=TRUE)
 featureCounts_FileIn <- args[1]
 PhenotypesBedOut_OnlyFirstReps <- args[2]
 
-table_genes <- read_tsv(featureCounts_FileIn) #%>% select(Chr, Start, End, Strand, Geneid)
+rename_STAR_alignment_samples <- function(MyString){
+    return(
+           str_replace(MyString, "Alignments/STAR_Align/.+?/(.+?)/(\\d+)/Filtered\\.bam", "\\1.\\2")
+    )
+}
+
+ColumnRenamerFunction <- 'rename_STAR_alignment_samples'
+
+table_genes <- read_tsv(featureCounts_FileIn, comment = "#") #%>% select(Chr, Start, End, Strand, Geneid)
 
 
 genes_bed <- table_genes %>% select(Chr, Start, End, Strand, Geneid)
 
 
-dat <- table_genes %>% select(-c("Strand", "Chr", "Start", "End")) %>% inner_join(genes_bed, ., by="Geneid")
+# dat <- table_genes %>% select(-c("Strand", "Chr", "Start", "End")) %>% inner_join(genes_bed, ., by="Geneid")
+
+dat <- read_tsv(featureCounts_FileIn, comment = "#") %>%
+    rename_with(get(ColumnRenamerFunction), starts_with("Alignments")) %>%
+    select(-c("Strand", "Chr", "Start", "End")) %>%
+    inner_join(genes_bed, ., by="Geneid") %>%
+    mutate(Chr=paste0("chr", Chr))
+
 
 
 #genes_bed <- table_genes %>% select(Chr, Start, End, Strand, Geneid)

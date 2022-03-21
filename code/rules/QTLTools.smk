@@ -185,6 +185,12 @@ def GetQTLtoolsPassFlags(wildcards):
         return "--permute 1000"
     elif wildcards.Pass == "NominalPass":
         return "--nominal 1"
+        
+def GetExcludeFile(wildcards):
+    if wildcards.Phenotype.split('.')[0] == 'chRNA':
+        return '--exclude-samples config/chRNA.exc'
+    else:
+        return ''
 
 rule QTLtools_generalized:
     input:
@@ -203,10 +209,11 @@ rule QTLtools_generalized:
         "gsl/2.5"
     params:
         Flags = GetQTLtoolsFlags,
-        PassFlags = GetQTLtoolsPassFlags
+        PassFlags = GetQTLtoolsPassFlags,
+        ExcFlag = GetExcludeFile
     shell:
         """
-        {config[QTLtools]} cis --std-err --chunk {wildcards.n} {N_PermutationChunks} --vcf {input.vcf} --bed {input.bed} --cov {input.cov} --out {output} {params.Flags} {params.PassFlags} &> {log}
+        {config[QTLtools]} cis --std-err --chunk {wildcards.n} {N_PermutationChunks} --vcf {input.vcf} --bed {input.bed} --cov {input.cov} --out {output} {params.Flags} {params.PassFlags} {params.ExcFlag} &> {log}
         """
 
 rule Gather_QTLtools_cis_pass:
@@ -268,7 +275,7 @@ rule MakePhenotypeTableToColocPeaksWithGenes:
 
 use rule MakePhenotypeTableToColocPeaksWithGenes as MakePhenotypeTableToColocIntronsWithGenes with:
     wildcard_constraints:
-        Phenotype = "chRNA.IR|chRNA.Splicing|polyA.Splicing|polyA.IR|polyA.Splicing.Subset_YRI"
+        Phenotype = "chRNA.IR|chRNA.Splicing|polyA.Splicing|polyA.IR|polyA.Splicing.Subset_YRI|polyA.IR.Subset_YRI|chRNA.Slopes"
     params:
         cis_window = 0,
         bedtools_intersect_params = "-s",
@@ -276,7 +283,7 @@ use rule MakePhenotypeTableToColocPeaksWithGenes as MakePhenotypeTableToColocInt
 
 use rule MakePhenotypeTableToColocPeaksWithGenes as MakePhenotypeTableToColocGenes with:
     wildcard_constraints:
-        Phenotype = "Expression.Splicing.Subset_YRI|chRNA.Expression.Splicing|Expression.Splicing|MetabolicLabelled.30min|MetabolicLabelled.60min"
+        Phenotype = "Expression.Splicing.Subset_YRI|chRNA.Expression.Splicing|Expression.Splicing|MetabolicLabelled.30min|MetabolicLabelled.60min|chRNA.Expression_eRNA|chRNA.Expression_cheRNA|chRNA.Expression_lncRNA|chRNA.Expression_snoRNA"
     params:
         cis_window = 0,
         bedtools_intersect_params = "-s -f 1 -r",

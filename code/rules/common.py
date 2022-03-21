@@ -13,14 +13,18 @@ for pheno in ["polyA.Expression", "chRNA.Expression", "MetabolicLabelled.30min",
     for ncRNA in ['cheRNA', 'eRNA', 'lncRNA', 'snoRNA']:
         ncRNA_Phenotypes.append(pheno + '_' + ncRNA)# + '.Subset_YRI')
 
-MyPhenotypes = ["chRNA.IR", "Expression.Splicing", "chRNA.Expression.Splicing",  "H3K27AC", "CTCF", "H3K4ME3", "chRNA.Splicing", "polyA.Splicing", "MetabolicLabelled.30min", "MetabolicLabelled.60min", "Expression.Splicing.Subset_YRI", "polyA.Splicing.Subset_YRI"]
+MyPhenotypes = ["chRNA.IR", "Expression.Splicing", "chRNA.Expression.Splicing",  "H3K27AC", "CTCF", "H3K4ME3", "chRNA.Splicing", "polyA.Splicing", "MetabolicLabelled.30min", "MetabolicLabelled.60min", "Expression.Splicing.Subset_YRI", "polyA.Splicing.Subset_YRI",
+               "polyA.IR", "polyA.IR.Subset_YRI", "chRNA.Expression_cheRNA", "chRNA.Expression_eRNA",
+               "chRNA.Expression_lncRNA", "chRNA.Expression_snoRNA", "chRNA.Slopes"]
 # "polyA.Expression.AllRNA.Subset_YRI", "MetabolicLabelled.30min.AllRNA.Subset_YRI", 
 #                 "MetabolicLabelled.60min.AllRNA.Subset_YRI", "chRNA.Expression.AllRNA.Subset_YRI"]
 
 ######## We can use this later to add ncRNAs to QTL analysis
 #MyPhenotypes += ncRNA_Phenotypes
 
-PhenotypesToColoc = [p for p in MyPhenotypes if ((p not in ["Expression.Splicing", "polyA.Splicing"]) and (p not in ncRNA_Phenotypes))]
+#PhenotypesToColoc = [p for p in MyPhenotypes if ((p not in ["Expression.Splicing", "polyA.Splicing", "polyA.IR"]) and (p not in ncRNA_Phenotypes))]
+
+PhenotypesToColoc = [p for p in MyPhenotypes if (p not in ["Expression.Splicing", "polyA.Splicing", "polyA.IR"])]
 
 ## All Fastq samples
 Fastq_samples = pd.read_csv("config/samples.tsv", sep='\t', comment='#')

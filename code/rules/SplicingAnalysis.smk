@@ -128,7 +128,8 @@ rule featureCounts_IR:
     threads:
         8
     params:
-        extraParams = GetFeatureCountsParams
+        extraParams = GetFeatureCountsParams,
+        pairedEndParams = PairedEndParams
     resources:
         mem = 12000,
         cpus_per_node = 9
@@ -136,7 +137,7 @@ rule featureCounts_IR:
         "logs/featureCounts_IR/{Phenotype}.log"
     shell:
         """
-        featureCounts -p {params.extraParams} -F SAF -T {threads} --ignoreDup --primary -a {input.annotations} -o {output} {input.bam} &> {log}
+        featureCounts {params.pairedEndParams} {params.extraParams} -F SAF -T {threads} --ignoreDup --primary -a {input.annotations} -o {output} {input.bam} &> {log}
         """
 
 def Get_intron_feature_Counts_ForIR(wildcards):
@@ -252,12 +253,17 @@ rule leafcutter_PreparePhenotypes:
         (awk -F'\\t' -v OFS='\\t' 'NR==1 {{$4="pid\\tgid\\tstrand"; print $0}} FNR!=1 {{$1="chr"$1; split($4, a, ":"); split(a[4], b, "_"); $4=$4"\\t"$1"_"a[4]"\\t"b[3]; print $0}}' {input}.qqnorm_chr* | gzip - > {output} ) &>> {log}
         """
 
-rule Subset_YRI_leafcutter_phenotype_table:
+rule Subset_YRI_phenotype_table:
     input:
-        "QTLs/QTLTools/polyA.Splicing/OnlyFirstReps.qqnorm.bed.gz"
+        input_file = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.qqnorm.bed.gz",
+        igsr = '../data/igsr_samples.tsv.gz'
     output:
-        "QTLs/QTLTools/polyA.Splicing.Subset_YRI/OnlyFirstReps.qqnorm.bed.gz"
+        "QTLs/QTLTools/{Phenotype}.Subset_YRI/OnlyFirstReps.qqnorm.bed.gz"
+    wildcard_constraints:
+        Phenotype = "|".join(["polyA.Splicing", "polyA.IR"])
+    log:
+        "logs/Subsample_YRI.{Phenotype}.log"
     shell:
         """
-        python scripts/subsample_polyA.Splicing_YRI.py
+        python scripts/subsample.Splicing_YRI.py --input {input.input_file} --output {output} &> {log}
         """
