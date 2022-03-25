@@ -7,10 +7,7 @@ rule SplitAndCombineSummaryStatsPerLocus:
     signal. Therefore, this script reads the QTLtools output files for multiple
     phenotypes, and writes out the necessary summary stats for all phenotypes
     to new smaller files (one file for each gwas trait or gene) if they pass
-    some minimum Pvalue treshold from the QTLtools permutation test.  TODO:
-    This rule takes a long time to run. If we are going to be changing the
-    pipeline a lot and rerunning this rule a lot, it might be convenient to
-    parallelize this rule somehow computation somehow
+    some minimum Pvalue treshold from the QTLtools permutation test.
     """
     input:
         zip( expand(
@@ -19,14 +16,14 @@ rule SplitAndCombineSummaryStatsPerLocus:
             Phenotype=MyPhenotypes,
         ),
         expand(
-            "QTLs/QTLTools/{Phenotype}/{Pass}{{QTLsGenotypeSet}}{{FeatureCoordinatesRedefinedFor}}.txt.gz",
+            "QTLs/QTLTools/{Phenotype}/{Pass}{{QTLsGenotypeSet}}{FeatureCoordinatesRedefinedFor}Chunks/{{n}}.txt",
             Pass="NominalPass",
             Phenotype=MyPhenotypes,
         ))
     output:
-        directory("hyprcoloc/LociWiseSummaryStatsInput/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}")
+        directory("hyprcoloc/LociWiseSummaryStatsInput/Chunks/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}/{n}")
     log:
-        "logs/SplitAndCombineSummaryStatsPerGene.{QTLsGenotypeSet}.{FeatureCoordinatesRedefinedFor}.log"
+        "logs/SplitAndCombineSummaryStatsPerGene.{QTLsGenotypeSet}.{FeatureCoordinatesRedefinedFor}.{n}.log"
     params:
         MinNominalP = 0.01
     wildcard_constraints:
@@ -34,6 +31,20 @@ rule SplitAndCombineSummaryStatsPerLocus:
     shell:
         """
         python scripts/CombineAndSplitSummaryStatsForGWASColoc.py {output}/ {params.MinNominalP} {input} &> {log}
+        """
+
+rule GatherSummaryStatsFileChunks:
+    input:
+        expand("hyprcoloc/LociWiseSummaryStatsInput/Chunks/{{QTLsGenotypeSet}}{{FeatureCoordinatesRedefinedFor}}/{n}", n=range(1, 1+N_PermutationChunks) )
+    output:
+        directory("hyprcoloc/LociWiseSummaryStatsInput/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}")
+    log:
+        "logs/GatherSummaryStatsFileChunks/{QTLsGenotypeSet}.{FeatureCoordinatesRedefinedFor}.log"
+    wildcard_constraints:
+        FeatureCoordinatesRedefinedFor = "ForGWASColoc|ForColoc"
+    shell:
+        """
+        python scripts/MergeSummaryStatChunks.py {output} {input} &> {log}
         """
 
 rule InstallHyprcoloc:
