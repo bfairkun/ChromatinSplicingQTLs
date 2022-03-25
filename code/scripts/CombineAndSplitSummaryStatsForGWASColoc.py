@@ -31,8 +31,14 @@ if hasattr(sys, "ps1"):
         "",
         "scratch/testcolocgwasfiles/",
         "0.01",
-        "QTLs/QTLTools/Expression.Splicing/PermutationPassForGWASColoc.txt.gz",
-        "scratch/test.txt.gz",
+        "scratch/test_summarystats/PermutationPassForColoc.txt.gz",
+        "scratch/test_summarystats/nominal/eQTL.part.aa",
+        "scratch/test_summarystats/PermutationPassForColoc.txt.gz",
+        "scratch/test_summarystats/nominal/eQTL.part.ab",
+        "scratch/test_summarystats/PermutationPassForColoc.txt.gz",
+        "scratch/test_summarystats/nominal/eQTL.part.ac",
+        "scratch/test_summarystats/PermutationPassForColoc.txt.gz",
+        "scratch/test_summarystats/nominal/eQTL.part.ad",
     ]
 
 FilesOutPrefix = sys.argv[1]
@@ -41,6 +47,24 @@ SummaryStatFilesIn = sys.argv[3:]
 PairedSummaryStatFilesIn = tuple(
     zip(SummaryStatFilesIn[0::2], SummaryStatFilesIn[1::2])
 )
+
+def return_file_handle(input_file, open_mode="rt"):
+    """
+    Handles compressed and uncompressed files. Accepts open modes r/w/w+
+    """
+    # compressed
+    if input_file.endswith(".gz"):
+        with gzip.open(input_file, open_mode) as gzipped_file_handle:
+            yield gzipped_file_handle
+    else:
+        with open(input_file, open_mode) as normal_fh:
+            yield normal_fh
+
+
+def is_gz_file(filepath):
+    with open(filepath, 'rb') as test_f:
+        return test_f.read(2) == b'\x1f\x8b'
+
 
 FilesOutPrefixDir = os.path.dirname(FilesOutPrefix)
 if FilesOutPrefixDir:
@@ -53,27 +77,32 @@ for PermutationPassFileIn, NominalPassFileIn in PairedSummaryStatFilesIn:
     PhenotypesToInclude = set(
         permutation_df.loc[permutation_df["adj_emp_pval"] < NominalPThreshold]["phe_id"]
     )
-    with gzip.open(NominalPassFileIn, "rt") as fh:
-        OpenFileOut = None
-        for i, line in enumerate(fh):
-            if i >= 0:
-                l = line.strip("\n").split(" ")
-                if l[0] in PhenotypesToInclude:
-                    phenotype, gwas_locus = l[0].rsplit(":",1)
-                    gwas_accession = gwas_locus.split("_")[-1]
-                    FileOut = FilesOutPrefix + gwas_accession + ".txt.gz"
-                    if FileOut != OpenFileOut:
-                        try:
-                            fh_out.close()
-                        except:
-                            pass
-                        if FileOut not in FilesOpened:
-                            with gzip.open(FileOut, "wt") as fh_out:
-                                _ = fh_out.write("phenotype\tsource_file\tgwas_locus\tsnp\tbeta\tbeta_se\tp\n")
-                            FilesOpened.add(FileOut)
-                        fh_out = gzip.open(FileOut, "at")
-                    _ = fh_out.write(
-                        f"{phenotype}\t{NominalPassFileIn}\t{gwas_locus}\t{l[7]}\t{l[13]}\t{l[14]}\t{l[11]}\n"
-                    )
-                    OpenFileOut = FileOut
-        fh_out.close()
+    OpenFileOut = None
+    if is_gz_file(NominalPassFileIn):
+        fh = gzip.open(NominalPassFileIn, 'rt')
+    else:
+        fh = open(NominalPassFileIn, 'rt')
+    for i, line in enumerate(fh):
+        if i >= 0:
+            l = line.strip("\n").split(" ")
+            if l[0] in PhenotypesToInclude:
+                phenotype, gwas_locus = l[0].rsplit(":",1)
+                gwas_accession = gwas_locus.split("_")[-1]
+                FileOut = FilesOutPrefix + gwas_accession + ".txt.gz"
+                if FileOut != OpenFileOut:
+                    try:
+                        fh_out.close()
+                    except:
+                        pass
+                    if FileOut not in FilesOpened:
+                        with gzip.open(FileOut, "wt") as fh_out:
+                            _ = fh_out.write("")
+                        FilesOpened.add(FileOut)
+                    fh_out = gzip.open(FileOut, "at")
+                _ = fh_out.write(
+                    #phenotype\tsource_file\tgwas_locus\tsnp\tbeta\tbeta_se\tp\n
+                    f"{phenotype}\t{NominalPassFileIn}\t{gwas_locus}\t{l[7]}\t{l[13]}\t{l[14]}\t{l[11]}\n"
+                )
+                OpenFileOut = FileOut
+    fh.close()
+    fh_out.close()
