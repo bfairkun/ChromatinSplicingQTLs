@@ -30,7 +30,9 @@ dat <- read_tsv(featureCounts_FileIn, comment = "#") %>%
     rename_with(get(ColumnRenamerFunction), starts_with("Alignments")) %>%
     select(-c("Strand", "Chr", "Start", "End")) %>%
     inner_join(genes_bed, ., by="Geneid") %>%
-    mutate(Chr=paste0("chr", Chr))
+    select(1:6, matches("\\.1$")) %>%
+    rename_with(~str_remove(., '\\.1$'))
+#     mutate(Chr=paste0("chr", Chr))
 
 
 

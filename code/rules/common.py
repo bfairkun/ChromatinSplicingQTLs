@@ -5,7 +5,13 @@ import glob
 
 autosomes = [str(i) for i in range(1,23)]
 
-N_PermutationChunks = 100
+#N_PermutationChunks = 100
+
+def Get_N_PermutationChunks(wildcards):
+    if wildcards.Phenotype in ['eRNA', 'cheRNA']:
+        return 10
+    else:
+        return 100
 
 ncRNA_Phenotypes = []
 
@@ -24,7 +30,7 @@ MyPhenotypes = ["chRNA.IR", "Expression.Splicing", "chRNA.Expression.Splicing", 
 
 #PhenotypesToColoc = [p for p in MyPhenotypes if ((p not in ["Expression.Splicing", "polyA.Splicing", "polyA.IR"]) and (p not in ncRNA_Phenotypes))]
 
-PhenotypesToColoc = [p for p in MyPhenotypes if (p not in ["Expression.Splicing", "polyA.Splicing", "polyA.IR"])]
+PhenotypesToColoc = [p for p in MyPhenotypes if (p not in ["Expression.Splicing", "polyA.Splicing", "polyA.IR", "chRNA.Slopes"])]
 
 ## All Fastq samples
 Fastq_samples = pd.read_csv("config/samples.tsv", sep='\t', comment='#')

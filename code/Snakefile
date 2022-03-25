@@ -167,7 +167,7 @@ rule Gather_gwas_summary_stats:
             QTLsGenotypeSet="",
             FeatureCoordinatesRedefinedFor=["ForColoc"],
             ),
-        expand("QTLs/QTLTools/{Phenotype}/OnlyFirstReps.PSI.bed.gz", Phenotype="polyA.Splicing")
+        expand("QTLs/QTLTools/{Phenotype}/OnlyFirstReps.PSI.bed.gz", Phenotype=["polyA.Splicing","chRNA.Splicing"])
         
 
 rule chRNAGetSlopes:
