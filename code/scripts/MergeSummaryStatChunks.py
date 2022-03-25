@@ -53,6 +53,7 @@ os.makedirs(DestinationDir, exist_ok=True)
 # Loop thru dictionary, merging files to fdst_fn in DestinationDir
 for fdst_fn, fsrc_fnlist in FilesToMerge.items():
     with open(DestinationDir + "/" + fdst_fn,'wb') as fdst:
+        _ = fdst.write("phenotype\tsource_file\tgwas_locus\tsnp\tbeta\tbeta_se\tp\n")
         for fsrc_fn in fsrc_fnlist:
             with open(fsrc_fn,'rb') as fsrc:
                 shutil.copyfileobj(fsrc, fdst)
