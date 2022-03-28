@@ -12,7 +12,7 @@
 #Use hard coded arguments in interactive R session, else use command line args
 if(interactive()){
     args <- scan(text=
-                 "scratch/Counts.txt scratch/NormFactors.tsv QTLs/QTLTools/Expression.Splicing/OnlyFirstReps.qqnorm.bed.gz 4", what='character')
+                 "featureCounts/polyA.Expression/Counts.txt featureCounts/polyA.Expression/NormFactors.tsv ExpressionAnalysis/polyA/ExpressedGeneList.txt ", what='character')
 } else{
     args <- commandArgs(trailingOnly=TRUE)
 }

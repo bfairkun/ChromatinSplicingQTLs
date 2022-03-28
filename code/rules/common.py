@@ -72,7 +72,7 @@ def much_more_mem_after_first_attempt(wildcards, attempt):
     if int(attempt) == 1:
         return 4000
     else:
-        return 40000
+        return 52000
 
 def require_at_least_one(filelist):
     """
@@ -149,7 +149,6 @@ def GetBigwigParams(wildcards):
         return "-split"
     elif wildcards.Phenotype in ChromatinProfilingPhenotypes:
         return ""
-        # return "-pc"
     else:
         return ""
 

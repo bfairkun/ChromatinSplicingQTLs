@@ -20,6 +20,8 @@ include: "rules/BensJupyterNotebookRules.smk"
 include: "rules/GetNonCodingRNA.smk"
 include: "rules/GWAS_PrepForColoc.smk"
 include: "rules/chRNASeqSlopes.smk"
+include: "rules/ProcessTehranchi.smk"
+include: "rules/PlotQTLs.smk"
 
 
 wildcard_constraints:
