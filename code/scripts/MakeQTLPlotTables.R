@@ -158,7 +158,7 @@ BwTable.df <- AllSamples %>%
   filter(Phenotype %in% Phenotypes) %>%
   distinct(.keep_all = T) %>%
   mutate(Strand = case_when(
-    Phenotype == "chRNA.Expression.Splicing" ~ "+,-",
+    # Phenotype == "chRNA.Expression.Splicing" ~ "+,-",
     TRUE ~ ".")) %>%
   separate_rows(Strand, sep=",") %>%
   mutate(bw= case_when(

@@ -16,7 +16,7 @@ rule SplitAndCombineSummaryStatsPerLocus:
             Phenotype=MyPhenotypes,
         ),
         expand(
-            "QTLs/QTLTools/{Phenotype}/{Pass}{{QTLsGenotypeSet}}{FeatureCoordinatesRedefinedFor}Chunks/{{n}}.txt",
+            "QTLs/QTLTools/{Phenotype}/{Pass}{{QTLsGenotypeSet}}{{FeatureCoordinatesRedefinedFor}}Chunks/{{n}}.txt",
             Pass="NominalPass",
             Phenotype=MyPhenotypes,
         ))
@@ -68,6 +68,7 @@ rule InstallHyprcoloc:
         """
         Rscript -e 'devtools::install_github("jrs95/hyprcoloc", build_opts = c("--resave-data", "--no-manual"), build_vignettes = TRUE, dependencies=F); install.packages("R.utils", repos = "http://cran.us.r-project.org")' &> {log}
         """
+
 
 rule create_genewise_summarystats_listchunks:
     input:
