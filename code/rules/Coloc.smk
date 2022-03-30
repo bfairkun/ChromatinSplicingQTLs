@@ -16,7 +16,7 @@ rule SplitAndCombineSummaryStatsPerLocus:
             Phenotype=MyPhenotypes,
         ),
         expand(
-            "QTLs/QTLTools/{Phenotype}/{Pass}{{QTLsGenotypeSet}}{FeatureCoordinatesRedefinedFor}Chunks/{{n}}.txt",
+            "QTLs/QTLTools/{Phenotype}/{Pass}{{QTLsGenotypeSet}}{{FeatureCoordinatesRedefinedFor}}Chunks/{{n}}.txt",
             Pass="NominalPass",
             Phenotype=MyPhenotypes,
         ))

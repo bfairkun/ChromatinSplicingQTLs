@@ -211,19 +211,19 @@ rule QTLtools_generalized:
         Flags = GetQTLtoolsFlags,
         PassFlags = GetQTLtoolsPassFlags,
         ExcFlag = GetExcludeFile,
-        N_PermutationChunks = Get_N_PermutationChunks
+        #N_PermutationChunks = Get_N_PermutationChunks
     shell:
         """
-        {config[QTLtools]} cis --std-err --chunk {wildcards.n} {params.N_PermutationChunks} --vcf {input.vcf} --bed {input.bed} --cov {input.cov} --out {output} {params.Flags} {params.PassFlags} {params.ExcFlag} &> {log}
+        {config[QTLtools]} cis --std-err --chunk {wildcards.n} {N_PermutationChunks} --vcf {input.vcf} --bed {input.bed} --cov {input.cov} --out {output} {params.Flags} {params.PassFlags} {params.ExcFlag} &> {log}
         """
 
 rule Gather_QTLtools_cis_pass:
     input:
-        expand( "QTLs/QTLTools/{{Phenotype}}/{{Pass}}{{QTLsGenotypeSet}}{{FeatureCoordinatesRedefinedFor}}Chunks/{n}.txt", n=range(0, 101) )
+        expand( "QTLs/QTLTools/{{Phenotype}}/{{Pass}}{{QTLsGenotypeSet}}{{FeatureCoordinatesRedefinedFor}}Chunks/{n}.txt", n=range(0, 1+N_PermutationChunks) )
     output:
         "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.gz"
-    wildcard_constraints:
-        Phenotype = "|".join([x for x in MyPhenotypes if ((x != 'chRNA.Expression_eRNA') and (x != 'chRNA.Expression_cheRNA'))])
+    #wildcard_constraints:
+    #    Phenotype = "|".join([x for x in MyPhenotypes if ((x != 'chRNA.Expression_eRNA') and (x != 'chRNA.Expression_cheRNA'))])
     log:
         "logs/Gather_QTLtools_cis_pass/{Phenotype}.{Pass}.{QTLsGenotypeSet}.{FeatureCoordinatesRedefinedFor}.log"
     shell:
@@ -231,11 +231,11 @@ rule Gather_QTLtools_cis_pass:
         (cat {input} | gzip - > {output}) &> {log}
         """
         
-use rule Gather_QTLtools_cis_pass as Gather_QTLtools_cis_pass_ncRNA with:
-    input:
-        expand( "QTLs/QTLTools/{{Phenotype}}/{{Pass}}{{QTLsGenotypeSet}}{{FeatureCoordinatesRedefinedFor}}Chunks/{n}.txt", n=range(0, 11) )
-    wildcard_constraints:
-        Phenotype = "chRNA.Expression_eRNA|chRNA.Expression_cheRNA"
+#use rule Gather_QTLtools_cis_pass as Gather_QTLtools_cis_pass_ncRNA with:
+#    input:
+#        expand( "QTLs/QTLTools/{{Phenotype}}/{{Pass}}{{QTLsGenotypeSet}}{{FeatureCoordinatesRedefinedFor}}Chunks/{n}.txt", n=range(0, #1+N_PermutationChunks_ncRNA) )
+#    wildcard_constraints:
+#        Phenotype = "chRNA.Expression_eRNA|chRNA.Expression_cheRNA"
 
 rule AddQValueToPermutationPass:
     input:

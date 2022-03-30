@@ -5,13 +5,14 @@ import glob
 
 autosomes = [str(i) for i in range(1,23)]
 
-#N_PermutationChunks = 100
+N_PermutationChunks = 100
+# N_PermutationChunks_ncRNA = 10
 
-def Get_N_PermutationChunks(wildcards):
-    if wildcards.Phenotype in ['eRNA', 'cheRNA']:
-        return 10
-    else:
-        return 100
+# def Get_N_PermutationChunks(wildcards):
+#     if wildcards.Phenotype in ['eRNA', 'cheRNA']:
+#         return 10
+#     else:
+#         return 100
 
 ncRNA_Phenotypes = []
 
