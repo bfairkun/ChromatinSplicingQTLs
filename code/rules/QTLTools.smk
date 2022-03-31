@@ -215,6 +215,10 @@ rule QTLtools_generalized:
     shell:
         """
         {config[QTLtools]} cis --std-err --chunk {wildcards.n} {N_PermutationChunks} --vcf {input.vcf} --bed {input.bed} --cov {input.cov} --out {output} {params.Flags} {params.PassFlags} {params.ExcFlag} &> {log}
+        if [ ! -f {output} ]
+        then
+            touch {output}
+        fi
         """
 
 rule Gather_QTLtools_cis_pass:

@@ -36,6 +36,7 @@ tryCatch(
     if (windowStyle == 'IntronWindows_equalLength')   {     
       Counts.EqualSizeBins <- fread(intronFile, #fread(paste(equalLengthDir, intronFile, sep=''), 
                               sep = '\t', col.names = c("chr", "start", "stop", "name", "score", "strand", "Readcount"), header=F) %>%
+<<<<<<< Updated upstream
     separate(name, into = c("gene", "IntChr", "IntStart", "IntStop", "IntStrand", "Window"),convert=T, sep = "_") %>%
     mutate(IntronLength = IntStop - IntStart) %>%
     unite(IntronName, gene, IntChr, IntStart, IntStop, IntStrand, remove=F) %>%
@@ -58,6 +59,34 @@ tryCatch(
     ungroup() %>%
     dplyr::select(chr, start, stop, Window, IntronName, Readcount, IntronLength)
   }
+||||||| constructed merge base
+
+  separate(name, into = c("gene", "IntChr", "IntStart", "IntStop", "IntStrand", "Window"),convert=T, sep = "_") %>%
+  mutate(IntronLength = IntStop - IntStart) %>%
+  unite(IntronName, gene, IntChr, IntStart, IntStop, IntStrand, remove=F) %>%
+  group_by(IntronName) %>%
+  mutate(WindowCount=max(Window)) %>%
+  ungroup() %>%
+  mutate(Window = case_when(
+    IntStrand == "+" ~ Window,
+    IntStrand == "-" ~ WindowCount + as.integer(1) - Window
+  )) %>%
+  dplyr::select(chr, start, stop, Window, IntronName, Readcount, IntronLength)
+=======
+
+  separate(name, into = c("gene", "IntChr", "IntStart", "IntStop", "IntStrand", "Window"),convert=T, sep = "_") %>%
+  mutate(IntronLength = IntStop - IntStart) %>%
+  unite(IntronName, gene, IntChr, IntStart, IntStop, IntStrand, remove=F) %>%
+  group_by(IntronName) %>%
+  mutate(WindowCount=max(Window)) %>%
+  ungroup() %>%
+  ###### This is necessary when equalLength. Probably should fix that
+  #mutate(Window = case_when(
+  #  IntStrand == "+" ~ Window,
+  #  IntStrand == "-" ~ WindowCount + as.integer(1) - Window
+  #)) %>%
+  dplyr::select(chr, start, stop, Window, IntronName, Readcount, IntronLength)
+>>>>>>> Stashed changes
 
 print('or when processing')
             
@@ -93,9 +122,17 @@ if (windowStyle == 'IntronWindows_equalLength')   {
 CoverageFits.df <- Counts.EqualSizeBins %>%
   filter(IntronName %in% IntronsToGetSlope) %>% #filter(Readcount >= 1) %>%
    ## See if we can make length independent
+<<<<<<< Updated upstream
   #mutate(RelativeIntronPosInBp = Window*WinLen) %>% ##### This is what we were doing with equalLength
   mutate(RelativeIntronPosInBp =  Window*WinLen) %>%
   #mutate(RelativeIntronPosInBp = Window/100) %>%
+||||||| constructed merge base
+  #mutate(RelativeIntronPosInBp = Window*WinLen) %>%
+  mutate(RelativeIntronPosInBp = (Window*WinLen)/(stop - start)) %>%
+=======
+  #mutate(RelativeIntronPosInBp = Window*WinLen) %>% ##### This is what we were doing with equalLength
+  mutate(RelativeIntronPosInBp = Window/100) %>%
+>>>>>>> Stashed changes
   # sample_n_of(9, IntronName) %>%
   group_by(IntronName) %>%
   do(CoverageFit = rlm(Readcount ~ RelativeIntronPosInBp, data = ., maxit=40)) %>%
@@ -187,6 +224,7 @@ set.seed(0)
 
 CoverageFits.nb.glm.df <- Counts.EqualSizeBins %>%
   filter(IntronName %in% IntronsToGetSlope) %>% #filter(Readcount >= 1) %>%
+<<<<<<< Updated upstream
   mutate(RelativeIntronPosInBp = Window*WinLen) %>%
 #   mutate(RelativeIntronPosInBp = Window/100) %>%
   #mutate(RelativeIntronPosInBp = Window*WinLen) %>% ### This is what we were doing with equalLength
@@ -201,6 +239,13 @@ CoverageFits.nb.glm.df <- Counts.EqualSizeBins %>%
   mutate(RelativeIntronPosInBp = Window/100) %>%
 #   mutate(RelativeIntronPosInBp = Window/100) %>%
   #mutate(RelativeIntronPosInBp = Window*WinLen) %>% ### This is what we were doing with equalLength
+||||||| constructed merge base
+  mutate(RelativeIntronPosInBp = (Window*WinLen)/(stop - start)) %>%
+  #mutate(RelativeIntronPosInBp = Window*WinLen) %>%
+=======
+  mutate(RelativeIntronPosInBp = Window/100) %>%
+  #mutate(RelativeIntronPosInBp = Window*WinLen) %>% ### This is what we were doing with equalLength
+>>>>>>> Stashed changes
   group_by(IntronName) %>%
   do(CoverageFit = possibly(glm.nb, otherwise = NA)(Readcount ~ RelativeIntronPosInBp, data = ., link="identity")) %>%
   summarise(IntronName, tidy(CoverageFit)) #tidy(CoverageFit)
