@@ -52,7 +52,7 @@ for (i in seq_along(Loci)){
 
     SummaryStats.filtered <- SummaryStats %>%
         filter(gwas_locus == TestLocus) %>%
-        mutate(phenotype_class = str_replace(source_file, "QTLs/QTLTools/(.+?)/(.+?)\\.txt\\.gz", "\\1")) %>%
+        mutate(phenotype_class = str_replace(source_file, "QTLs/QTLTools/(.+?)/(.+?)/.+$", "\\1")) %>%
         filter( if (is.na(TraitClassesRestrictions) ) TRUE else phenotype_class %in% TraitClassesRestrictions ) %>%
         unite(phenotype, phenotype_class, phenotype, sep=";") %>%
         select(snp, phenotype, beta, beta_se, p) %>%

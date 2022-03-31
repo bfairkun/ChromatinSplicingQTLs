@@ -12,7 +12,7 @@
 # Usage: <Filelist of loci-wise summary stats files> <Fileout_clusters> <Fileout_finemappingScores> '[Optional list of space delimited phenotype classes to include, surrounded by single quotes]' 
 if(interactive()){
     args <- scan(text=
-                 " scratch/testfilelist.txt  scratch/test.txt.gz scratch/Finemappingscores.txt.gz 'H2K27AC H3K4ME3'", what='character')
+                 "hyprcoloc/Results/ForColoc/Chunks/4.list.txt scratch/testshyprcoloc.txt.gz scratch/testhyprcoloc.snpscores.txt.gz 'chRNA.IR chRNA.Expression.Splicing H3K27AC CTCF H3K4ME3 chRNA.Splicing MetabolicLabelled.30min MetabolicLabelled.60min Expression.Splicing.Subset_YRI polyA.Splicing.Subset_YRI polyA.IR.Subset_YRI chRNA.Expression_cheRNA chRNA.Expression_eRNA chRNA.Expression_lncRNA chRNA.Expression_snoRNA'", what='character')
 } else{
     args <- commandArgs(trailingOnly=TRUE)
 }
@@ -46,14 +46,14 @@ Loci<- read_tsv(FilelistIn, col_names=c("f")) %>%
 
 for (i in seq_along(Loci)){
 
-    TestLocus <- Loci[1]
+    # TestLocus <- Loci[1]
     TestLocus <- Loci[i]
     print(paste0("running loci", i, " : ", names(TestLocus)))
 
 
     SummaryStats.filtered <- fread(TestLocus) %>%
         filter(gwas_locus == names(TestLocus)) %>%
-        mutate(phenotype_class = str_replace(source_file, "QTLs/QTLTools/(.+?)/(.+?)\\.txt\\.gz", "\\1")) %>%
+        mutate(phenotype_class = str_replace(source_file, "QTLs/QTLTools/(.+?)/(.+?)/.+$", "\\1")) %>%
         filter( if (is.na(TraitClassesRestrictions) ) TRUE else phenotype_class %in% TraitClassesRestrictions )  %>%
         unite(phenotype, phenotype_class, phenotype, sep=";") %>%
         select(snp, phenotype, beta, beta_se, p) %>%
