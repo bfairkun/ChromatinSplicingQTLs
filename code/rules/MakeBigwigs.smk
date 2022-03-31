@@ -9,7 +9,7 @@ def GetGeneList(wildcards):
         return []
 
 def GetGeneListCol(wildcards):
-    if wildcards.Phenotype in RNASeqPhenotypes:
+    if wildcards.Phenotype in RNASeqPhenotypes_extended:
         return "4"
     else:
         return ""
@@ -32,28 +32,6 @@ rule CalculateNormFactorsForBigwig:
         Rscript scripts/CalculateNormFactorsForBigwig.R {input.Counts} {output} {input.OptionalGeneList} {params.OptionalGeneListCol} &> {log}
         """
 
-# rule MakeBigwigs:
-#     """
-#     Scale bigwig to base coverage per billion chromosomal reads
-#     """
-#     input:
-#         fai = "ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa.fai",
-#         bam = GetBamForBigwig,
-#         bai = GetBaiForBigwig
-#     params:
-#         GetBigwigParams
-#     wildcard_constraints:
-#         Phenotype = "|".join(ChromatinProfilingPhenotypes)
-#     output:
-#         bw = "bigwigs/{Phenotype}/{IndID}.{Rep}.bw"
-#     log:
-#         "logs/MakeBigwigs/{Phenotype}/{IndID}.{Rep}.log"
-#     resources:
-#         mem = 48000
-#     shell:
-#         """
-#         scripts/GenometracksByGenotype/BamToBigwig.sh {input.fai} {input.bam} {output.bw} {params} -scale $(bc <<< "scale=3;1000000000/$(samtools idxstats {input.bam} | awk '$1 ~ "^chr" {{sum+=$2}} END{{printf sum}}')") &> {log}
-#         """
 
 def GetFeatureCountsNormFactorsFile(wildcards):
     if wildcards.Phenotype == "Expression.Splicing":
@@ -62,6 +40,7 @@ def GetFeatureCountsNormFactorsFile(wildcards):
         return "featureCounts/chRNA.Expression.Splicing/NormFactors.tsv"
     else:
         return "featureCounts/{Phenotype}/NormFactors.tsv"
+
 
 rule MakeBigwigs_NormalizedToEdgeRFeatureCounts:
     """
@@ -73,16 +52,55 @@ rule MakeBigwigs_NormalizedToEdgeRFeatureCounts:
         bai = GetBaiForBigwig,
         NormFactorsFile = GetFeatureCountsNormFactorsFile
     params:
-        GetBigwigParams
+        GenomeCovArgs=GetBigwigParams,
+        bw_minus = "bw_minus=",
+        MKTEMP_ARGS = "-p " + config['scratch'],
+        SORT_ARGS="-T " + config['scratch'],
+        Region = "chr11:65,495,738-65,508,516"
+        # Region = ""
     # wildcard_constraints:
     #     Phenotype = "|".join(RNASeqPhenotypes)
+    shadow: "shallow"
     output:
-        bw = "bigwigs/{Phenotype}/{IndID}.{Rep}.bw"
+        bw = "bigwigs/{Phenotype}/{IndID}.{Rep}.bw",
+        bw_minus = []
     log:
         "logs/MakeBigwigs/{Phenotype}/{IndID}.{Rep}.log"
     resources:
-        mem = 52000
+        mem = much_more_mem_after_first_attempt
     shell:
         """
-        scripts/GenometracksByGenotype/BamToBigwig.sh {input.fai} {input.bam} {output.bw} {params} -scale $(bc <<< "scale=3;1000000000/$(grep '{input.bam}' {input.NormFactorsFile} | awk '{{print $2}}')") &> {log}
+        ScaleFactor=$(bc <<< "scale=3;1000000000/$(grep '{input.bam}' {input.NormFactorsFile} | awk 'NR==1 {{print $2}}')")
+        scripts/GenometracksByGenotype/BamToBigwig.sh {input.fai} {input.bam} {output.bw}  GENOMECOV_ARGS="{params.GenomeCovArgs} -scale ${{ScaleFactor}}" REGION='{params.Region}' MKTEMP_ARGS="{params.MKTEMP_ARGS}" SORT_ARGS="{params.SORT_ARGS}" {params.bw_minus}"{output.bw_minus}" &> {log}
         """
+
+use rule MakeBigwigs_NormalizedToEdgeRFeatureCounts as MakeBigwigs_NormalizedToEdgeRFeatureCounts_stranded with:
+    output:
+        bw = "bigwigs/{Phenotype}_stranded/{IndID}.{Rep}.plus.bw",
+        bw_minus = "bigwigs/{Phenotype}_stranded/{IndID}.{Rep}.minus.bw"
+    log:
+        "logs/MakeBigwigs_stranded/{Phenotype}/{IndID}.{Rep}.log"
+
+rule GatherAllBigwigs:
+    input:
+        expand(
+            "bigwigs/{Phenotype}/{IndID}.{Rep}.bw",
+            zip,
+            Phenotype=Fastq_samples["Phenotype"],
+            IndID=Fastq_samples["IndID"],
+            Rep=Fastq_samples["RepNumber"],
+        ),
+        expand(
+            "bigwigs/{Phenotype}_stranded/{IndID}.{Rep}.plus.bw",
+            zip,
+            Phenotype=chRNASeqSamples_df["Phenotype"],
+            IndID=chRNASeqSamples_df["IndID"],
+            Rep=chRNASeqSamples_df["RepNumber"],
+        ),
+        expand(
+            "bigwigs/{Phenotype}_stranded/{IndID}.{Rep}.minus.bw",
+            zip,
+            Phenotype=chRNASeqSamples_df["Phenotype"],
+            IndID=chRNASeqSamples_df["IndID"],
+            Rep=chRNASeqSamples_df["RepNumber"],
+        ),

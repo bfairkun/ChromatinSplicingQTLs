@@ -89,10 +89,21 @@ rule mbv:
         Rscript scripts/Plot_mbv.R {output.text} {output.plot} {wildcards.IndID} &>> {log}
         """
 
+# rule MultiQC:
+#     input:
+#         expand("QC/QualimapRnaseq/{Phenotype}.{IndID}.{Rep}/rnaseq_qc_results.txt",  zip, Phenotype=RNASeqSamples_df['Phenotype'], IndID=RNASeqSamples_df['IndID'], Rep=RNASeqSamples_df['RepNumber']),
+#         expand("Alignments/STAR_Align/{Phenotype}/{IndID}/{Rep}/Log.final.out", zip, Phenotype=RNASeqSamples_df['Phenotype'], IndID=RNASeqSamples_df['IndID'], Rep=RNASeqSamples_df['RepNumber']),
+#         expand("FastqFastp/{Phenotype}/{IndID}/{Rep}.fastp.json", zip, Phenotype=Fastq_samples['Phenotype'], IndID=Fastq_samples['IndID'], Rep=Fastq_samples['RepNumber']),
+#     log: "logs/Multiqc.log"
+#     output:
+#         "Multiqc/multiqc_report.html"
+#     shell:
+#         """
+#         multiqc -f -dd 3  -o Multiqc/ QC/QualimapRnaseq/ FastqFastp/ Alignments/STAR_Align/ &> {log}
+#         """
 
 rule MultiQC:
     input:
-        expand("QC/QualimapRnaseq/{Phenotype}.{IndID}.{Rep}/rnaseq_qc_results.txt",  zip, Phenotype=RNASeqSamples_df['Phenotype'], IndID=RNASeqSamples_df['IndID'], Rep=RNASeqSamples_df['RepNumber']),
         expand("Alignments/STAR_Align/{Phenotype}/{IndID}/{Rep}/Log.final.out", zip, Phenotype=RNASeqSamples_df['Phenotype'], IndID=RNASeqSamples_df['IndID'], Rep=RNASeqSamples_df['RepNumber']),
         expand("FastqFastp/{Phenotype}/{IndID}/{Rep}.fastp.json", zip, Phenotype=Fastq_samples['Phenotype'], IndID=Fastq_samples['IndID'], Rep=Fastq_samples['RepNumber']),
     log: "logs/Multiqc.log"
@@ -100,5 +111,5 @@ rule MultiQC:
         "Multiqc/multiqc_report.html"
     shell:
         """
-        multiqc -f -dd 3  -o Multiqc/ QC/QualimapRnaseq/ FastqFastp/ Alignments/STAR_Align/ &> {log}
+        multiqc -f -dd 3  -o Multiqc/ Alignments/STAR_Align/ &> {log}
         """
