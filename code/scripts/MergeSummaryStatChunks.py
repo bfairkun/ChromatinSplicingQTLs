@@ -17,6 +17,7 @@ import os
 import glob
 from collections import defaultdict
 import shutil
+import gzip
 # I like to script and debug with an interactive interpreter. If using
 # interactive interpreter to script quick args with sys.argv, parse_args with
 # hardcoded args below
@@ -43,17 +44,17 @@ SourceDirs = [i.rstrip('/') for i in sys.argv[2:]]
 #Dict mapping of all filepaths needed to concatenate, with basenames as keys
 FilesToMerge = defaultdict(list)
 for dirname in SourceDirs:
-    for fn in glob.glob(dirname + '/*.txt'):
+    for fn in glob.glob(dirname + '/*.txt.gz'):
         FilesToMerge[os.path.basename(fn)].append(fn)
-print(FilesToMerge)
+# print(FilesToMerge)
 
 
 # mkdir for output
 os.makedirs(DestinationDir, exist_ok=True)
 # Loop thru dictionary, merging files to fdst_fn in DestinationDir
 for fdst_fn, fsrc_fnlist in FilesToMerge.items():
-    with open(DestinationDir + "/" + fdst_fn,'wb') as fdst:
+    with gzip.open(DestinationDir + "/" + fdst_fn,'wt') as fdst:
         _ = fdst.write("phenotype\tsource_file\tgwas_locus\tsnp\tbeta\tbeta_se\tp\n")
         for fsrc_fn in fsrc_fnlist:
-            with open(fsrc_fn,'rb') as fsrc:
+            with gzip.open(fsrc_fn,'rt') as fsrc:
                 shutil.copyfileobj(fsrc, fdst)
