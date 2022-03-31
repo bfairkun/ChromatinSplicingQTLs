@@ -23,6 +23,7 @@ import gzip
 import pathlib
 import os
 import pandas as pd
+import subprocess as sp
 
 # I like to script and debug with an interactive interpreter. If using
 # interactive interpreter, parse_args with hardcoded args below
@@ -73,6 +74,8 @@ if FilesOutPrefixDir:
 FilesOpened = set([])
 
 for PermutationPassFileIn, NominalPassFileIn in PairedSummaryStatFilesIn:
+    if int(sp.check_output('wc -l ' + NominalPassFileIn, shell=True).decode().split()[0]) == 0:
+        continue
     permutation_df = pd.read_csv(PermutationPassFileIn, sep=" ")
     PhenotypesToInclude = set(
         permutation_df.loc[permutation_df["adj_emp_pval"] < NominalPThreshold]["phe_id"]
