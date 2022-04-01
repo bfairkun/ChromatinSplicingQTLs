@@ -81,6 +81,7 @@ def much_more_mem_after_first_attempt(wildcards, attempt):
     else:
         return 52000
 
+
 def require_at_least_one(filelist):
     """
     https://stackoverflow.com/questions/65227729/how-to-make-snakemake-input-optional-but-not-empty

@@ -126,7 +126,7 @@ rule gwas_coloc_chunk:
     output:
         "hyprcoloc/Results/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}/Chunks/{n}.txt.gz"
     resources:
-        mem_mb = 16000
+        mem_mb = lambda wildcards, attempt: 32000 if int(attempt) == 1 else 42000
     log:
         "logs/gwas_coloc_chunk/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}/{n}.log"
     conda:
@@ -135,6 +135,12 @@ rule gwas_coloc_chunk:
         """
         bash {input.bashscript} &> {log}
         """
+
+def much_more_mem_after_first_attempt(wildcards, attempt):
+    if int(attempt) == 1:
+        return 4000
+    else:
+        return 52000
 
 rule genewise_coloc_chunk:
     input:
@@ -147,7 +153,7 @@ rule genewise_coloc_chunk:
         clusters = "hyprcoloc/Results/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}/Chunks/{n}.txt.gz",
         snpscores = "hyprcoloc/Results/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}/Chunks/{n}.snpscores.txt.gz"
     resources:
-        mem_mb = 16000
+        mem_mb = lambda wildcards, attempt: 32000 if int(attempt) == 1 else 42000
     params:
         PhenotypesToColoc = " ".join(PhenotypesToColoc)
     log:
