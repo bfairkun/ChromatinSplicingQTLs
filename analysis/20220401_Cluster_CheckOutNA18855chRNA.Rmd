@@ -1,0 +1,67 @@
+---
+title: "what's with NA18855 chRNAseq"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F)
+```
+
+## Motivation
+
+Carlos noted that chRNA sample NA18855 is an outlier in the correlation matrix for expression and splicing, so we decided to exclude it from QTL mapping. But when I browsed a handful of genes of this sample on IGV, it looked like a pretty chRNA sample, comparable to all the other samples.
+
+I hypothesize maybe this sample has some chromosomal abberations, that we might detect if we looked at average gene expression at the scale of many megabases or chromosomes. Let's check this out, just for curiosity sake...
+
+First let's reproduce that Carlose said it was an outlier:
+
+```{r}
+library(tidyverse)
+library(edgeR)
+library(gplots)
+
+dat <- read_tsv("../code/featureCounts/chRNA.Expression/Counts.txt", comment = '#')
+genes <- read_tsv("../code/ExpressionAnalysis/polyA/ExpressedGeneList.txt", col_names = c("chrom", "start", "stop", "Geneid", "score", "strand"))
+
+cpm <- dat %>%
+  select(-c(2:6)) %>%
+  inner_join(genes, by="Geneid") %>%
+  select(1, matches("Alignments/STAR_Align/chRNA.Expression.Splicing/(.+?)/1/Filtered.bam")) %>%
+  rename_at(-1, ~ str_replace(.x, "Alignments/STAR_Align/chRNA.Expression.Splicing/(.+?)/1/Filtered.bam", "\\1")) %>%
+  column_to_rownames("Geneid") %>%
+  as.matrix() %>%
+  DGEList() %>%
+  cpm(log=T)
+
+heatmap.2(cor(cpm), trace = "none")
+  
+```
+
+18885 is an outlier in these cpm correlation matrix of gene expression.
+
+Now let's check for average gene expression differences between that sample and others at the chromosomal scale...
+
+
+```{r}
+head(cpm)
+
+cpm %>%
+  as.data.frame() %>%
+  rownames_to_column("Geneid") %>%
+  # select(Geneid, NA18853, NA19122, NA18855) %>%
+  inner_join(genes, by="Geneid") %>%
+  mutate(NA19122_NA18853 = NA19122-NA18853, NA18855_NA18853=NA18855-NA18853, NA18523_NA19150=NA18523-NA19150) %>%
+  select(chrom, start, NA19122_NA18853, NA18855_NA18853, NA18523_NA19150) %>%
+  gather(key = "SampleContrast", value = Log2ExpressionDifference, -chrom, -start) %>%
+  sample_frac(size=1) %>%
+  ggplot(aes(x=start, y=Log2ExpressionDifference, color=SampleContrast)) +
+    # geom_point(alpha=0.2) +
+    geom_smooth() +
+    geom_hline(yintercept = 0) +
+    coord_cartesian(ylim=c(-2,2)) +
+    facet_wrap(~chrom, scales = "free_x")
+  
+
+```
+
+yeah i think i conclude its a sample filled with chromosomal abberrations. here is a the change in gene expression plotted by position along the chromosomes (smoothed for better visualization). This is comparing expression between a random chRNA sample pair (red), another random sample pair (blue), and a sample pair with the NA18855 (green). So even though NA18855 might look normal when when you are zoomed in to the level of genes on IGV, at this scale you can see it is just wonky. Let’s not include. Honestly for the purposes of measuring cis-gene regulation, it might still technically add more power than problems… but let’s just not.
