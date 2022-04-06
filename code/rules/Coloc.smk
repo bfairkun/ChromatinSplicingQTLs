@@ -72,11 +72,12 @@ rule InstallHyprcoloc:
 
 rule create_genewise_summarystats_listchunks:
     input:
-        MolQTLSummaryStats = "hyprcoloc/LociWiseSummaryStatsInput/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}",
+        MolQTLSummaryStats = GetColocTsvFormattedString("hyprcoloc/LociWiseSummaryStatsInput/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}"),
     wildcard_constraints:
-        FeatureCoordinatesRedefinedFor = "ForColoc"
+        FeatureCoordinatesRedefinedFor = "ForColoc",
+        ColocName = '|'.join(colocs_genewise.index)
     output:
-        expand("hyprcoloc/Results/{{QTLsGenotypeSet}}{{FeatureCoordinatesRedefinedFor}}/Chunks/{n}.list.txt", n=range(0,config["genewise_coloc_chunks"]))
+        expand("hyprcoloc/Results/{{FeatureCoordinatesRedefinedFor}}/{{ColocName}}/Chunks/{n}.list.txt", n=range(0,config["genewise_coloc_chunks"]))
     run:
         from itertools import cycle
         import glob
@@ -92,14 +93,14 @@ rule create_genewise_summarystats_listchunks:
         for f in output:
             open(f, 'a').close()
 
-
 rule create_gwascoloc_bash_scripts:
     output:
-        expand("hyprcoloc/Results/{{QTLsGenotypeSet}}{{FeatureCoordinatesRedefinedFor}}/Chunks/{n}.sh", n=range(0,config["gwas_coloc_chunks"]))
+        expand("hyprcoloc/Results/{{FeatureCoordinatesRedefinedFor}}/{{ColocName}}/Chunks/{n}.sh", n=range(0,config["gwas_coloc_chunks"]))
     wildcard_constraints:
-        FeatureCoordinatesRedefinedFor = "ForGWASColoc"
+        FeatureCoordinatesRedefinedFor = "ForGWASColoc",
+        ColocName = '|'.join(colocs_gwas.index)
     params:
-        PhenotypesToColoc = " ".join(PhenotypesToColoc)
+        PhenotypesToColoc = GetMolPhenotypesToColoc
     run:
         from itertools import cycle
         gwas_bashscript_pairs = zip(gwas_df.index, cycle(output))
@@ -117,18 +118,19 @@ rule create_gwascoloc_bash_scripts:
 
 rule gwas_coloc_chunk:
     input:
-        bashscript = "hyprcoloc/Results/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}/Chunks/{n}.sh",
-        MolQTLSummaryStats = "hyprcoloc/LociWiseSummaryStatsInput/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}",
+        bashscript = "hyprcoloc/Results/{FeatureCoordinatesRedefinedFor}/{ColocName}/Chunks/{n}.sh",
+        MolQTLSummaryStats = GetColocTsvFormattedString("hyprcoloc/LociWiseSummaryStatsInput/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}"),
         Gwas_summary_stats =  expand("gwas_summary_stats/leadSnpWindowStats/{accession}.tsv.gz", accession=gwas_df.index),
         ModifiedCondaEnvConfirmation = "hyprcoloc/hyprcoloc_installed.touchfile"
     wildcard_constraints:
-        FeatureCoordinatesRedefinedFor = "ForGWASColoc"
+        FeatureCoordinatesRedefinedFor = "ForGWASColoc",
+        ColocName = '|'.join(colocs_gwas.index)
     output:
-        "hyprcoloc/Results/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}/Chunks/{n}.txt.gz"
+        "hyprcoloc/Results/{FeatureCoordinatesRedefinedFor}/{ColocName}/Chunks/{n}.txt.gz"
     resources:
         mem_mb = lambda wildcards, attempt: 32000 if int(attempt) == 1 else 42000
     log:
-        "logs/gwas_coloc_chunk/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}/{n}.log"
+        "logs/gwas_coloc_chunk/{FeatureCoordinatesRedefinedFor}/{ColocName}/{n}.log"
     conda:
         "../envs/r_hyprcoloc.yml"
     shell:
@@ -136,28 +138,23 @@ rule gwas_coloc_chunk:
         bash {input.bashscript} &> {log}
         """
 
-def much_more_mem_after_first_attempt(wildcards, attempt):
-    if int(attempt) == 1:
-        return 4000
-    else:
-        return 52000
-
 rule genewise_coloc_chunk:
     input:
-        MolQTLSummaryStats = "hyprcoloc/LociWiseSummaryStatsInput/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}",
-        summarystatslist = "hyprcoloc/Results/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}/Chunks/{n}.list.txt",
+        MolQTLSummaryStats = GetColocTsvFormattedString("hyprcoloc/LociWiseSummaryStatsInput/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}"),
+        summarystatslist = "hyprcoloc/Results/{FeatureCoordinatesRedefinedFor}/{ColocName}/Chunks/{n}.list.txt",
         ModifiedCondaEnvConfirmation = "hyprcoloc/hyprcoloc_installed.touchfile"
     wildcard_constraints:
-        FeatureCoordinatesRedefinedFor = "ForColoc"
+        FeatureCoordinatesRedefinedFor = "ForColoc",
+        ColocName = '|'.join(colocs_genewise.index)
     output:
-        clusters = "hyprcoloc/Results/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}/Chunks/{n}.txt.gz",
-        snpscores = "hyprcoloc/Results/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}/Chunks/{n}.snpscores.txt.gz"
+        clusters = "hyprcoloc/Results/{FeatureCoordinatesRedefinedFor}/{ColocName}/Chunks/{n}.txt.gz",
+        snpscores = "hyprcoloc/Results/{FeatureCoordinatesRedefinedFor}/{ColocName}/Chunks/{n}.snpscores.txt.gz"
     resources:
         mem_mb = lambda wildcards, attempt: 32000 if int(attempt) == 1 else 42000
     params:
-        PhenotypesToColoc = " ".join(PhenotypesToColoc)
+        PhenotypesToColoc = GetMolPhenotypesToColoc
     log:
-        "logs/gwas_coloc_chunk/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}/{n}.log"
+        "logs/gwas_coloc_chunk/{FeatureCoordinatesRedefinedFor}/{ColocName}/{n}.log"
     conda:
         "../envs/r_hyprcoloc.yml"
     shell:
@@ -167,13 +164,14 @@ rule genewise_coloc_chunk:
 
 rule Gather_gwas_coloc_chunks:
     input:
-        expand("hyprcoloc/Results/{{QTLsGenotypeSet}}{{FeatureCoordinatesRedefinedFor}}/Chunks/{n}.txt.gz", n=range(0, config["gwas_coloc_chunks"]))
+        expand("hyprcoloc/Results/{{FeatureCoordinatesRedefinedFor}}/{{ColocName}}/Chunks/{n}.txt.gz", n=range(0, config["gwas_coloc_chunks"]))
     output:
-        "../output/hyprcoloc_results/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}/hyprcoloc.results.txt.gz"
+        "hyprcoloc/Results/{FeatureCoordinatesRedefinedFor}/{ColocName}/results.txt.gz"
     params:
         header = "GWASLeadSnpChrom_Pos_RefAllele_AltAllele_rsID_trait\tHyprcolocIteration\tColocalizedTraits\tPosteriorColocalizationPr\tRegionalAssociationPr\tTopCandidateSNP\tProportionPosteriorPrExplainedByTopSNP\tDroppedTrait"
     wildcard_constraints:
-        FeatureCoordinatesRedefinedFor = "ForGWASColoc"
+        FeatureCoordinatesRedefinedFor = "ForGWASColoc",
+        ColocName = '|'.join(colocs_gwas.index)
     shell:
         """
         cat <(echo "{params.header}") <(zcat {input}) | gzip - > {output}
@@ -181,37 +179,73 @@ rule Gather_gwas_coloc_chunks:
 
 use rule Gather_gwas_coloc_chunks as Gather_genewise_coloc_chunks with:
     input:
-        expand("hyprcoloc/Results/{{QTLsGenotypeSet}}{{FeatureCoordinatesRedefinedFor}}/Chunks/{n}.txt.gz", n=range(0, config["genewise_coloc_chunks"]))
+        expand("hyprcoloc/Results/{{FeatureCoordinatesRedefinedFor}}/{{ColocName}}/Chunks/{n}.txt.gz", n=range(0, config["genewise_coloc_chunks"]))
     wildcard_constraints:
         FeatureCoordinatesRedefinedFor = "ForColoc",
+        ColocName = '|'.join(colocs_genewise.index)
     params:
         header = "GeneLocus\tHyprcolocIteration\tColocalizedTraits\tPosteriorColocalizationPr\tRegionalAssociationPr\tTopCandidateSNP\tProportionPosteriorPrExplainedByTopSNP\tDroppedTrait"
 
 use rule Gather_gwas_coloc_chunks as Gather_genewise_coloc_chunks_snpscores with:
     input:
-        expand("hyprcoloc/Results/{{QTLsGenotypeSet}}{{FeatureCoordinatesRedefinedFor}}/Chunks/{n}.snpscores.txt.gz", n=range(0, config["genewise_coloc_chunks"]))
+        expand("hyprcoloc/Results/{{FeatureCoordinatesRedefinedFor}}/{{ColocName}}/Chunks/{n}.snpscores.txt.gz", n=range(0, config["genewise_coloc_chunks"]))
     wildcard_constraints:
         FeatureCoordinatesRedefinedFor = "ForColoc",
+        ColocName = '|'.join(colocs_genewise.index)
     output:
-        "../output/hyprcoloc_results/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}/snpscores.txt.gz"
+        "hyprcoloc/Results/{FeatureCoordinatesRedefinedFor}/{ColocName}/snpscores.txt.gz"
     params:
         header = "snp\tColocalizedCluster\tFinemapPr\tLocus"
 
+
 rule TidyColocalizedTraitsAndSummaryStats:
     input:
-        ColocResults = "../output/hyprcoloc_results/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}/hyprcoloc.results.txt.gz",
-        MolQTLSummaryStats = "hyprcoloc/LociWiseSummaryStatsInput/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}",
+        ColocResults = "hyprcoloc/Results/{FeatureCoordinatesRedefinedFor}/{ColocName}/results.txt.gz",
+        MolQTLSummaryStats = GetColocTsvFormattedString("hyprcoloc/LociWiseSummaryStatsInput/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}"),
     log:
-        "logs/TidyColocalizedTraitsAndSummaryStats/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.log"
+        "logs/TidyColocalizedTraitsAndSummaryStats/{FeatureCoordinatesRedefinedFor}/{ColocName}.log"
     output:
-        "../output/hyprcoloc_results/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}/hyprcoloc.results.OnlyColocalized.Stats.txt.gz"
+        "hyprcoloc/Results/{FeatureCoordinatesRedefinedFor}/{ColocName}/tidy_results_OnlyColocalized.txt.gz"
     resources:
         mem_mb = 16000
     wildcard_constraints:
         FeatureCoordinatesRedefinedFor = "ForColoc",
+        ColocName = '|'.join(colocs_genewise.index)
     conda:
         "../envs/r_2.yaml"
     shell:
         """
-        Rscript scripts/TidyGenewiseColocs.R {input.ColocResults} {input.MolQTLSummaryStats}/ {output}
+        Rscript scripts/TidyGenewiseColocs.R {input.ColocResults} {input.MolQTLSummaryStats}/ {output} &> {log}
+        """
+
+rule CopyGenewiseHyprcolocResultsToTrackedOutputDir:
+    input:
+        results = "hyprcoloc/Results/{FeatureCoordinatesRedefinedFor}/{ColocName}/results.txt.gz",
+        snpscores = "hyprcoloc/Results/{FeatureCoordinatesRedefinedFor}/{ColocName}/snpscores.txt.gz",
+        tidy_results = "hyprcoloc/Results/{FeatureCoordinatesRedefinedFor}/{ColocName}/tidy_results_OnlyColocalized.txt.gz"
+    output:
+        results = "../output/hyprcoloc_results/{FeatureCoordinatesRedefinedFor}/{ColocName}/hyprcoloc.results.txt.gz",
+        snpscores = "../output/hyprcoloc_results/{FeatureCoordinatesRedefinedFor}/{ColocName}/snpscores.txt.gz",
+        tidy_results = "../output/hyprcoloc_results/{FeatureCoordinatesRedefinedFor}/{ColocName}/hyprcoloc.results.OnlyColocalized.Stats.txt.gz"
+    wildcard_constraints:
+        FeatureCoordinatesRedefinedFor = "ForColoc",
+        ColocName = '|'.join(colocs_genewise.index)
+    shell:
+        """
+        cp {input.results} {output.results}
+        cp {input.snpscores} {output.snpscores}
+        cp {input.tidy_results} {output.tidy_results}
+        """
+
+rule CopyGwasHyprcolocResultsToTrackedOutputDir:
+    input:
+        results = "hyprcoloc/Results/{FeatureCoordinatesRedefinedFor}/{ColocName}/results.txt.gz",
+    output:
+        results = "../output/hyprcoloc_results/{FeatureCoordinatesRedefinedFor}/{ColocName}/hyprcoloc.results.txt.gz",
+    wildcard_constraints:
+        FeatureCoordinatesRedefinedFor = "ForGWASColoc",
+        ColocName = '|'.join(colocs_gwas.index)
+    shell:
+        """
+        cp {input.results} {output.results}
         """
