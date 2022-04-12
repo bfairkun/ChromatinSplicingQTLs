@@ -83,13 +83,13 @@ use rule MakeBigwigs_NormalizedToEdgeRFeatureCounts as MakeBigwigs_NormalizedToE
 
 rule GatherAllBigwigs:
     input:
-        # expand(
-        #     "bigwigs/{Phenotype}/{IndID}.{Rep}.bw",
-        #     zip,
-        #     Phenotype=Fastq_samples["Phenotype"],
-        #     IndID=Fastq_samples["IndID"],
-        #     Rep=Fastq_samples["RepNumber"],
-        # ),
+        expand(
+            "bigwigs/{Phenotype}/{IndID}.{Rep}.bw",
+            zip,
+            Phenotype=Fastq_samples["Phenotype"],
+            IndID=Fastq_samples["IndID"],
+            Rep=Fastq_samples["RepNumber"],
+        ),
         expand(
             "bigwigs/{Phenotype}_stranded/{IndID}.{Rep}.plus.bw",
             zip,

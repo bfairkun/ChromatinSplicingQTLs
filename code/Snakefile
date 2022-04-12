@@ -35,6 +35,11 @@ wildcard_constraints:
 
 localrules:
     all,
+    CollectNormalizedPsiTables,
+    CollectColocResultsToOutputDir,
+    CollectDownloadGWAS_SummaryStats,
+    Collect_chRNASeq_Fastq,
+    CollectColocResultsToCodeDir,
     CopyFastqFromLocal,
     DownloadFastqFromLink,
     Download1KG_GRCh38,
@@ -135,7 +140,7 @@ rule all:
         "SplicingAnalysis/IR/ProCap/Counts.txt"
 
 
-rule Gather_chRNASeq_Fastq:
+rule Collect_chRNASeq_Fastq:
     """
     Useful to force rexecution of all chRNAseq related analysis after
     identifying sample swaps and correcting them in samples.tsv config
@@ -165,6 +170,10 @@ rule CollectColocResultsToOutputDir:
     input:
         expand("../output/hyprcoloc_results/ForColoc/{ColocName}/hyprcoloc.results.OnlyColocalized.Stats.txt.gz", ColocName = colocs_genewise.index),
         expand("../output/hyprcoloc_results/ForGWASColoc/{ColocName}/hyprcoloc.results.txt.gz", ColocName = colocs_gwas.index )
+
+rule CollectDownloadGWAS_SummaryStats:
+    input:
+        expand("gwas_summary_stats/full_data/{accession}.tsv.gz", accession=gwas_df.index)
 
 rule chRNAGetSlopes:
     """
