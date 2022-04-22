@@ -1,0 +1,38 @@
+name: spliceq2
+channels:
+  - bioconda
+  - defaults
+  - conda-forge
+  - r
+dependencies:
+  - _libgcc_mutex=0.1=main
+  - _openmp_mutex=4.5=1_gnu
+  - ca-certificates=2022.3.29=h06a4308_0
+  - certifi=2021.5.30=py36h06a4308_0
+  - ld_impl_linux-64=2.35.1=h7274673_9
+  - libffi=3.3=he6710b0_2
+  - libgcc-ng=9.3.0=h5101ec6_17
+  - libgomp=9.3.0=h5101ec6_17
+  - libstdcxx-ng=9.3.0=hd4cf53a_17
+  - ncurses=6.3=h7f8727e_2
+  - openssl=1.1.1n=h7f8727e_0
+  - pip=21.2.2=py36h06a4308_0
+  - python=3.6.13=h12debd9_1
+  - readline=8.1.2=h7f8727e_1
+  - setuptools=58.0.4=py36h06a4308_0
+  - sqlite=3.38.2=hc218d9a_0
+  - tk=8.6.11=h1ccaba5_0
+  - wheel=0.37.1=pyhd3eb1b0_0
+  - xz=5.2.5=h7b6447c_0
+  - zlib=1.2.12=h7f8727e_1
+  - pip:
+    - commonmark==0.9.1
+    - dataclasses==0.8
+    - interlap==0.2.7
+    - numpy==1.19.5
+    - pygments==2.11.2
+    - pysam==0.19.0
+    - rich==12.2.0
+    - splice-q==1.0.0
+    - typing-extensions==4.1.1
+prefix: /project2/gilad/bjf79_project1/envs/spliceq2

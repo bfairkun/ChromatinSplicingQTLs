@@ -60,15 +60,7 @@ chRNASeqSamples = list(pd.Index(chRNASeqSamples_df['IndID'].unique()).intersecti
 # Get random sample for each phenotype
 Fastq_samples.groupby('Phenotype').apply(lambda x: x.sample(2, random_state=1)).reset_index(drop=True)
 
-# Read in table of GWAS summary stat links (obtained from GWAS catalog's online
-# interface)
-#list the files
-filelist = glob.glob("../data/GWAS_catalog_summary_stats_sources/*.csv") 
-#read them into pandas
-df_list = [pd.read_csv(file, index_col='Study accession') for file in filelist]
-#concatenate them together
-gwas_df = pd.concat(df_list)
-# gwas_df = pd.read_csv("../data/GWAS_catalog_summary_stats_sources/list_gwas_summary_statistics_PMID27863252.csv", index_col='Study accession')
+gwas_df = pd.read_csv("config/gwas_table.tsv", index_col='gwas', sep='\t', usecols=['gwas', 'trait', 'FTPPath', "SummaryStatsLocalFilepath", 'ProcessingMethod', "Continuous"])
 
 colocs_df = pd.read_csv("config/ColocRunWildcards.tsv", index_col=0, comment='#', sep='\t', keep_default_na=False)
 colocs_gwas = colocs_df.loc[colocs_df['FeatureCoordinatesRedefinedFor']=='ForGWASColoc']

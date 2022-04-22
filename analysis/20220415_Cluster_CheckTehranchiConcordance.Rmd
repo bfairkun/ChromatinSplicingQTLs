@@ -1,0 +1,168 @@
+---
+title: "CheckTehranchiConcordance"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,  warning = F, message = F)
+```
+
+
+## Intro
+
+[Tehranchi et al](https://www.cell.com/fulltext/S0092-8674(16)30339-7) used pooled chip-seq assay on YRI LCLs to assess allele-specific binding QTLs for 5 transcription factors. They found that the QTL SNPs over TF motif hits were largely concordant with predicted TF-binding effects from position weight matrix. In our data, I want to check how TF binding may effect other processes, like splicing, for which [NFKB for example was recently shown to affect](https://www.nature.com/articles/s41467-020-16853-x). To do this, first I downloaded TableS2 from Tehranchi et al, lifted over the QTL variants to hg38, searched for TF motif hits (motifs downloaded from JASPAR) for both alleles, and caculated the change in PWM score. I did this all using a script in the snakemake, and in this notebook I will explore the results...
+
+```{r}
+library(tidyverse)
+library(qvalue)
+
+dat <- read_tsv("../code/scratch/ScanTFBS.txt.gz")
+
+head(dat)
+
+dat$motif %>% unique()
+
+dat$TF %>% unique()
+```
+
+Each row is a Tehranchi QTL with a TF PWM motif hit. Note that for each QTL, I searched across 10 different JASPAR motifs, since some of the different TF's that were probed had more than one motif that I thought would be worthwhile checking. One of the first things I should do is condense SNPs for the best hit for the motifs for a single TF, and also select only the direct binding hits (where the QTL TF matches the motif TF)
+
+```{r}
+MotifToTF <- c("MA0105.4.NFKB1"="NF-kB",
+               "MA0137.2.STAT1"="Stat1",
+               "MA0137.3.STAT1"="Stat1",
+               "MA0778.1.NFKB2"="NF-kB",
+               "MA0080.2.SPI1"="PU.1",
+               "MA0105.3.NFKB1"="NF-kB",
+               "MA0491.2.JUND"="JunD",
+               "MA0785.1.POU2F1"="Pou2f1"
+               )
+
+dat.filtered <- dat %>%
+  mutate(motif = recode(motif, !!!MotifToTF)) %>%
+  filter(TF == motif) %>%
+  group_by(chrom, start, TF) %>%
+  arrange(desc(MaxAnyValue)) %>%
+  distinct(chrom, start, TF, .keep_all = T) %>%
+  ungroup()
+
+```
+
+The P values here are what is reported in TableS2 from Tehranchi. I think they are nominal P-values, and filtered for nominal Pvalue < 0.05.
+
+```{r}
+dat.filtered$P %>% hist()
+```
+
+
+Based on the histogram, most of these QTLs are probably false positives, most of the Pvalue distribution mass is in a flat region. If we had the whole distribution of P-values it would be trivial to estimate FDR and filter out most of the false discoveries.
+
+For now, let's plot the concordance of deltaPWM (ref-alt) versus if the high binding allele was the ref by plotting histograms of the deltaPWM, colored by if TableS2 reports the the reference (lifted to hg38) is the high binding allele. So I would expect most of the true QTLs with a positive deltaPWM to also be where reference is the high binding allele.
+
+```{r}
+dat.filtered %>%
+  filter(!Delta==0) %>%
+  ggplot(aes(x=Delta, fill=hg38refIsHighbind)) +
+  geom_histogram() +
+  facet_wrap(~TF, scales = "free") +
+  theme_classic()
+```
+
+Not much concordance... But what happens if i use a more stringent Pvalue filter to filter out some of the false discoveries...
+
+```{r}
+dat.filtered %>%
+  filter(!Delta==0) %>%
+  filter(P<0.001) %>%
+  ggplot(aes(x=Delta, fill=hg38refIsHighbind)) +
+  geom_histogram() +
+  facet_wrap(~TF, scales = "free") +
+  theme_classic()
+```
+
+Ok this is a bit more believable. Maybe I should try estimating a FDR and filtering on an appropriate FDR threshold. First let's plot the Pvalue distribition (at least up to 0.05) for each TF
+
+```{r}
+dat.filtered %>%
+  ggplot(aes(x=P)) +
+  geom_histogram() +
+  facet_wrap(~TF, scales = "free") +
+  theme_classic()
+```
+
+Ok I think I should just drop STAT1 from analysis, and for the others I will try to apply Storey's q value FDR estimation approach somehow. How about we count the number of observations from 0.04 to 0.05 (mostly flat region, representing 1% of the interval from 0-1), then create 95X as many observations sampled randomly from uniform (from 0.05 to 1) to fill in the rest of the Pvalue distribution with these mock data. Then we can use qvalue package to estimate FDR.
+
+```{r}
+MockPValsToFillIn <- dat.filtered %>%
+  filter(!TF == "Stat1") %>%
+  filter(P<0.05 & P>0.04) %>%
+  select(TF) %>%
+  uncount(95) %>%
+  mutate(P = runif(nrow(.), 0.05, 1))
+
+#Plot histogram with mock pvalues filled in
+dat.filtered %>%
+  filter(!TF == "Stat1") %>%
+  bind_rows(MockPValsToFillIn) %>%
+  ggplot(aes(x=P)) +
+  geom_histogram() +
+  facet_wrap(~TF, scales = "free") +
+  theme_classic()
+
+dat.filted.with.FDR <- dat.filtered %>%
+  filter(!TF == "Stat1") %>%
+  bind_rows(MockPValsToFillIn) %>%
+  group_by(TF) %>%
+  mutate(q = qvalue(P)$qvalues) %>%
+  ungroup()
+
+# Plot qvalues per TF.  Based on the histogram, Pou2f1 should have basically no QTLs that pass a stringent (10%) FDR threshold
+dat.filted.with.FDR %>%
+  ggplot(aes(x=q)) +
+  geom_histogram() +
+  facet_wrap(~TF, scales = "free") +
+  theme_classic()
+
+```
+
+Ok great. I think that worked fine. Now let's replot the concordance of deltaPWM versus observed high binding allele for FDR10% QTLs
+
+```{r}
+dat.filted.with.FDR %>%
+  filter(q < 0.1) %>%
+  filter(!Delta==0) %>%
+  ggplot(aes(x=Delta, fill=hg38refIsHighbind)) +
+  geom_histogram() +
+  facet_wrap(~TF, scales = "free") +
+  theme_classic()
+```
+
+Ok that looks better. Let's replot a different way, for simplicity:
+
+
+```{r}
+dat.filted.with.FDR %>%
+  filter(q < 0.1) %>%
+  filter(!Delta==0) %>%
+  mutate(IsRefenceAlleleHigherPWM = Delta>0) %>%
+  count(IsRefenceAlleleHigherPWM, hg38refIsHighbind, TF) %>%
+  ggplot(aes(x=IsRefenceAlleleHigherPWM, y=n, fill=hg38refIsHighbind)) +
+  geom_col() +
+  facet_wrap(~TF, scales = "free") +
+  labs(x="Is RefAllele higher predicted binding (PWM)", y="Number TF-binding QTLs", fill="Is RefAllele higher observed binding") +
+  theme_classic()
+
+```
+
+Most of the Pou2f1 might still be false positives, and there weren't that many QTLs for that TF to begin with... Let's just drop that from futher analysis. and in general there may still be some bias towards reference allele, perhaps due to mapping biases or something of the sort... But I think I am still picking up on a little signal in that when the referenceAllele has a higher PWM, it is more likely the higher binding allele. Let's write out these TF QTLs to a new file, and consider quantifying splicing in-around these TF sites.
+
+```{r, eval=F}
+dat.filted.with.FDR %>%
+  filter(!TF == "Pou2f1") %>%
+  filter(q < 0.1) %>%
+  filter(!Delta==0) %>%
+  select(chrom, start, stop, DeltaPWM=Delta, P, TF) %>%
+  arrange(chrom, start, stop) %>%
+  write_tsv("../data/Tehranchi_PrimaryTFBinding-QTLs.bed.gz")
+```
+

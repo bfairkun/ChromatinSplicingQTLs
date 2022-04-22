@@ -1,0 +1,57 @@
+name: crossmap
+channels:
+  - bioconda
+  - defaults
+  - conda-forge
+  - r
+dependencies:
+  - _libgcc_mutex=0.1=conda_forge
+  - _openmp_mutex=4.5=1_gnu
+  - blas=1.0=openblas
+  - bx-python=0.8.13=py39h6471ffd_1
+  - bzip2=1.0.8=h7b6447c_0
+  - c-ares=1.18.1=h7f8727e_0
+  - ca-certificates=2022.3.29=h06a4308_0
+  - certifi=2021.10.8=py39h06a4308_2
+  - crossmap=0.6.3=pyhb7b1952_0
+  - cython=0.29.28=py39h295c915_0
+  - krb5=1.19.2=hac12032_0
+  - ld_impl_linux-64=2.35.1=h7274673_9
+  - libcurl=7.82.0=h0b77cf5_0
+  - libdeflate=1.10=h7f98852_0
+  - libedit=3.1.20210910=h7f8727e_0
+  - libev=4.33=h7f8727e_1
+  - libffi=3.3=he6710b0_2
+  - libgcc-ng=11.2.0=h1d223b6_15
+  - libgfortran-ng=7.5.0=ha8ba4b0_17
+  - libgfortran4=7.5.0=ha8ba4b0_17
+  - libgomp=11.2.0=h1d223b6_15
+  - libnghttp2=1.46.0=hce63b2e_0
+  - libopenblas=0.3.18=hf726d26_0
+  - libpng=1.6.37=hbc83047_0
+  - libssh2=1.9.0=h1ba5d50_1
+  - libstdcxx-ng=9.3.0=hd4cf53a_17
+  - libuuid=2.32.1=h7f98852_1000
+  - libzlib=1.2.11=h166bdaf_1014
+  - lzo=2.10=h7b6447c_2
+  - mysql-connector-c=6.1.11=h24aacaa_2
+  - ncurses=6.3=h7f8727e_2
+  - numpy=1.21.2=py39hd8d4704_0
+  - numpy-base=1.21.2=py39h2b8c604_0
+  - openssl=1.1.1n=h7f8727e_0
+  - pip=21.2.4=py39h06a4308_0
+  - pybigwig=0.3.18=py39h792ddb7_2
+  - pysam=0.19.0=py39h5030a8b_0
+  - python=3.9.12=h12debd9_0
+  - python-lzo=1.14=py39h265373d_0
+  - python_abi=3.9=2_cp39
+  - readline=8.1.2=h7f8727e_1
+  - setuptools=61.2.0=py39h06a4308_0
+  - sqlite=3.38.2=hc218d9a_0
+  - tk=8.6.11=h1ccaba5_0
+  - tzdata=2022a=hda174b7_0
+  - ucsc-wigtobigwig=377=ha8a8165_3
+  - wheel=0.37.1=pyhd3eb1b0_0
+  - xz=5.2.5=h7b6447c_0
+  - zlib=1.2.11=h166bdaf_1014
+prefix: /project2/gilad/bjf79_project1/envs/crossmap
