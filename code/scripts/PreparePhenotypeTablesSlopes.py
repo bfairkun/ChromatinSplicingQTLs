@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import os
 #from tqdm import tqdm
+from sklearn.preprocessing import scale
 from scipy.stats import rankdata
 from scipy.stats import norm
 from statsmodels.stats.multitest import multipletests
@@ -14,19 +15,30 @@ def qqnorm(x):
     return(norm.ppf( (rankdata(x)-a)/(n+1.0-2.0*a) ))
 
 
-def combine_dataframe(samples, windowStyle, max_missing=0.4):
+def combine_dataframe(samples, windowStyle, skip_introns, max_missing=0.1, top_introns = 10000):
     df = pd.DataFrame()
+    df_error = pd.DataFrame()
     for sample in samples:#, leave=True, position=0):
-        df_sample = pd.read_csv('IntronSlopes/slopes/{sample}.{windowStyle}.glm_nb.tab.gz'.format(
+            
+        df_sample = pd.read_csv('IntronSlopes/slopes/{sample}.{windowStyle}.tab.gz'.format(
+#         df_sample = pd.read_csv('IntronSlopes/slopes/{sample}.{windowStyle}.glm_nb.tab.gz'.format(
             sample=sample, windowStyle=windowStyle), sep='\t', index_col=0).dropna()
 
-        fdr = multipletests(df_sample['Slope.p.value'], alpha=0.25, method='fdr_bh')
-        df_sample = pd.DataFrame(df_sample.loc[fdr[0], 'Slope'])
+#         fdr = multipletests(df_sample['Slope.p.value'], alpha=0.25, method='fdr_bh')
+#         df_sample = pd.DataFrame(df_sample.loc[fdr[0], 'Slope'])
+        df_sample_error = pd.DataFrame(df_sample['std.error'])
+        df_sample_error.columns = [sample]
+        df_error = pd.concat([df_error, df_sample_error], axis=1)
+        df_sample = pd.DataFrame(df_sample['Slope'])
         df_sample.columns = [sample]
         df = pd.concat([df, df_sample], axis=1)
         
     df = df.loc[df.isna().mean(axis=1) <= max_missing]
-    return df
+    df_error = df_error.loc[[x for x in df.index if x not in skip_introns]]
+    
+    best_samples = df_error.mean(axis=1).sort_values()[:top_introns].index
+    
+    return df.loc[best_samples]
 
 
 def qqnorm_slopes(df_slopes):
@@ -37,17 +49,26 @@ def qqnorm_slopes(df_slopes):
     imputed_df.columns = df_slopes.columns 
     imputed_df.index = df_slopes.index
     
+    df_scale = pd.DataFrame()
     df_qqnorm = pd.DataFrame()
     
     for idx, row in imputed_df.iterrows():#, leave=True, position=0):
         
-        qqnorm_row = qqnorm(row)
+        scale_row = scale(row)
+        df_scale[idx] = scale_row
         
-        df_qqnorm[idx] = qqnorm_row
-        
-    df_qqnorm.index = imputed_df.columns
+    df_scale.index = imputed_df.columns
     
-    return df_qqnorm.T
+    df_scale = df_scale.T
+    
+    for sample in df_scale.columns:
+        
+        qqnorm_row = qqnorm(df_scale[sample])
+        df_qqnorm[sample] = qqnorm_row
+        
+    df_qqnorm.index = imputed_df.index
+    
+    return df_qqnorm
 
 
 def intron_list_to_bed(intron_list):
@@ -65,23 +86,38 @@ def intron_list_to_bed(intron_list):
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--windowStyle', type=str, required=True)
-parser.add_argument('--FDR', type=str, required=True)
+parser.add_argument('--skip_samples', type=str, required=True)
+parser.add_argument('--skip_introns', type=str, required=True)
+parser.add_argument('--max_missing', type=str, required=True)
+parser.add_argument('--top_introns', type=str, required=True)
+# parser.add_argument('--FDR', type=str, required=True)
 
 
 if __name__ == '__main__':
     
     args = parser.parse_args()
     windowStyle = args.windowStyle
-    FDR = np.float(args.FDR)
+    skip_samples = args.skip_samples.split(':')
+    skip_introns = args.skip_introns.split(':')
+    max_missing = float(args.max_missing)
+    top_introns = int(args.top_introns)
+#     FDR = np.float(args.FDR)
     
-    samples = [x.split('.')[0] for x in os.listdir("IntronSlopes/slopes/") if "{windowStyle}.glm_nb.tab.gz".format(windowStyle=windowStyle) in x]
+    samples = [x.split('.')[0] for x in os.listdir("IntronSlopes/slopes/") if "{windowStyle}.tab.gz".format(windowStyle=windowStyle) in x]
     
-    df_slopes = combine_dataframe(samples, windowStyle)
+    samples = [x for x in samples if x not in  skip_samples]
+    
+#     samples = [x.split('.')[0] for x in os.listdir("IntronSlopes/slopes/") if "{windowStyle}.glm_nb.tab.gz".format(windowStyle=windowStyle) in x]
+    
+    df_slopes = combine_dataframe(samples, windowStyle, skip_introns, max_missing=max_missing, top_introns=top_introns)
     df_qqnorm = qqnorm_slopes(df_slopes)
 
     bed = intron_list_to_bed(df_qqnorm.index)
     
     output_bed = pd.concat([bed, df_qqnorm], axis=1).sort_values(['#Chr', 'start'])
+    
+    
+    
     
     output_bed.to_csv('QTLs/QTLTools/chRNA.Slopes/OnlyFirstReps.qqnorm.bed.gz', sep='\t', index=False, header=True)
         

@@ -186,8 +186,42 @@ rule chRNAGetSlopes:
             "IntronSlopes/slopes/{IndID}.{windowStyle}.tab.gz",
             IndID=chRNASeqSamples, windowStyle = ["IntronWindows_equalLength", "IntronWindows"]
         ),
+        #expand(
+        #    "IntronSlopes/slopes/{IndID}.{windowStyle}.glm_nb.tab.gz",
+        #    IndID=chRNASeqSamples, windowStyle = ["IntronWindows_equalLength", "IntronWindows"]
+        #),
+        "QTLs/QTLTools/chRNA.Slopes/OnlyFirstReps.qqnorm.bed.gz",
+        "QTLs/QTLTools/chRNA.Slopes/PermutationPass.FDR_Added.txt.gz"
+        
+        
+rule SpliceSitePhenotypes:
+    input:
         expand(
-            "IntronSlopes/slopes/{IndID}.{windowStyle}.glm_nb.tab.gz",
-            IndID=chRNASeqSamples, windowStyle = ["IntronWindows_equalLength", "IntronWindows"]
+            "QTLs/QTLTools/{Phenotype}.{Prime}/NominalPass.txt.gz",
+            Phenotype = ['chRNA.Splicing', 'polyA.Splicing', 'H3K4ME1', 'H3K4ME3', 'H3K27AC'],
+            Prime = ['5PrimeSS', '3PrimeSS']
         ),
-        "QTLs/QTLTools/chRNA.Slopes/OnlyFirstReps.qqnorm.bed.gz"
+        expand(
+            "featureCounts/{Phenotype}.{SpliceSite}/Counts.txt",
+            Phenotype = ['H3K4ME1', 'H3K4ME3', 'H3K27AC'],
+            SpliceSite = ['5PrimeSS', '3PrimeSS']
+        ),
+        expand(
+        "featureCounts/{Phenotype}/NormFactors.tsv",
+        Phenotype = ['chRNA.Expression', 'chRNA.Expression_eRNA', 'chRNA.Expression_cheRNA', 'chRNA.Expression_snoRNA', 
+        'chRNA.Expression_lncRNA', 'H3K27AC.3PrimeSS', 'H3K27AC.5PrimeSS', 'H3K4ME3.3PrimeSS', 'H3K4ME3.5PrimeSS',
+        'H3K4ME1.3PrimeSS', 'H3K4ME1.5PrimeSS']
+        ),
+        expand(
+            "QTLs/QTLTools/{Phenotype}.{Prime}.Peaks/NominalPass.txt.gz",
+            Phenotype = ['H3K4ME1', 'H3K4ME3', 'H3K27AC', 'CTCF'],
+            Prime = ['5PrimeSS', '3PrimeSS']
+        ),
+        #"QTLs/QTLTools/chRNA.Splicing.3PrimeSS/NominalPass.txt.gz",
+        #"QTLs/QTLTools/polyA.Splicing.5PrimeSS/NominalPass.txt.gz",
+        #"QTLs/QTLTools/polyA.Splicing.3PrimeSS/NominalPass.txt.gz",
+        #"QTLs/QTLTools/chRNA.Splicing.5PrimeSS/PermutationPass.FDR_Added.txt.gz",
+        #"QTLs/QTLTools/chRNA.Splicing.3PrimeSS/PermutationPass.FDR_Added.txt.gz",
+        #"QTLs/QTLTools/polyA.Splicing.5PrimeSS/PermutationPass.FDR_Added.txt.gz",
+        #"QTLs/QTLTools/polyA.Splicing.3PrimeSS/PermutationPass.FDR_Added.txt.gz",
+

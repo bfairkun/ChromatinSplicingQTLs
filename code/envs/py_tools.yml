@@ -200,7 +200,6 @@ dependencies:
   - snakemake-minimal=6.12.1=pyhdfd78af_0
   - sqlite=3.37.0=h9cd32fc_0
   - statsmodels=0.13.0=py310h7f8727e_0
-  - stone=3.2.1=pyhd8ed1ab_0
   - stopit=1.1.2=py_0
   - tabulate=0.8.9=pyhd8ed1ab_0
   - threadpoolctl=2.1.0=pyh5ca1d4c_0

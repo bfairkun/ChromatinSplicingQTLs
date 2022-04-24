@@ -26,6 +26,7 @@ minIntronCounts = as.integer(args[2])
 minCoverageCounts = as.integer(args[3])
 minCoverage = as.numeric(args[4])
 WinLen = as.integer(args[5])
+minIntronLen = as.integer(args[6])
 
 print('loaded params')
 
@@ -36,7 +37,6 @@ tryCatch(
     if (windowStyle == 'IntronWindows_equalLength')   {     
       Counts.EqualSizeBins <- fread(intronFile, #fread(paste(equalLengthDir, intronFile, sep=''), 
                               sep = '\t', col.names = c("chr", "start", "stop", "name", "score", "strand", "Readcount"), header=F) %>%
-<<<<<<< Updated upstream
     separate(name, into = c("gene", "IntChr", "IntStart", "IntStop", "IntStrand", "Window"),convert=T, sep = "_") %>%
     mutate(IntronLength = IntStop - IntStart) %>%
     unite(IntronName, gene, IntChr, IntStart, IntStop, IntStrand, remove=F) %>%
@@ -59,45 +59,20 @@ tryCatch(
     ungroup() %>%
     dplyr::select(chr, start, stop, Window, IntronName, Readcount, IntronLength)
   }
-||||||| constructed merge base
-
-  separate(name, into = c("gene", "IntChr", "IntStart", "IntStop", "IntStrand", "Window"),convert=T, sep = "_") %>%
-  mutate(IntronLength = IntStop - IntStart) %>%
-  unite(IntronName, gene, IntChr, IntStart, IntStop, IntStrand, remove=F) %>%
-  group_by(IntronName) %>%
-  mutate(WindowCount=max(Window)) %>%
-  ungroup() %>%
-  mutate(Window = case_when(
-    IntStrand == "+" ~ Window,
-    IntStrand == "-" ~ WindowCount + as.integer(1) - Window
-  )) %>%
-  dplyr::select(chr, start, stop, Window, IntronName, Readcount, IntronLength)
-=======
-
-  separate(name, into = c("gene", "IntChr", "IntStart", "IntStop", "IntStrand", "Window"),convert=T, sep = "_") %>%
-  mutate(IntronLength = IntStop - IntStart) %>%
-  unite(IntronName, gene, IntChr, IntStart, IntStop, IntStrand, remove=F) %>%
-  group_by(IntronName) %>%
-  mutate(WindowCount=max(Window)) %>%
-  ungroup() %>%
-  ###### This is necessary when equalLength. Probably should fix that
-  #mutate(Window = case_when(
-  #  IntStrand == "+" ~ Window,
-  #  IntStrand == "-" ~ WindowCount + as.integer(1) - Window
-  #)) %>%
-  dplyr::select(chr, start, stop, Window, IntronName, Readcount, IntronLength)
->>>>>>> Stashed changes
 
 print('or when processing')
             
 IntronCountSums <- Counts.EqualSizeBins %>%
   group_by(IntronName) %>%
-  summarise(IntronSum=sum(Readcount), IntronObsSum=sum(Readcount>0), IntronCoverage=mean(Readcount>=minCoverageCounts))
+  summarise(IntronSum=sum(Readcount), IntronObsSum=sum(Readcount>0), IntronCovBins = sum(Readcount>=minCoverageCounts),
+            IntronLength = mean(IntronLength), IntronCoverage=mean(Readcount>=minCoverageCounts))
 
 print('or when filtering')
 # Hard-coded IntronObsSum minimum of 2, despite min Intron Coverage, to ensure rlm can run
-IntronsToGetSlope <- IntronCountSums %>% filter((IntronSum>=minIntronCounts), (IntronObsSum>=2), ((IntronObsSum>=20) | (IntronCoverage>=minCoverage))) %>% pull(IntronName)
+IntronsToGetSlope <- IntronCountSums %>% filter((IntronSum>=minIntronCounts), (IntronCovBins>=2), (IntronLength>=minIntronLen), ((IntronObsSum>=20) | (IntronCoverage>=minCoverage))) %>% pull(IntronName)
 
+IntronCountSums %>% write_delim(paste('IntronSlopes/slopes/', SampleName, '.', windowStyle, '.IntronCountSums.tab.gz', sep=''), delim = '\t')
+            
 print('or when whatever this is')
 
 sample_n_of <- function(data, size, ...) {
@@ -122,20 +97,13 @@ if (windowStyle == 'IntronWindows_equalLength')   {
 CoverageFits.df <- Counts.EqualSizeBins %>%
   filter(IntronName %in% IntronsToGetSlope) %>% #filter(Readcount >= 1) %>%
    ## See if we can make length independent
-<<<<<<< Updated upstream
   #mutate(RelativeIntronPosInBp = Window*WinLen) %>% ##### This is what we were doing with equalLength
   mutate(RelativeIntronPosInBp =  Window*WinLen) %>%
   #mutate(RelativeIntronPosInBp = Window/100) %>%
-||||||| constructed merge base
-  #mutate(RelativeIntronPosInBp = Window*WinLen) %>%
-  mutate(RelativeIntronPosInBp = (Window*WinLen)/(stop - start)) %>%
-=======
-  #mutate(RelativeIntronPosInBp = Window*WinLen) %>% ##### This is what we were doing with equalLength
-  mutate(RelativeIntronPosInBp = Window/100) %>%
->>>>>>> Stashed changes
   # sample_n_of(9, IntronName) %>%
   group_by(IntronName) %>%
-  do(CoverageFit = rlm(Readcount ~ RelativeIntronPosInBp, data = ., maxit=40)) %>%
+  mutate(NormCounts = scale(Readcount)) %>%
+  do(CoverageFit = rlm(NormCounts ~ RelativeIntronPosInBp, data = ., maxit=40)) %>%
   summarise(IntronName, tidy(CoverageFit))
     
   } else if (windowStyle == 'IntronWindows')   {  
@@ -147,7 +115,8 @@ CoverageFits.df <- Counts.EqualSizeBins %>%
     #mutate(RelativeIntronPosInBp = Window/100) %>%
     # sample_n_of(9, IntronName) %>%
     group_by(IntronName) %>%
-    do(CoverageFit = rlm(Readcount ~ RelativeIntronPosInBp, data = ., maxit=40)) %>%
+    mutate(NormCounts = scale(Readcount)) %>%
+    do(CoverageFit = rlm(NormCounts ~ RelativeIntronPosInBp, data = ., maxit=40)) %>%
     summarise(IntronName, tidy(CoverageFit))
   }
             
@@ -216,87 +185,79 @@ CoverageFits.df.tidy %>%
 #### GLM NB slopes
 
 
-tryCatch(
-        {
-set.seed(0)
+# tryCatch(
+#         {
+# set.seed(0)
             
-  if (windowStyle == 'IntronWindows_equalLength')   {  
+#   if (windowStyle == 'IntronWindows_equalLength')   {  
 
-CoverageFits.nb.glm.df <- Counts.EqualSizeBins %>%
-  filter(IntronName %in% IntronsToGetSlope) %>% #filter(Readcount >= 1) %>%
-<<<<<<< Updated upstream
-  mutate(RelativeIntronPosInBp = Window*WinLen) %>%
+# CoverageFits.nb.glm.df <- Counts.EqualSizeBins %>%
+#   filter(IntronName %in% IntronsToGetSlope) %>% #filter(Readcount >= 1) %>%
+#   mutate(RelativeIntronPosInBp = Window*WinLen) %>%
+# #   mutate(RelativeIntronPosInBp = Window/100) %>%
+#   #mutate(RelativeIntronPosInBp = Window*WinLen) %>% ### This is what we were doing with equalLength
+#   group_by(IntronName) %>%
+#   do(CoverageFit = possibly(glm.nb, otherwise = NA)(Readcount ~ RelativeIntronPosInBp, data = ., link="identity")) %>%
+#   summarise(IntronName, tidy(CoverageFit)) #tidy(CoverageFit)
+      
+#   } else if (windowStyle == 'IntronWindows')   {
+      
+#       CoverageFits.nb.glm.df <- Counts.EqualSizeBins %>%
+#   filter(IntronName %in% IntronsToGetSlope) %>% #filter(Readcount >= 1) %>%
 #   mutate(RelativeIntronPosInBp = Window/100) %>%
-  #mutate(RelativeIntronPosInBp = Window*WinLen) %>% ### This is what we were doing with equalLength
-  group_by(IntronName) %>%
-  do(CoverageFit = possibly(glm.nb, otherwise = NA)(Readcount ~ RelativeIntronPosInBp, data = ., link="identity")) %>%
-  summarise(IntronName, tidy(CoverageFit)) #tidy(CoverageFit)
+# #   mutate(RelativeIntronPosInBp = Window/100) %>%
+#   #mutate(RelativeIntronPosInBp = Window*WinLen) %>% ### This is what we were doing with equalLength
+#   group_by(IntronName) %>%
+#   do(CoverageFit = possibly(glm.nb, otherwise = NA)(Readcount ~ RelativeIntronPosInBp, data = ., link="identity")) %>%
+#   summarise(IntronName, tidy(CoverageFit)) #tidy(CoverageFit)
       
-  } else if (windowStyle == 'IntronWindows')   {
-      
-      CoverageFits.nb.glm.df <- Counts.EqualSizeBins %>%
-  filter(IntronName %in% IntronsToGetSlope) %>% #filter(Readcount >= 1) %>%
-  mutate(RelativeIntronPosInBp = Window/100) %>%
-#   mutate(RelativeIntronPosInBp = Window/100) %>%
-  #mutate(RelativeIntronPosInBp = Window*WinLen) %>% ### This is what we were doing with equalLength
-||||||| constructed merge base
-  mutate(RelativeIntronPosInBp = (Window*WinLen)/(stop - start)) %>%
-  #mutate(RelativeIntronPosInBp = Window*WinLen) %>%
-=======
-  mutate(RelativeIntronPosInBp = Window/100) %>%
-  #mutate(RelativeIntronPosInBp = Window*WinLen) %>% ### This is what we were doing with equalLength
->>>>>>> Stashed changes
-  group_by(IntronName) %>%
-  do(CoverageFit = possibly(glm.nb, otherwise = NA)(Readcount ~ RelativeIntronPosInBp, data = ., link="identity")) %>%
-  summarise(IntronName, tidy(CoverageFit)) #tidy(CoverageFit)
-      
-  }
+#   }
 
-CoverageFits.df.tidy <- CoverageFits.nb.glm.df %>%
-  ungroup() %>%
-  dplyr::select(-c("std.error", "statistic", "p.value", "x")) %>%
-  spread(key="term", value="estimate") %>%
-  separate(IntronName, into = c("gene", "IntChr", "IntStart", "IntStop", "IntStrand"),convert=T, sep = "_", remove = F) %>%
-  mutate(IntronLength = IntStop - IntStart) %>% 
-     dplyr::select(c("IntronName", "gene", "IntChr", "IntStart", "IntStop", "IntStrand", "(Intercept)",
-                    "RelativeIntronPosInBp", "IntronLength"))
+# CoverageFits.df.tidy <- CoverageFits.nb.glm.df %>%
+#   ungroup() %>%
+#   dplyr::select(-c("std.error", "statistic", "p.value", "x")) %>%
+#   spread(key="term", value="estimate") %>%
+#   separate(IntronName, into = c("gene", "IntChr", "IntStart", "IntStop", "IntStrand"),convert=T, sep = "_", remove = F) %>%
+#   mutate(IntronLength = IntStop - IntStart) %>% 
+#      dplyr::select(c("IntronName", "gene", "IntChr", "IntStart", "IntStop", "IntStrand", "(Intercept)",
+#                     "RelativeIntronPosInBp", "IntronLength"))
 
-colnames(CoverageFits.df.tidy) <- c("IntronName", "Gene", "IntChr", "IntStart", "IntStop", "IntStrand", "Intercept",
-                    "Slope", "IntronLength")
+# colnames(CoverageFits.df.tidy) <- c("IntronName", "Gene", "IntChr", "IntStart", "IntStop", "IntStrand", "Intercept",
+#                     "Slope", "IntronLength")
 
-CoverageFits.df.tidy['Slope.p.value'] = CoverageFits.nb.glm.df[CoverageFits.nb.glm.df$term == "RelativeIntronPosInBp",]$p.value
-CoverageFits.df.tidy['Intercept.p.value'] = CoverageFits.nb.glm.df[CoverageFits.nb.glm.df$term == "(Intercept)",]$p.value
+# CoverageFits.df.tidy['Slope.p.value'] = CoverageFits.nb.glm.df[CoverageFits.nb.glm.df$term == "RelativeIntronPosInBp",]$p.value
+# CoverageFits.df.tidy['Intercept.p.value'] = CoverageFits.nb.glm.df[CoverageFits.nb.glm.df$term == "(Intercept)",]$p.value
 
-IntronCountSums_filtered <- IntronCountSums[IntronCountSums$IntronName %in% CoverageFits.df.tidy$IntronName,]
-IntronCountSums_filtered <- IntronCountSums_filtered %>% column_to_rownames(., var = "IntronName")
+# IntronCountSums_filtered <- IntronCountSums[IntronCountSums$IntronName %in% CoverageFits.df.tidy$IntronName,]
+# IntronCountSums_filtered <- IntronCountSums_filtered %>% column_to_rownames(., var = "IntronName")
             
-CoverageFits.df.tidy['counts'] <- IntronCountSums_filtered[CoverageFits.df.tidy$IntronName,]$IntronSum
-CoverageFits.df.tidy['coverageMean'] <- IntronCountSums_filtered[CoverageFits.df.tidy$IntronName,]$IntronCoverage
+# CoverageFits.df.tidy['counts'] <- IntronCountSums_filtered[CoverageFits.df.tidy$IntronName,]$IntronSum
+# CoverageFits.df.tidy['coverageMean'] <- IntronCountSums_filtered[CoverageFits.df.tidy$IntronName,]$IntronCoverage
             
-print(paste('IntronSlopes/slopes/', SampleName, '_glm.nb.tab.gz', sep=''))
+# print(paste('IntronSlopes/slopes/', SampleName, '_glm.nb.tab.gz', sep=''))
 
-CoverageFits.df.tidy %>%
-  mutate(IsSlopeNegative = Slope < 0 ) %>%
-  write_delim(paste('IntronSlopes/slopes/', SampleName, '.', windowStyle, '.glm_nb.tab.gz', sep=''), delim = '\t')
+# CoverageFits.df.tidy %>%
+#   mutate(IsSlopeNegative = Slope < 0 ) %>%
+#   write_delim(paste('IntronSlopes/slopes/', SampleName, '.', windowStyle, '.glm_nb.tab.gz', sep=''), delim = '\t')
             
-},
-    error = function(e) {
+# },
+#     error = function(e) {
         
-        data.frame(IntronName=character(),
-                  gene=character(),
-                  IntChr=character(),
-                  IntStart=character(),
-                  IntStop=character(),
-                  IntStrand=character(),
-                  Intercept=character(),
-                  slope=character(),
-                  IntronLength=character(),
-                  std.error = character(),
-                  counts = character(),
-                  coverageMean = character(),
-                  IsSlopeNegative = character(),
-                  stringsAsFactors=FALSE) %>% write_delim(paste('IntronSlopes/slopes/', SampleName, '.', windowStyle, '.glm_nb.tab.gz', sep=''), delim = '\t')
+#         data.frame(IntronName=character(),
+#                   gene=character(),
+#                   IntChr=character(),
+#                   IntStart=character(),
+#                   IntStop=character(),
+#                   IntStrand=character(),
+#                   Intercept=character(),
+#                   slope=character(),
+#                   IntronLength=character(),
+#                   std.error = character(),
+#                   counts = character(),
+#                   coverageMean = character(),
+#                   IsSlopeNegative = character(),
+#                   stringsAsFactors=FALSE) %>% write_delim(paste('IntronSlopes/slopes/', SampleName, '.', windowStyle, '.glm_nb.tab.gz', sep=''), delim = '\t')
        
-        })
+#         })
 
 

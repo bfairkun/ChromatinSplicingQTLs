@@ -23,6 +23,11 @@ rule PrepareQTLToolsPhenotypeTable_FromFeatureCountsPeaks:
         Rscript scripts/PreparePhenotypeTablesFromFeatureCounts_ChromatinProfilingPeaks.R {input} {params.max_features} {output.AllSamples} {output.FirstReps} &> {log}
         """
 
+
+use rule PrepareQTLToolsPhenotypeTable_FromFeatureCountsPeaks as MakeChromatinSpliceSitePhenotypes with:
+    wildcard_constraints:
+        Phenotype = 'H3K4ME1.5PrimeSS|H3K4ME1.3PrimeSS|H3K4ME3.5PrimeSS|H3K4ME3.3PrimeSS|H3K27AC.5PrimeSS|H3K27AC.3PrimeSS'
+
 # rule GetGenotypePCs:
 #     input:
 #         FirstReps = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.qqnorm.bed.gz",

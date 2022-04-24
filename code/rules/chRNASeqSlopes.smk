@@ -114,12 +114,13 @@ rule GetSlopes:
         #bed = "IntronSlopes/IntronWindowCounts/{IndID}.IntronWindows_equalLength.bed.gz"
     params:
         WinLen = "200",
-        minIntronCounts = "10",
-        minCoverageCounts = "1",
-        minCoverage = "0.25"
+        minIntronCounts = "1000",
+        minCoverageCounts = "20",
+        minCoverage = "0.9",
+        minIntronLen = "1000"
     output:
         "IntronSlopes/slopes/{IndID}.{windowStyle}.tab.gz",
-        "IntronSlopes/slopes/{IndID}.{windowStyle}.glm_nb.tab.gz"
+        #"IntronSlopes/slopes/{IndID}.{windowStyle}.glm_nb.tab.gz"
     resources:
         mem_mb = 16000
     conda:
@@ -131,23 +132,41 @@ rule GetSlopes:
         "logs/slopes/{IndID}.{windowStyle}.slope.log"
     shell:
         """
-        (Rscript scripts/GetSlopes.R {input.bed} {params.minIntronCounts} {params.minCoverageCounts} {params.minCoverage} {params.WinLen}) &> {log}
+        (Rscript scripts/GetSlopes.R {input.bed} {params.minIntronCounts} {params.minCoverageCounts} {params.minCoverage} {params.WinLen} {params.minIntronLen}) &> {log}
         """
         
 rule SlopesPreparePhenotypes:
     input: 
-        expand("IntronSlopes/IntronWindowCounts/{IndID}.IntronWindows.bed.gz", IndID=chRNASeqSamples)
+        expand("IntronSlopes/IntronWindowCounts/{IndID}.IntronWindows_equalLength.bed.gz", IndID=chRNASeqSamples)
     output:
         "QTLs/QTLTools/chRNA.Slopes/OnlyFirstReps.qqnorm.bed.gz"
     conda:
         "../envs/py_tools.yml"
     params:
-        FDR = "0.25"
+        skip_samples = 'NA18855',
+        skip_introns = ':'.join(['ENSG00000153944.11_chr17_57596950_57615969_+',
+                                'ENSG00000187231.14_chr2_179191866_179264498_-',
+                                'ENSG00000170832.13_chr17_60301704_60345480_-',
+                                'ENSG00000062725.10_chr17_60500487_60525793_-',
+                                'ENSG00000204217.15_chr2_202377550_202464808_+',
+                                'ENSG00000182670.13_chr21_37172744_37182773_+',
+                                'ENSG00000131374.14_chr3_17428519_17508473_-',
+                                'ENSG00000188033.10_chr19_12583556_12609157_-',
+                                'ENSG00000152492.15_chr3_191329723_191357087_+',
+                                'ENSG00000198874.13_chr7_67195337_67238307_+',
+                                'ENSG00000170776.22_chr15_85485753_85521427_+',
+                                'ENSG00000181722.16_chr3_114900342_114974365_-',
+                                'ENSG00000088930.8_chr20_21303473_21326278_+',
+                                'ENSG00000136813.14_chr9_111397153_111408570_-',
+                                'ENSG00000073282.13_chr3_189631577_189737739_+']),
+        max_missing = '0.1',
+        top_introns = '10000',
+        #FDR = "0.25"
     log:
         "logs/slopes/OnlyFirstReps.log"
     shell:
         """
-        python scripts/PreparePhenotypeTablesSlopes.py --windowStyle IntronWindows --FDR {params.FDR} &> {log}
+        python scripts/PreparePhenotypeTablesSlopes.py --windowStyle IntronWindows_equalLength --skip_samples {params.skip_samples} --skip_introns {params.skip_introns} --max_missing {params.max_missing} --top_introns {params.top_introns} &> {log}
         """
         
 
