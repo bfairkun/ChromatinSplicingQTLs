@@ -1,0 +1,1 @@
+Get summary stats by exporting csv after searching for an publication in GWAS catalog summary stats. Be sure to check to include ftp link column. Only take from studies with API access (which have harmonised summary stats)

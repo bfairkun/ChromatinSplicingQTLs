@@ -18,6 +18,8 @@ First load necessary libraries and read in colocalization results data...
 
 ```{r}
 library(tidyverse)
+library(RColorBrewer)
+library(scales)
 
 # table of gwas considered
 gwas <- read_csv("../data/list_gwas_summary_statistics_PMID27863252.csv") %>%
@@ -61,11 +63,13 @@ Ok, a median of about 17 traits attempted to colocalize for each GWAS locus, and
 Now, how many gwas loci have anything colocalizing with them?
 
 ```{r}
+
 # Bar plot of number of loci, filled by color if they colocalize with at least 1 molQTL
 dat %>%
   mutate(ColocalizedTraitsContainGWAS = str_detect(ColocalizedTraits, Locus)) %>%
   group_by(Locus, trait) %>%
   summarise(DoesLocusColocalizeWithAnything = sum(ColocalizedTraitsContainGWAS)) %>%
+  replace_na(list(DoesLocusColocalizeWithAnything=0)) %>%
   ggplot(aes(x=trait, fill=factor(DoesLocusColocalizeWithAnything))) +
   geom_bar(position="stack") +
   theme_classic() +
@@ -76,6 +80,7 @@ dat %>%
   mutate(ColocalizedTraitsContainGWAS = str_detect(ColocalizedTraits, Locus)) %>%
   group_by(Locus, trait) %>%
   summarise(DoesLocusColocalizeWithAnything = sum(ColocalizedTraitsContainGWAS)) %>%
+  replace_na(list(DoesLocusColocalizeWithAnything=0)) %>%
   ggplot(aes(x=trait, fill=factor(DoesLocusColocalizeWithAnything))) +
   geom_bar(position="fill") +
   ylab('Fraction GWAS loci colocalized') +
@@ -107,16 +112,29 @@ yes, there is clearly a trend wherein the gwas loci that colocalize with somethi
 Moving on...  let's see what type of molQTL tend to colocalize with the gwas loci (out of the molecular traits I attemped,  obviously).
 
 ```{r}
+dat %>%
+    select(trait, Locus, ColocalizedTraits) %>%
+    filter(str_detect(ColocalizedTraits, Locus)) %>%
+    separate_rows(ColocalizedTraits, sep = ", ") %>%
+    filter(!ColocalizedTraits==Locus) %>%
+    separate(ColocalizedTraits, into=c("Trait_family", "trait"), sep = ";")  %>%
+    pull(Trait_family) %>% unique()
 
 dat %>%
     select(trait, Locus, ColocalizedTraits) %>%
     filter(str_detect(ColocalizedTraits, Locus)) %>%
-    mutate(trait_families = str_replace(str_replace_all(ColocalizedTraits, ";.+?,", ""), ";.+$", "")) %>%
-    mutate(trait_families = str_replace(trait_families, paste0(Locus, ", "), "")) %>%
+    separate_rows(ColocalizedTraits, sep = ", ") %>%
+    filter(!ColocalizedTraits==Locus) %>%
+    separate(ColocalizedTraits, into=c("Trait_family", "MolTrait"), sep = ";") %>%
+    distinct(Locus, Trait_family, .keep_all = T) %>%
+    select(-MolTrait) %>%
+    group_by(Locus, trait) %>% 
+    summarise(trait_families = paste0(Trait_family, collapse = ", ")) %>%
     mutate(trait_families = case_when(
                                       str_detect(trait_families, " ") ~ "More than one",
                                       TRUE ~ trait_families
                                       )) %>%
+    mutate(trait_families=recode(trait_families, !!!c("MetabolicLabelled.30min"="MetabolicLabelled.30|60", "MetabolicLabelled.60min"="MetabolicLabelled.30|60", "Expression.Splicing.Subset_YRI"="polyA.eQTL", "chRNA.Expression.Splicing"="chRNA.eQTL", "polyA.IR.Subset_YRI"="polyA.IntronRetention", "polyA.Splicing.Subset_YRI"="polyA.SplicingLeafcutter", "chRNA.Splicing"="chRNA.SplicingLeafcutter"))) %>%
     ggplot(aes(x=trait, fill=trait_families)) +
     geom_bar(position="stack")+
     ylab("Number colocalized loci") +
@@ -124,62 +142,33 @@ dat %>%
     theme_classic() +
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
-
 dat %>%
     select(trait, Locus, ColocalizedTraits) %>%
     filter(str_detect(ColocalizedTraits, Locus)) %>%
-    mutate(trait_families = str_replace(str_replace_all(ColocalizedTraits, ";.+?,", ""), ";.+$", "")) %>%
-    mutate(trait_families = str_replace(trait_families, paste0(Locus, ", "), "")) %>%
+    separate_rows(ColocalizedTraits, sep = ", ") %>%
+    filter(!ColocalizedTraits==Locus) %>%
+    separate(ColocalizedTraits, into=c("Trait_family", "MolTrait"), sep = ";") %>%
+    distinct(Locus, Trait_family, .keep_all = T) %>%
+    select(-MolTrait) %>%
+    group_by(Locus, trait) %>% 
+    summarise(trait_families = paste0(Trait_family, collapse = ", ")) %>%
     mutate(trait_families = case_when(
                                       str_detect(trait_families, " ") ~ "More than one",
                                       TRUE ~ trait_families
                                       )) %>%
-    mutate(trait_families = recode(trait_families,
-                                   Expression.Splicing = "Expression (Geuvadis)",
-                                   Expression.Splicing.Subset_YRI = "Expression; YRI Subset",
-                                   polyA.Splicing.Subset_YRI = "Splicing; leafcutter; YRI Subset")) %>%
+    mutate(trait_families=recode(trait_families, !!!c("MetabolicLabelled.30min"="MetabolicLabelled.30|60", "MetabolicLabelled.60min"="MetabolicLabelled.30|60", "Expression.Splicing.Subset_YRI"="polyA.eQTL", "chRNA.Expression.Splicing"="chRNA.eQTL", "polyA.IR.Subset_YRI"="polyA.Splicing", "polyA.Splicing.Subset_YRI"="polyA.Splicing", "chRNA.Splicing"="chRNA.Splicing", "chRNA.IR"="chRNA.Splicing", "H3K27AC"="H3K27AC|H3K4ME3", "H3K4ME3"="H3K27AC|H3K4ME3", "chRNA.Expression_lncRNA"="chRNA.ncRNA.eQTL", "chRNA.Expression_snoRNA"="chRNA.ncRNA.eQTL", "chRNA.Expression_cheRNA"="chRNA.ncRNA.eQTL", "chRNA.Expression_eRNA"="chRNA.ncRNA.eQTL"))) %>%
     ggplot(aes(x=trait, fill=trait_families)) +
     geom_bar(position="fill")+
-    ylab("Fraction colocalized loci") +
-    scale_y_continuous(expand=c(0,0)) +
-    labs(fill="molecular QTL type") +
+    ylab("Number colocalized loci") +
+    labs(fill="Molecular trait category") +
+    scale_fill_brewer(palette="Set3") +
     coord_flip() +
     theme_classic() +
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), legend.position="bottom")
 
 ```
 
-In these plots, "More than one" just means more than one thing colocalized, even if it is two different molecular traits from the same trait class (eg, two sQTLs). Maybe it would be worthwhile replotting where two different eQTLs would still just be "eQTL" rather than "more than one".
 
-```{r}
-dat %>%
-    select(trait, Locus, ColocalizedTraits) %>%
-    filter(str_detect(ColocalizedTraits, Locus)) %>%
-    mutate(trait_families = str_replace(str_replace_all(ColocalizedTraits, ";.+?,", ""), ";.+$", "")) %>%
-    mutate(trait_families = str_replace(trait_families, paste0(Locus, ", "), "")) %>%
-    mutate(split = str_split(trait_families, " ")) %>% # split
-    mutate(split = map(.$split, ~ unique(.x))) %>% # drop duplicates
-    mutate(split = map_chr(.$split, ~paste(.x, collapse = " "))) %>%
-    mutate(trait_families = case_when(
-                                      str_detect(split, " ") ~ "More than one",
-                                      TRUE ~ split
-                                      )) %>%
-    mutate(trait_families = recode(trait_families,
-                                   Expression.Splicing = "Expression (Geuvadis)",
-                                   Expression.Splicing.Subset_YRI = "Expression; YRI Subset",
-                                   polyA.Splicing.Subset_YRI = "Splicing; leafcutter; YRI Subset")) %>%
-    ggplot(aes(x=trait, fill=trait_families)) +
-    geom_bar(position="fill")+
-    ylab("Fraction colocalized loci") +
-    scale_y_continuous(expand=c(0,0)) +
-    labs(fill="molecular QTL type") +
-    coord_flip() +
-    theme_classic() +
-    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), legend.position="bottom")
-
-```
-
-Ok the difference is pretty subtle. Maybe splicing went up a little. And that is unsurprising since splice events within a cluster covary by design, so when a sQTL trait colocalizes with GWAS, it may be common to have more than one sQTL trait colocalize.
 
 Ok, let's get a sense of the posterior probability values for colocalizations
 

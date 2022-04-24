@@ -140,6 +140,8 @@ rule DownloadGWAS_SummaryStats:
         "gwas_summary_stats/full_data/{accession}.tsv.gz"
     params:
         ftp_link = lambda wildcards: gwas_df.loc[wildcards.accession]['FTP Path'][7:]
+    wildcard_constraints:
+        accession = '|'.join(gwas_df.loc[gwas_df['FTPPath'].notna()].index)
     log:
         "logs/DownloadGWAS_SummaryStats/{accession}.log"
     shell:

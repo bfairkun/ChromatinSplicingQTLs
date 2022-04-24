@@ -1,0 +1,14 @@
+# Tsv configuration file of colocalization runs Each colocalization run has a
+# ColocName used to name output files QTLsGenotypeSet is [''|'HarmonizedSNPs'].
+# 'HarmonizedSNPs' will use same set of SNPs for all phenotypes for QTLmapping
+# and colocalization. '' will use intersection of SNPs for colocalization
+# FeatureCoordinatesRedefinedFor is ['ForColoc'|'ForGWASColoc']. ForColoc is
+# for gene-wise molQTL colocalization. ForGWASColoc is for GWAS-locus-wise
+# colocalization MolPhenotypesToColoc is an optional space separated list of
+# mol Phenotype wildcards to include in colocalization. If none is provided,
+# will default to PhenotypesToColoc in common.py
+ColocName	QTLsGenotypeSet	FeatureCoordinatesRedefinedFor	MolPhenotypesToColoc
+MolColocStandard		ForColoc	
+GWASColocStandard		ForGWASColoc	
+GWASColoc_AllRNASeq		ForGWASColoc	chRNA.IR chRNA.Expression.Splicing H3K27AC CTCF H3K4ME3 chRNA.Splicing MetabolicLabelled.30min MetabolicLabelled.60min Expression.Splicing.Subset polyA.Splicing.Subset polyA.IR.Subset chRNA.Expression_cheRNA chRNA.Expression_eRNA chRNA.Expression_lncRNA chRNA.Expression_snoRNA
+

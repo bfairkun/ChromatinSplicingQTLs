@@ -60,10 +60,11 @@ chRNASeqSamples = list(pd.Index(chRNASeqSamples_df['IndID'].unique()).intersecti
 # Get random sample for each phenotype
 Fastq_samples.groupby('Phenotype').apply(lambda x: x.sample(2, random_state=1)).reset_index(drop=True)
 
-# Read in table of GWAS summary stat links (obtained from GWAS catalog's online
-# interface)
-gwas_df = pd.read_csv("../data/list_gwas_summary_statistics_PMID27863252.csv", index_col='Study accession')
+gwas_df = pd.read_csv("config/gwas_table.tsv", index_col='gwas', sep='\t', usecols=['gwas', 'trait', 'FTPPath', "SummaryStatsLocalFilepath", 'ProcessingMethod', "Continuous"])
 
+colocs_df = pd.read_csv("config/ColocRunWildcards.tsv", index_col=0, comment='#', sep='\t', keep_default_na=False)
+colocs_gwas = colocs_df.loc[colocs_df['FeatureCoordinatesRedefinedFor']=='ForGWASColoc']
+colocs_genewise = colocs_df.loc[colocs_df['FeatureCoordinatesRedefinedFor']=='ForColoc']
 
 # print(ChromatinProfilingPhenotypes)
 
@@ -217,3 +218,24 @@ def GetBamForPhenotype(wildcards):
 def GetAnnotationsForRegion(wildcards):
     if wildcards.Region == "AtTSS":
         return "ReferenceGenome/Annotations/TSSRegions.saf"
+
+def GetMolPhenotypesToColoc(wildcards):
+    ProvidedMolPhenotypeList = colocs_df.loc[wildcards.ColocName]['MolPhenotypesToColoc']
+    if ProvidedMolPhenotypeList == '':
+        return ' '.join(PhenotypesToColoc)
+    else:
+        return ProvidedMolPhenotypeList
+
+def GetColocTsvFormattedString(string):
+    """
+    return a snakemake input function that returns formatted string with wildcard values that match colocs_df based on ColocName index wildcard
+    """
+    def F(wildcards):
+        return string.format(**colocs_df.loc[wildcards.ColocName].to_dict())
+    return F
+
+def much_more_mem_after_first_attempt(wildcards, attempt):
+    if int(attempt) == 1:
+        return 4000
+    else:
+        return 52000

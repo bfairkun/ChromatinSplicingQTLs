@@ -11,7 +11,7 @@
 #Use hard coded arguments in interactive R session, else use command line args
 if(interactive()){
     args <- scan(text=
-                 "../output/hyprcoloc_results/ForColoc/hyprcoloc.results.txt.gz hyprcoloc/LociWiseSummaryStatsInput/ForColoc/ scratch/test.hyprcoloc.tidy.txt.gz", what='character')
+                 "hyprcoloc/Results/ForColoc/MolColocStandard/results.txt.gz hyprcoloc/LociWiseSummaryStatsInput/ForColoc/ scratch/tidy_results_OnlyColocalized.txt.gz", what='character')
 } else{
     args <- commandArgs(trailingOnly=TRUE)
 }
@@ -37,7 +37,7 @@ sample_n_groups = function(tbl, size, replace = FALSE, weight = NULL) {
 GetSummaryStats <- function(df){
     SummaryStats <- fread(paste0(summary_stats_dir, df$Locus[1], ".txt.gz")) %>%
         filter(snp %in% unique(df$topSNP)) %>%
-        mutate(phenotype_class = str_replace(source_file, "QTLs/QTLTools/(.+?)/.+", "\\1")) %>%
+        mutate(phenotype_class = str_replace(source_file, "QTLs/QTLTools/(.+?)/(.+?)/.+$", "\\1")) %>%
         mutate(phenotype_full = paste0(phenotype_class, ";", phenotype)) %>%
         select(snp, beta, beta_se, p, Locus=gwas_locus, phenotype_full) %>%
         right_join(df, by=c("phenotype_full"="ColocalizedTraits", "snp"="topSNP", "Locus")) %>%

@@ -1,0 +1,46 @@
+---
+title: "ExploreLiftoverHarmonisation"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Intro
+
+Some gwas summary stats are provided in hg19. I have been doing my whole project in hg38. This means I have to liftover those stats. But as described [here](https://mrcieu.github.io/TwoSampleMR/articles/harmonise.html), we need to ensure effect size directions are properly polarised/harmonised to the hg38 reference genome + strand. I have liftover the hg19 summary stats to hg38, saving the allele1 and allele2, and also added what the hg38 reference base is. Here I need to explore this data, to ensure I can harmonise things properly.
+
+```{r}
+library(tidyverse)
+```
+
+read data...
+
+```{r}
+
+dat <- read_tsv("../code/gwas_summary_stats/hg38lifted_summarystat_beds/IMSGC2019.bed.refalleleadded.gz", col_names = c("chrom", "pos", "pos_plusone", "P", "snp", "allele1", "allele2", "OR", "hg38RefBase"))
+
+NSnps <- nrow(dat)
+```
+
+How often are allele1 and hg38Ref the same?
+
+```{r}
+dat.reformat <- dat %>% head(1000000) %>%
+  mutate(IsDbsnp = str_starts(snp, "rs")) %>%
+  select(chrom, IsDbsnp, pos, snp, allele1, allele2, hg38RefBase) %>%
+  gather(key="allele", value="N", allele1, allele2) %>%
+  mutate(IsConcord = N == hg38RefBase) %>%
+  group_by(allele, IsDbsnp) %>%
+  summarise(NumConcord = sum(IsConcord))
+```
+
+
+Hmm, the dbSNPs are more concordant, but still, the allele listed as allele1 is no more likely to be the hg38 reference allele than allele2.
+
+## update
+
+Phoenix pointed out to me that hyprcoloc essentially uses p values and the sign of beta doesn't matter. See [https://github.com/jrs95/hyprcoloc/issues/6](https://github.com/jrs95/hyprcoloc/issues/6).
+
+That makes things a lot easier... technically i don't even need to worry about sign of beta for future hyprcoloc analyses.

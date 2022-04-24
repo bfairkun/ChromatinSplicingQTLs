@@ -35,6 +35,11 @@ wildcard_constraints:
 
 localrules:
     all,
+    CollectNormalizedPsiTables,
+    CollectColocResultsToOutputDir,
+    CollectDownloadGWAS_SummaryStats,
+    Collect_chRNASeq_Fastq,
+    CollectColocResultsToCodeDir,
     CopyFastqFromLocal,
     DownloadFastqFromLink,
     Download1KG_GRCh38,
@@ -135,7 +140,7 @@ rule all:
         "SplicingAnalysis/IR/ProCap/Counts.txt"
 
 
-rule Gather_chRNASeq_Fastq:
+rule Collect_chRNASeq_Fastq:
     """
     Useful to force rexecution of all chRNAseq related analysis after
     identifying sample swaps and correcting them in samples.tsv config
@@ -150,27 +155,25 @@ rule Gather_chRNASeq_Fastq:
         ####),
 
 
-rule Gather_gwas_summary_stats:
+rule CollectColocResultsToCodeDir:
     """
-    invoke this as the target rule to download gwas summary stats. See the
-    gwas_df dataframe assigned in common.py.
+    invoke this as the target rule to perform colocalizations as defined in config/ColocRunWildcards.tsv without altering any git tracked files in ../output dir
     """
     input:
-        expand(
-            "../output/hyprcoloc_results/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}/hyprcoloc.results.txt.gz",
-            QTLsGenotypeSet="",
-            FeatureCoordinatesRedefinedFor=["ForGWASColoc", "ForColoc"],
-        ),
-        expand("../output/hyprcoloc_results/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}/snpscores.txt.gz",
-            QTLsGenotypeSet="",
-            FeatureCoordinatesRedefinedFor=["ForColoc"],
-            ),
-        expand("../output/hyprcoloc_results/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}/hyprcoloc.results.OnlyColocalized.Stats.txt.gz",
-            QTLsGenotypeSet="",
-            FeatureCoordinatesRedefinedFor=["ForColoc"],
-            ),
-        expand("QTLs/QTLTools/{Phenotype}/OnlyFirstReps.PSI.bed.gz", Phenotype=["polyA.Splicing","chRNA.Splicing"])
-        
+        expand("hyprcoloc/Results/ForColoc/{ColocName}/tidy_results_OnlyColocalized.txt.gz", ColocName = colocs_genewise.index),
+        expand("hyprcoloc/Results/ForGWASColoc/{ColocName}/results.txt.gz", ColocName = colocs_gwas.index )
+
+rule CollectColocResultsToOutputDir:
+    """
+    invoke this as the target rule to perform colocalizations as defined in config/ColocRunWildcards.tsv and move them to the ../output dir which is git tracked
+    """
+    input:
+        expand("../output/hyprcoloc_results/ForColoc/{ColocName}/hyprcoloc.results.OnlyColocalized.Stats.txt.gz", ColocName = colocs_genewise.index),
+        expand("../output/hyprcoloc_results/ForGWASColoc/{ColocName}/hyprcoloc.results.txt.gz", ColocName = colocs_gwas.index )
+
+rule CollectDownloadGWAS_SummaryStats:
+    input:
+        expand("gwas_summary_stats/full_data/{accession}.tsv.gz", accession=gwas_df.index)
 
 rule chRNAGetSlopes:
     """

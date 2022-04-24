@@ -48,4 +48,3 @@ rule Prepare_RNA_seq_ExpressionPhenotypeTable_ForGenesInList:
         Rscript scripts/PreparePhenotypeTableFromFeatureCounts_SubsetGeneList.R {input.featureCounts} {input.GeneList} {output.FirstReps} {input.YRI_List} &> {log}
         """
 
-

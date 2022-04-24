@@ -1,5 +1,6 @@
 *
 !config/
+!config/**
 !snakemake_profiles
 !snakemake_profiles/**
 !notebooks
@@ -35,3 +36,4 @@ scripts/.snakemake*
 **__pycache__/
 */.ipynb_checkpoints
 */.ipynb_checkpoints/*
+**DS_Store

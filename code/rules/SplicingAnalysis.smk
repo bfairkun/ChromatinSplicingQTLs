@@ -408,3 +408,31 @@ rule featureCountsForSpliceSite:
 
 
 
+
+rule MakeNormalizedPsiTables:
+    input:
+        numers = "SplicingAnalysis/leafcutter/clustering/autosomes/leafcutter_perind_numers.counts.gz"
+    output:
+        expand("SplicingAnalysis/leafcutter/NormalizedPsiTables/PSI.{Phenotype}.bed", Phenotype = ["Expression.Splicing", "MetabolicLabelled.30min", "MetabolicLabelled.60min", "chRNA.Expression.Splicing"])
+    log:
+        "logs/MakeNormalizedPsiTables.log"
+    conda:
+        "envs/r_2.yaml"
+    shell:
+        """
+        Rscript scripts/MakeNormalizedPSI.Tables.R SplicingAnalysis/leafcutter/NormalizedPsiTables/PSI. {input.numers} &> {log}
+        """
+
+rule BgzipAndTabixPsiTables:
+    input:
+        "SplicingAnalysis/leafcutter/NormalizedPsiTables/PSI.{Phenotype}.bed"
+    output:
+        bed = "SplicingAnalysis/leafcutter/NormalizedPsiTables/PSI.{Phenotype}.bed.gz",
+        tbi = "SplicingAnalysis/leafcutter/NormalizedPsiTables/PSI.{Phenotype}.bed.gz.tbi"
+    log:
+        "logs/BgzipAndTabixPsiTables/{Phenotype}.log"
+    shell:
+        """
+        bgzip {input}
+        tabix -p bed {output.bed}
+        """

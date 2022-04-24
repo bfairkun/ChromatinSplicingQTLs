@@ -25,7 +25,7 @@ rule CalculateNormFactorsForBigwig:
     params:
         OptionalGeneListCol = GetGeneListCol
     conda:
-        "../envs/r_essentials.yml"
+        "../envs/r_2.yaml"
     priority: 1
     shell:
         """
@@ -56,7 +56,7 @@ rule MakeBigwigs_NormalizedToEdgeRFeatureCounts:
         bw_minus = "bw_minus=",
         MKTEMP_ARGS = "-p " + config['scratch'],
         SORT_ARGS="-T " + config['scratch'],
-        Region = "chr11:65,495,738-65,508,516"
+        Region = ""
         # Region = ""
     # wildcard_constraints:
     #     Phenotype = "|".join(RNASeqPhenotypes)
