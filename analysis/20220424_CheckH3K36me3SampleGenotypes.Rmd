@@ -1,0 +1,92 @@
+---
+title: "CheckH3K36me3FinalGenotypes"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F)
+```
+
+```{r}
+library(tidyverse)
+
+
+```
+
+```{r}
+mbv.files <- list.files("/project2/yangili1/bjf79/20201123_CheckH3K36me3_CutAndTag/code/QC/mbv/data", full.names = T) %>%
+  set_names(str_replace(., ".+\\/(.+?)_H3K36ME3_Final.txt", "\\1"))
+  
+dat <-lapply(mbv.files, read_delim, delim=' ') %>%
+  bind_rows(.id = "ExpectedSampleID") %>%
+  filter(startsWith(SampleID, "NA"))
+
+
+  
+```
+
+```{r}
+dat %>%
+  ggplot(aes(x=perc_het_consistent, y=perc_hom_consistent, color=SampleID == ExpectedSampleID, label=SampleID )) +
+  geom_text(size=2) +
+  facet_wrap(~ExpectedSampleID, nrow = 12, scales = "free") +
+  theme_classic()
+
+```
+
+```{r}
+SamplesToCheckOut <- c("NA19104", "NA19166", "NA19128", "NA18859", "NA19193", "NA19195", "NA19196", "NA19254", "NA18486")
+
+dat %>%
+  filter(ExpectedSampleID %in% SamplesToCheckOut) %>%
+  ggplot(aes(x=perc_het_consistent, y=perc_hom_consistent, color=SampleID == ExpectedSampleID, label=SampleID )) +
+  geom_text(size=3) +
+  facet_wrap(~ExpectedSampleID) +
+  theme_classic()
+
+dat %>%
+  filter(ExpectedSampleID %in% SamplesToCheckOut) %>%
+  filter(SampleID == ExpectedSampleID) %>%
+  ggplot(aes(x=perc_het_consistent, y=perc_hom_consistent, color=SampleID == ExpectedSampleID, label=SampleID )) +
+  geom_text(size=4) +
+  facet_wrap(~ExpectedSampleID) +
+  theme_classic()
+
+
+```
+
+So there are couple clear sample swaps, and also a couple samples that just aren't in the 1000G vcf that I have been using. Let's correct the sample swaps, and write to file, including the samples that aren't in 1000G (where we can only speculate their ID matches what is expected)... Those samples won't be useful for QTL calling, but for the since we have the data, its worthwhile to write it out.
+
+```{r}
+ExpectedSamplesAndWells <- read_tsv("/project2/yangili1/bjf79/20201123_CheckH3K36me3_CutAndTag/code/Samples.H3K36me3.3.tsv") %>%
+  filter(endsWith(line, "_Final")) %>%
+  mutate(ExpectedSampleID = str_replace(line, "(.+?)_H3K36ME3_Final", "\\1")) %>%
+  mutate(WellID = str_replace(R1, ".+?YLi-BF-1-(.+?)_.+", "\\1")) %>%
+  select(WellID, ExpectedSampleID, R1, R2)
+
+ExpectedSamplesAndWells %>%
+   filter(ExpectedSampleID %in% c("NA19184", "NA19153", "NA19213"))
+
+ExpectedSamplesAndWells %>%
+  #Fix sample swaps
+  mutate(FixedSampleID = case_when(
+    ExpectedSampleID == "NA19166" ~ "NA19184",
+    ExpectedSampleID == "NA19254" ~ "NA19213",
+    ExpectedSampleID == "NA19104" ~ "NA19153",
+    TRUE ~ ExpectedSampleID    
+  )) %>%
+  filter(!ExpectedSampleID == "NA18859") %>%
+  group_by(FixedSampleID) %>%
+  mutate(RepNumber = row_number()) %>%
+  ungroup() %>%
+  mutate(R1_local = str_replace(R1, "/project2/yangili1/bjf79/SequencingData/(.+)", "/cds/yangili1/bjf79/Fastq/\\1")) %>%
+  mutate(R2_local = str_replace(R2, "/project2/yangili1/bjf79/SequencingData/(.+)", "/cds/yangili1/bjf79/Fastq/\\1")) %>%
+  select(IndID = FixedSampleID, RepNumber, R1_local, R2_local) %>%
+  mutate(Assay = "CutAndTag", Phenotype = "H3K36ME3", PairedEnd = TRUE) %>%
+  write_tsv("/project2/yangili1/bjf79/ChromatinSplicingQTLs/data/20220415_FinalH3K36ME3_SampleList.tsv.gz")
+
+
+```
+
+
+
