@@ -38,7 +38,7 @@ rule Prepare_RNA_seq_ExpressionPhenotypeTable_ForGenesInList:
     output:
         FirstReps = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.qqnorm.bed.gz"
     wildcard_constraints:
-        Phenotype = "|".join(RNASeqPhenotypes_extended)
+        Phenotype = "|".join([x for x in RNASeqPhenotypes_extended if x != 'chRNA.Expression.Splicing'])
     log:
         "logs/Prepare_chrRNA_RNA_seq_ExpressionPhenotypeTable/{Phenotype}.log"
     conda:
@@ -47,4 +47,33 @@ rule Prepare_RNA_seq_ExpressionPhenotypeTable_ForGenesInList:
         """
         Rscript scripts/PreparePhenotypeTableFromFeatureCounts_SubsetGeneList.R {input.featureCounts} {input.GeneList} {output.FirstReps} {input.YRI_List} &> {log}
         """
+
+
+
+
+rule Prepare_chRNA_ExpressionPhenotypes:
+    input:
+        "featureCounts/chRNA.Expression/Counts.txt",
+        "featureCounts/chRNA.Expression_eRNA/Counts.txt",
+        "featureCounts/chRNA.Expression_cheRNA/Counts.txt",
+        "featureCounts/chRNA.Expression_lncRNA/Counts.txt",
+        "featureCounts/chRNA.Expression_snoRNA/Counts.txt",
+        "ExpressionAnalysis/polyA/ExpressedGeneList.txt",
+    output:
+        "QTLs/QTLTools/chRNA.Expression.Splicing/OnlyFirstReps.qqnorm.bed.gz",
+        "QTLs/QTLTools/chRNA.Expression_eRNA/OnlyFirstReps.qqnorm.bed.gz",
+        "QTLs/QTLTools/chRNA.Expression_cheRNA/OnlyFirstReps.qqnorm.bed.gz",
+        "QTLs/QTLTools/chRNA.Expression_snoRNA/OnlyFirstReps.qqnorm.bed.gz",
+        "QTLs/QTLTools/chRNA.Expression_lncRNA/OnlyFirstReps.qqnorm.bed.gz",
+    log:
+        "logs/Prepare_chRNA_Expression_Phenotypes.log"
+    conda:
+        "../envs/r_essentials.yml"
+    shell:
+        """
+        Rscript scripts/Prepare_chRNA_Phenotypes.R &> {log}
+        """
+        
+
+
 
