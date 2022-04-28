@@ -39,6 +39,8 @@ rule CreateBedForNonGwasCatalogStats:
     output:
         bed = "gwas_summary_stats/sorted_index_summarystat_hg38beds/{accession}.bed.gz",
         tbi = "gwas_summary_stats/sorted_index_summarystat_hg38beds/{accession}.bed.gz.tbi",
+    resources:
+        mem_mb = 16000
     shell:
         """
         cat <(printf "#Chr\\tstart\\tend\\tP\\tsnpID\\tA1\\tA2\\tP\\tOR\\n") {input} |  bedtools sort -i - -header | bgzip /dev/stdin -c > {output.bed}
@@ -177,7 +179,7 @@ rule GwasBedStatsToStandardizedFormat:
 
 rule GatherGwasStandardizedStats:
     input:
-        expand("gwas_summary_stats/StatsForColoc/{accession}.unstandardized.txt.gz", accession = gwas_df.index)
+        expand("gwas_summary_stats/StatsForColoc/{accession}.standardized.txt.gz", accession = gwas_df.index)
 
 # rule GetGWASSummaryStatsAtLeadSNPWindows:
 #     """

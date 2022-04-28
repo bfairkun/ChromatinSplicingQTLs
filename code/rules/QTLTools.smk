@@ -335,3 +335,20 @@ rule MakePhenotypeTableToColocFeaturesWithGWASLoci:
         tabix -p bed {output.bed}
         """
 
+rule tabixNominalPassQTLResults:
+    """
+    Convert QTLtools output to tab delimited bgzipped and tabix indexed files
+    for easy access with tabix
+    """
+    input:
+        "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.gz"
+    wildcard_constraints:
+        Pass = "NominalPass"
+    output:
+        txt = "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.tabix.gz",
+        tbi = "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.tabix.gz.tbi"
+    shell:
+        """
+        cat <(zcat {input} | head -1 | perl -p -e 'printf("#") if $. ==1; s/ /\\t/g') <(zcat {input} | awk 'NR>1' | head -1000000 |  perl -p -e 's/ /\\t/g' | sort -k9,9 -k10,10n  ) | bgzip /dev/stdin -c > {output.txt}
+        tabix -b 10 e10 -s9 {output.txt}
+        """

@@ -30,5 +30,5 @@ dat %>%
     mutate(beta = log(OR)) %>%
     mutate(SE=abs(beta/qnorm(P/2))) %>%
     select(loci, chrom, start, beta, SE, A1, A2) %>%
-    write_tsv()
+    write_tsv(f_out)
 
