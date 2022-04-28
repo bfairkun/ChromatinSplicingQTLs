@@ -107,22 +107,22 @@ rule GetAdditionalNonCodingRNAFromFeatureCounts:
 
 ### Excluding ProCap to avoid confusion
 
-rule PrepareAllRNACountsForQTLTools:
-    input:
-        featureCounts = "featureCounts/{Phenotype}_{ncRNA}/Counts.txt",
-    output:
-        FirstReps = "QTLs/QTLTools/{Phenotype}_{ncRNA}/OnlyFirstReps.qqnorm.bed.gz"
-    log:
-        "logs/Prepare_{Phenotype}.{ncRNA}_PhenotypeTable.log"
-    conda:
-        "../envs/r_essentials.yml"
-    wildcard_constraints:
-        Phenotype = "|".join(["polyA.Expression", "chRNA.Expression", "MetabolicLabelled.30min", "MetabolicLabelled.60min"]),
-        ncRNA = "|".join(["eRNA", "cheRNA", "snoRNA", "lncRNA"])
-    conda:
-        "../envs/r_essentials.yml"
-    shell:
-        """
-        Rscript scripts/PreparePhenotypeTablesNonCodingRNA.R {input.featureCounts} {output.FirstReps} &> {log}
-        """
+#rule PrepareAllRNACountsForQTLTools:
+#    input:
+#        featureCounts = "featureCounts/{Phenotype}_{ncRNA}/Counts.txt",
+#    output:
+#        FirstReps = "QTLs/QTLTools/{Phenotype}_{ncRNA}/OnlyFirstReps.qqnorm.bed.gz"
+#    log:
+#        "logs/Prepare_{Phenotype}.{ncRNA}_PhenotypeTable.log"
+#    conda:
+#        "../envs/r_essentials.yml"
+#    wildcard_constraints:
+#        Phenotype = "|".join(["polyA.Expression", "chRNA.Expression", "MetabolicLabelled.30min", "MetabolicLabelled.60min"]),
+#        ncRNA = "|".join(["eRNA", "cheRNA", "snoRNA", "lncRNA"])
+#    conda:
+#        "../envs/r_essentials.yml"
+#    shell:
+#        """
+#        Rscript scripts/PreparePhenotypeTablesNonCodingRNA.R {input.featureCounts} {output.FirstReps} &> {log}
+#        """
 

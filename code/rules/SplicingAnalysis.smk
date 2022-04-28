@@ -373,7 +373,6 @@ rule MakeSpliceSiteSAF:
         zcat {input.in3} | awk -F'\\t' '{{print $4"\\t"$1"\\t"$2"\\t"$3"\\t."}}' > {output.out3};
         """
 
-
 def  GetAnnotationsForSpliceSite(wildcards):
     if wildcards.SpliceSite == '5PrimeSS':
         return "ReferenceGenome/Annotations/SpliceSites.5PrimeSS.saf"
@@ -403,11 +402,6 @@ rule featureCountsForSpliceSite:
         """
         featureCounts {params.paired} {params.extraParams} -T {threads} --ignoreDup --primary -a {input.annotations} -o {output} {input.bam} &> {log}
         """
-
-
-
-
-
 
 rule MakeNormalizedPsiTables:
     input:

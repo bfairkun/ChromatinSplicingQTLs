@@ -104,9 +104,9 @@ rule all:
         ####    "featureCounts/{Phenotype}/Counts.txt",
         ####    Phenotype=["MetabolicLabelled.30min", "MetabolicLabelled.60min"],
         ####),
-        expand(
-           "gwas_summary_stats/full_data/{accession}.tsv.gz", accession=gwas_df.index
-        ),
+        #expand(
+        #   "gwas_summary_stats/full_data/{accession}.tsv.gz", accession=gwas_df.index
+        #),
         ####expand(
         ####    "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.gz",
         ####    Phenotype=PhenotypesToColoc,
@@ -137,7 +137,8 @@ rule all:
         #"SplicingAnalysis/IR/polyA.IR/Counts.txt",
         "QTLs/QTLTools/chRNA.IR/OnlyFirstReps.qqnorm.bed.gz",
         "QTLs/QTLTools/polyA.IR/OnlyFirstReps.qqnorm.bed.gz",
-        "SplicingAnalysis/IR/ProCap/Counts.txt"
+        "SplicingAnalysis/IR/ProCap/Counts.txt",
+        expand("QTLs/QTLTools/{Phenotype}/PermutationPass.FDR_Added.txt.gz", Phenotype=MyPhenotypes)
 
 
 rule Collect_chRNASeq_Fastq:
