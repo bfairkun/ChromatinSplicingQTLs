@@ -106,7 +106,7 @@ rule create_gwascoloc_bash_scripts:
         gwas_bashscript_pairs = zip(gwas_df.index, cycle(output))
         for accession, out_f in gwas_bashscript_pairs:
             with open(out_f, 'a') as f:
-                _ = f.write(f'Rscript scripts/hyprcoloc_gwas.R hyprcoloc/LociWiseSummaryStatsInput/ForGWASColoc/{accession}.txt.gz gwas_summary_stats/leadSnpWindowStats/{accession}.tsv.gz {out_f.rstrip(".sh")}.txt.gz "{params.PhenotypesToColoc}"\n')
+                _ = f.write(f'Rscript scripts/hyprcoloc_gwas2.R hyprcoloc/LociWiseSummaryStatsInput/ForGWASColoc/{accession}.txt.gz gwas_summary_stats/StatsForColoc/{accession}.standardized.txt.gz {out_f.rstrip(".sh")}.txt.gz "{params.PhenotypesToColoc}"\n')
         # If there are more output files than accession numbers, the extra
         # output files won't get made in the previous loop and snakemake will
         # complain of missing output files. as a fail safe, let's append to
@@ -120,7 +120,7 @@ rule gwas_coloc_chunk:
     input:
         bashscript = "hyprcoloc/Results/{FeatureCoordinatesRedefinedFor}/{ColocName}/Chunks/{n}.sh",
         MolQTLSummaryStats = GetColocTsvFormattedString("hyprcoloc/LociWiseSummaryStatsInput/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}"),
-        Gwas_summary_stats =  expand("gwas_summary_stats/leadSnpWindowStats/{accession}.tsv.gz", accession=gwas_df.index),
+        Gwas_summary_stats =  expand("gwas_summary_stats/StatsForColoc/{accession}.standardized.txt.gz", accession=gwas_df.index),
         ModifiedCondaEnvConfirmation = "hyprcoloc/hyprcoloc_installed.touchfile"
     wildcard_constraints:
         FeatureCoordinatesRedefinedFor = "ForGWASColoc",
