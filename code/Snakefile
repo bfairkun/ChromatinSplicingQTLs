@@ -96,10 +96,10 @@ rule all:
         ####    ],
         ####),
         ####"ReferenceGenome/Annotations/GTFTools_BasicAnnotations/gencode.v34.chromasomal.tss.bed",
-        ####expand(
-        ####    "featureCounts/AtTSS/{Phenotype}/Counts.txt",
-        ####    Phenotype=["H3K27AC", "H3K4ME3"],
-        ####),
+        expand(
+            "featureCounts/AtTSS/{Phenotype}/Counts.txt",
+            Phenotype=["H3K27AC", "H3K4ME3", "H3K36ME3", "H3K4ME1"],
+        ),
         ####expand(
         ####    "featureCounts/{Phenotype}/Counts.txt",
         ####    Phenotype=["MetabolicLabelled.30min", "MetabolicLabelled.60min"],
@@ -198,6 +198,28 @@ rule chRNAGetSlopes:
         "QTLs/QTLTools/chRNA.Slopes/PermutationPass.FDR_Added.txt.gz"
         
         
+rule testSpliceq:
+    input:
+        expand('SplicingAnalysis/SPLICEq/MetabolicLabelled.60min.{mode}/{IndID}.spliceq.tab',
+        IndID = metabolic60samples,
+        mode = ['IRjunctions', 'IER']),
+        expand('SplicingAnalysis/SPLICEq/MetabolicLabelled.30min.{mode}/{IndID}.spliceq.tab',
+        IndID = metabolic30samples,
+        mode = ['IRjunctions', 'IER']),
+        expand('SplicingAnalysis/SPLICEq/polyA.{mode}/{IndID}.spliceq.tab',
+        IndID = polyAsamples,
+        mode = ['IRjunctions', 'IER']),
+        expand('SplicingAnalysis/SPLICEq/chRNA.{mode}/{IndID}.spliceq.tab',
+        IndID = chRNAsamples,
+        mode = ['IRjunctions', 'IER']),
+        
+        
+rule CollectSpliceq:
+    input:
+        expand("QTLs/QTLTools/{Phenotype}.{mode}/OnlyFirstReps.ratios.bed.gz",
+        Phenotype = ['chRNA', 'polyA', 'MetabolicLabelled.30min', 'MetabolicLabelled.60min'],
+        mode = ['IRjunctions', 'IER'])
+        
 rule SpliceSitePhenotypes:
     input:
         expand(
@@ -214,13 +236,17 @@ rule SpliceSitePhenotypes:
         "featureCounts/{Phenotype}/NormFactors.tsv",
         Phenotype = ['chRNA.Expression', 'chRNA.Expression_eRNA', 'chRNA.Expression_cheRNA', 'chRNA.Expression_snoRNA', 
         'chRNA.Expression_lncRNA', 'H3K27AC.3PrimeSS', 'H3K27AC.5PrimeSS', 'H3K4ME3.3PrimeSS', 'H3K4ME3.5PrimeSS',
-        'H3K4ME1.3PrimeSS', 'H3K4ME1.5PrimeSS']
+        'H3K4ME1.3PrimeSS', 'H3K4ME1.5PrimeSS', 'H3K36ME3.5PrimeSS', 'H3K36ME3.3PrimeSS']
         ),
         expand(
             "QTLs/QTLTools/{Phenotype}.{Prime}.Peaks/NominalPass.txt.gz",
-            Phenotype = ['H3K4ME1', 'H3K4ME3', 'H3K27AC', 'CTCF'],
+            Phenotype = ['H3K4ME1', 'H3K4ME3', 'H3K27AC', 'CTCF', 'H3K36ME3'],
             Prime = ['5PrimeSS', '3PrimeSS']
         ),
+        expand("QTLs/QTLTools/{Phenotype}/PermutationPass.FDR_Added.txt.gz", 
+        Phenotype=["MetabolicLabelled.30min.IR", "MetabolicLabelled.60min.IR",
+                   "MetabolicLabelled.30min.Splicing", "MetabolicLabelled.60min.Splicing"]
+        )
         #"QTLs/QTLTools/chRNA.Splicing.3PrimeSS/NominalPass.txt.gz",
         #"QTLs/QTLTools/polyA.Splicing.5PrimeSS/NominalPass.txt.gz",
         #"QTLs/QTLTools/polyA.Splicing.3PrimeSS/NominalPass.txt.gz",

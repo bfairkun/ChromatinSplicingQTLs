@@ -21,7 +21,8 @@ IntronCounts_f_in <- args[1]
 GeneCounts_f_in <- args[2]
 f_out <- args[3]
 plot_out <- args[4]
-SampleIRCountsMinimum <- as.numeric(args[5])
+ir_out <- args[5]
+SampleIRCountsMinimum <- as.numeric(args[6])
 
 library(tidyverse)
 library(magrittr)
@@ -75,6 +76,8 @@ dat.introns.norm.byhostgene <-
     select(-Length) %>%
     right_join(dat.introns.norm, by=c("sample", "Geneid"), suffix=c(".hostgene", ".intron")) %>%
     mutate(IR.Ratio = cpk.intron/cpk.hostgene)
+
+write_tsv(dat.introns.norm.byhostgene, ir_out)
 
 head(dat.introns.norm.byhostgene)
 

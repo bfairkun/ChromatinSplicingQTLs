@@ -22,7 +22,12 @@ for pheno in ["polyA.Expression", "chRNA.Expression", "MetabolicLabelled.30min",
 
 MyPhenotypes = ["chRNA.IR", "Expression.Splicing", "chRNA.Expression.Splicing",  "H3K27AC", "CTCF", "H3K4ME3", "chRNA.Splicing", "polyA.Splicing", "MetabolicLabelled.30min", "MetabolicLabelled.60min", "Expression.Splicing.Subset_YRI", "polyA.Splicing.Subset_YRI",
                "polyA.IR", "polyA.IR.Subset_YRI", "chRNA.Expression_cheRNA", "chRNA.Expression_eRNA",
-               "chRNA.Expression_lncRNA", "chRNA.Expression_snoRNA", "chRNA.Slopes", "H3K4ME1", "ProCap"]
+               "chRNA.Expression_lncRNA", "chRNA.Expression_snoRNA", "chRNA.Slopes", "H3K4ME1", "ProCap", "H3K36ME3",
+               'chRNA.IER', 'polyA.IER', 'chRNA.IRjunctions', 'polyA.IRjunctions',
+               'MetabolicLabelled.30min.IER', 'MetabolicLabelled.60min.IER', 
+                'MetabolicLabelled.30min.IRjunctions', 'MetabolicLabelled.60min.IRjunctions',
+               'MetabolicLabelled.30min.Splicing', 'MetabolicLabelled.60min.Splicing', 
+                'MetabolicLabelled.30min.IR', 'MetabolicLabelled.60min.IR']
 # "polyA.Expression.AllRNA.Subset_YRI", "MetabolicLabelled.30min.AllRNA.Subset_YRI", 
 #                 "MetabolicLabelled.60min.AllRNA.Subset_YRI", "chRNA.Expression.AllRNA.Subset_YRI"]
 
@@ -31,7 +36,7 @@ MyPhenotypes = ["chRNA.IR", "Expression.Splicing", "chRNA.Expression.Splicing", 
 
 #PhenotypesToColoc = [p for p in MyPhenotypes if ((p not in ["Expression.Splicing", "polyA.Splicing", "polyA.IR"]) and (p not in ncRNA_Phenotypes))]
 
-PhenotypesToColoc = [p for p in MyPhenotypes if (p not in ["Expression.Splicing", "polyA.Splicing", "polyA.IR"])]
+PhenotypesToColoc = MyPhenotypes #[p for p in MyPhenotypes if (p not in ["Expression.Splicing", "polyA.Splicing", "polyA.IR"])]
 
 ## All Fastq samples
 Fastq_samples = pd.read_csv("config/samples.tsv", sep='\t', comment='#')
@@ -65,6 +70,12 @@ gwas_df = pd.read_csv("config/gwas_table.tsv", index_col='gwas', sep='\t', useco
 colocs_df = pd.read_csv("config/ColocRunWildcards.tsv", index_col=0, comment='#', sep='\t', keep_default_na=False)
 colocs_gwas = colocs_df.loc[colocs_df['FeatureCoordinatesRedefinedFor']=='ForGWASColoc']
 colocs_genewise = colocs_df.loc[colocs_df['FeatureCoordinatesRedefinedFor']=='ForColoc']
+
+
+chRNAsamples = list(Fastq_samples.loc[ (Fastq_samples['Phenotype']=='chRNA.Expression.Splicing') ].drop_duplicates().IndID)
+polyAsamples = list(Fastq_samples.loc[ (Fastq_samples['Phenotype']=='Expression.Splicing') ].drop_duplicates().IndID)
+metabolic30samples = list(Fastq_samples.loc[ (Fastq_samples['Phenotype']=='MetabolicLabelled.30min') ].drop_duplicates().IndID)
+metabolic60samples = list(Fastq_samples.loc[ (Fastq_samples['Phenotype']=='MetabolicLabelled.60min') ].drop_duplicates().IndID)
 
 # print(ChromatinProfilingPhenotypes)
 

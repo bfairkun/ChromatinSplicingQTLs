@@ -1,0 +1,47 @@
+name: spliceq
+channels:
+  - bioconda
+  - r
+  - defaults
+  - conda-forge
+dependencies:
+  - _libgcc_mutex=0.1=conda_forge
+  - _openmp_mutex=4.5=2_kmp_llvm
+  - bzip2=1.0.8=h7b6447c_0
+  - c-ares=1.18.1=h7f8727e_0
+  - ca-certificates=2021.10.8=ha878542_0
+  - certifi=2021.10.8=py39hf3d152e_2
+  - interlap=0.2.7=pyh9f0ad1d_0
+  - krb5=1.19.2=hac12032_0
+  - ld_impl_linux-64=2.35.1=h7274673_9
+  - libcurl=7.82.0=h0b77cf5_0
+  - libdeflate=1.10=h7f98852_0
+  - libedit=3.1.20210910=h7f8727e_0
+  - libev=4.33=h7f8727e_1
+  - libffi=3.3=he6710b0_2
+  - libgcc-ng=11.2.0=h1d223b6_16
+  - libnghttp2=1.46.0=hce63b2e_0
+  - libssh2=1.9.0=h1ba5d50_1
+  - libzlib=1.2.11=h166bdaf_1014
+  - llvm-openmp=13.0.1=he0ac6c6_1
+  - ncurses=6.3=h7f8727e_2
+  - openssl=1.1.1n=h166bdaf_0
+  - pip=21.2.4=py39h06a4308_0
+  - pysam=0.19.0=py39h5030a8b_0
+  - python=3.9.12=h12debd9_0
+  - python_abi=3.9=2_cp39
+  - readline=8.1.2=h7f8727e_1
+  - setuptools=61.2.0=py39h06a4308_0
+  - sqlite=3.38.2=hc218d9a_0
+  - tk=8.6.11=h1ccaba5_0
+  - tzdata=2022a=hda174b7_0
+  - wheel=0.37.1=pyhd3eb1b0_0
+  - xz=5.2.5=h7b6447c_0
+  - zlib=1.2.11=h166bdaf_1014
+  - pip:
+    - commonmark==0.9.1
+    - numpy==1.22.3
+    - pygments==2.12.0
+    - rich==12.2.0
+    - splice-q==1.0.0
+prefix: /project2/yangili1/cfbuenabadn/envs/spliceq

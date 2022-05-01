@@ -9,7 +9,7 @@ rule Macs2PeakCalling_narrow:
     resources:
         mem = 58000
     params:
-        "--tempdir /scratch/midway2/bjf79/ --outdir PeakCalling/ --name {Phenotype}"
+        "--tempdir /scratch/midway2/cnajar/ --outdir PeakCalling/ --name {Phenotype}"
     shell:
         """
         macs2 callpeak {params} -f BAMPE --name {wildcards.Phenotype} -t {input.bams} &> {log}
@@ -21,7 +21,7 @@ use rule Macs2PeakCalling_narrow as Macs2PeakCalling_broad with:
         peaks = "PeakCalling/{Phenotype}_peaks.broadPeak",
         saf = "PeakCalling/{Phenotype}_peaks.broadPeak.saf"
     params:
-        "--tempdir /scratch/midway2/bjf79/ --outdir PeakCalling/ --name {Phenotype} --broad"
+        "--tempdir /scratch/midway2/cnajar/ --outdir PeakCalling/ --name {Phenotype} --broad"
     log:
         "logs/Macs2PeakCalling_broad/{Phenotype}.log"
 
@@ -32,7 +32,7 @@ use rule Macs2PeakCalling_narrow as Macs2PeakCalling_narrow_perind with:
         peaks = "PeakCallingPerInd/{Phenotype}/{IndID}.{Rep}_peaks.narrowPeak",
         saf = "PeakCallingPerInd/{Phenotype}/{IndID}.{Rep}_peaks.narrowPeak.saf"
     params:
-        "--tempdir /scratch/midway2/bjf79/ --outdir PeakCallingPerInd/{Phenotype}/ --name {IndID}.{Rep}"
+        "--tempdir /scratch/midway2/cnajar/ --outdir PeakCallingPerInd/{Phenotype}/ --name {IndID}.{Rep}"
     log:
         "logs/Macs2PeakCalling_narrow_perind/{Phenotype}/{IndID}.{Rep}.log"
 
@@ -43,7 +43,7 @@ use rule Macs2PeakCalling_narrow as Macs2PeakCalling_broad_perind with:
         peaks = "PeakCallingPerInd/{Phenotype}/{IndID}.{Rep}_peaks.broadPeak",
         saf = "PeakCallingPerInd/{Phenotype}/{IndID}.{Rep}_peaks.broadPeak.saf"
     params:
-        "--tempdir /scratch/midway2/bjf79/ --outdir PeakCallingPerInd/{Phenotype}/ --name {IndID}.{Rep} --broad"
+        "--tempdir /scratch/midway2/cnajar/ --outdir PeakCallingPerInd/{Phenotype}/ --name {IndID}.{Rep} --broad"
     log:
         "logs/Macs2PeakCalling_broad_perind/{Phenotype}/{IndID}.{Rep}.log"
 

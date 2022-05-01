@@ -290,7 +290,7 @@ rule MakePhenotypeTableToColocPeaksWithGenes:
 
 use rule MakePhenotypeTableToColocPeaksWithGenes as MakePhenotypeTableToColocIntronsWithGenes with:
     wildcard_constraints:
-        Phenotype = "chRNA.IR|chRNA.Splicing|polyA.Splicing|polyA.IR|polyA.Splicing.Subset_YRI|polyA.IR.Subset_YRI|chRNA.Slopes"
+        Phenotype = "MetabolicLabelled.30min.IRjunctions|MetabolicLabelled.60min.IRjunctions|polyA.IRjunctions|chRNA.IRjunctions|MetabolicLabelled.30min.IER|MetabolicLabelled.60min.IER|polyA.IER|chRNA.IER|MetabolicLabelled.30min.IR|MetabolicLabelled.30min.Splicing|MetabolicLabelled.60min.IR|MetabolicLabelled.60min.Splicing|chRNA.IR|chRNA.Splicing|polyA.Splicing|polyA.IR|polyA.Splicing.Subset_YRI|polyA.IR.Subset_YRI|chRNA.Slopes"
     params:
         cis_window = 0,
         bedtools_intersect_params = "-s",

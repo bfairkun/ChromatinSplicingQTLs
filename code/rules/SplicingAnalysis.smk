@@ -1,4 +1,3 @@
-
 rule ExtractJuncs:
     input:
         bam = GetBamForBigwig,
@@ -145,12 +144,20 @@ def Get_intron_feature_Counts_ForIR(wildcards):
         return "SplicingAnalysis/IR/chRNA.Expression.Splicing/Counts.txt"
     elif wildcards.Phenotype == "polyA.IR":
         return "SplicingAnalysis/IR/Expression.Splicing/Counts.txt"
+    elif wildcards.Phenotype == "MetabolicLabelled.30min.IR":
+        return "SplicingAnalysis/IR/MetabolicLabelled.30min/Counts.txt"
+    elif wildcards.Phenotype == "MetabolicLabelled.60min.IR":
+        return "SplicingAnalysis/IR/MetabolicLabelled.60min/Counts.txt"
 
 def Get_gene_feature_Counts_ForIR(wildcards):
     if wildcards.Phenotype == "chRNA.IR":
         return "featureCounts/chRNA.Expression/Counts.txt"
     elif wildcards.Phenotype == "polyA.IR":
         return "featureCounts/polyA.Expression/Counts.txt"
+    elif wildcards.Phenotype == "MetabolicLabelled.30min.IR":
+        return "featureCounts/MetabolicLabelled.30min/Counts.txt"
+    elif wildcards.Phenotype == "MetabolicLabelled.60min.IR":
+        return "featureCounts/MetabolicLabelled.60min/Counts.txt"
 
 def SampleMinimumIR_Counts(wildcards):
     if wildcards.Phenotype == "chRNA.IR":
@@ -164,20 +171,21 @@ rule featureCounts_IR_to_bedgz:
         Gene_counts = Get_gene_feature_Counts_ForIR
     output:
         bed = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.qqnorm.bed.gz",
-        plot = "SplicingAnalysis/IR/{Phenotype}/IR.Ratio.plot.pdf"
+        plot = "SplicingAnalysis/IR/{Phenotype}/IR.Ratio.plot.pdf",
+        ir = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.IR.bed.gz",
     wildcard_constraints:
-        Phenotype = "|".join(["chRNA.IR", "polyA.IR"])
+        Phenotype = "|".join(["chRNA.IR", "polyA.IR", "MetabolicLabelled.30min.IR", "MetabolicLabelled.60min.IR"])
     log:
         "logs/featureCounts_IR_to_bedgz/{Phenotype}.log"
     params:
-        SampleMinimumIR_Counts = SampleMinimumIR_Counts
+        SampleMinimumIR_Counts = "1" #SampleMinimumIR_Counts
     resources:
         mem_mb = 32000
     conda:
         "../envs/r_essentials.yml"
     shell:
         """
-        Rscript scripts/ProcessIRFeatureCounts.R {input.IR_counts} {input.Gene_counts} {output.bed} {output.plot} {params.SampleMinimumIR_Counts} &> {log}
+        Rscript scripts/ProcessIRFeatureCounts.R {input.IR_counts} {input.Gene_counts} {output.bed} {output.plot} {output.ir} {params.SampleMinimumIR_Counts} &> {log}
         """
 
 rule SplitLeafcutter_countsTable:
@@ -199,6 +207,10 @@ def GetSplitLeafcutterCountTablesForPhenotype(wildcards):
         return "SplicingAnalysis/leafcutter/clustering/autosomes/leafcutter_perind.counts.gz.Expression.Splicing.gz"
     elif wildcards.Phenotype == "chRNA.Splicing":
         return "SplicingAnalysis/leafcutter/clustering/autosomes/leafcutter_perind.counts.gz.chRNA.Expression.Splicing.gz"
+    elif wildcards.Phenotype == "MetabolicLabelled.30min.Splicing":
+        return "SplicingAnalysis/leafcutter/clustering/autosomes/leafcutter_perind.counts.gz.MetabolicLabelled.30min.gz"
+    elif wildcards.Phenotype == "MetabolicLabelled.60min.Splicing":
+        return "SplicingAnalysis/leafcutter/clustering/autosomes/leafcutter_perind.counts.gz.MetabolicLabelled.60min.gz"
         
 
 rule Leafcutter_countsTable_toPSI:
@@ -207,7 +219,7 @@ rule Leafcutter_countsTable_toPSI:
     output:
         temp("QTLs/QTLTools/{Phenotype}/OnlyFirstReps.PSI.bed")
     wildcard_constraints:
-        Phenotype = "|".join(["polyA.Splicing", "chRNA.Splicing"])
+        Phenotype = "|".join(["polyA.Splicing", "chRNA.Splicing", "MetabolicLabelled.30min.Splicing", "MetabolicLabelled.60min.Splicing"])
     log:
         "logs/Leafcutter_countsTable_toPSI/{Phenotype}.log"
     conda:
@@ -224,7 +236,7 @@ rule sortAndIndexPSITable:
         bed = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.PSI.bed.gz",
         tbi = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.PSI.bed.gz.tbi"
     wildcard_constraints:
-        Phenotype = "|".join(["polyA.Splicing", "chRNA.Splicing"])
+        Phenotype = "|".join(["polyA.Splicing", "chRNA.Splicing", "MetabolicLabelled.30min.Splicing", "MetabolicLabelled.60min.Splicing"])
     shell:
         """
         bedtools sort -header -i {input} | bgzip /dev/stdin -c > {output.bed}
@@ -240,7 +252,7 @@ rule leafcutter_PreparePhenotypes:
     output:
         "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.qqnorm.bed.gz"
     wildcard_constraints:
-        Phenotype = "|".join(["polyA.Splicing", "chRNA.Splicing"])
+        Phenotype = "|".join(["polyA.Splicing", "chRNA.Splicing", "MetabolicLabelled.30min.Splicing", "MetabolicLabelled.60min.Splicing"])
     conda:
         "../envs/py27.yaml"
     resources:
@@ -291,6 +303,8 @@ rule GetSpliceSitePhenotypes:
         "logs/leafcutter_PreparePhenotypes/{Phenotype}.SpliceSites.log"
     params:
         flags = GetSkippedSamples
+    conda:
+        "../envs/py_tools.yml"
     shell:
         """
         python scripts/GetSpliceSitesFromLeafcutter.py --counts {input} --output QTLs/QTLTools/{wildcards.Phenotype} {params.flags} &> {log}
@@ -344,10 +358,21 @@ rule MakeChromatinSpliceSitePeakPhenotypes:
         ncols = "78"
     shell:
         """
-        zcat {input.Chromatin} | head -n 1 > QTLs/QTLTools/{wildcards.chromatinPhenotype}.{wildcards.Prime}/OnlyFirstReps.qqnorm.bed;
-        bedtools intersect -wo -F 0.1 -a {input.Chromatin} -b {input.SpliceSites} | awk -F"\\t" '{{printf($1"\\t"${params.start}"\\t"${params.end}"\\t"${params.name}"\\t"); for (x=5; x<={params.ncols}; x++) printf("%s\\t", $x);printf("\\n"); }}' >> QTLs/QTLTools/{wildcards.chromatinPhenotype}.{wildcards.Prime}/OnlyFirstReps.qqnorm.bed;
+        zcat {input.Chromatin} | head -n 1 > QTLs/QTLTools/{wildcards.chromatinPhenotype}.{wildcards.Prime}.Peaks/OnlyFirstReps.qqnorm.bed;
+        bedtools intersect -wo -F 0.1 -a {input.Chromatin} -b {input.SpliceSites} | awk -F"\\t" '{{printf($1"\\t"${params.start}"\\t"${params.end}"\\t"${params.name}"\\t"); for (x=5; x<={params.ncols}; x++) printf("%s\\t", $x);printf("\\n"); }}' >> QTLs/QTLTools/{wildcards.chromatinPhenotype}.{wildcards.Prime}.Peaks/OnlyFirstReps.qqnorm.bed;
         gzip QTLs/QTLTools/{wildcards.chromatinPhenotype}.{wildcards.Prime}.Peaks/OnlyFirstReps.qqnorm.bed
         """
+    
+use rule MakeChromatinSpliceSitePeakPhenotypes as MakeChromatinSpliceSitePeakH3K36ME3 with:
+    wildcard_constraints:
+        Prime = '5PrimeSS|3PrimeSS',
+        chromatinPhenotype = 'H3K36ME3'
+    params:
+        start = "107",
+        end = "108",
+        name = "104",
+        ncols = "100"
+
     
 use rule MakeChromatinSpliceSitePeakPhenotypes as MakeChromatinSpliceSiteCTCF with:
     wildcard_constraints:
@@ -391,7 +416,7 @@ rule featureCountsForSpliceSite:
     threads:
         8
     wildcard_constraints:
-        Phenotype = 'H3K4ME1|H3K4ME3|H3K27AC',
+        Phenotype = 'H3K4ME1|H3K4ME3|H3K27AC|H3K36ME3',
         SpliceSite = '5PrimeSS|3PrimeSS'
     resources:
         mem = 12000,
@@ -430,3 +455,124 @@ rule BgzipAndTabixPsiTables:
         bgzip {input}
         tabix -p bed {output.bed}
         """
+
+
+
+    
+def GetSPLICEqModeParams(wildcards):
+    if wildcards.mode == "IER":
+        return "--IERatio"
+    else:
+        return "-f 3"
+
+rule RunSPLICEq_chRNA:
+    input:
+        bam = 'Alignments/STAR_Align/chRNA.Expression.Splicing/{IndID}/1/Filtered.bam',
+        bai = 'Alignments/STAR_Align/chRNA.Expression.Splicing/{IndID}/1/Filtered.bam.bai',
+        Comprehensive_gtf = "ReferenceGenome/Annotations/gencode.v34.chromasomal.annotation.gtf",
+    output:
+        "SplicingAnalysis/SPLICEq/chRNA.{mode}/{IndID}.spliceq.tab"
+    params:
+        GetSPLICEqModeParams
+    conda:
+        "../envs/spliceq.yml"
+    wildcard_constraints:
+        IndID = '|'.join(chRNAsamples),
+        mode = 'IRjunctions|IER'
+    log:
+        "logs/spliceq/chRNA.{mode}/{IndID}.log"
+    shell:
+        """
+        SPLICE-q.py -b {input.bam} -g {input.Comprehensive_gtf} -o {output} {params} &> {log}
+        """
+
+use rule RunSPLICEq_chRNA as rule RunSPLICEq_polyA with:
+    input:
+        bam = 'Alignments/STAR_Align/Expression.Splicing/{IndID}/1/Filtered.bam',
+        bai = 'Alignments/STAR_Align/Expression.Splicing/{IndID}/1/Filtered.bam.bai',
+        Comprehensive_gtf = "ReferenceGenome/Annotations/gencode.v34.chromasomal.annotation.gtf",
+    output:
+        "SplicingAnalysis/SPLICEq/polyA.{mode}/{IndID}.spliceq.tab"
+    log:
+        "logs/spliceq/polyA.{mode}/{IndID}.log"
+    wildcard_constraints:
+        IndID = '|'.join(polyAsamples),
+        mode = 'IRjunctions|IER'
+        
+use rule RunSPLICEq_chRNA as rule RunSPLICEq_M30 with:
+    input:
+        bam = 'Alignments/STAR_Align/MetabolicLabelled.30min/{IndID}/1/Filtered.bam',
+        bai = 'Alignments/STAR_Align/MetabolicLabelled.30min/{IndID}/1/Filtered.bam.bai',
+        Comprehensive_gtf = "ReferenceGenome/Annotations/gencode.v34.chromasomal.annotation.gtf",
+    output:
+        "SplicingAnalysis/SPLICEq/MetabolicLabelled.30min.{mode}/{IndID}.spliceq.tab"
+    log:
+        "logs/spliceq/MetabolicLabelled.30min.{mode}/{IndID}.log"
+    wildcard_constraints:
+        IndID = '|'.join(metabolic30samples),
+        mode = 'IRjunctions|IER'
+        
+use rule RunSPLICEq_chRNA as rule RunSPLICEq_M60 with:
+    input:
+        bam = 'Alignments/STAR_Align/MetabolicLabelled.60min/{IndID}/1/Filtered.bam',
+        bai = 'Alignments/STAR_Align/MetabolicLabelled.60min/{IndID}/1/Filtered.bam.bai',
+        Comprehensive_gtf = "ReferenceGenome/Annotations/gencode.v34.chromasomal.annotation.gtf",
+    output:
+        "SplicingAnalysis/SPLICEq/MetabolicLabelled.60min.{mode}/{IndID}.spliceq.tab"
+    log:
+        "logs/spliceq/MetabolicLabelled.60min.{mode}/{IndID}.log"
+    wildcard_constraints:
+        IndID = '|'.join(metabolic60samples),
+        mode = 'IRjunctions|IER'
+        
+rule CollectSPLICEq_chRNA:
+    input: 
+        expand("SplicingAnalysis/SPLICEq/chRNA.{{mode}}/{IndID}.spliceq.tab", IndID=chRNAsamples)
+    output:
+        out_qqnorm = "QTLs/QTLTools/{Phenotype}.{mode}/OnlyFirstReps.qqnorm.bed.gz",
+        out = "QTLs/QTLTools/{Phenotype}.{mode}/OnlyFirstReps.ratios.bed.gz",
+    log:
+        "logs/spliceq/{Phenotype}.{mode}.log"
+    wildcard_constraints:
+        mode = 'IRjunctions|IER',
+        Phenotype = 'chRNA'
+    params:
+        "NA18855"
+    conda:
+        "../envs/py_tools.yml"
+    shell:
+        """
+        python scripts/collect_spliceq.py --spliceq_dir SplicingAnalysis/SPLICEq/{wildcards.Phenotype}.{wildcards.mode}/ --spliceq_mode {wildcards.mode} --output {output.out} --output_qqnorm {output.out_qqnorm} --skip_samples {params} &> {log}
+        """
+
+use rule CollectSPLICEq_chRNA as CollectSPLICEq_polyA with:
+    input: 
+        expand("SplicingAnalysis/SPLICEq/polyA.{{mode}}/{IndID}.spliceq.tab", IndID=polyAsamples)
+    wildcard_constraints:
+        mode = 'IRjunctions|IER',
+        Phenotype = 'polyA'
+    params:
+        "None"
+        
+use rule CollectSPLICEq_chRNA as CollectSPLICEq_M30 with:
+    input: 
+        expand("SplicingAnalysis/SPLICEq/MetabolicLabelled.30min.{{mode}}/{IndID}.spliceq.tab", IndID=metabolic30samples)
+    wildcard_constraints:
+        mode = 'IRjunctions|IER',
+        Phenotype = 'MetabolicLabelled.30min'
+    params:
+        "None"
+
+
+use rule CollectSPLICEq_chRNA as CollectSPLICEq_M60 with:
+    input: 
+        expand("SplicingAnalysis/SPLICEq/MetabolicLabelled.60min.{{mode}}/{IndID}.spliceq.tab", IndID=metabolic60samples)
+    wildcard_constraints:
+        mode = 'IRjunctions|IER',
+        Phenotype = 'MetabolicLabelled.60min'
+    params:
+        "None"
+
+
+
+

@@ -31,6 +31,7 @@ use rule featureCounts as featureCountsAtRegion with:
         "logs/featureCountsAtRegion/{Region}/{Phenotype}.log"
     params:
         extraParams = GetFeatureCountsParams,
+        paired = PairedEndParams
 
 rule Get2kbTSSRegions:
     """
