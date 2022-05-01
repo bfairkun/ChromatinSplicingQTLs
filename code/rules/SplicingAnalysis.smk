@@ -66,6 +66,8 @@ rule annotate_juncfiles:
     output:
         basic = "SplicingAnalysis/leafcutter/regtools_annotate/basic/{Phenotype}_{IndID}_{Rep}.bed.gz",
         comprehensive = "SplicingAnalysis/leafcutter/regtools_annotate/comprehensive/{Phenotype}_{IndID}_{Rep}.bed.gz"
+    conda:
+        "../envs/regtools.yml"
     log:
         "logs/annotate_juncfiles/{Phenotype}_{IndID}_{Rep}.log"
     shell:

@@ -176,7 +176,7 @@ def GetQTLtoolsFlags(wildcards):
             return "--grp-best --window 10000"
         elif wildcards.Phenotype.split('.')[-1] in ['5PrimeSS', '3PrimeSS']:
             return "--window 0"
-        elif wildcards.Phenotype in ["chRNA.IR", "polyA.IR", "chRNA.Expression.Splicing"]:
+        elif wildcards.Phenotype in ["chRNA.IR", "polyA.IR", "chRNA.IER", "polyA.IER", "MetabolicLabelled.30min.IER", "MetabolicLabelled.60min.IER"]:
             return "--window 10000"
         else:
             return "--window 100000"
