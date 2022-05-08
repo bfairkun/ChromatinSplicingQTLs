@@ -483,7 +483,7 @@ rule RunSPLICEq_chRNA:
         "logs/spliceq/chRNA.{mode}/{IndID}.log"
     shell:
         """
-        SPLICE-q.py -b {input.bam} -g {input.Comprehensive_gtf} -o {output} {params} &> {log}
+        SPLICE-q.py -b {input.bam} -g {input.Comprehensive_gtf} -o {output} {params} --MinCoverage 0 &> {log}
         """
 
 use rule RunSPLICEq_chRNA as rule RunSPLICEq_polyA with:
