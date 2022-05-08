@@ -22,6 +22,7 @@ include: "rules/GWAS_PrepForColoc.smk"
 include: "rules/chRNASeqSlopes.smk"
 include: "rules/ProcessTehranchi.smk"
 include: "rules/PlotQTLs.smk"
+include: "rules/CalculateExonicPSI.smk"
 
 
 wildcard_constraints:
@@ -138,7 +139,9 @@ rule all:
         "QTLs/QTLTools/chRNA.IR/OnlyFirstReps.qqnorm.bed.gz",
         "QTLs/QTLTools/polyA.IR/OnlyFirstReps.qqnorm.bed.gz",
         "SplicingAnalysis/IR/ProCap/Counts.txt",
-        expand("QTLs/QTLTools/{Phenotype}/PermutationPass.FDR_Added.txt.gz", Phenotype=MyPhenotypes)
+        expand("QTLs/QTLTools/{Phenotype}/PermutationPass.FDR_Added.txt.gz", Phenotype=MyPhenotypes),
+        expand("hyprcoloc/Results/ForColoc/{ColocName}/tidy_results_OnlyColocalized.txt.gz", ColocName = colocs_genewise.index),
+        expand("hyprcoloc/Results/ForGWASColoc/{ColocName}/results.txt.gz", ColocName = colocs_gwas.index )
 
 
 rule Collect_chRNASeq_Fastq:
