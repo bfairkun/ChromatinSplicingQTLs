@@ -194,7 +194,7 @@ rule SplitLeafcutter_countsTable:
     input:
         "SplicingAnalysis/leafcutter/clustering/autosomes/leafcutter_perind.counts.gz"
     output:
-        expand("SplicingAnalysis/leafcutter/clustering/autosomes/leafcutter_perind.counts.gz.{Phenotype}.gz", Phenotype=RNASeqPhenotypes)
+        expand("SplicingAnalysis/leafcutter/clustering/autosomes/leafcutter_perind.counts.gz.{Phenotype}.gz", Phenotype=[p for p in RNASeqPhenotypes if p != 'ProCap'])
     log:
         "logs/SplitLeafcutter_countsTable.log"
     conda:
@@ -493,6 +493,8 @@ use rule RunSPLICEq_chRNA as rule RunSPLICEq_polyA with:
         bam = 'Alignments/STAR_Align/Expression.Splicing/{IndID}/1/Filtered.bam',
         bai = 'Alignments/STAR_Align/Expression.Splicing/{IndID}/1/Filtered.bam.bai',
         Comprehensive_gtf = "ReferenceGenome/Annotations/gencode.v34.chromasomal.annotation.gtf",
+    resources:
+        mem_mb = 50000
     output:
         "SplicingAnalysis/SPLICEq/polyA.{mode}/{IndID}.spliceq.tab"
     log:

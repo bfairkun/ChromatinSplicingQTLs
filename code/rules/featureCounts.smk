@@ -29,6 +29,8 @@ use rule featureCounts as featureCountsAtRegion with:
         "featureCounts/{Region}/{Phenotype}/Counts.txt"
     log:
         "logs/featureCountsAtRegion/{Region}/{Phenotype}.log"
+    wildcard_constraints:
+        Phenotype = "chRNA.Expression|polyA.Expression"
     params:
         extraParams = GetFeatureCountsParams,
         paired = PairedEndParams

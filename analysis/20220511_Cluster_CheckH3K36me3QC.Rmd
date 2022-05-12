@@ -1,0 +1,129 @@
+---
+title: "Check h3k36me3 QC"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,  warning = F, message = F)
+```
+
+
+```{r}
+library(tidyverse)
+library(edgeR)
+library(gplots)
+```
+
+
+```{r}
+dat <- read_tsv("../code/MiscCountTables/H3K36ME3.bed")
+
+
+h3k36me3_rpkm <- 
+  dat %>%
+  select(-c(1:3, 5, 6)) %>%
+  column_to_rownames("pid") %>%
+  DGEList() %>%
+  # rpkm(log=T, gene.length = dat$end - dat$start)
+  rpkm(log=T, gene.length = 1)
+
+h3k36me3_rpkm %>% as.matrix() %>%
+  cor() %>%
+  heatmap.2(trace="none", dendrogram = 'column', cexRow = 0.3, cexCol = .3)
+
+
+
+rnaseq <- read_tsv("../code/featureCounts/chRNA.Expression/Counts.txt", comment="#") %>%
+  select(-2:6) %>%
+  column_to_rownames("Geneid")
+
+```
+
+
+```{r}
+if(interactive()){
+    args <- scan(text=
+                 "../code/ExpressionAnalysis/polyA/ExpressedGeneList.txt ../code/scratch/MultiphenotypeSpearmanMat.pdf ../code/featureCounts/chRNA.Expression/Counts.txt ../code/featureCounts/polyA.Expression/Counts.txt ../code/featureCounts/MetabolicLabelled.30min/Counts.txt ../code/featureCounts/MetabolicLabelled.60min/Counts.txt ../code/featureCounts/AtTSS/H3K27AC/Counts.txt featureCounts/AtTSS/H3K4ME3/Counts.txt", what='character')
+} else{
+    args <- commandArgs(trailingOnly=TRUE)
+}
+
+
+args <- scan(text=
+                 "../code/ExpressionAnalysis/polyA/ExpressedGeneList.txt ../code/scratch/MultiphenotypeSpearmanMat.pdf ../code/featureCounts/chRNA.Expression/Counts.txt ../code/featureCounts/polyA.Expression/Counts.txt ../code/featureCounts/MetabolicLabelled.30min/Counts.txt ../code/featureCounts/MetabolicLabelled.60min/Counts.txt", what='character')
+
+geneListBedfile <- args[1]
+PdfOut <- args[2]
+CountFiles <- args[-c(1:2)]
+
+library(tidyverse)
+library(edgeR)
+library(gplots)
+library(scales)
+library(magrittr)
+library(viridis)
+
+NumbersToColors <- function(NumberVector){
+  N <- length(unique(NumberVector))
+  Key <- setNames(hue_pal()(N), 1:N)
+  return(list(ColorVector=recode(NumberVector, !!!Key), Key=Key))
+}
+
+GetCountMatrix <- function(FileIn, genesToInclude){
+    CountsFile.df <- read_tsv(FileIn, comment="#") %>%
+        filter(Geneid %in% genesToInclude)
+    GeneLengths <- CountsFile.df$Length
+    Mat <- CountsFile.df %>%
+        select(-Chr, -Start, -End, -Strand, -Length) %>%
+        column_to_rownames("Geneid") %>%
+        DGEList() %>%
+        # rpkm(log=T, prior.count=0.1, gene.length=GeneLengths)
+        rpkm(log=T, prior.count=0.1, gene.length=1)
+    Out <- Mat[,sample(1:ncol(Mat), 15)]
+    colnames(Out) <- 1:15
+    Out %>% as.data.frame() %>% rownames_to_column("Geneid") %>% return()
+}
+
+
+genesToInclude <- read_tsv(geneListBedfile, col_names=c("chr", "start", "stop", "gene", "score", "strand")) %>% pull(gene)
+
+set.seed(1)
+mylist <- lapply(CountFiles, GetCountMatrix, genesToInclude)
+names(mylist) <- str_replace(CountFiles, "../code/featureCounts/(.+)/Counts.txt", "\\1")
+
+
+
+CombinedMat <- bind_rows(mylist, .id="Source") %>% as.tibble() %>%
+    gather("SampleNum", "rpkm", -Source, -Geneid) %>%
+    unite("Sample", Source, SampleNum ) %>%
+    spread(Sample, rpkm) %>%
+    inner_join(
+      x=h3k36me3_rpkm[, 1:15] %>%
+      as.data.frame() %>%
+      rownames_to_column("Geneid") %>%
+      select(1:16) %>%
+      rename_at(vars(-1), ~ str_replace(.x, "NA(.+)", "H3K36ME3_\\1")),
+      y=.,
+      by="Geneid"
+    ) %>%
+    column_to_rownames("Geneid")
+
+
+
+
+MyColors <- colnames(CombinedMat) %>%
+    str_replace("_\\d+", "") %>%
+    factor() %>%
+    as.numeric() %>%
+    NumbersToColors() %>%
+    extract2(1)
+
+
+pdf(PdfOut)
+CombinedMat %>%
+    cor(method="spearman") %>%
+    heatmap.2(trace="none", dendrogram="none", Rowv=FALSE, Colv=FALSE, ColSideColors = MyColors, RowSideColors=MyColors, col=viridis(30, option="B", direction = 1), labRow=F)
+dev.off()
+```
+

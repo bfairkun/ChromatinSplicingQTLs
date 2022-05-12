@@ -25,7 +25,7 @@ dat.in <- read_delim(file_in, delim=' ')
 Phenotypes <- colnames(dat.in[,-1]) %>% str_replace("(.+?)_.+", "\\1") %>% unique()
 
 for (i in seq_along(Phenotypes)){
-    print(paste("Processing", i))
+    print(paste("Processing", Phenotypes[i]))
     dat.in %>%
         select(chrom, starts_with(paste0(Phenotypes[i], "_"))) %>%
         # rename_with(get(ColumnRenamerFunction), starts_with("Alignments")) %>%

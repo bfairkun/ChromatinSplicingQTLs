@@ -24,7 +24,7 @@ library(viridis)
 library(gplots)
 library(data.table)
 
-dat <- read_tsv("../output/hyprcoloc_results/ForColoc/hyprcoloc.results.txt.gz", col_names = c("Locus", "iteration", 'ColocalizedTraits', 'ColocPr', 'RegionalPr', "topSNP", "TopSNPFinemapPr", "DroppedTrait"), skip=1)
+dat <- read_tsv("../output/hyprcoloc_results/ForColoc/MolColocStandard/hyprcoloc.results.txt.gz", col_names = c("Locus", "iteration", 'ColocalizedTraits', 'ColocPr', 'RegionalPr', "topSNP", "TopSNPFinemapPr", "DroppedTrait"), skip=1)
 
 ```
 

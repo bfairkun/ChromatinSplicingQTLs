@@ -206,7 +206,7 @@ rule QTLtools_generalized:
     log:
         "logs/QTLtools_cis_permutation_pass/{Phenotype}.{Pass}.{QTLsGenotypeSet}.{FeatureCoordinatesRedefinedFor}/{n}.log"
     resources:
-        mem_mb = 58000
+        mem_mb = much_more_mem_after_first_attempt
     envmodules:
         "gsl/2.5"
     params:
