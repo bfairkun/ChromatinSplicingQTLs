@@ -5,8 +5,12 @@ rule GetGenomeElements:
         "IntronSlopes/Annotation/genome_exons.bed"
     shell:
         """
-        awk -F'\t' '$3=="exon"' {input.gtf} | awk -F'\t' '{{print $1"\t"$4"\t"$5"\t"$3"\t"$6"\t"$7}}' >> {output}
+        awk '$3=="exon" {{print $1"\\t"$4"\\t"$5"\\t"$7"\\t"$14"\\t"$16}}' ReferenceGenome/Annotations/gencode.v34.primary_assembly.annotation.gtf | awk -F'"' '{{print $1""$2"\\t"$4}}' | awk '{{print $1"\\t"$2"\\t"$3"\\t"$6"\\t"$5"\\t"$4}}' | grep protein_coding > {output};
+        awk '$3=="exon" {{print $1"\\t"$4"\\t"$5"\\t"$7"\\t"$14"\\t"$16}}' ReferenceGenome/Annotations/gencode.v34.primary_assembly.annotation.gtf | awk -F'"' '{{print $1""$2"\\t"$4}}' | awk '{{print $1"\\t"$2"\\t"$3"\\t"$6"\\t"$5"\\t"$4}}' | grep snoRNA >> {output}
         """
+        #"""
+        #awk -F'\\t' '$3=="exon"' {input.gtf} | awk -F'\\t' '{{print $1"\\t"$4"\\t"$5"\\t"$3"\\t"$6"\\t"$7}}' >> {output}
+        #"""
 
 #grep -v protein_coding {input.gtf} | tail -n+6 | awk -F'\t' '{{print $1"\t"$4"\t"$5"\t"$3"\t"$6"\t"$7}}' > {output} && grep protein_coding {input.gtf} | awk -F'\t' '$3=="exon"' | awk -F'\t' '{{print $1"\t"$4"\t"$5"\tprotein_coding_"$3"\t"$6"\t"$7}}' >> {output}
     
@@ -104,8 +108,16 @@ rule CountReadsInIntronWindows:
         echo {input.bed};
         echo {output};
         set +o pipefail;
-        (samtools view -bh -F 256 {input.bam} | bedtools intersect -sorted -S -g {input.faidx} -a {input.bed} -b - -c -split -F 0.5 | gzip - > {output}) &> {log}
+        (samtools view -bh -F 256 -f 64 {input.bam} | bedtools intersect -sorted -S -g {input.faidx} -a {input.bed} -b - -c -split | gzip - > {output}) &> {log}
         """
+        #"""
+        #echo {input.bam};
+        #echo {input.faidx};
+        #echo {input.bed};
+        #echo {output};
+        #set +o pipefail;
+        #(samtools view -bh -F 256 {input.bam} | bedtools intersect -sorted -S -g {input.faidx} -a {input.bed} -b - -c -split -F 0.5 | gzip - > {output}) &> {log}
+        #"""
         
 
 rule GetSlopes:
@@ -122,7 +134,7 @@ rule GetSlopes:
         "IntronSlopes/slopes/{IndID}.{windowStyle}.tab.gz",
         #"IntronSlopes/slopes/{IndID}.{windowStyle}.glm_nb.tab.gz"
     resources:
-        mem_mb = 16000
+        mem_mb = 32000
     conda:
         "../envs/r_slopes.yml"
     wildcard_constraints:
@@ -137,9 +149,12 @@ rule GetSlopes:
         
 rule SlopesPreparePhenotypes:
     input: 
-        expand("IntronSlopes/IntronWindowCounts/{IndID}.IntronWindows_equalLength.bed.gz", IndID=chRNASeqSamples)
+        expand("IntronSlopes/slopes/{IndID}.IntronWindows_equalLength.tab.gz", IndID=chRNASeqSamples)
+        #expand("IntronSlopes/IntronWindowCounts/{IndID}.IntronWindows_equalLength.bed.gz", IndID=chRNASeqSamples)
     output:
-        "QTLs/QTLTools/chRNA.Slopes/OnlyFirstReps.qqnorm.bed.gz"
+        "QTLs/QTLTools/chRNA.Slopes/OnlyFirstReps.qqnorm.bed.gz",
+        'QTLs/QTLTools/chRNA.Slopes/OnlyFirstReps.Slopes.bed.gz',
+        'QTLs/QTLTools/chRNA.Slopes/OnlyFirstReps.Intercept.bed.gz'
     conda:
         "../envs/py_tools.yml"
     params:
@@ -158,7 +173,17 @@ rule SlopesPreparePhenotypes:
                                 'ENSG00000181722.16_chr3_114900342_114974365_-',
                                 'ENSG00000088930.8_chr20_21303473_21326278_+',
                                 'ENSG00000136813.14_chr9_111397153_111408570_-',
-                                'ENSG00000073282.13_chr3_189631577_189737739_+']),
+                                'ENSG00000073282.13_chr3_189631577_189737739_+',
+                                'ENSG00000135945.10_chr2_99464985_99489816_-',
+                                'ENSG00000154447.15_chr4_169136620_169155479_-',
+                                'ENSG00000105708.9_chr19_19714487_19732955_-',
+                                'ENSG00000153561.13_chr2_86720809_86740926_+',
+                                'ENSG00000148459.16_chr10_26709768_26720217_+',
+                                'ENSG00000166478.10_chr11_9479546_9494645_+',
+                                'ENSG00000111371.16_chr12_46229639_46239678_-',
+                                'ENSG00000250312.8_chr4_131505_160911_+',
+                                'ENSG00000166478.10_chr11_9479546_9494645_+',
+                                'ENSG00000166348.18_chr10_73575675_73625566_-']),
         max_missing = '0.1',
         top_introns = '10000',
         #FDR = "0.25"
@@ -170,7 +195,114 @@ rule SlopesPreparePhenotypes:
         """
         
 
+############################################
+
+# Here I will try not correcting the introns by overlap, but rather by std error. Hopefully we can capture more slopes
+# I expect the effect of exons to be ammeliorated by filtering by error.
+
+rule GetAllExpressedIntrons:
+    input:
+        bed = "IntronSlopes/Annotation/GencodeHg38_all_introns.expressedHostGenes.bed.gz",
+        faidx = "../data/Chrome.sizes"
+    output:
+        "IntronSlopes/Annotation/GencodeHg38_all_introns.non_corrected.uniq.bed"
+    params:
+        max_overlap = 0.01,
+    shell:
+        """
+        zcat {input.bed} | awk -F'\\t' -v OFS='\\t' '$1 !~ "_" {{ print $1, $2, $3,$7"_"$1"_"$2"_"$3"_"$6,".", $6 }}' | sort | uniq | bedtools sort -i - -faidx {input.faidx} > {output}
+        """        
 
 
+use rule MakeWindowsForIntrons_equalSized as MakeWindowsForAllIntrons_equalSized with:
+    input:
+        bed = "IntronSlopes/Annotation/GencodeHg38_all_introns.non_corrected.uniq.bed",
+        faidx = "../data/Chrome.sizes"
+    output:
+        "IntronSlopes/Annotation/GencodeHg38_all_introns.non_corrected.uniq.bed.IntronWindows_equalLength.bed"
 
 
+use rule CountReadsInIntronWindows as CountReadsInAllIntronWindows with:
+    input:
+        bed = "IntronSlopes/Annotation/GencodeHg38_all_introns.non_corrected.uniq.bed.IntronWindows_equalLength.bed",
+        faidx = "../data/Chrome.sizes",
+        bam = 'Alignments/STAR_Align/chRNA.Expression.Splicing/{IndID}/1/Filtered.bam'
+    log:
+        "logs/CountReadsInAllIntronWindows/{IndID}.IntronWindows_equalLength.log"
+    output:
+        bed = "IntronSlopes/AllIntronWindowCounts/{IndID}.IntronWindows_equalLength.bed.gz"
+        
+rule GetSlopesAll:
+    input:
+        bed = "IntronSlopes/AllIntronWindowCounts/{IndID}.IntronWindows_equalLength.bed.gz"
+    params:
+        WinLen = "200",
+        minIntronCounts = "1000",
+        minCoverageCounts = "20",
+        minCoverage = "0.9",
+        minIntronLen = "1000"
+    output:
+        "IntronSlopes/AllSlopes/{IndID}.IntronWindows_equalLength.tab.gz",
+    resources:
+        mem_mb = 32000
+    conda:
+        "../envs/r_slopes.yml"
+    wildcard_constraints:
+        IndID = "|".join(chRNASeqSamples),
+    log:
+        "logs/slopes/AllIntrons_{IndID}.IntronWindows_equalLength.slope.log"
+    shell:
+        """
+        (Rscript scripts/GetSlopesAll.R {input.bed} {params.minIntronCounts} {params.minCoverageCounts} {params.minCoverage} {params.WinLen} {params.minIntronLen}) &> {log}
+        """
+        
+rule AllSlopesPreparePhenotypes:
+    input: 
+        expand("IntronSlopes/AllIntronWindowCounts/{IndID}.IntronWindows_equalLength.bed.gz", IndID=chRNASeqSamples),
+        expand("IntronSlopes/AllSlopes/{IndID}.IntronWindows_equalLength.tab.gz", IndID=chRNASeqSamples),
+    output:
+        "QTLs/QTLTools/chRNA.Slopes.All/OnlyFirstReps.qqnorm.bed.gz",
+        'QTLs/QTLTools/chRNA.Slopes.All/OnlyFirstReps.Slopes.bed.gz',
+        'QTLs/QTLTools/chRNA.Slopes.All/OnlyFirstReps.Intercept.bed.gz'
+    conda:
+        "../envs/py_tools.yml"
+    params:
+        skip_samples = 'NA18855',
+        skip_introns = ':'.join(['ENSG00000153944.11_chr17_57596950_57615969_+',
+                                'ENSG00000187231.14_chr2_179191866_179264498_-',
+                                'ENSG00000170832.13_chr17_60301704_60345480_-',
+                                'ENSG00000062725.10_chr17_60500487_60525793_-',
+                                'ENSG00000204217.15_chr2_202377550_202464808_+',
+                                'ENSG00000182670.13_chr21_37172744_37182773_+',
+                                'ENSG00000131374.14_chr3_17428519_17508473_-',
+                                'ENSG00000188033.10_chr19_12583556_12609157_-',
+                                'ENSG00000152492.15_chr3_191329723_191357087_+',
+                                'ENSG00000198874.13_chr7_67195337_67238307_+',
+                                'ENSG00000170776.22_chr15_85485753_85521427_+',
+                                'ENSG00000181722.16_chr3_114900342_114974365_-',
+                                'ENSG00000088930.8_chr20_21303473_21326278_+',
+                                'ENSG00000136813.14_chr9_111397153_111408570_-',
+                                'ENSG00000073282.13_chr3_189631577_189737739_+',
+                                'ENSG00000135945.10_chr2_99464985_99489816_-',
+                                'ENSG00000154447.15_chr4_169136620_169155479_-',
+                                'ENSG00000105708.9_chr19_19714487_19732955_-',
+                                'ENSG00000153561.13_chr2_86720809_86740926_+',
+                                'ENSG00000148459.16_chr10_26709768_26720217_+',
+                                'ENSG00000166478.10_chr11_9479546_9494645_+',
+                                'ENSG00000111371.16_chr12_46229639_46239678_-',
+                                'ENSG00000250312.8_chr4_131505_160911_+',
+                                'ENSG00000166478.10_chr11_9479546_9494645_+',
+                                'ENSG00000166348.18_chr10_73575675_73625566_-',
+                                'ENSG00000078674.17_chr8_17993619_18006262_+',
+                                'ENSG00000035499.13_chr5_60647533_60686961_-',
+                                'ENSG00000150403.18_chr13_113503588_113510237_+']),
+        max_missing = '0.1',
+        top_introns = '10000',
+        #FDR = "0.25"
+    log:
+        "logs/AllSlopes/OnlyFirstReps.log"
+    shell:
+        """
+        python scripts/PreparePhenotypeTablesAllSlopes.py --windowStyle IntronWindows_equalLength --skip_samples {params.skip_samples} --skip_introns {params.skip_introns} --max_missing {params.max_missing} --top_introns {params.top_introns} &> {log}
+        """
+        

@@ -20,11 +20,35 @@ def process_spliceq_IER(spliceq_file):
         intronID.append(intron)
 
     chIER_['IntronID'] = intronID
-    chIER_.groupby('IntronID').IER.mean()
-    chIER_ = pd.DataFrame(chIER_.groupby('IntronID').IER.mean())
-    chIER_.columns = [sample]
+#     chIER_.groupby('IntronID').IER.mean()
+
+    chIER_score = pd.DataFrame(chIER_.groupby('IntronID').IER.mean())
+    chIER_score.columns = [sample]
+        
+    chIER_exon5_cov = pd.DataFrame(chIER_.groupby('IntronID').exon5_cov.max())
+    chIER_exon5_cov.columns = [sample]
     
-    return chIER_
+    chIER_sj5_cov_split = pd.DataFrame(chIER_.groupby('IntronID').sj5_cov_split.max())
+    chIER_sj5_cov_split.columns = [sample]
+    
+    chIER_sj5_cov_nonsplit = pd.DataFrame(chIER_.groupby('IntronID').sj5_cov_nonsplit.max())
+    chIER_sj5_cov_nonsplit.columns = [sample]
+    
+    chIER_intron_cov = pd.DataFrame(chIER_.groupby('IntronID').intron_cov.max())
+    chIER_intron_cov.columns = [sample]
+    
+    
+    
+    chIER_exon3_cov = pd.DataFrame(chIER_.groupby('IntronID').exon3_cov.max())
+    chIER_exon3_cov.columns = [sample]
+    
+    chIER_sj3_cov_split = pd.DataFrame(chIER_.groupby('IntronID').sj3_cov_split.max())
+    chIER_sj3_cov_split.columns = [sample]
+    
+    chIER_sj3_cov_nonsplit = pd.DataFrame(chIER_.groupby('IntronID').sj3_cov_nonsplit.max())
+    chIER_sj3_cov_nonsplit.columns = [sample]
+    
+    return chIER_score, chIER_exon5_cov, chIER_sj5_cov_split, chIER_sj5_cov_nonsplit, chIER_intron_cov, chIER_exon3_cov, chIER_sj3_cov_split, chIER_sj3_cov_nonsplit
 
 
 def process_spliceq_IRjunctions(spliceq_file):
@@ -56,10 +80,12 @@ def process_spliceq_IRjunctions(spliceq_file):
     chIR_f3_total = pd.concat([chIR_f3_pos, chIR_f3_neg])
     chIR_f3_total['IntronID'] = (intronID_pos + intronID_neg)
     chIR_f3_total = chIR_f3_total.loc[[x not in ['X', 'Y'] for x in chIR_f3_total.chr]]
-    chIR_f3_total = pd.DataFrame(chIR_f3_total.groupby('IntronID').score.mean())
-    chIR_f3_total.columns = [sample]
     
-    return chIR_f3_total
+    
+    chIR_f3_score = pd.DataFrame(chIR_f3_total.groupby('IntronID').score.mean())
+    chIR_f3_score.columns = [sample]
+    
+    return chIR_f3_score
     
 def qqnorm(x):
     n=len(x)
@@ -104,6 +130,22 @@ def qqnormDF(dfIR, max_missing=0.4, skip_samples = []):
 
 
 
+def process_df_list(df_list):
+    IRdf = pd.concat(df_list, axis=1)
+    
+    samples = list(IRdf.columns)
+    
+    IRdf['pid'] = list(IRdf.index)
+    IRdf['gid'] = list(IRdf.index)
+    
+    IRdf[['#Chr', 'start', 'end', 'strand']] = IRdf['pid'].str.split(':', expand=True)
+        
+    column_order = ['#Chr', 'start', 'end', 'pid', 'gid', 'strand'] + samples
+        
+    IRdf = IRdf[column_order]
+    
+    return IRdf
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--spliceq_dir', type=str, required=True)
 parser.add_argument('--spliceq_mode', type=str, required=True)
@@ -120,41 +162,80 @@ if __name__ == '__main__':
     output_qqnorm = args.output_qqnorm
     skip_samples = args.skip_samples
     
-    df_list = []
+    df_score = []
+    df_exon5 = []
+    df_sj5 = []
+    df_sj5_ncov = []
+    df_intron = []
+    df_exon3 = []
+    df_sj3 = []
+    df_sj3_ncov = []
+    
     sample_files = os.listdir(spliceq_dir)
     
     for sample in sample_files:
         
         if spliceq_mode == 'IRjunctions':
             df = process_spliceq_IRjunctions(spliceq_dir + '/' + sample)
+            df_score.append(df)
         else:
+            
             df = process_spliceq_IER(spliceq_dir + '/' + sample)
+            df_score.append(df[0])
+            df_exon5.append(df[1])
+            df_sj5.append(df[2])
+            df_sj5_ncov.append(df[3])
+            df_intron.append(df[4])
+            df_exon3.append(df[5])
+            df_sj3.append(df[6])
+            df_sj3_ncov.append(df[7])
         
-        df_list.append(df)
         
-    IRdf = pd.concat(df_list, axis=1)
+#     IRdf = pd.concat(df_list, axis=1)
     
-    samples = list(IRdf.columns)
+#     samples = list(IRdf.columns)
     
-    IRdf['pid'] = list(IRdf.index)
-    IRdf['gid'] = list(IRdf.index)
+#     IRdf['pid'] = list(IRdf.index)
+#     IRdf['gid'] = list(IRdf.index)
     
-    IRdf[['#Chr', 'start', 'end', 'strand']] = IRdf['pid'].str.split(':', expand=True)
+#     IRdf[['#Chr', 'start', 'end', 'strand']] = IRdf['pid'].str.split(':', expand=True)
         
-    column_order = ['#Chr', 'start', 'end', 'pid', 'gid', 'strand'] + samples
+#     column_order = ['#Chr', 'start', 'end', 'pid', 'gid', 'strand'] + samples
         
-    IRdf = IRdf[column_order]
-        
+#     IRdf = IRdf[column_order]
+     
+    IRdf = process_df_list(df_score)
     IRdf.to_csv(output, sep='\t', index=False)
     
     IRqqnorm = qqnormDF(IRdf, max_missing=0.1, skip_samples = [skip_samples])
-    
     idx = IRqqnorm.index
-    
     IRqqnorm_out = pd.concat([IRdf.loc[idx, IRdf.columns[:6]], IRqqnorm], axis=1)
-    
     IRqqnorm_out.to_csv(output_qqnorm, sep='\t', index=False)
     
+    
+    if spliceq_mode == 'IER':
+    
+        IRdf = process_df_list(df_exon5)
+        IRdf.to_csv(output[:-13] + 'exon5.bed.gz', sep='\t', index=False)
+
+        IRdf = process_df_list(df_sj5)
+        IRdf.to_csv(output[:-13] + 'sj5.bed.gz', sep='\t', index=False)
+
+        IRdf = process_df_list(df_sj5_ncov)
+        IRdf.to_csv(output[:-13] + 'sj5_ncov.bed.gz', sep='\t', index=False)
+
+        IRdf = process_df_list(df_intron)
+        IRdf.to_csv(output[:-13] + 'intron.bed.gz', sep='\t', index=False)
+
+        IRdf = process_df_list(df_exon3)
+        IRdf.to_csv(output[:-13] + 'exon3.bed.gz', sep='\t', index=False)
+
+        IRdf = process_df_list(df_sj3)
+        IRdf.to_csv(output[:-13] + 'sj3.bed.gz', sep='\t', index=False)
+
+        IRdf = process_df_list(df_sj3_ncov)
+        IRdf.to_csv(output[:-13] + 'sj3_ncov.bed.gz', sep='\t', index=False)
+
         
     
     

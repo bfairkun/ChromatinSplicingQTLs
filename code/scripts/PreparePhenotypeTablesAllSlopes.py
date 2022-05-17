@@ -20,7 +20,7 @@ def combine_dataframe(samples, windowStyle, skip_introns, max_missing=0.1, top_i
     df_error = pd.DataFrame()
     for sample in samples:#, leave=True, position=0):
             
-        df_sample = pd.read_csv('IntronSlopes/slopes/{sample}.{windowStyle}.tab.gz'.format(
+        df_sample = pd.read_csv('IntronSlopes/AllSlopes/{sample}.{windowStyle}.tab.gz'.format(
 #         df_sample = pd.read_csv('IntronSlopes/slopes/{sample}.{windowStyle}.glm_nb.tab.gz'.format(
             sample=sample, windowStyle=windowStyle), sep='\t', index_col=0).dropna()
 
@@ -103,7 +103,7 @@ if __name__ == '__main__':
     top_introns = int(args.top_introns)
 #     FDR = np.float(args.FDR)
     
-    samples = [x.split('.')[0] for x in os.listdir("IntronSlopes/slopes/") if "{windowStyle}.tab.gz".format(windowStyle=windowStyle) in x]
+    samples = [x.split('.')[0] for x in os.listdir("IntronSlopes/AllSlopes/") if "{windowStyle}.tab.gz".format(windowStyle=windowStyle) in x]
     
     samples = [x for x in samples if x not in  skip_samples]
 
@@ -113,15 +113,15 @@ if __name__ == '__main__':
     df_qqnorm = qqnorm_slopes(df_slopes)
     bed = intron_list_to_bed(df_qqnorm.index)
     output_bed = pd.concat([bed, df_qqnorm], axis=1).sort_values(['#Chr', 'start'])
-    output_bed.to_csv('QTLs/QTLTools/chRNA.Slopes/OnlyFirstReps.qqnorm.bed.gz', sep='\t', index=False, header=True)
+    output_bed.to_csv('QTLs/QTLTools/chRNA.Slopes.All/OnlyFirstReps.qqnorm.bed.gz', sep='\t', index=False, header=True)
     
     slope_bed = pd.concat([bed, df_slopes], axis=1).sort_values(['#Chr', 'start'])
-    slope_bed.to_csv('QTLs/QTLTools/chRNA.Slopes/OnlyFirstReps.Slopes.bed.gz', sep='\t', index=False, header=True)
+    slope_bed.to_csv('QTLs/QTLTools/chRNA.Slopes.All/OnlyFirstReps.Slopes.bed.gz', sep='\t', index=False, header=True)
     
     df_intercept = combine_dataframe(samples, windowStyle, skip_introns, max_missing=max_missing, 
                                   top_introns=top_introns, parameter = '(Intercept)')
     intercept_bed = pd.concat([bed, df_intercept], axis=1).sort_values(['#Chr', 'start'])
-    intercept_bed.to_csv('QTLs/QTLTools/chRNA.Slopes/OnlyFirstReps.Intercept.bed.gz', sep='\t', index=False, header=True)
+    intercept_bed.to_csv('QTLs/QTLTools/chRNA.Slopes.All/OnlyFirstReps.Intercept.bed.gz', sep='\t', index=False, header=True)
     
     
     
