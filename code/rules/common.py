@@ -204,7 +204,8 @@ def GetFeatureCountsParams(wildcards):
             return "-s 2"
     elif (wildcards.Phenotype in ChromatinProfilingPhenotypes) or (wildcards.Region == 'AtTSS'):
         return "-F SAF"
-
+    elif wildcards.Phenotype == "polyA.Expression" and wildcards.Region == "AtInternalExons":
+        return "-F SAF"
     else:
         return ""
 

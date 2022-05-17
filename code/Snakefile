@@ -140,7 +140,10 @@ rule all:
         "QTLs/QTLTools/polyA.IR/OnlyFirstReps.qqnorm.bed.gz",
         "SplicingAnalysis/IR/ProCap/Counts.txt",
         expand("QTLs/QTLTools/{Phenotype}/PermutationPass.FDR_Added.txt.gz", Phenotype=MyPhenotypes),
+        expand("QTLs/QTLTools/{Phenotype}/PermutationPassForColoc.txt.gz", Phenotype=MyPhenotypes),
         expand("hyprcoloc/Results/ForColoc/{ColocName}/tidy_results_OnlyColocalized.txt.gz", ColocName = colocs_genewise.index),
+        expand("QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.tabix.gz", Pass="NominalPass", QTLsGenotypeSet="", FeatureCoordinatesRedefinedFor="ForColoc", Phenotype=MyPhenotypes),
+        "QC/PvalsForPi1_0.1.txt.gz",
         expand("hyprcoloc/Results/ForGWASColoc/{ColocName}/results.txt.gz", ColocName = colocs_gwas.index )
 
 

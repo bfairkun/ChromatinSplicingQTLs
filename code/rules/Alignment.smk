@@ -94,8 +94,8 @@ rule MakeDummyVcfForSTAR_WASP_MODE:
     log:
         "logs/MakeDummyVcfForSTAR_WASP_MODE/{Phenotype}/{chrom}.log"
     output:
-        vcf = "ReferenceGenome/STAR_WASP_Vcfs/{Phenotype}/{chrom}.vcf.gz",
-        tbi = "ReferenceGenome/STAR_WASP_Vcfs/{Phenotype}/{chrom}.vcf.gz.tbi"
+        vcf = temp("ReferenceGenome/STAR_WASP_Vcfs/{Phenotype}/{chrom}.vcf.gz"),
+        tbi = temp("ReferenceGenome/STAR_WASP_Vcfs/{Phenotype}/{chrom}.vcf.gz.tbi")
     shell:
         """
         (bcftools view -s {params.IndIDs} --force-samples -c 1:minor {input} | awk -F'\\t' -v OFS='\\t' '$1~"^##" {{print}} $1=="#CHROM" {{print $1,$2,$3,$4,$5,$6,$7,$8,$9,"DummyID"}} $1!~"^#" {{print $1,$2,$3,$4,$5,$6,$7,$8,$9,"0|1"}}' | bgzip -c /dev/stdin > {output}) &> {log}
@@ -120,7 +120,7 @@ rule STAR_Align_WASP:
         R2 = "FastqFastp/{Phenotype}/{IndID}/{Rep}.R2.fastq.gz",
         vcf = "ReferenceGenome/STAR_WASP_Vcfs/{Phenotype}/WholeGenome.vcf"
     output:
-        bam = "Alignments/STAR_Align/{Phenotype}/{IndID}/{Rep}/Aligned.sortedByCoord.out.bam",
+        bam = temp("Alignments/STAR_Align/{Phenotype}/{IndID}/{Rep}/Aligned.sortedByCoord.out.bam"),
         align_log = "Alignments/STAR_Align/{Phenotype}/{IndID}/{Rep}/Log.final.out"
     threads: 8
     log: "logs/STAR_Align_WASP/{Phenotype}/{IndID}.{Rep}.log"
@@ -172,8 +172,8 @@ rule Hisat2_Align:
         R1 = "FastqFastp/{Phenotype}/{IndID}/{Rep}.R1.fastq.gz",
         R2 = "FastqFastp/{Phenotype}/{IndID}/{Rep}.R2.fastq.gz",
     output:
-        bam = "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.bam",
-        bai = "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.bam.bai"
+        bam = temp("Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.bam"),
+        bai = temp("Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.bam.bai")
     threads: 8
     conda:
         "../envs/hisat2.yml"
@@ -214,7 +214,7 @@ rule MakeHornetSnpList:
     log:
         "logs/MakeHornetSnpList/{Phenotype}/{chrom}.log"
     output:
-        snps = "ReferenceGenome/HornetSnpLists/{Phenotype}/chr{chrom}.snps.txt.gz",
+        snps = temp("ReferenceGenome/HornetSnpLists/{Phenotype}/chr{chrom}.snps.txt.gz"),
     shell:
         """
         (bcftools view -H -s {params.IndIDs} -m2 -M2 -v snps --force-samples -c 1:minor {input} | awk -F'\\t' '{{ print $2, $4, $5 }}' | gzip - > {output} ) &> {log}

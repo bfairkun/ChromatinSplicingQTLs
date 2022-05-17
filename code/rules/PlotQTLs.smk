@@ -4,7 +4,7 @@ rule MakeBigwigListTsv:
     """
     input:
         beds = expand("QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.gz", Phenotype = PhenotypesToColoc),
-        samplelist = "config/samples.tsv",
+        # samplelist = "config/samples.tsv",
         colors = "../data/ColorsForPhenotypes.xlsx",
         # bigwigs = GatherAllBigwigs,
         hyprccoloc_results = "../output/hyprcoloc_results/ForColoc/MolColocStandard/hyprcoloc.results.txt.gz",

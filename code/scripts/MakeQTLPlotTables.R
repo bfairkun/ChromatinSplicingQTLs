@@ -81,7 +81,8 @@ coloc.results <- read_tsv(hyprcoloc_results_fn, col_names = c("Locus", "iteratio
   mutate(pid=str_replace(full_pid, "(.+?);(.+)", "\\2")) %>%
   select(-ColocalizedTraits, -DroppedTrait)
 
-AllSamples <- read_tsv("config/samples.tsv")
+AllSamples <- read_tsv("config/samples.tsv", comment = "#")
+
 
 Phenotypes <- coloc.results$Phenotype %>% unique()
 
