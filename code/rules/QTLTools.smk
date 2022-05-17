@@ -202,7 +202,7 @@ rule QTLtools_generalized:
         bed_tbi = GetQTLtoolsBedTbi,
         cov = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.pca"
     output:
-        "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}Chunks/{n}.txt"
+        temp("QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}Chunks/{n}.txt")
     log:
         "logs/QTLtools_cis_permutation_pass/{Phenotype}.{Pass}.{QTLsGenotypeSet}.{FeatureCoordinatesRedefinedFor}/{n}.log"
     resources:
@@ -281,7 +281,7 @@ rule MakePhenotypeTableToColocPeaksWithGenes:
     resources:
         mem_mb = 12000
     wildcard_constraints:
-        Phenotype = "H3K4ME3|H3K27AC|H3K4ME1|CTCF"
+        Phenotype = "H3K4ME3|H3K27AC|H3K4ME1|CTCF|ProCap|chRNA.Expression_eRNA|chRNA.Expression_cheRNA|chRNA.Expression_lncRNA|chRNA.Expression_snoRNA"
     shell:
         """
         cat <(zcat {input.bed} | head -1) <(bedtools slop -i {input.genes} -b {params.cis_window} -g {input.fai} | bedtools intersect -b {input.bed} -a - -sorted -wo {params.bedtools_intersect_params} | awk -F'\\t' -v OFS='\\t' '{{$10=$10":"$4; $11=$4; print $0}}' | rev | cut -d$'\\t' -f2- | rev | cut -d$'\\t' -f 4,7- | sort | join -t$'\\t' <(awk -F'\\t' -v OFS='\\t' '{{print $4, $0}}' {input.genes} | sort) - | cut -d$'\\t' -f 2-4,11- | bedtools slop -i - -b {params.coloc_window} -g {input.fai} ) | bedtools sort -i - -header | bgzip /dev/stdin -c > {output.bed}
@@ -298,7 +298,7 @@ use rule MakePhenotypeTableToColocPeaksWithGenes as MakePhenotypeTableToColocInt
 
 use rule MakePhenotypeTableToColocPeaksWithGenes as MakePhenotypeTableToColocGenes with:
     wildcard_constraints:
-        Phenotype = "Expression.Splicing.Subset_YRI|chRNA.Expression.Splicing|Expression.Splicing|MetabolicLabelled.30min|MetabolicLabelled.60min|chRNA.Expression_eRNA|chRNA.Expression_cheRNA|chRNA.Expression_lncRNA|chRNA.Expression_snoRNA"
+        Phenotype = "Expression.Splicing.Subset_YRI|chRNA.Expression.Splicing|Expression.Splicing|MetabolicLabelled.30min|MetabolicLabelled.60min|H3K36ME3"
     params:
         cis_window = 0,
         bedtools_intersect_params = "-s -f 1 -r",
@@ -344,12 +344,35 @@ rule tabixNominalPassQTLResults:
         "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.gz"
     wildcard_constraints:
         Pass = "NominalPass"
+    params:
+        # sort_temp = '-T ' + config['scratch'][:-1]
+        sort_temp = ""
     output:
         txt = "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.tabix.gz",
         tbi = "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.tabix.gz.tbi"
+    resources:
+        mem_mb = much_more_mem_after_first_attempt
+    log:
+        "logs/tabixNominalPassQTLResults/{Phenotype}.{Pass}.{QTLsGenotypeSet}.{FeatureCoordinatesRedefinedFor}.log"
+    shadow: "shallow"
     shell:
         """
-        cat <(zcat {input} | head -1 | perl -p -e 'printf("#") if $. ==1; s/ /\\t/g') <(zcat {input} | awk 'NR>1' |  perl -p -e 's/ /\\t/g' | sort -k9,9 -k10,10n  ) | bgzip /dev/stdin -c > {output.txt}
-        tabix -b 10 e10 -s9 {output.txt}
+        (cat <(zcat {input} | head -1 | perl -p -e 'printf("#") if $. ==1; s/ /\\t/g') <(zcat {input} | awk 'NR>1' |  perl -p -e 's/ /\\t/g' | sort {params.sort_temp} -k9,9 -k10,10n  ) | bgzip /dev/stdin -c > {output.txt}) &> {log}
+        tabix -b 10 -e10 -s9 {output.txt} &>> {log}
+        """
+
+rule GetPvalsForPiStats:
+    input:
+        Nominal = expand("QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.tabix.gz", Pass="NominalPass", QTLsGenotypeSet="", FeatureCoordinatesRedefinedFor="ForColoc", Phenotype=MyPhenotypes),
+        Permutation = expand("QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.gz", Pass="PermutationPass", QTLsGenotypeSet="", FeatureCoordinatesRedefinedFor="ForColoc", Phenotype=MyPhenotypes)
+    output:
+        "QC/PvalsForPi1_{FDR}.txt.gz"
+    params:
+        phenotypes = ' '.join(MyPhenotypes)
+    log:
+        "logs/GetPvalsForPiStats/{FDR}.log"
+    shell:
+        """
+        python scripts/GatherTopSNPPvalsCrossTraits.py {output} {wildcards.FDR} {params.phenotypes} &> {log}
         """
 

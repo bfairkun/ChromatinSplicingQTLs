@@ -18,6 +18,21 @@ library(tidyverse)
 library(viridis)
 library(gplots)
 library(data.table)
+library(qvalue)
+library(purrr)
+
+sample_n_of <- function(data, size, ...) {
+  dots <- quos(...)
+  
+  group_ids <- data %>% 
+    group_by(!!! dots) %>% 
+    group_indices()
+  
+  sampled_groups <- sample(unique(group_ids), size)
+  
+  data %>% 
+    filter(group_ids %in% sampled_groups)
+}
 
 dat <- read_tsv("../output/hyprcoloc_results/ForColoc/MolColocStandard/hyprcoloc.results.txt.gz", col_names = c("Locus", "iteration", 'ColocalizedTraits', 'ColocPr', 'RegionalPr', "topSNP", "TopSNPFinemapPr", "DroppedTrait"), skip=1)
 
@@ -27,7 +42,7 @@ dat$ColocPr %>% hist()
 The default posterior probability for colocalization clustering is 0.25 (and the authors don't recommend going below this)... Above I plotted histogram of posterior probabilties for colocalized clusters.
 
 ```{r}
-dat %>%
+dat.tidy <- dat %>%
   # head(1000) %>%
   separate_rows(ColocalizedTraits, sep = ', ') %>%
   mutate(Trait = case_when(
@@ -45,6 +60,209 @@ dat %>%
     mutate(PC_ClassPair = paste(PC1, PC2)) %>%
     # pull(PC_ClassPair) %>% unique()
     mutate(IsColocalizedPair = iteration.x == iteration.y)
+
+RNASeqPhenotypes <- c("MetabolicLabelled.30min", "MetabolicLabelled.60min", "Expression.Splicing.Subset_YRI")
+
+
+dat.tidy %>%
+  filter((PC1 %in% RNASeqPhenotypes) & (PC2 %in% RNASeqPhenotypes)) %>%
+  group_by(Locus) %>%
+  mutate(MinPr = min(ColocPr.x)) %>%
+  ungroup() %>%
+  slice(rep(1:n(), each=6)) %>%
+  mutate(threshold = rep_len(seq(0.25, 0.75, length.out=6), length.out=n())) %>%
+  filter((MinPr > threshold) | is.na(MinPr)) %>%
+  # filter(((ColocPr.x > threshold) & (ColocPr.y > threshold)) | is.na(ColocPr.x) | is.na(ColocPr.y)) %>%
+  # mutate(IsColocalizedPair = ((iteration.x == iteration.y) & ColocPr.x > threshold)) %>%
+  group_by(PC1, PC2, threshold) %>%
+  summarise(FractionColocs = sum(IsColocalizedPair)/n()) %>%
+  ungroup() %>%
+  mutate(TopPCs = paste(PC1, PC2)) %>%
+  mutate(BottomPCs = paste(PC2, PC1)) %>%
+  select(-PC1, -PC2) %>%
+  gather(key = "MatrixHalf", value = "PCs", TopPCs, BottomPCs) %>%
+  separate(PCs, into=c("PC1", "PC2"), sep = " ") %>%
+  distinct(PC1, PC2, FractionColocs, .keep_all = T) %>%
+  ggplot(aes(x=PC1, y=PC2, fill=FractionColocs)) +
+  geom_raster() +
+  geom_text(aes(label=signif(FractionColocs, 2)), size=2) +
+  scale_fill_viridis(option="B", direction = 1) +
+  facet_wrap(~threshold) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+
+As expected, filtering for genes with clusters with a higher minimum colocalization probability results in less colocalizations, though not be too much.
+
+But really what I want to know is why things aren't colocalizing. I could consider lowering that colocalization threshold, but the hyprcoloc authors recommend against that. Maybe a different approach would be to look at the genes that did versus didn't colocalize, to consider being more stringent what things i attempt to colocalize
+
+```{r}
+
+
+Files <- paste0("../code/QTLs/QTLTools/", RNASeqPhenotypes,"/PermutationPass.txt.gz") %>%
+  setNames(RNASeqPhenotypes)
+
+StandardPermutationPassResults <- lapply(Files, read_delim, delim=' ') %>%
+  bind_rows(.id="Phenotype") %>%
+  select(PC=Phenotype, P=phe_id, p=adj_beta_pval)
+
+dat %>%
+  # head(1000) %>%
+  separate_rows(ColocalizedTraits, sep = ', ') %>%
+  mutate(Trait = case_when(
+    ColocalizedTraits == "None" ~ DroppedTrait,
+    TRUE ~ ColocalizedTraits
+  )) %>%
+  select(-ColocalizedTraits, -DroppedTrait) %>%
+  separate(Trait, into=c("PC", "P"), sep = ";") %>%
+  filter(PC %in% RNASeqPhenotypes) %>%
+  inner_join(StandardPermutationPassResults, by=c("PC", "P")) %>%
+  replace_na(list(ColocPr = 0)) %>%
+  # mutate(ColocPrGroup = cut(ColocPr, include.lowest = F, breaks=c(0, 0.25, 0.35, 0.45, 0.55, 0.65, 0.75, 1))) %>%
+  mutate(ColocPrGroup = cut(ColocPr, include.lowest = F, breaks=c(0, 0.25, 0.5, 0.75, 1))) %>%
+  ggplot(aes(x=-log10(p), color=ColocPrGroup)) +
+  stat_ecdf() +
+  geom_vline(xintercept = -log10(0.005), linetype='dashed') +
+  geom_vline(xintercept = -log10(0.01), linetype='dashed') +
+  coord_cartesian(xlim=c(1,5)) +
+  facet_wrap(~PC) +
+  labs(y="ecdf", x="-log10(p) for FeaturePermutationPass") +
+  # facet_grid(rows = vars(PC), cols = vars(ColocPrGroup)) +
+  theme_bw()
+  
+```
+
+
+Let's check pi statistic for metabolic 30, 60min, polyA RNA-seq eQTLs... I have already calculated top eQTL SNP nominal P value for each FDR<10% eGene from each assay, and also got the same p-value across the other assays. Here I'll read in that data and calculate pi1 statistic with qvalue package
+
+```{r}
+pvals <- read_tsv("../code/QC/PvalsForPi1_0.1.txt.gz")
+head(pvals)
+```
+
+
+First I'll estimate pi1 by eye by looking at histogram of Pvals:
+
+```{r}
+
+pvals %>%
+  filter((TestPhenotypeClass %in% RNASeqPhenotypes ) & (DiscoveryPhenotypeClass %in% RNASeqPhenotypes)) %>%
+  ggplot(aes(x=TestPhenotypeP)) +
+  geom_histogram() +
+  facet_grid(rows=vars(TestPhenotypeClass), cols = vars(DiscoveryPhenotypeClass)) +
+  theme_bw()
+
+
+pvals %>%
+  filter((TestPhenotypeClass %in% RNASeqPhenotypes ) & (DiscoveryPhenotypeClass %in% RNASeqPhenotypes)) %>%
+  filter(!TestPhenotypeClass==DiscoveryPhenotypeClass) %>%
+  group_by(TestPhenotypeClass, DiscoveryPhenotypeClass) %>%
+  summarise(pi1 = 1-qvalue(TestPhenotypeP)$pi0) %>%
+  ggplot(aes(x=TestPhenotypeClass, y=DiscoveryPhenotypeClass, fill=pi1)) +
+  geom_raster() +
+  geom_text(aes(label=signif(pi1, 2)), size=2) +
+  scale_fill_viridis(option="B", direction = 1, limits=c(0,1)) +
+  theme_classic()
+
+myfunc <- function(TestPhenotypeP){
+  return(1-qvalue(TestPhenotypeP)$pi0)
+}
+
+
+pvals %>%
+  filter((TestPhenotypeClass %in% RNASeqPhenotypes ) & (DiscoveryPhenotypeClass %in% RNASeqPhenotypes)) %>%
+  filter(!TestPhenotypeClass==DiscoveryPhenotypeClass) %>%
+  group_by(TestPhenotypeClass, DiscoveryPhenotypeClass) %>%
+  summarise(pi1 = myfunc(TestPhenotypeP)) %>%
+  # summarise(pi1 = possibly(myfunc(.$TestPhenotypeP), otherwise = NA)) %>%
+  ggplot(aes(x=TestPhenotypeClass, y=DiscoveryPhenotypeClass, fill=pi1)) +
+  geom_raster() +
+  geom_text(aes(label=signif(pi1, 2)), size=2) +
+  scale_fill_viridis(option="B", direction = 1, limits=c(0,1)) +
+  theme_classic()
+  
+```
+
+Let's create that pi1 stat table for all phenotypes again
+
+```{r}
+
+
+
+```
+
+Next let's check some manhattan plots for things that did or didn't colocalize... I'll forget about adding in LD patterns like locuszoom... even though it would be helpful to visualize it might complicate the matter.
+
+First let's get some cases where things did colocalize:
+
+
+
+```{r}
+dat.tidy %>%
+  pull(PC_ClassPair) %>% unique()
+
+Files <- paste0("../code/QTLs/QTLTools/", RNASeqPhenotypes,"/NominalPassForColoc.txt.tabix.gz") %>%
+  setNames(RNASeqPhenotypes)
+
+GenePos <- read_tsv("../code/ExpressionAnalysis/polyA/ExpressedGeneList.txt", col_names = c("Chrom", "start", "stop", "Locus", "score", "strand"))
+
+GenesToPlot <- dat.tidy %>%
+  # filter(IsColocalizedPair) %>%
+  filter(PC_ClassPair == "MetabolicLabelled.30min MetabolicLabelled.60min") %>%
+  group_by(IsColocalizedPair) %>%
+  sample_n(10) %>%
+  ungroup() %>%
+  select(Locus, IsColocalizedPair, topSNP.x, ColocPr.y) %>%
+  separate(topSNP.x, into=c("topSNPChr", "topSNPPos", "topSNPRef", "TopSNPAlt"), sep=":", convert=T) %>%
+  select(Locus, IsColocalizedPair, topSNPPos, ColocPr.y)
+
+
+
+CoommandsToReadInStats <- GenePos %>%
+  inner_join(GenesToPlot, by="Locus") %>%
+  slice(rep(1:n(), each=3)) %>%
+  mutate(Filename = rep_len(Files, length.out=n())) %>%
+  mutate(cmd = str_glue("tabix -h {Filename} {Chrom}:{start-100000}-{stop+100000}")) %>%
+  mutate(name = paste(Locus, str_replace(Filename, "../code/QTLs/QTLTools/(.+?)/NominalPassForColoc.txt.tabix.gz", "\\1"), IsColocalizedPair, ColocPr.y, sep = ":")) %>%
+  select(name, cmd) %>% deframe()
+
+# dat <- fread("tabix ../code/QTLs/QTLTools/MetabolicLabelled.30min/NominalPassForColoc.txt.tabix.gz chr1:19582212-19899945")
+
+StandardNominalPassResults <- lapply(CoommandsToReadInStats, fread) %>%
+  bind_rows(.id="Phenotype") %>%
+  separate('#phe_id', into=c("phe_id", "Locus"), sep=":") %>%
+  separate('Phenotype', into=c("LocusFromHyprcoloc", "PhenotypeClass", "IsColocalizedPair", "ColocPr"), sep=":", convert=T)
+
+
+Plt <- StandardNominalPassResults %>%
+    filter(phe_id == LocusFromHyprcoloc) %>%
+    group_by(Locus) %>%
+    add_count(var_id) %>%
+    filter(n == length(RNASeqPhenotypes)) %>%
+    arrange(IsColocalizedPair, Locus) %>%
+    mutate(ColocPr = if_else(IsColocalizedPair, ColocPr, 0)) %>%
+    # bind_rows(GenesToPlot) %>%
+    ggplot(aes(x=var_from, y=-log10(nom_pval), color=PhenotypeClass)) +
+    # geom_vline(aes(xintercept=topSNPPos)) +
+    geom_text(aes(label=ColocPr), x=Inf, y=Inf, color="black", vjust=2) +
+    geom_point() +
+    facet_wrap(~Locus+PhenotypeClass+IsColocalizedPair, scales="free", ncol=3, labeller = label_wrap_gen()) +
+    # facet_grid(rows=vars(Locus), cols=vars(PhenotypeClass), scales="free") +
+    theme_classic()
+
+ggsave("../code/scratch/hyprcoloc_coloc_manahantan.pdf", height=60, width=20, limitsize=F)
+
+
+Plt2<-StandardNominalPassResults %>%
+    filter(phe_id == LocusFromHyprcoloc) %>%
+    filter(Locus=="ENSG00000133789.15") %>%
+    filter(PhenotypeClass %in% c("MetabolicLabelled.30min", "MetabolicLabelled.60min")) %>%
+    select(nom_pval, PhenotypeClass, var_id) %>%
+    spread("PhenotypeClass", "nom_pval" ) %>%
+    ggplot(aes(x=-log10(MetabolicLabelled.30min), y=-log10(MetabolicLabelled.60min))) +
+    geom_point()
+
+ggsave("../code/scratch/hyprcoloc_coloc_coloc_example.pdf")
 
 ```
 
