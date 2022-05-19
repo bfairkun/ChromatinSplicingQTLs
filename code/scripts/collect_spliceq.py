@@ -11,12 +11,13 @@ def process_spliceq_IER(spliceq_file):
     
     sample = spliceq_file.split('/')[-1].split('.')[0]
     chIER = pd.read_csv(spliceq_file, sep='\t')
-    chIER_ = chIER.drop(columns=['gene_ID', 'transcript_ID', 'intron_ID']).drop_duplicates()
+    #chIER_ = chIER.drop(columns=['gene_ID', 'transcript_ID', 'intron_ID']).drop_duplicates()
+    chIER_ = chIER.drop(columns=['transcript_ID', 'intron_ID']).drop_duplicates()
     chIER_ = chIER_.loc[[x not in ['X', 'Y'] for x in chIER_.chr]]
 
     intronID = []
     for idx, row in chIER_.iterrows():
-        intron = 'chr' + str(row.chr) + ':' + str(row.IStart+3) + ':' + str(row.IEnd-3) + ':' + row.strand
+        intron = row.gene_ID + '|chr' + str(row.chr) + ':' + str(row.IStart+3) + ':' + str(row.IEnd-3) + ':' + row.strand
         intronID.append(intron)
 
     chIER_['IntronID'] = intronID
@@ -130,15 +131,20 @@ def qqnormDF(dfIR, max_missing=0.4, skip_samples = []):
 
 
 
-def process_df_list(df_list):
+def process_df_list(df_list, spliceq_mode = 'IER'):
     IRdf = pd.concat(df_list, axis=1)
     
     samples = list(IRdf.columns)
     
     IRdf['pid'] = list(IRdf.index)
-    IRdf['gid'] = list(IRdf.index)
-    
-    IRdf[['#Chr', 'start', 'end', 'strand']] = IRdf['pid'].str.split(':', expand=True)
+    #IRdf['gid'] = list(IRdf.index)
+    if spliceq_mode == 'IER':
+#         IRdf['gid'] = [x.split('|')[0] for x in list(IRdf.index)]
+        IRdf[['gene_chrom', 'start', 'end', 'strand']] = IRdf['pid'].str.split(':', expand=True)
+        IRdf[['gid', '#Chr']] = IRdf['gene_chrom'].str.split('|', expand=True)
+    else:
+        IRdf['gid'] = list(IRdf.index)
+        IRdf[['#Chr', 'start', 'end', 'strand']] = IRdf['pid'].str.split(':', expand=True)
         
     column_order = ['#Chr', 'start', 'end', 'pid', 'gid', 'strand'] + samples
         
@@ -178,6 +184,7 @@ if __name__ == '__main__':
         if spliceq_mode == 'IRjunctions':
             df = process_spliceq_IRjunctions(spliceq_dir + '/' + sample)
             df_score.append(df)
+            
         else:
             
             df = process_spliceq_IER(spliceq_dir + '/' + sample)
@@ -204,7 +211,7 @@ if __name__ == '__main__':
         
 #     IRdf = IRdf[column_order]
      
-    IRdf = process_df_list(df_score)
+    IRdf = process_df_list(df_score, spliceq_mode)
     IRdf.to_csv(output, sep='\t', index=False)
     
     IRqqnorm = qqnormDF(IRdf, max_missing=0.1, skip_samples = [skip_samples])
