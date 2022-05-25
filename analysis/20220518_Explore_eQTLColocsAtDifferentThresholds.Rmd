@@ -592,6 +592,29 @@ dat.tidy %>%
        x= "Number promoter peak QTLs per gene",
        y="ecdf")
 
+#expand and right join
+a <- dat.tidy %>%
+  filter(PC1 %in% c("Expression.Splicing.Subset_YRI", "chRNA.Expression.Splicing")) %>%
+  separate(Locus, into=c("Locus", "Threshold"), sep = ":") %>%
+  separate(Threshold, into = c("ColocPhenotypeClass", "Threshold"), sep="_") %>%
+  filter(ColocPhenotypeClass == "")
+
+a %>%
+  expand(Threshold, P1, PC1, PC2) %>%
+  left_join(
+    a %>%
+      count(Threshold, P1, PC1, PC2),
+    by = c("Threshold", "P1", "PC1", "PC2")) %>%
+  replace_na(list(n=0)) %>%
+  filter(PC2 %in% c("H3K4ME3", "H3K4ME1", "H3K27AC")) %>%
+  ggplot(aes(x=n)) +
+  stat_ecdf(aes(color = PC2)) +
+  facet_grid(rows=vars(PC1), cols=vars(Threshold)) +
+  theme_classic() +
+  labs(caption = "I think I didn't do this properly",
+       title = "Usually only one TSS QTL per eGene",
+       x= "Number promoter peak QTLs per gene",
+       y="ecdf")
 
 dat.tidy %>%
   filter(PC1 %in% c("Expression.Splicing.Subset_YRI", "chRNA.Expression.Splicing")) %>%
@@ -614,6 +637,7 @@ dat.tidy %>%
   geom_text(aes(label=signif(FractionColocs, 2))) +
   scale_fill_viridis(option="B", direction = 1, limits=c(0,1)) +
   facet_wrap(~Threshold) +
+  coord_cartesian(xlim=c(0,5)) +
   theme_classic() +
   labs(title = "Rate of colocalization") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))

@@ -250,3 +250,7 @@ rule CopyGwasHyprcolocResultsToTrackedOutputDir:
         """
         cp {input.results} {output.results}
         """
+
+rule GatherAllHyprcolocResultsToTrackedOutputDir:
+    input:
+        expand("../output/hyprcoloc_results/{FeatureCoordinatesRedefinedFor}/{ColocName}/hyprcoloc.results.txt.gz", FeatureCoordinatesRedefinedFor = "ForColoc", ColocName = colocs_genewise.index)
