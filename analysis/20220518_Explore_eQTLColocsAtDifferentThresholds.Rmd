@@ -362,16 +362,36 @@ PeaksToTSS <- Sys.glob("../code/Misc/PeaksClosestToTSS/*_assigned.tsv.gz") %>%
   bind_rows(.id="ChromatinMark") %>%
   mutate(GenePeakPair = paste(gene, peak, sep = ";"))
 
-eQTLs <- read_delim("../code/QTLs/QTLTools/Expression.Splicing.Subset_YRI/PermutationPassForColoc.txt.gz", delim=' ') %>%
-  mutate(q = qvalue(adj_beta_pval)$qvalues)
-
-
 ```
+
+And plot some summary stats. How many TSS peaks per gene?
+
+```{r}
+
+PeaksToTSS %>%
+  count(ChromatinMark, gene) %>%
+  right_join(
+    expand.grid(gene = ExpressedGenes, ChromatinMark = c("H3K4ME3", "H3K4ME1", "H3K27AC")),
+    by = c("gene", "ChromatinMark")
+  ) %>%
+  replace_na(list(n=0)) %>%
+  ggplot(aes(x=n)) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(0,10)) +
+  facet_wrap(~ChromatinMark) +
+  labs(title = "Genes have variable number of TSS peaks", x="Number of TSS peaks per gene", y="ecdf") +
+  theme_bw() 
+```
+
 
 Because I was selecting eQTLs for colocalization based on nominal P value, i should get a sense of what these thresholds mean in terms of FDR...
 
 
 ```{r}
+
+eQTLs <- read_delim("../code/QTLs/QTLTools/Expression.Splicing.Subset_YRI/PermutationPassForColoc.txt.gz", delim=' ') %>%
+  mutate(q = qvalue(adj_beta_pval)$qvalues)
+
 ggplot(eQTLs, aes(x=adj_beta_pval, y=q)) +
   geom_point() +
   geom_vline(xintercept = 0.01) +
@@ -387,7 +407,49 @@ ggplot(eQTLs, aes(x=adj_beta_pval, y=q)) +
 
 ```
 
+Ok that makes sense for eQTLs, but based on the amount of enrichment of positive tests (ie the pi1 stat), the FDR will correspond to different P value. I thought it was most reasonable to attempt to colocalized based on a Pvalue threshold, but I am sort of now worried about chance colocalizations from false positive QTL signals. Let's plot histograms of permutation pass Pvalues for all traits, and see how this pvalue threshold corresponds to fdr for different traits:
 
+```{r}
+
+PermutationPassResults <- Sys.glob("../code/QTLs/QTLTools/*/PermutationPassForColoc.txt.gz") %>%
+  setNames(str_replace(., "../code/QTLs/QTLTools/(.+?)/PermutationPassForColoc.txt.gz", "\\1")) %>%
+  lapply(read_delim, delim=' ') %>%
+  bind_rows(.id="Phenotype") %>%
+  group_by(Phenotype) %>%
+  mutate(q = qvalue(adj_beta_pval)$qvalues)
+
+PermutationPassResults %>%
+  ggplot(aes(x=adj_beta_pval)) +
+  geom_histogram() +
+  facet_wrap(~Phenotype, scales="free_y") +
+  theme_classic()
+
+PermutationPassResults %>%
+  ggplot(aes(x=adj_beta_pval)) +
+  geom_histogram() +
+  facet_wrap(~Phenotype, scales="free_y", labeller = label_wrap_gen()) +
+  theme_classic()
+
+PermutationPassResults %>%
+  select(Phenotype, adj_beta_pval, q) %>%
+  group_by(Phenotype) %>%
+  slice(which.min(abs(adj_beta_pval - 0.01)),
+        which.min(abs(adj_beta_pval - 0.005)),
+        which.min(abs(adj_beta_pval - 0.001))) %>%
+  ungroup() %>%
+  arrange(Phenotype, adj_beta_pval) %>%
+  group_by(Phenotype) %>%
+  mutate(ThresholdCondition = row_number()) %>%
+  mutate(Threshold = recode(ThresholdCondition, `1`="0.001", `2`="0.005", `3`="0.01")) %>%
+  ggplot(aes(x=Threshold, y=q)) +
+  geom_col() +
+  facet_wrap(~Phenotype, scales="free_y", labeller = labeller(groupwrap = label_wrap_gen(10))) +
+  labs(y="FDR", title = "P value thresholds correspond to slightly different FDR", x="Permutation nominal P value threshold") +
+  theme_classic()
+```
+
+
+Ok now let's get to asking the question about how many eQTLs colocalize with a promoter peak QTL at the TSS.
 
 ```{r}
 
@@ -481,44 +543,85 @@ dat.tidy %>%
 
 ```
 
-Ok that makes sense for eQTLs, but based on the amount of enrichment of positive tests (ie the pi1 stat), the FDR will correspond to different P value. I thought it was most reasonable to attempt to colocalized based on a Pvalue threshold, but I am sort of now worried about chance colocalizations from false positive QTL signals. Let's plot histograms of permutation pass Pvalues for all traits, and see how this pvalue threshold corresponds to fdr for different traits:
+Let's ask about the coloc *rate* (between promoter QTLs and eQTLs) now of the tested promoter QTLs...
+
+First, how many test coloc pairs per gene, then what is the rate of colocalization:
+
+
 
 ```{r}
-
-PermutationPassResults <- Sys.glob("../code/QTLs/QTLTools/*/PermutationPassForColoc.txt.gz") %>%
-  setNames(str_replace(., "../code/QTLs/QTLTools/(.+?)/PermutationPassForColoc.txt.gz", "\\1")) %>%
-  lapply(read_delim, delim=' ') %>%
-  bind_rows(.id="Phenotype") %>%
-  group_by(Phenotype) %>%
-  mutate(q = qvalue(adj_beta_pval)$qvalues)
-
-PermutationPassResults %>%
-  ggplot(aes(x=adj_beta_pval)) +
-  geom_histogram() +
-  facet_wrap(~Phenotype, scales="free_y") +
-  theme_classic()
-
-PermutationPassResults %>%
-  ggplot(aes(x=adj_beta_pval)) +
-  geom_histogram() +
-  facet_wrap(~Phenotype, scales="free_y", labeller = label_wrap_gen()) +
-  theme_classic()
-
-PermutationPassResults %>%
-  select(Phenotype, adj_beta_pval, q) %>%
-  group_by(Phenotype) %>%
-  slice(which.min(abs(adj_beta_pval - 0.01)),
-        which.min(abs(adj_beta_pval - 0.005)),
-        which.min(abs(adj_beta_pval - 0.001))) %>%
+dat.tidy %>%
+  filter(PC1 %in% c("Expression.Splicing.Subset_YRI", "chRNA.Expression.Splicing")) %>%
+  separate(Locus, into=c("Locus", "Threshold"), sep = ":") %>%
+  separate(Threshold, into = c("ColocPhenotypeClass", "Threshold"), sep="_") %>%
+  filter(ColocPhenotypeClass == "") %>%
+  mutate(GenePeakPair = paste(P1, P2, sep=";")) %>%
+  filter(GenePeakPair %in% PeaksToTSS$GenePeakPair) %>%
+  group_by(PC1, PC2, Threshold) %>%
+  summarise(FractionColocs = n()) %>%
   ungroup() %>%
-  arrange(Phenotype, adj_beta_pval) %>%
-  group_by(Phenotype) %>%
-  mutate(ThresholdCondition = row_number()) %>%
-  mutate(Threshold = recode(ThresholdCondition, `1`="0.001", `2`="0.005", `3`="0.01")) %>%
-  ggplot(aes(x=Threshold, y=q)) +
-  geom_col() +
-  facet_wrap(~Phenotype, scales="free_y", labeller = labeller(groupwrap = label_wrap_gen(10))) +
-  labs(y="FDR", title = "P value thresholds correspond to slightly different FDR", x="Permutation nominal P value threshold") +
-  theme_classic()
+  mutate(TopPCs = paste(PC1, PC2)) %>%
+  mutate(BottomPCs = paste(PC2, PC1)) %>%
+  select(-PC1, -PC2) %>%
+  gather(key = "MatrixHalf", value = "PCs", TopPCs, BottomPCs) %>%
+  separate(PCs, into=c("PC1", "PC2"), sep = " ") %>%
+  distinct(PC1, PC2, FractionColocs, Threshold, .keep_all = T) %>%
+  ggplot(aes(x=PC1, y=PC2, fill=FractionColocs)) +
+  geom_raster() +
+  geom_text(aes(label=signif(FractionColocs, 2))) +
+  scale_fill_viridis(option="B", direction = 1) +
+  facet_wrap(~Threshold) +
+  theme_classic() +
+  labs(title = "Number of attempted colocalized trait pairs") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+dat.tidy %>%
+  filter(PC1 %in% c("Expression.Splicing.Subset_YRI", "chRNA.Expression.Splicing")) %>%
+  separate(Locus, into=c("Locus", "Threshold"), sep = ":") %>%
+  separate(Threshold, into = c("ColocPhenotypeClass", "Threshold"), sep="_") %>%
+  filter(ColocPhenotypeClass == "") %>%
+  mutate(GenePeakPair = paste(P1, P2, sep=";")) %>%
+  filter(GenePeakPair %in% PeaksToTSS$GenePeakPair) %>%
+  count(PC1, P1, PC2, Threshold) %>%
+  ggplot(aes(x=n)) +
+  stat_ecdf(aes(color = PC2)) +
+  facet_wrap(~PC1) +
+  theme_classic() +
+  labs(caption = "Only including genes where a colocalization was attempted between eQTL and promoter peak QTL",
+       title = "Usually only one TSS QTL per eGene",
+       x= "Number promoter peak QTLs per gene",
+       y="ecdf")
+
+
+dat.tidy %>%
+  filter(PC1 %in% c("Expression.Splicing.Subset_YRI", "chRNA.Expression.Splicing")) %>%
+  separate(Locus, into=c("Locus", "Threshold"), sep = ":") %>%
+  separate(Threshold, into = c("ColocPhenotypeClass", "Threshold"), sep="_") %>%
+  filter(ColocPhenotypeClass == "") %>%
+  mutate(GenePeakPair = paste(P1, P2, sep=";")) %>%
+  filter(GenePeakPair %in% PeaksToTSS$GenePeakPair) %>%
+  group_by(PC1, PC2, Threshold) %>%
+  summarise(FractionColocs = sum(IsColocalizedPair)/n()) %>%
+  ungroup() %>%
+  mutate(TopPCs = paste(PC1, PC2)) %>%
+  mutate(BottomPCs = paste(PC2, PC1)) %>%
+  select(-PC1, -PC2) %>%
+  gather(key = "MatrixHalf", value = "PCs", TopPCs, BottomPCs) %>%
+  separate(PCs, into=c("PC1", "PC2"), sep = " ") %>%
+  distinct(PC1, PC2, FractionColocs, Threshold, .keep_all = T) %>%
+  ggplot(aes(x=PC1, y=PC2, fill=FractionColocs)) +
+  geom_raster() +
+  geom_text(aes(label=signif(FractionColocs, 2))) +
+  scale_fill_viridis(option="B", direction = 1, limits=c(0,1)) +
+  facet_wrap(~Threshold) +
+  theme_classic() +
+  labs(title = "Rate of colocalization") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
 ```
+
+So in other words, when there is a QTL for both a chromatin peak at a TSS, and the eQTL, (meaning I tested for colocalization), the colocalization rate was about 60%.
+
+
+
 

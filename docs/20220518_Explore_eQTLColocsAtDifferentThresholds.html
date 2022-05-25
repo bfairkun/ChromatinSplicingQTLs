@@ -458,7 +458,7 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 </div>
 <div id="strongRMarkdownfilestronguncommittedchanges" class="panel-collapse collapse">
 <div class="panel-body">
-<p>The R Markdown is untracked by Git. To know which version of the R Markdown file created these results, you’ll want to first commit it to the Git repo. If you’re still working on the analysis, you can ignore this warning. When you’re finished, you can run <code>wflow_publish</code> to commit the R Markdown file and build the HTML.</p>
+<p>The R Markdown file has unstaged changes. To know which version of the R Markdown file created these results, you’ll want to first commit it to the Git repo. If you’re still working on the analysis, you can ignore this warning. When you’re finished, you can run <code>wflow_publish</code> to commit the R Markdown file and build the HTML.</p>
 </div>
 </div>
 </div>
@@ -525,16 +525,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstree0df2cadd7a4ea879f55835e2c5dae9a626cba741targetblank0df2cada"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/0df2cadd7a4ea879f55835e2c5dae9a626cba741" target="_blank">0df2cad</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstree26d951fad0ebf9447f4677f34c49f8185e0d984ftargetblank26d951fa"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/26d951fad0ebf9447f4677f34c49f8185e0d984f" target="_blank">26d951f</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstree0df2cadd7a4ea879f55835e2c5dae9a626cba741targetblank0df2cada" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstree26d951fad0ebf9447f4677f34c49f8185e0d984ftargetblank26d951fa" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/0df2cadd7a4ea879f55835e2c5dae9a626cba741" target="_blank">0df2cad</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/26d951fad0ebf9447f4677f34c49f8185e0d984f" target="_blank">26d951f</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -617,19 +617,11 @@ Ignored files:
     Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022.csv
 
 Untracked files:
-    Untracked:  analysis/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd
-    Untracked:  analysis/20220524_CheckClosestPeakToTSS.Rmd
-    Untracked:  code/scripts/hyprcoloc_genewise2.R
     Untracked:  code/snakemake_profiles/slurm/__pycache__/
 
 Unstaged changes:
-    Modified:   code/Snakefile
-    Modified:   code/config/ColocRunWildcards.tsv
-    Modified:   code/rules/ChromatinPehnotypesAnalysis.smk
-    Modified:   code/rules/Coloc.smk
-    Modified:   code/rules/common.py
+    Modified:   analysis/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd
     Modified:   code/scripts/GenometracksByGenotype
-    Modified:   code/scripts/TidyGenewiseColocs.R
 
 </code></pre>
 <p>
@@ -642,9 +634,69 @@ Note that any generated files, e.g. HTML, png, CSS, etc., are not included in t
 <hr>
 </div>
 <div id="versions" class="tab-pane fade">
+
 <p>
-There are no past versions. Publish this analysis with <code>wflow_publish()</code> to start tracking its development.
+These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd</code>) and HTML (<code>docs/20220518_Explore_eQTLColocsAtDifferentThresholds.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
 </p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/fe6333bb3982433069d51165ab0291340093976d/analysis/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd" target="_blank">fe6333b</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-05-25
+</td>
+<td>
+update site and molQTL coloc
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/fe6333bb3982433069d51165ab0291340093976d/docs/20220518_Explore_eQTLColocsAtDifferentThresholds.html" target="_blank">fe6333b</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-05-25
+</td>
+<td>
+update site and molQTL coloc
+</td>
+</tr>
+</tbody>
+</table>
+</div>
 <hr>
 </div>
 </div>
@@ -765,6 +817,43 @@ cols(
   distinct(Threshold, GeneLocus, TopCandidateSNP, .keep_all = T) %&gt;%
   pull(PosteriorColocalizationPr) %&gt;% hist()</code></pre>
 <p><img src="figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-1-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-1">
+Past versions of unnamed-chunk-1-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-1-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/fe6333bb3982433069d51165ab0291340093976d/docs/figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-1-1.png" target="_blank">fe6333b</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-05-25
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>dat %&gt;%
   separate(Trait, into=c(&quot;PC&quot;, &quot;P&quot;), sep=&quot;;&quot;) %&gt;%
   pull(PC) %&gt;% unique() %&gt;% sort()</code></pre>
@@ -812,6 +901,43 @@ cols(
   labs(title = &quot;Number of Loci:molQTL pairs attempted to colocalize in total&quot;) +
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))</code></pre>
 <p><img src="figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-1-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-2">
+Past versions of unnamed-chunk-1-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-1-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/fe6333bb3982433069d51165ab0291340093976d/docs/figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-1-2.png" target="_blank">fe6333b</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-05-25
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>The default posterior probability for colocalization clustering is 0.25 (and the authors don’t recommend going below this)… Above I plotted histogram of posterior probabilties for colocalized clusters.</p>
 <pre class="r"><code>dat.tidy &lt;- dat %&gt;%
   unite(Locus, GeneLocus, Threshold, sep = &quot;:&quot;) %&gt;%
@@ -851,6 +977,43 @@ dat.tidy %&gt;%
   theme_classic() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))</code></pre>
 <p><img src="figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-1">
+Past versions of unnamed-chunk-2-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/fe6333bb3982433069d51165ab0291340093976d/docs/figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-2-1.png" target="_blank">fe6333b</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-05-25
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>dat.tidy %&gt;%
   filter((PC1 %in% RNASeqPhenotypes) &amp; (PC2 %in% RNASeqPhenotypes)) %&gt;%
   separate(Locus, into=c(&quot;Locus&quot;, &quot;Threshold&quot;), sep = &quot;:&quot;) %&gt;%
@@ -871,6 +1034,43 @@ dat.tidy %&gt;%
   theme_classic() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))</code></pre>
 <p><img src="figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-2-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-2">
+Past versions of unnamed-chunk-2-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/fe6333bb3982433069d51165ab0291340093976d/docs/figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-2-2.png" target="_blank">fe6333b</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-05-25
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>As expected, filtering for genes with clusters with a higher minimum colocalization probability results in less colocalizations, though not be too much.</p>
 <p>But really what I want to know is why things aren’t colocalizing. I could consider lowering that colocalization threshold, but the hyprcoloc authors recommend against that. Maybe a different approach would be to look at the genes that did versus didn’t colocalize, to consider being more stringent what things i attempt to colocalize</p>
 <pre class="r"><code>Files &lt;- paste0(&quot;../code/QTLs/QTLTools/&quot;, RNASeqPhenotypes,&quot;/PermutationPass.txt.gz&quot;) %&gt;%
@@ -960,6 +1160,43 @@ cols(
   theme_bw()</code></pre>
 <pre><code>`stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</code></pre>
 <p><img src="figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-1">
+Past versions of unnamed-chunk-5-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-5-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/fe6333bb3982433069d51165ab0291340093976d/docs/figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-5-1.png" target="_blank">fe6333b</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-05-25
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>pvals %&gt;%
   filter((TestPhenotypeClass %in% RNASeqPhenotypes ) &amp; (DiscoveryPhenotypeClass %in% RNASeqPhenotypes)) %&gt;%
   filter(!TestPhenotypeClass==DiscoveryPhenotypeClass) %&gt;%
@@ -972,6 +1209,43 @@ cols(
   theme_classic() +
   theme(axis.text.x = element_text(angle = 45, hjust=1))</code></pre>
 <p><img src="figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-5-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-2">
+Past versions of unnamed-chunk-5-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-5-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/fe6333bb3982433069d51165ab0291340093976d/docs/figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-5-2.png" target="_blank">fe6333b</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-05-25
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>myfunc &lt;- function(TestPhenotypeP){
   return(1-qvalue(TestPhenotypeP)$pi0)
 }</code></pre>
@@ -987,6 +1261,43 @@ cols(
   scale_fill_viridis(option=&quot;B&quot;, direction = 1, limits=c(0,1)) +
   theme_classic()</code></pre>
 <p><img src="figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-6-1">
+Past versions of unnamed-chunk-6-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-6-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/fe6333bb3982433069d51165ab0291340093976d/docs/figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-6-1.png" target="_blank">fe6333b</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-05-25
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>pvals$TestPhenotypeClass %&gt;% unique()</code></pre>
 <pre><code> [1] &quot;chRNA.IR&quot;                           
  [2] &quot;polyA.IR&quot;                           
@@ -1229,6 +1540,43 @@ cols(
   labs(title = &quot;Distance from TSS to closest peak&quot;) +
   theme_bw()</code></pre>
 <p><img src="figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-1">
+Past versions of unnamed-chunk-9-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-9-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/fe6333bb3982433069d51165ab0291340093976d/docs/figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-9-1.png" target="_blank">fe6333b</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-05-25
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>peak_dat %&gt;%
   filter(distance &lt;2000 &amp; distance &gt; -2000) %&gt;%
   filter(!distance == 0) %&gt;%
@@ -1241,6 +1589,43 @@ cols(
        caption = &quot;Overlapping peaks removed&quot;) +
   theme_bw()</code></pre>
 <p><img src="figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-9-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-2">
+Past versions of unnamed-chunk-9-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-9-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/fe6333bb3982433069d51165ab0291340093976d/docs/figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-9-2.png" target="_blank">fe6333b</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-05-25
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>First let’s read in the file that maps peaks to TSS’s based on distance threshold of 500</p>
 <pre class="r"><code>PeaksToTSS &lt;- Sys.glob(&quot;../code/Misc/PeaksClosestToTSS/*_assigned.tsv.gz&quot;) %&gt;%
   setNames(str_replace(., &quot;../code/Misc/PeaksClosestToTSS/(.+?)_assigned.tsv.gz&quot;, &quot;\\1&quot;)) %&gt;%
@@ -1274,6 +1659,63 @@ cols(
   peak = col_character(),
   distance = col_double()
 )</code></pre>
+<p>And plot some summary stats. How many TSS peaks per gene?</p>
+<pre class="r"><code>PeaksToTSS %&gt;%
+  count(ChromatinMark, gene) %&gt;%
+  right_join(
+    expand.grid(gene = ExpressedGenes, ChromatinMark = c(&quot;H3K4ME3&quot;, &quot;H3K4ME1&quot;, &quot;H3K27AC&quot;)),
+    by = c(&quot;gene&quot;, &quot;ChromatinMark&quot;)
+  ) %&gt;%
+  replace_na(list(n=0)) %&gt;%
+  ggplot(aes(x=n)) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(0,10)) +
+  facet_wrap(~ChromatinMark) +
+  labs(title = &quot;Genes have variable number of TSS peaks&quot;, x=&quot;Number of TSS peaks per gene&quot;, y=&quot;ecdf&quot;) +
+  theme_bw() </code></pre>
+<pre><code>Warning: Column `gene` joining character vector and factor, coercing into
+character vector</code></pre>
+<pre><code>Warning: Column `ChromatinMark` joining character vector and factor,
+coercing into character vector</code></pre>
+<p><img src="figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-11-1">
+Past versions of unnamed-chunk-11-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-11-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/fe6333bb3982433069d51165ab0291340093976d/docs/figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-11-1.png" target="_blank">fe6333b</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-05-25
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Because I was selecting eQTLs for colocalization based on nominal P value, i should get a sense of what these thresholds mean in terms of FDR…</p>
 <pre class="r"><code>eQTLs &lt;- read_delim(&quot;../code/QTLs/QTLTools/Expression.Splicing.Subset_YRI/PermutationPassForColoc.txt.gz&quot;, delim=&#39; &#39;) %&gt;%
   mutate(q = qvalue(adj_beta_pval)$qvalues)</code></pre>
 <pre><code>Parsed with column specification:
@@ -1286,7 +1728,6 @@ cols(
   var_chr = col_character()
 )</code></pre>
 <pre><code>See spec(...) for full column specifications.</code></pre>
-<p>Because I was selecting eQTLs for colocalization based on nominal P value, i should get a sense of what these thresholds mean in terms of FDR…</p>
 <pre class="r"><code>ggplot(eQTLs, aes(x=adj_beta_pval, y=q)) +
   geom_point() +
   geom_vline(xintercept = 0.01) +
@@ -1299,7 +1740,534 @@ cols(
        y= &quot;FDR&quot;,
        x=&quot;Permutation test nominal P&quot;) +
   theme_bw()</code></pre>
-<p><img src="figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-12-1">
+Past versions of unnamed-chunk-12-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-12-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/fe6333bb3982433069d51165ab0291340093976d/docs/figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-12-1.png" target="_blank">fe6333b</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-05-25
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Ok that makes sense for eQTLs, but based on the amount of enrichment of positive tests (ie the pi1 stat), the FDR will correspond to different P value. I thought it was most reasonable to attempt to colocalized based on a Pvalue threshold, but I am sort of now worried about chance colocalizations from false positive QTL signals. Let’s plot histograms of permutation pass Pvalues for all traits, and see how this pvalue threshold corresponds to fdr for different traits:</p>
+<pre class="r"><code>PermutationPassResults &lt;- Sys.glob(&quot;../code/QTLs/QTLTools/*/PermutationPassForColoc.txt.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/QTLs/QTLTools/(.+?)/PermutationPassForColoc.txt.gz&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(read_delim, delim=&#39; &#39;) %&gt;%
+  bind_rows(.id=&quot;Phenotype&quot;) %&gt;%
+  group_by(Phenotype) %&gt;%
+  mutate(q = qvalue(adj_beta_pval)$qvalues)</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre class="r"><code>PermutationPassResults %&gt;%
+  ggplot(aes(x=adj_beta_pval)) +
+  geom_histogram() +
+  facet_wrap(~Phenotype, scales=&quot;free_y&quot;) +
+  theme_classic()</code></pre>
+<pre><code>`stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</code></pre>
+<p><img src="figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-13-1">
+Past versions of unnamed-chunk-13-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-13-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/fe6333bb3982433069d51165ab0291340093976d/docs/figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-13-1.png" target="_blank">fe6333b</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-05-25
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>PermutationPassResults %&gt;%
+  ggplot(aes(x=adj_beta_pval)) +
+  geom_histogram() +
+  facet_wrap(~Phenotype, scales=&quot;free_y&quot;, labeller = label_wrap_gen()) +
+  theme_classic()</code></pre>
+<pre><code>`stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</code></pre>
+<p><img src="figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-13-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-13-2">
+Past versions of unnamed-chunk-13-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-13-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/fe6333bb3982433069d51165ab0291340093976d/docs/figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-13-2.png" target="_blank">fe6333b</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-05-25
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>PermutationPassResults %&gt;%
+  select(Phenotype, adj_beta_pval, q) %&gt;%
+  group_by(Phenotype) %&gt;%
+  slice(which.min(abs(adj_beta_pval - 0.01)),
+        which.min(abs(adj_beta_pval - 0.005)),
+        which.min(abs(adj_beta_pval - 0.001))) %&gt;%
+  ungroup() %&gt;%
+  arrange(Phenotype, adj_beta_pval) %&gt;%
+  group_by(Phenotype) %&gt;%
+  mutate(ThresholdCondition = row_number()) %&gt;%
+  mutate(Threshold = recode(ThresholdCondition, `1`=&quot;0.001&quot;, `2`=&quot;0.005&quot;, `3`=&quot;0.01&quot;)) %&gt;%
+  ggplot(aes(x=Threshold, y=q)) +
+  geom_col() +
+  facet_wrap(~Phenotype, scales=&quot;free_y&quot;, labeller = labeller(groupwrap = label_wrap_gen(10))) +
+  labs(y=&quot;FDR&quot;, title = &quot;P value thresholds correspond to slightly different FDR&quot;, x=&quot;Permutation nominal P value threshold&quot;) +
+  theme_classic()</code></pre>
+<p><img src="figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-13-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-13-3">
+Past versions of unnamed-chunk-13-3.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-13-3" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/fe6333bb3982433069d51165ab0291340093976d/docs/figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-13-3.png" target="_blank">fe6333b</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-05-25
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Ok now let’s get to asking the question about how many eQTLs colocalize with a promoter peak QTL at the TSS.</p>
 <pre class="r"><code>eQTLs %&gt;% filter(adj_beta_pval&lt;0.005) %&gt;% nrow()</code></pre>
 <pre><code>[1] 1874</code></pre>
 <pre class="r"><code>dat %&gt;% head()</code></pre>
@@ -1922,7 +2890,7 @@ cols(
        fill = str_wrap(&quot;Is eQTL coloc w/ [H3K4ME1|H3K4ME3|H3K27AC] QTL at promoter&quot;, width=20)) +
   theme_classic() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))</code></pre>
-<p><img src="figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>dat.tidy %&gt;%
   filter(PC1 %in% c(&quot;Expression.Splicing.Subset_YRI&quot;, &quot;chRNA.Expression.Splicing&quot;)) %&gt;%
   separate(Locus, into=c(&quot;Locus&quot;, &quot;Threshold&quot;), sep = &quot;:&quot;) %&gt;%
@@ -1947,7 +2915,7 @@ cols(
        fill = str_wrap(&quot;Is eQTL coloc w/ any [H3K4ME1|H3K4ME3|H3K27AC] QTL&quot;, width=20)) +
   theme_classic() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))</code></pre>
-<p><img src="figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-12-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-14-2.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>dat.tidy %&gt;%
   filter(PC1 %in% c(&quot;Expression.Splicing.Subset_YRI&quot;, &quot;chRNA.Expression.Splicing&quot;)) %&gt;%
   separate(Locus, into=c(&quot;Locus&quot;, &quot;Threshold&quot;), sep = &quot;:&quot;) %&gt;%
@@ -1972,385 +2940,77 @@ cols(
        fill = str_wrap(&quot;Is eQTL coloc w/ any poly.sQTL&quot;, width=20)) +
   theme_classic() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))</code></pre>
-<p><img src="figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-12-3.png" width="672" style="display: block; margin: auto;" /></p>
-<p>Ok that makes sense for eQTLs, but based on the amount of enrichment of positive tests (ie the pi1 stat), the FDR will correspond to different P value. I thought it was most reasonable to attempt to colocalized based on a Pvalue threshold, but I am sort of now worried about chance colocalizations from false positive QTL signals. Let’s plot histograms of permutation pass Pvalues for all traits, and see how this pvalue threshold corresponds to fdr for different traits:</p>
-<pre class="r"><code>PermutationPassResults &lt;- Sys.glob(&quot;../code/QTLs/QTLTools/*/PermutationPassForColoc.txt.gz&quot;) %&gt;%
-  setNames(str_replace(., &quot;../code/QTLs/QTLTools/(.+?)/PermutationPassForColoc.txt.gz&quot;, &quot;\\1&quot;)) %&gt;%
-  lapply(read_delim, delim=&#39; &#39;) %&gt;%
-  bind_rows(.id=&quot;Phenotype&quot;) %&gt;%
-  group_by(Phenotype) %&gt;%
-  mutate(q = qvalue(adj_beta_pval)$qvalues)</code></pre>
-<pre><code>Parsed with column specification:
-cols(
-  .default = col_double(),
-  phe_id = col_character(),
-  phe_chr = col_character(),
-  phe_strd = col_character(),
-  var_id = col_character(),
-  var_chr = col_character()
-)</code></pre>
-<pre><code>See spec(...) for full column specifications.</code></pre>
-<pre><code>Parsed with column specification:
-cols(
-  .default = col_double(),
-  phe_id = col_character(),
-  phe_chr = col_character(),
-  phe_strd = col_character(),
-  var_id = col_character(),
-  var_chr = col_character()
-)</code></pre>
-<pre><code>See spec(...) for full column specifications.</code></pre>
-<pre><code>Parsed with column specification:
-cols(
-  .default = col_double(),
-  phe_id = col_character(),
-  phe_chr = col_character(),
-  phe_strd = col_character(),
-  var_id = col_character(),
-  var_chr = col_character()
-)</code></pre>
-<pre><code>See spec(...) for full column specifications.</code></pre>
-<pre><code>Parsed with column specification:
-cols(
-  .default = col_double(),
-  phe_id = col_character(),
-  phe_chr = col_character(),
-  phe_strd = col_character(),
-  var_id = col_character(),
-  var_chr = col_character()
-)</code></pre>
-<pre><code>See spec(...) for full column specifications.</code></pre>
-<pre><code>Parsed with column specification:
-cols(
-  .default = col_double(),
-  phe_id = col_character(),
-  phe_chr = col_character(),
-  phe_strd = col_character(),
-  var_id = col_character(),
-  var_chr = col_character()
-)</code></pre>
-<pre><code>See spec(...) for full column specifications.</code></pre>
-<pre><code>Parsed with column specification:
-cols(
-  .default = col_double(),
-  phe_id = col_character(),
-  phe_chr = col_character(),
-  phe_strd = col_character(),
-  var_id = col_character(),
-  var_chr = col_character()
-)</code></pre>
-<pre><code>See spec(...) for full column specifications.</code></pre>
-<pre><code>Parsed with column specification:
-cols(
-  .default = col_double(),
-  phe_id = col_character(),
-  phe_chr = col_character(),
-  phe_strd = col_character(),
-  var_id = col_character(),
-  var_chr = col_character()
-)</code></pre>
-<pre><code>See spec(...) for full column specifications.</code></pre>
-<pre><code>Parsed with column specification:
-cols(
-  .default = col_double(),
-  phe_id = col_character(),
-  phe_chr = col_character(),
-  phe_strd = col_character(),
-  var_id = col_character(),
-  var_chr = col_character()
-)</code></pre>
-<pre><code>See spec(...) for full column specifications.</code></pre>
-<pre><code>Parsed with column specification:
-cols(
-  .default = col_double(),
-  phe_id = col_character(),
-  phe_chr = col_character(),
-  phe_strd = col_character(),
-  var_id = col_character(),
-  var_chr = col_character()
-)</code></pre>
-<pre><code>See spec(...) for full column specifications.</code></pre>
-<pre><code>Parsed with column specification:
-cols(
-  .default = col_double(),
-  phe_id = col_character(),
-  phe_chr = col_character(),
-  phe_strd = col_character(),
-  var_id = col_character(),
-  var_chr = col_character()
-)</code></pre>
-<pre><code>See spec(...) for full column specifications.</code></pre>
-<pre><code>Parsed with column specification:
-cols(
-  .default = col_double(),
-  phe_id = col_character(),
-  phe_chr = col_character(),
-  phe_strd = col_character(),
-  var_id = col_character(),
-  var_chr = col_character()
-)</code></pre>
-<pre><code>See spec(...) for full column specifications.</code></pre>
-<pre><code>Parsed with column specification:
-cols(
-  .default = col_double(),
-  phe_id = col_character(),
-  phe_chr = col_character(),
-  phe_strd = col_character(),
-  var_id = col_character(),
-  var_chr = col_character()
-)</code></pre>
-<pre><code>See spec(...) for full column specifications.</code></pre>
-<pre><code>Parsed with column specification:
-cols(
-  .default = col_double(),
-  phe_id = col_character(),
-  phe_chr = col_character(),
-  phe_strd = col_character(),
-  var_id = col_character(),
-  var_chr = col_character()
-)</code></pre>
-<pre><code>See spec(...) for full column specifications.</code></pre>
-<pre><code>Parsed with column specification:
-cols(
-  .default = col_double(),
-  phe_id = col_character(),
-  phe_chr = col_character(),
-  phe_strd = col_character(),
-  var_id = col_character(),
-  var_chr = col_character()
-)</code></pre>
-<pre><code>See spec(...) for full column specifications.</code></pre>
-<pre><code>Parsed with column specification:
-cols(
-  .default = col_double(),
-  phe_id = col_character(),
-  phe_chr = col_character(),
-  phe_strd = col_character(),
-  var_id = col_character(),
-  var_chr = col_character()
-)</code></pre>
-<pre><code>See spec(...) for full column specifications.</code></pre>
-<pre><code>Parsed with column specification:
-cols(
-  .default = col_double(),
-  phe_id = col_character(),
-  phe_chr = col_character(),
-  phe_strd = col_character(),
-  var_id = col_character(),
-  var_chr = col_character()
-)</code></pre>
-<pre><code>See spec(...) for full column specifications.</code></pre>
-<pre><code>Parsed with column specification:
-cols(
-  .default = col_double(),
-  phe_id = col_character(),
-  phe_chr = col_character(),
-  phe_strd = col_character(),
-  var_id = col_character(),
-  var_chr = col_character()
-)</code></pre>
-<pre><code>See spec(...) for full column specifications.</code></pre>
-<pre><code>Parsed with column specification:
-cols(
-  .default = col_double(),
-  phe_id = col_character(),
-  phe_chr = col_character(),
-  phe_strd = col_character(),
-  var_id = col_character(),
-  var_chr = col_character()
-)</code></pre>
-<pre><code>See spec(...) for full column specifications.</code></pre>
-<pre><code>Parsed with column specification:
-cols(
-  .default = col_double(),
-  phe_id = col_character(),
-  phe_chr = col_character(),
-  phe_strd = col_character(),
-  var_id = col_character(),
-  var_chr = col_character()
-)</code></pre>
-<pre><code>See spec(...) for full column specifications.</code></pre>
-<pre><code>Parsed with column specification:
-cols(
-  .default = col_double(),
-  phe_id = col_character(),
-  phe_chr = col_character(),
-  phe_strd = col_character(),
-  var_id = col_character(),
-  var_chr = col_character()
-)</code></pre>
-<pre><code>See spec(...) for full column specifications.</code></pre>
-<pre><code>Parsed with column specification:
-cols(
-  .default = col_double(),
-  phe_id = col_character(),
-  phe_chr = col_character(),
-  phe_strd = col_character(),
-  var_id = col_character(),
-  var_chr = col_character()
-)</code></pre>
-<pre><code>See spec(...) for full column specifications.</code></pre>
-<pre><code>Parsed with column specification:
-cols(
-  .default = col_double(),
-  phe_id = col_character(),
-  phe_chr = col_character(),
-  phe_strd = col_character(),
-  var_id = col_character(),
-  var_chr = col_character()
-)</code></pre>
-<pre><code>See spec(...) for full column specifications.</code></pre>
-<pre><code>Parsed with column specification:
-cols(
-  .default = col_double(),
-  phe_id = col_character(),
-  phe_chr = col_character(),
-  phe_strd = col_character(),
-  var_id = col_character(),
-  var_chr = col_character()
-)</code></pre>
-<pre><code>See spec(...) for full column specifications.</code></pre>
-<pre><code>Parsed with column specification:
-cols(
-  .default = col_double(),
-  phe_id = col_character(),
-  phe_chr = col_character(),
-  phe_strd = col_character(),
-  var_id = col_character(),
-  var_chr = col_character()
-)</code></pre>
-<pre><code>See spec(...) for full column specifications.</code></pre>
-<pre><code>Parsed with column specification:
-cols(
-  .default = col_double(),
-  phe_id = col_character(),
-  phe_chr = col_character(),
-  phe_strd = col_character(),
-  var_id = col_character(),
-  var_chr = col_character()
-)</code></pre>
-<pre><code>See spec(...) for full column specifications.</code></pre>
-<pre><code>Parsed with column specification:
-cols(
-  .default = col_double(),
-  phe_id = col_character(),
-  phe_chr = col_character(),
-  phe_strd = col_character(),
-  var_id = col_character(),
-  var_chr = col_character()
-)</code></pre>
-<pre><code>See spec(...) for full column specifications.</code></pre>
-<pre><code>Parsed with column specification:
-cols(
-  .default = col_double(),
-  phe_id = col_character(),
-  phe_chr = col_character(),
-  phe_strd = col_character(),
-  var_id = col_character(),
-  var_chr = col_character()
-)</code></pre>
-<pre><code>See spec(...) for full column specifications.</code></pre>
-<pre><code>Parsed with column specification:
-cols(
-  .default = col_double(),
-  phe_id = col_character(),
-  phe_chr = col_character(),
-  phe_strd = col_character(),
-  var_id = col_character(),
-  var_chr = col_character()
-)</code></pre>
-<pre><code>See spec(...) for full column specifications.</code></pre>
-<pre><code>Parsed with column specification:
-cols(
-  .default = col_double(),
-  phe_id = col_character(),
-  phe_chr = col_character(),
-  phe_strd = col_character(),
-  var_id = col_character(),
-  var_chr = col_character()
-)</code></pre>
-<pre><code>See spec(...) for full column specifications.</code></pre>
-<pre><code>Parsed with column specification:
-cols(
-  .default = col_double(),
-  phe_id = col_character(),
-  phe_chr = col_character(),
-  phe_strd = col_character(),
-  var_id = col_character(),
-  var_chr = col_character()
-)</code></pre>
-<pre><code>See spec(...) for full column specifications.</code></pre>
-<pre><code>Parsed with column specification:
-cols(
-  .default = col_double(),
-  phe_id = col_character(),
-  phe_chr = col_character(),
-  phe_strd = col_character(),
-  var_id = col_character(),
-  var_chr = col_character()
-)</code></pre>
-<pre><code>See spec(...) for full column specifications.</code></pre>
-<pre><code>Parsed with column specification:
-cols(
-  .default = col_double(),
-  phe_id = col_character(),
-  phe_chr = col_character(),
-  phe_strd = col_character(),
-  var_id = col_character(),
-  var_chr = col_character()
-)</code></pre>
-<pre><code>See spec(...) for full column specifications.</code></pre>
-<pre><code>Parsed with column specification:
-cols(
-  .default = col_double(),
-  phe_id = col_character(),
-  phe_chr = col_character(),
-  phe_strd = col_character(),
-  var_id = col_character(),
-  var_chr = col_character()
-)</code></pre>
-<pre><code>See spec(...) for full column specifications.</code></pre>
-<pre><code>Parsed with column specification:
-cols(
-  .default = col_double(),
-  phe_id = col_character(),
-  phe_chr = col_character(),
-  phe_strd = col_character(),
-  var_id = col_character(),
-  var_chr = col_character()
-)</code></pre>
-<pre><code>See spec(...) for full column specifications.</code></pre>
-<pre class="r"><code>PermutationPassResults %&gt;%
-  ggplot(aes(x=adj_beta_pval)) +
-  geom_histogram() +
-  facet_wrap(~Phenotype, scales=&quot;free_y&quot;) +
-  theme_classic()</code></pre>
-<pre><code>`stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</code></pre>
-<p><img src="figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>PermutationPassResults %&gt;%
-  ggplot(aes(x=adj_beta_pval)) +
-  geom_histogram() +
-  facet_wrap(~Phenotype, scales=&quot;free_y&quot;, labeller = label_wrap_gen()) +
-  theme_classic()</code></pre>
-<pre><code>`stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</code></pre>
-<p><img src="figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-13-2.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>PermutationPassResults %&gt;%
-  select(Phenotype, adj_beta_pval, q) %&gt;%
-  group_by(Phenotype) %&gt;%
-  slice(which.min(abs(adj_beta_pval - 0.01)),
-        which.min(abs(adj_beta_pval - 0.005)),
-        which.min(abs(adj_beta_pval - 0.001))) %&gt;%
+<p><img src="figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-14-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Let’s ask about the coloc <em>rate</em> (between promoter QTLs and eQTLs) now of the tested promoter QTLs…</p>
+<p>First, how many test coloc pairs per gene, then what is the rate of colocalization:</p>
+<pre class="r"><code>dat.tidy %&gt;%
+  filter(PC1 %in% c(&quot;Expression.Splicing.Subset_YRI&quot;, &quot;chRNA.Expression.Splicing&quot;)) %&gt;%
+  separate(Locus, into=c(&quot;Locus&quot;, &quot;Threshold&quot;), sep = &quot;:&quot;) %&gt;%
+  separate(Threshold, into = c(&quot;ColocPhenotypeClass&quot;, &quot;Threshold&quot;), sep=&quot;_&quot;) %&gt;%
+  filter(ColocPhenotypeClass == &quot;&quot;) %&gt;%
+  mutate(GenePeakPair = paste(P1, P2, sep=&quot;;&quot;)) %&gt;%
+  filter(GenePeakPair %in% PeaksToTSS$GenePeakPair) %&gt;%
+  group_by(PC1, PC2, Threshold) %&gt;%
+  summarise(FractionColocs = n()) %&gt;%
   ungroup() %&gt;%
-  arrange(Phenotype, adj_beta_pval) %&gt;%
-  group_by(Phenotype) %&gt;%
-  mutate(ThresholdCondition = row_number()) %&gt;%
-  mutate(Threshold = recode(ThresholdCondition, `1`=&quot;0.001&quot;, `2`=&quot;0.005&quot;, `3`=&quot;0.01&quot;)) %&gt;%
-  ggplot(aes(x=Threshold, y=q)) +
-  geom_col() +
-  facet_wrap(~Phenotype, scales=&quot;free_y&quot;, labeller = labeller(groupwrap = label_wrap_gen(10))) +
-  labs(y=&quot;FDR&quot;, title = &quot;P value thresholds correspond to slightly different FDR&quot;, x=&quot;Permutation nominal P value threshold&quot;) +
-  theme_classic()</code></pre>
-<p><img src="figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-13-3.png" width="672" style="display: block; margin: auto;" /></p>
+  mutate(TopPCs = paste(PC1, PC2)) %&gt;%
+  mutate(BottomPCs = paste(PC2, PC1)) %&gt;%
+  select(-PC1, -PC2) %&gt;%
+  gather(key = &quot;MatrixHalf&quot;, value = &quot;PCs&quot;, TopPCs, BottomPCs) %&gt;%
+  separate(PCs, into=c(&quot;PC1&quot;, &quot;PC2&quot;), sep = &quot; &quot;) %&gt;%
+  distinct(PC1, PC2, FractionColocs, Threshold, .keep_all = T) %&gt;%
+  ggplot(aes(x=PC1, y=PC2, fill=FractionColocs)) +
+  geom_raster() +
+  geom_text(aes(label=signif(FractionColocs, 2))) +
+  scale_fill_viridis(option=&quot;B&quot;, direction = 1) +
+  facet_wrap(~Threshold) +
+  theme_classic() +
+  labs(title = &quot;Number of attempted colocalized trait pairs&quot;) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))</code></pre>
+<p><img src="figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-15-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>dat.tidy %&gt;%
+  filter(PC1 %in% c(&quot;Expression.Splicing.Subset_YRI&quot;, &quot;chRNA.Expression.Splicing&quot;)) %&gt;%
+  separate(Locus, into=c(&quot;Locus&quot;, &quot;Threshold&quot;), sep = &quot;:&quot;) %&gt;%
+  separate(Threshold, into = c(&quot;ColocPhenotypeClass&quot;, &quot;Threshold&quot;), sep=&quot;_&quot;) %&gt;%
+  filter(ColocPhenotypeClass == &quot;&quot;) %&gt;%
+  mutate(GenePeakPair = paste(P1, P2, sep=&quot;;&quot;)) %&gt;%
+  filter(GenePeakPair %in% PeaksToTSS$GenePeakPair) %&gt;%
+  count(PC1, P1, PC2, Threshold) %&gt;%
+  ggplot(aes(x=n)) +
+  stat_ecdf(aes(color = PC2)) +
+  facet_wrap(~PC1) +
+  theme_classic() +
+  labs(caption = &quot;Only including genes where a colocalization was attempted between eQTL and promoter peak QTL&quot;,
+       title = &quot;Usually only one TSS QTL per eGene&quot;,
+       x= &quot;Number promoter peak QTLs per gene&quot;,
+       y=&quot;ecdf&quot;)</code></pre>
+<p><img src="figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-15-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>dat.tidy %&gt;%
+  filter(PC1 %in% c(&quot;Expression.Splicing.Subset_YRI&quot;, &quot;chRNA.Expression.Splicing&quot;)) %&gt;%
+  separate(Locus, into=c(&quot;Locus&quot;, &quot;Threshold&quot;), sep = &quot;:&quot;) %&gt;%
+  separate(Threshold, into = c(&quot;ColocPhenotypeClass&quot;, &quot;Threshold&quot;), sep=&quot;_&quot;) %&gt;%
+  filter(ColocPhenotypeClass == &quot;&quot;) %&gt;%
+  mutate(GenePeakPair = paste(P1, P2, sep=&quot;;&quot;)) %&gt;%
+  filter(GenePeakPair %in% PeaksToTSS$GenePeakPair) %&gt;%
+  group_by(PC1, PC2, Threshold) %&gt;%
+  summarise(FractionColocs = sum(IsColocalizedPair)/n()) %&gt;%
+  ungroup() %&gt;%
+  mutate(TopPCs = paste(PC1, PC2)) %&gt;%
+  mutate(BottomPCs = paste(PC2, PC1)) %&gt;%
+  select(-PC1, -PC2) %&gt;%
+  gather(key = &quot;MatrixHalf&quot;, value = &quot;PCs&quot;, TopPCs, BottomPCs) %&gt;%
+  separate(PCs, into=c(&quot;PC1&quot;, &quot;PC2&quot;), sep = &quot; &quot;) %&gt;%
+  distinct(PC1, PC2, FractionColocs, Threshold, .keep_all = T) %&gt;%
+  ggplot(aes(x=PC1, y=PC2, fill=FractionColocs)) +
+  geom_raster() +
+  geom_text(aes(label=signif(FractionColocs, 2))) +
+  scale_fill_viridis(option=&quot;B&quot;, direction = 1, limits=c(0,1)) +
+  facet_wrap(~Threshold) +
+  theme_classic() +
+  labs(title = &quot;Rate of colocalization&quot;) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))</code></pre>
+<p><img src="figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-15-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>So in other words, when there is a QTL for both a chromatin peak at a TSS, and the eQTL, (meaning I tested for colocalization), the colocalization rate was about 60%.</p>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
@@ -2385,29 +3045,30 @@ other attached packages:
 [13] ggplot2_3.3.5     tidyverse_1.3.0  
 
 loaded via a namespace (and not attached):
- [1] Rcpp_1.0.5         lubridate_1.7.4    lattice_0.20-38   
- [4] gtools_3.8.1       utf8_1.1.4         assertthat_0.2.1  
- [7] rprojroot_2.0.2    digest_0.6.20      plyr_1.8.4        
-[10] R6_2.4.0           cellranger_1.1.0   backports_1.1.4   
-[13] reprex_0.3.0       evaluate_0.14      httr_1.4.1        
-[16] pillar_1.4.2       rlang_0.4.10       readxl_1.3.1      
-[19] rstudioapi_0.10    gdata_2.18.0       rmarkdown_1.13    
-[22] labeling_0.3       splines_3.6.1      munsell_0.5.0     
-[25] broom_0.5.2        compiler_3.6.1     httpuv_1.5.1      
-[28] modelr_0.1.8       xfun_0.8           pkgconfig_2.0.2   
-[31] htmltools_0.3.6    tidyselect_1.1.0   gridExtra_2.3     
-[34] workflowr_1.6.2    fansi_0.4.0        crayon_1.3.4      
-[37] dbplyr_1.4.2       withr_2.4.1        later_0.8.0       
-[40] bitops_1.0-6       grid_3.6.1         nlme_3.1-140      
-[43] jsonlite_1.6       gtable_0.3.0       lifecycle_0.1.0   
-[46] DBI_1.1.0          git2r_0.26.1       magrittr_1.5      
-[49] scales_1.1.0       KernSmooth_2.23-15 cli_2.2.0         
-[52] stringi_1.4.3      farver_2.1.0       reshape2_1.4.3    
-[55] fs_1.3.1           promises_1.0.1     xml2_1.3.2        
-[58] ellipsis_0.2.0.1   generics_0.0.2     vctrs_0.3.1       
-[61] tools_3.6.1        glue_1.3.1         hms_0.5.3         
-[64] yaml_2.2.0         colorspace_1.4-1   caTools_1.17.1.2  
-[67] rvest_0.3.5        knitr_1.23         haven_2.3.1       </code></pre>
+ [1] httr_1.4.1         jsonlite_1.6       splines_3.6.1     
+ [4] modelr_0.1.8       gtools_3.8.1       assertthat_0.2.1  
+ [7] cellranger_1.1.0   yaml_2.2.0         pillar_1.4.2      
+[10] backports_1.1.4    lattice_0.20-38    glue_1.3.1        
+[13] digest_0.6.20      promises_1.0.1     rvest_0.3.5       
+[16] colorspace_1.4-1   htmltools_0.3.6    httpuv_1.5.1      
+[19] plyr_1.8.4         pkgconfig_2.0.2    broom_0.5.2       
+[22] haven_2.3.1        scales_1.1.0       gdata_2.18.0      
+[25] whisker_0.3-2      later_0.8.0        git2r_0.26.1      
+[28] generics_0.0.2     farver_2.1.0       ellipsis_0.2.0.1  
+[31] withr_2.4.1        cli_2.2.0          magrittr_1.5      
+[34] crayon_1.3.4       readxl_1.3.1       evaluate_0.14     
+[37] fs_1.3.1           fansi_0.4.0        nlme_3.1-140      
+[40] xml2_1.3.2         tools_3.6.1        hms_0.5.3         
+[43] lifecycle_0.1.0    munsell_0.5.0      reprex_0.3.0      
+[46] compiler_3.6.1     caTools_1.17.1.2   rlang_0.4.10      
+[49] grid_3.6.1         rstudioapi_0.10    bitops_1.0-6      
+[52] labeling_0.3       rmarkdown_1.13     gtable_0.3.0      
+[55] DBI_1.1.0          reshape2_1.4.3     R6_2.4.0          
+[58] gridExtra_2.3      lubridate_1.7.4    knitr_1.23        
+[61] utf8_1.1.4         workflowr_1.6.2    rprojroot_2.0.2   
+[64] KernSmooth_2.23-15 stringi_1.4.3      Rcpp_1.0.5        
+[67] vctrs_0.3.1        dbplyr_1.4.2       tidyselect_1.1.0  
+[70] xfun_0.8          </code></pre>
 </div>
 </div>
 
