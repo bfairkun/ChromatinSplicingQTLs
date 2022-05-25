@@ -1,0 +1,47 @@
+---
+title: "CheckClosestTSSPeak"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Intro
+
+To check how many eQTLs are explained in part by effects on chromatin at the promoter, first I need a mapping of genes (and their TSS/promoters) to the ChIP-seq peaks for which I have QTL calls. I ran bedtools closest to get the closest peak to each TSS, and after using bedtools shuffle on the peaks as a control.
+
+```{r}
+library(tidyverse)
+
+ExpressedGenes <- read_tsv("../code/ExpressionAnalysis/polyA/ExpressedGeneList.txt", col_names = c("chr","start", "stop", "gene", "score", "strand")) %>% pull("gene")
+
+dat <- Sys.glob("../code/Misc/PeaksClosestToTSS/*.bed") %>%
+  setNames(str_replace(., "../code/Misc/PeaksClosestToTSS/(.+?).bed", "\\1")) %>%
+  lapply(read_tsv, col_names = c("gene_chr", "gene_start", "gene_stop", "geneid", "gene_score", "gene_strand", "peak_chr", "peak_start", "peak_end", "peak_name", "distance")) %>%
+  bind_rows(.id="dataset") %>%
+  filter(geneid %in% ExpressedGenes) %>%
+  separate(dataset, into=c("Mark", "Type"), sep="_", remove=F)
+
+
+dat %>%
+  filter(distance <2000 & distance > -2000) %>%
+  # filter(!distance == 0) %>%
+  ggplot(aes(x=distance, group=dataset, color=Type)) +
+  # geom_density() +
+  geom_freqpoly(binwidth=100) +
+  coord_cartesian(xlim=c(-2000, 2000)) +
+  facet_wrap(~Mark)
+
+dat %>%
+  filter(Type == "real") %>%
+  distinct(peak_name, .keep_all = T) %>%
+  count(dataset)
+
+dat %>%
+  filter(dataset == "H3K4ME3_real") %>%
+  filter(distance <500 & distance > -500) %>%
+  pull(geneid) %>%
+  intersect(ExpressedGenes) %>% length()
+```
+

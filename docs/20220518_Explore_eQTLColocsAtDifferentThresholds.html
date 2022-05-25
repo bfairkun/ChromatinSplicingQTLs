@@ -1,0 +1,2457 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+
+
+<title>Check robustness of colocalization results at various thresholds</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/master/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">myproject</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Check robustness of colocalization results at various thresholds</h1>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2022-05-25
+</p>
+<p>
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 1
+</p>
+<p>
+<strong>Knit directory:</strong> <code>ChromatinSplicingQTLs/analysis/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
+</p>
+<p>
+This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
+  href="https://github.com/jdblischak/workflowr">workflowr</a> (version 1.6.2). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges"> <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted changes </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguncommittedchanges" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The R Markdown is untracked by Git. To know which version of the R Markdown file created these results, you’ll want to first commit it to the Git repo. If you’re still working on the analysis, you can ignore this warning. When you’re finished, you can run <code>wflow_publish</code> to commit the R Markdown file and build the HTML.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20191126code"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Seed:</strong> <code>set.seed(20191126)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20191126code" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20191126)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Session information:</strong> recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be confident that you successfully produced the results during this run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstree0df2cadd7a4ea879f55835e2c5dae9a626cba741targetblank0df2cada"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/0df2cadd7a4ea879f55835e2c5dae9a626cba741" target="_blank">0df2cad</a> </a>
+</p>
+</div>
+<div id="strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstree0df2cadd7a4ea879f55835e2c5dae9a626cba741targetblank0df2cada" class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/0df2cadd7a4ea879f55835e2c5dae9a626cba741" target="_blank">0df2cad</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    analysis/.Rhistory
+    Ignored:    code/.DS_Store
+    Ignored:    code/.RData
+    Ignored:    code/._.DS_Store
+    Ignored:    code/._README.md
+    Ignored:    code/._report.html
+    Ignored:    code/.ipynb_checkpoints/
+    Ignored:    code/.snakemake/
+    Ignored:    code/Alignments/
+    Ignored:    code/ENCODE/
+    Ignored:    code/ExpressionAnalysis/
+    Ignored:    code/FastqFastp/
+    Ignored:    code/FastqFastpSE/
+    Ignored:    code/Genotypes/
+    Ignored:    code/IntronSlopes/
+    Ignored:    code/Misc/
+    Ignored:    code/MiscCountTables/
+    Ignored:    code/Multiqc/
+    Ignored:    code/Multiqc_chRNA/
+    Ignored:    code/PeakCalling/
+    Ignored:    code/Phenotypes/
+    Ignored:    code/PlotGruberQTLs/
+    Ignored:    code/PlotQTLs/
+    Ignored:    code/ProCapAnalysis/
+    Ignored:    code/QC/
+    Ignored:    code/QTLs/
+    Ignored:    code/ReferenceGenome/
+    Ignored:    code/Rplots.pdf
+    Ignored:    code/Session.vim
+    Ignored:    code/SplicingAnalysis/
+    Ignored:    code/TODO
+    Ignored:    code/Tehranchi/
+    Ignored:    code/bigwigs/
+    Ignored:    code/bigwigs_FromNonWASPFilteredReads/
+    Ignored:    code/config/.DS_Store
+    Ignored:    code/config/._.DS_Store
+    Ignored:    code/config/.ipynb_checkpoints/
+    Ignored:    code/debug.ipynb
+    Ignored:    code/debug_python.ipynb
+    Ignored:    code/deepTools/
+    Ignored:    code/featureCounts/
+    Ignored:    code/gwas_summary_stats/
+    Ignored:    code/hyprcoloc/
+    Ignored:    code/igv_session.xml
+    Ignored:    code/log
+    Ignored:    code/logs/
+    Ignored:    code/notebooks/.ipynb_checkpoints/
+    Ignored:    code/rules/.ChromatinPehnotypesAnalysis.smk.swp
+    Ignored:    code/rules/.ipynb_checkpoints/
+    Ignored:    code/rules/OldRules/
+    Ignored:    code/rules/notebooks/
+    Ignored:    code/scratch/
+    Ignored:    code/scripts/.ipynb_checkpoints/
+    Ignored:    code/scripts/GTFtools_0.8.0/
+    Ignored:    code/scripts/liftOverBedpe/liftOverBedpe.py
+    Ignored:    code/snakemake.log
+    Ignored:    code/snakemake.sbatch.log
+    Ignored:    data/.DS_Store
+    Ignored:    data/._.DS_Store
+    Ignored:    data/._20220414203249_JASPAR2022_combined_matrices_25818_jaspar.txt
+    Ignored:    data/._ColorsForPhenotypes.xlsx
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-10.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-11.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-2.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-3.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-4.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-5.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-6.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-7.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-8.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022.csv
+
+Untracked files:
+    Untracked:  analysis/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd
+    Untracked:  analysis/20220524_CheckClosestPeakToTSS.Rmd
+    Untracked:  code/scripts/hyprcoloc_genewise2.R
+    Untracked:  code/snakemake_profiles/slurm/__pycache__/
+
+Unstaged changes:
+    Modified:   code/Snakefile
+    Modified:   code/config/ColocRunWildcards.tsv
+    Modified:   code/rules/ChromatinPehnotypesAnalysis.smk
+    Modified:   code/rules/Coloc.smk
+    Modified:   code/rules/common.py
+    Modified:   code/scripts/GenometracksByGenotype
+    Modified:   code/scripts/TidyGenewiseColocs.R
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+<p>
+There are no past versions. Publish this analysis with <code>wflow_publish()</code> to start tracking its development.
+</p>
+<hr>
+</div>
+</div>
+</div>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>In a <a href="20211217_GenewiseColocFirstLook.html">previous notebook</a> I explored the genewise hyprcoloc output, and noted that 30min and 60min 4sU colocalize (with all default parameters/thresholds) 80% of the time that they are tested. I expect this to be closer to 100%, and we should get similarly high colocalization with eQTL from polyA RNA-seq. Perhaps just by filtering for colocalizations above some threshold we can get more believable results. I could/should technically re-run hyprcoloc with different parameters, but before I do that, to understand the results better, let’s see how these colocalization rates change after filter for different posterior probabilities for colocalization.</p>
+</div>
+<div id="analysis" class="section level2">
+<h2>Analysis</h2>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>── Attaching packages ────────────────────────────────── tidyverse 1.3.0 ──</code></pre>
+<pre><code>✓ ggplot2 3.3.5     ✓ purrr   0.3.4
+✓ tibble  2.1.3     ✓ dplyr   0.8.3
+✓ tidyr   1.1.0     ✓ stringr 1.4.0
+✓ readr   1.3.1     ✓ forcats 0.4.0</code></pre>
+<pre><code>── Conflicts ───────────────────────────────────── tidyverse_conflicts() ──
+x dplyr::filter() masks stats::filter()
+x dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>library(viridis)</code></pre>
+<pre><code>Loading required package: viridisLite</code></pre>
+<pre class="r"><code>library(gplots)</code></pre>
+<pre><code>
+Attaching package: &#39;gplots&#39;</code></pre>
+<pre><code>The following object is masked from &#39;package:stats&#39;:
+
+    lowess</code></pre>
+<pre class="r"><code>library(data.table)</code></pre>
+<pre><code>
+Attaching package: &#39;data.table&#39;</code></pre>
+<pre><code>The following objects are masked from &#39;package:dplyr&#39;:
+
+    between, first, last</code></pre>
+<pre><code>The following object is masked from &#39;package:purrr&#39;:
+
+    transpose</code></pre>
+<pre class="r"><code>library(qvalue)
+library(purrr)
+
+sample_n_of &lt;- function(data, size, ...) {
+  dots &lt;- quos(...)
+  
+  group_ids &lt;- data %&gt;% 
+    group_by(!!! dots) %&gt;% 
+    group_indices()
+  
+  sampled_groups &lt;- sample(unique(group_ids), size)
+  
+  data %&gt;% 
+    filter(group_ids %in% sampled_groups)
+}
+
+dat &lt;- Sys.glob(&quot;../code/hyprcoloc/Results/ForColoc/MolColocTest*_*/results.txt.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/hyprcoloc/Results/ForColoc/MolColocTest(.*?)_(.+?)/results.txt.gz&quot;, &quot;\\1_0.\\2&quot;)) %&gt;%
+  lapply(read_tsv) %&gt;%
+  bind_rows(.id=&quot;Threshold&quot;)</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  GeneLocus = col_character(),
+  HyprcolocIteration = col_double(),
+  PosteriorColocalizationPr = col_double(),
+  RegionalAssociationPr = col_double(),
+  TopCandidateSNP = col_character(),
+  ProportionPosteriorPrExplainedByTopSNP = col_double(),
+  Trait = col_character()
+)</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  GeneLocus = col_character(),
+  HyprcolocIteration = col_double(),
+  PosteriorColocalizationPr = col_double(),
+  RegionalAssociationPr = col_double(),
+  TopCandidateSNP = col_character(),
+  ProportionPosteriorPrExplainedByTopSNP = col_double(),
+  Trait = col_character()
+)
+Parsed with column specification:
+cols(
+  GeneLocus = col_character(),
+  HyprcolocIteration = col_double(),
+  PosteriorColocalizationPr = col_double(),
+  RegionalAssociationPr = col_double(),
+  TopCandidateSNP = col_character(),
+  ProportionPosteriorPrExplainedByTopSNP = col_double(),
+  Trait = col_character()
+)
+Parsed with column specification:
+cols(
+  GeneLocus = col_character(),
+  HyprcolocIteration = col_double(),
+  PosteriorColocalizationPr = col_double(),
+  RegionalAssociationPr = col_double(),
+  TopCandidateSNP = col_character(),
+  ProportionPosteriorPrExplainedByTopSNP = col_double(),
+  Trait = col_character()
+)
+Parsed with column specification:
+cols(
+  GeneLocus = col_character(),
+  HyprcolocIteration = col_double(),
+  PosteriorColocalizationPr = col_double(),
+  RegionalAssociationPr = col_double(),
+  TopCandidateSNP = col_character(),
+  ProportionPosteriorPrExplainedByTopSNP = col_double(),
+  Trait = col_character()
+)
+Parsed with column specification:
+cols(
+  GeneLocus = col_character(),
+  HyprcolocIteration = col_double(),
+  PosteriorColocalizationPr = col_double(),
+  RegionalAssociationPr = col_double(),
+  TopCandidateSNP = col_character(),
+  ProportionPosteriorPrExplainedByTopSNP = col_double(),
+  Trait = col_character()
+)</code></pre>
+<pre class="r"><code>dat %&gt;%
+  distinct(Threshold, GeneLocus, TopCandidateSNP, .keep_all = T) %&gt;%
+  pull(PosteriorColocalizationPr) %&gt;% hist()</code></pre>
+<p><img src="figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-1-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>dat %&gt;%
+  separate(Trait, into=c(&quot;PC&quot;, &quot;P&quot;), sep=&quot;;&quot;) %&gt;%
+  pull(PC) %&gt;% unique() %&gt;% sort()</code></pre>
+<pre><code> [1] &quot;chRNA.Expression_cheRNA&quot;            
+ [2] &quot;chRNA.Expression_eRNA&quot;              
+ [3] &quot;chRNA.Expression_lncRNA&quot;            
+ [4] &quot;chRNA.Expression_snoRNA&quot;            
+ [5] &quot;chRNA.Expression.Splicing&quot;          
+ [6] &quot;chRNA.IER&quot;                          
+ [7] &quot;chRNA.IR&quot;                           
+ [8] &quot;chRNA.IRjunctions&quot;                  
+ [9] &quot;chRNA.Slopes&quot;                       
+[10] &quot;chRNA.Splicing&quot;                     
+[11] &quot;CTCF&quot;                               
+[12] &quot;Expression.Splicing&quot;                
+[13] &quot;Expression.Splicing.Subset_YRI&quot;     
+[14] &quot;H3K27AC&quot;                            
+[15] &quot;H3K36ME3&quot;                           
+[16] &quot;H3K4ME1&quot;                            
+[17] &quot;H3K4ME3&quot;                            
+[18] &quot;MetabolicLabelled.30min&quot;            
+[19] &quot;MetabolicLabelled.30min.IER&quot;        
+[20] &quot;MetabolicLabelled.30min.IR&quot;         
+[21] &quot;MetabolicLabelled.30min.IRjunctions&quot;
+[22] &quot;MetabolicLabelled.30min.Splicing&quot;   
+[23] &quot;MetabolicLabelled.60min&quot;            
+[24] &quot;MetabolicLabelled.60min.IER&quot;        
+[25] &quot;MetabolicLabelled.60min.IR&quot;         
+[26] &quot;MetabolicLabelled.60min.IRjunctions&quot;
+[27] &quot;MetabolicLabelled.60min.Splicing&quot;   
+[28] &quot;polyA.IER&quot;                          
+[29] &quot;polyA.IR&quot;                           
+[30] &quot;polyA.IR.Subset_YRI&quot;                
+[31] &quot;polyA.IRjunctions&quot;                  
+[32] &quot;polyA.Splicing&quot;                     
+[33] &quot;polyA.Splicing.Subset_YRI&quot;          
+[34] &quot;ProCap&quot;                             </code></pre>
+<pre class="r"><code>dat %&gt;%
+  separate(Trait, into=c(&quot;PC&quot;, &quot;P&quot;), sep=&quot;;&quot;) %&gt;%
+  count(Threshold, PC) %&gt;%
+  ggplot(aes(x=PC, y=n)) +
+  geom_col() +
+  facet_wrap(~Threshold) +
+  theme_bw() +
+  labs(title = &quot;Number of Loci:molQTL pairs attempted to colocalize in total&quot;) +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))</code></pre>
+<p><img src="figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-1-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>The default posterior probability for colocalization clustering is 0.25 (and the authors don’t recommend going below this)… Above I plotted histogram of posterior probabilties for colocalized clusters.</p>
+<pre class="r"><code>dat.tidy &lt;- dat %&gt;%
+  unite(Locus, GeneLocus, Threshold, sep = &quot;:&quot;) %&gt;%
+  left_join(., ., by = &quot;Locus&quot;) %&gt;% 
+    filter(Trait.x != Trait.y) %&gt;% 
+    rowwise() %&gt;%
+    mutate(name = toString(sort(c(Trait.x,Trait.y)) )) %&gt;% 
+    distinct(Locus, name, .keep_all = T) %&gt;% 
+    separate(name, into = c(&quot;PC1&quot;,&quot;P1&quot;,&quot;DummySpace&quot;,&quot;PC2&quot;,&quot;P2&quot;), sep = &quot;[, ;]&quot;) %&gt;% 
+    select(-DummySpace) %&gt;%
+    mutate(PC_ClassPair = paste(PC1, PC2)) %&gt;%
+    # pull(PC_ClassPair) %&gt;% unique()
+    mutate(IsColocalizedPair = HyprcolocIteration.x == HyprcolocIteration.y) %&gt;%
+    replace_na(list(IsColocalizedPair = FALSE))
+
+
+RNASeqPhenotypes &lt;- c(&quot;MetabolicLabelled.30min&quot;, &quot;MetabolicLabelled.60min&quot;, &quot;Expression.Splicing.Subset_YRI&quot;, &quot;chRNA.Expression.Splicing&quot;, &quot;H3K36ME3&quot;)
+
+
+dat.tidy %&gt;%
+  filter((PC1 %in% RNASeqPhenotypes) &amp; (PC2 %in% RNASeqPhenotypes)) %&gt;%
+  separate(Locus, into=c(&quot;Locus&quot;, &quot;Threshold&quot;), sep = &quot;:&quot;) %&gt;%
+  group_by(PC1, PC2, Threshold) %&gt;%
+  summarise(FractionColocs = sum(IsColocalizedPair)/n()) %&gt;%
+  ungroup() %&gt;%
+  mutate(TopPCs = paste(PC1, PC2)) %&gt;%
+  mutate(BottomPCs = paste(PC2, PC1)) %&gt;%
+  select(-PC1, -PC2) %&gt;%
+  gather(key = &quot;MatrixHalf&quot;, value = &quot;PCs&quot;, TopPCs, BottomPCs) %&gt;%
+  separate(PCs, into=c(&quot;PC1&quot;, &quot;PC2&quot;), sep = &quot; &quot;) %&gt;%
+  distinct(PC1, PC2, FractionColocs, Threshold, .keep_all = T) %&gt;%
+  ggplot(aes(x=PC1, y=PC2, fill=FractionColocs)) +
+  geom_raster() +
+  geom_text(aes(label=signif(FractionColocs, 2))) +
+  scale_fill_viridis(option=&quot;B&quot;, direction = 1, limits=c(0.5,1)) +
+  facet_wrap(~Threshold) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))</code></pre>
+<p><img src="figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>dat.tidy %&gt;%
+  filter((PC1 %in% RNASeqPhenotypes) &amp; (PC2 %in% RNASeqPhenotypes)) %&gt;%
+  separate(Locus, into=c(&quot;Locus&quot;, &quot;Threshold&quot;), sep = &quot;:&quot;) %&gt;%
+  group_by(PC1, PC2, Threshold) %&gt;%
+  summarise(NumColocAttempts = n()) %&gt;%
+  ungroup() %&gt;%
+  mutate(TopPCs = paste(PC1, PC2)) %&gt;%
+  mutate(BottomPCs = paste(PC2, PC1)) %&gt;%
+  select(-PC1, -PC2) %&gt;%
+  gather(key = &quot;MatrixHalf&quot;, value = &quot;PCs&quot;, TopPCs, BottomPCs) %&gt;%
+  separate(PCs, into=c(&quot;PC1&quot;, &quot;PC2&quot;), sep = &quot; &quot;) %&gt;%
+  distinct(PC1, PC2, Threshold, NumColocAttempts, .keep_all = T) %&gt;%
+  ggplot(aes(x=PC1, y=PC2, fill=NumColocAttempts)) +
+  geom_raster() +
+  geom_text(aes(label=NumColocAttempts)) +
+  scale_fill_viridis(option=&quot;B&quot;, direction = 1, limits=c(0,1000)) +
+  facet_wrap(~Threshold) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))</code></pre>
+<p><img src="figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-2-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>As expected, filtering for genes with clusters with a higher minimum colocalization probability results in less colocalizations, though not be too much.</p>
+<p>But really what I want to know is why things aren’t colocalizing. I could consider lowering that colocalization threshold, but the hyprcoloc authors recommend against that. Maybe a different approach would be to look at the genes that did versus didn’t colocalize, to consider being more stringent what things i attempt to colocalize</p>
+<pre class="r"><code>Files &lt;- paste0(&quot;../code/QTLs/QTLTools/&quot;, RNASeqPhenotypes,&quot;/PermutationPass.txt.gz&quot;) %&gt;%
+  setNames(RNASeqPhenotypes)
+
+StandardPermutationPassResults &lt;- lapply(Files, read_delim, delim=&#39; &#39;) %&gt;%
+  bind_rows(.id=&quot;Phenotype&quot;) %&gt;%
+  select(PC=Phenotype, P=phe_id, p=adj_beta_pval)</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<p>Let’s check pi statistic for metabolic 30, 60min, polyA RNA-seq eQTLs… I have already calculated top eQTL SNP nominal P value for each FDR&lt;10% eGene from each assay, and also got the same p-value across the other assays. Here I’ll read in that data and calculate pi1 statistic with qvalue package</p>
+<pre class="r"><code>pvals &lt;- read_tsv(&quot;../code/QC/PvalsForPi1_0.1.txt.gz&quot;)</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  PhenotypeID = col_character(),
+  DiscoveryPhenotypeClass = col_character(),
+  DiscoveryPhenotypePermutationP = col_double(),
+  DiscoveryPhenotypePermutationQ = col_double(),
+  TestPhenotypeClass = col_character(),
+  TestPhenotypeP = col_double()
+)</code></pre>
+<pre class="r"><code>head(pvals)</code></pre>
+<pre><code># A tibble: 6 x 6
+  PhenotypeID DiscoveryPhenot… DiscoveryPhenot… DiscoveryPhenot…
+  &lt;chr&gt;       &lt;chr&gt;                       &lt;dbl&gt;            &lt;dbl&gt;
+1 IntID.8317… chRNA.IR                 0.00158            0.0438
+2 IntID.8317… chRNA.IR                 0.00158            0.0438
+3 IntID.8317… chRNA.IR                 0.00158            0.0438
+4 IntID.8317… chRNA.IR                 0.00158            0.0438
+5 IntID.8317… chRNA.IR                 0.00158            0.0438
+6 IntID.9554… chRNA.IR                 0.000279           0.0113
+# … with 2 more variables: TestPhenotypeClass &lt;chr&gt;, TestPhenotypeP &lt;dbl&gt;</code></pre>
+<p>First I’ll estimate pi1 by eye by looking at histogram of Pvals:</p>
+<pre class="r"><code>pvals %&gt;%
+  filter((TestPhenotypeClass %in% RNASeqPhenotypes ) &amp; (DiscoveryPhenotypeClass %in% RNASeqPhenotypes)) %&gt;%
+  ggplot(aes(x=TestPhenotypeP)) +
+  geom_histogram() +
+  facet_grid(rows=vars(TestPhenotypeClass), cols = vars(DiscoveryPhenotypeClass)) +
+  theme_bw()</code></pre>
+<pre><code>`stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</code></pre>
+<p><img src="figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>pvals %&gt;%
+  filter((TestPhenotypeClass %in% RNASeqPhenotypes ) &amp; (DiscoveryPhenotypeClass %in% RNASeqPhenotypes)) %&gt;%
+  filter(!TestPhenotypeClass==DiscoveryPhenotypeClass) %&gt;%
+  group_by(TestPhenotypeClass, DiscoveryPhenotypeClass) %&gt;%
+  summarise(pi1 = 1-qvalue(TestPhenotypeP)$pi0) %&gt;%
+  ggplot(aes(x=TestPhenotypeClass, y=DiscoveryPhenotypeClass, fill=pi1)) +
+  geom_raster() +
+  geom_text(aes(label=signif(pi1, 2))) +
+  scale_fill_viridis(option=&quot;B&quot;, direction = 1, limits=c(0,1)) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, hjust=1))</code></pre>
+<p><img src="figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-5-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>myfunc &lt;- function(TestPhenotypeP){
+  return(1-qvalue(TestPhenotypeP)$pi0)
+}</code></pre>
+<p>Let’s create that pi1 stat table for all phenotypes again</p>
+<pre class="r"><code>pvals %&gt;%
+  filter((TestPhenotypeClass %in% RNASeqPhenotypes ) &amp; (DiscoveryPhenotypeClass %in% RNASeqPhenotypes)) %&gt;%
+  filter(!TestPhenotypeClass==DiscoveryPhenotypeClass) %&gt;%
+  group_by(TestPhenotypeClass, DiscoveryPhenotypeClass) %&gt;%
+  summarise(pi1 = 1-qvalue(TestPhenotypeP)$pi0) %&gt;%
+  ggplot(aes(x=TestPhenotypeClass, y=DiscoveryPhenotypeClass, fill=pi1)) +
+  geom_raster() +
+  geom_text(aes(label=signif(pi1, 2))) +
+  scale_fill_viridis(option=&quot;B&quot;, direction = 1, limits=c(0,1)) +
+  theme_classic()</code></pre>
+<p><img src="figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>pvals$TestPhenotypeClass %&gt;% unique()</code></pre>
+<pre><code> [1] &quot;chRNA.IR&quot;                           
+ [2] &quot;polyA.IR&quot;                           
+ [3] &quot;polyA.IR.Subset_YRI&quot;                
+ [4] &quot;MetabolicLabelled.30min.IR&quot;         
+ [5] &quot;MetabolicLabelled.60min.IR&quot;         
+ [6] &quot;Expression.Splicing&quot;                
+ [7] &quot;chRNA.Expression.Splicing&quot;          
+ [8] &quot;MetabolicLabelled.30min&quot;            
+ [9] &quot;MetabolicLabelled.60min&quot;            
+[10] &quot;Expression.Splicing.Subset_YRI&quot;     
+[11] &quot;H3K36ME3&quot;                           
+[12] &quot;H3K27AC&quot;                            
+[13] &quot;CTCF&quot;                               
+[14] &quot;H3K4ME3&quot;                            
+[15] &quot;chRNA.Splicing&quot;                     
+[16] &quot;polyA.Splicing&quot;                     
+[17] &quot;polyA.Splicing.Subset_YRI&quot;          
+[18] &quot;MetabolicLabelled.30min.Splicing&quot;   
+[19] &quot;chRNA.Expression_cheRNA&quot;            
+[20] &quot;chRNA.Expression_eRNA&quot;              
+[21] &quot;ProCap&quot;                             
+[22] &quot;chRNA.Expression_lncRNA&quot;            
+[23] &quot;chRNA.Expression_snoRNA&quot;            
+[24] &quot;chRNA.Slopes&quot;                       
+[25] &quot;H3K4ME1&quot;                            
+[26] &quot;chRNA.IER&quot;                          
+[27] &quot;chRNA.IRjunctions&quot;                  
+[28] &quot;polyA.IRjunctions&quot;                  
+[29] &quot;polyA.IER&quot;                          
+[30] &quot;MetabolicLabelled.30min.IER&quot;        
+[31] &quot;MetabolicLabelled.60min.IER&quot;        
+[32] &quot;MetabolicLabelled.30min.IRjunctions&quot;
+[33] &quot;MetabolicLabelled.60min.IRjunctions&quot;</code></pre>
+<pre class="r"><code>SplicingPhenotypes &lt;- c(&quot;chRNA.Splicing&quot;, &quot;polyA.Splicing&quot;, &quot;MetabolicLabelled.30min.Splicing&quot;)</code></pre>
+<p>…same for intron retention phenotypes</p>
+<pre class="r"><code>pvals %&gt;%
+  filter((TestPhenotypeClass %in% SplicingPhenotypes ) &amp; (DiscoveryPhenotypeClass %in% SplicingPhenotypes)) %&gt;%
+  filter(!TestPhenotypeClass==DiscoveryPhenotypeClass) %&gt;%
+  group_by(TestPhenotypeClass, DiscoveryPhenotypeClass) %&gt;%
+  summarise(pi1 = 1-qvalue(TestPhenotypeP)$pi0) %&gt;%
+  ggplot(aes(x=TestPhenotypeClass, y=DiscoveryPhenotypeClass, fill=pi1)) +
+  geom_raster() +
+  geom_text(aes(label=signif(pi1, 2))) +
+  scale_fill_viridis(option=&quot;B&quot;, direction = 1, limits=c(0,1)) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, hjust=1))
+
+IntronRetentionPhenotypes &lt;- c(&quot;polyA.IER&quot;, &quot;chRNA.IER&quot;, &quot;MetabolicLabelled.30min.IER&quot;)
+
+pvals %&gt;%
+  filter((TestPhenotypeClass %in% IntronRetentionPhenotypes ) &amp; (DiscoveryPhenotypeClass %in% IntronRetentionPhenotypes)) %&gt;%
+  filter(!TestPhenotypeClass==DiscoveryPhenotypeClass) %&gt;%
+  group_by(TestPhenotypeClass, DiscoveryPhenotypeClass) %&gt;%
+  summarise(pi1 = 1-qvalue(TestPhenotypeP)$pi0) %&gt;%
+  ggplot(aes(x=TestPhenotypeClass, y=DiscoveryPhenotypeClass, fill=pi1)) +
+  geom_raster() +
+  geom_text(aes(label=signif(pi1, 2))) +
+  scale_fill_viridis(option=&quot;B&quot;, direction = 1, limits=c(0,1)) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, hjust=1))</code></pre>
+<p>Next let’s check some manhattan plots for things that did or didn’t colocalize… I’ll forget about adding in LD patterns like locuszoom… even though it would be helpful to visualize it might complicate the matter.</p>
+<p>First let’s get some cases where things did colocalize:</p>
+<pre class="r"><code>dat.tidy %&gt;%
+  pull(PC_ClassPair) %&gt;% unique()
+
+Files &lt;- paste0(&quot;../code/QTLs/QTLTools/&quot;, RNASeqPhenotypes,&quot;/NominalPassForColoc.txt.tabix.gz&quot;) %&gt;%
+  setNames(RNASeqPhenotypes)
+
+GenePos &lt;- read_tsv(&quot;../code/ExpressionAnalysis/polyA/ExpressedGeneList.txt&quot;, col_names = c(&quot;Chrom&quot;, &quot;start&quot;, &quot;stop&quot;, &quot;Locus&quot;, &quot;score&quot;, &quot;strand&quot;))
+
+GenesToPlot &lt;- dat.tidy %&gt;%
+  # filter(IsColocalizedPair) %&gt;%
+  filter(PC_ClassPair == &quot;MetabolicLabelled.30min MetabolicLabelled.60min&quot;) %&gt;%
+  group_by(IsColocalizedPair) %&gt;%
+  sample_n(10) %&gt;%
+  ungroup() %&gt;%
+  select(Locus, IsColocalizedPair, topSNP.x, ColocPr.y) %&gt;%
+  separate(topSNP.x, into=c(&quot;topSNPChr&quot;, &quot;topSNPPos&quot;, &quot;topSNPRef&quot;, &quot;TopSNPAlt&quot;), sep=&quot;:&quot;, convert=T) %&gt;%
+  select(Locus, IsColocalizedPair, topSNPPos, ColocPr.y)
+
+
+
+CoommandsToReadInStats &lt;- GenePos %&gt;%
+  inner_join(GenesToPlot, by=&quot;Locus&quot;) %&gt;%
+  slice(rep(1:n(), each=3)) %&gt;%
+  mutate(Filename = rep_len(Files, length.out=n())) %&gt;%
+  mutate(cmd = str_glue(&quot;tabix -h {Filename} {Chrom}:{start-100000}-{stop+100000}&quot;)) %&gt;%
+  mutate(name = paste(Locus, str_replace(Filename, &quot;../code/QTLs/QTLTools/(.+?)/NominalPassForColoc.txt.tabix.gz&quot;, &quot;\\1&quot;), IsColocalizedPair, ColocPr.y, sep = &quot;:&quot;)) %&gt;%
+  select(name, cmd) %&gt;% deframe()
+
+# dat &lt;- fread(&quot;tabix ../code/QTLs/QTLTools/MetabolicLabelled.30min/NominalPassForColoc.txt.tabix.gz chr1:19582212-19899945&quot;)
+
+StandardNominalPassResults &lt;- lapply(CoommandsToReadInStats, fread) %&gt;%
+  bind_rows(.id=&quot;Phenotype&quot;) %&gt;%
+  separate(&#39;#phe_id&#39;, into=c(&quot;phe_id&quot;, &quot;Locus&quot;), sep=&quot;:&quot;) %&gt;%
+  separate(&#39;Phenotype&#39;, into=c(&quot;LocusFromHyprcoloc&quot;, &quot;PhenotypeClass&quot;, &quot;IsColocalizedPair&quot;, &quot;ColocPr&quot;), sep=&quot;:&quot;, convert=T)
+
+
+Plt &lt;- StandardNominalPassResults %&gt;%
+    filter(phe_id == LocusFromHyprcoloc) %&gt;%
+    group_by(Locus) %&gt;%
+    add_count(var_id) %&gt;%
+    filter(n == length(RNASeqPhenotypes)) %&gt;%
+    arrange(IsColocalizedPair, Locus) %&gt;%
+    mutate(ColocPr = if_else(IsColocalizedPair, ColocPr, 0)) %&gt;%
+    # bind_rows(GenesToPlot) %&gt;%
+    ggplot(aes(x=var_from, y=-log10(nom_pval), color=PhenotypeClass)) +
+    # geom_vline(aes(xintercept=topSNPPos)) +
+    geom_text(aes(label=ColocPr), x=Inf, y=Inf, color=&quot;black&quot;, vjust=2) +
+    geom_point() +
+    facet_wrap(~Locus+PhenotypeClass+IsColocalizedPair, scales=&quot;free&quot;, ncol=3, labeller = label_wrap_gen()) +
+    # facet_grid(rows=vars(Locus), cols=vars(PhenotypeClass), scales=&quot;free&quot;) +
+    theme_classic()
+
+ggsave(&quot;../code/scratch/hyprcoloc_coloc_manahantan.pdf&quot;, height=60, width=20, limitsize=F)
+
+
+Plt2&lt;-StandardNominalPassResults %&gt;%
+    filter(phe_id == LocusFromHyprcoloc) %&gt;%
+    filter(Locus==&quot;ENSG00000133789.15&quot;) %&gt;%
+    filter(PhenotypeClass %in% c(&quot;MetabolicLabelled.30min&quot;, &quot;MetabolicLabelled.60min&quot;)) %&gt;%
+    select(nom_pval, PhenotypeClass, var_id) %&gt;%
+    spread(&quot;PhenotypeClass&quot;, &quot;nom_pval&quot; ) %&gt;%
+    ggplot(aes(x=-log10(MetabolicLabelled.30min), y=-log10(MetabolicLabelled.60min))) +
+    geom_point()
+
+ggsave(&quot;../code/scratch/hyprcoloc_coloc_coloc_example.pdf&quot;)</code></pre>
+<p>Ok now let’s check how many eQTLs also had a colocalizing chromatin QTL at the promoter/TSS…</p>
+<p>More precisely, I will count the number of gene/peak pair that is in PeaksToTSS and also in colocalization. What fraction of eGenes (FDR&lt;10%) are also in this list? What fraction of eGenes have a gene/peak pair that is not in PeaksToTSS (eg, enhancers).</p>
+<p>First, about creating a mapping of peaks to TSS (promoter)…</p>
+<pre class="r"><code>ExpressedGenes &lt;- read_tsv(&quot;../code/ExpressionAnalysis/polyA/ExpressedGeneList.txt&quot;, col_names = c(&quot;chr&quot;,&quot;start&quot;, &quot;stop&quot;, &quot;gene&quot;, &quot;score&quot;, &quot;strand&quot;)) %&gt;% pull(&quot;gene&quot;)</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  chr = col_character(),
+  start = col_double(),
+  stop = col_double(),
+  gene = col_character(),
+  score = col_character(),
+  strand = col_character()
+)</code></pre>
+<pre class="r"><code>peak_dat &lt;- Sys.glob(&quot;../code/Misc/PeaksClosestToTSS/*.bed.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/Misc/PeaksClosestToTSS/(.+?).bed&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(read_tsv, col_names = c(&quot;gene_chr&quot;, &quot;gene_start&quot;, &quot;gene_stop&quot;, &quot;geneid&quot;, &quot;gene_score&quot;, &quot;gene_strand&quot;, &quot;peak_chr&quot;, &quot;peak_start&quot;, &quot;peak_end&quot;, &quot;peak_name&quot;, &quot;distance&quot;)) %&gt;%
+  bind_rows(.id=&quot;dataset&quot;) %&gt;%
+  filter(geneid %in% ExpressedGenes) %&gt;%
+  separate(dataset, into=c(&quot;Mark&quot;, &quot;Type&quot;), sep=&quot;_&quot;, remove=F)</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  gene_chr = col_character(),
+  gene_start = col_double(),
+  gene_stop = col_double(),
+  geneid = col_character(),
+  gene_score = col_character(),
+  gene_strand = col_character(),
+  peak_chr = col_character(),
+  peak_start = col_double(),
+  peak_end = col_double(),
+  peak_name = col_character(),
+  distance = col_double()
+)</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  gene_chr = col_character(),
+  gene_start = col_double(),
+  gene_stop = col_double(),
+  geneid = col_character(),
+  gene_score = col_character(),
+  gene_strand = col_character(),
+  peak_chr = col_character(),
+  peak_start = col_double(),
+  peak_end = col_double(),
+  peak_name = col_character(),
+  distance = col_double()
+)
+Parsed with column specification:
+cols(
+  gene_chr = col_character(),
+  gene_start = col_double(),
+  gene_stop = col_double(),
+  geneid = col_character(),
+  gene_score = col_character(),
+  gene_strand = col_character(),
+  peak_chr = col_character(),
+  peak_start = col_double(),
+  peak_end = col_double(),
+  peak_name = col_character(),
+  distance = col_double()
+)
+Parsed with column specification:
+cols(
+  gene_chr = col_character(),
+  gene_start = col_double(),
+  gene_stop = col_double(),
+  geneid = col_character(),
+  gene_score = col_character(),
+  gene_strand = col_character(),
+  peak_chr = col_character(),
+  peak_start = col_double(),
+  peak_end = col_double(),
+  peak_name = col_character(),
+  distance = col_double()
+)
+Parsed with column specification:
+cols(
+  gene_chr = col_character(),
+  gene_start = col_double(),
+  gene_stop = col_double(),
+  geneid = col_character(),
+  gene_score = col_character(),
+  gene_strand = col_character(),
+  peak_chr = col_character(),
+  peak_start = col_double(),
+  peak_end = col_double(),
+  peak_name = col_character(),
+  distance = col_double()
+)
+Parsed with column specification:
+cols(
+  gene_chr = col_character(),
+  gene_start = col_double(),
+  gene_stop = col_double(),
+  geneid = col_character(),
+  gene_score = col_character(),
+  gene_strand = col_character(),
+  peak_chr = col_character(),
+  peak_start = col_double(),
+  peak_end = col_double(),
+  peak_name = col_character(),
+  distance = col_double()
+)</code></pre>
+<pre class="r"><code>peak_dat %&gt;%
+  filter(distance &lt;2000 &amp; distance &gt; -2000) %&gt;%
+  # filter(!distance == 0) %&gt;%
+  ggplot(aes(x=distance, group=dataset, color=Type)) +
+  # geom_density() +
+  geom_freqpoly(binwidth=100) +
+  coord_cartesian(xlim=c(-2000, 2000)) +
+  facet_wrap(~Mark) +
+  labs(title = &quot;Distance from TSS to closest peak&quot;) +
+  theme_bw()</code></pre>
+<p><img src="figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>peak_dat %&gt;%
+  filter(distance &lt;2000 &amp; distance &gt; -2000) %&gt;%
+  filter(!distance == 0) %&gt;%
+  ggplot(aes(x=distance, group=dataset, color=Type)) +
+  # geom_density() +
+  geom_freqpoly(binwidth=100) +
+  coord_cartesian(xlim=c(-2000, 2000)) +
+  facet_wrap(~Mark) +
+  labs(title = &quot;Distance from TSS to closest peak&quot;,
+       caption = &quot;Overlapping peaks removed&quot;) +
+  theme_bw()</code></pre>
+<p><img src="figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-9-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>First let’s read in the file that maps peaks to TSS’s based on distance threshold of 500</p>
+<pre class="r"><code>PeaksToTSS &lt;- Sys.glob(&quot;../code/Misc/PeaksClosestToTSS/*_assigned.tsv.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/Misc/PeaksClosestToTSS/(.+?)_assigned.tsv.gz&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(read_tsv) %&gt;%
+  bind_rows(.id=&quot;ChromatinMark&quot;) %&gt;%
+  mutate(GenePeakPair = paste(gene, peak, sep = &quot;;&quot;))</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  chrom = col_character(),
+  TSS_start = col_double(),
+  gene = col_character(),
+  strand = col_character(),
+  peak = col_character(),
+  distance = col_double()
+)
+Parsed with column specification:
+cols(
+  chrom = col_character(),
+  TSS_start = col_double(),
+  gene = col_character(),
+  strand = col_character(),
+  peak = col_character(),
+  distance = col_double()
+)
+Parsed with column specification:
+cols(
+  chrom = col_character(),
+  TSS_start = col_double(),
+  gene = col_character(),
+  strand = col_character(),
+  peak = col_character(),
+  distance = col_double()
+)</code></pre>
+<pre class="r"><code>eQTLs &lt;- read_delim(&quot;../code/QTLs/QTLTools/Expression.Splicing.Subset_YRI/PermutationPassForColoc.txt.gz&quot;, delim=&#39; &#39;) %&gt;%
+  mutate(q = qvalue(adj_beta_pval)$qvalues)</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<p>Because I was selecting eQTLs for colocalization based on nominal P value, i should get a sense of what these thresholds mean in terms of FDR…</p>
+<pre class="r"><code>ggplot(eQTLs, aes(x=adj_beta_pval, y=q)) +
+  geom_point() +
+  geom_vline(xintercept = 0.01) +
+  geom_vline(xintercept = 0.005) +
+  geom_vline(xintercept = 0.001) +
+  # scale_x_continuous(trans=&quot;log10&quot;) +
+  # scale_y_continuous(trans=&quot;log10&quot;) +
+  coord_cartesian(xlim=c(0,0.011), ylim=c(0,0.05)) +
+  labs(title = &quot;Colocalization attempt theshold corresponds to polyA eQTL FDR &lt; 3% for&quot;,
+       y= &quot;FDR&quot;,
+       x=&quot;Permutation test nominal P&quot;) +
+  theme_bw()</code></pre>
+<p><img src="figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>eQTLs %&gt;% filter(adj_beta_pval&lt;0.005) %&gt;% nrow()</code></pre>
+<pre><code>[1] 1874</code></pre>
+<pre class="r"><code>dat %&gt;% head()</code></pre>
+<pre><code># A tibble: 6 x 8
+  Threshold GeneLocus HyprcolocIterat… PosteriorColoca… RegionalAssocia…
+  &lt;chr&gt;     &lt;chr&gt;                &lt;dbl&gt;            &lt;dbl&gt;            &lt;dbl&gt;
+1 _0.001    ENSG0000…               NA           NA               NA    
+2 _0.001    ENSG0000…                1            0.476            0.834
+3 _0.001    ENSG0000…                1            0.476            0.834
+4 _0.001    ENSG0000…               NA           NA               NA    
+5 _0.001    ENSG0000…               NA           NA               NA    
+6 _0.001    ENSG0000…                1            0.476            0.834
+# … with 3 more variables: TopCandidateSNP &lt;chr&gt;,
+#   ProportionPosteriorPrExplainedByTopSNP &lt;dbl&gt;, Trait &lt;chr&gt;</code></pre>
+<pre class="r"><code>dat.tidy %&gt;%
+  pull(PC_ClassPair) %&gt;% unique()</code></pre>
+<pre><code>  [1] &quot;chRNA.Expression_lncRNA chRNA.Splicing&quot;                                 
+  [2] &quot;chRNA.Expression_lncRNA Expression.Splicing&quot;                            
+  [3] &quot;chRNA.Expression_lncRNA H3K4ME3&quot;                                        
+  [4] &quot;chRNA.Expression_lncRNA MetabolicLabelled.30min.Splicing&quot;               
+  [5] &quot;chRNA.Expression_lncRNA MetabolicLabelled.60min.Splicing&quot;               
+  [6] &quot;chRNA.Splicing chRNA.Splicing&quot;                                          
+  [7] &quot;chRNA.Splicing Expression.Splicing&quot;                                     
+  [8] &quot;chRNA.Splicing H3K4ME3&quot;                                                 
+  [9] &quot;chRNA.Splicing MetabolicLabelled.30min.Splicing&quot;                        
+ [10] &quot;chRNA.Splicing MetabolicLabelled.60min.Splicing&quot;                        
+ [11] &quot;Expression.Splicing H3K4ME3&quot;                                            
+ [12] &quot;Expression.Splicing MetabolicLabelled.30min.Splicing&quot;                   
+ [13] &quot;Expression.Splicing MetabolicLabelled.60min.Splicing&quot;                   
+ [14] &quot;H3K4ME3 MetabolicLabelled.30min.Splicing&quot;                               
+ [15] &quot;H3K4ME3 MetabolicLabelled.60min.Splicing&quot;                               
+ [16] &quot;MetabolicLabelled.30min.Splicing MetabolicLabelled.30min.Splicing&quot;      
+ [17] &quot;MetabolicLabelled.30min.Splicing MetabolicLabelled.60min.Splicing&quot;      
+ [18] &quot;MetabolicLabelled.60min.Splicing MetabolicLabelled.60min.Splicing&quot;      
+ [19] &quot;H3K27AC H3K27AC&quot;                                                        
+ [20] &quot;H3K27AC H3K4ME1&quot;                                                        
+ [21] &quot;H3K27AC ProCap&quot;                                                         
+ [22] &quot;H3K4ME1 ProCap&quot;                                                         
+ [23] &quot;chRNA.Expression_cheRNA chRNA.Expression_cheRNA&quot;                        
+ [24] &quot;chRNA.Expression_cheRNA chRNA.Expression_eRNA&quot;                          
+ [25] &quot;chRNA.Expression_cheRNA chRNA.Expression_lncRNA&quot;                        
+ [26] &quot;chRNA.Expression_cheRNA Expression.Splicing&quot;                            
+ [27] &quot;chRNA.Expression_cheRNA H3K27AC&quot;                                        
+ [28] &quot;chRNA.Expression_cheRNA H3K4ME1&quot;                                        
+ [29] &quot;chRNA.Expression_cheRNA ProCap&quot;                                         
+ [30] &quot;chRNA.Expression_eRNA chRNA.Expression_eRNA&quot;                            
+ [31] &quot;chRNA.Expression_eRNA chRNA.Expression_lncRNA&quot;                          
+ [32] &quot;chRNA.Expression_eRNA Expression.Splicing&quot;                              
+ [33] &quot;chRNA.Expression_eRNA H3K27AC&quot;                                          
+ [34] &quot;chRNA.Expression_eRNA H3K4ME1&quot;                                          
+ [35] &quot;chRNA.Expression_eRNA ProCap&quot;                                           
+ [36] &quot;chRNA.Expression_lncRNA H3K27AC&quot;                                        
+ [37] &quot;chRNA.Expression_lncRNA H3K4ME1&quot;                                        
+ [38] &quot;chRNA.Expression_lncRNA ProCap&quot;                                         
+ [39] &quot;Expression.Splicing H3K27AC&quot;                                            
+ [40] &quot;Expression.Splicing H3K4ME1&quot;                                            
+ [41] &quot;Expression.Splicing ProCap&quot;                                             
+ [42] &quot;H3K4ME1 H3K4ME1&quot;                                                        
+ [43] &quot;ProCap ProCap&quot;                                                          
+ [44] &quot;chRNA.IR chRNA.Splicing&quot;                                                
+ [45] &quot;chRNA.IR Expression.Splicing&quot;                                           
+ [46] &quot;chRNA.IR MetabolicLabelled.30min&quot;                                       
+ [47] &quot;chRNA.IR polyA.IR&quot;                                                      
+ [48] &quot;chRNA.Splicing MetabolicLabelled.30min&quot;                                 
+ [49] &quot;chRNA.Splicing polyA.IR&quot;                                                
+ [50] &quot;Expression.Splicing MetabolicLabelled.30min&quot;                            
+ [51] &quot;Expression.Splicing polyA.IR&quot;                                           
+ [52] &quot;MetabolicLabelled.30min polyA.IR&quot;                                       
+ [53] &quot;polyA.IR polyA.IR&quot;                                                      
+ [54] &quot;Expression.Splicing polyA.Splicing&quot;                                     
+ [55] &quot;H3K4ME1 H3K4ME3&quot;                                                        
+ [56] &quot;H3K4ME1 polyA.IR&quot;                                                       
+ [57] &quot;H3K4ME1 polyA.Splicing&quot;                                                 
+ [58] &quot;H3K4ME3 polyA.IR&quot;                                                       
+ [59] &quot;H3K4ME3 polyA.Splicing&quot;                                                 
+ [60] &quot;H3K4ME3 ProCap&quot;                                                         
+ [61] &quot;polyA.IR polyA.Splicing&quot;                                                
+ [62] &quot;polyA.IR ProCap&quot;                                                        
+ [63] &quot;polyA.Splicing polyA.Splicing&quot;                                          
+ [64] &quot;polyA.Splicing ProCap&quot;                                                  
+ [65] &quot;Expression.Splicing polyA.IR.Subset_YRI&quot;                                
+ [66] &quot;polyA.IR polyA.IR.Subset_YRI&quot;                                           
+ [67] &quot;polyA.IR.Subset_YRI polyA.Splicing&quot;                                     
+ [68] &quot;H3K27AC H3K4ME3&quot;                                                        
+ [69] &quot;chRNA.Expression_lncRNA chRNA.Expression.Splicing&quot;                      
+ [70] &quot;chRNA.Expression_lncRNA polyA.Splicing&quot;                                 
+ [71] &quot;chRNA.Expression_lncRNA polyA.Splicing.Subset_YRI&quot;                      
+ [72] &quot;chRNA.Expression.Splicing Expression.Splicing&quot;                          
+ [73] &quot;chRNA.Expression.Splicing H3K27AC&quot;                                      
+ [74] &quot;chRNA.Expression.Splicing polyA.Splicing&quot;                               
+ [75] &quot;chRNA.Expression.Splicing polyA.Splicing.Subset_YRI&quot;                    
+ [76] &quot;Expression.Splicing polyA.Splicing.Subset_YRI&quot;                          
+ [77] &quot;H3K27AC polyA.Splicing&quot;                                                 
+ [78] &quot;H3K27AC polyA.Splicing.Subset_YRI&quot;                                      
+ [79] &quot;polyA.Splicing polyA.Splicing.Subset_YRI&quot;                               
+ [80] &quot;chRNA.Expression.Splicing chRNA.Splicing&quot;                               
+ [81] &quot;chRNA.Expression.Splicing MetabolicLabelled.30min.IR&quot;                   
+ [82] &quot;chRNA.Expression.Splicing polyA.IR&quot;                                     
+ [83] &quot;chRNA.Splicing H3K27AC&quot;                                                 
+ [84] &quot;chRNA.Splicing MetabolicLabelled.30min.IR&quot;                              
+ [85] &quot;chRNA.Splicing polyA.Splicing&quot;                                          
+ [86] &quot;Expression.Splicing MetabolicLabelled.30min.IR&quot;                         
+ [87] &quot;H3K27AC MetabolicLabelled.30min.IR&quot;                                     
+ [88] &quot;H3K27AC polyA.IR&quot;                                                       
+ [89] &quot;MetabolicLabelled.30min.IR polyA.IR&quot;                                    
+ [90] &quot;MetabolicLabelled.30min.IR polyA.Splicing&quot;                              
+ [91] &quot;chRNA.IER chRNA.IR&quot;                                                     
+ [92] &quot;chRNA.IER chRNA.Splicing&quot;                                               
+ [93] &quot;chRNA.IER H3K27AC&quot;                                                      
+ [94] &quot;chRNA.IER polyA.Splicing&quot;                                               
+ [95] &quot;chRNA.IER polyA.Splicing.Subset_YRI&quot;                                    
+ [96] &quot;chRNA.IER ProCap&quot;                                                       
+ [97] &quot;chRNA.IR H3K27AC&quot;                                                       
+ [98] &quot;chRNA.IR polyA.Splicing&quot;                                                
+ [99] &quot;chRNA.IR polyA.Splicing.Subset_YRI&quot;                                     
+[100] &quot;chRNA.IR ProCap&quot;                                                        
+[101] &quot;chRNA.Splicing polyA.Splicing.Subset_YRI&quot;                               
+[102] &quot;chRNA.Splicing ProCap&quot;                                                  
+[103] &quot;polyA.Splicing.Subset_YRI ProCap&quot;                                       
+[104] &quot;H3K4ME3 MetabolicLabelled.30min.IR&quot;                                     
+[105] &quot;MetabolicLabelled.30min.IR ProCap&quot;                                      
+[106] &quot;chRNA.Expression_eRNA chRNA.Expression.Splicing&quot;                        
+[107] &quot;chRNA.Expression_eRNA chRNA.IER&quot;                                        
+[108] &quot;chRNA.Expression_eRNA chRNA.IR&quot;                                         
+[109] &quot;chRNA.Expression_eRNA chRNA.IRjunctions&quot;                                
+[110] &quot;chRNA.Expression_eRNA H3K36ME3&quot;                                         
+[111] &quot;chRNA.Expression_eRNA MetabolicLabelled.30min&quot;                          
+[112] &quot;chRNA.Expression_eRNA MetabolicLabelled.30min.IR&quot;                       
+[113] &quot;chRNA.Expression_eRNA MetabolicLabelled.60min&quot;                          
+[114] &quot;chRNA.Expression_eRNA MetabolicLabelled.60min.IR&quot;                       
+[115] &quot;chRNA.Expression_eRNA polyA.IR&quot;                                         
+[116] &quot;chRNA.Expression.Splicing chRNA.IER&quot;                                    
+[117] &quot;chRNA.Expression.Splicing chRNA.IR&quot;                                     
+[118] &quot;chRNA.Expression.Splicing chRNA.IRjunctions&quot;                            
+[119] &quot;chRNA.Expression.Splicing H3K36ME3&quot;                                     
+[120] &quot;chRNA.Expression.Splicing MetabolicLabelled.30min&quot;                      
+[121] &quot;chRNA.Expression.Splicing MetabolicLabelled.60min&quot;                      
+[122] &quot;chRNA.Expression.Splicing MetabolicLabelled.60min.IR&quot;                   
+[123] &quot;chRNA.Expression.Splicing ProCap&quot;                                       
+[124] &quot;chRNA.IER chRNA.IRjunctions&quot;                                            
+[125] &quot;chRNA.IER Expression.Splicing&quot;                                          
+[126] &quot;chRNA.IER H3K36ME3&quot;                                                     
+[127] &quot;chRNA.IER MetabolicLabelled.30min&quot;                                      
+[128] &quot;chRNA.IER MetabolicLabelled.30min.IR&quot;                                   
+[129] &quot;chRNA.IER MetabolicLabelled.60min&quot;                                      
+[130] &quot;chRNA.IER MetabolicLabelled.60min.IR&quot;                                   
+[131] &quot;chRNA.IER polyA.IR&quot;                                                     
+[132] &quot;chRNA.IR chRNA.IRjunctions&quot;                                             
+[133] &quot;chRNA.IR H3K36ME3&quot;                                                      
+[134] &quot;chRNA.IR MetabolicLabelled.30min.IR&quot;                                    
+[135] &quot;chRNA.IR MetabolicLabelled.60min&quot;                                       
+[136] &quot;chRNA.IR MetabolicLabelled.60min.IR&quot;                                    
+[137] &quot;chRNA.IRjunctions Expression.Splicing&quot;                                  
+[138] &quot;chRNA.IRjunctions H3K36ME3&quot;                                             
+[139] &quot;chRNA.IRjunctions MetabolicLabelled.30min&quot;                              
+[140] &quot;chRNA.IRjunctions MetabolicLabelled.30min.IR&quot;                           
+[141] &quot;chRNA.IRjunctions MetabolicLabelled.60min&quot;                              
+[142] &quot;chRNA.IRjunctions MetabolicLabelled.60min.IR&quot;                           
+[143] &quot;chRNA.IRjunctions polyA.IR&quot;                                             
+[144] &quot;chRNA.IRjunctions ProCap&quot;                                               
+[145] &quot;Expression.Splicing H3K36ME3&quot;                                           
+[146] &quot;Expression.Splicing MetabolicLabelled.60min&quot;                            
+[147] &quot;Expression.Splicing MetabolicLabelled.60min.IR&quot;                         
+[148] &quot;H3K36ME3 MetabolicLabelled.30min&quot;                                       
+[149] &quot;H3K36ME3 MetabolicLabelled.30min.IR&quot;                                    
+[150] &quot;H3K36ME3 MetabolicLabelled.60min&quot;                                       
+[151] &quot;H3K36ME3 MetabolicLabelled.60min.IR&quot;                                    
+[152] &quot;H3K36ME3 polyA.IR&quot;                                                      
+[153] &quot;H3K36ME3 ProCap&quot;                                                        
+[154] &quot;MetabolicLabelled.30min MetabolicLabelled.30min.IR&quot;                     
+[155] &quot;MetabolicLabelled.30min MetabolicLabelled.60min&quot;                        
+[156] &quot;MetabolicLabelled.30min MetabolicLabelled.60min.IR&quot;                     
+[157] &quot;MetabolicLabelled.30min ProCap&quot;                                         
+[158] &quot;MetabolicLabelled.30min.IR MetabolicLabelled.60min&quot;                     
+[159] &quot;MetabolicLabelled.30min.IR MetabolicLabelled.60min.IR&quot;                  
+[160] &quot;MetabolicLabelled.60min MetabolicLabelled.60min.IR&quot;                     
+[161] &quot;MetabolicLabelled.60min polyA.IR&quot;                                       
+[162] &quot;MetabolicLabelled.60min ProCap&quot;                                         
+[163] &quot;MetabolicLabelled.60min.IR polyA.IR&quot;                                    
+[164] &quot;MetabolicLabelled.60min.IR ProCap&quot;                                      
+[165] &quot;CTCF Expression.Splicing&quot;                                               
+[166] &quot;CTCF H3K27AC&quot;                                                           
+[167] &quot;CTCF H3K4ME1&quot;                                                           
+[168] &quot;CTCF ProCap&quot;                                                            
+[169] &quot;chRNA.Expression_eRNA polyA.Splicing&quot;                                   
+[170] &quot;Expression.Splicing Expression.Splicing.Subset_YRI&quot;                     
+[171] &quot;chRNA.IR CTCF&quot;                                                          
+[172] &quot;chRNA.IR H3K4ME3&quot;                                                       
+[173] &quot;CTCF H3K4ME3&quot;                                                           
+[174] &quot;CTCF polyA.Splicing&quot;                                                    
+[175] &quot;H3K27AC polyA.IER&quot;                                                      
+[176] &quot;H3K4ME1 polyA.IER&quot;                                                      
+[177] &quot;polyA.IER polyA.Splicing&quot;                                               
+[178] &quot;polyA.IER ProCap&quot;                                                       
+[179] &quot;H3K27AC MetabolicLabelled.30min&quot;                                        
+[180] &quot;H3K4ME3 H3K4ME3&quot;                                                        
+[181] &quot;H3K4ME3 MetabolicLabelled.30min&quot;                                        
+[182] &quot;chRNA.Expression_cheRNA chRNA.Expression.Splicing&quot;                      
+[183] &quot;chRNA.Expression_cheRNA CTCF&quot;                                           
+[184] &quot;chRNA.Expression_cheRNA Expression.Splicing.Subset_YRI&quot;                 
+[185] &quot;chRNA.Expression_cheRNA H3K36ME3&quot;                                       
+[186] &quot;chRNA.Expression_cheRNA H3K4ME3&quot;                                        
+[187] &quot;chRNA.Expression_cheRNA polyA.Splicing&quot;                                 
+[188] &quot;chRNA.Expression_cheRNA polyA.Splicing.Subset_YRI&quot;                      
+[189] &quot;chRNA.Expression_lncRNA CTCF&quot;                                           
+[190] &quot;chRNA.Expression_lncRNA Expression.Splicing.Subset_YRI&quot;                 
+[191] &quot;chRNA.Expression_lncRNA H3K36ME3&quot;                                       
+[192] &quot;chRNA.Expression.Splicing CTCF&quot;                                         
+[193] &quot;chRNA.Expression.Splicing Expression.Splicing.Subset_YRI&quot;               
+[194] &quot;chRNA.Expression.Splicing H3K4ME1&quot;                                      
+[195] &quot;chRNA.Expression.Splicing H3K4ME3&quot;                                      
+[196] &quot;CTCF Expression.Splicing.Subset_YRI&quot;                                    
+[197] &quot;CTCF H3K36ME3&quot;                                                          
+[198] &quot;CTCF polyA.Splicing.Subset_YRI&quot;                                         
+[199] &quot;Expression.Splicing.Subset_YRI H3K27AC&quot;                                 
+[200] &quot;Expression.Splicing.Subset_YRI H3K36ME3&quot;                                
+[201] &quot;Expression.Splicing.Subset_YRI H3K4ME1&quot;                                 
+[202] &quot;Expression.Splicing.Subset_YRI H3K4ME3&quot;                                 
+[203] &quot;Expression.Splicing.Subset_YRI polyA.Splicing&quot;                          
+[204] &quot;Expression.Splicing.Subset_YRI polyA.Splicing.Subset_YRI&quot;               
+[205] &quot;Expression.Splicing.Subset_YRI ProCap&quot;                                  
+[206] &quot;H3K27AC H3K36ME3&quot;                                                       
+[207] &quot;H3K36ME3 H3K4ME1&quot;                                                       
+[208] &quot;H3K36ME3 H3K4ME3&quot;                                                       
+[209] &quot;H3K36ME3 polyA.Splicing&quot;                                                
+[210] &quot;H3K36ME3 polyA.Splicing.Subset_YRI&quot;                                     
+[211] &quot;H3K4ME1 polyA.Splicing.Subset_YRI&quot;                                      
+[212] &quot;H3K4ME3 polyA.Splicing.Subset_YRI&quot;                                      
+[213] &quot;chRNA.Expression_eRNA H3K4ME3&quot;                                          
+[214] &quot;chRNA.Expression_eRNA MetabolicLabelled.30min.Splicing&quot;                 
+[215] &quot;chRNA.Expression_eRNA polyA.IRjunctions&quot;                                
+[216] &quot;H3K4ME3 polyA.IRjunctions&quot;                                              
+[217] &quot;MetabolicLabelled.30min.Splicing polyA.IRjunctions&quot;                     
+[218] &quot;H3K4ME3 MetabolicLabelled.60min.IR&quot;                                     
+[219] &quot;chRNA.Expression_eRNA Expression.Splicing.Subset_YRI&quot;                   
+[220] &quot;chRNA.Expression_eRNA CTCF&quot;                                             
+[221] &quot;CTCF polyA.IR&quot;                                                          
+[222] &quot;chRNA.Expression_eRNA chRNA.Splicing&quot;                                   
+[223] &quot;chRNA.Expression_eRNA polyA.IR.Subset_YRI&quot;                              
+[224] &quot;chRNA.Expression.Splicing polyA.IR.Subset_YRI&quot;                          
+[225] &quot;chRNA.Splicing Expression.Splicing.Subset_YRI&quot;                          
+[226] &quot;chRNA.Splicing MetabolicLabelled.60min&quot;                                 
+[227] &quot;chRNA.Splicing polyA.IR.Subset_YRI&quot;                                     
+[228] &quot;Expression.Splicing.Subset_YRI MetabolicLabelled.30min&quot;                 
+[229] &quot;Expression.Splicing.Subset_YRI MetabolicLabelled.30min.IR&quot;              
+[230] &quot;Expression.Splicing.Subset_YRI MetabolicLabelled.60min&quot;                 
+[231] &quot;Expression.Splicing.Subset_YRI polyA.IR&quot;                                
+[232] &quot;Expression.Splicing.Subset_YRI polyA.IR.Subset_YRI&quot;                     
+[233] &quot;H3K27AC MetabolicLabelled.60min&quot;                                        
+[234] &quot;H3K27AC polyA.IR.Subset_YRI&quot;                                            
+[235] &quot;H3K4ME3 MetabolicLabelled.60min&quot;                                        
+[236] &quot;H3K4ME3 polyA.IR.Subset_YRI&quot;                                            
+[237] &quot;MetabolicLabelled.30min polyA.IR.Subset_YRI&quot;                            
+[238] &quot;MetabolicLabelled.30min.IR polyA.IR.Subset_YRI&quot;                         
+[239] &quot;MetabolicLabelled.60min polyA.IR.Subset_YRI&quot;                            
+[240] &quot;polyA.IR.Subset_YRI ProCap&quot;                                             
+[241] &quot;chRNA.Expression.Splicing MetabolicLabelled.60min.Splicing&quot;             
+[242] &quot;H3K27AC MetabolicLabelled.60min.Splicing&quot;                               
+[243] &quot;MetabolicLabelled.60min.Splicing polyA.Splicing&quot;                        
+[244] &quot;chRNA.IR H3K4ME1&quot;                                                       
+[245] &quot;chRNA.IER H3K4ME1&quot;                                                      
+[246] &quot;chRNA.IER H3K4ME3&quot;                                                      
+[247] &quot;chRNA.IER polyA.IR.Subset_YRI&quot;                                          
+[248] &quot;chRNA.IR chRNA.IR&quot;                                                      
+[249] &quot;chRNA.IR polyA.IR.Subset_YRI&quot;                                           
+[250] &quot;chRNA.IRjunctions chRNA.Splicing&quot;                                       
+[251] &quot;chRNA.IRjunctions H3K27AC&quot;                                              
+[252] &quot;chRNA.IRjunctions H3K4ME1&quot;                                              
+[253] &quot;chRNA.IRjunctions H3K4ME3&quot;                                              
+[254] &quot;chRNA.IRjunctions polyA.IR.Subset_YRI&quot;                                  
+[255] &quot;chRNA.IRjunctions polyA.Splicing&quot;                                       
+[256] &quot;chRNA.IRjunctions polyA.Splicing.Subset_YRI&quot;                            
+[257] &quot;chRNA.Splicing H3K4ME1&quot;                                                 
+[258] &quot;chRNA.Splicing MetabolicLabelled.60min.IR&quot;                              
+[259] &quot;H3K27AC MetabolicLabelled.60min.IR&quot;                                     
+[260] &quot;H3K4ME1 MetabolicLabelled.30min.IR&quot;                                     
+[261] &quot;H3K4ME1 MetabolicLabelled.60min.IR&quot;                                     
+[262] &quot;H3K4ME1 polyA.IR.Subset_YRI&quot;                                            
+[263] &quot;MetabolicLabelled.30min.IR polyA.Splicing.Subset_YRI&quot;                   
+[264] &quot;MetabolicLabelled.60min.IR polyA.IR.Subset_YRI&quot;                         
+[265] &quot;MetabolicLabelled.60min.IR polyA.Splicing&quot;                              
+[266] &quot;MetabolicLabelled.60min.IR polyA.Splicing.Subset_YRI&quot;                   
+[267] &quot;polyA.IR polyA.Splicing.Subset_YRI&quot;                                     
+[268] &quot;polyA.IR.Subset_YRI polyA.Splicing.Subset_YRI&quot;                          
+[269] &quot;polyA.Splicing.Subset_YRI polyA.Splicing.Subset_YRI&quot;                    
+[270] &quot;chRNA.Expression.Splicing MetabolicLabelled.30min.Splicing&quot;             
+[271] &quot;chRNA.Expression.Splicing polyA.IER&quot;                                    
+[272] &quot;chRNA.Expression.Splicing polyA.IRjunctions&quot;                            
+[273] &quot;chRNA.IER chRNA.IER&quot;                                                    
+[274] &quot;chRNA.IER MetabolicLabelled.30min.Splicing&quot;                             
+[275] &quot;chRNA.IER MetabolicLabelled.60min.Splicing&quot;                             
+[276] &quot;chRNA.IER polyA.IER&quot;                                                    
+[277] &quot;chRNA.IER polyA.IRjunctions&quot;                                            
+[278] &quot;chRNA.IR MetabolicLabelled.30min.Splicing&quot;                              
+[279] &quot;chRNA.IR MetabolicLabelled.60min.Splicing&quot;                              
+[280] &quot;chRNA.IR polyA.IER&quot;                                                     
+[281] &quot;chRNA.IR polyA.IRjunctions&quot;                                             
+[282] &quot;chRNA.IRjunctions chRNA.IRjunctions&quot;                                    
+[283] &quot;chRNA.IRjunctions MetabolicLabelled.30min.Splicing&quot;                     
+[284] &quot;chRNA.IRjunctions MetabolicLabelled.60min.Splicing&quot;                     
+[285] &quot;chRNA.IRjunctions polyA.IER&quot;                                            
+[286] &quot;chRNA.IRjunctions polyA.IRjunctions&quot;                                    
+[287] &quot;chRNA.Splicing polyA.IER&quot;                                               
+[288] &quot;chRNA.Splicing polyA.IRjunctions&quot;                                       
+[289] &quot;Expression.Splicing polyA.IER&quot;                                          
+[290] &quot;Expression.Splicing polyA.IRjunctions&quot;                                  
+[291] &quot;MetabolicLabelled.30min.IR MetabolicLabelled.30min.IR&quot;                  
+[292] &quot;MetabolicLabelled.30min.IR MetabolicLabelled.30min.Splicing&quot;            
+[293] &quot;MetabolicLabelled.30min.IR MetabolicLabelled.60min.Splicing&quot;            
+[294] &quot;MetabolicLabelled.30min.IR polyA.IER&quot;                                   
+[295] &quot;MetabolicLabelled.30min.IR polyA.IRjunctions&quot;                           
+[296] &quot;MetabolicLabelled.30min.Splicing MetabolicLabelled.60min.IR&quot;            
+[297] &quot;MetabolicLabelled.30min.Splicing polyA.IER&quot;                             
+[298] &quot;MetabolicLabelled.30min.Splicing polyA.IR&quot;                              
+[299] &quot;MetabolicLabelled.30min.Splicing polyA.IR.Subset_YRI&quot;                   
+[300] &quot;MetabolicLabelled.30min.Splicing polyA.Splicing&quot;                        
+[301] &quot;MetabolicLabelled.30min.Splicing polyA.Splicing.Subset_YRI&quot;             
+[302] &quot;MetabolicLabelled.30min.Splicing ProCap&quot;                                
+[303] &quot;MetabolicLabelled.60min.IR MetabolicLabelled.60min.IR&quot;                  
+[304] &quot;MetabolicLabelled.60min.IR MetabolicLabelled.60min.Splicing&quot;            
+[305] &quot;MetabolicLabelled.60min.IR polyA.IER&quot;                                   
+[306] &quot;MetabolicLabelled.60min.IR polyA.IRjunctions&quot;                           
+[307] &quot;MetabolicLabelled.60min.Splicing polyA.IER&quot;                             
+[308] &quot;MetabolicLabelled.60min.Splicing polyA.IR&quot;                              
+[309] &quot;MetabolicLabelled.60min.Splicing polyA.IR.Subset_YRI&quot;                   
+[310] &quot;MetabolicLabelled.60min.Splicing polyA.IRjunctions&quot;                     
+[311] &quot;MetabolicLabelled.60min.Splicing polyA.Splicing.Subset_YRI&quot;             
+[312] &quot;MetabolicLabelled.60min.Splicing ProCap&quot;                                
+[313] &quot;polyA.IER polyA.IR&quot;                                                     
+[314] &quot;polyA.IER polyA.IR.Subset_YRI&quot;                                          
+[315] &quot;polyA.IER polyA.IRjunctions&quot;                                            
+[316] &quot;polyA.IER polyA.Splicing.Subset_YRI&quot;                                    
+[317] &quot;polyA.IR polyA.IRjunctions&quot;                                             
+[318] &quot;polyA.IR.Subset_YRI polyA.IR.Subset_YRI&quot;                                
+[319] &quot;polyA.IR.Subset_YRI polyA.IRjunctions&quot;                                  
+[320] &quot;polyA.IRjunctions polyA.Splicing&quot;                                       
+[321] &quot;polyA.IRjunctions polyA.Splicing.Subset_YRI&quot;                            
+[322] &quot;polyA.IRjunctions ProCap&quot;                                               
+[323] &quot;chRNA.Expression_lncRNA chRNA.Expression_lncRNA&quot;                        
+[324] &quot;chRNA.Expression_lncRNA chRNA.IR&quot;                                       
+[325] &quot;chRNA.Expression_lncRNA MetabolicLabelled.30min&quot;                        
+[326] &quot;chRNA.Expression_lncRNA MetabolicLabelled.60min&quot;                        
+[327] &quot;chRNA.Expression_lncRNA polyA.IR&quot;                                       
+[328] &quot;H3K4ME1 MetabolicLabelled.30min&quot;                                        
+[329] &quot;H3K4ME1 MetabolicLabelled.60min&quot;                                        
+[330] &quot;MetabolicLabelled.30min polyA.Splicing&quot;                                 
+[331] &quot;MetabolicLabelled.60min polyA.Splicing&quot;                                 
+[332] &quot;chRNA.IR Expression.Splicing.Subset_YRI&quot;                                
+[333] &quot;chRNA.IRjunctions Expression.Splicing.Subset_YRI&quot;                       
+[334] &quot;chRNA.IR chRNA.Slopes&quot;                                                  
+[335] &quot;chRNA.Slopes Expression.Splicing&quot;                                       
+[336] &quot;chRNA.Slopes H3K4ME3&quot;                                                   
+[337] &quot;chRNA.Slopes MetabolicLabelled.30min.IR&quot;                                
+[338] &quot;chRNA.Slopes MetabolicLabelled.60min.IR&quot;                                
+[339] &quot;chRNA.Slopes polyA.IR&quot;                                                  
+[340] &quot;chRNA.Slopes polyA.IR.Subset_YRI&quot;                                       
+[341] &quot;chRNA.Slopes polyA.Splicing&quot;                                            
+[342] &quot;chRNA.Slopes polyA.Splicing.Subset_YRI&quot;                                 
+[343] &quot;H3K27AC MetabolicLabelled.30min.Splicing&quot;                               
+[344] &quot;MetabolicLabelled.30min polyA.Splicing.Subset_YRI&quot;                      
+[345] &quot;chRNA.IER Expression.Splicing.Subset_YRI&quot;                               
+[346] &quot;polyA.IER polyA.IER&quot;                                                    
+[347] &quot;chRNA.Expression_eRNA polyA.Splicing.Subset_YRI&quot;                        
+[348] &quot;Expression.Splicing.Subset_YRI polyA.IER&quot;                               
+[349] &quot;Expression.Splicing.Subset_YRI polyA.IRjunctions&quot;                       
+[350] &quot;H3K4ME1 polyA.IRjunctions&quot;                                              
+[351] &quot;chRNA.Expression_eRNA polyA.IER&quot;                                        
+[352] &quot;Expression.Splicing.Subset_YRI MetabolicLabelled.30min.Splicing&quot;        
+[353] &quot;MetabolicLabelled.30min MetabolicLabelled.30min.Splicing&quot;               
+[354] &quot;MetabolicLabelled.30min.Splicing MetabolicLabelled.60min&quot;               
+[355] &quot;MetabolicLabelled.60min polyA.Splicing.Subset_YRI&quot;                      
+[356] &quot;chRNA.Expression_eRNA MetabolicLabelled.60min.Splicing&quot;                 
+[357] &quot;H3K4ME1 MetabolicLabelled.60min.Splicing&quot;                               
+[358] &quot;chRNA.Splicing H3K36ME3&quot;                                                
+[359] &quot;H3K36ME3 polyA.IR.Subset_YRI&quot;                                           
+[360] &quot;chRNA.Expression_cheRNA chRNA.Expression_snoRNA&quot;                        
+[361] &quot;chRNA.Expression_cheRNA chRNA.Splicing&quot;                                 
+[362] &quot;chRNA.Expression_cheRNA MetabolicLabelled.30min&quot;                        
+[363] &quot;chRNA.Expression_cheRNA MetabolicLabelled.60min&quot;                        
+[364] &quot;chRNA.Expression_snoRNA chRNA.Expression.Splicing&quot;                      
+[365] &quot;chRNA.Expression_snoRNA chRNA.Splicing&quot;                                 
+[366] &quot;chRNA.Expression_snoRNA Expression.Splicing&quot;                            
+[367] &quot;chRNA.Expression_snoRNA Expression.Splicing.Subset_YRI&quot;                 
+[368] &quot;chRNA.Expression_snoRNA H3K27AC&quot;                                        
+[369] &quot;chRNA.Expression_snoRNA H3K4ME1&quot;                                        
+[370] &quot;chRNA.Expression_snoRNA H3K4ME3&quot;                                        
+[371] &quot;chRNA.Expression_snoRNA MetabolicLabelled.30min&quot;                        
+[372] &quot;chRNA.Expression_snoRNA MetabolicLabelled.60min&quot;                        
+[373] &quot;chRNA.Expression_snoRNA polyA.Splicing&quot;                                 
+[374] &quot;chRNA.Expression_snoRNA polyA.Splicing.Subset_YRI&quot;                      
+[375] &quot;Expression.Splicing.Subset_YRI MetabolicLabelled.60min.IR&quot;              
+[376] &quot;H3K4ME3 polyA.IER&quot;                                                      
+[377] &quot;chRNA.Expression_cheRNA chRNA.IRjunctions&quot;                              
+[378] &quot;chRNA.Expression_lncRNA chRNA.IER&quot;                                      
+[379] &quot;chRNA.Expression_lncRNA MetabolicLabelled.30min.IR&quot;                     
+[380] &quot;chRNA.Expression_lncRNA MetabolicLabelled.60min.IR&quot;                     
+[381] &quot;chRNA.Expression_lncRNA polyA.IR.Subset_YRI&quot;                            
+[382] &quot;H3K36ME3 MetabolicLabelled.30min.Splicing&quot;                              
+[383] &quot;H3K4ME1 MetabolicLabelled.30min.Splicing&quot;                               
+[384] &quot;chRNA.Expression.Splicing chRNA.Slopes&quot;                                 
+[385] &quot;chRNA.Slopes Expression.Splicing.Subset_YRI&quot;                            
+[386] &quot;chRNA.Slopes H3K27AC&quot;                                                   
+[387] &quot;chRNA.Slopes H3K36ME3&quot;                                                  
+[388] &quot;chRNA.Slopes H3K4ME1&quot;                                                   
+[389] &quot;chRNA.Slopes ProCap&quot;                                                    
+[390] &quot;Expression.Splicing MetabolicLabelled.30min.IER&quot;                        
+[391] &quot;Expression.Splicing MetabolicLabelled.60min.IER&quot;                        
+[392] &quot;MetabolicLabelled.30min.IER MetabolicLabelled.30min.IR&quot;                 
+[393] &quot;MetabolicLabelled.30min.IER MetabolicLabelled.60min.IER&quot;                
+[394] &quot;MetabolicLabelled.30min.IER MetabolicLabelled.60min.IR&quot;                 
+[395] &quot;MetabolicLabelled.30min.IER polyA.IR&quot;                                   
+[396] &quot;MetabolicLabelled.30min.IER polyA.IR.Subset_YRI&quot;                        
+[397] &quot;MetabolicLabelled.30min.IR MetabolicLabelled.60min.IER&quot;                 
+[398] &quot;MetabolicLabelled.60min.IER MetabolicLabelled.60min.IR&quot;                 
+[399] &quot;MetabolicLabelled.60min.IER polyA.IR&quot;                                   
+[400] &quot;MetabolicLabelled.60min.IER polyA.IR.Subset_YRI&quot;                        
+[401] &quot;CTCF MetabolicLabelled.30min&quot;                                           
+[402] &quot;H3K36ME3 MetabolicLabelled.60min.Splicing&quot;                              
+[403] &quot;chRNA.IER MetabolicLabelled.60min.IER&quot;                                  
+[404] &quot;chRNA.IR MetabolicLabelled.60min.IER&quot;                                   
+[405] &quot;chRNA.IRjunctions MetabolicLabelled.60min.IER&quot;                          
+[406] &quot;MetabolicLabelled.60min.IER polyA.IER&quot;                                  
+[407] &quot;MetabolicLabelled.60min.IER polyA.IRjunctions&quot;                          
+[408] &quot;Expression.Splicing.Subset_YRI MetabolicLabelled.60min.Splicing&quot;        
+[409] &quot;chRNA.Splicing CTCF&quot;                                                    
+[410] &quot;CTCF MetabolicLabelled.30min.Splicing&quot;                                  
+[411] &quot;CTCF polyA.IRjunctions&quot;                                                 
+[412] &quot;H3K27AC polyA.IRjunctions&quot;                                              
+[413] &quot;chRNA.Expression_lncRNA chRNA.IRjunctions&quot;                              
+[414] &quot;MetabolicLabelled.30min polyA.IER&quot;                                      
+[415] &quot;MetabolicLabelled.30min polyA.IRjunctions&quot;                              
+[416] &quot;H3K4ME1 MetabolicLabelled.30min.IER&quot;                                    
+[417] &quot;chRNA.Expression_lncRNA polyA.IRjunctions&quot;                              
+[418] &quot;chRNA.Expression_eRNA chRNA.Expression_snoRNA&quot;                          
+[419] &quot;CTCF CTCF&quot;                                                              
+[420] &quot;H3K4ME3 MetabolicLabelled.30min.IER&quot;                                    
+[421] &quot;MetabolicLabelled.30min.IER ProCap&quot;                                     
+[422] &quot;H3K36ME3 polyA.IER&quot;                                                     
+[423] &quot;chRNA.Expression_cheRNA chRNA.IR&quot;                                       
+[424] &quot;CTCF MetabolicLabelled.60min.IR&quot;                                        
+[425] &quot;chRNA.Expression_cheRNA polyA.IR&quot;                                       
+[426] &quot;chRNA.Expression_lncRNA MetabolicLabelled.30min.IER&quot;                    
+[427] &quot;chRNA.IRjunctions MetabolicLabelled.30min.IER&quot;                          
+[428] &quot;Expression.Splicing.Subset_YRI MetabolicLabelled.30min.IER&quot;             
+[429] &quot;H3K27AC MetabolicLabelled.30min.IER&quot;                                    
+[430] &quot;H3K36ME3 polyA.IRjunctions&quot;                                             
+[431] &quot;chRNA.Expression_cheRNA MetabolicLabelled.60min.Splicing&quot;               
+[432] &quot;chRNA.Expression_cheRNA polyA.IER&quot;                                      
+[433] &quot;chRNA.Expression_cheRNA polyA.IRjunctions&quot;                              
+[434] &quot;MetabolicLabelled.60min MetabolicLabelled.60min.Splicing&quot;               
+[435] &quot;MetabolicLabelled.30min MetabolicLabelled.60min.Splicing&quot;               
+[436] &quot;chRNA.Expression_lncRNA polyA.IER&quot;                                      
+[437] &quot;chRNA.Splicing MetabolicLabelled.30min.IRjunctions&quot;                     
+[438] &quot;chRNA.Splicing MetabolicLabelled.60min.IRjunctions&quot;                     
+[439] &quot;H3K4ME1 MetabolicLabelled.30min.IRjunctions&quot;                            
+[440] &quot;H3K4ME1 MetabolicLabelled.60min.IRjunctions&quot;                            
+[441] &quot;MetabolicLabelled.30min.IRjunctions MetabolicLabelled.30min.Splicing&quot;   
+[442] &quot;MetabolicLabelled.30min.IRjunctions MetabolicLabelled.60min.IRjunctions&quot;
+[443] &quot;MetabolicLabelled.30min.IRjunctions polyA.IR&quot;                           
+[444] &quot;MetabolicLabelled.30min.IRjunctions polyA.IR.Subset_YRI&quot;                
+[445] &quot;MetabolicLabelled.30min.IRjunctions polyA.Splicing&quot;                     
+[446] &quot;MetabolicLabelled.30min.IRjunctions polyA.Splicing.Subset_YRI&quot;          
+[447] &quot;MetabolicLabelled.30min.IRjunctions ProCap&quot;                             
+[448] &quot;MetabolicLabelled.30min.Splicing MetabolicLabelled.60min.IRjunctions&quot;   
+[449] &quot;MetabolicLabelled.60min.IRjunctions polyA.IR&quot;                           
+[450] &quot;MetabolicLabelled.60min.IRjunctions polyA.IR.Subset_YRI&quot;                
+[451] &quot;MetabolicLabelled.60min.IRjunctions polyA.Splicing&quot;                     
+[452] &quot;MetabolicLabelled.60min.IRjunctions polyA.Splicing.Subset_YRI&quot;          
+[453] &quot;MetabolicLabelled.60min.IRjunctions ProCap&quot;                             
+[454] &quot;CTCF MetabolicLabelled.60min&quot;                                           
+[455] &quot;chRNA.Expression_cheRNA MetabolicLabelled.30min.Splicing&quot;               
+[456] &quot;chRNA.Expression_cheRNA polyA.IR.Subset_YRI&quot;                            
+[457] &quot;chRNA.Expression_eRNA MetabolicLabelled.30min.IER&quot;                      
+[458] &quot;chRNA.IER MetabolicLabelled.30min.IER&quot;                                  
+[459] &quot;chRNA.IR MetabolicLabelled.30min.IER&quot;                                   
+[460] &quot;MetabolicLabelled.30min.IER polyA.IER&quot;                                  
+[461] &quot;chRNA.IER CTCF&quot;                                                         
+[462] &quot;CTCF polyA.IR.Subset_YRI&quot;                                               
+[463] &quot;chRNA.Expression_snoRNA polyA.IR&quot;                                       
+[464] &quot;chRNA.Expression_snoRNA chRNA.Expression_snoRNA&quot;                        
+[465] &quot;chRNA.Expression_eRNA chRNA.Slopes&quot;                                     
+[466] &quot;MetabolicLabelled.60min polyA.IER&quot;                                      
+[467] &quot;MetabolicLabelled.60min polyA.IRjunctions&quot;                              
+[468] &quot;chRNA.Expression_eRNA MetabolicLabelled.30min.IRjunctions&quot;              
+[469] &quot;chRNA.Expression_eRNA MetabolicLabelled.60min.IER&quot;                      
+[470] &quot;chRNA.Expression_eRNA MetabolicLabelled.60min.IRjunctions&quot;              
+[471] &quot;chRNA.Expression_lncRNA MetabolicLabelled.30min.IRjunctions&quot;            
+[472] &quot;chRNA.Expression_lncRNA MetabolicLabelled.60min.IER&quot;                    
+[473] &quot;chRNA.Expression_lncRNA MetabolicLabelled.60min.IRjunctions&quot;            
+[474] &quot;chRNA.IER MetabolicLabelled.30min.IRjunctions&quot;                          
+[475] &quot;chRNA.IER MetabolicLabelled.60min.IRjunctions&quot;                          
+[476] &quot;chRNA.IR MetabolicLabelled.30min.IRjunctions&quot;                           
+[477] &quot;chRNA.IR MetabolicLabelled.60min.IRjunctions&quot;                           
+[478] &quot;chRNA.IRjunctions MetabolicLabelled.30min.IRjunctions&quot;                  
+[479] &quot;chRNA.IRjunctions MetabolicLabelled.60min.IRjunctions&quot;                  
+[480] &quot;chRNA.Splicing MetabolicLabelled.30min.IER&quot;                             
+[481] &quot;chRNA.Splicing MetabolicLabelled.60min.IER&quot;                             
+[482] &quot;Expression.Splicing MetabolicLabelled.30min.IRjunctions&quot;                
+[483] &quot;Expression.Splicing MetabolicLabelled.60min.IRjunctions&quot;                
+[484] &quot;Expression.Splicing.Subset_YRI MetabolicLabelled.30min.IRjunctions&quot;     
+[485] &quot;Expression.Splicing.Subset_YRI MetabolicLabelled.60min.IER&quot;             
+[486] &quot;Expression.Splicing.Subset_YRI MetabolicLabelled.60min.IRjunctions&quot;     
+[487] &quot;H3K27AC MetabolicLabelled.30min.IRjunctions&quot;                            
+[488] &quot;H3K27AC MetabolicLabelled.60min.IER&quot;                                    
+[489] &quot;H3K27AC MetabolicLabelled.60min.IRjunctions&quot;                            
+[490] &quot;H3K36ME3 MetabolicLabelled.30min.IER&quot;                                   
+[491] &quot;H3K36ME3 MetabolicLabelled.30min.IRjunctions&quot;                           
+[492] &quot;H3K36ME3 MetabolicLabelled.60min.IER&quot;                                   
+[493] &quot;H3K36ME3 MetabolicLabelled.60min.IRjunctions&quot;                           
+[494] &quot;H3K4ME1 MetabolicLabelled.60min.IER&quot;                                    
+[495] &quot;H3K4ME3 MetabolicLabelled.30min.IRjunctions&quot;                            
+[496] &quot;H3K4ME3 MetabolicLabelled.60min.IER&quot;                                    
+[497] &quot;H3K4ME3 MetabolicLabelled.60min.IRjunctions&quot;                            
+[498] &quot;MetabolicLabelled.30min MetabolicLabelled.30min.IER&quot;                    
+[499] &quot;MetabolicLabelled.30min MetabolicLabelled.30min.IRjunctions&quot;            
+[500] &quot;MetabolicLabelled.30min MetabolicLabelled.60min.IER&quot;                    
+[501] &quot;MetabolicLabelled.30min MetabolicLabelled.60min.IRjunctions&quot;            
+[502] &quot;MetabolicLabelled.30min.IER MetabolicLabelled.30min.IER&quot;                
+[503] &quot;MetabolicLabelled.30min.IER MetabolicLabelled.30min.IRjunctions&quot;        
+[504] &quot;MetabolicLabelled.30min.IER MetabolicLabelled.30min.Splicing&quot;           
+[505] &quot;MetabolicLabelled.30min.IER MetabolicLabelled.60min&quot;                    
+[506] &quot;MetabolicLabelled.30min.IER MetabolicLabelled.60min.IRjunctions&quot;        
+[507] &quot;MetabolicLabelled.30min.IER MetabolicLabelled.60min.Splicing&quot;           
+[508] &quot;MetabolicLabelled.30min.IER polyA.IRjunctions&quot;                          
+[509] &quot;MetabolicLabelled.30min.IER polyA.Splicing&quot;                             
+[510] &quot;MetabolicLabelled.30min.IER polyA.Splicing.Subset_YRI&quot;                  
+[511] &quot;MetabolicLabelled.30min.IR MetabolicLabelled.30min.IRjunctions&quot;         
+[512] &quot;MetabolicLabelled.30min.IR MetabolicLabelled.60min.IRjunctions&quot;         
+[513] &quot;MetabolicLabelled.30min.IRjunctions MetabolicLabelled.30min.IRjunctions&quot;
+[514] &quot;MetabolicLabelled.30min.IRjunctions MetabolicLabelled.60min&quot;            
+[515] &quot;MetabolicLabelled.30min.IRjunctions MetabolicLabelled.60min.IER&quot;        
+[516] &quot;MetabolicLabelled.30min.IRjunctions MetabolicLabelled.60min.IR&quot;         
+[517] &quot;MetabolicLabelled.30min.IRjunctions MetabolicLabelled.60min.Splicing&quot;   
+[518] &quot;MetabolicLabelled.30min.IRjunctions polyA.IER&quot;                          
+[519] &quot;MetabolicLabelled.30min.IRjunctions polyA.IRjunctions&quot;                  
+[520] &quot;MetabolicLabelled.30min.Splicing MetabolicLabelled.60min.IER&quot;           
+[521] &quot;MetabolicLabelled.60min MetabolicLabelled.60min.IER&quot;                    
+[522] &quot;MetabolicLabelled.60min MetabolicLabelled.60min.IRjunctions&quot;            
+[523] &quot;MetabolicLabelled.60min.IER MetabolicLabelled.60min.IER&quot;                
+[524] &quot;MetabolicLabelled.60min.IER MetabolicLabelled.60min.IRjunctions&quot;        
+[525] &quot;MetabolicLabelled.60min.IER MetabolicLabelled.60min.Splicing&quot;           
+[526] &quot;MetabolicLabelled.60min.IER polyA.Splicing&quot;                             
+[527] &quot;MetabolicLabelled.60min.IER polyA.Splicing.Subset_YRI&quot;                  
+[528] &quot;MetabolicLabelled.60min.IER ProCap&quot;                                     
+[529] &quot;MetabolicLabelled.60min.IR MetabolicLabelled.60min.IRjunctions&quot;         
+[530] &quot;MetabolicLabelled.60min.IRjunctions MetabolicLabelled.60min.IRjunctions&quot;
+[531] &quot;MetabolicLabelled.60min.IRjunctions MetabolicLabelled.60min.Splicing&quot;   
+[532] &quot;MetabolicLabelled.60min.IRjunctions polyA.IER&quot;                          
+[533] &quot;MetabolicLabelled.60min.IRjunctions polyA.IRjunctions&quot;                  
+[534] &quot;polyA.IRjunctions polyA.IRjunctions&quot;                                    
+[535] &quot;chRNA.Expression_cheRNA chRNA.IER&quot;                                      
+[536] &quot;CTCF MetabolicLabelled.60min.Splicing&quot;                                  
+[537] &quot;chRNA.Expression_snoRNA MetabolicLabelled.30min.IR&quot;                     
+[538] &quot;chRNA.IRjunctions CTCF&quot;                                                 
+[539] &quot;CTCF MetabolicLabelled.30min.IR&quot;                                        
+[540] &quot;chRNA.Expression_lncRNA chRNA.Expression_snoRNA&quot;                        
+[541] &quot;chRNA.Slopes chRNA.Splicing&quot;                                            
+[542] &quot;CTCF polyA.IER&quot;                                                         
+[543] &quot;CTCF MetabolicLabelled.30min.IER&quot;                                       
+[544] &quot;CTCF MetabolicLabelled.60min.IER&quot;                                       
+[545] &quot;chRNA.Expression.Splicing MetabolicLabelled.30min.IER&quot;                  
+[546] &quot;chRNA.Expression.Splicing MetabolicLabelled.30min.IRjunctions&quot;          
+[547] &quot;chRNA.Expression.Splicing MetabolicLabelled.60min.IER&quot;                  
+[548] &quot;chRNA.Expression.Splicing MetabolicLabelled.60min.IRjunctions&quot;          
+[549] &quot;chRNA.Slopes CTCF&quot;                                                      
+[550] &quot;chRNA.Slopes MetabolicLabelled.30min&quot;                                   
+[551] &quot;chRNA.Expression_cheRNA MetabolicLabelled.30min.IR&quot;                     
+[552] &quot;chRNA.Expression_cheRNA MetabolicLabelled.60min.IR&quot;                     
+[553] &quot;chRNA.IER chRNA.Slopes&quot;                                                 
+[554] &quot;chRNA.IRjunctions chRNA.Slopes&quot;                                         
+[555] &quot;chRNA.Expression_snoRNA ProCap&quot;                                         
+[556] &quot;chRNA.Expression_snoRNA MetabolicLabelled.60min.IR&quot;                     
+[557] &quot;CTCF MetabolicLabelled.30min.IRjunctions&quot;                               
+[558] &quot;chRNA.Expression_snoRNA H3K36ME3&quot;                                       
+[559] &quot;chRNA.Expression_cheRNA MetabolicLabelled.30min.IER&quot;                    
+[560] &quot;chRNA.Expression_cheRNA MetabolicLabelled.60min.IER&quot;                    
+[561] &quot;chRNA.Expression_cheRNA MetabolicLabelled.60min.IRjunctions&quot;            
+[562] &quot;chRNA.Expression_snoRNA chRNA.IR&quot;                                       
+[563] &quot;chRNA.Expression_lncRNA chRNA.Slopes&quot;                                   
+[564] &quot;chRNA.Slopes MetabolicLabelled.60min.Splicing&quot;                          
+[565] &quot;chRNA.Expression_snoRNA MetabolicLabelled.30min.Splicing&quot;               
+[566] &quot;chRNA.Expression_snoRNA polyA.IRjunctions&quot;                              
+[567] &quot;chRNA.Expression_snoRNA CTCF&quot;                                           
+[568] &quot;chRNA.Expression_snoRNA MetabolicLabelled.60min.Splicing&quot;               
+[569] &quot;chRNA.Slopes chRNA.Slopes&quot;                                              
+[570] &quot;chRNA.Slopes MetabolicLabelled.30min.Splicing&quot;                          
+[571] &quot;CTCF MetabolicLabelled.60min.IRjunctions&quot;                               
+[572] &quot;chRNA.Expression_snoRNA polyA.IR.Subset_YRI&quot;                            
+[573] &quot;chRNA.Expression_snoRNA chRNA.IER&quot;                                      
+[574] &quot;chRNA.Slopes MetabolicLabelled.60min&quot;                                   
+[575] &quot;chRNA.Slopes polyA.IER&quot;                                                 
+[576] &quot;chRNA.Slopes polyA.IRjunctions&quot;                                         
+[577] &quot;chRNA.Expression_snoRNA chRNA.IRjunctions&quot;                              
+[578] &quot;chRNA.Expression_snoRNA polyA.IER&quot;                                      
+[579] &quot;chRNA.Expression_snoRNA MetabolicLabelled.60min.IRjunctions&quot;            
+[580] &quot;chRNA.Slopes MetabolicLabelled.30min.IRjunctions&quot;                       
+[581] &quot;chRNA.Slopes MetabolicLabelled.60min.IER&quot;                               
+[582] &quot;chRNA.Slopes MetabolicLabelled.60min.IRjunctions&quot;                       </code></pre>
+<pre class="r"><code>dat.tidy %&gt;%
+  filter(PC1 %in% c(&quot;Expression.Splicing.Subset_YRI&quot;, &quot;chRNA.Expression.Splicing&quot;)) %&gt;%
+  separate(Locus, into=c(&quot;Locus&quot;, &quot;Threshold&quot;), sep = &quot;:&quot;) %&gt;%
+  separate(Threshold, into = c(&quot;ColocPhenotypeClass&quot;, &quot;Threshold&quot;), sep=&quot;_&quot;) %&gt;%
+  filter(ColocPhenotypeClass == &quot;&quot;) %&gt;%
+  mutate(GenePeakPair = paste(P1, P2, sep=&quot;;&quot;)) %&gt;%
+  mutate(IsGenePeakPairPromoter = GenePeakPair %in% PeaksToTSS$GenePeakPair) %&gt;%
+  mutate(IsColocalizedGenePeakPromoter = IsColocalizedPair &amp; IsGenePeakPairPromoter) %&gt;%
+  group_by(Locus, P1, PC1, Threshold) %&gt;%
+  summarise(GeneContainsColocalizedGenePeakPromoter = any(IsGenePeakPairPromoter)) %&gt;%
+  group_by(Threshold, PC1) %&gt;%
+  summarise(FractionColocs = sum(GeneContainsColocalizedGenePeakPromoter),
+            eGenesAttemptedToColoc = n() -  sum(GeneContainsColocalizedGenePeakPromoter)) %&gt;%
+  ungroup() %&gt;%
+  gather(&quot;IsColocalized&quot;, &quot;NumberGenes&quot;, FractionColocs, eGenesAttemptedToColoc) %&gt;%
+  ggplot(aes(x=Threshold, y=NumberGenes, fill=IsColocalized)) +
+  geom_col() +
+  facet_wrap(~PC1) +
+  scale_fill_discrete(labels = c(&quot;Yes&quot;, &quot;No&quot;)) +
+  labs(title = &quot;~1/3 eGenes have colocalized chromatin effects at promoter&quot;,
+       y = str_wrap(&quot;Number eGenes&quot;, width=30),
+       fill = str_wrap(&quot;Is eQTL coloc w/ [H3K4ME1|H3K4ME3|H3K27AC] QTL at promoter&quot;, width=20)) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))</code></pre>
+<p><img src="figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>dat.tidy %&gt;%
+  filter(PC1 %in% c(&quot;Expression.Splicing.Subset_YRI&quot;, &quot;chRNA.Expression.Splicing&quot;)) %&gt;%
+  separate(Locus, into=c(&quot;Locus&quot;, &quot;Threshold&quot;), sep = &quot;:&quot;) %&gt;%
+  separate(Threshold, into = c(&quot;ColocPhenotypeClass&quot;, &quot;Threshold&quot;), sep=&quot;_&quot;) %&gt;%
+  filter(ColocPhenotypeClass == &quot;&quot;) %&gt;%
+  mutate(GenePeakPair = paste(P1, P2, sep=&quot;;&quot;)) %&gt;%
+  mutate(IsGenePeakPairPromoter = PC2 %in% c(&quot;H3K4ME3&quot;, &quot;H3K27AC&quot;, &quot;H3K4ME1&quot;)) %&gt;%
+  mutate(IsColocalizedGenePeakPromoter = IsColocalizedPair &amp; IsGenePeakPairPromoter) %&gt;%
+  group_by(Locus, P1, PC1, Threshold) %&gt;%
+  summarise(GeneContainsColocalizedGenePeakPromoter = any(IsGenePeakPairPromoter)) %&gt;%
+  group_by(Threshold, PC1) %&gt;%
+  summarise(FractionColocs = sum(GeneContainsColocalizedGenePeakPromoter),
+            eGenesAttemptedToColoc = n() -  sum(GeneContainsColocalizedGenePeakPromoter)) %&gt;%
+  ungroup() %&gt;%
+  gather(&quot;IsColocalized&quot;, &quot;NumberGenes&quot;, FractionColocs, eGenesAttemptedToColoc) %&gt;%
+  ggplot(aes(x=Threshold, y=NumberGenes, fill=IsColocalized)) +
+  geom_col() +
+  facet_wrap(~PC1) +
+  scale_fill_discrete(labels = c(&quot;Yes&quot;, &quot;No&quot;)) +
+  labs(title = &quot;~4/5 eGenes have colocalized chromatin effects somewhere&quot;,
+       y = str_wrap(&quot;Number eGenes&quot;, width=30),
+       fill = str_wrap(&quot;Is eQTL coloc w/ any [H3K4ME1|H3K4ME3|H3K27AC] QTL&quot;, width=20)) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))</code></pre>
+<p><img src="figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-12-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>dat.tidy %&gt;%
+  filter(PC1 %in% c(&quot;Expression.Splicing.Subset_YRI&quot;, &quot;chRNA.Expression.Splicing&quot;)) %&gt;%
+  separate(Locus, into=c(&quot;Locus&quot;, &quot;Threshold&quot;), sep = &quot;:&quot;) %&gt;%
+  separate(Threshold, into = c(&quot;ColocPhenotypeClass&quot;, &quot;Threshold&quot;), sep=&quot;_&quot;) %&gt;%
+  filter(ColocPhenotypeClass == &quot;&quot;) %&gt;%
+  mutate(GenePeakPair = paste(P1, P2, sep=&quot;;&quot;)) %&gt;%
+  mutate(IsGenePeakPairPromoter = PC2 %in% c(&quot;polyA.Splicing&quot;)) %&gt;%
+  mutate(IsColocalizedGenePeakPromoter = IsColocalizedPair &amp; IsGenePeakPairPromoter) %&gt;%
+  group_by(Locus, P1, PC1, Threshold) %&gt;%
+  summarise(GeneContainsColocalizedGenePeakPromoter = any(IsGenePeakPairPromoter)) %&gt;%
+  group_by(Threshold, PC1) %&gt;%
+  summarise(FractionColocs = sum(GeneContainsColocalizedGenePeakPromoter),
+            eGenesAttemptedToColoc = n() -  sum(GeneContainsColocalizedGenePeakPromoter)) %&gt;%
+  ungroup() %&gt;%
+  gather(&quot;IsColocalized&quot;, &quot;NumberGenes&quot;, FractionColocs, eGenesAttemptedToColoc) %&gt;%
+  ggplot(aes(x=Threshold, y=NumberGenes, fill=IsColocalized)) +
+  geom_col() +
+  facet_wrap(~PC1) +
+  scale_fill_discrete(labels = c(&quot;Yes&quot;, &quot;No&quot;)) +
+  labs(title = &quot;~1/2 eGenes have colocalized sQTL somewhere&quot;,
+       y = str_wrap(&quot;Number eGenes&quot;, width=30),
+       fill = str_wrap(&quot;Is eQTL coloc w/ any poly.sQTL&quot;, width=20)) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))</code></pre>
+<p><img src="figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-12-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok that makes sense for eQTLs, but based on the amount of enrichment of positive tests (ie the pi1 stat), the FDR will correspond to different P value. I thought it was most reasonable to attempt to colocalized based on a Pvalue threshold, but I am sort of now worried about chance colocalizations from false positive QTL signals. Let’s plot histograms of permutation pass Pvalues for all traits, and see how this pvalue threshold corresponds to fdr for different traits:</p>
+<pre class="r"><code>PermutationPassResults &lt;- Sys.glob(&quot;../code/QTLs/QTLTools/*/PermutationPassForColoc.txt.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/QTLs/QTLTools/(.+?)/PermutationPassForColoc.txt.gz&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(read_delim, delim=&#39; &#39;) %&gt;%
+  bind_rows(.id=&quot;Phenotype&quot;) %&gt;%
+  group_by(Phenotype) %&gt;%
+  mutate(q = qvalue(adj_beta_pval)$qvalues)</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  phe_id = col_character(),
+  phe_chr = col_character(),
+  phe_strd = col_character(),
+  var_id = col_character(),
+  var_chr = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre class="r"><code>PermutationPassResults %&gt;%
+  ggplot(aes(x=adj_beta_pval)) +
+  geom_histogram() +
+  facet_wrap(~Phenotype, scales=&quot;free_y&quot;) +
+  theme_classic()</code></pre>
+<pre><code>`stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</code></pre>
+<p><img src="figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>PermutationPassResults %&gt;%
+  ggplot(aes(x=adj_beta_pval)) +
+  geom_histogram() +
+  facet_wrap(~Phenotype, scales=&quot;free_y&quot;, labeller = label_wrap_gen()) +
+  theme_classic()</code></pre>
+<pre><code>`stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</code></pre>
+<p><img src="figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-13-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>PermutationPassResults %&gt;%
+  select(Phenotype, adj_beta_pval, q) %&gt;%
+  group_by(Phenotype) %&gt;%
+  slice(which.min(abs(adj_beta_pval - 0.01)),
+        which.min(abs(adj_beta_pval - 0.005)),
+        which.min(abs(adj_beta_pval - 0.001))) %&gt;%
+  ungroup() %&gt;%
+  arrange(Phenotype, adj_beta_pval) %&gt;%
+  group_by(Phenotype) %&gt;%
+  mutate(ThresholdCondition = row_number()) %&gt;%
+  mutate(Threshold = recode(ThresholdCondition, `1`=&quot;0.001&quot;, `2`=&quot;0.005&quot;, `3`=&quot;0.01&quot;)) %&gt;%
+  ggplot(aes(x=Threshold, y=q)) +
+  geom_col() +
+  facet_wrap(~Phenotype, scales=&quot;free_y&quot;, labeller = labeller(groupwrap = label_wrap_gen(10))) +
+  labs(y=&quot;FDR&quot;, title = &quot;P value thresholds correspond to slightly different FDR&quot;, x=&quot;Permutation nominal P value threshold&quot;) +
+  theme_classic()</code></pre>
+<p><img src="figure/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd/unnamed-chunk-13-3.png" width="672" style="display: block; margin: auto;" /></p>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.6.1 (2019-07-05)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Scientific Linux 7.4 (Nitrogen)
+
+Matrix products: default
+BLAS/LAPACK: /software/openblas-0.2.19-el7-x86_64/lib/libopenblas_haswellp-r0.2.19.so
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+ [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] qvalue_2.16.0     data.table_1.14.2 gplots_3.0.1.1   
+ [4] viridis_0.5.1     viridisLite_0.3.0 forcats_0.4.0    
+ [7] stringr_1.4.0     dplyr_0.8.3       purrr_0.3.4      
+[10] readr_1.3.1       tidyr_1.1.0       tibble_2.1.3     
+[13] ggplot2_3.3.5     tidyverse_1.3.0  
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_1.0.5         lubridate_1.7.4    lattice_0.20-38   
+ [4] gtools_3.8.1       utf8_1.1.4         assertthat_0.2.1  
+ [7] rprojroot_2.0.2    digest_0.6.20      plyr_1.8.4        
+[10] R6_2.4.0           cellranger_1.1.0   backports_1.1.4   
+[13] reprex_0.3.0       evaluate_0.14      httr_1.4.1        
+[16] pillar_1.4.2       rlang_0.4.10       readxl_1.3.1      
+[19] rstudioapi_0.10    gdata_2.18.0       rmarkdown_1.13    
+[22] labeling_0.3       splines_3.6.1      munsell_0.5.0     
+[25] broom_0.5.2        compiler_3.6.1     httpuv_1.5.1      
+[28] modelr_0.1.8       xfun_0.8           pkgconfig_2.0.2   
+[31] htmltools_0.3.6    tidyselect_1.1.0   gridExtra_2.3     
+[34] workflowr_1.6.2    fansi_0.4.0        crayon_1.3.4      
+[37] dbplyr_1.4.2       withr_2.4.1        later_0.8.0       
+[40] bitops_1.0-6       grid_3.6.1         nlme_3.1-140      
+[43] jsonlite_1.6       gtable_0.3.0       lifecycle_0.1.0   
+[46] DBI_1.1.0          git2r_0.26.1       magrittr_1.5      
+[49] scales_1.1.0       KernSmooth_2.23-15 cli_2.2.0         
+[52] stringi_1.4.3      farver_2.1.0       reshape2_1.4.3    
+[55] fs_1.3.1           promises_1.0.1     xml2_1.3.2        
+[58] ellipsis_0.2.0.1   generics_0.0.2     vctrs_0.3.1       
+[61] tools_3.6.1        glue_1.3.1         hms_0.5.3         
+[64] yaml_2.2.0         colorspace_1.4-1   caTools_1.17.1.2  
+[67] rvest_0.3.5        knitr_1.23         haven_2.3.1       </code></pre>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+http://docs.mathjax.org/en/latest/configuration.html.  This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

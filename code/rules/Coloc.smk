@@ -152,14 +152,15 @@ rule genewise_coloc_chunk:
     resources:
         mem_mb = lambda wildcards, attempt: 32000 if int(attempt) == 1 else 42000
     params:
-        PhenotypesToColoc = GetMolPhenotypesToColoc
+        PhenotypesToColoc = GetMolPhenotypesToColoc,
+        Threshold = lambda wildcards: colocs_df.loc[wildcards.ColocName]['Threshold']
     log:
         "logs/gwas_coloc_chunk/{FeatureCoordinatesRedefinedFor}/{ColocName}/{n}.log"
     conda:
         "../envs/r_hyprcoloc.yml"
     shell:
         """
-        Rscript scripts/hyprcoloc_genewise.R {input.summarystatslist} {output.clusters} {output.snpscores} '{params.PhenotypesToColoc}' &> {log}
+        Rscript scripts/hyprcoloc_genewise2.R {input.summarystatslist} {output.clusters} {output.snpscores} {params.Threshold} '{params.PhenotypesToColoc}' &> {log}
         """
 
 rule Gather_gwas_coloc_chunks:
@@ -184,7 +185,7 @@ use rule Gather_gwas_coloc_chunks as Gather_genewise_coloc_chunks with:
         FeatureCoordinatesRedefinedFor = "ForColoc",
         ColocName = '|'.join(colocs_genewise.index)
     params:
-        header = "GeneLocus\tHyprcolocIteration\tColocalizedTraits\tPosteriorColocalizationPr\tRegionalAssociationPr\tTopCandidateSNP\tProportionPosteriorPrExplainedByTopSNP\tDroppedTrait"
+        header = "GeneLocus\tHyprcolocIteration\tPosteriorColocalizationPr\tRegionalAssociationPr\tTopCandidateSNP\tProportionPosteriorPrExplainedByTopSNP\tTrait"
 
 use rule Gather_gwas_coloc_chunks as Gather_genewise_coloc_chunks_snpscores with:
     input:
