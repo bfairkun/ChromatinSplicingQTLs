@@ -172,7 +172,8 @@ def GetQTLtoolsFlags(wildcards):
         # using --window 0 sometimes results in errors (exit code 139). No idea why
         return "--window 1"
     else:
-        if wildcards.Phenotype in ["polyA.Splicing", "chRNA.Splicing", "polyA.Splicing.Subset_YRI"]:
+        if wildcards.Phenotype in ["polyA.Splicing", "chRNA.Splicing", "polyA.Splicing.Subset_YRI", 
+        "MetabolicLabelled.30min.Splicing", "MetabolicLabelled.60min.Splicing"]:
             return "--grp-best --window 10000"
         elif wildcards.Phenotype.split('.')[-1] in ['5PrimeSS', '3PrimeSS']:
             return "--window 0"

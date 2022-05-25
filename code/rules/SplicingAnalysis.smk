@@ -307,6 +307,8 @@ rule GetSpliceSitePhenotypes:
         flags = GetSkippedSamples
     conda:
         "../envs/py_tools.yml"
+    resources:
+        mem = 32000,
     shell:
         """
         python scripts/GetSpliceSitesFromLeafcutter.py --counts {input} --output QTLs/QTLTools/{wildcards.Phenotype} {params.flags} &> {log}
@@ -540,6 +542,8 @@ rule CollectSPLICEq_chRNA:
     wildcard_constraints:
         mode = 'IRjunctions|IER',
         Phenotype = 'chRNA'
+    resources:
+        mem_mb = 32000
     params:
         "NA18855"
     conda:

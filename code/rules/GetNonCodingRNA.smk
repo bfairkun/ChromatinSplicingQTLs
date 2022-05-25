@@ -5,6 +5,7 @@ rule get_eRNA_saf:
         "ProCapAnalysis/CountTable.hg38.features.bed",
     output:
         "../data/eRNA.saf",
+        "../data/eRNA_both_strands.saf",
     log:
         "logs/eRNA_reference.log"
     shell:
@@ -34,17 +35,29 @@ rule get_cheRNA_saf:
         python scripts/get_cheRNA_saf.py &> {log}
         """
 
+def FeatureCountsNonCodingStrandParams(wildcards):
+    if wildcards.Phenotype == 'chRNA.Expression':
+        return "-s 2"
+    else:
+        return ""
+        
+def SAFeRNAForPhenotype(wildcards):
+    if wildcards.Phenotype == 'chRNA.Expression':
+        return "../data/eRNA_both_strands.saf"
+    else:
+        return "../data/eRNA.saf"
 
 rule featureCountsNonCoding:
     input:
         bam = GetBamForPhenotype,
-        eRNA = "../data/eRNA.saf",
+        eRNA = SAFeRNAForPhenotype,
         cheRNA = "../data/cheRNA_K562_GSE83531.saf",
     output:
         "featureCounts/{Phenotype}_eRNA/Counts.txt",
         "featureCounts/{Phenotype}_cheRNA/Counts.txt",
     params:
         extraParams = PairedEndParams,
+        strandParams = FeatureCountsNonCodingStrandParams
     threads:
         8
     wildcard_constraints:
@@ -56,8 +69,8 @@ rule featureCountsNonCoding:
         "logs/featureCounts/{Phenotype}"
     shell:
         """
-        featureCounts {params.extraParams} -F SAF -T {threads} --ignoreDup --primary -a {input.eRNA} -o featureCounts/{wildcards.Phenotype}_eRNA/Counts.txt {input.bam} &> {log}.eRNA.log;
-        featureCounts {params.extraParams} -F SAF -T {threads} --ignoreDup --primary -a {input.cheRNA} -o featureCounts/{wildcards.Phenotype}_cheRNA/Counts.txt {input.bam} &> {log}.cheRNA.log
+        featureCounts {params.extraParams} {params.strandParams} -F SAF -T {threads} --ignoreDup --primary -a {input.eRNA} -o featureCounts/{wildcards.Phenotype}_eRNA/Counts.txt {input.bam} &> {log}.eRNA.log;
+        featureCounts {params.extraParams} {params.strandParams} -F SAF -T {threads} --ignoreDup --primary -a {input.cheRNA} -o featureCounts/{wildcards.Phenotype}_cheRNA/Counts.txt {input.bam} &> {log}.cheRNA.log
         """
 
 

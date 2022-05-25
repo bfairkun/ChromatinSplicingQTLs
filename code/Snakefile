@@ -99,7 +99,7 @@ rule all:
         ####"ReferenceGenome/Annotations/GTFTools_BasicAnnotations/gencode.v34.chromasomal.tss.bed",
         expand(
             "featureCounts/AtTSS/{Phenotype}/Counts.txt",
-            Phenotype=["H3K27AC", "H3K4ME3", "H3K36ME3", "H3K4ME1"],
+            Phenotype=["H3K27AC", "H3K4ME3", "H3K36ME3", "H3K4ME1", "ProCap"],
         ),
         ####expand(
         ####    "featureCounts/{Phenotype}/Counts.txt",
@@ -187,21 +187,16 @@ rule chRNAGetSlopes:
     Get slopes for chRNA-seq data. 
     """
     input:
-        expand(
-            "IntronSlopes/IntronWindowCounts/{IndID}.{windowStyle}.bed.gz",
-            IndID=chRNASeqSamples,
-            windowStyle=["IntronWindows_equalLength", "IntronWindows"],
-        ),
-        expand(
-            "IntronSlopes/slopes/{IndID}.{windowStyle}.tab.gz",
-            IndID=chRNASeqSamples, windowStyle = ["IntronWindows_equalLength", "IntronWindows"]
-        ),
-        #expand(
-        #    "IntronSlopes/slopes/{IndID}.{windowStyle}.glm_nb.tab.gz",
-        #    IndID=chRNASeqSamples, windowStyle = ["IntronWindows_equalLength", "IntronWindows"]
-        #),
         "QTLs/QTLTools/chRNA.Slopes/OnlyFirstReps.qqnorm.bed.gz",
-        "QTLs/QTLTools/chRNA.Slopes/PermutationPass.FDR_Added.txt.gz"
+        'QTLs/QTLTools/chRNA.Slopes/OnlyFirstReps.Slopes.bed.gz',
+        'QTLs/QTLTools/chRNA.Slopes/OnlyFirstReps.Intercept.bed.gz',
+        "QTLs/QTLTools/chRNA.Slopes/OnlyFirstReps.qqnorm.bed.gz",
+        "QTLs/QTLTools/chRNA.Slopes/PermutationPass.FDR_Added.txt.gz",
+        "QTLs/QTLTools/chRNA.Slopes.All/OnlyFirstReps.qqnorm.bed.gz",
+        'QTLs/QTLTools/chRNA.Slopes.All/OnlyFirstReps.Slopes.bed.gz',
+        'QTLs/QTLTools/chRNA.Slopes.All/OnlyFirstReps.Intercept.bed.gz',
+        "QTLs/QTLTools/chRNA.Slopes.All/OnlyFirstReps.qqnorm.bed.gz",
+        "QTLs/QTLTools/chRNA.Slopes.All/PermutationPass.FDR_Added.txt.gz"
         
         
 rule testSpliceq:
@@ -230,12 +225,12 @@ rule SpliceSitePhenotypes:
     input:
         expand(
             "QTLs/QTLTools/{Phenotype}.{Prime}/NominalPass.txt.gz",
-            Phenotype = ['chRNA.Splicing', 'polyA.Splicing', 'H3K4ME1', 'H3K4ME3', 'H3K27AC'],
+            Phenotype = ['chRNA.Splicing', 'polyA.Splicing', 'H3K4ME1', 'H3K4ME3', 'H3K27AC', 'H3K36ME3'],
             Prime = ['5PrimeSS', '3PrimeSS']
         ),
         expand(
             "featureCounts/{Phenotype}.{SpliceSite}/Counts.txt",
-            Phenotype = ['H3K4ME1', 'H3K4ME3', 'H3K27AC'],
+            Phenotype = ['H3K4ME1', 'H3K4ME3', 'H3K27AC', 'H3K36ME3'],
             SpliceSite = ['5PrimeSS', '3PrimeSS']
         ),
         expand(
@@ -246,7 +241,7 @@ rule SpliceSitePhenotypes:
         ),
         expand(
             "QTLs/QTLTools/{Phenotype}.{Prime}.Peaks/NominalPass.txt.gz",
-            Phenotype = ['H3K4ME1', 'H3K4ME3', 'H3K27AC', 'CTCF', 'H3K36ME3'],
+            Phenotype = ['H3K4ME1', 'H3K4ME3', 'H3K27AC', 'CTCF'],#, 'H3K36ME3'],
             Prime = ['5PrimeSS', '3PrimeSS']
         ),
         expand("QTLs/QTLTools/{Phenotype}/PermutationPass.FDR_Added.txt.gz", 
@@ -260,4 +255,23 @@ rule SpliceSitePhenotypes:
         #"QTLs/QTLTools/chRNA.Splicing.3PrimeSS/PermutationPass.FDR_Added.txt.gz",
         #"QTLs/QTLTools/polyA.Splicing.5PrimeSS/PermutationPass.FDR_Added.txt.gz",
         #"QTLs/QTLTools/polyA.Splicing.3PrimeSS/PermutationPass.FDR_Added.txt.gz",
+        
+rule eRNA_rules:
+    input:
+        "../data/eRNA.saf",
+        expand(
+            "featureCounts/{Phenotype}_{ncRNA}/Counts.txt",
+            Phenotype=[
+                "polyA.Expression",
+                "chRNA.Expression",
+                "MetabolicLabelled.30min",
+                "MetabolicLabelled.60min",
+                "ProCap"
+            ],
+            ncRNA=["eRNA", "cheRNA", "lncRNA", "snoRNA"],#, "introns"],
+        ),
+        expand(
+          "QTLs/QTLTools/chRNA.Expression_{ncRNA}/OnlyFirstReps.qqnorm.bed.gz",
+          ncRNA = ["eRNA", "cheRNA", "snoRNA", "lncRNA"]
+        ),
 
