@@ -17,12 +17,15 @@ include: "rules/QTLTools.smk"
 include: "rules/Coloc.smk"
 include: "rules/report.smk"
 include: "rules/BensJupyterNotebookRules.smk"
-include: "rules/GetNonCodingRNA.smk"
+include: "rules/NonCodingRNA.smk"
 include: "rules/GWAS_PrepForColoc.smk"
 include: "rules/chRNASeqSlopes.smk"
 include: "rules/ProcessTehranchi.smk"
 include: "rules/PlotQTLs.smk"
 include: "rules/CalculateExonicPSI.smk"
+include: "rules/DeNovoAssembly.smk"
+include: "rules/IntronRetention.smk"
+include: "rules/SpliceSiteMutation.smk"
 
 
 wildcard_constraints:
@@ -140,6 +143,10 @@ rule all:
         "QTLs/QTLTools/polyA.IR/OnlyFirstReps.qqnorm.bed.gz",
         "SplicingAnalysis/IR/ProCap/Counts.txt",
         expand("QTLs/QTLTools/{Phenotype}/PermutationPass.FDR_Added.txt.gz", Phenotype=MyPhenotypes),
+        expand("QTLs/QTLTools/{Phenotype}/PermutationPass.FDR_Added.txt.gz", 
+        Phenotype=["MetabolicLabelled.30min.IR", "MetabolicLabelled.60min.IR",
+                   "MetabolicLabelled.30min.Splicing", "MetabolicLabelled.60min.Splicing"]
+        ),
         expand("QTLs/QTLTools/{Phenotype}/PermutationPassForColoc.txt.gz", Phenotype=MyPhenotypes),
         expand("hyprcoloc/Results/ForColoc/{ColocName}/tidy_results_OnlyColocalized.txt.gz", ColocName = colocs_genewise.index),
         expand("QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.tabix.gz", Pass="NominalPass", QTLsGenotypeSet="", FeatureCoordinatesRedefinedFor="ForColoc", Phenotype=MyPhenotypes),
@@ -228,6 +235,8 @@ rule SpliceSitePhenotypes:
             Phenotype = ['chRNA.Splicing', 'polyA.Splicing', 'H3K4ME1', 'H3K4ME3', 'H3K27AC', 'H3K36ME3'],
             Prime = ['5PrimeSS', '3PrimeSS']
         ),
+        "QTLs/QTLTools/polyA.Splicing.5PrimeSS.Subset_YRI/NominalPass.txt.gz",
+        "QTLs/QTLTools/polyA.Splicing.3PrimeSS.Subset_YRI/NominalPass.txt.gz",
         expand(
             "featureCounts/{Phenotype}.{SpliceSite}/Counts.txt",
             Phenotype = ['H3K4ME1', 'H3K4ME3', 'H3K27AC', 'H3K36ME3'],
@@ -239,15 +248,11 @@ rule SpliceSitePhenotypes:
         'chRNA.Expression_lncRNA', 'H3K27AC.3PrimeSS', 'H3K27AC.5PrimeSS', 'H3K4ME3.3PrimeSS', 'H3K4ME3.5PrimeSS',
         'H3K4ME1.3PrimeSS', 'H3K4ME1.5PrimeSS', 'H3K36ME3.5PrimeSS', 'H3K36ME3.3PrimeSS']
         ),
-        expand(
-            "QTLs/QTLTools/{Phenotype}.{Prime}.Peaks/NominalPass.txt.gz",
-            Phenotype = ['H3K4ME1', 'H3K4ME3', 'H3K27AC', 'CTCF'],#, 'H3K36ME3'],
-            Prime = ['5PrimeSS', '3PrimeSS']
-        ),
-        expand("QTLs/QTLTools/{Phenotype}/PermutationPass.FDR_Added.txt.gz", 
-        Phenotype=["MetabolicLabelled.30min.IR", "MetabolicLabelled.60min.IR",
-                   "MetabolicLabelled.30min.Splicing", "MetabolicLabelled.60min.Splicing"]
-        )
+        #expand(
+        #    "QTLs/QTLTools/{Phenotype}.{Prime}.Peaks/NominalPass.txt.gz",
+        #    Phenotype = ['H3K4ME1', 'H3K4ME3', 'H3K27AC', 'CTCF'],
+        #    Prime = ['5PrimeSS', '3PrimeSS']
+        #),
         #"QTLs/QTLTools/chRNA.Splicing.3PrimeSS/NominalPass.txt.gz",
         #"QTLs/QTLTools/polyA.Splicing.5PrimeSS/NominalPass.txt.gz",
         #"QTLs/QTLTools/polyA.Splicing.3PrimeSS/NominalPass.txt.gz",
@@ -255,6 +260,10 @@ rule SpliceSitePhenotypes:
         #"QTLs/QTLTools/chRNA.Splicing.3PrimeSS/PermutationPass.FDR_Added.txt.gz",
         #"QTLs/QTLTools/polyA.Splicing.5PrimeSS/PermutationPass.FDR_Added.txt.gz",
         #"QTLs/QTLTools/polyA.Splicing.3PrimeSS/PermutationPass.FDR_Added.txt.gz",
+        
+rule assembly:
+    input:
+        "ReferenceGenome/Annotations/Assembly/chRNA.Expression.Splicing.stringtie.assembly.gtf",
         
 rule eRNA_rules:
     input:

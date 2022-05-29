@@ -44,7 +44,7 @@ def combine_dataframe(samples, windowStyle, skip_introns, max_missing=0.1, top_i
 def qqnorm_slopes(df_slopes):
     
     imputer = SimpleImputer()
-    imputed_df = pd.DataFrame(imputer.fit_transform(df_slopes).T).T
+    imputed_df = pd.DataFrame(imputer.fit_transform(df_slopes.T)).T
     
     imputed_df.columns = df_slopes.columns 
     imputed_df.index = df_slopes.index

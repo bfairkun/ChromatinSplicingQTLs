@@ -13,6 +13,7 @@ samples: samples.tsv
 # This executable was compiled on RCC Midway and requires `module load
 # gsl/2.5`. I put that module load statement in my bashrc
 QTLtools: "scripts/QTLtools"
+stringtie: "scripts/stringtie"
 
 # key for faster downloading of public fastq samples with aspera instead of
 # ftp.  Leave blank if not using aspera. wget/curl can be used with ftp/http

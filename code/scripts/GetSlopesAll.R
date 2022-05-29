@@ -97,11 +97,12 @@ CoverageFits.df <- Counts.EqualSizeBins %>%
   filter(IntronName %in% IntronsToGetSlope) %>% #filter(Readcount >= 1) %>%
    ## See if we can make length independent
   #mutate(RelativeIntronPosInBp = Window*WinLen) %>% ##### This is what we were doing with equalLength
-  mutate(RelativeIntronPosInBp =  Window*WinLen) %>%
+  mutate(RelativeIntronPosInBp =  (Window*WinLen)/IntronLength) %>%
+  mutate(logCounts =  log1p(Readcount)) %>%
   #mutate(RelativeIntronPosInBp = Window/100) %>%
   # sample_n_of(9, IntronName) %>%
   group_by(IntronName) %>%
-  mutate(NormCounts = scale(Readcount)) %>%
+  mutate(NormCounts = scale(logCounts)) %>%
   do(CoverageFit = rlm(NormCounts ~ RelativeIntronPosInBp, data = ., maxit=40)) %>%
   summarise(IntronName, tidy(CoverageFit))
     
@@ -159,3 +160,11 @@ CoverageFits.df.tidy %>%
   mutate(IsSlopeNegative = Slope < 0 ) %>%
   write_delim(paste('IntronSlopes/AllSlopes/', SampleName, '.', windowStyle, '.tab.gz', sep=''), delim = '\t')
             
+
+
+
+
+
+#mutate(RelativeIntronPosInBp =  Window*WinLen) %>%
+# group_by(IntronName) %>%
+#  mutate(NormCounts = scale(Readcount)) %>%

@@ -64,7 +64,7 @@ rule GetSamplesVcfByChrom:
         vcf = "QTLs/QTLTools/{Phenotype}/Genotypes/{chrom}.vcf.gz",
         tbi = "QTLs/QTLTools/{Phenotype}/Genotypes/{chrom}.vcf.gz.tbi"
     resources:
-        mem_mb = 8000
+        mem_mb = 16000
     log:
         "logs/GetSamplesVcfByChrom/{Phenotype}/{chrom}.log"
     params:
@@ -176,6 +176,8 @@ def GetQTLtoolsFlags(wildcards):
         "MetabolicLabelled.30min.Splicing", "MetabolicLabelled.60min.Splicing"]:
             return "--grp-best --window 10000"
         elif wildcards.Phenotype.split('.')[-1] in ['5PrimeSS', '3PrimeSS']:
+            return "--window 0"
+        elif ('5PrimeSS' in wildcards.Phenotype) or ('3PrimeSS' in wildcards.Phenotype):
             return "--window 0"
         elif wildcards.Phenotype in ["chRNA.IR", "polyA.IR", "chRNA.IER", "polyA.IER", "MetabolicLabelled.30min.IER", "MetabolicLabelled.60min.IER"]:
             return "--window 10000"
