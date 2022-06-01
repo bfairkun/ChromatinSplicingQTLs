@@ -4,11 +4,21 @@
 # and colocalization. '' will use intersection of SNPs for colocalization
 # FeatureCoordinatesRedefinedFor is ['ForColoc'|'ForGWASColoc']. ForColoc is
 # for gene-wise molQTL colocalization. ForGWASColoc is for GWAS-locus-wise
-# colocalization MolPhenotypesToColoc is an optional space separated list of
-# mol Phenotype wildcards to include in colocalization. If none is provided,
-# will default to PhenotypesToColoc in common.py
-ColocName	QTLsGenotypeSet	FeatureCoordinatesRedefinedFor	MolPhenotypesToColoc
-MolColocStandard		ForColoc	
-GWASColocStandard		ForGWASColoc	
-GWASColoc_AllRNASeq		ForGWASColoc	chRNA.IR chRNA.Expression.Splicing H3K27AC CTCF H3K4ME3 chRNA.Splicing MetabolicLabelled.30min MetabolicLabelled.60min Expression.Splicing.Subset polyA.Splicing.Subset polyA.IR.Subset chRNA.Expression_cheRNA chRNA.Expression_eRNA chRNA.Expression_lncRNA chRNA.Expression_snoRNA
+# colocalization. Threshold defines the permutation pass p value threshold to
+# attempt colocalization with a molQTL phenotype. MolPhenotypesToColoc is an
+# optional space separated list of mol Phenotype wildcards to include in
+# colocalization. If none is provided, will default to PhenotypesToColoc in
+# common.py.
+ColocName	QTLsGenotypeSet	FeatureCoordinatesRedefinedFor	Threshold	MolPhenotypesToColoc
+MolColocTesteQTL_01		ForColoc	0.01	MetabolicLabelled.30min MetabolicLabelled.60min Expression.Splicing.Subset_YRI
+MolColocTesteQTL_005		ForColoc	0.005	MetabolicLabelled.30min MetabolicLabelled.60min Expression.Splicing.Subset_YRI
+MolColocTesteQTL_001		ForColoc	0.001	MetabolicLabelled.30min MetabolicLabelled.60min Expression.Splicing.Subset_YRI
+# MolColocTesteQTL_0001		ForColoc	0.0005	MetabolicLabelled.30min MetabolicLabelled.60min Expression.Splicing.Subset_YRI
+MolColocTest_01		ForColoc	0.01	
+MolColocTest_005		ForColoc	0.005	
+MolColocTest_001		ForColoc	0.001	
+# MolColocTest_0001		ForColoc	0.0005	
+MolColocStandard		ForColoc	0.01	
+GWASColocStandard		ForGWASColoc	0.01	
+GWASColoc_AllRNASeq		ForGWASColoc	0.01	chRNA.IR chRNA.Expression.Splicing H3K27AC CTCF H3K4ME3 chRNA.Splicing MetabolicLabelled.30min MetabolicLabelled.60min Expression.Splicing.Subset_YRI polyA.Splicing.Subset polyA.IR.Subset_YRI chRNA.Expression_cheRNA chRNA.Expression_eRNA chRNA.Expression_lncRNA chRNA.Expression_snoRNA
 

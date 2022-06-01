@@ -67,3 +67,40 @@ rule PreparePhenotypeTableForQTLToolsFromWellFormatedCountTable:
         Rscript scripts/PreparePhenotypeTableFromWellFormattedTable.R {input} {output} &> {log}
         """
 
+rule CalculatePeaksClosestToTSS:
+    """
+    take annotated TSSs (there may be multiple per gene) and find closest
+    existing peak call for which we called QTLs. Also do this after using
+    bedtools shuffle as a control.
+    """
+    input:
+        chromatin_peaks = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.gz",
+        TSS = "ReferenceGenome/Annotations/GTFTools/gencode.v34.chromasomal.tss.bed",
+        fai = "ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa.fai"
+    output:
+        real = "Misc/PeaksClosestToTSS/{Phenotype}_real.bed.gz",
+        permuted = "Misc/PeaksClosestToTSS/{Phenotype}_permuted.bed.gz"
+    wildcard_constraints:
+        Phenotype = "|".join(["H3K4ME3", "H3K27AC", "H3K4ME1"])
+    shell:
+        """
+        awk -v OFS='\\t' '{{print "chr"$1,$2,$3, $6, ".", $4}}' {input.TSS} | sort | uniq  |  bedtools sort -i - | bedtools closest -a - -b <(zcat {input.chromatin_peaks} | awk -F'\\t' -v OFS='\\t' 'NR>1 {{print $1,$2,$3,$4}}' | bedtools shuffle -i - -g {input.fai} | bedtools sort -i -  ) -D a | gzip - > {output.permuted}
+        awk -v OFS='\\t' '{{print "chr"$1,$2,$3, $6, ".", $4}}' {input.TSS} | sort | uniq  |  bedtools sort -i - | bedtools closest -a - -b <(zcat {input.chromatin_peaks} | awk -F'\\t' -v OFS='\\t' 'NR>1 {{print $1,$2,$3,$4}}' ) -D a | gzip - >  {output.real}
+        """
+
+rule AssignPeaksToTSS:
+    """
+    Based on manually inspecting the distance between peaks and TSS
+    """
+    input:
+        real = "Misc/PeaksClosestToTSS/{Phenotype}_real.bed.gz",
+    output:
+        mappings = "Misc/PeaksClosestToTSS/{Phenotype}_assigned.tsv.gz"
+    shell:
+        """
+        zcat {input.real} | awk -F '\\t' -v OFS='\\t' 'BEGIN {{print "chrom", "TSS_start", "gene", "strand", "peak", "distance"}} $NF<=500 && $NF>=-500 {{print $1, $2, $4, $6, $10, $NF}}' | gzip - > {output}
+        """
+
+rule GatherPeaksClosestToTSS:
+    input:
+        expand("Misc/PeaksClosestToTSS/{Phenotype}_assigned.tsv.gz", Phenotype=["H3K4ME3", "H3K27AC", "H3K4ME1"])

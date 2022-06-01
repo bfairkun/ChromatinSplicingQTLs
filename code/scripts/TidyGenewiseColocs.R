@@ -44,17 +44,15 @@ GetSummaryStats <- function(df){
         return()
 }
 
-dat <- read_tsv(f_in, col_names = c("Locus", "iteration", 'ColocalizedTraits', 'ColocPr', 'RegionalPr', "topSNP", "TopSNPFinemapPr", "DroppedTrait"), skip=1) %>%
-  filter(!ColocalizedTraits == "None") %>%
-  separate_rows(ColocalizedTraits, sep = ', ') %>%
-  group_by(Locus)
-  # sample_n_groups(100)
+dat <- read_tsv(f_in, col_names = c("Locus", "iteration", 'ColocPr', 'RegionalPr', "topSNP", "TopSNPFinemapPr", "ColocalizedTraits"), skip=1) %>%
+  filter(!is.na(topSNP)) %>%
+  group_by(Locus) %>%
+  sample_n_groups(100)
 
 Split.list <- setNames(group_split(dat), deframe(group_keys(dat)))
 
 Split.list.w.summarystats <- lapply(Split.list, GetSummaryStats)
 
 bind_rows(Split.list.w.summarystats, .id="Locus") %>%
-    select(-DroppedTrait) %>%
     write_tsv(f_out)
 

@@ -249,6 +249,7 @@ def GetMolPhenotypesToColoc(wildcards):
     else:
         return ProvidedMolPhenotypeList
 
+
 def GetColocTsvFormattedString(string):
     """
     return a snakemake input function that returns formatted string with wildcard values that match colocs_df based on ColocName index wildcard
