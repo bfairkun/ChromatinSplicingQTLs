@@ -16,7 +16,3 @@ rule Stringtie:
         """
         {config[stringtie]} --rf -c 10 -f 0.99 -t -m 2000 -v -o {output} -p {threads} -G {input.gtf} Alignments/STAR_Align/chRNA.Expression.Splicing/NA19153/1/Filtered.bam &> {log}
         """
-        #"""
-        #{config[stringtie]} -v -o {output} -p {threads} -G {input.gtf} {input.bam} &> {log}
-        #"""
-        

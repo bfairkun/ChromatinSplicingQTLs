@@ -26,6 +26,7 @@ include: "rules/CalculateExonicPSI.smk"
 include: "rules/DeNovoAssembly.smk"
 include: "rules/IntronRetention.smk"
 include: "rules/SpliceSiteMutation.smk"
+include: "rules/DeNovoNonCodingRNA.smk"
 
 
 wildcard_constraints:
@@ -55,6 +56,7 @@ localrules:
     Download_hg19_to_hg38_chain,
     DownloadHg38Gencode_basic,
     DownloadKristjansdottirSupplementData2,
+    DownloadProSeq,
 
 
 ruleorder: CopyFastqFromLocal > DownloadFastqFromLink
@@ -189,6 +191,9 @@ rule CollectDownloadGWAS_SummaryStats:
     input:
         expand("gwas_summary_stats/full_data/{accession}.tsv.gz", accession=gwas_df.index)
 
+
+#### Test rules
+
 rule chRNAGetSlopes:
     """
     Get slopes for chRNA-seq data. 
@@ -284,3 +289,16 @@ rule eRNA_rules:
           ncRNA = ["eRNA", "cheRNA", "snoRNA", "lncRNA"]
         ),
 
+rule getHMMInput:
+    input:
+        ##expand("NonCodingRNA/chRNA_counts/{chrom}.{IndID}.{strand}.bed.gz",
+        ##    chrom=chrom_list, IndID = chRNASeqSamples[:10], strand=['minus', 'plus']
+        ##    ),
+        #expand("NonCodingRNA/counts/chRNA/chr1.{IndID}.{strand}.bed.gz",
+        #    IndID = chRNASeqSamples[:10], strand=['minus', 'plus'],
+        #    ),
+        #expand("NonCodingRNA/counts/ProSeq/chr1.{IndID}.{strand}.bed.gz",
+        #    IndID = proseq_samples[:3], strand = ['minus', 'plus']
+        #    )
+        expand("NonCodingRNA/tables/{chrom}.{strand}.counts.tab.gz",
+                chrom = chrom_list, strand = ['minus', 'plus'])

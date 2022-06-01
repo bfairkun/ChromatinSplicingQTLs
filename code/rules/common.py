@@ -77,6 +77,11 @@ polyAsamples = list(Fastq_samples.loc[ (Fastq_samples['Phenotype']=='Expression.
 metabolic30samples = list(Fastq_samples.loc[ (Fastq_samples['Phenotype']=='MetabolicLabelled.30min') ].drop_duplicates().IndID)
 metabolic60samples = list(Fastq_samples.loc[ (Fastq_samples['Phenotype']=='MetabolicLabelled.60min') ].drop_duplicates().IndID)
 
+
+
+proseq_samples = ['GM18505', 'GM19239', 'GM19238', 'GM19222', 'GM19193', 'GM19131', 'GM19099', 'GM18522', 'GM18520', 'GM18517']
+chrom_list = ['chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13', 'chr14',
+        'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr21', 'chr22', 'chrX']
 # print(ChromatinProfilingPhenotypes)
 
 # Retrieve samples where
@@ -257,3 +262,13 @@ def much_more_mem_after_first_attempt(wildcards, attempt):
         return 4000
     else:
         return 52000
+
+def GetBigwigForDeeptToolscheRNA(wildcards):
+    template = 'bigwigs/chRNA.Expression.Splicing_stranded/{IndID}.1.{strand}.bw'
+    # needed for as long as strands are swapped
+    if wildcards.strand == 'plus':
+        strand = 'minus'
+    else:
+        strand = 'plus'
+    bw = template.format(IndID = wildcards.IndID, strand = strand)
+    return bw
