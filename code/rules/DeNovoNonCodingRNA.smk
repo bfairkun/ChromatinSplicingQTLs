@@ -46,7 +46,7 @@ rule LiftOverProSeq:
         "logs/liftover.{IndID}.{strand}.log"
     shell:
         """
-        liftOver {input.bedgraph} {input.chain} ProSeq/bedgraph/{wildcards.IndID}.{wildcards.strand}.hg38.bedgraph ProSeq/unmapped &> {log}
+        liftOver {input.bedgraph} {input.chain} ProSeq/bedgraph/{wildcards.IndID}.{wildcards.strand}.hg38.bedgraph ProSeq/unmapped &> {log};
         gzip ProSeq/bedgraph/{wildcards.IndID}.{wildcards.strand}.hg38.bedgraph
         """
 
@@ -94,7 +94,7 @@ rule SplitBamByChromosome:
         IndID = "|".join(chRNASeqSamples),
         chrom = "|".join(chrom_list),
     resources:
-        mem_mb = 42000
+        mem_mb = 58000
     log:
         "logs/NonCodingRNA/split_bam.{IndID}.{chrom}.log"
     shell:
@@ -108,7 +108,7 @@ rule WindowCountsChRNA:
         bam = "NonCodingRNA/bam/{IndID}.{chrom}.bam",
         chrom_bed = "NonCodingRNA/bed/{chrom}.windows.{strand}.bed.gz"
     output:
-        temp("NonCodingRNA/counts/chRNA/{chrom}.{IndID}.{strand}.bed.gz")
+        "NonCodingRNA/counts/chRNA/{chrom}.{IndID}.{strand}.bed.gz"
     wildcard_constraints:
         IndID = "|".join([x for x in chRNASeqSamples if x != "NA18855"]),
         chrom = "|".join(chrom_list),
@@ -127,7 +127,7 @@ rule WindowCountsProSeq:
         windows_bed = "NonCodingRNA/bed/{chrom}.windows.{strand}.bed.gz",
         proseq_bed = "ProSeq/bedgraph/{IndID}.{strand}.hg38.bedgraph.gz"
     output:
-        temp("NonCodingRNA/counts/ProSeq/{chrom}.{IndID}.{strand}.bed.gz")
+        "NonCodingRNA/counts/ProSeq/{chrom}.{IndID}.{strand}.bed.gz"
     wildcard_constraints:
         IndID = "|".join(proseq_samples),
         chrom = "|".join(chrom_list),
@@ -155,13 +155,29 @@ rule MakeInputForHMM:
     log:
         "logs/NonCodingRNA/make_input_for_hmm.{chrom}.{strand}.log"
     resources:
-        mem_mb = 24000
+        mem_mb = 58000
     shell:
         """
         python scripts/MakeInputForHMM.py --chrom {wildcards.chrom} --counts_dir NonCodingRNA/counts/ --strand {wildcards.strand} --output {output} > {log}
         """
 
-#rule RunHMM:
+rule RunHMM:
+    input:
+        "NonCodingRNA/tables/{chrom}.{strand}.counts.tab.gz"
+    output:
+        "NonCodingRNA/tables/{chrom}.{strand}.predicted.tab.gz"
+    wildcard_constraints:
+        chrom = "|".join(chrom_list),
+        strand = 'minus|plus',
+    log:
+        "logs/NonCodingRNA/run_hmm.{chrom}.{strand}.log"
+    resources:
+        mem_mb = 58000
+    shell:
+        """
+        Rscript scripts/runHMM.R {wildcards.chrom} {wildcards.strand} > {log};
+        gzip NonCodingRNA/tables/{wildcards.chrom}.{wildcards.strand}.predicted.tab
+        """
 
 #rule ProcessAnnotationsHMM:
 

@@ -24,7 +24,7 @@ rule RunSPLICEq_chRNA:
         "../envs/spliceq.yml"
     wildcard_constraints:
         IndID = '|'.join(chRNAsamples),
-        mode = 'IRjunctions|IER'
+        mode = 'IER' 
     log:
         "logs/spliceq/chRNA.{mode}/{IndID}.log"
     shell:
@@ -45,7 +45,7 @@ use rule RunSPLICEq_chRNA as rule RunSPLICEq_polyA with:
         "logs/spliceq/polyA.{mode}/{IndID}.log"
     wildcard_constraints:
         IndID = '|'.join(polyAsamples),
-        mode = 'IRjunctions|IER'
+        mode = 'IER'
         
 use rule RunSPLICEq_chRNA as rule RunSPLICEq_M30 with:
     input:
@@ -58,7 +58,7 @@ use rule RunSPLICEq_chRNA as rule RunSPLICEq_M30 with:
         "logs/spliceq/MetabolicLabelled.30min.{mode}/{IndID}.log"
     wildcard_constraints:
         IndID = '|'.join(metabolic30samples),
-        mode = 'IRjunctions|IER'
+        mode = 'IER'
         
 use rule RunSPLICEq_chRNA as rule RunSPLICEq_M60 with:
     input:
@@ -71,7 +71,7 @@ use rule RunSPLICEq_chRNA as rule RunSPLICEq_M60 with:
         "logs/spliceq/MetabolicLabelled.60min.{mode}/{IndID}.log"
     wildcard_constraints:
         IndID = '|'.join(metabolic60samples),
-        mode = 'IRjunctions|IER'
+        mode = 'IER'
         
 rule CollectSPLICEq_chRNA:
     input: 
@@ -82,7 +82,7 @@ rule CollectSPLICEq_chRNA:
     log:
         "logs/spliceq/{Phenotype}.{mode}.log"
     wildcard_constraints:
-        mode = 'IRjunctions|IER',
+        mode = 'IER',
         Phenotype = 'chRNA'
     resources:
         mem_mb = 32000
@@ -92,14 +92,14 @@ rule CollectSPLICEq_chRNA:
         "../envs/py_tools.yml"
     shell:
         """
-        python scripts/collect_spliceq.py --spliceq_dir SplicingAnalysis/SPLICEq/{wildcards.Phenotype}.{wildcards.mode}/ --spliceq_mode {wildcards.mode} --output {output.out} --output_qqnorm {output.out_qqnorm} --skip_samples {params} &> {log}
+        python scripts/collect_spliceq.py --spliceq_dir SplicingAnalysis/SPLICEq/{wildcards.Phenotype}.{wildcards.mode}/  --output {output.out} --output_qqnorm {output.out_qqnorm} --skip_samples {params} &> {log}
         """
 
 use rule CollectSPLICEq_chRNA as CollectSPLICEq_polyA with:
     input: 
         expand("SplicingAnalysis/SPLICEq/polyA.{{mode}}/{IndID}.spliceq.tab", IndID=polyAsamples)
     wildcard_constraints:
-        mode = 'IRjunctions|IER',
+        mode = 'IER',
         Phenotype = 'polyA'
     params:
         "None"
@@ -108,7 +108,7 @@ use rule CollectSPLICEq_chRNA as CollectSPLICEq_M30 with:
     input: 
         expand("SplicingAnalysis/SPLICEq/MetabolicLabelled.30min.{{mode}}/{IndID}.spliceq.tab", IndID=metabolic30samples)
     wildcard_constraints:
-        mode = 'IRjunctions|IER',
+        mode = 'IER',
         Phenotype = 'MetabolicLabelled.30min'
     params:
         "None"
@@ -118,7 +118,7 @@ use rule CollectSPLICEq_chRNA as CollectSPLICEq_M60 with:
     input: 
         expand("SplicingAnalysis/SPLICEq/MetabolicLabelled.60min.{{mode}}/{IndID}.spliceq.tab", IndID=metabolic60samples)
     wildcard_constraints:
-        mode = 'IRjunctions|IER',
+        mode = 'IER',
         Phenotype = 'MetabolicLabelled.60min'
     params:
         "None"

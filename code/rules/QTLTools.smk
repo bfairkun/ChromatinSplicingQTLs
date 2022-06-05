@@ -179,7 +179,8 @@ def GetQTLtoolsFlags(wildcards):
             return "--window 0"
         elif ('5PrimeSS' in wildcards.Phenotype) or ('3PrimeSS' in wildcards.Phenotype):
             return "--window 0"
-        elif wildcards.Phenotype in ["chRNA.IR", "polyA.IR", "chRNA.IER", "polyA.IER", "MetabolicLabelled.30min.IER", "MetabolicLabelled.60min.IER"]:
+        elif wildcards.Phenotype in ["chRNA.IR", "polyA.IR", "chRNA.IER", "polyA.IER", "polyA.IER.Subset_YRI",
+        "MetabolicLabelled.30min.IER", "MetabolicLabelled.60min.IER"]:
             return "--window 10000"
         else:
             return "--window 100000"

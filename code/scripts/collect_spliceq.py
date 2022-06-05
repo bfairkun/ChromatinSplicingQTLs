@@ -109,7 +109,7 @@ def qqnormDF(dfIR, max_missing=0.4, skip_samples = []):
     print(str(dfIR.shape[0]) + " with enough observations") 
     
     imputer = SimpleImputer()
-    imputed_df = pd.DataFrame(imputer.fit_transform(dfIR).T).T
+    imputed_df = pd.DataFrame(imputer.fit_transform(dfIR.T)).T
     
     imputed_df.columns = dfIR.columns 
     imputed_df.index = dfIR.index
@@ -131,20 +131,20 @@ def qqnormDF(dfIR, max_missing=0.4, skip_samples = []):
 
 
 
-def process_df_list(df_list, spliceq_mode = 'IER'):
+def process_df_list(df_list):
     IRdf = pd.concat(df_list, axis=1)
     
     samples = list(IRdf.columns)
     
     IRdf['pid'] = list(IRdf.index)
     #IRdf['gid'] = list(IRdf.index)
-    if spliceq_mode == 'IER':
+#     if spliceq_mode == 'IER':
 #         IRdf['gid'] = [x.split('|')[0] for x in list(IRdf.index)]
-        IRdf[['gene_chrom', 'start', 'end', 'strand']] = IRdf['pid'].str.split(':', expand=True)
-        IRdf[['gid', '#Chr']] = IRdf['gene_chrom'].str.split('|', expand=True)
-    else:
-        IRdf['gid'] = list(IRdf.index)
-        IRdf[['#Chr', 'start', 'end', 'strand']] = IRdf['pid'].str.split(':', expand=True)
+    IRdf[['gene_chrom', 'start', 'end', 'strand']] = IRdf['pid'].str.split(':', expand=True)
+    IRdf[['gid', '#Chr']] = IRdf['gene_chrom'].str.split('|', expand=True)
+#     else:
+#         IRdf['gid'] = list(IRdf.index)
+#         IRdf[['#Chr', 'start', 'end', 'strand']] = IRdf['pid'].str.split(':', expand=True)
         
     column_order = ['#Chr', 'start', 'end', 'pid', 'gid', 'strand'] + samples
         
@@ -154,7 +154,6 @@ def process_df_list(df_list, spliceq_mode = 'IER'):
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--spliceq_dir', type=str, required=True)
-parser.add_argument('--spliceq_mode', type=str, required=True)
 parser.add_argument('--output', type=str, required=True)
 parser.add_argument('--output_qqnorm', type=str, required=True)
 parser.add_argument('--skip_samples', type=str, required=True)
@@ -163,7 +162,7 @@ if __name__ == '__main__':
     
     args = parser.parse_args()
     spliceq_dir = args.spliceq_dir
-    spliceq_mode = args.spliceq_mode
+#     spliceq_mode = args.spliceq_mode
     output = args.output
     output_qqnorm = args.output_qqnorm
     skip_samples = args.skip_samples
@@ -181,21 +180,21 @@ if __name__ == '__main__':
     
     for sample in sample_files:
         
-        if spliceq_mode == 'IRjunctions':
-            df = process_spliceq_IRjunctions(spliceq_dir + '/' + sample)
-            df_score.append(df)
+#         if spliceq_mode == 'IRjunctions':
+#             df = process_spliceq_IRjunctions(spliceq_dir + '/' + sample)
+#             df_score.append(df)
             
-        else:
+#         else:
             
-            df = process_spliceq_IER(spliceq_dir + '/' + sample)
-            df_score.append(df[0])
-            df_exon5.append(df[1])
-            df_sj5.append(df[2])
-            df_sj5_ncov.append(df[3])
-            df_intron.append(df[4])
-            df_exon3.append(df[5])
-            df_sj3.append(df[6])
-            df_sj3_ncov.append(df[7])
+        df = process_spliceq_IER(spliceq_dir + '/' + sample)
+        df_score.append(df[0])
+        df_exon5.append(df[1])
+        df_sj5.append(df[2])
+        df_sj5_ncov.append(df[3])
+        df_intron.append(df[4])
+        df_exon3.append(df[5])
+        df_sj3.append(df[6])
+        df_sj3_ncov.append(df[7])
         
         
 #     IRdf = pd.concat(df_list, axis=1)
@@ -211,41 +210,46 @@ if __name__ == '__main__':
         
 #     IRdf = IRdf[column_order]
      
-    IRdf = process_df_list(df_score, spliceq_mode)
+    IRdf = process_df_list(df_score)
     IRdf.to_csv(output, sep='\t', index=False)
     
-    IRqqnorm = qqnormDF(IRdf, max_missing=0.1, skip_samples = [skip_samples])
+    
+    
+    
+#     if spliceq_mode == 'IER':
+    
+    exon5 = process_df_list(df_exon5)
+    exon5.to_csv(output[:-13] + 'exon5.bed.gz', sep='\t', index=False)
+
+    sj5 = process_df_list(df_sj5)
+    sj5.to_csv(output[:-13] + 'sj5.bed.gz', sep='\t', index=False)
+
+    sj5_ncov = process_df_list(df_sj5_ncov)
+    sj5_ncov.to_csv(output[:-13] + 'sj5_ncov.bed.gz', sep='\t', index=False)
+
+    intron = process_df_list(df_intron)
+    intron.to_csv(output[:-13] + 'intron.bed.gz', sep='\t', index=False)
+
+    exon3 = process_df_list(df_exon3)
+    exon3.to_csv(output[:-13] + 'exon3.bed.gz', sep='\t', index=False)
+
+    sj3 = process_df_list(df_sj3)
+    sj3.to_csv(output[:-13] + 'sj3.bed.gz', sep='\t', index=False)
+
+    sj3_ncov = process_df_list(df_sj3_ncov)
+    sj3_ncov.to_csv(output[:-13] + 'sj3_ncov.bed.gz', sep='\t', index=False)
+
+    sj_counts = sj3 + sj5
+    sj_ncov_counts = sj5_ncov + sj3_ncov
+    
+    idx = sj_counts.loc[((sj_counts >= 1) & (sj_ncov_counts >= 1)).mean(axis=1) >= 0.1].index
+    
+    IRdf = IRdf.loc[idx]
+    
+    IRqqnorm = qqnormDF(IRdf, max_missing=0.9, skip_samples = [skip_samples])
     idx = IRqqnorm.index
     IRqqnorm_out = pd.concat([IRdf.loc[idx, IRdf.columns[:6]], IRqqnorm], axis=1)
     IRqqnorm_out.to_csv(output_qqnorm, sep='\t', index=False)
-    
-    
-    if spliceq_mode == 'IER':
-    
-        IRdf = process_df_list(df_exon5)
-        IRdf.to_csv(output[:-13] + 'exon5.bed.gz', sep='\t', index=False)
-
-        IRdf = process_df_list(df_sj5)
-        IRdf.to_csv(output[:-13] + 'sj5.bed.gz', sep='\t', index=False)
-
-        IRdf = process_df_list(df_sj5_ncov)
-        IRdf.to_csv(output[:-13] + 'sj5_ncov.bed.gz', sep='\t', index=False)
-
-        IRdf = process_df_list(df_intron)
-        IRdf.to_csv(output[:-13] + 'intron.bed.gz', sep='\t', index=False)
-
-        IRdf = process_df_list(df_exon3)
-        IRdf.to_csv(output[:-13] + 'exon3.bed.gz', sep='\t', index=False)
-
-        IRdf = process_df_list(df_sj3)
-        IRdf.to_csv(output[:-13] + 'sj3.bed.gz', sep='\t', index=False)
-
-        IRdf = process_df_list(df_sj3_ncov)
-        IRdf.to_csv(output[:-13] + 'sj3_ncov.bed.gz', sep='\t', index=False)
-
-        
-    
-    
     
     
     

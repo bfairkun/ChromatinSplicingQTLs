@@ -14,7 +14,9 @@ def MakeCountsPerAssay(counts_dir, assay, chrom, strand):
     assay_samples = [x for x in os.listdir(assay_dir) if x.split('.')[0] == chrom]
     assay_samples = [x for x in assay_samples if x.split('.')[2] == strand]
     
-    df = pd.DataFrame()
+    df = list()
+    
+    counter = 1
     
     for assay_sample in assay_samples:
         sample = assay_sample.split('.')[1]
@@ -23,13 +25,32 @@ def MakeCountsPerAssay(counts_dir, assay, chrom, strand):
         
         counts = assay_counts.counts
         
-        if ((assay == 'ProSeq') and (strand == 'minus')):
-            counts = -counts
+        if assay == 'ProSeq':
+            counts = assay_counts.name
+            counts = list(counts.replace('.', '0'))
+            counts = np.array([int(x) for x in counts])
+            if strand == 'minus':
+                counts = -counts
         
-        df[assay + '_' + sample] = counts
+        df.append(list(counts))
+        chrom = list(assay_counts.chrom)
+        start = list(assay_counts.start.astype(str))
+        end = list(assay_counts.end.astype(str))
+        #df[assay + '_' + sample] = counts
         
-        idx = df.chrom + '_' + df.start.astype(str) + '_' + df.end.astype(str) + '_' + strand
-        df.index = idx
+        print(sample + ', ' + str(counter) + '/' + str(len(assay_samples)))
+        
+        counter += 1
+        
+    print(str(len(df)) + ' samples')
+    
+    print(str(len(df[0])) + ' bins')
+
+    df = pd.DataFrame(df).T
+    print(df.shape)
+    df.columns = [assay + '_' + sample.split('.')[1] for sample in assay_samples]
+    idx = [chrom[i] + '_' + start[i] + '_' + end[i] + '_' + strand for i in range(len(chrom))]
+    df.index = idx
         
     return df
         
@@ -50,9 +71,10 @@ if __name__ == '__main__':
     output = args.output
 
     assay_list = os.listdir(counts_dir)
-    
+    print('Merging data from assays')
     df = pd.DataFrame()
     for assay in assay_list:
+        print('Merging ' + assay + ' data')
         df_assay = MakeCountsPerAssay(counts_dir, assay, chrom, strand)
         df = pd.concat([df, df_assay], axis=1)
         

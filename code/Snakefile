@@ -229,9 +229,11 @@ rule testSpliceq:
         
 rule CollectSpliceq:
     input:
-        expand("QTLs/QTLTools/{Phenotype}.{mode}/OnlyFirstReps.ratios.bed.gz",
-        Phenotype = ['chRNA', 'polyA', 'MetabolicLabelled.30min', 'MetabolicLabelled.60min'],
-        mode = ['IRjunctions', 'IER'])
+        expand("QTLs/QTLTools/{Phenotype}.IER/OnlyFirstReps.ratios.bed.gz",
+        Phenotype = ['chRNA', 'polyA', 'MetabolicLabelled.30min', 'MetabolicLabelled.60min']),
+        expand("QTLs/QTLTools/{Phenotype}.IER/OnlyFirstReps.qqnorm.bed.gz",
+        Phenotype = ['chRNA', 'polyA', 'MetabolicLabelled.30min', 'MetabolicLabelled.60min']),
+        "QTLs/QTLTools/polyA.IER.Subset_YRI/OnlyFirstReps.qqnorm.bed.gz"
         
 rule SpliceSitePhenotypes:
     input:
@@ -291,14 +293,9 @@ rule eRNA_rules:
 
 rule getHMMInput:
     input:
-        ##expand("NonCodingRNA/chRNA_counts/{chrom}.{IndID}.{strand}.bed.gz",
-        ##    chrom=chrom_list, IndID = chRNASeqSamples[:10], strand=['minus', 'plus']
-        ##    ),
-        #expand("NonCodingRNA/counts/chRNA/chr1.{IndID}.{strand}.bed.gz",
-        #    IndID = chRNASeqSamples[:10], strand=['minus', 'plus'],
-        #    ),
-        #expand("NonCodingRNA/counts/ProSeq/chr1.{IndID}.{strand}.bed.gz",
-        #    IndID = proseq_samples[:3], strand = ['minus', 'plus']
-        #    )
         expand("NonCodingRNA/tables/{chrom}.{strand}.counts.tab.gz",
+                chrom = chrom_list, strand = ['minus', 'plus']),
+        expand("NonCodingRNA/tables/{chrom}.{strand}.predicted.tab.gz",
                 chrom = chrom_list, strand = ['minus', 'plus'])
+        
+        
