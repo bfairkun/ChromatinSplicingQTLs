@@ -19,7 +19,7 @@ library(viridis)
 library(gplots)
 library(data.table)
 library(qvalue)
-library(purrr)
+# library(purrr)
 
 sample_n_of <- function(data, size, ...) {
   dots <- quos(...)
@@ -64,6 +64,53 @@ dat %>%
   labs(title = "Number of Loci:molQTL pairs attempted to colocalize in total") +
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
 
+
+
+```
+
+Carlos wants to know: 
+- how many sQTL and irQTLs coloc with polyA eQTLs? And how many coloc with polyA eQTL but not polyA sQTL?
+
+```{r}
+
+dat.forcarlos <- dat %>%
+    filter(!str_detect(Threshold, "eQTL")) %>%
+    separate(Trait, into=c("PC", "P"), sep=";", remove = F) %>%
+    # pull(PC) %>% unique()
+    filter(PC %in% c("Expression.Splicing.Subset_YRI", "polyA.Splicing.Subset_YRI", "polyA.IER", "chRNA.Expression.Splicing", "chRNA.Splicing", "chRNA.IER"))
+
+dat.forcarlos %>%
+    count(PC, Threshold) %>%
+    ggplot(aes(x=PC, y=n)) +
+    geom_col() +
+    facet_wrap(~Threshold) +
+    labs(title="Number features attempted for coloc at different P thresholds", y="NumFeatures", x="PhenotypeClass") +
+    theme(axis.text.x=element_text(angle=45, hjust=1))
+
+dat.forcarlos %>%
+    filter(!is.na(TopCandidateSNP)) %>%
+    group_by(GeneLocus, TopCandidateSNP, Threshold) %>%
+    mutate(Contains_eQTL = any(PC == "Expression.Splicing.Subset_YRI")) %>%
+    mutate(Contains_sQTL = any(PC %in% c("polyA.Splicing.Subset_YRI", "polyA.IER",  "chRNA.Splicing", "chRNA.IER"))) %>%
+    mutate(Contains_chRNA_specific_sQTL = any(PC %in% c("chRNA.Splicing", "chRNA.IER"))
+           & !any(PC %in% c("polyA.Splicing.Subset_YRI", "polyA.IER"))) %>%
+    ungroup() %>%
+    distinct(Threshold, GeneLocus, TopCandidateSNP, .keep_all=T) %>%
+    filter(Contains_eQTL) %>%
+    group_by(Threshold) %>%
+    summarise(
+              Num_eQTL = sum(Contains_eQTL),
+              Num_sQTL_coloc_eQTL = sum(Contains_sQTL),
+              Num_chRNA_specific_sQTL_coloc_eQTL = sum(Contains_chRNA_specific_sQTL)
+    ) %>%
+    gather(key="eQTL_type", value="count", -Threshold) %>%
+    ggplot(aes(x=eQTL_type, y=count)) +
+    geom_col() +
+    geom_text(aes(label=count), color="black", angle=90, hjust=1) +
+    facet_wrap(~Threshold, scales="free_y") +
+    labs(title="Num eQTL coloc with sQTL") +
+    theme_classic() +
+    theme(axis.text.x=element_text(angle=45, hjust=1))
 
 
 ```

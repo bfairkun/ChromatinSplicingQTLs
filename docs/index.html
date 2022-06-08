@@ -1,18 +1,19 @@
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
 
 <head>
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
 
 
 <title>Home</title>
 
+<script src="site_libs/header-attrs-2.6/header-attrs.js"></script>
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
@@ -23,13 +24,14 @@
 <link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
 
-<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/master/img/reproducible.png">
-<!-- Add a small amount of space between sections. -->
 <style type="text/css">
-div.section {
-  padding-top: 12px;
-}
-</style>
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
 
 <style type="text/css">code{white-space: pre;}</style>
 <style type="text/css">
@@ -79,6 +81,7 @@ h6 {
 
 
 
+
 <style type = "text/css">
 .main-container {
   max-width: 940px;
@@ -91,7 +94,6 @@ code {
 }
 img {
   max-width:100%;
-  height: auto;
 }
 .tabbed-pane {
   padding-top: 12px;
@@ -240,6 +242,7 @@ $(document).ready(function () {
   border: none;
   display: inline-block;
   border-radius: 4px;
+  background-color: transparent;
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li {
@@ -251,18 +254,6 @@ $(document).ready(function () {
   display: none;
 }
 </style>
-
-<script>
-$(document).ready(function () {
-  window.buildTabsets("TOC");
-});
-
-$(document).ready(function () {
-  $('.tabset-dropdown > .nav-tabs > li').click(function () {
-    $(this).parent().toggleClass('nav-tabs-open')
-  });
-});
-</script>
 
 <!-- code folding -->
 
@@ -308,6 +299,15 @@ $(document).ready(function () {
   </div><!--/.container -->
 </div><!--/.navbar -->
 
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
 <div class="fluid-row" id="header">
 
 
@@ -337,7 +337,7 @@ $(document).ready(function () {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2022-05-25
+<strong>Last updated:</strong> 2022-06-08
 </p>
 <p>
 <strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
@@ -347,7 +347,7 @@ $(document).ready(function () {
 </p>
 <p>
 This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
-  href="https://github.com/jdblischak/workflowr">workflowr</a> (version 1.6.2). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+  href="https://github.com/jdblischak/workflowr">workflowr</a> (version 1.5.0). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
 </p>
 <hr>
 </div>
@@ -385,7 +385,7 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 </div>
 <div id="strongSeedstrongcodesetseed20191126code" class="panel-collapse collapse">
 <div class="panel-body">
-<p>The command <code>set.seed(20191126)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+<p>The command <code>set.seed(20191126)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
 </div>
 </div>
 </div>
@@ -428,25 +428,20 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstree0df2cadd7a4ea879f55835e2c5dae9a626cba741targetblank0df2cada"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/0df2cadd7a4ea879f55835e2c5dae9a626cba741" target="_blank">0df2cad</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstree9c3089100be7ffea187f213d23c78fa3b78744c5targetblank9c30891a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/9c3089100be7ffea187f213d23c78fa3b78744c5" target="_blank">9c30891</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstree0df2cadd7a4ea879f55835e2c5dae9a626cba741targetblank0df2cada" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstree9c3089100be7ffea187f213d23c78fa3b78744c5targetblank9c30891a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
-Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
-</p>
-<p>
-The results in this page were generated with repository version <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/0df2cadd7a4ea879f55835e2c5dae9a626cba741" target="_blank">0df2cad</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
-</p>
-<p>
-Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility. The version displayed above was the version of the Git repository at the time these results were generated. <br><br> Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
 </p>
 <pre><code>
 Ignored files:
     Ignored:    .DS_Store
     Ignored:    .Rhistory
     Ignored:    .Rproj.user/
+    Ignored:    analysis/.20220606_PlotColocsForIntuitions.Rmd.swp
     Ignored:    analysis/.Rhistory
     Ignored:    code/.DS_Store
     Ignored:    code/.RData
@@ -494,7 +489,6 @@ Ignored files:
     Ignored:    code/log
     Ignored:    code/logs/
     Ignored:    code/notebooks/.ipynb_checkpoints/
-    Ignored:    code/rules/.ChromatinPehnotypesAnalysis.smk.swp
     Ignored:    code/rules/.ipynb_checkpoints/
     Ignored:    code/rules/OldRules/
     Ignored:    code/rules/notebooks/
@@ -520,19 +514,13 @@ Ignored files:
     Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022.csv
 
 Untracked files:
-    Untracked:  analysis/20220518_Explore_eQTLColocsAtDifferentThresholds.Rmd
-    Untracked:  analysis/20220524_CheckClosestPeakToTSS.Rmd
-    Untracked:  code/scripts/hyprcoloc_genewise2.R
     Untracked:  code/snakemake_profiles/slurm/__pycache__/
 
 Unstaged changes:
-    Modified:   code/Snakefile
-    Modified:   code/config/ColocRunWildcards.tsv
-    Modified:   code/rules/ChromatinPehnotypesAnalysis.smk
-    Modified:   code/rules/Coloc.smk
-    Modified:   code/rules/common.py
     Modified:   code/scripts/GenometracksByGenotype
-    Modified:   code/scripts/TidyGenewiseColocs.R
+
+Staged changes:
+    Modified:   analysis/20220606_PlotColocsForIntuitions.Rmd
 
 </code></pre>
 <p>
@@ -547,7 +535,7 @@ Note that any generated files, e.g. HTML, png, CSS, etc., are not included in t
 <div id="versions" class="tab-pane fade">
 
 <p>
-These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/index.Rmd</code>) and HTML (<code>docs/index.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
+These are the previous versions of the R Markdown and HTML files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view them.
 </p>
 <div class="table-responsive">
 <table class="table table-condensed table-hover">
@@ -576,6 +564,23 @@ Message
 html
 </td>
 <td>
+<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/fe6333bb3982433069d51165ab0291340093976d/docs/index.html" target="_blank">fe6333b</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-05-25
+</td>
+<td>
+update site and molQTL coloc
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
 <a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/0c8ee9c65abd3ee8c00bed55cfafcfd2caa5bdbd/docs/index.html" target="_blank">0c8ee9c</a>
 </td>
 <td>
@@ -599,7 +604,7 @@ html
 Benjmain Fair
 </td>
 <td>
-2021-12-28
+2021-12-29
 </td>
 <td>
 rebuilt some site analyses
@@ -821,35 +826,37 @@ initial commit
 <p>We are still collecting data, but I have also been perusing around published data a bit.</p>
 <p>Here are links to all of my rendered analysis Rmarkdowns (code <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/master/analysis">here</a>):</p>
 <pre class="r"><code>library(tidyverse)</code></pre>
-<pre><code>── Attaching packages ────────────────────────────────── tidyverse 1.3.0 ──</code></pre>
-<pre><code>✓ ggplot2 3.3.5     ✓ purrr   0.3.4
-✓ tibble  2.1.3     ✓ dplyr   0.8.3
-✓ tidyr   1.1.0     ✓ stringr 1.4.0
-✓ readr   1.3.1     ✓ forcats 0.4.0</code></pre>
-<pre><code>── Conflicts ───────────────────────────────────── tidyverse_conflicts() ──
-x dplyr::filter() masks stats::filter()
-x dplyr::lag()    masks stats::lag()</code></pre>
+<pre><code>── Attaching packages ─────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>✔ ggplot2 3.2.1     ✔ purrr   0.3.3
+✔ tibble  3.0.4     ✔ dplyr   1.0.2
+✔ tidyr   1.1.2     ✔ stringr 1.4.0
+✔ readr   1.4.0     ✔ forcats 0.5.0</code></pre>
+<pre><code>── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()</code></pre>
 <pre class="r"><code>rmds &lt;- list.files(path = &quot;../analysis/&quot;, pattern=&quot;^\\d+.+&quot;)
 rmd_htmls &lt;- str_replace(rmds, &quot;Rmd$&quot;, &quot;html&quot;)
 
 for(i in rmd_htmls){
   cat(&quot;[&quot;, i, &quot;](&quot;, i,&quot;)\n\n&quot;, sep=&quot;&quot;)
 }</code></pre>
-<p><a href="20200110_PickSamplesForGrowth.html" class="uri">20200110_PickSamplesForGrowth.html</a></p>
-<p><a href="20200210_PickSamplesToOrder.html" class="uri">20200210_PickSamplesToOrder.html</a></p>
-<p><a href="20210604_CheckSampleGenotypes.html" class="uri">20210604_CheckSampleGenotypes.html</a></p>
-<p><a href="20211207_ExploreColocalizations.html" class="uri">20211207_ExploreColocalizations.html</a></p>
-<p><a href="20211217_GenewiseColocFirstLook.html" class="uri">20211217_GenewiseColocFirstLook.html</a></p>
-<p><a href="20220114_ColocalizationEffectSizeCorrelations.html" class="uri">20220114_ColocalizationEffectSizeCorrelations.html</a></p>
-<p><a href="20220228_PickCutAndTagSamples.html" class="uri">20220228_PickCutAndTagSamples.html</a></p>
-<p><a href="20220401_Cluster_CheckOutNA18855chRNA.html" class="uri">20220401_Cluster_CheckOutNA18855chRNA.html</a></p>
-<p><a href="202204012_Cluster_TestGwasHarmonisation.html" class="uri">202204012_Cluster_TestGwasHarmonisation.html</a></p>
-<p><a href="20220415_Cluster_CheckTehranchiConcordance.html" class="uri">20220415_Cluster_CheckTehranchiConcordance.html</a></p>
-<p><a href="20220424_CheckH3K36me3SampleGenotypes.html" class="uri">20220424_CheckH3K36me3SampleGenotypes.html</a></p>
-<p><a href="20220511_Cluster_CheckH3K36me3QC.html" class="uri">20220511_Cluster_CheckH3K36me3QC.html</a></p>
-<p><a href="20220511_ExploreColocsAtDifferentThresholds.html" class="uri">20220511_ExploreColocsAtDifferentThresholds.html</a></p>
-<p><a href="20220518_Explore_eQTLColocsAtDifferentThresholds.html" class="uri">20220518_Explore_eQTLColocsAtDifferentThresholds.html</a></p>
-<p><a href="20220524_CheckClosestPeakToTSS.html" class="uri">20220524_CheckClosestPeakToTSS.html</a></p>
+<p><a href="20200110_PickSamplesForGrowth.html">20200110_PickSamplesForGrowth.html</a></p>
+<p><a href="20200210_PickSamplesToOrder.html">20200210_PickSamplesToOrder.html</a></p>
+<p><a href="20210604_CheckSampleGenotypes.html">20210604_CheckSampleGenotypes.html</a></p>
+<p><a href="20211207_ExploreColocalizations.html">20211207_ExploreColocalizations.html</a></p>
+<p><a href="20211217_GenewiseColocFirstLook.html">20211217_GenewiseColocFirstLook.html</a></p>
+<p><a href="20220114_ColocalizationEffectSizeCorrelations.html">20220114_ColocalizationEffectSizeCorrelations.html</a></p>
+<p><a href="20220228_PickCutAndTagSamples.html">20220228_PickCutAndTagSamples.html</a></p>
+<p><a href="20220401_Cluster_CheckOutNA18855chRNA.html">20220401_Cluster_CheckOutNA18855chRNA.html</a></p>
+<p><a href="202204012_Cluster_TestGwasHarmonisation.html">202204012_Cluster_TestGwasHarmonisation.html</a></p>
+<p><a href="20220415_Cluster_CheckTehranchiConcordance.html">20220415_Cluster_CheckTehranchiConcordance.html</a></p>
+<p><a href="20220424_CheckH3K36me3SampleGenotypes.html">20220424_CheckH3K36me3SampleGenotypes.html</a></p>
+<p><a href="20220511_Cluster_CheckH3K36me3QC.html">20220511_Cluster_CheckH3K36me3QC.html</a></p>
+<p><a href="20220511_ExploreColocsAtDifferentThresholds.html">20220511_ExploreColocsAtDifferentThresholds.html</a></p>
+<p><a href="20220518_Explore_eQTLColocsAtDifferentThresholds.html">20220518_Explore_eQTLColocsAtDifferentThresholds.html</a></p>
+<p><a href="20220524_CheckClosestPeakToTSS.html">20220524_CheckClosestPeakToTSS.html</a></p>
+<p><a href="20220527_ExploreCarlosChromatinSplicingData.html">20220527_ExploreCarlosChromatinSplicingData.html</a></p>
+<p><a href="20220606_PlotColocsForIntuitions.html">20220606_PlotColocsForIntuitions.html</a></p>
 <p>Also, a list of links to ipynb files that were incorporated into the snakemake. Since github renders ipynbs directly, this is not a relative link from the site folder, but rather links directly to the file to view on github (code <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/master/code/notebooks">here</a>):</p>
 <pre class="r"><code>ipynbs &lt;- list.files(path = &quot;../docs/&quot;, pattern=&quot;^\\d+.+ipynb$&quot;)
 
@@ -865,7 +872,7 @@ for(i in ipynbs){
 </p>
 <div id="workflowr-sessioninfo" class="collapse">
 <pre class="r"><code>sessionInfo()</code></pre>
-<pre><code>R version 3.6.1 (2019-07-05)
+<pre><code>R version 3.4.3 (2017-11-30)
 Platform: x86_64-pc-linux-gnu (64-bit)
 Running under: Scientific Linux 7.4 (Nitrogen)
 
@@ -884,26 +891,25 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] forcats_0.4.0   stringr_1.4.0   dplyr_0.8.3     purrr_0.3.4    
-[5] readr_1.3.1     tidyr_1.1.0     tibble_2.1.3    ggplot2_3.3.5  
-[9] tidyverse_1.3.0
+[1] forcats_0.5.0   stringr_1.4.0   dplyr_1.0.2     purrr_0.3.3    
+[5] readr_1.4.0     tidyr_1.1.2     tibble_3.0.4    ggplot2_3.2.1  
+[9] tidyverse_1.2.1
 
 loaded via a namespace (and not attached):
- [1] tidyselect_1.1.0 xfun_0.8         haven_2.3.1      lattice_0.20-38 
- [5] colorspace_1.4-1 vctrs_0.3.1      generics_0.0.2   htmltools_0.3.6 
- [9] yaml_2.2.0       rlang_0.4.10     later_0.8.0      pillar_1.4.2    
-[13] withr_2.4.1      glue_1.3.1       DBI_1.1.0        dbplyr_1.4.2    
-[17] modelr_0.1.8     readxl_1.3.1     lifecycle_0.1.0  munsell_0.5.0   
-[21] gtable_0.3.0     workflowr_1.6.2  cellranger_1.1.0 rvest_0.3.5     
-[25] evaluate_0.14    knitr_1.23       httpuv_1.5.1     fansi_0.4.0     
-[29] broom_0.5.2      Rcpp_1.0.5       promises_1.0.1   backports_1.1.4 
-[33] scales_1.1.0     jsonlite_1.6     fs_1.3.1         hms_0.5.3       
-[37] digest_0.6.20    stringi_1.4.3    grid_3.6.1       rprojroot_2.0.2 
-[41] cli_2.2.0        tools_3.6.1      magrittr_1.5     crayon_1.3.4    
-[45] whisker_0.3-2    pkgconfig_2.0.2  xml2_1.3.2       reprex_0.3.0    
-[49] lubridate_1.7.4  rstudioapi_0.10  assertthat_0.2.1 rmarkdown_1.13  
-[53] httr_1.4.1       R6_2.4.0         nlme_3.1-140     git2r_0.26.1    
-[57] compiler_3.6.1  </code></pre>
+ [1] Rcpp_1.0.3        cellranger_1.1.0  compiler_3.4.3    pillar_1.4.7     
+ [5] later_1.0.0       git2r_0.26.1      workflowr_1.5.0   tools_3.4.3      
+ [9] digest_0.6.27     lubridate_1.7.9.2 jsonlite_1.6      evaluate_0.14    
+[13] lifecycle_0.2.0   gtable_0.3.0      pkgconfig_2.0.3   rlang_0.4.9      
+[17] cli_2.0.0         rstudioapi_0.10   yaml_2.2.0        haven_2.3.1      
+[21] xfun_0.20         withr_2.1.2       xml2_1.2.0        httr_1.4.2       
+[25] knitr_1.26        hms_0.5.3         generics_0.1.0    fs_1.3.1         
+[29] vctrs_0.3.6       rprojroot_1.3-2   grid_3.4.3        tidyselect_1.1.0 
+[33] glue_1.4.2        R6_2.4.1          fansi_0.4.0       readxl_1.3.1     
+[37] rmarkdown_2.6     modelr_0.1.8      magrittr_1.5      whisker_0.3-2    
+[41] backports_1.1.5   scales_1.1.0      promises_1.1.0    htmltools_0.4.0  
+[45] ellipsis_0.3.0    assertthat_0.2.1  rvest_0.3.6       colorspace_2.0-0 
+[49] httpuv_1.5.2      stringi_1.4.3     lazyeval_0.2.2    munsell_0.5.0    
+[53] broom_0.7.3       crayon_1.3.4     </code></pre>
 </div>
 
 
@@ -921,13 +927,15 @@ footer is added to webpages before the MathJax javascript. -->
 
 
 
+
+
 </div>
 
 <script>
 
 // add bootstrap table styles to pandoc tables
 function bootstrapStylePandocTables() {
-  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
 }
 $(document).ready(function () {
   bootstrapStylePandocTables();
@@ -935,6 +943,23 @@ $(document).ready(function () {
 
 
 </script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
 
 <!-- dynamically load mathjax for compatibility with self-contained -->
 <script>
