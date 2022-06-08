@@ -46,8 +46,7 @@ GetSummaryStats <- function(df){
 
 dat <- read_tsv(f_in, col_names = c("Locus", "iteration", 'ColocPr', 'RegionalPr', "topSNP", "TopSNPFinemapPr", "ColocalizedTraits"), skip=1) %>%
   filter(!is.na(topSNP)) %>%
-  group_by(Locus) %>%
-  sample_n_groups(100)
+  group_by(Locus)
 
 Split.list <- setNames(group_split(dat), deframe(group_keys(dat)))
 

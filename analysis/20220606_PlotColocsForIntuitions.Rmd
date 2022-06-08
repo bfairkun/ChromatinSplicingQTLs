@@ -1,0 +1,183 @@
+---
+title: "Check robustness of colocalization results at various thresholds"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+In a [previous notebook](20211217_GenewiseColocFirstLook.html) I explored the genewise hyprcoloc output, and noted that 30min and 60min 4sU colocalize (with all default parameters/thresholds) 80% of the time that they are tested. I expect this to be closer to 100%, and we should get similarly high colocalization with eQTL from polyA RNA-seq. Perhaps just by filtering for colocalizations above some threshold we can get more believable results. I could/should technically re-run hyprcoloc with different parameters, but before I do that, to understand the results better, let's see how these colocalization rates change after filter for different posterior probabilities for colocalization.
+
+## Analysis
+
+```{r}
+library(tidyverse)
+library(viridis)
+library(gplots)
+library(data.table)
+library(qvalue)
+library(purrr)
+
+sample_n_of <- function(data, size, ...) {
+  dots <- quos(...)
+  
+  group_ids <- data %>% 
+    group_by(!!! dots) %>% 
+    group_indices()
+  
+  sampled_groups <- sample(unique(group_ids), size)
+  
+  data %>% 
+    filter(group_ids %in% sampled_groups)
+}
+
+dat <- Sys.glob("../code/hyprcoloc/Results/ForColoc/MolColocTest*_*/results.txt.gz") %>%
+  setNames(str_replace(., "../code/hyprcoloc/Results/ForColoc/MolColocTest(.*?)_(.+?)/results.txt.gz", "\\1_0.\\2")) %>%
+  lapply(read_tsv) %>%
+  bind_rows(.id="Threshold")
+
+PeaksToTSS <- Sys.glob("../code/Misc/PeaksClosestToTSS/*_assigned.tsv.gz") %>%
+  setNames(str_replace(., "../code/Misc/PeaksClosestToTSS/(.+?)_assigned.tsv.gz", "\\1")) %>%
+  lapply(read_tsv) %>%
+  bind_rows(.id="ChromatinMark") %>%
+  mutate(GenePeakPair = paste(gene, peak, sep = ";")) %>%
+  distinct(ChromatinMark, peak, gene, .keep_all=T)
+
+dat %>%
+  distinct(Threshold, GeneLocus, TopCandidateSNP, .keep_all = T) %>%
+  pull(PosteriorColocalizationPr) %>% hist()
+
+dat %>%
+  separate(Trait, into=c("PC", "P"), sep=";") %>%
+  pull(PC) %>% unique() %>% sort()
+
+dat %>%
+  separate(Trait, into=c("PC", "P"), sep=";") %>%
+  count(Threshold, PC) %>%
+  ggplot(aes(x=PC, y=n)) +
+  geom_col() +
+  facet_wrap(~Threshold) +
+  theme_bw() +
+  labs(title = "Number of Loci:molQTL pairs attempted to colocalize in total") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+
+
+
+```
+
+Below is some code for making files, and then some code for running my script to plot some colocalizations. I will plot 5 loci where metabolic labelled samples did not coloc, 5 where they did, 5 where promoterQTL/eQTL coloc, 5 where non-promoter QTL coloc, 5 where sQTL/eQTL coloc, and 5 where sQTL/eQTL don't coloc.
+
+```{r, eval=F}
+
+
+dat.ToPlotColocs <- dat %>%
+    filter(Threshold == "_0.001") %>%
+    separate(Trait, into=c("PC", "P"), sep=";", remove = F) %>%
+    left_join(PeaksToTSS %>% select(ChromatinMark, peak, gene), by=c("PC"="ChromatinMark", "P"="peak")) %>%
+    mutate( PC = case_when(
+                           gene == GeneLocus ~ paste(PC, "AtPromoter" ,sep="_"),
+                           !is.na(gene) ~ paste(PC, "AtDistalPromoter" ,sep="_"),
+                           TRUE ~ PC
+                           ) )
+
+# both metabolic coloc
+Targets <- dat.ToPlotColocs  %>%
+    filter(!is.na(TopCandidateSNP)) %>%
+    group_by(GeneLocus, TopCandidateSNP) %>%
+    filter(any(str_detect(PC, "MetabolicLabelled.30min")) & any(str_detect(PC, "MetabolicLabelled.60min"))) %>%
+    ungroup() %>%
+    pull(GeneLocus) %>% unique()
+dat.ToPlotColocs %>%
+    filter(Threshold == "_0.001") %>%
+    filter(PC %in% c("MetabolicLabelled.30min", "MetabolicLabelled.60min", "Expression.Splicing.Subset_YRI", "H3K27AC", "H3K27AC_AtPromoter", "H3K27AC_AtDistalPromoter")) %>%
+    filter(GeneLocus %in% Targets) %>%
+    sample_n_of(10, GeneLocus) %>%
+    select(-Threshold) %>%
+    write_tsv("scratch/ColocExamples/GroupMetabolicColoc.tsv")
+
+
+# metabolic don't coloc
+Targets <- dat.ToPlotColocs  %>%
+    filter(PC %in% c("MetabolicLabelled.30min", "MetabolicLabelled.60min")) %>%
+    group_by(GeneLocus) %>%
+    filter(any(str_detect(PC, "MetabolicLabelled.30min")) & any(str_detect(PC, "MetabolicLabelled.60min"))) %>%
+    ungroup() %>%
+    group_by(GeneLocus, TopCandidateSNP) %>%
+    filter(
+           (is.na(TopCandidateSNP) & PC %in% c("MetabolicLabelled.30min", "MetabolicLabelled.60min")) | (sum(str_detect(PC, "MetabolicLabelled")) == 1)
+    ) %>%
+    ungroup() %>%
+    pull(GeneLocus) %>% unique()
+Targets <- dat.ToPlotColocs %>%
+    filter(GeneLocus %in% TestedTargets) %>%
+    filter(is.na(TopCandidateSNP))
+dat.ToPlotColocs %>%
+    filter(Threshold == "_0.001") %>%
+    filter(PC %in% c("MetabolicLabelled.30min", "MetabolicLabelled.60min", "Expression.Splicing.Subset_YRI", "H3K27AC", "H3K27AC_AtPromoter", "H3K27AC_AtDistalPromoter")) %>%
+    filter(GeneLocus %in% Targets) %>%
+    sample_n_of(10, GeneLocus) %>%
+    select(-Threshold) %>%
+    write_tsv("scratch/ColocExamples/GroupMetabolicNotColoc.tsv")
+
+# Promoter and eqtl coloc TODO
+Targets <- dat.ToPlotColocs %>%
+    filter(PC %in% c("MetabolicLabelled.30min", "MetabolicLabelled.60min", "Expression.Splicing.Subset_YRI", "H3K27AC", "H3K27AC_AtPromoter", "H3K27AC_AtDistalPromoter")) %>%
+    filter(!is.na(TopCandidateSNP)) %>%
+    group_by(GeneLocus, TopCandidateSNP) %>%
+    filter(any(PC == "Expression.Splicing.Subset_YRI") & any(PC == "H3K27AC_AtPromoter")) %>%
+    ungroup() %>%
+    pull(GeneLocus) %>% unique()
+dat.ToPlotColocs %>%
+    filter(Threshold == "_0.001") %>%
+    filter(PC %in% c("MetabolicLabelled.30min", "MetabolicLabelled.60min", "Expression.Splicing.Subset_YRI", "H3K27AC", "H3K27AC_AtPromoter", "H3K27AC_AtDistalPromoter")) %>%
+    filter(GeneLocus %in% Targets) %>%
+    sample_n_of(10, GeneLocus) %>%
+    select(-Threshold) %>%
+    write_tsv("scratch/ColocExamples/GroupPromoterEqtlColoc.tsv")
+
+# Promoter and eqtl don't coloc
+Targets <- dat.ToPlotColocs %>%
+    filter(PC %in% c("MetabolicLabelled.30min", "MetabolicLabelled.60min", "Expression.Splicing.Subset_YRI", "H3K27AC", "H3K27AC_AtPromoter", "H3K27AC_AtDistalPromoter")) %>%
+    filter(!is.na(TopCandidateSNP)) %>%
+    group_by(GeneLocus, TopCandidateSNP) %>%
+    filter(any(PC == "Expression.Splicing.Subset_YRI") & any(PC == "H3K27AC_AtPromoter")) %>%
+    ungroup() %>%
+    pull(GeneLocus) %>% unique()
+dat.ToPlotColocs %>%
+    filter(Threshold == "_0.001") %>%
+    filter(PC %in% c("MetabolicLabelled.30min", "MetabolicLabelled.60min", "Expression.Splicing.Subset_YRI", "H3K27AC", "H3K27AC_AtPromoter", "H3K27AC_AtDistalPromoter")) %>%
+    filter(GeneLocus %in% Targets) %>%
+    sample_n_of(10, GeneLocus) %>%
+    select(-Threshold) %>%
+    write_tsv("scratch/ColocExamples/GroupPromoterEqtlColoc.tsv")
+
+dat %>%
+  count(Threshold, GeneLocus) %>%
+  ggplot(aes(x=n, color=Threshold)) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(0,10)) +
+  theme_bw()
+
+dat.tidy
+
+
+
+dat %>%
+  filter(Threshold == "_0.01") %>%
+  select(-Threshold) %>%
+  # add_count(GeneLocus, TopCandidateSNP) %
+  ) %>%
+  write_tsv("../code/scratch/TestHyprcolocPlots.tsv")
+
+```
+
+```{bash, eval=F}
+conda activate r_essentials
+echo "hello world"
+```
+
+
+
