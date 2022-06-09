@@ -200,12 +200,14 @@ pvals %>%
 pvals$TestPhenotypeClass %>% unique()
 
 SplicingPhenotypes <- c("chRNA.Splicing", "polyA.Splicing", "MetabolicLabelled.30min.Splicing")
+SplicingPhenotypes <- c("chRNA.Splicing", "polyA.Splicing.Subset_YRI")
 
 ```
 
 ...same for intron retention phenotypes
 
 ```{r, eval=F}
+
 pvals %>%
   filter((TestPhenotypeClass %in% SplicingPhenotypes ) & (DiscoveryPhenotypeClass %in% SplicingPhenotypes)) %>%
   filter(!TestPhenotypeClass==DiscoveryPhenotypeClass) %>%
@@ -219,6 +221,7 @@ pvals %>%
   theme(axis.text.x = element_text(angle = 45, hjust=1))
 
 IntronRetentionPhenotypes <- c("polyA.IER", "chRNA.IER", "MetabolicLabelled.30min.IER")
+IntronRetentionPhenotypes <- c("polyA.IER", "chRNA.IER")
 
 pvals %>%
   filter((TestPhenotypeClass %in% IntronRetentionPhenotypes ) & (DiscoveryPhenotypeClass %in% IntronRetentionPhenotypes)) %>%
@@ -231,6 +234,7 @@ pvals %>%
   scale_fill_viridis(option="B", direction = 1, limits=c(0,1)) +
   theme_classic() +
   theme(axis.text.x = element_text(angle = 45, hjust=1))
+
 
 ```
 
@@ -646,6 +650,66 @@ dat.tidy %>%
 
 So in other words, when there is a QTL for both a chromatin peak at a TSS, and the eQTL, (meaning I tested for colocalization), the colocalization rate was about 60%.
 
+
+Below is some code for making files, and then some code for running my script to plot some colocalizations. I will plot 5 loci where metabolic labelled samples did not coloc, 5 where they did, 5 where promoterQTL/eQTL coloc, 5 where non-promoter QTL coloc, 5 where sQTL/eQTL coloc, and 5 where sQTL/eQTL don't coloc.
+
+```{r, eval=F}
+
+
+dat %>%
+    filter(Threshold == "_0.001") %>%
+    separate(Trait, into=c("PC", "P"), sep=";", remove = F) %>%
+    # pull(PC) %>% unique()
+    group_by(GeneLocus, TopCandidateSNP) %>%
+    mutate(Contains_sQTL = any(str_detect(PC, "polyA.Splicing"))) %>%
+    mutate(Contains_eQTL = any(str_detect(PC, "Expression.Splicing.Subset_YRI"))) %>%
+    mutate(Contains_hQTL = any(str_detect(PC, "H3K27AC"))) %>%
+    mutate(Contains_s_e_QTL = Contains_sQTL & Contains_eQTL ) %>%
+    mutate(Contains_h_e_QTL = Contains_hQTL & Contains_eQTL ) %>%
+    ungroup() %>%
+    group_by(GeneLocus) %>%
+    filter(any(Contains_h_e_QTL)) %>%
+    filter(!any(Contains_s_e_QTL)) %>%
+    filter(any(Contains_sQTL)) %>%
+    ungroup() %>%
+    filter(PC %in% c("polyA.Splicing", "Expression.Splicing.Subset_YRI", "H3K27AC")) %>%
+    filter(GeneLocus == "ENSG00000090006.18") %>%
+    # select(GeneLocus:Trait) %>%
+    write_tsv("scratch/ForPoster/PotentialColocExamples.tsv")
+
+    # add_count(GeneLocus) %>%
+    # arrange(desc(GeneLocus)) %>%
+    # select(GeneLocus, n)
+
+
+
+dat %>%
+  count(Threshold, GeneLocus) %>%
+  ggplot(aes(x=n, color=Threshold)) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(0,10)) +
+  theme_bw()
+
+dat.tidy
+
+
+
+dat %>%
+  filter(Threshold == "_0.01") %>%
+  select(-Threshold) %>%
+  # add_count(GeneLocus, TopCandidateSNP) %>%
+  separate(Trait, into=c("PC", "P"), sep=";", remove = F) %>%
+  group_by(GeneLocus, TopCandidateSNP) %>%
+  mutate(
+    ContainsMeta60 = PC == c("")
+  ) %>%
+  write_tsv("../code/scratch/TestHyprcolocPlots.tsv")
+```
+
+```{bash, eval=F}
+conda activate r_essentials
+echo "hello world"
+```
 
 
 

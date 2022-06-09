@@ -1,0 +1,21 @@
+---
+title: "ExploreCarlosChromatinSplicingData"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+## Intro
+
+Want to investigate hypothesis that splicing causally effects H3K36me3. Previous literature includes [de Almeida et al](https://www.nature.com/articles/nsmb.2123) where the authors see a genome-wide correlation b/n H3K36me3 and splicing, and do some splicing inhibition experiments and see a corresponding effect. Also [Kim et al](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3158196/) does some genome wide splicing inhibition and notes a puzzling 3' shift in H3K36me3 signal. Though, with splicing inhibition drugs I have to wonder about secondary non-direct effects. They also do some very nice single gene experiments where they knock out a splice site and observe H3K36me3 changes with chip-qpcr, but with single genes a wonder how generalizeable the finding is, and they still observe a 3' shift which is hard to mechanistically explain imo. Here I wanted to use H3K36me3 population scale QTL data as well as chRNA-seq QTL data to look for correlations in splice site mutations (natural experiments like the Lim et al single gene study), splicing effect, and H3K36me3 effect surrounding the splice site.
+
+
+## Methods
+
+Carlos processed data roughly as follows:
+
+- calculate 
+
