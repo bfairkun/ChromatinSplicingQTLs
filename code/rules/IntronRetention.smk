@@ -85,14 +85,16 @@ rule CollectSPLICEq_chRNA:
         mode = 'IER',
         Phenotype = 'chRNA'
     resources:
-        mem_mb = 32000
+        mem_mb = 52000
     params:
-        "NA18855"
+        skip = "NA18855",
+        min_reads = 1,
+        min_fraction = 0.1
     conda:
         "../envs/py_tools.yml"
     shell:
         """
-        python scripts/collect_spliceq.py --spliceq_dir SplicingAnalysis/SPLICEq/{wildcards.Phenotype}.{wildcards.mode}/  --output {output.out} --output_qqnorm {output.out_qqnorm} --skip_samples {params} &> {log}
+        python scripts/collect_spliceq.py --spliceq_dir SplicingAnalysis/SPLICEq/{wildcards.Phenotype}.{wildcards.mode}/  --output {output.out} --output_qqnorm {output.out_qqnorm} --skip_samples {params.skip} --min_reads {params.min_reads} --min_fraction {params.min_fraction} &> {log}
         """
 
 use rule CollectSPLICEq_chRNA as CollectSPLICEq_polyA with:
@@ -102,7 +104,9 @@ use rule CollectSPLICEq_chRNA as CollectSPLICEq_polyA with:
         mode = 'IER',
         Phenotype = 'polyA'
     params:
-        "None"
+        skip = "None",
+        min_reads = 1,
+        min_fraction = 0.1
         
 use rule CollectSPLICEq_chRNA as CollectSPLICEq_M30 with:
     input: 
@@ -111,7 +115,9 @@ use rule CollectSPLICEq_chRNA as CollectSPLICEq_M30 with:
         mode = 'IER',
         Phenotype = 'MetabolicLabelled.30min'
     params:
-        "None"
+        skip = "None",
+        min_reads = 1,
+        min_fraction = 0.1
 
 
 use rule CollectSPLICEq_chRNA as CollectSPLICEq_M60 with:
@@ -121,6 +127,8 @@ use rule CollectSPLICEq_chRNA as CollectSPLICEq_M60 with:
         mode = 'IER',
         Phenotype = 'MetabolicLabelled.60min'
     params:
-        "None"
+        skip = "None",
+        min_reads = 1,
+        min_fraction = 0.1
 
 
