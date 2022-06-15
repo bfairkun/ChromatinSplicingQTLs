@@ -157,6 +157,8 @@ parser.add_argument('--spliceq_dir', type=str, required=True)
 parser.add_argument('--output', type=str, required=True)
 parser.add_argument('--output_qqnorm', type=str, required=True)
 parser.add_argument('--skip_samples', type=str, required=True)
+parser.add_argument('--min_reads', type=int, required=True)
+parser.add_argument('--min_fraction', type=float, required=True)
 
 if __name__ == '__main__':
     
@@ -166,6 +168,8 @@ if __name__ == '__main__':
     output = args.output
     output_qqnorm = args.output_qqnorm
     skip_samples = args.skip_samples
+    min_reads = args.min_reads
+    min_fraction = args.min_fraction
     
     df_score = []
     df_exon5 = []
@@ -239,14 +243,20 @@ if __name__ == '__main__':
     sj3_ncov = process_df_list(df_sj3_ncov)
     sj3_ncov.to_csv(output[:-13] + 'sj3_ncov.bed.gz', sep='\t', index=False)
 
-    sj_counts = sj3 + sj5
-    sj_ncov_counts = sj5_ncov + sj3_ncov
     
-    idx = sj_counts.loc[((sj_counts >= 1) & (sj_ncov_counts >= 1)).mean(axis=1) >= 0.1].index
+    samples = sj3.columns[6:]
+
+    sj_counts = sj3[samples] + sj5[samples]
+    sj_ncov_counts = sj5_ncov[samples] + sj3_ncov[samples]
+
+    #sj_counts = sj3 + sj5
+    #sj_ncov_counts = sj5_ncov + sj3_ncov
+    
+    idx = sj_counts.loc[((sj_counts >= min_reads) & (sj_ncov_counts >= min_reads)).mean(axis=1) >= min_fraction].index
     
     IRdf = IRdf.loc[idx]
     
-    IRqqnorm = qqnormDF(IRdf, max_missing=0.9, skip_samples = [skip_samples])
+    IRqqnorm = qqnormDF(IRdf, max_missing=(1-min_fraction), skip_samples = [skip_samples])
     idx = IRqqnorm.index
     IRqqnorm_out = pd.concat([IRdf.loc[idx, IRdf.columns[:6]], IRqqnorm], axis=1)
     IRqqnorm_out.to_csv(output_qqnorm, sep='\t', index=False)
