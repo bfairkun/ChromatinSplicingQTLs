@@ -51,23 +51,6 @@ rule LiftOverProSeq:
         """
 
 
-#rule DefineGenomeWindows:
-#    output:
-#        expand("NonCodingRNA/bed/{chrom}.{strand}.{segment}.bed.gz",
-#               chrom=chrom_list,
-#               strand = ['plus', 'minus'],
-#               segment = GenomeWindowsByChrom)
-#    log:
-#        "logs/makegenomewindows.log"
-#    resources:
-#        mem_mb = 24000
-#    params:
-#        length = GetChromLength
-#    shell:
-#        """
-#        python scripts/MakeGenomeWindows.py --chrom {wildcards.chrom} --length {params.length} &> {log}
-#        """
-
 rule MakeWindows:
     input:
         "../data/Chrome.sizes"
@@ -84,10 +67,47 @@ rule MakeWindows:
         bedtools makewindows -g {input} -w {params} | awk '$1=="{wildcards.chrom}" {{print $1"\\t"$2"\\t"$3"\\t.\\t.\\t+"}}' > {output.plus};
         bedtools makewindows -g {input} -w {params} | awk '$1=="{wildcards.chrom}" {{print $1"\\t"$2"\\t"$3"\\t.\\t.\\t-"}}' > {output.minus}
         """
+        
+rule FilterLongJunc:
+    input:
+        "Alignments/STAR_Align/chRNA.Expression.Splicing/{IndID}/1/Filtered.bam",
+    output:
+        temp("NonCodingRNA/bam/{IndID}.filtered.bam")
+    wildcard_constraints:
+        IndID = "|".join(chRNASeqSamples),
+    resources:
+        mem_mb = 12000
+    log:
+        "logs/NonCodingRNA/filter_bam.{IndID}.log"
+    conda:
+        "../envs/py_tools.yml"
+    params:
+        max_junc_length = 10000
+    shell:
+        """
+        python scripts/filter_long_junc.py --input {input} --output {output} --max_junc_length {params.max_junc_length} &> {log}
+        """
+        
+rule IndexBam:
+    input:
+        "NonCodingRNA/bam/{IndID}.filtered.bam"
+    output:
+        "NonCodingRNA/bam/{IndID}.filtered.bam.bai"
+    log:
+        "logs/index.{IndID}_filtered.bam.log"
+    wildcard_constraints:
+        IndID = "|".join(chRNASeqSamples),
+    resources:
+        mem_mb = 12000
+    shell:
+        """
+        (samtools index -b {input}) &> {log}
+        """
 
 rule SplitBamByChromosome:
     input:
-        bam = "Alignments/STAR_Align/chRNA.Expression.Splicing/{IndID}/1/Filtered.bam",
+        bam = "NonCodingRNA/bam/{IndID}.filtered.bam",
+        bai = "NonCodingRNA/bam/{IndID}.filtered.bam.bai"
     output:
         temp("NonCodingRNA/bam/{IndID}.{chrom}.bam")
     wildcard_constraints:
@@ -119,8 +139,9 @@ rule WindowCountsChRNA:
         "logs/NonCodingRNA/counts_chRNA.{IndID}.{chrom}.{strand}.log"
     shell:
         """
-        (samtools view -bh -F 256 -f 64 {input.bam} | bedtools intersect -sorted -S -g {input.faidx} -a {input.chrom_bed} -b - -c -split | gzip - > {output}) &> {log}
+        (samtools view -bh -F 256 -f 64 {input.bam} | bedtools intersect -sorted -S -g {input.faidx} -a {input.chrom_bed} -b - -c | gzip - > {output}) &> {log}
         """
+        #(samtools view -bh -F 256 -f 64 {input.bam} | bedtools intersect -sorted -S -g {input.faidx} -a {input.chrom_bed} -b - -c -split | gzip - > {output}) &> {log}
 
 rule WindowCountsProSeq:
     input:
@@ -145,8 +166,8 @@ rule MakeInputForHMM:
     input:
         expand("NonCodingRNA/counts/chRNA/{{chrom}}.{IndID}.{{strand}}.bed.gz",
                IndID = [x for x in chRNASeqSamples if x != "NA18855"]),
-        expand("NonCodingRNA/counts/ProSeq/{{chrom}}.{IndID}.{{strand}}.bed.gz",
-               IndID = proseq_samples)
+        #expand("NonCodingRNA/counts/ProSeq/{{chrom}}.{IndID}.{{strand}}.bed.gz",
+        #       IndID = proseq_samples)
     output:
         "NonCodingRNA/tables/{chrom}.{strand}.counts.tab.gz"
     wildcard_constraints:
@@ -191,10 +212,10 @@ rule GetAllGenesForOverlap:
     input:
         "ReferenceGenome/Annotations/GTFTools/gencode.v34.chromasomal.genes.bed"
     output:
-        "NonCodingRNA/tables/allGenes.bed.gz"
+        "NonCodingRNA/annotation/allGenes.bed.gz"
     shell:
         """
-        awk -F'\\t' '{{print "chr"$1"\\t"$2"\\t"$3"\\t"$5"\\t"$6"\\t"$4}}' {input} | gzip -  > {output}
+        awk -F'\\t' '{{print "chr"$1"\\t"$2"\\t"$3"\\t"$5"\\t"$6"\\t"$4}}' {input} | bedtools sort -i - | gzip -  > {output}
         """
     
 def GetMergedDistance(wildcards):
@@ -206,9 +227,9 @@ def GetMergedDistance(wildcards):
 rule ProcessAnnotationsHMM:
     input:
         pred = "NonCodingRNA/tables/{chrom}.{strand}.predicted_{nstates}states.tab.gz",
-        genes_bed = "NonCodingRNA/tables/allGenes.bed.gz"
+        genes_bed = "NonCodingRNA/annotation/allGenes.bed.gz"
     output:
-        TU_bed = temp("NonCodingRNA/tables/{chrom}.{strand}.TU_{nstates}states.tab.gz"),
+        TU_bed = "NonCodingRNA/tables/{chrom}.{strand}.TU_{nstates}states.tab.gz",
         merged_bed = "NonCodingRNA/tables/{chrom}.{strand}.merged_{nstates}states.tab.gz",
         ncRNA_bed = "NonCodingRNA/tables/{chrom}.{strand}.{nstates}states.ncRNA.bed.gz",
     wildcard_constraints:
@@ -217,8 +238,8 @@ rule ProcessAnnotationsHMM:
         nstates = '2|3'
     params:
         strand = getStrandString,
-        merge_distance = GetMergedDistance,
-        max_overlap = 0.25
+        merge_distance = 1000,#GetMergedDistance,
+        max_overlap = 0.1
     log:
         "logs/NonCodingRNA/merge_hmm.{chrom}.{strand}.{nstates}states.log"
     resources:
@@ -226,8 +247,8 @@ rule ProcessAnnotationsHMM:
     shell:
         """
         python scripts/processHMM.py --input {input.pred} --output {output.TU_bed} --nstates {wildcards.nstates} &> {log};
-        (bedtools merge -i {output.TU_bed} -d {params.merge_distance} | awk -F'\\t' '{{print $0"\\t.\\t.\\t{params.strand}"}}' - | sort -u | gzip - > {output.merged_bed}) &>> {log};
-        (bedtools intersect -s -v -a {output.merged_bed} -b {input.genes_bed} -f {params.max_overlap} | sort -u | gzip - > {output.ncRNA_bed}) &>> {log}
+        (bedtools merge -i {output.TU_bed} -d {params.merge_distance} | awk -F'\\t' '{{print $0"\\t"$1"_"$2"_"$3"_{params.strand}\\t"$1"_"$2"_"$3"_{params.strand}\\t{params.strand}"}}' - | sort -u | gzip - > {output.merged_bed}) &>> {log};
+        (bedtools subtract -A -s -a {output.merged_bed} -b {input.genes_bed} -f {params.max_overlap} | sort -u | gzip - > {output.ncRNA_bed}) &>> {log}
         """
         
 rule MergeNonCodingRNA:
@@ -256,7 +277,7 @@ rule MergeNonCodingRNA:
         bedtools sort -i {output.tmp_filtered_bed} | gzip - > {output.filtered_bed};
         bedtools sort -i {output.tmp_hmm_bed} | gzip - > {output.hmm_bed};
         """
-        
+   
 rule ProteinCodingOverlap:
     input:
         gene_list = "ExpressionAnalysis/polyA/ExpressedGeneList.txt",
@@ -297,7 +318,7 @@ rule LogTransformBigWig:
         bedgraph_log = temp("NonCodingRNA/bigwig/chRNA.{IndID}.{strand}.log1p.bedgraph"),
         bigwig_log = "NonCodingRNA/bigwig/chRNA.{IndID}.{strand}.log1p.bw"
     wildcard_constraints:
-        IndID = "NA18486|NA19201",
+        IndID = "NA18486|NA19201|NA19210",
         strand = 'plus|minus'
     log:
         "logs/NonCodingRNA/chRNA.log1p.{IndID}.{strand}.log"
@@ -319,7 +340,7 @@ rule LogTransformPolyA:
         bedgraph_log = temp("NonCodingRNA/bigwig/polyA.{IndID}.log1p.bedgraph"),
         bigwig_log = "NonCodingRNA/bigwig/polyA.{IndID}.log1p.bw"
     wildcard_constraints:
-        IndID = "NA18486|NA19201",
+        IndID = "NA18486|NA19201|NA19210",
     log:
         "logs/NonCodingRNA/polyA.log1p.{IndID}.log"
     resources:
@@ -341,49 +362,75 @@ rule SplitAnnotationByStrand:
         "logs/NonCodingRNA/split_annotation.log"
     shell:
         """
-        (zcat NonCodingRNA/annotation/ncRNA_filtered.2states.sorted.bed.gz | awk -F'\t' '$6=="+"' -  > {output.plus_bed}) &> {log};
-        (zcat NonCodingRNA/annotation/ncRNA_filtered.2states.sorted.bed.gz | awk -F'\t' '$6=="-"' -  > {output.minus_bed}) &>> {log};
+        (zcat NonCodingRNA/annotation/ncRNA_filtered.2states.sorted.bed.gz | awk -F'\\t' '$6=="+"' -  > {output.plus_bed}) &> {log};
+        (zcat NonCodingRNA/annotation/ncRNA_filtered.2states.sorted.bed.gz | awk -F'\\t' '$6=="-"' -  > {output.minus_bed}) &>> {log};
         """
+        
+        
+rule GetTSSAnnotations:
+    input:
+        plus_bed = "NonCodingRNA/deeptools/bed/ncRNA.plus.bed",
+        minus_bed = "NonCodingRNA/deeptools/bed/ncRNA.minus.bed",
+        genes_bed = "NonCodingRNA/annotation/allGenes.bed.gz",
+    output:
+        ncRNA_tss = "NonCodingRNA/annotation/ncRNA_filtered.2states.TSS.bed.gz",
+        genes_plus = temp("NonCodingRNA/annotation/allGenes.plus.bed"),
+        genes_minus = temp("NonCodingRNA/annotation/allGenes.minus.bed"),
+        genes_tss = "NonCodingRNA/annotation/allGenes.TSS.bed.gz"
+    log:
+        "logs/TSSAnnotations.log",
+    params:
+        window = 1000
+    resources:
+        mem_mb = 12000
+    shell:
+        """
+        awk -F'\\t' '{{print $1"\\t"$2-{params.window}"\\t"$2+{params.window}"\\t"$4"\\t"$5"\\t"$6}}' {input.plus_bed} > NonCodingRNA/annotation/ncRNA_filtered.2states.TSS.bed;
+        awk -F'\\t' '{{print $1"\\t"$3-{params.window}"\\t"$3+{params.window}"\\t"$4"\\t"$5"\\t"$6}}' {input.minus_bed} >> NonCodingRNA/annotation/ncRNA_filtered.2states.TSS.bed;
+        gzip NonCodingRNA/annotation/ncRNA_filtered.2states.TSS.bed;
+        zcat {input.genes_bed} | awk -F'\\t' '$6=="+"' -  > {output.genes_plus};
+        zcat {input.genes_bed} | awk -F'\\t' '$6=="-"' -  > {output.genes_minus};
+        awk -F'\\t' '{{print $1"\\t"$2-{params.window}"\\t"$2+{params.window}"\\t"$4"\\t"$5"\\t"$6}}' {output.genes_plus} > NonCodingRNA/annotation/allGenes.TSS.bed;
+        awk -F'\\t' '{{print $1"\\t"$3-{params.window}"\\t"$3+{params.window}"\\t"$4"\\t"$5"\\t"$6}}' {output.genes_minus} >> NonCodingRNA/annotation/allGenes.TSS.bed;
+        gzip NonCodingRNA/annotation/allGenes.TSS.bed;
+        """
+        
 
 rule deepTools_chRNA_plotHeatmap:
     input:
         chRNA_plus = "NonCodingRNA/bigwig/chRNA.{IndID}.plus.log1p.bw",
         chRNA_minus = "NonCodingRNA/bigwig/chRNA.{IndID}.minus.log1p.bw",
         polyA = "NonCodingRNA/bigwig/polyA.{IndID}.log1p.bw",
-        plus_bed = "NonCodingRNA/deeptools/bed/ncRNA.plus.bed",
-        minus_bed = "NonCodingRNA/deeptools/bed/ncRNA.minus.bed",
+        plus_bed = "NonCodingRNA/deeptools/bed/ncRNA.plus{strictness}.bed",
+        minus_bed = "NonCodingRNA/deeptools/bed/ncRNA.minus{strictness}.bed",
     output:
-        mat = "NonCodingRNA/deeptools/matrix/{IndID}.RNA.matrix.gz",
-        png = "NonCodingRNA/deeptools/plots/{IndID}.RNA.plot.png"
+        mat = "NonCodingRNA/deeptools/matrix/{IndID}.RNA{strictness}.matrix.gz",
+        png = "NonCodingRNA/deeptools/plots/{IndID}.RNA{strictness}.plot.png"
     conda:
         "../envs/deeptools.yml"
     log:
-        "logs/NonCodingRNA/plots.{IndID}.log"
+        "logs/NonCodingRNA/plots.{IndID}{strictness}.log"
     resources:
         mem_mb = 12000
     wildcard_constraints:
-        IndID = "NA18486|NA19201",
+        IndID = "NA18486|NA19201|NA19210",
+        strictness = "|.strict1|.strict2|.strict3"
     shell:
         """
         computeMatrix reference-point --regionBodyLength 5000 -a 3000 -b 3000 -R {input.plus_bed} {input.minus_bed} -S {input.chRNA_plus} {input.chRNA_minus} {input.polyA} -o {output.mat} &> {log}
-        plotHeatmap -m {output.mat} -o {output.png} --regionsLabel "ncRNA.plus" "ncRNA.minus" --samplesLabel "chRNA plus {wildcards.IndID}" "chRNA minus {wildcards.IndID}" "polyA {wildcards.IndID}" --averageTypeSummaryPlot mean &>> {log}
+        plotHeatmap -m {output.mat} -o {output.png} --regionsLabel "ncRNA.plus{wildcards.strictness}" "ncRNA.minus{wildcards.strictness}" --samplesLabel "chRNA plus {wildcards.IndID}" "chRNA minus {wildcards.IndID}" "polyA {wildcards.IndID}" --averageTypeSummaryPlot mean &>> {log}
         """
-        
-        #"""
-        #computeMatrix reference-point -a 20000 -b 20000 -R {input.plus_bed} {input.minus_bed} -S {input.chRNA_plus} {input.chRNA_minus} {input.polyA} -o {output.mat} &> {log}
-        #plotHeatmap -m {output.mat} -o {output.png} --regionsLabel "ncRNA.plus" "ncRNA.minus" --samplesLabel "chRNA plus {wildcards.IndID}" "chRNA minus {wildcards.IndID}" "polyA {wildcards.IndID}" --averageTypeSummaryPlot mean &>> {log}
-        #"""
         
 
 rule StrictFilter:
     input:
         ncPlus = "NonCodingRNA/deeptools/bed/ncRNA.plus.bed",
         ncMinus = "NonCodingRNA/deeptools/bed/ncRNA.minus.bed",
-        genes = "NonCodingRNA/tables/allGenes.bed.gz",
+        genes = "NonCodingRNA/annotation/allGenes.bed.gz",
         chrom = "../data/Chrome.sizes"
     output:
-        genes1 = "NonCodingRNA/tables/allGenes_expanded1.bed.gz",
-        genes2 = "NonCodingRNA/tables/allGenes_expanded2.bed.gz",
+        genes1 = "NonCodingRNA/deeptools/bed/allGenes_expanded1.bed.gz",
+        genes2 = "NonCodingRNA/deeptools/bed/allGenes_expanded2.bed.gz",
         ncPlus1 = "NonCodingRNA/deeptools/bed/ncRNA.plus.strict1.bed",
         ncMinus1 = "NonCodingRNA/deeptools/bed/ncRNA.minus.strict1.bed",
         ncPlus2 = "NonCodingRNA/deeptools/bed/ncRNA.plus.strict2.bed",
@@ -398,77 +445,89 @@ rule StrictFilter:
         """
         (bedtools slop -i {input.genes} -g {input.chrom} -b 5000 | awk -F'\t' '{{print $1"\\t"$2"\\t"$3}}' | gzip - > {output.genes1}) &> {log};
         (bedtools slop -i {input.genes} -g {input.chrom} -b 20000 | awk -F'\t' '{{print $1"\\t"$2"\\t"$3}}' | gzip - > {output.genes2}) &>> {log};
-        (bedtools intersect -v -a {input.ncPlus} -b {output.genes1} -f 0.5 > {output.ncPlus1}) &>> {log};
-        (bedtools intersect -v -a {input.ncMinus} -b {output.genes1} -f 0.5 > {output.ncMinus1}) &>> {log};
-        (bedtools intersect -v -a {input.ncPlus} -b {output.genes2} -f 0.5 > {output.ncPlus2}) &>> {log};
-        (bedtools intersect -v -a {input.ncMinus} -b {output.genes2} -f 0.5 > {output.ncMinus2}) &>> {log};
-        (bedtools intersect -v -a {input.ncPlus} -b {output.genes1} > {output.ncPlus3}) &>> {log};
-        (bedtools intersect -v -a {input.ncMinus} -b {output.genes1} > {output.ncMinus3}) &>> {log};
+        (bedtools subtract -A -a {input.ncPlus} -b {output.genes1} -f 0.5 > {output.ncPlus1}) &>> {log};
+        (bedtools subtract -A -a {input.ncMinus} -b {output.genes1} -f 0.5 > {output.ncMinus1}) &>> {log};
+        (bedtools subtract -A -a {input.ncPlus} -b {output.genes2} -f 0.5 > {output.ncPlus2}) &>> {log};
+        (bedtools subtract -A -a {input.ncMinus} -b {output.genes2} -f 0.5 > {output.ncMinus2}) &>> {log};
+        (bedtools subtract -A -a {input.ncPlus} -b {output.genes1} > {output.ncPlus3}) &>> {log};
+        (bedtools subtract -A -a {input.ncMinus} -b {output.genes1} > {output.ncMinus3}) &>> {log};
         """
-        
-use rule deepTools_chRNA_plotHeatmap as deepTools_chRNA_plotHeatmap_strict1 with:
-    input:
-        chRNA_plus = "NonCodingRNA/bigwig/chRNA.{IndID}.plus.log1p.bw",
-        chRNA_minus = "NonCodingRNA/bigwig/chRNA.{IndID}.minus.log1p.bw",
-        polyA = "NonCodingRNA/bigwig/polyA.{IndID}.log1p.bw",
-        plus_bed = "NonCodingRNA/deeptools/bed/ncRNA.plus.strict1.bed",
-        minus_bed = "NonCodingRNA/deeptools/bed/ncRNA.minus.strict1.bed",
-    output:
-        mat = "NonCodingRNA/deeptools/matrix/{IndID}.RNA_strict1.matrix.gz",
-        png = "NonCodingRNA/deeptools/plots/{IndID}.RNA_strict1.plot.png"
-        
-use rule deepTools_chRNA_plotHeatmap as deepTools_chRNA_plotHeatmap_strict2 with:
-    input:
-        chRNA_plus = "NonCodingRNA/bigwig/chRNA.{IndID}.plus.log1p.bw",
-        chRNA_minus = "NonCodingRNA/bigwig/chRNA.{IndID}.minus.log1p.bw",
-        polyA = "NonCodingRNA/bigwig/polyA.{IndID}.log1p.bw",
-        plus_bed = "NonCodingRNA/deeptools/bed/ncRNA.plus.strict2.bed",
-        minus_bed = "NonCodingRNA/deeptools/bed/ncRNA.minus.strict2.bed",
-    output:
-        mat = "NonCodingRNA/deeptools/matrix/{IndID}.RNA_strict2.matrix.gz",
-        png = "NonCodingRNA/deeptools/plots/{IndID}.RNA_strict2.plot.png"
-        
-use rule deepTools_chRNA_plotHeatmap as deepTools_chRNA_plotHeatmap_strict3 with:
-    input:
-        chRNA_plus = "NonCodingRNA/bigwig/chRNA.{IndID}.plus.log1p.bw",
-        chRNA_minus = "NonCodingRNA/bigwig/chRNA.{IndID}.minus.log1p.bw",
-        polyA = "NonCodingRNA/bigwig/polyA.{IndID}.log1p.bw",
-        plus_bed = "NonCodingRNA/deeptools/bed/ncRNA.plus.strict3.bed",
-        minus_bed = "NonCodingRNA/deeptools/bed/ncRNA.minus.strict3.bed",
-    output:
-        mat = "NonCodingRNA/deeptools/matrix/{IndID}.RNA_strict3.matrix.gz",
-        png = "NonCodingRNA/deeptools/plots/{IndID}.RNA_strict3.plot.png"
-        
-        
         
         
 ################
 
+
+
+use rule LogTransformPolyA as LogTransformHistone with:
+    input:
+        chrom_sizes = "../data/Chrome.sizes", 
+        bigwig = "/project2/yangili1/bjf79/ChromatinSplicingQTLs/code/bigwigs/{Phenotype}/{IndID}.1.bw"
+    output:
+        bedgraph = temp("NonCodingRNA/bigwig/{Phenotype}.{IndID}.bedgraph"),
+        bedgraph_log = temp("NonCodingRNA/bigwig/{Phenotype}.{IndID}.log1p.bedgraph"),
+        bigwig_log = "NonCodingRNA/bigwig/{Phenotype}.{IndID}.log1p.bw"
+    wildcard_constraints:
+        IndID = "NA19201|NA19210",
+        Phenotype = "H3K27AC|H3K4ME1|H3K4ME3|H3K36ME3|ProCap"
+    log:
+        "logs/NonCodingRNA/{Phenotype}.log1p.{IndID}.log"
+        
+
 rule deepTools_histone_plotHeatmap:
+    input:
+        procap = "NonCodingRNA/bigwig/ProCap.{IndID}.log1p.bw",
+        h3k4me1 = "NonCodingRNA/bigwig/H3K4ME1.{IndID}.log1p.bw",
+        h3k4me3 = "NonCodingRNA/bigwig/H3K4ME3.{IndID}.log1p.bw",
+        h3k27ac = "NonCodingRNA/bigwig/H3K27AC.{IndID}.log1p.bw",
+        h3k36me3 = "NonCodingRNA/bigwig/H3K36ME3.{IndID}.log1p.bw",
+        plus_bed = "NonCodingRNA/deeptools/bed/ncRNA.plus{strictness}.bed",
+        minus_bed = "NonCodingRNA/deeptools/bed/ncRNA.minus{strictness}.bed",
+    output:
+        mat = "NonCodingRNA/deeptools/matrix/{IndID}.histone{strictness}.matrix.gz",
+        png = "NonCodingRNA/deeptools/plots/{IndID}.histone{strictness}.plot.png"
+    conda:
+        "../envs/deeptools.yml"
+    log:
+        "logs/NonCodingRNA/histone_plots.{IndID}{strictness}.log"
+    resources:
+        mem_mb = 12000
+    wildcard_constraints:
+        IndID = "NA19201|NA19210",
+        strictness = "|.strict1|.strict2|.strict3"
+    shell:
+        """
+        computeMatrix reference-point --regionBodyLength 5000 -a 3000 -b 3000 -R {input.plus_bed} {input.minus_bed} -S {input.procap} {input.h3k27ac} {input.h3k4me1} {input.h3k4me3} {input.h3k36me3} -o {output.mat} &> {log}
+        plotHeatmap -m {output.mat} -o {output.png} --regionsLabel "ncRNA.plus{wildcards.strictness}" "ncRNA.minus{wildcards.strictness}" --samplesLabel "ProCap {wildcards.IndID}" "H3K27ac {wildcards.IndID}" "H3K4me1 {wildcards.IndID}" "H3K4me3 {wildcards.IndID}" "H3K36me3 {wildcards.IndID}" --averageTypeSummaryPlot mean &>> {log}
+        """
+        
+rule plotHeatmapAll:
     input:
         chRNA_plus = "NonCodingRNA/bigwig/chRNA.{IndID}.plus.log1p.bw",
         chRNA_minus = "NonCodingRNA/bigwig/chRNA.{IndID}.minus.log1p.bw",
         polyA = "NonCodingRNA/bigwig/polyA.{IndID}.log1p.bw",
-        plus_bed = "NonCodingRNA/deeptools/bed/ncRNA.plus.bed",
-        minus_bed = "NonCodingRNA/deeptools/bed/ncRNA.minus.bed",
+        procap = "NonCodingRNA/bigwig/ProCap.{IndID}.log1p.bw",
+        h3k4me1 = "NonCodingRNA/bigwig/H3K4ME1.{IndID}.log1p.bw",
+        h3k4me3 = "NonCodingRNA/bigwig/H3K4ME3.{IndID}.log1p.bw",
+        h3k27ac = "NonCodingRNA/bigwig/H3K27AC.{IndID}.log1p.bw",
+        h3k36me3 = "NonCodingRNA/bigwig/H3K36ME3.{IndID}.log1p.bw",
+        plus_bed = "NonCodingRNA/deeptools/bed/ncRNA.plus{strictness}.bed",
+        minus_bed = "NonCodingRNA/deeptools/bed/ncRNA.minus{strictness}.bed",
     output:
-        mat = "NonCodingRNA/deeptools/matrix/{IndID}.RNA.matrix.gz",
-        png = "NonCodingRNA/deeptools/plots/{IndID}.RNA.plot.png"
+        mat = "NonCodingRNA/deeptools/matrix/{IndID}.combined{strictness}.matrix.gz",
+        png = "NonCodingRNA/deeptools/plots/{IndID}.combined{strictness}.plot.png"
     conda:
         "../envs/deeptools.yml"
     log:
-        "logs/NonCodingRNA/plots.{IndID}.log"
+        "logs/NonCodingRNA/combined_plots.{IndID}{strictness}.log"
     resources:
         mem_mb = 12000
     wildcard_constraints:
-        IndID = "NA18486|NA19201",
+        IndID = "NA19201|NA19210",
+        strictness = "|.strict1|.strict2|.strict3"
     shell:
         """
-        computeMatrix reference-point --regionBodyLength 5000 -a 3000 -b 3000 -R {input.plus_bed} {input.minus_bed} -S {input.chRNA_plus} {input.chRNA_minus} {input.polyA} -o {output.mat} &> {log}
-        plotHeatmap -m {output.mat} -o {output.png} --regionsLabel "ncRNA.plus" "ncRNA.minus" --samplesLabel "chRNA plus {wildcards.IndID}" "chRNA minus {wildcards.IndID}" "polyA {wildcards.IndID}" --averageTypeSummaryPlot mean &>> {log}
+        computeMatrix reference-point --regionBodyLength 5000 -a 3000 -b 3000 -R {input.plus_bed} {input.minus_bed} -S {input.chRNA_plus} {input.chRNA_minus} {input.polyA} {input.procap} {input.h3k27ac} {input.h3k4me1} {input.h3k4me3} {input.h3k36me3} -o {output.mat} &> {log}
+        plotHeatmap -m {output.mat} -o {output.png} --regionsLabel "ncRNA.plus{wildcards.strictness}" "ncRNA.minus{wildcards.strictness}" --samplesLabel "chRNA plus {wildcards.IndID}" "chRNA minus {wildcards.IndID}" "polyA {wildcards.IndID}" "ProCap {wildcards.IndID}" "H3K27ac {wildcards.IndID}" "H3K4me1 {wildcards.IndID}" "H3K4me3 {wildcards.IndID}" "H3K36me3 {wildcards.IndID}" --averageTypeSummaryPlot mean &>> {log}
         """
         
-        
-        
-        
-        
+ 
