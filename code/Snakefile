@@ -293,27 +293,14 @@ rule eRNA_rules:
 
 rule getHMMInput:
     input:
-        expand("NonCodingRNA/tables/{chrom}.{strand}.counts.tab.gz",
-                chrom = chrom_list, strand = ['minus', 'plus']),
-        expand("NonCodingRNA/tables/{chrom}.{strand}.predicted_{states}states.tab.gz",
-                chrom = chrom_list, strand = ['minus', 'plus'], states=['2', '3']),
-        expand("NonCodingRNA/tables/{chrom}.{strand}.{nstates}states.ncRNA.bed.gz",
-        chrom=chrom_list, strand = ['minus', 'plus'], nstates=['2', '3']),
-        expand("NonCodingRNA/annotation/ncRNA.{nstates}states.bed.gz", nstates=['2', '3']),
-        expand("NonCodingRNA/annotation/ncRNA_filtered.{nstates}states.bed.gz", nstates=['2', '3']),
-        expand("NonCodingRNA/annotation/allHMM.{nstates}states.bed.gz", nstates=['2', '3']),
-        expand("NonCodingRNA/annotation/AnnotatedProteinCoding_overlap.{nstates}states.bed.gz", nstates=['2', '3']),
-        expand("NonCodingRNA/annotation/DeNovoProteinCoding_overlap.{nstates}states.bed.gz", nstates=['2', '3']),
+        "NonCodingRNA/annotation/ncRNA_filtered.2states.sorted.bed.gz",
+        "NonCodingRNA/annotation/ncRNA.2states.sorted.bed.gz",
+        "NonCodingRNA/annotation/AnnotatedProteinCoding_overlap.2states.bed.gz",
+        "NonCodingRNA/annotation/DeNovoProteinCoding_overlap.2states.bed.gz",
         expand("NonCodingRNA/deeptools/matrix/{IndID}.RNA{strictness}.matrix.gz", 
         IndID = ["NA18486", "NA19201", "NA19210"], strictness=["", ".strict1", ".strict2", ".strict3"]),
         expand("NonCodingRNA/deeptools/plots/{IndID}.RNA{strictness}.plot.png", 
         IndID = ["NA18486", "NA19201", "NA19210"], strictness=["", ".strict1", ".strict2", ".strict3"]),
-        #expand("NonCodingRNA/deeptools/matrix/{IndID}.RNA.strict1.matrix.gz", IndID = ["NA18486", "NA19201", "NA19210"]),
-        #expand("NonCodingRNA/deeptools/plots/{IndID}.RNA.strict1.plot.png", IndID = ["NA18486", "NA19201", "NA19210"]),
-        #expand("NonCodingRNA/deeptools/matrix/{IndID}.RNA.strict2.matrix.gz", IndID = ["NA18486", "NA19201", "NA19210"]),
-        #expand("NonCodingRNA/deeptools/plots/{IndID}.RNA.strict2.plot.png", IndID = ["NA18486", "NA19201", "NA19210"]),
-        #expand("NonCodingRNA/deeptools/matrix/{IndID}.RNA.strict3.matrix.gz", IndID = ["NA18486", "NA19201", "NA19210"]),
-        #expand("NonCodingRNA/deeptools/plots/{IndID}.RNA.strict3.plot.png", IndID = ["NA18486", "NA19201", "NA19210"]),
         expand("NonCodingRNA/deeptools/matrix/{IndID}.histone{strictness}.matrix.gz", 
         IndID = ["NA19201", "NA19210"], strictness=["", ".strict1", ".strict2", ".strict3"]),
         expand("NonCodingRNA/deeptools/plots/{IndID}.histone{strictness}.plot.png",  
@@ -323,9 +310,15 @@ rule getHMMInput:
         expand("NonCodingRNA/deeptools/plots/{IndID}.combined{strictness}.plot.png",  
         IndID = ["NA19201", "NA19210"], strictness=["", ".strict1", ".strict2", ".strict3"]),
         "NonCodingRNA/annotation/ncRNA_filtered.2states.TSS.bed.gz",
-        "NonCodingRNA/annotation/allGenes.TSS.bed.gz"
+        expand("NonCodingRNA/bigwig/{IndID}.plus.bw", 
+        IndID = ["NA18486", "NA18497", "NA18498", "NA18499", "NA19201", "NA19210"]),
+        expand("NonCodingRNA/bigwig/{IndID}.minus.bw", 
+        IndID = ["NA18486", "NA18497", "NA18498", "NA18499", "NA19201", "NA19210"]),
         
         
         
+        
+        
+  
         
         

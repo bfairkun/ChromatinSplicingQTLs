@@ -118,24 +118,49 @@ rule GetAdditionalNonCodingRNAFromFeatureCounts:
         """
         
 
-### Excluding ProCap to avoid confusion
+rule MakeSAFForNonCodingRNA:
+    input:
+        "NonCodingRNA_200/annotation/ncRNA_filtered.2states.sorted.bed.gz",
+    output:
+        "NonCodingRNA_200/annotation/ncRNA_filtered.2states.sorted.saf",
+    shell:
+        """
+        echo -e 'GeneID\\tChr\\tStart\\tEnd\\tStrand' > {output};
+        zcat {input} | awk '{{print sep='\\t' "ncRNA_" NR, $1, $2, $3, $6 }}' FS='\\t' OFS='\\t' >> {output}
+        """
+        
+rule featureCountsNonCodingRNA:
+    input:
+        bam = GetBamForPhenotype,
+        saf = "NonCodingRNA_200/annotation/ncRNA_filtered.2states.sorted.bed.gz",
+    output:
+        "featureCounts/{Phenotype}_ncRNA/Counts.txt",
+    params:
+        extraParams = PairedEndParams,
+        strandParams = FeatureCountsNonCodingStrandParams
+    threads:
+        8
+    wildcard_constraints:
+        Phenotype = "|".join(["polyA.Expression", "chRNA.Expression", "MetabolicLabelled.30min", "MetabolicLabelled.60min"])
+    resources:
+        mem = 12000,
+        cpus_per_node = 9,
+    log:
+        "logs/featureCounts/{Phenotype}_ncRNA.log"
+    shell:
+        """
+        featureCounts {params.extraParams} {params.strandParams} -F SAF -T {threads} --ignoreDup --primary -a {input.saf} -o featureCounts/{wildcards.Phenotype}_ncRNA/Counts.txt {input.bam} &> {log};
+        """
 
-#rule PrepareAllRNACountsForQTLTools:
-#    input:
-#        featureCounts = "featureCounts/{Phenotype}_{ncRNA}/Counts.txt",
-#    output:
-#        FirstReps = "QTLs/QTLTools/{Phenotype}_{ncRNA}/OnlyFirstReps.qqnorm.bed.gz"
-#    log:
-#        "logs/Prepare_{Phenotype}.{ncRNA}_PhenotypeTable.log"
-#    conda:
-#        "../envs/r_essentials.yml"
-#    wildcard_constraints:
-#        Phenotype = "|".join(["polyA.Expression", "chRNA.Expression", "MetabolicLabelled.30min", "MetabolicLabelled.60min"]),
-#        ncRNA = "|".join(["eRNA", "cheRNA", "snoRNA", "lncRNA"])
-#    conda:
-#        "../envs/r_essentials.yml"
-#    shell:
-#        """
-#        Rscript scripts/PreparePhenotypeTablesNonCodingRNA.R {input.featureCounts} {output.FirstReps} &> {log}
-#        """
+        
+        
+        
+        
+        
+        
+        
+        
+        
+
+
 

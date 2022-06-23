@@ -57,7 +57,7 @@ done
 if [[ $bw_minus == "" ]]
 then
     temp_bgfile=$(mktemp $MKTEMP_ARGS)
-    samtools view -h $SAMTOOLSVIEW_ARGS $bam $REGION | perl -lane 'print if (( $F[0] =~ /^@/ ) || ( abs($F[8]) <= 10000  ))' | samtools view -bh | bedtools genomecov -ibam - -bga $GENOMECOV_ARGS | LC_COLLATE=C sort $SORT_ARGS -k1,1 -k2,2n > $temp_bgfile
+    samtools view -h $SAMTOOLSVIEW_ARGS $bam $REGION | perl -lane 'print if (( $F[0] =~ /^@/ ) || ( abs($F[8]) <= 20000  ))' | samtools view -bh | bedtools genomecov -ibam - -bga $GENOMECOV_ARGS | LC_COLLATE=C sort $SORT_ARGS -k1,1 -k2,2n > $temp_bgfile
     bedGraphToBigWig $temp_bgfile $fai $bw
     rm ${temp_bgfile}
 else
@@ -71,8 +71,8 @@ else
     samtools merge -f $temp_bamfile_minus <(samtools view -bh -F128 -f16 $bam $REGION) <(samtools view -bh -f162  $bam $REGION)
 
     # Create bedgraphs
-    samtools view -h $SAMTOOLSVIEW_ARGS $temp_bamfile_plus | perl -lane 'print if (( $F[0] =~ /^@/ ) || ( abs($F[8]) <= 10000  ))' | samtools view -bh | bedtools genomecov -ibam - -bga $GENOMECOV_ARGS |  LC_COLLATE=C sort $SORT_ARGS -k1,1 -k2,2n > $temp_bgfile_plus
-    samtools view -h $SAMTOOLSVIEW_ARGS $temp_bamfile_minus | perl -lane 'print if (( $F[0] =~ /^@/ ) || ( abs($F[8]) <= 10000  ))' | samtools view -bh | bedtools genomecov -ibam - -bga $GENOMECOV_ARGS | LC_COLLATE=C sort $SORT_ARGS -k1,1 -k2,2n > $temp_bgfile_minus
+    samtools view -h $SAMTOOLSVIEW_ARGS $temp_bamfile_plus | perl -lane 'print if (( $F[0] =~ /^@/ ) || ( abs($F[8]) <= 20000  ))' | samtools view -bh | bedtools genomecov -ibam - -bga $GENOMECOV_ARGS |  LC_COLLATE=C sort $SORT_ARGS -k1,1 -k2,2n > $temp_bgfile_plus
+    samtools view -h $SAMTOOLSVIEW_ARGS $temp_bamfile_minus | perl -lane 'print if (( $F[0] =~ /^@/ ) || ( abs($F[8]) <= 20000  ))' | samtools view -bh | bedtools genomecov -ibam - -bga $GENOMECOV_ARGS | LC_COLLATE=C sort $SORT_ARGS -k1,1 -k2,2n > $temp_bgfile_minus
 
     #Create bigwigs
     bedGraphToBigWig $temp_bgfile_plus $fai $bw

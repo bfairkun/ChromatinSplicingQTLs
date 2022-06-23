@@ -58,7 +58,7 @@ rule MakeWindows:
         plus = "NonCodingRNA/bed/{chrom}.windows.plus.bed.gz",
         minus = "NonCodingRNA/bed/{chrom}.windows.minus.bed.gz",
     params:
-        win_size = 200
+        win_size = 50,
     wildcard_constraints:
         chrom = "|".join(chrom_list),
         strand = 'minus|plus',
@@ -82,17 +82,20 @@ rule FilterLongJunc:
     conda:
         "../envs/py_tools.yml"
     params:
-        max_junc_length = 10000
+        max_junc_length = 20000
     shell:
         """
-        python scripts/filter_long_junc.py --input {input} --output {output} --max_junc_length {params.max_junc_length} &> {log}
+        (samtools view -h -F256 {input} | perl -lane 'print if (( $F[0] =~ /^@/ ) || ( abs($F[8]) <= {params.max_junc_length}  ))' | samtools view -bh > {output}) &> {log}
         """
+        
+#python scripts/filter_long_junc.py --input {input} --output {output} --max_junc_length {params.max_junc_length} &> {log}
+        
         
 rule IndexBam:
     input:
         "NonCodingRNA/bam/{IndID}.filtered.bam"
     output:
-        "NonCodingRNA/bam/{IndID}.filtered.bam.bai"
+        temp("NonCodingRNA/bam/{IndID}.filtered.bam.bai")
     log:
         "logs/index.{IndID}_filtered.bam.log"
     wildcard_constraints:
@@ -210,13 +213,15 @@ def getStrandString(wildcards):
         
 rule GetAllGenesForOverlap:
     input:
-        "ReferenceGenome/Annotations/GTFTools/gencode.v34.chromasomal.genes.bed"
+        "ReferenceGenome/Annotations/gencode.v34.chromasomal.annotation.gtf"
+        #"ReferenceGenome/Annotations/GTFTools/gencode.v34.chromasomal.genes.bed"
     output:
         "NonCodingRNA/annotation/allGenes.bed.gz"
     shell:
         """
-        awk -F'\\t' '{{print "chr"$1"\\t"$2"\\t"$3"\\t"$5"\\t"$6"\\t"$4}}' {input} | bedtools sort -i - | gzip -  > {output}
+        awk -F'\\t' '$3=="gene" {{print $1"\\t"$4"\\t"$5"\\t"$7"\\t"$9}}' {input} | awk -F'"' '{{print $1"\\t"$6"\\t"$4}}' | awk -F'\\t' '{{print $1"\\t"$2"\\t"$3"\\t"$6"\\t"$7"\\t"$4}}' | bedtools sort -i - | gzip - > {output}
         """
+        #awk -F'\\t' '{{print "chr"$1"\\t"$2"\\t"$3"\\t"$5"\\t"$6"\\t"$4}}' {input} | bedtools sort -i - | gzip -  > {output}
     
 def GetMergedDistance(wildcards):
     if wildcards.nstates == '3':
@@ -263,7 +268,7 @@ rule MergeNonCodingRNA:
         filtered_bed = "NonCodingRNA/annotation/ncRNA_filtered.{nstates}states.sorted.bed.gz",
         hmm_bed = "NonCodingRNA/annotation/allHMM.{nstates}states.sorted.bed.gz"
     params:
-        length = 1000,
+        length = 200,
     wildcard_constraints:
         nstates = '2|3'
     log:
@@ -376,7 +381,7 @@ rule GetTSSAnnotations:
         ncRNA_tss = "NonCodingRNA/annotation/ncRNA_filtered.2states.TSS.bed.gz",
         genes_plus = temp("NonCodingRNA/annotation/allGenes.plus.bed"),
         genes_minus = temp("NonCodingRNA/annotation/allGenes.minus.bed"),
-        genes_tss = "NonCodingRNA/annotation/allGenes.TSS.bed.gz"
+        #genes_tss = "NonCodingRNA/annotation/allGenes.TSS.bed.gz"
     log:
         "logs/TSSAnnotations.log",
     params:
@@ -390,10 +395,11 @@ rule GetTSSAnnotations:
         gzip NonCodingRNA/annotation/ncRNA_filtered.2states.TSS.bed;
         zcat {input.genes_bed} | awk -F'\\t' '$6=="+"' -  > {output.genes_plus};
         zcat {input.genes_bed} | awk -F'\\t' '$6=="-"' -  > {output.genes_minus};
-        awk -F'\\t' '{{print $1"\\t"$2-{params.window}"\\t"$2+{params.window}"\\t"$4"\\t"$5"\\t"$6}}' {output.genes_plus} > NonCodingRNA/annotation/allGenes.TSS.bed;
-        awk -F'\\t' '{{print $1"\\t"$3-{params.window}"\\t"$3+{params.window}"\\t"$4"\\t"$5"\\t"$6}}' {output.genes_minus} >> NonCodingRNA/annotation/allGenes.TSS.bed;
-        gzip NonCodingRNA/annotation/allGenes.TSS.bed;
         """
+
+#awk -F'\\t' '{{print $1"\\t"$2-{params.window}"\\t"$2+{params.window}"\\t"$4"\\t"$5"\\t"$6}}' {output.genes_plus} > NonCodingRNA/annotation/allGenes.TSS.bed;
+#awk -F'\\t' '{{print $1"\\t"$3-{params.window}"\\t"$3+{params.window}"\\t"$4"\\t"$5"\\t"$6}}' {output.genes_minus} >> NonCodingRNA/annotation/allGenes.TSS.bed;
+#gzip NonCodingRNA/annotation/allGenes.TSS.bed;
         
 
 rule deepTools_chRNA_plotHeatmap:
@@ -529,5 +535,33 @@ rule plotHeatmapAll:
         computeMatrix reference-point --regionBodyLength 5000 -a 3000 -b 3000 -R {input.plus_bed} {input.minus_bed} -S {input.chRNA_plus} {input.chRNA_minus} {input.polyA} {input.procap} {input.h3k27ac} {input.h3k4me1} {input.h3k4me3} {input.h3k36me3} -o {output.mat} &> {log}
         plotHeatmap -m {output.mat} -o {output.png} --regionsLabel "ncRNA.plus{wildcards.strictness}" "ncRNA.minus{wildcards.strictness}" --samplesLabel "chRNA plus {wildcards.IndID}" "chRNA minus {wildcards.IndID}" "polyA {wildcards.IndID}" "ProCap {wildcards.IndID}" "H3K27ac {wildcards.IndID}" "H3K4me1 {wildcards.IndID}" "H3K4me3 {wildcards.IndID}" "H3K36me3 {wildcards.IndID}" --averageTypeSummaryPlot mean &>> {log}
         """
+ 
+rule BamToBWWithIntronCoverage:
+    input:
+        fai = "ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa.fai",
+        bam = "Alignments/STAR_Align/chRNA.Expression.Splicing/{IndID}/1/Filtered.bam",
+        bai = "Alignments/STAR_Align/chRNA.Expression.Splicing/{IndID}/1/Filtered.bam.bai"
+    output:
+        bw_plus = "NonCodingRNA/bigwig/{IndID}.plus.bw",
+        bw_minus = "NonCodingRNA/bigwig/{IndID}.minus.bw",
+    wildcard_constraints:
+        IndID = "NA18486|NA18497|NA18498|NA18499|NA19201|NA19210"
+    resources:
+        mem_mb = 12000
+    log:
+        "logs/NonCodingRNA/{IndID}.bed2bigwig.log"
+    shell:
+        """
+        bash scripts/BamToBigwig_PrefilterBySize.sh {input.fai} {input.bam} {output.bw_minus} bw_minus={output.bw_plus} SORT_ARGS='-T /scratch/midway2/cnajar/' MKTEMP_ARGS='-p /scratch/midway2/cnajar/'
+        """
         
+
+
+
+
+
+ 
+ 
+ 
+ 
  
