@@ -1,0 +1,1452 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+
+
+<title>Quantify color rates more interpretable way</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/master/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">myproject</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Quantify color rates more interpretable way</h1>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2022-06-22
+</p>
+<p>
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 1
+</p>
+<p>
+<strong>Knit directory:</strong> <code>ChromatinSplicingQTLs/analysis/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
+</p>
+<p>
+This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
+  href="https://github.com/jdblischak/workflowr">workflowr</a> (version 1.6.2). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges"> <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted changes </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguncommittedchanges" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The R Markdown is untracked by Git. To know which version of the R Markdown file created these results, you’ll want to first commit it to the Git repo. If you’re still working on the analysis, you can ignore this warning. When you’re finished, you can run <code>wflow_publish</code> to commit the R Markdown file and build the HTML.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20191126code"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Seed:</strong> <code>set.seed(20191126)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20191126code" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20191126)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Session information:</strong> recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be confident that you successfully produced the results during this run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstree2ca3bcbeadd7d25f1584c8334595300093fe15bdtargetblank2ca3bcba"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/2ca3bcbeadd7d25f1584c8334595300093fe15bd" target="_blank">2ca3bcb</a> </a>
+</p>
+</div>
+<div id="strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstree2ca3bcbeadd7d25f1584c8334595300093fe15bdtargetblank2ca3bcba" class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/2ca3bcbeadd7d25f1584c8334595300093fe15bd" target="_blank">2ca3bcb</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    analysis/.Rhistory
+    Ignored:    code/.DS_Store
+    Ignored:    code/.RData
+    Ignored:    code/._.DS_Store
+    Ignored:    code/._README.md
+    Ignored:    code/._report.html
+    Ignored:    code/.ipynb_checkpoints/
+    Ignored:    code/.snakemake/
+    Ignored:    code/Alignments/
+    Ignored:    code/ENCODE/
+    Ignored:    code/ExpressionAnalysis/
+    Ignored:    code/FastqFastp/
+    Ignored:    code/FastqFastpSE/
+    Ignored:    code/Genotypes/
+    Ignored:    code/IntronSlopes/
+    Ignored:    code/Misc/
+    Ignored:    code/MiscCountTables/
+    Ignored:    code/Multiqc/
+    Ignored:    code/Multiqc_chRNA/
+    Ignored:    code/PeakCalling/
+    Ignored:    code/Phenotypes/
+    Ignored:    code/PlotGruberQTLs/
+    Ignored:    code/PlotQTLs/
+    Ignored:    code/ProCapAnalysis/
+    Ignored:    code/QC/
+    Ignored:    code/QTLs/
+    Ignored:    code/ReferenceGenome/
+    Ignored:    code/Rplots.pdf
+    Ignored:    code/Session.vim
+    Ignored:    code/SplicingAnalysis/
+    Ignored:    code/TODO
+    Ignored:    code/Tehranchi/
+    Ignored:    code/bigwigs/
+    Ignored:    code/bigwigs_FromNonWASPFilteredReads/
+    Ignored:    code/config/.DS_Store
+    Ignored:    code/config/._.DS_Store
+    Ignored:    code/config/.ipynb_checkpoints/
+    Ignored:    code/debug.ipynb
+    Ignored:    code/debug_python.ipynb
+    Ignored:    code/deepTools/
+    Ignored:    code/featureCounts/
+    Ignored:    code/gwas_summary_stats/
+    Ignored:    code/hyprcoloc/
+    Ignored:    code/igv_session.xml
+    Ignored:    code/log
+    Ignored:    code/logs/
+    Ignored:    code/notebooks/.ipynb_checkpoints/
+    Ignored:    code/rules/.ipynb_checkpoints/
+    Ignored:    code/rules/OldRules/
+    Ignored:    code/rules/notebooks/
+    Ignored:    code/scratch/
+    Ignored:    code/scripts/.ipynb_checkpoints/
+    Ignored:    code/scripts/GTFtools_0.8.0/
+    Ignored:    code/scripts/__pycache__/
+    Ignored:    code/scripts/liftOverBedpe/liftOverBedpe.py
+    Ignored:    code/snakemake.log
+    Ignored:    code/snakemake.sbatch.log
+    Ignored:    data/.DS_Store
+    Ignored:    data/._.DS_Store
+    Ignored:    data/._20220414203249_JASPAR2022_combined_matrices_25818_jaspar.txt
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-10.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-11.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-2.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-3.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-4.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-5.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-6.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-7.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-8.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022.csv
+
+Untracked files:
+    Untracked:  analysis/20220622_QuantifyColocRateMoreInterpretableWay.Rmd
+    Untracked:  code/scripts/CalculateLD_PerGeneWindow.py
+    Untracked:  code/scripts/CalculateLD_PerGeneWindow_Chunks.py
+    Untracked:  code/scripts/PlotColocFromHyprcolocResults.R
+    Untracked:  code/snakemake_profiles/slurm/__pycache__/
+    Untracked:  data/Phenotypes_recode_for_Plotting.txt
+
+Unstaged changes:
+    Modified:   analysis/20220606_PlotColocsForIntuitions.Rmd
+    Modified:   code/Snakefile
+    Modified:   code/rules/Coloc.smk
+    Modified:   code/rules/MakeBigwigs.smk
+    Modified:   code/scripts/GenometracksByGenotype
+    Modified:   code/scripts/hyprcoloc_genewise2.R
+    Modified:   data/ColorsForPhenotypes.xlsx
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+<p>
+There are no past versions. Publish this analysis with <code>wflow_publish()</code> to start tracking its development.
+</p>
+<hr>
+</div>
+</div>
+</div>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>In a <a href="20211217_GenewiseColocFirstLook.html">previous notebook</a> I explored the genewise hyprcoloc output, and noted that 30min and 60min 4sU colocalize (with all default parameters/thresholds) 80% of the time that they are tested. I expect this to be closer to 100%, and we should get similarly high colocalization with eQTL from polyA RNA-seq. Perhaps just by filtering for colocalizations above some threshold we can get more believable results. I could/should technically re-run hyprcoloc with different parameters, but before I do that, to understand the results better, let’s see how these colocalization rates change after filter for different posterior probabilities for colocalization.</p>
+</div>
+<div id="analysis" class="section level2">
+<h2>Analysis</h2>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>── Attaching packages ────────────────────────────────── tidyverse 1.3.0 ──</code></pre>
+<pre><code>✓ ggplot2 3.3.5     ✓ purrr   0.3.4
+✓ tibble  2.1.3     ✓ dplyr   0.8.3
+✓ tidyr   1.1.0     ✓ stringr 1.4.0
+✓ readr   1.3.1     ✓ forcats 0.4.0</code></pre>
+<pre><code>── Conflicts ───────────────────────────────────── tidyverse_conflicts() ──
+x dplyr::filter() masks stats::filter()
+x dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>library(viridis)</code></pre>
+<pre><code>Loading required package: viridisLite</code></pre>
+<pre class="r"><code>library(gplots)</code></pre>
+<pre><code>
+Attaching package: &#39;gplots&#39;</code></pre>
+<pre><code>The following object is masked from &#39;package:stats&#39;:
+
+    lowess</code></pre>
+<pre class="r"><code>library(data.table)</code></pre>
+<pre><code>
+Attaching package: &#39;data.table&#39;</code></pre>
+<pre><code>The following objects are masked from &#39;package:dplyr&#39;:
+
+    between, first, last</code></pre>
+<pre><code>The following object is masked from &#39;package:purrr&#39;:
+
+    transpose</code></pre>
+<pre class="r"><code>library(qvalue)
+library(purrr)
+
+sample_n_of &lt;- function(data, size, ...) {
+  dots &lt;- quos(...)
+  
+  group_ids &lt;- data %&gt;% 
+    group_by(!!! dots) %&gt;% 
+    group_indices()
+  
+  sampled_groups &lt;- sample(unique(group_ids), size)
+  
+  data %&gt;% 
+    filter(group_ids %in% sampled_groups)
+}
+
+RecodeDat &lt;- read_tsv(&quot;../data/Phenotypes_recode_for_Plotting.txt&quot;)</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  PC = col_character(),
+  Alias = col_character(),
+  ShorterAlias = col_character(),
+  Include = col_logical()
+)</code></pre>
+<pre class="r"><code>dat &lt;- Sys.glob(&quot;../code/hyprcoloc/Results/ForColoc/MolColocTest*_*/results.txt.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/hyprcoloc/Results/ForColoc/MolColocTest(.*?)_(.+?)/results.txt.gz&quot;, &quot;\\1_0.\\2&quot;)) %&gt;%
+  lapply(read_tsv) %&gt;%
+  bind_rows(.id=&quot;Threshold&quot;)</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  GeneLocus = col_character(),
+  HyprcolocIteration = col_double(),
+  PosteriorColocalizationPr = col_double(),
+  RegionalAssociationPr = col_double(),
+  TopCandidateSNP = col_character(),
+  ProportionPosteriorPrExplainedByTopSNP = col_double(),
+  Trait = col_character()
+)</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  GeneLocus = col_character(),
+  HyprcolocIteration = col_double(),
+  PosteriorColocalizationPr = col_double(),
+  RegionalAssociationPr = col_double(),
+  TopCandidateSNP = col_character(),
+  ProportionPosteriorPrExplainedByTopSNP = col_double(),
+  Trait = col_character()
+)
+Parsed with column specification:
+cols(
+  GeneLocus = col_character(),
+  HyprcolocIteration = col_double(),
+  PosteriorColocalizationPr = col_double(),
+  RegionalAssociationPr = col_double(),
+  TopCandidateSNP = col_character(),
+  ProportionPosteriorPrExplainedByTopSNP = col_double(),
+  Trait = col_character()
+)
+Parsed with column specification:
+cols(
+  GeneLocus = col_character(),
+  HyprcolocIteration = col_double(),
+  PosteriorColocalizationPr = col_double(),
+  RegionalAssociationPr = col_double(),
+  TopCandidateSNP = col_character(),
+  ProportionPosteriorPrExplainedByTopSNP = col_double(),
+  Trait = col_character()
+)
+Parsed with column specification:
+cols(
+  GeneLocus = col_character(),
+  HyprcolocIteration = col_double(),
+  PosteriorColocalizationPr = col_double(),
+  RegionalAssociationPr = col_double(),
+  TopCandidateSNP = col_character(),
+  ProportionPosteriorPrExplainedByTopSNP = col_double(),
+  Trait = col_character()
+)
+Parsed with column specification:
+cols(
+  GeneLocus = col_character(),
+  HyprcolocIteration = col_double(),
+  PosteriorColocalizationPr = col_double(),
+  RegionalAssociationPr = col_double(),
+  TopCandidateSNP = col_character(),
+  ProportionPosteriorPrExplainedByTopSNP = col_double(),
+  Trait = col_character()
+)</code></pre>
+<pre class="r"><code>dat %&gt;%
+  separate(Trait, into=c(&quot;PC&quot;, &quot;P&quot;), sep=&quot;;&quot;) %&gt;%
+  pull(PC) %&gt;% unique() %&gt;% sort()</code></pre>
+<pre><code> [1] &quot;chRNA.Expression_cheRNA&quot;            
+ [2] &quot;chRNA.Expression_eRNA&quot;              
+ [3] &quot;chRNA.Expression_lncRNA&quot;            
+ [4] &quot;chRNA.Expression_snoRNA&quot;            
+ [5] &quot;chRNA.Expression.Splicing&quot;          
+ [6] &quot;chRNA.IER&quot;                          
+ [7] &quot;chRNA.IR&quot;                           
+ [8] &quot;chRNA.IRjunctions&quot;                  
+ [9] &quot;chRNA.Slopes&quot;                       
+[10] &quot;chRNA.Splicing&quot;                     
+[11] &quot;CTCF&quot;                               
+[12] &quot;Expression.Splicing&quot;                
+[13] &quot;Expression.Splicing.Subset_YRI&quot;     
+[14] &quot;H3K27AC&quot;                            
+[15] &quot;H3K36ME3&quot;                           
+[16] &quot;H3K4ME1&quot;                            
+[17] &quot;H3K4ME3&quot;                            
+[18] &quot;MetabolicLabelled.30min&quot;            
+[19] &quot;MetabolicLabelled.30min.IER&quot;        
+[20] &quot;MetabolicLabelled.30min.IR&quot;         
+[21] &quot;MetabolicLabelled.30min.IRjunctions&quot;
+[22] &quot;MetabolicLabelled.30min.Splicing&quot;   
+[23] &quot;MetabolicLabelled.60min&quot;            
+[24] &quot;MetabolicLabelled.60min.IER&quot;        
+[25] &quot;MetabolicLabelled.60min.IR&quot;         
+[26] &quot;MetabolicLabelled.60min.IRjunctions&quot;
+[27] &quot;MetabolicLabelled.60min.Splicing&quot;   
+[28] &quot;polyA.IER&quot;                          
+[29] &quot;polyA.IR&quot;                           
+[30] &quot;polyA.IR.Subset_YRI&quot;                
+[31] &quot;polyA.IRjunctions&quot;                  
+[32] &quot;polyA.Splicing&quot;                     
+[33] &quot;polyA.Splicing.Subset_YRI&quot;          
+[34] &quot;ProCap&quot;                             </code></pre>
+<pre class="r"><code># dat %&gt;%
+#   separate(Trait, into=c(&quot;PC&quot;, &quot;P&quot;), sep=&quot;;&quot;) %&gt;%
+#   select(PC) %&gt;%
+#   distinct() %&gt;%
+#   write_tsv(&quot;../code/scratch/Phenotypes.tsv&quot;)
+
+dat %&gt;%
+  separate(Trait, into=c(&quot;PC&quot;, &quot;P&quot;), sep=&quot;;&quot;) %&gt;%
+  count(Threshold, PC) %&gt;%
+  ggplot(aes(x=PC, y=n)) +
+  geom_col() +
+  facet_wrap(~Threshold) +
+  theme_bw() +
+  labs(title = &quot;Number of Loci:molQTL pairs attempted to colocalize in total&quot;) +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))</code></pre>
+<p><img src="figure/20220622_QuantifyColocRateMoreInterpretableWay.Rmd/unnamed-chunk-1-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok so now make data frame with all attempted coloc pairs (each pair will be representated twice: once with traitA in column1, and once with traitB in column1).</p>
+<pre class="r"><code>dat.tidy &lt;- dat %&gt;%
+  # head(1000) %&gt;%
+  unite(Locus, GeneLocus, Threshold, sep = &quot;:&quot;) %&gt;%
+  left_join(., ., by = &quot;Locus&quot;) %&gt;% 
+    filter(Trait.x != Trait.y) %&gt;% 
+    separate(Trait.x, into = c(&quot;PC1&quot;,&quot;P1&quot;), sep = &quot;[, ;]&quot;, remove=F) %&gt;% 
+    separate(Trait.y, into = c(&quot;PC2&quot;,&quot;P2&quot;), sep = &quot;[, ;]&quot;, remove=F) %&gt;% 
+    rowwise() %&gt;%
+    mutate(PC_ClassPair = paste(PC1, PC2)) %&gt;%
+    ungroup() %&gt;%
+    # pull(PC_ClassPair) %&gt;% unique()
+    mutate(IsColocalizedPair = HyprcolocIteration.x == HyprcolocIteration.y) %&gt;%
+    replace_na(list(IsColocalizedPair = FALSE))
+
+RNASeqPhenotypes &lt;- c(&quot;MetabolicLabelled.30min&quot;, &quot;MetabolicLabelled.60min&quot;, &quot;Expression.Splicing.Subset_YRI&quot;, &quot;chRNA.Expression.Splicing&quot;, &quot;H3K36ME3&quot;)
+
+
+dat.tidy %&gt;%
+  filter((PC1 %in% RNASeqPhenotypes) &amp; (PC2 %in% RNASeqPhenotypes)) %&gt;%
+  separate(Locus, into=c(&quot;Locus&quot;, &quot;Threshold&quot;), sep = &quot;:&quot;) %&gt;%
+  group_by(PC1, PC2, Threshold) %&gt;%
+  summarise(FractionColocs = sum(IsColocalizedPair)/n()) %&gt;%
+  ungroup() %&gt;%
+  mutate(TopPCs = paste(PC1, PC2)) %&gt;%
+  mutate(BottomPCs = paste(PC2, PC1)) %&gt;%
+  select(-PC1, -PC2) %&gt;%
+  gather(key = &quot;MatrixHalf&quot;, value = &quot;PCs&quot;, TopPCs, BottomPCs) %&gt;%
+  separate(PCs, into=c(&quot;PC1&quot;, &quot;PC2&quot;), sep = &quot; &quot;) %&gt;%
+  distinct(PC1, PC2, FractionColocs, Threshold, .keep_all = T) %&gt;%
+  ggplot(aes(x=PC1, y=PC2, fill=FractionColocs)) +
+  geom_raster() +
+  geom_text(aes(label=signif(FractionColocs, 2))) +
+  scale_fill_viridis(option=&quot;B&quot;, direction = 1, limits=c(0.5,1)) +
+  facet_wrap(~Threshold) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))</code></pre>
+<p><img src="figure/20220622_QuantifyColocRateMoreInterpretableWay.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Alternate computation of the same data… How many xQTLs coloc with at least one yQTL:</p>
+<pre class="r"><code>RecodeVec &lt;- RecodeDat %&gt;%
+  select(PC, ShorterAlias) %&gt;%
+  deframe()
+
+RecodeIncludePCs &lt;- RecodeDat %&gt;%
+  filter(Include) %&gt;%
+  pull(PC)
+
+
+NumQTLs &lt;- dat.tidy %&gt;%
+  filter(PC1 %in% RNASeqPhenotypes) %&gt;%
+  mutate(PC1 = recode(PC1, !!!RecodeVec)) %&gt;%
+  mutate(PC2 = recode(PC2, !!!RecodeVec)) %&gt;%
+  separate(Locus, into=c(&quot;Locus&quot;, &quot;Threshold&quot;), sep = &quot;:&quot;) %&gt;%
+  distinct(Locus, Threshold, PC1, P1) %&gt;%
+  count(Threshold, PC1)
+
+
+dat.tidy %&gt;%
+  filter(PC1 %in% RNASeqPhenotypes) %&gt;%
+  filter(PC2 %in% RNASeqPhenotypes) %&gt;%
+  mutate(PC1 = recode(PC1, !!!RecodeVec)) %&gt;%
+  mutate(PC2 = recode(PC2, !!!RecodeVec)) %&gt;%
+  filter(IsColocalizedPair) %&gt;%
+  separate(Locus, into=c(&quot;Locus&quot;, &quot;Threshold&quot;), sep = &quot;:&quot;) %&gt;%
+  # filter(Locus==&quot;ENSG00000000457.14&quot; &amp; Threshold==&quot;_0.001&quot; &amp; PC1 == &quot;MetabolicLabelled.30min&quot; &amp; P1 ==&quot;ENSG00000000457.14&quot; &amp; PC2==&quot;MetabolicLabelled.60min&quot;) %&gt;%
+  mutate(PC2 = as.factor(PC2)) %&gt;%
+  count(Locus, Threshold, PC1, P1, PC2, .drop=F) %&gt;%
+  mutate(ContainsAtleastOneColoc = n&gt;0) %&gt;%
+  # add_count(PC1, Threshold, wt=, name=&quot;NumQTLsInPC1&quot;) %&gt;%
+  group_by(PC1, PC2, Threshold) %&gt;%
+  summarise(SumPC1sWithAtLeast1PC2Coloc = sum(ContainsAtleastOneColoc)) %&gt;%
+  left_join(NumQTLs, by=c(&quot;Threshold&quot;, &quot;PC1&quot;)) %&gt;%
+  mutate(FractionColocs = SumPC1sWithAtLeast1PC2Coloc/n) %&gt;%
+  ggplot(aes(x=PC1, y=PC2, fill=FractionColocs)) +
+  geom_raster() +
+  geom_text(aes(label=signif(FractionColocs, 2))) +
+  scale_fill_viridis(option=&quot;B&quot;, direction = 1, limits=c(0,1)) +
+  facet_wrap(~Threshold) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))</code></pre>
+<p><img src="figure/20220622_QuantifyColocRateMoreInterpretableWay.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>…same thing but with all phenotypes</p>
+<pre class="r"><code>NumQTLs &lt;- dat.tidy %&gt;%
+  filter(PC1 %in% RecodeIncludePCs) %&gt;%
+  mutate(PC1 = recode(PC1, !!!RecodeVec)) %&gt;%
+  mutate(PC2 = recode(PC2, !!!RecodeVec)) %&gt;%  separate(Locus, into=c(&quot;Locus&quot;, &quot;Threshold&quot;), sep = &quot;:&quot;) %&gt;%
+  distinct(Locus, Threshold, PC1, P1) %&gt;%
+  count(Threshold, PC1)
+
+
+dat.tidy %&gt;%
+  filter(PC1 %in% RecodeIncludePCs) %&gt;%
+  filter(PC2 %in% RecodeIncludePCs) %&gt;%
+  mutate(PC1 = recode(PC1, !!!RecodeVec)) %&gt;%
+  mutate(PC2 = recode(PC2, !!!RecodeVec)) %&gt;%
+  filter(IsColocalizedPair) %&gt;%
+  separate(Locus, into=c(&quot;Locus&quot;, &quot;Threshold&quot;), sep = &quot;:&quot;) %&gt;%
+  # filter((PC1 %in% RNASeqPhenotypes) &amp; (PC2 %in% RNASeqPhenotypes)) %&gt;%
+  mutate(PC2 = as.factor(PC2)) %&gt;%
+  count(Locus, Threshold, PC1, P1, PC2, .drop=F) %&gt;%
+  mutate(ContainsAtleastOneColoc = n&gt;0) %&gt;%
+  # add_count(PC1, Threshold, wt=, name=&quot;NumQTLsInPC1&quot;) %&gt;%
+  group_by(PC1, PC2, Threshold) %&gt;%
+  summarise(SumPC1sWithAtLeast1PC2Coloc = sum(ContainsAtleastOneColoc)) %&gt;%
+  left_join(NumQTLs, by=c(&quot;Threshold&quot;, &quot;PC1&quot;)) %&gt;%
+  # filter(Threshold == &quot;_0.001&quot;) %&gt;%
+  mutate(FractionColocs = SumPC1sWithAtLeast1PC2Coloc/n) %&gt;%
+  ggplot(aes(x=PC1, y=PC2, fill=FractionColocs)) +
+  geom_raster() +
+  # geom_text(aes(label=signif(FractionColocs*100, 2)), color=&quot;blue&quot;) +
+  scale_fill_viridis(option=&quot;B&quot;, direction = 1, limits=c(0,1)) +
+  facet_wrap(~Threshold) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))</code></pre>
+<p><img src="figure/20220622_QuantifyColocRateMoreInterpretableWay.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>dat.tidy %&gt;%
+  filter(PC1 %in% RecodeIncludePCs) %&gt;%
+  filter(PC2 %in% RecodeIncludePCs) %&gt;%
+  mutate(PC1 = recode(PC1, !!!RecodeVec)) %&gt;%
+  mutate(PC2 = recode(PC2, !!!RecodeVec)) %&gt;%
+  filter(IsColocalizedPair) %&gt;%
+  separate(Locus, into=c(&quot;Locus&quot;, &quot;Threshold&quot;), sep = &quot;:&quot;) %&gt;%
+  # filter((PC1 %in% RNASeqPhenotypes) &amp; (PC2 %in% RNASeqPhenotypes)) %&gt;%
+  mutate(PC2 = as.factor(PC2)) %&gt;%
+  count(Locus, Threshold, PC1, P1, PC2, .drop=F) %&gt;%
+  mutate(ContainsAtleastOneColoc = n&gt;0) %&gt;%
+  # add_count(PC1, Threshold, wt=, name=&quot;NumQTLsInPC1&quot;) %&gt;%
+  group_by(PC1, PC2, Threshold) %&gt;%
+  summarise(SumPC1sWithAtLeast1PC2Coloc = sum(ContainsAtleastOneColoc)) %&gt;%
+  left_join(NumQTLs, by=c(&quot;Threshold&quot;, &quot;PC1&quot;)) %&gt;%
+  filter(Threshold == &quot;_0.001&quot;) %&gt;%
+  mutate(FractionColocs = SumPC1sWithAtLeast1PC2Coloc/n) %&gt;%
+  ggplot(aes(x=PC1, y=PC2, fill=FractionColocs)) +
+  geom_raster() +
+  geom_text(aes(label=signif(FractionColocs*100, 2)), color=&quot;blue&quot;) +
+  scale_fill_viridis(option=&quot;B&quot;, direction = 1, limits=c(0,1)) +
+  facet_wrap(~Threshold) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))</code></pre>
+<p><img src="figure/20220622_QuantifyColocRateMoreInterpretableWay.Rmd/unnamed-chunk-4-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>I also want to make this plot distinguishing between promoter chromatin effects and non-promoter effects… for now let me just remake the plot after grouping these different chromatin phenotypes</p>
+<pre class="r"><code>NumQTLs &lt;- dat.tidy %&gt;%
+  filter(PC1 %in% RecodeIncludePCs) %&gt;%
+  mutate(PC1 = recode(PC1, !!!RecodeVec)) %&gt;%
+  mutate(PC2 = recode(PC2, !!!RecodeVec)) %&gt;%  separate(Locus, into=c(&quot;Locus&quot;, &quot;Threshold&quot;), sep = &quot;:&quot;) %&gt;%
+  mutate(PC1 = recode(PC1, H3K4ME3=&quot;H3K(4ME3|4ME1|K27AC)&quot;, H3K27AC=&quot;H3K(4ME3|4ME1|K27AC)&quot;, H3K4ME1=&quot;H3K(4ME3|4ME1|K27AC)&quot;)) %&gt;%
+  mutate(PC2 = recode(PC2, H3K4ME3=&quot;H3K(4ME3|4ME1|K27AC)&quot;, H3K27AC=&quot;H3K(4ME3|4ME1|K27AC)&quot;, H3K4ME1=&quot;H3K(4ME3|4ME1|K27AC)&quot;)) %&gt;%
+  distinct(Locus, Threshold, PC1, P1) %&gt;%
+  count(Threshold, PC1)
+
+dat.tidy %&gt;%
+  filter(PC1 %in% RecodeIncludePCs) %&gt;%
+  filter(PC2 %in% RecodeIncludePCs) %&gt;%
+  mutate(PC1 = recode(PC1, !!!RecodeVec)) %&gt;%
+  mutate(PC2 = recode(PC2, !!!RecodeVec)) %&gt;%
+  mutate(PC1 = recode(PC1, H3K4ME3=&quot;H3K(4ME3|4ME1|K27AC)&quot;, H3K27AC=&quot;H3K(4ME3|4ME1|K27AC)&quot;, H3K4ME1=&quot;H3K(4ME3|4ME1|K27AC)&quot;)) %&gt;%
+  mutate(PC2 = recode(PC2, H3K4ME3=&quot;H3K(4ME3|4ME1|K27AC)&quot;, H3K27AC=&quot;H3K(4ME3|4ME1|K27AC)&quot;, H3K4ME1=&quot;H3K(4ME3|4ME1|K27AC)&quot;)) %&gt;%
+  filter(IsColocalizedPair) %&gt;%
+  separate(Locus, into=c(&quot;Locus&quot;, &quot;Threshold&quot;), sep = &quot;:&quot;) %&gt;%
+  # filter((PC1 %in% RNASeqPhenotypes) &amp; (PC2 %in% RNASeqPhenotypes)) %&gt;%
+  mutate(PC2 = as.factor(PC2)) %&gt;%
+  count(Locus, Threshold, PC1, P1, PC2, .drop=F) %&gt;%
+  mutate(ContainsAtleastOneColoc = n&gt;0) %&gt;%
+  # add_count(PC1, Threshold, wt=, name=&quot;NumQTLsInPC1&quot;) %&gt;%
+  group_by(PC1, PC2, Threshold) %&gt;%
+  summarise(SumPC1sWithAtLeast1PC2Coloc = sum(ContainsAtleastOneColoc)) %&gt;%
+  left_join(NumQTLs, by=c(&quot;Threshold&quot;, &quot;PC1&quot;)) %&gt;%
+  filter(Threshold == &quot;_0.001&quot;) %&gt;%
+  mutate(FractionColocs = SumPC1sWithAtLeast1PC2Coloc/n) %&gt;%
+  ggplot(aes(x=PC1, y=PC2, fill=FractionColocs)) +
+  geom_raster() +
+  geom_text(aes(label=signif(FractionColocs*100, 2)), color=&quot;blue&quot;) +
+  scale_fill_viridis(option=&quot;B&quot;, direction = 1, limits=c(0,1)) +
+  facet_wrap(~Threshold) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))</code></pre>
+<p><img src="figure/20220622_QuantifyColocRateMoreInterpretableWay.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>I previously estimated more like 80% of eQTL have chromatin effect. now its more like a third. what gives?</p>
+<pre class="r"><code>dat.tidy %&gt;%
+  filter(PC1 %in% c(&quot;Expression.Splicing.Subset_YRI&quot;, &quot;chRNA.Expression.Splicing&quot;)) %&gt;%
+  separate(Locus, into=c(&quot;Locus&quot;, &quot;Threshold&quot;), sep = &quot;:&quot;) %&gt;%
+  separate(Threshold, into = c(&quot;ColocPhenotypeClass&quot;, &quot;Threshold&quot;), sep=&quot;_&quot;) %&gt;%
+  filter(ColocPhenotypeClass == &quot;&quot;) %&gt;%
+  mutate(GenePeakPair = paste(P1, P2, sep=&quot;;&quot;)) %&gt;%
+  mutate(IsGenePeakPairPromoter = PC2 %in% c(&quot;H3K4ME3&quot;, &quot;H3K27AC&quot;, &quot;H3K4ME1&quot;)) %&gt;%
+  mutate(IsColocalizedGenePeakPromoter = IsColocalizedPair &amp; IsGenePeakPairPromoter) %&gt;%
+  group_by(Locus, P1, PC1, Threshold) %&gt;%
+  ## THIS NEXT LINE IS JUST WRONG. IT COUNTS ATTEMPTED COLOCS
+  summarise(GeneContainsColocalizedGenePeakPromoter = any(IsGenePeakPairPromoter)) %&gt;%
+  group_by(Threshold, PC1) %&gt;%
+  summarise(FractionColocs = sum(GeneContainsColocalizedGenePeakPromoter),
+            eGenesAttemptedToColoc = n() -  sum(GeneContainsColocalizedGenePeakPromoter)) %&gt;%
+  ungroup() %&gt;%
+  gather(&quot;IsColocalized&quot;, &quot;NumberGenes&quot;, FractionColocs, eGenesAttemptedToColoc) %&gt;%
+  ggplot(aes(x=Threshold, y=NumberGenes, fill=IsColocalized)) +
+  geom_col() +
+  facet_wrap(~PC1) +
+  scale_fill_discrete(labels = c(&quot;No&quot;, &quot;Yes&quot;)) +
+  labs(title = &quot;~4/5 eGenes have colocalized chromatin effects somewhere&quot;,
+       y = str_wrap(&quot;Number eGenes&quot;, width=30),
+       fill = str_wrap(&quot;Is eQTL coloc w/ any [H3K4ME1|H3K4ME3|H3K27AC] QTL&quot;, width=20)) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))</code></pre>
+<p><img src="figure/20220622_QuantifyColocRateMoreInterpretableWay.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>dat.tidy %&gt;%
+  filter(PC1 %in% c(&quot;Expression.Splicing.Subset_YRI&quot;, &quot;chRNA.Expression.Splicing&quot;)) %&gt;%
+  separate(Locus, into=c(&quot;Locus&quot;, &quot;Threshold&quot;), sep = &quot;:&quot;) %&gt;%
+  separate(Threshold, into = c(&quot;ColocPhenotypeClass&quot;, &quot;Threshold&quot;), sep=&quot;_&quot;) %&gt;%
+  filter(ColocPhenotypeClass == &quot;&quot;) %&gt;%
+  mutate(GenePeakPair = paste(P1, P2, sep=&quot;;&quot;)) %&gt;%
+  mutate(IsGenePeakPairPromoter = PC2 %in% c(&quot;H3K4ME3&quot;, &quot;H3K27AC&quot;, &quot;H3K4ME1&quot;)) %&gt;%
+  mutate(IsColocalizedGenePeakPromoter = IsColocalizedPair &amp; IsGenePeakPairPromoter) %&gt;%
+  group_by(Locus, P1, PC1, Threshold) %&gt;%
+  ## THIS NEXT LINE CORRECT NOW. IT COUNTS COLOCS
+  summarise(GeneContainsColocalizedGenePeakPromoter = any(IsColocalizedGenePeakPromoter)) %&gt;%
+  group_by(Threshold, PC1) %&gt;%
+  summarise(FractionColocs = sum(GeneContainsColocalizedGenePeakPromoter),
+            eGenesAttemptedToColoc = n() -  sum(GeneContainsColocalizedGenePeakPromoter)) %&gt;%
+  ungroup() %&gt;%
+  gather(&quot;IsColocalized&quot;, &quot;NumberGenes&quot;, FractionColocs, eGenesAttemptedToColoc) %&gt;%
+  ggplot(aes(x=Threshold, y=NumberGenes, fill=IsColocalized)) +
+  geom_col() +
+  facet_wrap(~PC1) +
+  scale_fill_discrete(labels = c(&quot;No&quot;, &quot;Yes&quot;)) +
+  labs(title = &quot;~1/3 eGenes have colocalized chromatin effects somewhere&quot;,
+       y = str_wrap(&quot;Number eGenes&quot;, width=30),
+       fill = str_wrap(&quot;Is eQTL coloc w/ any [H3K4ME1|H3K4ME3|H3K27AC] QTL&quot;, width=20)) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))</code></pre>
+<p><img src="figure/20220622_QuantifyColocRateMoreInterpretableWay.Rmd/unnamed-chunk-6-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>PeaksToTSS &lt;- Sys.glob(&quot;../code/Misc/PeaksClosestToTSS/*_assigned.tsv.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/Misc/PeaksClosestToTSS/(.+?)_assigned.tsv.gz&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(read_tsv) %&gt;%
+  bind_rows(.id=&quot;ChromatinMark&quot;) %&gt;%
+  mutate(GenePeakPair = paste(gene, peak, sep = &quot;;&quot;))</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  chrom = col_character(),
+  TSS_start = col_double(),
+  gene = col_character(),
+  strand = col_character(),
+  peak = col_character(),
+  distance = col_double()
+)
+Parsed with column specification:
+cols(
+  chrom = col_character(),
+  TSS_start = col_double(),
+  gene = col_character(),
+  strand = col_character(),
+  peak = col_character(),
+  distance = col_double()
+)
+Parsed with column specification:
+cols(
+  chrom = col_character(),
+  TSS_start = col_double(),
+  gene = col_character(),
+  strand = col_character(),
+  peak = col_character(),
+  distance = col_double()
+)</code></pre>
+<pre class="r"><code>dat.tidy %&gt;%
+  filter(PC1 %in% c(&quot;Expression.Splicing.Subset_YRI&quot;, &quot;chRNA.Expression.Splicing&quot;)) %&gt;%
+  separate(Locus, into=c(&quot;Locus&quot;, &quot;Threshold&quot;), sep = &quot;:&quot;) %&gt;%
+  separate(Threshold, into = c(&quot;ColocPhenotypeClass&quot;, &quot;Threshold&quot;), sep=&quot;_&quot;) %&gt;%
+  filter(ColocPhenotypeClass == &quot;&quot;) %&gt;%
+  mutate(GenePeakPair = paste(P1, P2, sep=&quot;;&quot;)) %&gt;%
+  mutate(IsGenePeakPairPromoter = GenePeakPair %in% PeaksToTSS$GenePeakPair) %&gt;%
+  mutate(IsColocalizedGenePeakPromoter = IsColocalizedPair &amp; IsGenePeakPairPromoter) %&gt;%
+  group_by(Locus, P1, PC1, Threshold) %&gt;%
+  summarise(GeneContainsColocalizedGenePeakPromoter = any(IsColocalizedGenePeakPromoter)) %&gt;%
+  group_by(Threshold, PC1) %&gt;%
+  summarise(FractionColocs = sum(GeneContainsColocalizedGenePeakPromoter),
+            eGenesAttemptedToColoc = n() -  sum(GeneContainsColocalizedGenePeakPromoter)) %&gt;%
+  ungroup() %&gt;%
+  gather(&quot;IsColocalized&quot;, &quot;NumberGenes&quot;, FractionColocs, eGenesAttemptedToColoc) %&gt;%
+  ggplot(aes(x=Threshold, y=NumberGenes, fill=IsColocalized)) +
+  geom_col() +
+  facet_wrap(~PC1) +
+  scale_fill_discrete(labels = c(&quot;Yes&quot;, &quot;No&quot;)) +
+  labs(title = &quot;~1/4 eGenes have colocalized chromatin effects at promoter&quot;,
+       y = str_wrap(&quot;Number eGenes&quot;, width=30),
+       fill = str_wrap(&quot;Is eQTL coloc w/ [H3K4ME1|H3K4ME3|H3K27AC] QTL at promoter&quot;, width=20)) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))</code></pre>
+<p><img src="figure/20220622_QuantifyColocRateMoreInterpretableWay.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>PeaksToTSS</code></pre>
+<pre><code># A tibble: 255,075 x 8
+   ChromatinMark chrom TSS_start gene   strand peak   distance GenePeakPair
+   &lt;chr&gt;         &lt;chr&gt;     &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt;  &lt;chr&gt;     &lt;dbl&gt; &lt;chr&gt;       
+ 1 H3K27AC       chr1      29552 ENSG0… +      H3K27…        0 ENSG0000024…
+ 2 H3K27AC       chr1      29569 ENSG0… -      H3K27…        0 ENSG0000022…
+ 3 H3K27AC       chr1      30265 ENSG0… +      H3K27…     -254 ENSG0000024…
+ 4 H3K27AC       chr1      30364 ENSG0… +      H3K27…     -353 ENSG0000028…
+ 5 H3K27AC       chr1     629060 ENSG0… +      H3K27…      121 ENSG0000022…
+ 6 H3K27AC       chr1     629638 ENSG0… +      H3K27…        0 ENSG0000022…
+ 7 H3K27AC       chr1     631072 ENSG0… +      H3K27…        0 ENSG0000023…
+ 8 H3K27AC       chr1     631149 ENSG0… -      H3K27…        0 ENSG0000023…
+ 9 H3K27AC       chr1     631203 ENSG0… -      H3K27…        0 ENSG0000023…
+10 H3K27AC       chr1     632412 ENSG0… -      H3K27…        0 ENSG0000027…
+# … with 255,065 more rows</code></pre>
+<pre class="r"><code>NumQTLs &lt;- dat.tidy %&gt;%
+  filter(PC1 %in% RecodeIncludePCs) %&gt;%
+  mutate(PC1 = recode(PC1, !!!RecodeVec)) %&gt;%
+  mutate(PC2 = recode(PC2, !!!RecodeVec)) %&gt;%  separate(Locus, into=c(&quot;Locus&quot;, &quot;Threshold&quot;), sep = &quot;:&quot;) %&gt;%
+  mutate(PC1 = recode(PC1, H3K4ME3=&quot;H3K(4ME3|4ME1|K27AC)&quot;, H3K27AC=&quot;H3K(4ME3|4ME1|K27AC)&quot;, H3K4ME1=&quot;H3K(4ME3|4ME1|K27AC)&quot;)) %&gt;%
+  mutate(PC2 = recode(PC2, H3K4ME3=&quot;H3K(4ME3|4ME1|K27AC)&quot;, H3K27AC=&quot;H3K(4ME3|4ME1|K27AC)&quot;, H3K4ME1=&quot;H3K(4ME3|4ME1|K27AC)&quot;)) %&gt;%
+  distinct(Locus, Threshold, PC1, P1) %&gt;%
+  count(Threshold, PC1)
+
+dat.tidy %&gt;%
+  filter(PC1 %in% RecodeIncludePCs) %&gt;%
+  filter(PC2 %in% RecodeIncludePCs) %&gt;%
+  mutate(PC1 = recode(PC1, !!!RecodeVec)) %&gt;%
+  mutate(PC2 = recode(PC2, !!!RecodeVec)) %&gt;%
+  mutate(PC1 = recode(PC1, H3K4ME3=&quot;H3K(4ME3|4ME1|K27AC)&quot;, H3K27AC=&quot;H3K(4ME3|4ME1|K27AC)&quot;, H3K4ME1=&quot;H3K(4ME3|4ME1|K27AC)&quot;)) %&gt;%
+  mutate(PC2 = recode(PC2, H3K4ME3=&quot;H3K(4ME3|4ME1|K27AC)&quot;, H3K27AC=&quot;H3K(4ME3|4ME1|K27AC)&quot;, H3K4ME1=&quot;H3K(4ME3|4ME1|K27AC)&quot;)) %&gt;%
+  filter(IsColocalizedPair) %&gt;%
+  separate(Locus, into=c(&quot;Locus&quot;, &quot;Threshold&quot;), sep = &quot;:&quot;) %&gt;%
+  mutate(PC2 = case_when(
+    paste(Locus, P2, sep=&#39;;&#39;) %in% PeaksToTSS$GenePeakPair ~ &quot;H3K(4ME3|4ME1|K27AC) @ Promoter&quot;,
+    PC2==&quot;H3K(4ME3|4ME1|K27AC)&quot; ~ &quot;H3K(4ME3|4ME1|K27AC) Elsewhere&quot;,
+    TRUE ~ PC2
+  )) %&gt;%
+  mutate(PC2 = as.factor(PC2)) %&gt;%
+  count(Locus, Threshold, PC1, P1, PC2, .drop=F) %&gt;%
+  mutate(ContainsAtleastOneColoc = n&gt;0) %&gt;%
+  group_by(PC1, PC2, Threshold) %&gt;%
+  summarise(SumPC1sWithAtLeast1PC2Coloc = sum(ContainsAtleastOneColoc)) %&gt;%
+  left_join(NumQTLs, by=c(&quot;Threshold&quot;, &quot;PC1&quot;)) %&gt;%
+  filter(Threshold == &quot;_0.001&quot;) %&gt;%
+  mutate(FractionColocs = SumPC1sWithAtLeast1PC2Coloc/n) %&gt;%
+  ggplot(aes(x=PC1, y=PC2, fill=FractionColocs)) +
+  geom_raster() +
+  geom_text(aes(label=signif(FractionColocs*100, 2)), color=&quot;blue&quot;) +
+  scale_fill_viridis(option=&quot;B&quot;, direction = 1, limits=c(0,1)) +
+  facet_wrap(~Threshold) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))</code></pre>
+<p><img src="figure/20220622_QuantifyColocRateMoreInterpretableWay.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Check if IR methods are picking up on eQTL. I think the biological ones we want to capture will generally have negative effect size correlations (increased IR –&gt; decreased expression)… The ones that are just picking up on eQTLs will mostly be positive effect ize correlations.</p>
+<pre class="r"><code>dat.effectsizes &lt;- Sys.glob(&quot;../code/hyprcoloc/Results/ForColoc/MolColocTest*_*/tidy_results_OnlyColocalized.txt.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/hyprcoloc/Results/ForColoc/MolColocTest(.*?)_(.+?)/tidy_results_OnlyColocalized.txt.gz&quot;, &quot;\\1_0.\\2&quot;)) %&gt;%
+  lapply(read_tsv) %&gt;%
+  bind_rows(.id=&quot;Threshold&quot;)</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  snp = col_character(),
+  beta = col_double(),
+  beta_se = col_double(),
+  p = col_double(),
+  Locus = col_character(),
+  phenotype_full = col_character(),
+  iteration = col_double(),
+  ColocPr = col_double(),
+  RegionalPr = col_double(),
+  TopSNPFinemapPr = col_double()
+)
+Parsed with column specification:
+cols(
+  snp = col_character(),
+  beta = col_double(),
+  beta_se = col_double(),
+  p = col_double(),
+  Locus = col_character(),
+  phenotype_full = col_character(),
+  iteration = col_double(),
+  ColocPr = col_double(),
+  RegionalPr = col_double(),
+  TopSNPFinemapPr = col_double()
+)
+Parsed with column specification:
+cols(
+  snp = col_character(),
+  beta = col_double(),
+  beta_se = col_double(),
+  p = col_double(),
+  Locus = col_character(),
+  phenotype_full = col_character(),
+  iteration = col_double(),
+  ColocPr = col_double(),
+  RegionalPr = col_double(),
+  TopSNPFinemapPr = col_double()
+)
+Parsed with column specification:
+cols(
+  snp = col_character(),
+  beta = col_double(),
+  beta_se = col_double(),
+  p = col_double(),
+  Locus = col_character(),
+  phenotype_full = col_character(),
+  iteration = col_double(),
+  ColocPr = col_double(),
+  RegionalPr = col_double(),
+  TopSNPFinemapPr = col_double()
+)
+Parsed with column specification:
+cols(
+  snp = col_character(),
+  beta = col_double(),
+  beta_se = col_double(),
+  p = col_double(),
+  Locus = col_character(),
+  phenotype_full = col_character(),
+  iteration = col_double(),
+  ColocPr = col_double(),
+  RegionalPr = col_double(),
+  TopSNPFinemapPr = col_double()
+)
+Parsed with column specification:
+cols(
+  snp = col_character(),
+  beta = col_double(),
+  beta_se = col_double(),
+  p = col_double(),
+  Locus = col_character(),
+  phenotype_full = col_character(),
+  iteration = col_double(),
+  ColocPr = col_double(),
+  RegionalPr = col_double(),
+  TopSNPFinemapPr = col_double()
+)</code></pre>
+<pre class="r"><code>dat.tidy.witheffects &lt;- dat %&gt;%
+  left_join(
+    dat.effectsizes %&gt;%
+      select(GeneLocus=Locus, TopCandidateSNP=snp, Trait=phenotype_full, Threshold, beta, beta_se, p)
+    , by=c(&quot;GeneLocus&quot;, &quot;TopCandidateSNP&quot;, &quot;Threshold&quot;, &quot;Trait&quot;)) %&gt;%
+    unite(Locus, GeneLocus, Threshold, sep = &quot;:&quot;) %&gt;%
+    left_join(., ., by = &quot;Locus&quot;) %&gt;% 
+    filter(Trait.x != Trait.y) %&gt;% 
+    separate(Trait.x, into = c(&quot;PC1&quot;,&quot;P1&quot;), sep = &quot;[, ;]&quot;, remove=F) %&gt;% 
+    separate(Trait.y, into = c(&quot;PC2&quot;,&quot;P2&quot;), sep = &quot;[, ;]&quot;, remove=F) %&gt;% 
+    rowwise() %&gt;%
+    mutate(PC_ClassPair = paste(PC1, PC2)) %&gt;%
+    ungroup() %&gt;%
+    # pull(PC_ClassPair) %&gt;% unique()
+    mutate(IsColocalizedPair = HyprcolocIteration.x == HyprcolocIteration.y) %&gt;%
+    replace_na(list(IsColocalizedPair = FALSE))
+
+dat.tidy.witheffects %&gt;%
+  filter(IsColocalizedPair) %&gt;%
+  separate(Locus, into=c(&quot;Locus&quot;, &quot;Threshold&quot;), sep = &quot;:&quot;) %&gt;%
+  filter(Threshold == &quot;_0.001&quot;) %&gt;%
+  group_by(PC1, PC2) %&gt;%
+  summarise(cor = cor(beta.x, beta.y, method=&quot;spearman&quot;)) %&gt;%
+  pivot_wider(names_from = &quot;PC1&quot;, values_from = &quot;cor&quot;, values_fill=NA, names_sort=T) %&gt;%
+  column_to_rownames(&quot;PC2&quot;) %&gt;%
+  as.matrix() %&gt;%
+  heatmap.2(trace=&quot;none&quot;, col=colorpanel(75, &quot;blue&quot;, &quot;black&quot;, &quot;yellow&quot;), cexRow = 1, cexCol = 1, offsetRow=0, offsetCol = 0, margins=c(11,11), dendrogram = &quot;column&quot;)</code></pre>
+<pre><code>Warning in cor(beta.x, beta.y, method = &quot;spearman&quot;): the standard deviation
+is zero
+
+Warning in cor(beta.x, beta.y, method = &quot;spearman&quot;): the standard deviation
+is zero
+
+Warning in cor(beta.x, beta.y, method = &quot;spearman&quot;): the standard deviation
+is zero
+
+Warning in cor(beta.x, beta.y, method = &quot;spearman&quot;): the standard deviation
+is zero
+
+Warning in cor(beta.x, beta.y, method = &quot;spearman&quot;): the standard deviation
+is zero
+
+Warning in cor(beta.x, beta.y, method = &quot;spearman&quot;): the standard deviation
+is zero
+
+Warning in cor(beta.x, beta.y, method = &quot;spearman&quot;): the standard deviation
+is zero
+
+Warning in cor(beta.x, beta.y, method = &quot;spearman&quot;): the standard deviation
+is zero
+
+Warning in cor(beta.x, beta.y, method = &quot;spearman&quot;): the standard deviation
+is zero
+
+Warning in cor(beta.x, beta.y, method = &quot;spearman&quot;): the standard deviation
+is zero
+
+Warning in cor(beta.x, beta.y, method = &quot;spearman&quot;): the standard deviation
+is zero
+
+Warning in cor(beta.x, beta.y, method = &quot;spearman&quot;): the standard deviation
+is zero
+
+Warning in cor(beta.x, beta.y, method = &quot;spearman&quot;): the standard deviation
+is zero
+
+Warning in cor(beta.x, beta.y, method = &quot;spearman&quot;): the standard deviation
+is zero
+
+Warning in cor(beta.x, beta.y, method = &quot;spearman&quot;): the standard deviation
+is zero
+
+Warning in cor(beta.x, beta.y, method = &quot;spearman&quot;): the standard deviation
+is zero
+
+Warning in cor(beta.x, beta.y, method = &quot;spearman&quot;): the standard deviation
+is zero
+
+Warning in cor(beta.x, beta.y, method = &quot;spearman&quot;): the standard deviation
+is zero
+
+Warning in cor(beta.x, beta.y, method = &quot;spearman&quot;): the standard deviation
+is zero
+
+Warning in cor(beta.x, beta.y, method = &quot;spearman&quot;): the standard deviation
+is zero
+
+Warning in cor(beta.x, beta.y, method = &quot;spearman&quot;): the standard deviation
+is zero
+
+Warning in cor(beta.x, beta.y, method = &quot;spearman&quot;): the standard deviation
+is zero
+
+Warning in cor(beta.x, beta.y, method = &quot;spearman&quot;): the standard deviation
+is zero
+
+Warning in cor(beta.x, beta.y, method = &quot;spearman&quot;): the standard deviation
+is zero</code></pre>
+<p><img src="figure/20220622_QuantifyColocRateMoreInterpretableWay.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.6.1 (2019-07-05)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Scientific Linux 7.4 (Nitrogen)
+
+Matrix products: default
+BLAS/LAPACK: /software/openblas-0.2.19-el7-x86_64/lib/libopenblas_haswellp-r0.2.19.so
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+ [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] qvalue_2.16.0     data.table_1.14.2 gplots_3.0.1.1   
+ [4] viridis_0.5.1     viridisLite_0.3.0 forcats_0.4.0    
+ [7] stringr_1.4.0     dplyr_0.8.3       purrr_0.3.4      
+[10] readr_1.3.1       tidyr_1.1.0       tibble_2.1.3     
+[13] ggplot2_3.3.5     tidyverse_1.3.0  
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_1.0.5         lubridate_1.7.4    lattice_0.20-38   
+ [4] gtools_3.8.1       utf8_1.1.4         assertthat_0.2.1  
+ [7] rprojroot_2.0.2    digest_0.6.20      plyr_1.8.4        
+[10] R6_2.4.0           cellranger_1.1.0   backports_1.1.4   
+[13] reprex_0.3.0       evaluate_0.14      httr_1.4.1        
+[16] pillar_1.4.2       rlang_0.4.10       readxl_1.3.1      
+[19] rstudioapi_0.10    gdata_2.18.0       rmarkdown_1.13    
+[22] labeling_0.3       splines_3.6.1      munsell_0.5.0     
+[25] broom_0.5.2        compiler_3.6.1     httpuv_1.5.1      
+[28] modelr_0.1.8       xfun_0.8           pkgconfig_2.0.2   
+[31] htmltools_0.3.6    tidyselect_1.1.0   gridExtra_2.3     
+[34] workflowr_1.6.2    fansi_0.4.0        crayon_1.3.4      
+[37] dbplyr_1.4.2       withr_2.4.1        later_0.8.0       
+[40] bitops_1.0-6       grid_3.6.1         nlme_3.1-140      
+[43] jsonlite_1.6       gtable_0.3.0       lifecycle_0.1.0   
+[46] DBI_1.1.0          git2r_0.26.1       magrittr_1.5      
+[49] scales_1.1.0       KernSmooth_2.23-15 cli_2.2.0         
+[52] stringi_1.4.3      farver_2.1.0       reshape2_1.4.3    
+[55] fs_1.3.1           promises_1.0.1     xml2_1.3.2        
+[58] ellipsis_0.2.0.1   generics_0.0.2     vctrs_0.3.1       
+[61] tools_3.6.1        glue_1.3.1         hms_0.5.3         
+[64] yaml_2.2.0         colorspace_1.4-1   caTools_1.17.1.2  
+[67] rvest_0.3.5        knitr_1.23         haven_2.3.1       </code></pre>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+http://docs.mathjax.org/en/latest/configuration.html.  This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
