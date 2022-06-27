@@ -47,6 +47,25 @@ rule GatherSummaryStatsFileChunks:
         python scripts/MergeSummaryStatChunks.py {output} {input} &> {log}
         """
 
+CalculateLDChunks = 100
+rule CalculateLociwiseLDMat:
+    input:
+        MolQTLSummaryStats = "hyprcoloc/LociWiseSummaryStatsInput/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}",
+    output:
+        MolQTLSummaryStats = touch("hyprcoloc/LociWiseSummaryStatsLD/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}/.touch_{n}"),
+    log:
+        "logs/CalculateLociwiseLDMat/{QTLsGenotypeSet}.{FeatureCoordinatesRedefinedFor}/{n}"
+    resources:
+        mem_mb = 16000
+    shell:
+        """
+        python scripts/CalculateLD_PerGeneWindow_Chunks.py {input.MolQTLSummaryStats}/ hyprcoloc/LociWiseSummaryStatsLD/{wildcards.QTLsGenotypeSet}{wildcards.FeatureCoordinatesRedefinedFor}/ {wildcards.n} {CalculateLDChunks} &> {log}
+        """
+
+rule GatherLDMatrices:
+    input:
+        expand("hyprcoloc/LociWiseSummaryStatsLD/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}/.touch_{n}", QTLsGenotypeSet="", FeatureCoordinatesRedefinedFor="ForColoc" ,n=range(0,CalculateLDChunks))
+
 rule InstallHyprcoloc:
     """
     hyprcoloc r package is not on conda. This rule installs it on the conda environment. Here is a command to recreate the conda environment with dependencies (without hyprcoloc)
@@ -218,6 +237,23 @@ rule TidyColocalizedTraitsAndSummaryStats:
         """
         Rscript scripts/TidyGenewiseColocs.R {input.ColocResults} {input.MolQTLSummaryStats}/ {output} &> {log}
         """
+
+NumPvalsForPi1Chunks = 10
+rule GetPvalsForPi1AllTraitPairs:
+    input:
+        "scratch/PairwisePi1Traits.{chunk}.txt.gz"
+    output:
+        "scratch/PairwisePi1Traits.P.{chunk}.txt.gz"
+    log:
+        "logs/GetPvalsForPi1AllTraitPairs/{chunk}.log"
+    shell:
+        """
+        python scripts/CalculatePi1_GetAscertainmentP_AllPairs.py {input} {output} &> {log}
+        """
+
+rule GatherPvalsForPi1AllTraitPairs:
+    input:
+        expand("scratch/PairwisePi1Traits.P.{chunk}.txt.gz", chunk=range(1, NumPvalsForPi1Chunks+1))
 
 rule CopyGenewiseHyprcolocResultsToTrackedOutputDir:
     input:
