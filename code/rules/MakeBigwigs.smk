@@ -56,7 +56,8 @@ rule MakeBigwigs_NormalizedToEdgeRFeatureCounts:
         bw_minus = "bw_minus=",
         MKTEMP_ARGS = "-p " + config['scratch'],
         SORT_ARGS="-T " + config['scratch'],
-        Region = ""
+        Region = "",
+        BamToBigwigScript = "scripts/GenometracksByGenotype/BamToBigwig.sh"
         # Region = ""
     # wildcard_constraints:
     #     Phenotype = "|".join(RNASeqPhenotypes)
@@ -71,7 +72,7 @@ rule MakeBigwigs_NormalizedToEdgeRFeatureCounts:
     shell:
         """
         ScaleFactor=$(bc <<< "scale=3;1000000000/$(grep '{input.bam}' {input.NormFactorsFile} | awk 'NR==1 {{print $2}}')")
-        scripts/GenometracksByGenotype/BamToBigwig.sh {input.fai} {input.bam} {output.bw}  GENOMECOV_ARGS="{params.GenomeCovArgs} -scale ${{ScaleFactor}}" REGION='{params.Region}' MKTEMP_ARGS="{params.MKTEMP_ARGS}" SORT_ARGS="{params.SORT_ARGS}" {params.bw_minus}"{output.bw_minus}" &> {log}
+        {params.BamToBigwigScript} {input.fai} {input.bam} {output.bw}  GENOMECOV_ARGS="{params.GenomeCovArgs} -scale ${{ScaleFactor}}" REGION='{params.Region}' MKTEMP_ARGS="{params.MKTEMP_ARGS}" SORT_ARGS="{params.SORT_ARGS}" {params.bw_minus}"{output.bw_minus}" &> {log}
         """
 
 use rule MakeBigwigs_NormalizedToEdgeRFeatureCounts as MakeBigwigs_NormalizedToEdgeRFeatureCounts_stranded with:
@@ -80,6 +81,39 @@ use rule MakeBigwigs_NormalizedToEdgeRFeatureCounts as MakeBigwigs_NormalizedToE
         bw_minus = "bigwigs/{Phenotype}_stranded/{IndID}.{Rep}.minus.bw"
     log:
         "logs/MakeBigwigs_stranded/{Phenotype}/{IndID}.{Rep}.log"
+
+use rule MakeBigwigs_NormalizedToEdgeRFeatureCounts as MakeBigwigs_NormalizedToEdgeRFeatureCounts_stranded_nosplit with:
+    params:
+        GenomeCovArgs="",
+        bw_minus = "bw_minus=",
+        MKTEMP_ARGS = "-p " + config['scratch'],
+        SORT_ARGS="-T " + config['scratch'],
+        Region = "",
+        BamToBigwigScript = "scripts/GenometracksByGenotype/BamToBigwig.sh"
+    output:
+        bw = "bigwigs_nosplit/{Phenotype}_stranded/{IndID}.{Rep}.plus.bw",
+        bw_minus = "bigwigs_nosplit/{Phenotype}_stranded/{IndID}.{Rep}.minus.bw"
+    log:
+        "logs/MakeBigwigs_stranded_nosplit/{Phenotype}/{IndID}.{Rep}.log"
+
+use rule MakeBigwigs_NormalizedToEdgeRFeatureCounts as MakeBigwigs_NormalizedToEdgeRFeatureCounts_stranded_nosplit_filtered with:
+    params:
+        GenomeCovArgs="",
+        bw_minus = "bw_minus=",
+        MKTEMP_ARGS = "-p " + config['scratch'],
+        SORT_ARGS="-T " + config['scratch'],
+        Region = "",
+        BamToBigwigScript = "scripts/BamToBigwig_PrefilterBySize.sh"
+    output:
+        bw = "bigwigs_nosplit_filtered/{Phenotype}_stranded/{IndID}.{Rep}.plus.bw",
+        bw_minus = "bigwigs_nosplit_filtered/{Phenotype}_stranded/{IndID}.{Rep}.minus.bw"
+    log:
+        "logs/MakeBigwigs_stranded_nosplit_filtered/{Phenotype}/{IndID}.{Rep}.log"
+
+rule GatherUnsplitBigwigs:
+    input:
+        "bigwigs_nosplit/chRNA.Expression_stranded/NA18486.1.minus.bw",
+        "bigwigs_nosplit_filtered/chRNA.Expression_stranded/NA18486.1.minus.bw"
 
 rule GatherAllBigwigs:
     input:

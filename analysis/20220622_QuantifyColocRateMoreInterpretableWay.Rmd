@@ -1,0 +1,441 @@
+---
+title: "Quantify color rates more interpretable way"
+output: html_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+In a [previous notebook](20211217_GenewiseColocFirstLook.html) I explored the genewise hyprcoloc output, and noted that 30min and 60min 4sU colocalize (with all default parameters/thresholds) 80% of the time that they are tested. I expect this to be closer to 100%, and we should get similarly high colocalization with eQTL from polyA RNA-seq. Perhaps just by filtering for colocalizations above some threshold we can get more believable results. I could/should technically re-run hyprcoloc with different parameters, but before I do that, to understand the results better, let's see how these colocalization rates change after filter for different posterior probabilities for colocalization.
+
+## Analysis
+
+```{r}
+library(tidyverse)
+library(viridis)
+library(gplots)
+library(data.table)
+library(qvalue)
+library(purrr)
+
+sample_n_of <- function(data, size, ...) {
+  dots <- quos(...)
+  
+  group_ids <- data %>% 
+    group_by(!!! dots) %>% 
+    group_indices()
+  
+  sampled_groups <- sample(unique(group_ids), size)
+  
+  data %>% 
+    filter(group_ids %in% sampled_groups)
+}
+
+RecodeDat <- read_tsv("../data/Phenotypes_recode_for_Plotting.txt")
+
+dat <- Sys.glob("../code/hyprcoloc/Results/ForColoc/MolColocTest*_*/results.txt.gz") %>%
+  setNames(str_replace(., "../code/hyprcoloc/Results/ForColoc/MolColocTest(.*?)_(.+?)/results.txt.gz", "\\1_0.\\2")) %>%
+  lapply(read_tsv) %>%
+  bind_rows(.id="Threshold")
+
+dat %>%
+  separate(Trait, into=c("PC", "P"), sep=";") %>%
+  pull(PC) %>% unique() %>% sort()
+
+# dat %>%
+#   separate(Trait, into=c("PC", "P"), sep=";") %>%
+#   select(PC) %>%
+#   distinct() %>%
+#   write_tsv("../code/scratch/Phenotypes.tsv")
+
+dat %>%
+  separate(Trait, into=c("PC", "P"), sep=";") %>%
+  count(Threshold, PC) %>%
+  ggplot(aes(x=PC, y=n)) +
+  geom_col() +
+  facet_wrap(~Threshold) +
+  theme_bw() +
+  labs(title = "Number of Loci:molQTL pairs attempted to colocalize in total") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+
+```
+
+Ok so now make data frame with all attempted coloc pairs (each pair will be representated twice: once with traitA in column1, and once with traitB in column1).
+
+```{r}
+dat.tidy <- dat %>%
+  # head(1000) %>%
+  unite(Locus, GeneLocus, Threshold, sep = ":") %>%
+  left_join(., ., by = "Locus") %>% 
+    filter(Trait.x != Trait.y) %>% 
+    separate(Trait.x, into = c("PC1","P1"), sep = "[, ;]", remove=F) %>% 
+    separate(Trait.y, into = c("PC2","P2"), sep = "[, ;]", remove=F) %>% 
+    rowwise() %>%
+    mutate(PC_ClassPair = paste(PC1, PC2)) %>%
+    ungroup() %>%
+    # pull(PC_ClassPair) %>% unique()
+    mutate(IsColocalizedPair = HyprcolocIteration.x == HyprcolocIteration.y) %>%
+    replace_na(list(IsColocalizedPair = FALSE))
+
+RNASeqPhenotypes <- c("MetabolicLabelled.30min", "MetabolicLabelled.60min", "Expression.Splicing.Subset_YRI", "chRNA.Expression.Splicing", "H3K36ME3")
+
+
+dat.tidy %>%
+  filter((PC1 %in% RNASeqPhenotypes) & (PC2 %in% RNASeqPhenotypes)) %>%
+  separate(Locus, into=c("Locus", "Threshold"), sep = ":") %>%
+  group_by(PC1, PC2, Threshold) %>%
+  summarise(FractionColocs = sum(IsColocalizedPair)/n()) %>%
+  ungroup() %>%
+  mutate(TopPCs = paste(PC1, PC2)) %>%
+  mutate(BottomPCs = paste(PC2, PC1)) %>%
+  select(-PC1, -PC2) %>%
+  gather(key = "MatrixHalf", value = "PCs", TopPCs, BottomPCs) %>%
+  separate(PCs, into=c("PC1", "PC2"), sep = " ") %>%
+  distinct(PC1, PC2, FractionColocs, Threshold, .keep_all = T) %>%
+  ggplot(aes(x=PC1, y=PC2, fill=FractionColocs)) +
+  geom_raster() +
+  geom_text(aes(label=signif(FractionColocs, 2))) +
+  scale_fill_viridis(option="B", direction = 1, limits=c(0.5,1)) +
+  facet_wrap(~Threshold) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+
+```
+
+Alternate computation of the same data... How many xQTLs coloc with at least one yQTL:
+
+```{r}
+
+RecodeVec <- RecodeDat %>%
+  select(PC, ShorterAlias) %>%
+  deframe()
+
+RecodeIncludePCs <- RecodeDat %>%
+  filter(Include) %>%
+  pull(PC)
+
+
+NumQTLs <- dat.tidy %>%
+  filter(PC1 %in% RNASeqPhenotypes) %>%
+  mutate(PC1 = recode(PC1, !!!RecodeVec)) %>%
+  mutate(PC2 = recode(PC2, !!!RecodeVec)) %>%
+  separate(Locus, into=c("Locus", "Threshold"), sep = ":") %>%
+  distinct(Locus, Threshold, PC1, P1) %>%
+  count(Threshold, PC1)
+
+
+dat.tidy %>%
+  filter(PC1 %in% RNASeqPhenotypes) %>%
+  filter(PC2 %in% RNASeqPhenotypes) %>%
+  mutate(PC1 = recode(PC1, !!!RecodeVec)) %>%
+  mutate(PC2 = recode(PC2, !!!RecodeVec)) %>%
+  filter(IsColocalizedPair) %>%
+  separate(Locus, into=c("Locus", "Threshold"), sep = ":") %>%
+  # filter(Locus=="ENSG00000000457.14" & Threshold=="_0.001" & PC1 == "MetabolicLabelled.30min" & P1 =="ENSG00000000457.14" & PC2=="MetabolicLabelled.60min") %>%
+  mutate(PC2 = as.factor(PC2)) %>%
+  count(Locus, Threshold, PC1, P1, PC2, .drop=F) %>%
+  mutate(ContainsAtleastOneColoc = n>0) %>%
+  # add_count(PC1, Threshold, wt=, name="NumQTLsInPC1") %>%
+  group_by(PC1, PC2, Threshold) %>%
+  summarise(SumPC1sWithAtLeast1PC2Coloc = sum(ContainsAtleastOneColoc)) %>%
+  left_join(NumQTLs, by=c("Threshold", "PC1")) %>%
+  mutate(FractionColocs = SumPC1sWithAtLeast1PC2Coloc/n) %>%
+  ggplot(aes(x=PC1, y=PC2, fill=FractionColocs)) +
+  geom_raster() +
+  geom_text(aes(label=signif(FractionColocs, 2))) +
+  scale_fill_viridis(option="B", direction = 1, limits=c(0,1)) +
+  facet_wrap(~Threshold) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+
+
+```
+
+...same thing but with all phenotypes
+
+```{r}
+
+
+
+NumQTLs <- dat.tidy %>%
+  filter(PC1 %in% RecodeIncludePCs) %>%
+  mutate(PC1 = recode(PC1, !!!RecodeVec)) %>%
+  mutate(PC2 = recode(PC2, !!!RecodeVec)) %>%  separate(Locus, into=c("Locus", "Threshold"), sep = ":") %>%
+  distinct(Locus, Threshold, PC1, P1) %>%
+  count(Threshold, PC1)
+
+
+dat.tidy %>%
+  filter(PC1 %in% RecodeIncludePCs) %>%
+  filter(PC2 %in% RecodeIncludePCs) %>%
+  mutate(PC1 = recode(PC1, !!!RecodeVec)) %>%
+  mutate(PC2 = recode(PC2, !!!RecodeVec)) %>%
+  filter(IsColocalizedPair) %>%
+  separate(Locus, into=c("Locus", "Threshold"), sep = ":") %>%
+  # filter((PC1 %in% RNASeqPhenotypes) & (PC2 %in% RNASeqPhenotypes)) %>%
+  mutate(PC2 = as.factor(PC2)) %>%
+  count(Locus, Threshold, PC1, P1, PC2, .drop=F) %>%
+  mutate(ContainsAtleastOneColoc = n>0) %>%
+  # add_count(PC1, Threshold, wt=, name="NumQTLsInPC1") %>%
+  group_by(PC1, PC2, Threshold) %>%
+  summarise(SumPC1sWithAtLeast1PC2Coloc = sum(ContainsAtleastOneColoc)) %>%
+  left_join(NumQTLs, by=c("Threshold", "PC1")) %>%
+  # filter(Threshold == "_0.001") %>%
+  mutate(FractionColocs = SumPC1sWithAtLeast1PC2Coloc/n) %>%
+  ggplot(aes(x=PC1, y=PC2, fill=FractionColocs)) +
+  geom_raster() +
+  # geom_text(aes(label=signif(FractionColocs*100, 2)), color="blue") +
+  scale_fill_viridis(option="B", direction = 1, limits=c(0,1)) +
+  facet_wrap(~Threshold) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+dat.tidy %>%
+  filter(PC1 %in% RecodeIncludePCs) %>%
+  filter(PC2 %in% RecodeIncludePCs) %>%
+  mutate(PC1 = recode(PC1, !!!RecodeVec)) %>%
+  mutate(PC2 = recode(PC2, !!!RecodeVec)) %>%
+  filter(IsColocalizedPair) %>%
+  separate(Locus, into=c("Locus", "Threshold"), sep = ":") %>%
+  # filter((PC1 %in% RNASeqPhenotypes) & (PC2 %in% RNASeqPhenotypes)) %>%
+  mutate(PC2 = as.factor(PC2)) %>%
+  count(Locus, Threshold, PC1, P1, PC2, .drop=F) %>%
+  mutate(ContainsAtleastOneColoc = n>0) %>%
+  # add_count(PC1, Threshold, wt=, name="NumQTLsInPC1") %>%
+  group_by(PC1, PC2, Threshold) %>%
+  summarise(SumPC1sWithAtLeast1PC2Coloc = sum(ContainsAtleastOneColoc)) %>%
+  left_join(NumQTLs, by=c("Threshold", "PC1")) %>%
+  filter(Threshold == "_0.001") %>%
+  mutate(FractionColocs = SumPC1sWithAtLeast1PC2Coloc/n) %>%
+  ggplot(aes(x=PC1, y=PC2, fill=FractionColocs)) +
+  geom_raster() +
+  geom_text(aes(label=signif(FractionColocs*100, 2)), color="blue") +
+  scale_fill_viridis(option="B", direction = 1, limits=c(0,1)) +
+  facet_wrap(~Threshold) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+
+I also want to make this plot distinguishing between promoter chromatin effects and non-promoter effects... for now let me just remake the plot after grouping these different chromatin phenotypes
+
+```{r}
+
+NumQTLs <- dat.tidy %>%
+  filter(PC1 %in% RecodeIncludePCs) %>%
+  mutate(PC1 = recode(PC1, !!!RecodeVec)) %>%
+  mutate(PC2 = recode(PC2, !!!RecodeVec)) %>%  separate(Locus, into=c("Locus", "Threshold"), sep = ":") %>%
+  mutate(PC1 = recode(PC1, H3K4ME3="H3K(4ME3|4ME1|K27AC)", H3K27AC="H3K(4ME3|4ME1|K27AC)", H3K4ME1="H3K(4ME3|4ME1|K27AC)")) %>%
+  mutate(PC2 = recode(PC2, H3K4ME3="H3K(4ME3|4ME1|K27AC)", H3K27AC="H3K(4ME3|4ME1|K27AC)", H3K4ME1="H3K(4ME3|4ME1|K27AC)")) %>%
+  distinct(Locus, Threshold, PC1, P1) %>%
+  count(Threshold, PC1)
+
+dat.tidy %>%
+  filter(PC1 %in% RecodeIncludePCs) %>%
+  filter(PC2 %in% RecodeIncludePCs) %>%
+  mutate(PC1 = recode(PC1, !!!RecodeVec)) %>%
+  mutate(PC2 = recode(PC2, !!!RecodeVec)) %>%
+  mutate(PC1 = recode(PC1, H3K4ME3="H3K(4ME3|4ME1|K27AC)", H3K27AC="H3K(4ME3|4ME1|K27AC)", H3K4ME1="H3K(4ME3|4ME1|K27AC)")) %>%
+  mutate(PC2 = recode(PC2, H3K4ME3="H3K(4ME3|4ME1|K27AC)", H3K27AC="H3K(4ME3|4ME1|K27AC)", H3K4ME1="H3K(4ME3|4ME1|K27AC)")) %>%
+  filter(IsColocalizedPair) %>%
+  separate(Locus, into=c("Locus", "Threshold"), sep = ":") %>%
+  # filter((PC1 %in% RNASeqPhenotypes) & (PC2 %in% RNASeqPhenotypes)) %>%
+  mutate(PC2 = as.factor(PC2)) %>%
+  count(Locus, Threshold, PC1, P1, PC2, .drop=F) %>%
+  mutate(ContainsAtleastOneColoc = n>0) %>%
+  # add_count(PC1, Threshold, wt=, name="NumQTLsInPC1") %>%
+  group_by(PC1, PC2, Threshold) %>%
+  summarise(SumPC1sWithAtLeast1PC2Coloc = sum(ContainsAtleastOneColoc)) %>%
+  left_join(NumQTLs, by=c("Threshold", "PC1")) %>%
+  filter(Threshold == "_0.001") %>%
+  mutate(FractionColocs = SumPC1sWithAtLeast1PC2Coloc/n) %>%
+  ggplot(aes(x=PC1, y=PC2, fill=FractionColocs)) +
+  geom_raster() +
+  geom_text(aes(label=signif(FractionColocs*100, 2)), color="blue") +
+  scale_fill_viridis(option="B", direction = 1, limits=c(0,1)) +
+  facet_wrap(~Threshold) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+
+
+I previously estimated more like 80% of eQTL have chromatin effect. now its more like a third. what gives?
+
+
+
+```{r}
+
+dat.tidy %>%
+  filter(PC1 %in% c("Expression.Splicing.Subset_YRI", "chRNA.Expression.Splicing")) %>%
+  separate(Locus, into=c("Locus", "Threshold"), sep = ":") %>%
+  separate(Threshold, into = c("ColocPhenotypeClass", "Threshold"), sep="_") %>%
+  filter(ColocPhenotypeClass == "") %>%
+  mutate(GenePeakPair = paste(P1, P2, sep=";")) %>%
+  mutate(IsGenePeakPairPromoter = PC2 %in% c("H3K4ME3", "H3K27AC", "H3K4ME1")) %>%
+  mutate(IsColocalizedGenePeakPromoter = IsColocalizedPair & IsGenePeakPairPromoter) %>%
+  group_by(Locus, P1, PC1, Threshold) %>%
+  ## THIS NEXT LINE IS JUST WRONG. IT COUNTS ATTEMPTED COLOCS
+  summarise(GeneContainsColocalizedGenePeakPromoter = any(IsGenePeakPairPromoter)) %>%
+  group_by(Threshold, PC1) %>%
+  summarise(FractionColocs = sum(GeneContainsColocalizedGenePeakPromoter),
+            eGenesAttemptedToColoc = n() -  sum(GeneContainsColocalizedGenePeakPromoter)) %>%
+  ungroup() %>%
+  gather("IsColocalized", "NumberGenes", FractionColocs, eGenesAttemptedToColoc) %>%
+  ggplot(aes(x=Threshold, y=NumberGenes, fill=IsColocalized)) +
+  geom_col() +
+  facet_wrap(~PC1) +
+  scale_fill_discrete(labels = c("No", "Yes")) +
+  labs(title = "~4/5 eGenes have colocalized chromatin effects somewhere",
+       y = str_wrap("Number eGenes", width=30),
+       fill = str_wrap("Is eQTL coloc w/ any [H3K4ME1|H3K4ME3|H3K27AC] QTL", width=20)) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+dat.tidy %>%
+  filter(PC1 %in% c("Expression.Splicing.Subset_YRI", "chRNA.Expression.Splicing")) %>%
+  separate(Locus, into=c("Locus", "Threshold"), sep = ":") %>%
+  separate(Threshold, into = c("ColocPhenotypeClass", "Threshold"), sep="_") %>%
+  filter(ColocPhenotypeClass == "") %>%
+  mutate(GenePeakPair = paste(P1, P2, sep=";")) %>%
+  mutate(IsGenePeakPairPromoter = PC2 %in% c("H3K4ME3", "H3K27AC", "H3K4ME1")) %>%
+  mutate(IsColocalizedGenePeakPromoter = IsColocalizedPair & IsGenePeakPairPromoter) %>%
+  group_by(Locus, P1, PC1, Threshold) %>%
+  ## THIS NEXT LINE CORRECT NOW. IT COUNTS COLOCS
+  summarise(GeneContainsColocalizedGenePeakPromoter = any(IsColocalizedGenePeakPromoter)) %>%
+  group_by(Threshold, PC1) %>%
+  summarise(FractionColocs = sum(GeneContainsColocalizedGenePeakPromoter),
+            eGenesAttemptedToColoc = n() -  sum(GeneContainsColocalizedGenePeakPromoter)) %>%
+  ungroup() %>%
+  gather("IsColocalized", "NumberGenes", FractionColocs, eGenesAttemptedToColoc) %>%
+  ggplot(aes(x=Threshold, y=NumberGenes, fill=IsColocalized)) +
+  geom_col() +
+  facet_wrap(~PC1) +
+  scale_fill_discrete(labels = c("No", "Yes")) +
+  labs(title = "~1/3 eGenes have colocalized chromatin effects somewhere",
+       y = str_wrap("Number eGenes", width=30),
+       fill = str_wrap("Is eQTL coloc w/ any [H3K4ME1|H3K4ME3|H3K27AC] QTL", width=20)) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+
+```{r}
+PeaksToTSS <- Sys.glob("../code/Misc/PeaksClosestToTSS/*_assigned.tsv.gz") %>%
+  setNames(str_replace(., "../code/Misc/PeaksClosestToTSS/(.+?)_assigned.tsv.gz", "\\1")) %>%
+  lapply(read_tsv) %>%
+  bind_rows(.id="ChromatinMark") %>%
+  mutate(GenePeakPair = paste(gene, peak, sep = ";"))
+
+dat.tidy %>%
+  filter(PC1 %in% c("Expression.Splicing.Subset_YRI", "chRNA.Expression.Splicing")) %>%
+  separate(Locus, into=c("Locus", "Threshold"), sep = ":") %>%
+  separate(Threshold, into = c("ColocPhenotypeClass", "Threshold"), sep="_") %>%
+  filter(ColocPhenotypeClass == "") %>%
+  mutate(GenePeakPair = paste(P1, P2, sep=";")) %>%
+  mutate(IsGenePeakPairPromoter = GenePeakPair %in% PeaksToTSS$GenePeakPair) %>%
+  mutate(IsColocalizedGenePeakPromoter = IsColocalizedPair & IsGenePeakPairPromoter) %>%
+  group_by(Locus, P1, PC1, Threshold) %>%
+  summarise(GeneContainsColocalizedGenePeakPromoter = any(IsColocalizedGenePeakPromoter)) %>%
+  group_by(Threshold, PC1) %>%
+  summarise(FractionColocs = sum(GeneContainsColocalizedGenePeakPromoter),
+            eGenesAttemptedToColoc = n() -  sum(GeneContainsColocalizedGenePeakPromoter)) %>%
+  ungroup() %>%
+  gather("IsColocalized", "NumberGenes", FractionColocs, eGenesAttemptedToColoc) %>%
+  ggplot(aes(x=Threshold, y=NumberGenes, fill=IsColocalized)) +
+  geom_col() +
+  facet_wrap(~PC1) +
+  scale_fill_discrete(labels = c("Yes", "No")) +
+  labs(title = "~1/4 eGenes have colocalized chromatin effects at promoter",
+       y = str_wrap("Number eGenes", width=30),
+       fill = str_wrap("Is eQTL coloc w/ [H3K4ME1|H3K4ME3|H3K27AC] QTL at promoter", width=20)) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+```
+
+```{r}
+
+PeaksToTSS
+
+NumQTLs <- dat.tidy %>%
+  filter(PC1 %in% RecodeIncludePCs) %>%
+  mutate(PC1 = recode(PC1, !!!RecodeVec)) %>%
+  mutate(PC2 = recode(PC2, !!!RecodeVec)) %>%  separate(Locus, into=c("Locus", "Threshold"), sep = ":") %>%
+  mutate(PC1 = recode(PC1, H3K4ME3="H3K(4ME3|4ME1|K27AC)", H3K27AC="H3K(4ME3|4ME1|K27AC)", H3K4ME1="H3K(4ME3|4ME1|K27AC)")) %>%
+  mutate(PC2 = recode(PC2, H3K4ME3="H3K(4ME3|4ME1|K27AC)", H3K27AC="H3K(4ME3|4ME1|K27AC)", H3K4ME1="H3K(4ME3|4ME1|K27AC)")) %>%
+  distinct(Locus, Threshold, PC1, P1) %>%
+  count(Threshold, PC1)
+
+dat.tidy %>%
+  filter(PC1 %in% RecodeIncludePCs) %>%
+  filter(PC2 %in% RecodeIncludePCs) %>%
+  mutate(PC1 = recode(PC1, !!!RecodeVec)) %>%
+  mutate(PC2 = recode(PC2, !!!RecodeVec)) %>%
+  mutate(PC1 = recode(PC1, H3K4ME3="H3K(4ME3|4ME1|K27AC)", H3K27AC="H3K(4ME3|4ME1|K27AC)", H3K4ME1="H3K(4ME3|4ME1|K27AC)")) %>%
+  mutate(PC2 = recode(PC2, H3K4ME3="H3K(4ME3|4ME1|K27AC)", H3K27AC="H3K(4ME3|4ME1|K27AC)", H3K4ME1="H3K(4ME3|4ME1|K27AC)")) %>%
+  filter(IsColocalizedPair) %>%
+  separate(Locus, into=c("Locus", "Threshold"), sep = ":") %>%
+  mutate(PC2 = case_when(
+    paste(Locus, P2, sep=';') %in% PeaksToTSS$GenePeakPair ~ "H3K(4ME3|4ME1|K27AC) @ Promoter",
+    PC2=="H3K(4ME3|4ME1|K27AC)" ~ "H3K(4ME3|4ME1|K27AC) Elsewhere",
+    TRUE ~ PC2
+  )) %>%
+  mutate(PC2 = as.factor(PC2)) %>%
+  count(Locus, Threshold, PC1, P1, PC2, .drop=F) %>%
+  mutate(ContainsAtleastOneColoc = n>0) %>%
+  group_by(PC1, PC2, Threshold) %>%
+  summarise(SumPC1sWithAtLeast1PC2Coloc = sum(ContainsAtleastOneColoc)) %>%
+  left_join(NumQTLs, by=c("Threshold", "PC1")) %>%
+  filter(Threshold == "_0.001") %>%
+  mutate(FractionColocs = SumPC1sWithAtLeast1PC2Coloc/n) %>%
+  ggplot(aes(x=PC1, y=PC2, fill=FractionColocs)) +
+  geom_raster() +
+  geom_text(aes(label=signif(FractionColocs*100, 2)), color="blue") +
+  scale_fill_viridis(option="B", direction = 1, limits=c(0,1)) +
+  facet_wrap(~Threshold) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+
+Check if IR methods are picking up on eQTL. I think the biological ones we want to capture will generally have negative effect size correlations (increased IR --> decreased expression)... The ones that are just picking up on eQTLs will mostly be positive effect ize correlations.
+
+
+```{r}
+
+dat.effectsizes <- Sys.glob("../code/hyprcoloc/Results/ForColoc/MolColocTest*_*/tidy_results_OnlyColocalized.txt.gz") %>%
+  setNames(str_replace(., "../code/hyprcoloc/Results/ForColoc/MolColocTest(.*?)_(.+?)/tidy_results_OnlyColocalized.txt.gz", "\\1_0.\\2")) %>%
+  lapply(read_tsv) %>%
+  bind_rows(.id="Threshold")
+
+dat.tidy.witheffects <- dat %>%
+  left_join(
+    dat.effectsizes %>%
+      select(GeneLocus=Locus, TopCandidateSNP=snp, Trait=phenotype_full, Threshold, beta, beta_se, p)
+    , by=c("GeneLocus", "TopCandidateSNP", "Threshold", "Trait")) %>%
+    unite(Locus, GeneLocus, Threshold, sep = ":") %>%
+    left_join(., ., by = "Locus") %>% 
+    filter(Trait.x != Trait.y) %>% 
+    separate(Trait.x, into = c("PC1","P1"), sep = "[, ;]", remove=F) %>% 
+    separate(Trait.y, into = c("PC2","P2"), sep = "[, ;]", remove=F) %>% 
+    rowwise() %>%
+    mutate(PC_ClassPair = paste(PC1, PC2)) %>%
+    ungroup() %>%
+    # pull(PC_ClassPair) %>% unique()
+    mutate(IsColocalizedPair = HyprcolocIteration.x == HyprcolocIteration.y) %>%
+    replace_na(list(IsColocalizedPair = FALSE))
+
+dat.tidy.witheffects %>%
+  filter(IsColocalizedPair) %>%
+  separate(Locus, into=c("Locus", "Threshold"), sep = ":") %>%
+  filter(Threshold == "_0.001") %>%
+  group_by(PC1, PC2) %>%
+  summarise(cor = cor(beta.x, beta.y, method="spearman")) %>%
+  pivot_wider(names_from = "PC1", values_from = "cor", values_fill=NA, names_sort=T) %>%
+  column_to_rownames("PC2") %>%
+  as.matrix() %>%
+  heatmap.2(trace="none", col=colorpanel(75, "blue", "black", "yellow"), cexRow = 1, cexCol = 1, offsetRow=0, offsetCol = 0, margins=c(11,11), dendrogram = "column")
+
+```
+

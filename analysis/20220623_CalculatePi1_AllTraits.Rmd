@@ -1,0 +1,230 @@
+---
+title: "CalculatePi1"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F)
+```
+
+## Introduction
+
+I have been making a lot of plots of heatmaps to summarise colocalization rate between different types of QTLs. Here I will make some analogous plots with the pi1 statistic. I already made a file that take all pairs of traits that i attempted to coloc, and collects the P value of trait2 (trait.y) for the top snp in trait.x. I will use 
+
+```{r}
+library(tidyverse)
+library(qvalue)
+library(gplots)
+library(viridis)
+library(data.table)
+
+```
+
+Read in data
+
+```{r}
+
+FilesChunks <- paste0("../code/scratch/PairwisePi1Traits.P.", 1:10, ".txt.gz")
+
+dat <- lapply(FilesChunks, fread, sep='\t') %>%
+  bind_rows()
+
+RecodeDat <- read_tsv("../data/Phenotypes_recode_for_Plotting.txt")
+
+RecodeVec <- RecodeDat %>%
+  select(PC, ShorterAlias) %>%
+  deframe()
+
+RecodeIncludePCs <- RecodeDat %>%
+  filter(Include) %>%
+  pull(PC)
+
+colnames(dat)
+
+RNASeqPhenotypes <- c("MetabolicLabelled.30min", "MetabolicLabelled.60min", "Expression.Splicing.Subset_YRI", "chRNA.Expression.Splicing", "H3K36ME3")
+
+
+
+```
+
+First some sanity checks:
+
+what is the distribution of p values in phenotype.y, for top snps for phenotype.x
+
+```{r}
+hist(dat$trait.x.p.in.y)
+```
+
+
+Now about the one phenotype to many problem... first let's see the distribution of the number of phenotype y's compared to each phenotype x.
+
+```{r}
+dat %>%
+  count(P1, PC1, PC2) %>%
+  ggplot(aes(x=n)) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(0,100)) +
+  labs(title="Most traits <100 \nof other traits from each class in same gene locus window",
+       x="Number of traits in a class (ie splicing)\n within each gene window (ie polyA expression of a gene)",
+       y="ecdf") +
+  theme_bw()
+```
+
+
+Cactch errors and create pi1 heatmap without accounting for the one to many phenotypes problem...
+
+```{r}
+
+testFunction <- function (dat.in) {
+  return(tryCatch(1-qvalue(dat.in$Pvals.For.Pi1)$pi0, error=function(e) NULL))
+}
+
+dat.split <- dat %>%
+  filter(PC1 %in% RecodeIncludePCs) %>%
+  filter(PC2 %in% RecodeIncludePCs) %>%
+  mutate(PC1 = recode(PC1, !!!RecodeVec)) %>%
+  mutate(PC2 = recode(PC2, !!!RecodeVec)) %>%
+  mutate(PC1 = recode(PC1, H3K4ME3="H3K(4ME3|4ME1|K27AC)", H3K27AC="H3K(4ME3|4ME1|K27AC)", H3K4ME1="H3K(4ME3|4ME1|K27AC)")) %>%
+  mutate(PC2 = recode(PC2, H3K4ME3="H3K(4ME3|4ME1|K27AC)", H3K27AC="H3K(4ME3|4ME1|K27AC)", H3K4ME1="H3K(4ME3|4ME1|K27AC)")) %>%
+  select(PC1, PC2, Pvals.For.Pi1=trait.x.p.in.y) %>%
+  filter(!PC1==PC2) %>%
+  split(paste(.$PC1, .$PC2, sep = ";"))
+
+dat.pi1 <- lapply(dat.split, testFunction) %>%
+  unlist() %>%
+  data.frame(pi1=.) %>%
+  rownames_to_column("PC1_PC2") %>%
+  separate(PC1_PC2, into=c("PC1", "PC2"), sep=';')
+
+pi.heatmap <- ggplot(dat.pi1, aes(x=PC1, y=PC2, fill=pi1)) +
+  geom_raster() +
+  geom_text(aes(label=signif(pi1*100, 2)), color="blue") +
+  scale_fill_viridis(option="B", direction = 1, limits=c(0,1)) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+pi.heatmap  
+
+```
+
+
+
+Now use that approach to catch errors with qvalue, while accounting for the one to many phenotypes problem.
+
+```{r}
+### This code works
+
+dat.split <- dat %>%
+  filter(PC1 %in% RecodeIncludePCs) %>%
+  filter(PC2 %in% RecodeIncludePCs) %>%
+  mutate(PC1 = recode(PC1, !!!RecodeVec)) %>%
+  mutate(PC2 = recode(PC2, !!!RecodeVec)) %>%
+  mutate(PC1 = recode(PC1, H3K4ME3="H3K(4ME3|4ME1|K27AC)", H3K27AC="H3K(4ME3|4ME1|K27AC)", H3K4ME1="H3K(4ME3|4ME1|K27AC)")) %>%
+  mutate(PC2 = recode(PC2, H3K4ME3="H3K(4ME3|4ME1|K27AC)", H3K27AC="H3K(4ME3|4ME1|K27AC)", H3K4ME1="H3K(4ME3|4ME1|K27AC)")) %>%
+  mutate(runif = runif(n())) %>%
+  # mutate(runif2 = runif(n())) %>%
+  group_by(PC1, P1, PC2) %>%
+  mutate(test.stat.obs = -log10(min(trait.x.p.in.y)),
+         test.stat.null = -log10(min(runif))) %>%
+  ungroup() %>%
+  group_by(PC1, PC2) %>%
+  mutate(Pvals.For.Pi1 = empPvals(test.stat.obs, test.stat.null)) %>%
+  ungroup() %>%
+  select(PC1, PC2, Pvals.For.Pi1) %>%
+  filter(!PC1==PC2) %>%
+  split(paste(.$PC1, .$PC2, sep = ";"))
+
+dat.pi1 <- lapply(dat.split, testFunction) %>%
+  unlist() %>%
+  data.frame(pi1=.) %>%
+  rownames_to_column("PC1_PC2") %>%
+  separate(PC1_PC2, into=c("PC1", "PC2"), sep=';')
+
+pi.heatmap <- ggplot(dat.pi1, aes(x=PC1, y=PC2, fill=pi1)) +
+  geom_raster() +
+  geom_text(aes(label=signif(pi1*100, 2)), color="blue") +
+  scale_fill_viridis(option="B", direction = 1, limits=c(0,1)) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(x="Discovery QTL phenotype", y="Phenotype assessed for overlap")
+pi.heatmap  
+
+```
+
+I think the above heatmaps are questionable because the size of the empirical null distribution is really small in most cases (ie 1 or 2), and I'm not sure how well empPvals behaves or introduces bias with this small null distribution. I think I will pre-calculate the null distribution for all samples sizes less than say 100.
+
+```{r}
+
+MaxSampleSizeToCreateANull <- 100
+NSamplesToEstimateDistribution <- 10000
+NullSimulatedTestStats <- matrix(nrow=MaxSampleSizeToCreateANull, ncol=NSamplesToEstimateDistribution)
+rownames(NullSimulatedTestStats) <- paste0("runif_samplesize", 1:MaxSampleSizeToCreateANull)
+colnames(NullSimulatedTestStats) <- paste0("Sample_", 1:NSamplesToEstimateDistribution)
+
+
+for (i in 1:MaxSampleSizeToCreateANull){
+  SampleSizeFromUniform <- i
+  SampledDat <- matrix(runif(SampleSizeFromUniform*NSamplesToEstimateDistribution), nrow=NSamplesToEstimateDistribution)
+  SampleDatNullTestStatistics <- -log10(apply(SampledDat, 1, min))
+  NullSimulatedTestStats[i,] <- SampleDatNullTestStatistics
+}
+
+
+NullSimulatedTestStats %>%
+  as.data.frame() %>%
+  rownames_to_column("runif_samplesize") %>%
+  slice(1:20) %>%
+  # mutate(runif_samplesize = as.numeric(str_remove(runif_samplesize, "runif_samplesize"))) %>%
+  gather(key="Sample", value="value", -runif_samplesize) %>%
+  ggplot(aes(x=value, color=runif_samplesize)) +
+  geom_density() +
+  theme_bw()
+
+ecdf.functions <- apply(NullSimulatedTestStats, 1, ecdf)
+ecdf.functions[[1]](1)
+```
+
+Now let's remake the heatmaps
+
+```{r, eval=F}
+
+NullSimulatedTestStats
+
+dat.split <- dat %>%
+  # head(100000) %>%
+  filter(PC1 %in% RecodeIncludePCs) %>%
+  filter(PC2 %in% RecodeIncludePCs) %>%
+  mutate(PC1 = recode(PC1, !!!RecodeVec)) %>%
+  mutate(PC2 = recode(PC2, !!!RecodeVec)) %>%
+  group_by(PC1, P1, PC2) %>%
+  mutate(test.stat.obs = -log10(min(trait.x.p.in.y))) %>%
+  ungroup() %>%
+  add_count(PC1, P1, PC2) %>%
+  filter(n<=100) %>%
+  group_by(PC1, PC2) %>%
+  rowwise() %>%
+  mutate(Pvals.For.Pi1 = 1-ecdf.functions[[n]](test.stat.obs)) %>%
+  ungroup() %>%
+  select(PC1, PC2, Pvals.For.Pi1) %>%
+  filter(!PC1==PC2) %>%
+  split(paste(.$PC1, .$PC2, sep = ";"))
+
+dat.pi1 <- lapply(dat.split, testFunction) %>%
+  unlist() %>%
+  data.frame(pi1=.) %>%
+  rownames_to_column("PC1_PC2") %>%
+  separate(PC1_PC2, into=c("PC1", "PC2"), sep=';')
+
+pi.heatmap <- ggplot(dat.pi1, aes(x=PC1, y=PC2, fill=pi1)) +
+  geom_raster() +
+  geom_text(aes(label=signif(pi1*100, 2)), color="blue") +
+  scale_fill_viridis(option="B", direction = 1, limits=c(0,1)) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(x="Discovery QTL phenotype", y="Phenotype assessed for overlap")
+pi.heatmap  
+```
+
+
+ooops i realized now that all this doesn't make sense since i am only calculating pi1 from trait pairs i attempted to colocalize, meaning they are definitely a QTL for something even in the Trait.y, which will upwardly bias pi1.
+
+Will have to redo a lot of these analyses considering all test traits

@@ -93,18 +93,6 @@ for (i in seq_along(Loci)){
         print(i)
     }
 
-    ## Consider computing LD matrix as optional input for hyprcoloc
-    # snps <- betas %>%
-    #     rownames() %>%
-    #     as.data.frame() %>%
-    #     separate(".", into=c("chrom", "pos", "ref", "alt"), convert=T)
-
-    # Min <- min(snps$pos)
-    # Max <- max(snps$pos)
-    # Chrom <- snps$chrom[1]
-    # CMD <- paste0("vcftools --hap-r2 --gzvcf Genotypes/1KG_GRCh38/", Chrom, ".vcf.gz --chr chr", Chrom, " --from-bp ", Min, " --to-bp ", Max, " -c")
-    # LD <- fread(cmd=CMD)
-
     # Make snp x phenotype matrix of beta std errors
     ses <- SummaryStats.filtered %>%
         as_tibble() %>%
@@ -114,6 +102,11 @@ for (i in seq_along(Loci)){
         drop_na() %>%
         column_to_rownames("snp") %>%
         as.matrix()
+
+    # remove identical rows
+    snps_to_keep <- cbind(betas, ses) %>% unique() %>% rownames()
+    betas <- betas[snps_to_keep,]
+    ses <- ses[snps_to_keep,]
 
     # hyprcoloc does not accept 0 values for ses. Manually Replace 0 values with next smallest value
     ses[ses == 0] <- sort(ses[ses>0])[1]
@@ -125,7 +118,7 @@ for (i in seq_along(Loci)){
         print("Only one trait... skipping locus")
         next
     }
-    res <- hyprcoloc(betas, ses, trait.names=traits, snp.id=rsid, snpscores=T)
+    res <- hyprcoloc(betas, ses, trait.names=traits, snp.id=rsid, snpscores=T, bb.selection="align")
     print(dim(res[[1]]))
     try(
         res[[2]] %>%
@@ -144,18 +137,6 @@ for (i in seq_along(Loci)){
             write_tsv(FinemappingOut, append=T)
 
     )
-
-    # ResToWrite <- res[[1]] %>%
-    #      as.data.frame() %>%
-    #      mutate(Loci = names(TestLocus)) %>%
-    #      select(Loci, everything())
-     # ResToWrite %>%
-     #     separate_rows(ColocalizedTraits, sep = ', ') %>%
-     #     mutate(Trait = case_when(
-     #        ColocalizedTraits == "None" ~ DroppedTrait,
-     #        TRUE ~ ColocalizedTraits
-     #     ))
-     #     separateres[[1]] %>%
 
      res[[1]] %>%
          as.data.frame() %>%

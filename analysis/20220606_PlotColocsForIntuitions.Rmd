@@ -14,22 +14,21 @@ In a [previous notebook](20211217_GenewiseColocFirstLook.html) I explored the ge
 ## Analysis
 
 ```{r}
+
 library(tidyverse)
 library(viridis)
 library(gplots)
 library(data.table)
 library(qvalue)
+library(RColorBrewer)
 # library(purrr)
 
 sample_n_of <- function(data, size, ...) {
   dots <- quos(...)
-  
   group_ids <- data %>% 
     group_by(!!! dots) %>% 
     group_indices()
-  
   sampled_groups <- sample(unique(group_ids), size)
-  
   data %>% 
     filter(group_ids %in% sampled_groups)
 }
@@ -62,9 +61,9 @@ dat %>%
   facet_wrap(~Threshold) +
   theme_bw() +
   labs(title = "Number of Loci:molQTL pairs attempted to colocalize in total") +
-  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1, size=3))
 
-
+# ggsave("scratch/Num_ColocsAttemped.pdf")
 
 ```
 
@@ -86,6 +85,7 @@ dat.forcarlos %>%
     facet_wrap(~Threshold) +
     labs(title="Number features attempted for coloc at different P thresholds", y="NumFeatures", x="PhenotypeClass") +
     theme(axis.text.x=element_text(angle=45, hjust=1))
+ggsave("scratch/Num_ColocsAttemped2.pdf")
 
 dat.forcarlos %>%
     filter(!is.na(TopCandidateSNP)) %>%
@@ -111,15 +111,46 @@ dat.forcarlos %>%
     labs(title="Num eQTL coloc with sQTL") +
     theme_classic() +
     theme(axis.text.x=element_text(angle=45, hjust=1))
+ggsave("scratch/Num_Colocs_eQTL_and_sQTL.pdf")
 
+
+dat.forcarlos %>%
+    filter(!is.na(TopCandidateSNP)) %>%
+    group_by(GeneLocus, TopCandidateSNP, Threshold) %>%
+    mutate(Contains_eQTL = any(PC == "Expression.Splicing.Subset_YRI")) %>%
+    mutate(Contains_sQTL = any(PC %in% c("polyA.Splicing.Subset_YRI", "polyA.IER",  "chRNA.Splicing", "chRNA.IER"))) %>%
+    mutate(Contains_chRNA_specific_sQTL = any(PC %in% c("chRNA.Splicing", "chRNA.IER"))
+           & !any(PC %in% c("polyA.Splicing.Subset_YRI", "polyA.IER"))) %>%
+    mutate(Contains_polyARNA_specific_sQTL = !any(PC %in% c("chRNA.Splicing", "chRNA.IER"))
+           & any(PC %in% c("polyA.Splicing.Subset_YRI", "polyA.IER"))) %>%
+    ungroup() %>%
+    distinct(Threshold, GeneLocus, TopCandidateSNP, .keep_all=T) %>%
+    filter(Contains_eQTL) %>%
+    group_by(Threshold) %>%
+    summarise(
+              Num_eQTL = sum(Contains_eQTL),
+              Num_sQTL_coloc_eQTL = sum(Contains_sQTL),
+              Num_chRNA_specific_sQTL_coloc_eQTL = sum(Contains_chRNA_specific_sQTL),
+              Num_polyARNA_specific_sQTL_coloc_eQTL = sum(Contains_polyARNA_specific_sQTL)
+    ) %>%
+    gather(key="eQTL_type", value="count", -Threshold) %>%
+    ggplot(aes(x=eQTL_type, y=count)) +
+    geom_col() +
+    geom_text(aes(label=count), color="black", angle=90, hjust=1) +
+    facet_wrap(~Threshold, scales="free_y") +
+    labs(title="Num eQTL coloc with sQTL") +
+    theme_classic() +
+    theme(axis.text.x=element_text(angle=45, hjust=1))
+ggsave("scratch/Num_Colocs_eQTL_and_sQTL.pdf", height=7, width=8.5)
 
 ```
 
-Below is some code for making files, and then some code for running my script to plot some colocalizations. I will plot 5 loci where metabolic labelled samples did not coloc, 5 where they did, 5 where promoterQTL/eQTL coloc, 5 where non-promoter QTL coloc, 5 where sQTL/eQTL coloc, and 5 where sQTL/eQTL don't coloc.
+Below is some code for making files, and then some code for running my script to plot some colocalizations. I will plot 5 loci where metabolic labelled samples did not coloc, 5 where they did, 5 where promoterQTL/eQTL coloc, 5 where non-promoter QTL coloc, 5 where sQTL/eQTL coloc, and 5 where sQTL/eQTL don't coloc, 5 where sQTL/eQTL coloc but only when considering whole geuvadis sQTL
 
 ```{r, eval=F}
 
 
+set.seed(0)
 dat.ToPlotColocs <- dat %>%
     filter(Threshold == "_0.001") %>%
     separate(Trait, into=c("PC", "P"), sep=";", remove = F) %>%
@@ -137,12 +168,13 @@ Targets <- dat.ToPlotColocs  %>%
     filter(any(str_detect(PC, "MetabolicLabelled.30min")) & any(str_detect(PC, "MetabolicLabelled.60min"))) %>%
     ungroup() %>%
     pull(GeneLocus) %>% unique()
-dat.ToPlotColocs %>%
+dat %>%
     filter(Threshold == "_0.001") %>%
-    filter(PC %in% c("MetabolicLabelled.30min", "MetabolicLabelled.60min", "Expression.Splicing.Subset_YRI", "H3K27AC", "H3K27AC_AtPromoter", "H3K27AC_AtDistalPromoter")) %>%
+    separate(Trait, into=c("PC", "P"), sep=";", remove = F) %>%
+    filter(PC %in% c("Expression.Splicing.Subset_YRI", "MetabolicLabelled.30min",  "MetabolicLabelled.60min", "H3K27AC")) %>%
     filter(GeneLocus %in% Targets) %>%
     sample_n_of(10, GeneLocus) %>%
-    select(-Threshold) %>%
+    select(-Threshold, -P, -PC) %>%
     write_tsv("scratch/ColocExamples/GroupMetabolicColoc.tsv")
 
 
@@ -158,18 +190,45 @@ Targets <- dat.ToPlotColocs  %>%
     ) %>%
     ungroup() %>%
     pull(GeneLocus) %>% unique()
-Targets <- dat.ToPlotColocs %>%
-    filter(GeneLocus %in% TestedTargets) %>%
-    filter(is.na(TopCandidateSNP))
-dat.ToPlotColocs %>%
+dat %>%
     filter(Threshold == "_0.001") %>%
-    filter(PC %in% c("MetabolicLabelled.30min", "MetabolicLabelled.60min", "Expression.Splicing.Subset_YRI", "H3K27AC", "H3K27AC_AtPromoter", "H3K27AC_AtDistalPromoter")) %>%
+    separate(Trait, into=c("PC", "P"), sep=";", remove = F) %>%
+    filter(PC %in% c("Expression.Splicing.Subset_YRI", "MetabolicLabelled.30min",  "MetabolicLabelled.60min", "H3K27AC")) %>%
     filter(GeneLocus %in% Targets) %>%
     sample_n_of(10, GeneLocus) %>%
-    select(-Threshold) %>%
+    select(-Threshold, -P, -PC) %>%
     write_tsv("scratch/ColocExamples/GroupMetabolicNotColoc.tsv")
 
-# Promoter and eqtl coloc TODO
+# Metabolic don't coloc even in only eQTL coloc style
+Targets <- dat %>%
+    filter(Threshold == "eQTL_0.001") %>%
+    separate(Trait, into=c("PC", "P"), sep=";", remove = F) %>%
+    left_join(PeaksToTSS %>% select(ChromatinMark, peak, gene), by=c("PC"="ChromatinMark", "P"="peak")) %>%
+    mutate( PC = case_when(
+                           gene == GeneLocus ~ paste(PC, "AtPromoter" ,sep="_"),
+                           !is.na(gene) ~ paste(PC, "AtDistalPromoter" ,sep="_"),
+                           TRUE ~ PC
+                           ) ) %>%
+    filter(PC %in% c("MetabolicLabelled.30min", "MetabolicLabelled.60min")) %>%
+    group_by(GeneLocus) %>%
+    filter(any(str_detect(PC, "MetabolicLabelled.30min")) & any(str_detect(PC, "MetabolicLabelled.60min"))) %>%
+    ungroup() %>%
+    group_by(GeneLocus, TopCandidateSNP) %>%
+    filter(
+           (is.na(TopCandidateSNP) & PC %in% c("MetabolicLabelled.30min", "MetabolicLabelled.60min")) | (sum(str_detect(PC, "MetabolicLabelled")) == 1)
+    ) %>%
+    ungroup() %>%
+    pull(GeneLocus) %>% unique()
+dat %>%
+    filter(Threshold == "eQTL_0.001") %>%
+    separate(Trait, into=c("PC", "P"), sep=";", remove = F) %>%
+    filter(PC %in% c("Expression.Splicing.Subset_YRI", "MetabolicLabelled.30min",  "MetabolicLabelled.60min", "H3K27AC")) %>%
+    filter(GeneLocus %in% Targets) %>%
+    sample_n_of(10, GeneLocus) %>%
+    select(-Threshold, -P, -PC) %>%
+    write_tsv("scratch/ColocExamples/GroupMetabolicReallyNotColoc.tsv")
+
+# Promoter and eqtl coloc
 Targets <- dat.ToPlotColocs %>%
     filter(PC %in% c("MetabolicLabelled.30min", "MetabolicLabelled.60min", "Expression.Splicing.Subset_YRI", "H3K27AC", "H3K27AC_AtPromoter", "H3K27AC_AtDistalPromoter")) %>%
     filter(!is.na(TopCandidateSNP)) %>%
@@ -177,53 +236,205 @@ Targets <- dat.ToPlotColocs %>%
     filter(any(PC == "Expression.Splicing.Subset_YRI") & any(PC == "H3K27AC_AtPromoter")) %>%
     ungroup() %>%
     pull(GeneLocus) %>% unique()
-dat.ToPlotColocs %>%
+dat %>%
     filter(Threshold == "_0.001") %>%
-    filter(PC %in% c("MetabolicLabelled.30min", "MetabolicLabelled.60min", "Expression.Splicing.Subset_YRI", "H3K27AC", "H3K27AC_AtPromoter", "H3K27AC_AtDistalPromoter")) %>%
+    separate(Trait, into=c("PC", "P"), sep=";", remove = F) %>%
+    filter(PC %in% c("Expression.Splicing.Subset_YRI", "MetabolicLabelled.30min",  "MetabolicLabelled.60min", "H3K27AC")) %>%
     filter(GeneLocus %in% Targets) %>%
     sample_n_of(10, GeneLocus) %>%
-    select(-Threshold) %>%
+    select(-Threshold, -P, -PC) %>%
     write_tsv("scratch/ColocExamples/GroupPromoterEqtlColoc.tsv")
 
-# Promoter and eqtl don't coloc
+# eqtl coloc w/ h3k27ac but not at promoter
 Targets <- dat.ToPlotColocs %>%
     filter(PC %in% c("MetabolicLabelled.30min", "MetabolicLabelled.60min", "Expression.Splicing.Subset_YRI", "H3K27AC", "H3K27AC_AtPromoter", "H3K27AC_AtDistalPromoter")) %>%
     filter(!is.na(TopCandidateSNP)) %>%
     group_by(GeneLocus, TopCandidateSNP) %>%
-    filter(any(PC == "Expression.Splicing.Subset_YRI") & any(PC == "H3K27AC_AtPromoter")) %>%
+    filter(any(PC == "Expression.Splicing.Subset_YRI") & any(PC %in% c("H3K27AC_AtDistalPromoter", "H3K27AC") )) %>%
+    filter(!any(PC == "H3K27AC_AtPromoter") ) %>%
     ungroup() %>%
     pull(GeneLocus) %>% unique()
-dat.ToPlotColocs %>%
+dat %>%
     filter(Threshold == "_0.001") %>%
-    filter(PC %in% c("MetabolicLabelled.30min", "MetabolicLabelled.60min", "Expression.Splicing.Subset_YRI", "H3K27AC", "H3K27AC_AtPromoter", "H3K27AC_AtDistalPromoter")) %>%
+    separate(Trait, into=c("PC", "P"), sep=";", remove = F) %>%
+    filter(PC %in% c("Expression.Splicing.Subset_YRI", "MetabolicLabelled.30min",  "MetabolicLabelled.60min", "H3K27AC")) %>%
     filter(GeneLocus %in% Targets) %>%
     sample_n_of(10, GeneLocus) %>%
-    select(-Threshold) %>%
-    write_tsv("scratch/ColocExamples/GroupPromoterEqtlColoc.tsv")
+    select(-Threshold, -P, -PC) %>%
+    write_tsv("scratch/ColocExamples/GroupNonPromoterEqtlColoc.tsv")
 
+
+# eqtl coloc w/ sQTL
+Targets <- dat.ToPlotColocs %>%
+    filter(PC %in% c("Expression.Splicing.Subset_YRI", "H3K27AC", "H3K27AC_AtPromoter", "H3K27AC_AtDistalPromoter", "polyA.Splicing", "polyA.Splicing.Subset_YRI")) %>%
+    filter(!is.na(TopCandidateSNP)) %>%
+    group_by(GeneLocus, TopCandidateSNP) %>%
+    filter(any(PC == "Expression.Splicing.Subset_YRI") & any(PC == "polyA.Splicing.Subset_YRI" )) %>%
+    ungroup() %>%
+    pull(GeneLocus) %>% unique()
 dat %>%
-  count(Threshold, GeneLocus) %>%
-  ggplot(aes(x=n, color=Threshold)) +
-  stat_ecdf() +
-  coord_cartesian(xlim=c(0,10)) +
-  theme_bw()
+    filter(Threshold == "_0.001") %>%
+    separate(Trait, into=c("PC", "P"), sep=";", remove = F) %>%
+    filter(PC %in% c("Expression.Splicing.Subset_YRI", "H3K27AC",  "polyA.Splicing.Subset_YRI")) %>%
+    filter(GeneLocus %in% Targets) %>%
+    sample_n_of(10, GeneLocus) %>%
+    select(-Threshold, -P, -PC) %>%
+    write_tsv("scratch/ColocExamples/Group_sQTL_Coloc.tsv")
 
-dat.tidy
-
-
-
+# eqtl coloc w/ full-geuvadis-specific sQTL
+Targets <- dat.ToPlotColocs %>%
+    filter(PC %in% c("Expression.Splicing.Subset_YRI", "H3K27AC", "H3K27AC_AtPromoter", "H3K27AC_AtDistalPromoter", "polyA.Splicing", "polyA.Splicing.Subset_YRI")) %>%
+    filter(!is.na(TopCandidateSNP)) %>%
+    group_by(GeneLocus, TopCandidateSNP) %>%
+    filter(any(PC == "Expression.Splicing.Subset_YRI") & any(PC == "polyA.Splicing" )) %>%
+    filter(!any(PC ==  "polyA.Splicing.Subset_YRI" )) %>%
+    ungroup() %>%
+    pull(GeneLocus) %>% unique()
 dat %>%
-  filter(Threshold == "_0.01") %>%
-  select(-Threshold) %>%
-  # add_count(GeneLocus, TopCandidateSNP) %
-  ) %>%
-  write_tsv("../code/scratch/TestHyprcolocPlots.tsv")
+    filter(Threshold == "_0.001") %>%
+    separate(Trait, into=c("PC", "P"), sep=";", remove = F) %>%
+    filter(PC %in% c("Expression.Splicing.Subset_YRI", "H3K27AC",  "polyA.Splicing.Subset_YRI", "polyA.Splicing")) %>%
+    filter(GeneLocus %in% Targets) %>%
+    sample_n_of(10, GeneLocus) %>%
+    select(-Threshold, -P, -PC) %>%
+    write_tsv("scratch/ColocExamples/Group_FullGeauvadisSpecific_sQTL_Coloc.tsv")
+
+# sQTL and eQTL coloc with something but not eachother
+Targets <- dat.ToPlotColocs %>%
+    filter(PC %in% c("Expression.Splicing.Subset_YRI", "H3K27AC", "H3K27AC_AtPromoter", "H3K27AC_AtDistalPromoter",  "polyA.Splicing.Subset_YRI")) %>%
+    filter(!is.na(TopCandidateSNP)) %>%
+    group_by(GeneLocus, TopCandidateSNP) %>%
+    filter(any(PC == "Expression.Splicing.Subset_YRI") | any(PC == "polyA.Splicing.Subset_YRI" )) %>%
+    filter(!(any(PC == "Expression.Splicing.Subset_YRI") & any(PC == "polyA.Splicing.Subset_YRI" ))) %>%
+    filter(n()>=2) %>%
+    ungroup() %>%
+    pull(GeneLocus) %>% unique()
+dat %>%
+    filter(Threshold == "_0.001") %>%
+    separate(Trait, into=c("PC", "P"), sep=";", remove = F) %>%
+    filter(PC %in% c("Expression.Splicing.Subset_YRI", "H3K27AC",  "polyA.Splicing.Subset_YRI")) %>%
+    filter(GeneLocus %in% Targets) %>%
+    sample_n_of(10, GeneLocus) %>%
+    select(-Threshold, -P, -PC) %>%
+    write_tsv("scratch/ColocExamples/Group_sQTL_separate_eQTL_Coloc.tsv")
+
+```
+And finally write out a bash script to run my custom plotting script for each of those tsv files. Also write out a bash script for custom pygenometracks plotting
+
+```{r}
+
+Sys.glob("scratch/ColocExamples/Group*Coloc.tsv") %>%
+    setNames(str_replace(.,"scratch/ColocExamples/(Group.+?)Coloc.tsv", "\\1")) %>%
+    as.data.frame() %>%
+    rownames_to_column("GroupName") %>%
+    mutate(cmd = str_glue("Rscript scripts/PlotColocFromHyprcolocResults.R {`.`} scratch/ColocExamples/{GroupName}.Plot. png")) %>%
+    select(cmd) %>%
+    write_tsv("scratch/ColocExamples/ColocPlots.sh" ,col_names=F)
+
+AllTraits <- Sys.glob("QTLs/QTLTools/*/OnlyFirstReps.sorted.qqnorm.bed.gz") %>%
+    setNames(str_replace(.,"QTLs/QTLTools/(.+?)/OnlyFirstReps.sorted.qqnorm.bed.gz", "\\1")) %>%
+    lapply(fread, select=1:6, sep='\t') %>%
+    bind_rows(.id="PC")
+
+
+Assays <-
+    inner_join(
+        readxl::read_excel("../data/ColorsForPhenotypes.xlsx", sheet = 1),
+        readxl::read_excel("../data/ColorsForPhenotypes.xlsx", sheet = 2),
+        by="ParentAssay"
+    )
+
+
+color_pal_fun <- colorRampPalette(brewer.pal(7,"Dark2"))
+
+chr_sizes <- read_tsv("ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa.fai", col_names=c("Chr", "size", "N", "M", "O")) %>% select(Chr, size)
+
+dat.all <- Sys.glob("scratch/ColocExamples/Group*Coloc.tsv") %>%
+    setNames(str_replace(.,"scratch/ColocExamples/(Group.+?)Coloc.tsv", "\\1")) %>%
+    lapply(read_tsv) %>%
+    bind_rows(.id="Group") %>%
+    separate(Trait, into=c("PC", "P"), sep=";", remove = F) %>%
+    # pull(PC) %>% unique()
+    left_join(
+               (Assays %>% select(PC=Phenotype, GroupsFile_label))
+    ) %>%
+    left_join(
+               AllTraits,
+               by = c("P"="pid", "PC")
+    ) %>%
+    unite(key, GeneLocus, Group, remove=F) %>%
+    left_join(chr_sizes, by=c("#Chr"="Chr")) %>%
+    group_by(key) %>%
+    mutate(group_start = min(start), group_end=max(end)) %>%
+    ungroup() %>%
+    mutate(group_range = group_end - group_start) %>%
+    ungroup() %>%
+    rowwise() %>%
+    mutate(left_limit = max(c(1, group_start- (group_range*0.1)))) %>%
+    mutate(right_limit = min(c(size, (group_end+group_range*0.1)))) %>%
+    ungroup() %>%
+    separate(TopCandidateSNP, into=c("SNP_chr", "SNP_pos", "SNP_ref", "SNP_alt"), remove=F, sep=":", convert=T) %>%
+    select(GeneLocus, Group, key,  left_limit, right_limit, TopCandidateSNP, P, PC, start, end, strand, GroupsFile_label, Chr='#Chr', Trait, SNP_pos, SNP_chr)
+dat.all.split <- dat.all %>%
+    base::split(.$key)
+
+GroupFile <- read_tsv("PlotQTLs/bwList.Groups.tsv")
+
+for (dat.group in dat.all.split){
+    ColorsMap <- dat.group %>% pull(TopCandidateSNP) %>% unique() %>%
+        na.omit() %>% sort() %>%
+        setNames(color_pal_fun(length(.)), .)
+    bed_dat <- dat.group %>%
+        mutate(Color = recode(TopCandidateSNP, !!!ColorsMap, .default="#808080")) %>%
+        replace_na(list(Color="#808080")) %>%
+        rowwise() %>%
+        mutate(Color_rgb = paste(as.vector(col2rgb(Color)), collapse = ",") ) %>%
+        ungroup() %>%
+        mutate(DummyScore= 0, thickStart = start, thickEnd=end)
+    f_out_feats_bed <- paste0("scratch/ColocExamples/", bed_dat$Group[1], ".Plot.", bed_dat$GeneLocus[1], ".pygenometracks_files_feats.bed" )
+    bed_dat %>%
+        select(Chr, start, end, Trait, DummyScore, strand, thickStart, thickEnd, Color_rgb) %>%
+        distinct(.keep_all=T) %>%
+        arrange(Chr, start, end) %>%
+        write_tsv(f_out_feats_bed, col_names=F)
+    f_out_snp_bed <- paste0("scratch/ColocExamples/", bed_dat$Group[1], ".Plot.", bed_dat$GeneLocus[1], ".pygenometracks_files_snps.bed" )
+    bed_dat %>%
+        distinct(TopCandidateSNP, .keep_all=T) %>%
+        mutate(SNP_chr = paste0("chr", SNP_chr)) %>%
+        mutate(SNP_end = SNP_pos+1) %>%
+        mutate(DummyStrand = ".", thickStart=SNP_pos, thickEnd=SNP_end) %>%
+        select(SNP_chr, SNP_pos, SNP_end, TopCandidateSNP, DummyScore, strand, thickStart, thickEnd, Color_rgb) %>%
+        drop_na() %>%
+        arrange(SNP_chr, SNP_pos, SNP_end) %>%
+        write_tsv(f_out_snp_bed, col_names=F)
+    GroupFile %>%
+        filter(Group_label %in% dat$GroupsFile_label) %>%
+        write_tsv(paste0("scratch/ColocExamples/", bed_dat$Group[1], ".Plot.", bed_dat$GeneLocus[1], ".pygenometracks_files_groups.tsv" ))
+    # write extra ini
+    f_out_ini <- paste0("scratch/ColocExamples/", bed_dat$Group[1], ".Plot.", bed_dat$GeneLocus[1], ".pygenometracks_files_extras.ini" )
+    c("","","[test_feats]", paste0("file = ", f_out_feats_bed), "title = test_feats", "labels = true", "file_type = bed", "all_labels_inside = true", "color = bed_rgb", "",  "[spacer]", "", "[TopSNPs]", paste0("file = ", f_out_snp_bed),"title = ClusterSNPs", "labels = true", "file_type = bed", "all_labels_inside = true", "color = bed_rgb") %>% write_lines(f_out_ini)
+}
+
+dat.all %>% distinct(key, TopCandidateSNP, .keep_all=T) %>%
+    drop_na() %>%
+    mutate(left_limit = ceiling(left_limit), right_limit=floor(right_limit)) %>%
+    mutate(cmd = str_glue(
+                                   "python scripts/GenometracksByGenotype/AggregateBigwigsForPlotting.py -v --BigwigList PlotQTLs/bwList.tsv --Region {Chr}:{left_limit}-{right_limit} --VCF Genotypes/1KG_GRCh38/{SNP_chr}.vcf.gz --SnpPos {Chr}:{SNP_pos} --BigwigListType KeyFile --OutputPrefix scratch/ColocExamples/zTemp --FilterJuncsByBed scratch/ColocExamples/{Group}.Plot.{GeneLocus}.pygenometracks_files_feats.bed --GroupSettingsFile scratch/ColocExamples/{Group}.Plot.{GeneLocus}.pygenometracks_files_groups.tsv\npyGenomeTracks --tracks <(cat scratch/ColocExamples/zTemptracks.ini scratch/ColocExamples/{Group}.Plot.{GeneLocus}.pygenometracks_files_extras.ini scratch/ColocExamples/zGenesTracks.ini) --out scratch/ColocExamples/{Group}.Plot.{GeneLocus}.pygenometracksplt_{SNP_chr}_{SNP_pos}.png --region {Chr}:{left_limit}-{right_limit}"
+                                   )) %>%
+    # mutate(cmd = str_glue(
+    #                                "python scripts/GenometracksByGenotype/AggregateBigwigsForPlotting.py -v --BigwigList PlotQTLs/bwList.tsv --Region {Chr}:{left_limit}-{right_limit} --VCF Genotypes/1KG_GRCh38/{SNP_chr}.vcf.gz --SnpPos {Chr}:{SNP_pos} --BigwigListType KeyFile --OutputPrefix scratch/ColocExamples/zTemp --FilterJuncsByBed scratch/ColocExamples/{Group}.Plot.{GeneLocus}.pygenometracks_files_feats.bed --GroupSettingsFile scratch/ColocExamples/{Group}.Plot.{GeneLocus}.pygenometracks_files_groups.tsv\npyGenomeTracks --tracks <(cat scratch/ColocExamples/zTemptracks.ini scratch/ColocExamples/zGenesTracks.ini) --out scratch/ColocExamples/{Group}.Plot.{GeneLocus}.pygenometracksplt_{SNP_chr}_{SNP_pos}.png --region {Chr}:{left_limit}-{right_limit}"
+    #                                )) %>%
+    select(cmd) %>%
+    write.table("scratch/ColocExamples/ColocPlots.pygenometracks.sh", col.names=F, row.names=F, quote=F)
+
+
 
 ```
 
+
 ```{bash, eval=F}
 conda activate r_essentials
-echo "hello world"
+bash scratch/ColocExamples/ColocPlots.sh
 ```
 
 
