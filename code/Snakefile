@@ -272,26 +272,20 @@ rule assembly:
     input:
         "ReferenceGenome/Annotations/Assembly/chRNA.Expression.Splicing.stringtie.assembly.gtf",
         
-rule eRNA_rules:
+rule chRNAExpressionPhenotypes:
     input:
-        "../data/eRNA.saf",
         expand(
-            "featureCounts/{Phenotype}_{ncRNA}/Counts.txt",
-            Phenotype=[
-                "polyA.Expression",
-                "chRNA.Expression",
-                "MetabolicLabelled.30min",
-                "MetabolicLabelled.60min",
-                "ProCap"
-            ],
-            ncRNA=["eRNA", "cheRNA", "lncRNA", "snoRNA"],#, "introns"],
+          "QTLs/QTLTools/chRNA.Expression{RNA_type}/OnlyFirstReps.{data_type}.bed.gz",
+          RNA_type = [".Splicing", "_ncRNA"], data_type = ['qqnorm', 'RPKM']
         ),
         expand(
-          "QTLs/QTLTools/chRNA.Expression_{ncRNA}/OnlyFirstReps.qqnorm.bed.gz",
-          ncRNA = ["eRNA", "cheRNA", "snoRNA", "lncRNA"]
+          "QTLs/QTLTools/chRNA.Expression{RNA_type}/{Pass}.txt.gz",
+          RNA_type = [".Splicing", "_ncRNA"],
+          Pass = ["PermutationPass.FDR_Added", "NominalPass"]
         ),
 
 rule getHMMInput:
+    priority: 2
     input:
         "NonCodingRNA/annotation/ncRNA_filtered.2states.sorted.bed.gz",
         "NonCodingRNA/annotation/ncRNA.2states.sorted.bed.gz",
@@ -317,7 +311,12 @@ rule getHMMInput:
         
         
         
-        
+rule quantNonCodingRNA:
+    priority: 1
+    input:
+        expand("featureCounts/{Phenotype}_ncRNA/Counts.txt", 
+        Phenotype=["polyA.Expression", "chRNA.Expression", "MetabolicLabelled.30min", "MetabolicLabelled.60min"]
+        )
         
   
         

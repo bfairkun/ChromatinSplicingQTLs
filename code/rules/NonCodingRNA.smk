@@ -118,39 +118,39 @@ rule GetAdditionalNonCodingRNAFromFeatureCounts:
         """
         
 
-rule MakeSAFForNonCodingRNA:
-    input:
-        "NonCodingRNA_200/annotation/ncRNA_filtered.2states.sorted.bed.gz",
-    output:
-        "NonCodingRNA_200/annotation/ncRNA_filtered.2states.sorted.saf",
-    shell:
-        """
-        echo -e 'GeneID\\tChr\\tStart\\tEnd\\tStrand' > {output};
-        zcat {input} | awk '{{print sep='\\t' "ncRNA_" NR, $1, $2, $3, $6 }}' FS='\\t' OFS='\\t' >> {output}
-        """
+#rule MakeSAFForNonCodingRNA:
+#    input:
+#        "NonCodingRNA_200/annotation/ncRNA_filtered.2states.sorted.bed.gz",
+#    output:
+#        "NonCodingRNA_200/annotation/ncRNA_filtered.2states.sorted.saf",
+#    shell:
+#        """
+#        echo -e 'GeneID\\tChr\\tStart\\tEnd\\tStrand' > {output};
+#        zcat {input} | awk '{{print sep='\\t' "ncRNA_" NR, $1, $2, $3, $6 }}' FS='\\t' OFS='\\t' >> {output}
+#        """
         
-rule featureCountsNonCodingRNA:
-    input:
-        bam = GetBamForPhenotype,
-        saf = "NonCodingRNA_200/annotation/ncRNA_filtered.2states.sorted.bed.gz",
-    output:
-        "featureCounts/{Phenotype}_ncRNA/Counts.txt",
-    params:
-        extraParams = PairedEndParams,
-        strandParams = FeatureCountsNonCodingStrandParams
-    threads:
-        8
-    wildcard_constraints:
-        Phenotype = "|".join(["polyA.Expression", "chRNA.Expression", "MetabolicLabelled.30min", "MetabolicLabelled.60min"])
-    resources:
-        mem = 12000,
-        cpus_per_node = 9,
-    log:
-        "logs/featureCounts/{Phenotype}_ncRNA.log"
-    shell:
-        """
-        featureCounts {params.extraParams} {params.strandParams} -F SAF -T {threads} --ignoreDup --primary -a {input.saf} -o featureCounts/{wildcards.Phenotype}_ncRNA/Counts.txt {input.bam} &> {log};
-        """
+#rule featureCountsNonCodingRNA:
+#    input:
+#        bam = GetBamForPhenotype,
+#        saf = "NonCodingRNA_200/annotation/ncRNA_filtered.2states.sorted.saf",
+#    output:
+#        "featureCounts/{Phenotype}_ncRNA/Counts.txt",
+#    params:
+#        extraParams = PairedEndParams,
+#        strandParams = FeatureCountsNonCodingStrandParams
+#    threads:
+#        8
+#    wildcard_constraints:
+#        Phenotype = "|".join(["polyA.Expression", "chRNA.Expression", "MetabolicLabelled.30min", "MetabolicLabelled.60min"])
+#    resources:
+#        mem = 12000,
+#        cpus_per_node = 9,
+#    log:
+#        "logs/featureCounts/{Phenotype}_ncRNA.log"
+#    shell:
+#        """
+#        featureCounts {params.extraParams} {params.strandParams} -F SAF -T {threads} --ignoreDup --primary -a {input.saf} -o featureCounts/{wildcards.Phenotype}_ncRNA/Counts.txt {input.bam} &> {log};
+#        """
 
         
         

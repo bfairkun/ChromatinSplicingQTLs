@@ -58,7 +58,7 @@ rule MakeWindows:
         plus = "NonCodingRNA/bed/{chrom}.windows.plus.bed.gz",
         minus = "NonCodingRNA/bed/{chrom}.windows.minus.bed.gz",
     params:
-        win_size = 50,
+        win_size = 200,#50,
     wildcard_constraints:
         chrom = "|".join(chrom_list),
         strand = 'minus|plus',
@@ -265,10 +265,11 @@ rule MergeNonCodingRNA:
         tmp_filtered_bed = temp("NonCodingRNA/annotation/ncRNA_filtered.{nstates}states.bed.gz"),
         tmp_hmm_bed = temp("NonCodingRNA/annotation/allHMM.{nstates}states.bed.gz"),
         all_bed = "NonCodingRNA/annotation/ncRNA.{nstates}states.sorted.bed.gz",
+        filtered_bed_name = temp("NonCodingRNA/annotation/ncRNA_filtered.{nstates}states.sorted_renamed.bed.gz"),
         filtered_bed = "NonCodingRNA/annotation/ncRNA_filtered.{nstates}states.sorted.bed.gz",
         hmm_bed = "NonCodingRNA/annotation/allHMM.{nstates}states.sorted.bed.gz"
     params:
-        length = 200,
+        length = 1000,#200,
     wildcard_constraints:
         nstates = '2|3'
     log:
@@ -279,7 +280,8 @@ rule MergeNonCodingRNA:
         """
         python scripts/merge_HMM_annotation.py --length {params.length} --nstates {wildcards.nstates} &> {log};
         bedtools sort -i {output.tmp_all_bed} | gzip - > {output.all_bed};
-        bedtools sort -i {output.tmp_filtered_bed} | gzip - > {output.filtered_bed};
+        bedtools sort -i {output.tmp_filtered_bed} | gzip - > {output.filtered_bed_name};
+        zcat {output.filtered_bed_name} | awk '{{print sep='\\t' $1, $2, $3, "ncRNA_" NR, $5, $6 }}' FS='\\t' OFS='\\t' | gzip - > {output.filtered_bed};
         bedtools sort -i {output.tmp_hmm_bed} | gzip - > {output.hmm_bed};
         """
    
@@ -556,7 +558,43 @@ rule BamToBWWithIntronCoverage:
         """
         
 
+rule MakeSAFAnnotationForNonCodingRNA:
+    input:
+        "NonCodingRNA/annotation/ncRNA_filtered.2states.sorted.bed.gz",
+    output:
+        "NonCodingRNA/annotation/ncRNA_filtered.2states.sorted.saf",
+    shell:
+        """
+        echo -e 'GeneID\\tChr\\tStart\\tEnd\\tStrand' > {output};
+        zcat {input} | awk '{{print sep='\\t' $4, $1, $2, $3, $6 }}' FS='\\t' OFS='\\t' >> {output}
+        """
+        #zcat {input} | awk '{{print sep='\\t' "ncRNA_" NR, $1, $2, $3, $6 }}' FS='\\t' OFS='\\t' >> {output}
+        
+rule featureCountsNonCodingRNA:
+    input:
+        bam = GetBamForPhenotype,
+        saf = "NonCodingRNA/annotation/ncRNA_filtered.2states.sorted.saf",
+    output:
+        "featureCounts/{Phenotype}_ncRNA/Counts.txt",
+    params:
+        extraParams = PairedEndParams,
+        strandParams = FeatureCountsNonCodingStrandParams
+    threads:
+        8
+    wildcard_constraints:
+        Phenotype = "|".join(["polyA.Expression", "chRNA.Expression", "MetabolicLabelled.30min", "MetabolicLabelled.60min"])
+    resources:
+        mem = 12000,
+        cpus_per_node = 9,
+    log:
+        "logs/featureCounts/{Phenotype}_ncRNA.log"
+    shell:
+        """
+        featureCounts {params.extraParams} {params.strandParams} -F SAF -T {threads} --ignoreDup --primary -a {input.saf} -o featureCounts/{wildcards.Phenotype}_ncRNA/Counts.txt {input.bam} &> {log};
+        """
 
+        
+        
 
 
 
