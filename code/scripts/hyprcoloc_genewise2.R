@@ -28,15 +28,17 @@ library(hyprcoloc)
 FilelistIn <- args[1]
 FileOut <- args[2]
 FinemappingOut <- args[3]
-Threshold <- as.numeric(args[4])
+TierTwoOut <- args[4]
+Threshold <- as.numeric(args[5])
+
 
 PermutationResultFiles <- Sys.glob("QTLs/QTLTools/*/PermutationPassForColoc.txt.gz") %>%
     setNames(str_replace(., "QTLs/QTLTools/(.+?)/PermutationPassForColoc.txt.gz", "\\1"))
 
-if (args[5] == '' | is.na(args[5])){
+if (args[6] == '' | is.na(args[6])){
     TraitClassesRestrictions = NA
 } else {
-    TraitClassesRestrictions <- unlist(strsplit(args[5], ' '))
+    TraitClassesRestrictions <- unlist(strsplit(args[6], ' '))
     PermutationResultFiles <- PermutationResultFiles[TraitClassesRestrictions]
 }
 
@@ -56,9 +58,10 @@ Loci<- read_tsv(FilelistIn, col_names=c("f")) %>%
     select(Loci_names, f) %>%
     deframe()
 
-
-# HyprcolocResults.list <- vector("list", length(Loci))
-
+# Clear output files
+close( file( FileOut, open="w" ) )
+close( file( FinemappingOut, open="w" ) )
+close( file( TierTwoOut, open="w" ) )
 for (i in seq_along(Loci)){
 
     # TestLocus <- Loci[875]
@@ -154,5 +157,14 @@ for (i in seq_along(Loci)){
          mutate(Loci = names(TestLocus)) %>%
          select(Loci, everything()) %>%
          write_tsv(FileOut, append=T)
+
+    z = abs(betas)/ses
+    cor.z.pearson <- cor(z) %>% melt() %>% mutate(method="cor.z.pearson")
+    cor.logp.pearson <- cor(log(2*pnorm(z))) %>% melt() %>% mutate(method="cor.logp.pearson")
+    cor.z.spearman <- cor(z, method="spearman") %>% melt() %>% mutate(method='cor.z.spearman')
+    bind_rows(list(cor.z.pearson, cor.z.spearman, cor.logp.pearson)) %>%
+        spread("method", "value") %>%
+        mutate(GeneLocus = names(TestLocus)) %>%
+        write_tsv(TierTwoOut, append=T)
 
 }

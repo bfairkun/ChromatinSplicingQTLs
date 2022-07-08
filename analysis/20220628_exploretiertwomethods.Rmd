@@ -1,0 +1,103 @@
+---
+title: "test tier two coloc methods"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+## Intro
+
+Because hyprcoloc sometimes doesn't yield the intuitive result based on manually inspecting the raw data (not clustering things that look obviously colocalized), I want to be able to present the coloc results along side other, more permissive methods. For example, just pearson/spearman correlation coefficient of z-scores or log10 pvalues. I have already calculated that for a few trait pairs, and I just want to get some sense of if pearson/spearman and z-score/log-p-val makes any difference
+
+```{r}
+library(tidyverse)
+library(GGally)
+library(data.table)
+library(pROC)
+library(viridis)
+
+dat <- read_tsv("../code/scratch/tiertwo.txt.gz", col_names = c("P1", "P2", "cor.z.pearson", "cor.z.spearman", "cor.logp.pearson", "cor.logp.spearman"))
+
+dat %>%
+  ggpairs(dat, columns=3:6)
+
+```
+
+
+Ok , I have also calculated these correlation coefficients for Z score and logP value for all pairs of traits attempted colocalize. Let's compare that to colocalization results...
+
+```{r}
+coloc.results <- fread("../code/hyprcoloc/Results/ForColoc/MolColocStandard/PairwiseColocStats.txt.gz")
+pairwise.cor.results <- fread("../code/hyprcoloc/Results/ForColoc/MolColocStandard/pairwisecor.txt.gz", col.names = c("Trait1","Trait2", "cor.z.pearson", "cor.z.spearman", "cor.logp.pearson", "GeneLocus"))
+
+coloc.results
+
+```
+
+
+```{r}
+Combined.dat <- coloc.results %>%
+  inner_join(pairwise.cor.results, by = c("GeneLocus", "Trait.x"="Trait1", "Trait.y"="Trait2"))
+
+Combined.dat %>%
+  select(GeneLocus, IsColocalizedPair, cor.z.pearson, cor.z.spearman, cor.logp.pearson) %>%
+  gather(key="method", value="CorrelationCoefficient", cor.z.pearson, cor.z.spearman, cor.logp.pearson) %>%
+  ggplot(aes(x=CorrelationCoefficient, fill=IsColocalizedPair)) +
+  geom_histogram() +
+  facet_grid(rows=vars(IsColocalizedPair), cols=vars(method), scales = "free") +
+  theme_bw()
+
+```
+
+Ok, the spearman correlation of z scores I think does the best job at distinguishing the hyprcoloc colocalization calls. Let's continue with that. Let's make a ROC curve, using hyprcoloc's colocalization calls as the "true response", and pick a threshold for calling something "colocalized".
+
+```{r}
+ROC.results <- roc(response=Combined.dat$IsColocalizedPair, predictor = Combined.dat$cor.z.spearman)
+
+ROC.results$auc
+
+BestThreshold <- coords(ROC.results, "best", "threshold")
+BestThreshold
+
+plot(ROC.results)
+abline(v=BestThreshold["specificity"])
+abline(h=BestThreshold["sensitivity"])
+
+
+
+```
+
+Using that threshold, as criteria to call something colocalized, count how many colocalizions there are, compared to using hyprcoloc, then let's remake the heatmap for those gene expression phenotypes I have been using to assess results (eg Metabolic labelled 30, 60min).
+
+```{r}
+
+RNASeqPhenotypes <- c("MetabolicLabelled.30min", "MetabolicLabelled.60min", "Expression.Splicing.Subset_YRI", "chRNA.Expression.Splicing", "H3K36ME3")
+
+Combined.dat %>%
+  mutate(IsTierTwoColocalized = cor.z.spearman > BestThreshold["threshold"]) %>%
+  count(IsTierTwoColocalized, IsColocalizedPair) %>%
+  ggplot(aes(x=IsTierTwoColocalized, y=n, fill=IsColocalizedPair)) +
+  geom_col() +
+  labs(Title="Number colocalizations by methods", y="Number QTL trait pairs") +
+  theme_bw()
+
+Combined.dat %>%
+  filter((PC1 %in% RNASeqPhenotypes) & (PC2 %in% RNASeqPhenotypes)) %>%
+  mutate(IsTierTwoColocalized = cor.z.spearman > BestThreshold["threshold"]) %>%
+  group_by(PC1, PC2) %>%
+  summarise(FractionColocsBySpearmanCoef = sum(IsTierTwoColocalized)/n(),
+            FractionColosByHyprcoloc = sum(IsColocalizedPair)/n()) %>%
+  ungroup() %>%
+  gather(key="Method", value="FractionColocs", -PC1, -PC2) %>%
+  ggplot(aes(x=PC1, y=PC2, fill=FractionColocs)) +
+  geom_raster() +
+  geom_text(aes(label=signif(FractionColocs, 2))) +
+  scale_fill_viridis(option="B", direction = 1, limits=c(0.5,1)) +
+  facet_wrap(~Method) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+
+I think I want to plot a random sample of the coloc data from when the two methods disagree... From where coloc says something colocalizes but not my "tier two" method, and also where the tier two method says something should colocalize but not coloc.
