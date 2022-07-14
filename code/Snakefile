@@ -23,10 +23,10 @@ include: "rules/chRNASeqSlopes.smk"
 include: "rules/ProcessTehranchi.smk"
 include: "rules/PlotQTLs.smk"
 include: "rules/CalculateExonicPSI.smk"
-include: "rules/DeNovoAssembly.smk"
 include: "rules/IntronRetention.smk"
 include: "rules/SpliceSiteMutation.smk"
 include: "rules/DeNovoNonCodingRNA.smk"
+include: "rules/DeNovoNonCodingRNA_plots.smk"
 
 
 wildcard_constraints:
@@ -56,7 +56,6 @@ localrules:
     Download_hg19_to_hg38_chain,
     DownloadHg38Gencode_basic,
     DownloadKristjansdottirSupplementData2,
-    DownloadProSeq,
 
 
 ruleorder: CopyFastqFromLocal > DownloadFastqFromLink
@@ -285,12 +284,38 @@ rule chRNAExpressionPhenotypes:
         ),
 
 rule getHMMInput:
-    priority: 2
+    priority: 1
     input:
-        "NonCodingRNA/annotation/ncRNA_filtered.2states.sorted.bed.gz",
         "NonCodingRNA/annotation/ncRNA.2states.sorted.bed.gz",
         "NonCodingRNA/annotation/AnnotatedProteinCoding_overlap.2states.bed.gz",
         "NonCodingRNA/annotation/DeNovoProteinCoding_overlap.2states.bed.gz",
+        "NonCodingRNA/annotation/ncRNA.2states.TSS.bed.gz",
+        "NonCodingRNA/annotation/ncRNA.2states.3PrimeEnd.bed.gz",
+        "NonCodingRNA/annotation/allGenes.3PrimeEnd.bed.gz",
+        "NonCodingRNA/annotation/allGenes.FirstTSS.bed.gz",
+        "NonCodingRNA/annotation/allGenes.Last3PrimeEnd.bed.gz",
+        
+rule testHMMMerging:
+    priority: 2
+    input:
+        expand("NonCodingRNA/test/ncRNA.2states.{merge_distance}bp_merge.sorted.bed.gz",
+                merge_distance = ['0', '200', '400', '600', '800', '1000', '2000', '3000', '4000', '5000',
+                '6000', '7000', '8000', '9000', '10000', '15000', '20000']),
+        expand("NonCodingRNA/test/ncRNA.2states.{merge_distance}bp_merge.TSS.bed.gz",
+        merge_distance = ['0', '200', '400', '600', '800', '1000', '2000', '3000', '4000', '5000',
+                '6000', '7000', '8000', '9000', '10000', '15000', '20000']),
+        expand("NonCodingRNA/test/HistonePeaksTSS/ncRNA_filtered.2states.{merge_distance}bp_merge.TSS.{Peaks}_overlap.bed.gz",
+        merge_distance = ['0', '200', '400', '600', '800', '1000', '2000', '3000', '4000', '5000',
+                '6000', '7000', '8000', '9000', '10000', '15000', '20000'],
+        Peaks = ['H3K27AC', 'H3K4ME1', 'H3K4ME3']),
+        
+rule plotNonCodingRNA:
+    priority: 3
+    input:
+        expand("NonCodingRNA/bigwig/{IndID}.plus.bw", 
+        IndID = ["NA18486", "NA18497", "NA18498", "NA18499", "NA19201", "NA19210"]),
+        expand("NonCodingRNA/bigwig/{IndID}.minus.bw", 
+        IndID = ["NA18486", "NA18497", "NA18498", "NA18499", "NA19201", "NA19210"]),
         expand("NonCodingRNA/deeptools/matrix/{IndID}.RNA{strictness}.matrix.gz", 
         IndID = ["NA18486", "NA19201", "NA19210"], strictness=["", ".strict1", ".strict2", ".strict3"]),
         expand("NonCodingRNA/deeptools/plots/{IndID}.RNA{strictness}.plot.png", 
@@ -303,16 +328,10 @@ rule getHMMInput:
         IndID = ["NA19201", "NA19210"], strictness=["", ".strict1", ".strict2", ".strict3"]),
         expand("NonCodingRNA/deeptools/plots/{IndID}.combined{strictness}.plot.png",  
         IndID = ["NA19201", "NA19210"], strictness=["", ".strict1", ".strict2", ".strict3"]),
-        "NonCodingRNA/annotation/ncRNA_filtered.2states.TSS.bed.gz",
-        expand("NonCodingRNA/bigwig/{IndID}.plus.bw", 
-        IndID = ["NA18486", "NA18497", "NA18498", "NA18499", "NA19201", "NA19210"]),
-        expand("NonCodingRNA/bigwig/{IndID}.minus.bw", 
-        IndID = ["NA18486", "NA18497", "NA18498", "NA18499", "NA19201", "NA19210"]),
-        
         
         
 rule quantNonCodingRNA:
-    priority: 1
+    priority: 2
     input:
         expand("featureCounts/{Phenotype}_ncRNA/Counts.txt", 
         Phenotype=["polyA.Expression", "chRNA.Expression", "MetabolicLabelled.30min", "MetabolicLabelled.60min"]
