@@ -86,7 +86,7 @@ dat.tidy %>%
   filter((PC1 %in% RNASeqPhenotypes) & (PC2 %in% RNASeqPhenotypes)) %>%
   separate(Locus, into=c("Locus", "Threshold"), sep = ":") %>%
   group_by(PC1, PC2, Threshold) %>%
-  summarise(FractionColocs = sum(IsColocalizedPair)/n()) %>%
+  summarise(FractionColocsBySpearmanCoef = sum(IsColocalizedPair)/n()) %>%
   ungroup() %>%
   mutate(TopPCs = paste(PC1, PC2)) %>%
   mutate(BottomPCs = paste(PC2, PC1)) %>%

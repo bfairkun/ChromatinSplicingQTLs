@@ -167,7 +167,8 @@ rule genewise_coloc_chunk:
         ColocName = '|'.join(colocs_genewise.index)
     output:
         clusters = "hyprcoloc/Results/{FeatureCoordinatesRedefinedFor}/{ColocName}/Chunks/{n}.txt.gz",
-        snpscores = "hyprcoloc/Results/{FeatureCoordinatesRedefinedFor}/{ColocName}/Chunks/{n}.snpscores.txt.gz"
+        snpscores = "hyprcoloc/Results/{FeatureCoordinatesRedefinedFor}/{ColocName}/Chunks/{n}.snpscores.txt.gz",
+        pairwisecor = "hyprcoloc/Results/{FeatureCoordinatesRedefinedFor}/{ColocName}/Chunks/{n}.pairwisecor.txt.gz"
     resources:
         mem_mb = lambda wildcards, attempt: 32000 if int(attempt) == 1 else 42000
     params:
@@ -179,7 +180,7 @@ rule genewise_coloc_chunk:
         "../envs/r_hyprcoloc.yml"
     shell:
         """
-        Rscript scripts/hyprcoloc_genewise2.R {input.summarystatslist} {output.clusters} {output.snpscores} {params.Threshold} '{params.PhenotypesToColoc}' &> {log}
+        Rscript scripts/hyprcoloc_genewise2.R {input.summarystatslist} {output.clusters} {output.snpscores} {output.pairwisecor} {params.Threshold} '{params.PhenotypesToColoc}' &> {log}
         """
 
 rule Gather_gwas_coloc_chunks:
@@ -217,6 +218,16 @@ use rule Gather_gwas_coloc_chunks as Gather_genewise_coloc_chunks_snpscores with
     params:
         header = "snp\tColocalizedCluster\tFinemapPr\tLocus"
 
+use rule Gather_gwas_coloc_chunks as Gather_genewise_coloc_chunks_pairwisecor with:
+    input:
+        expand("hyprcoloc/Results/{{FeatureCoordinatesRedefinedFor}}/{{ColocName}}/Chunks/{n}.pairwisecor.txt.gz", n=range(0, config["genewise_coloc_chunks"]))
+    wildcard_constraints:
+        FeatureCoordinatesRedefinedFor = "ForColoc",
+        ColocName = '|'.join(colocs_genewise.index)
+    output:
+        "hyprcoloc/Results/{FeatureCoordinatesRedefinedFor}/{ColocName}/pairwisecor.txt.gz"
+    params:
+        header = "Trait1\tTrait2\tcor.z.pearson\tcor.z.spearman\tcor.logp.pearson\tGeneLocus"
 
 rule TidyColocalizedTraitsAndSummaryStats:
     input:
@@ -238,32 +249,17 @@ rule TidyColocalizedTraitsAndSummaryStats:
         Rscript scripts/TidyGenewiseColocs.R {input.ColocResults} {input.MolQTLSummaryStats}/ {output} &> {log}
         """
 
-NumPvalsForPi1Chunks = 10
-rule GetPvalsForPi1AllTraitPairs:
-    input:
-        "scratch/PairwisePi1Traits.{chunk}.txt.gz"
-    output:
-        "scratch/PairwisePi1Traits.P.{chunk}.txt.gz"
-    log:
-        "logs/GetPvalsForPi1AllTraitPairs/{chunk}.log"
-    shell:
-        """
-        python scripts/CalculatePi1_GetAscertainmentP_AllPairs.py {input} {output} &> {log}
-        """
-
-rule GatherPvalsForPi1AllTraitPairs:
-    input:
-        expand("scratch/PairwisePi1Traits.P.{chunk}.txt.gz", chunk=range(1, NumPvalsForPi1Chunks+1))
-
 rule CopyGenewiseHyprcolocResultsToTrackedOutputDir:
     input:
         results = "hyprcoloc/Results/{FeatureCoordinatesRedefinedFor}/{ColocName}/results.txt.gz",
         snpscores = "hyprcoloc/Results/{FeatureCoordinatesRedefinedFor}/{ColocName}/snpscores.txt.gz",
-        tidy_results = "hyprcoloc/Results/{FeatureCoordinatesRedefinedFor}/{ColocName}/tidy_results_OnlyColocalized.txt.gz"
+        tidy_results = "hyprcoloc/Results/{FeatureCoordinatesRedefinedFor}/{ColocName}/tidy_results_OnlyColocalized.txt.gz",
+        pairwisecor = "hyprcoloc/Results/{FeatureCoordinatesRedefinedFor}/{ColocName}/pairwisecor.txt.gz"
     output:
         results = "../output/hyprcoloc_results/{FeatureCoordinatesRedefinedFor}/{ColocName}/hyprcoloc.results.txt.gz",
         snpscores = "../output/hyprcoloc_results/{FeatureCoordinatesRedefinedFor}/{ColocName}/snpscores.txt.gz",
-        tidy_results = "../output/hyprcoloc_results/{FeatureCoordinatesRedefinedFor}/{ColocName}/hyprcoloc.results.OnlyColocalized.Stats.txt.gz"
+        tidy_results = "../output/hyprcoloc_results/{FeatureCoordinatesRedefinedFor}/{ColocName}/hyprcoloc.results.OnlyColocalized.Stats.txt.gz",
+        pairwisecor = "../output/hyprcoloc_results/{FeatureCoordinatesRedefinedFor}/{ColocName}/pairwisecor.txt.gz"
     wildcard_constraints:
         FeatureCoordinatesRedefinedFor = "ForColoc",
         ColocName = '|'.join(colocs_genewise.index)
@@ -272,6 +268,7 @@ rule CopyGenewiseHyprcolocResultsToTrackedOutputDir:
         cp {input.results} {output.results}
         cp {input.snpscores} {output.snpscores}
         cp {input.tidy_results} {output.tidy_results}
+        cp {input.pairwisecor} {output.pairwisecor}
         """
 
 rule CopyGwasHyprcolocResultsToTrackedOutputDir:
