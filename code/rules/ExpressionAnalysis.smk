@@ -55,20 +55,14 @@ rule Prepare_chRNA_ExpressionPhenotypes:
     input:
         "featureCounts/chRNA.Expression/Counts.txt",
         "featureCounts/chRNA.Expression_ncRNA/Counts.txt",
-        #"featureCounts/chRNA.Expression_eRNA/Counts.txt",
-        #"featureCounts/chRNA.Expression_cheRNA/Counts.txt",
         "featureCounts/chRNA.Expression_lncRNA/Counts.txt",
         "featureCounts/chRNA.Expression_snoRNA/Counts.txt",
         "ExpressionAnalysis/polyA/ExpressedGeneList.txt",
     output:
         "QTLs/QTLTools/chRNA.Expression.Splicing/OnlyFirstReps.qqnorm.bed.gz",
-        "QTLs/QTLTools/chRNA.Expression_ncRNA/OnlyFirstReps.qqnorm.bed.gz",
+        #"NonCodingRNA/chRNA.Expression_ncRNA/OnlyFirstReps.qqnorm.bed.gz",
         "QTLs/QTLTools/chRNA.Expression.Splicing/OnlyFirstReps.RPKM.bed.gz",
         "QTLs/QTLTools/chRNA.Expression_ncRNA/OnlyFirstReps.RPKM.bed.gz",
-        #"QTLs/QTLTools/chRNA.Expression_eRNA/OnlyFirstReps.qqnorm.bed.gz",
-        #"QTLs/QTLTools/chRNA.Expression_cheRNA/OnlyFirstReps.qqnorm.bed.gz",
-        #"QTLs/QTLTools/chRNA.Expression_snoRNA/OnlyFirstReps.qqnorm.bed.gz",
-        #"QTLs/QTLTools/chRNA.Expression_lncRNA/OnlyFirstReps.qqnorm.bed.gz",
     log:
         "logs/Prepare_chRNA_Expression_Phenotypes.log"
     conda:

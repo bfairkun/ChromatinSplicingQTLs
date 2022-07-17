@@ -272,6 +272,7 @@ rule assembly:
         "ReferenceGenome/Annotations/Assembly/chRNA.Expression.Splicing.stringtie.assembly.gtf",
         
 rule chRNAExpressionPhenotypes:
+    priority: 1
     input:
         expand(
           "QTLs/QTLTools/chRNA.Expression{RNA_type}/OnlyFirstReps.{data_type}.bed.gz",
@@ -286,28 +287,16 @@ rule chRNAExpressionPhenotypes:
 rule getHMMInput:
     priority: 1
     input:
-        "NonCodingRNA/annotation/ncRNA.2states.sorted.bed.gz",
-        "NonCodingRNA/annotation/AnnotatedProteinCoding_overlap.2states.bed.gz",
-        "NonCodingRNA/annotation/DeNovoProteinCoding_overlap.2states.bed.gz",
-        "NonCodingRNA/annotation/ncRNA.2states.TSS.bed.gz",
-        "NonCodingRNA/annotation/ncRNA.2states.3PrimeEnd.bed.gz",
+        "NonCodingRNA/annotation/ncRNA.bed.gz",
+        "NonCodingRNA/annotation/AnnotatedProteinCoding_overlap.bed.gz",
+        "NonCodingRNA/annotation/DeNovoProteinCoding_overlap.bed.gz",
+        "NonCodingRNA/annotation/ncRNA.TSS.bed.gz",
+        "NonCodingRNA/annotation/ncRNA.3PrimeEnd.bed.gz",
         "NonCodingRNA/annotation/allGenes.3PrimeEnd.bed.gz",
         "NonCodingRNA/annotation/allGenes.FirstTSS.bed.gz",
         "NonCodingRNA/annotation/allGenes.Last3PrimeEnd.bed.gz",
+        "NonCodingRNA/annotation/AnnotatedHMM.bed.gz"
         
-rule testHMMMerging:
-    priority: 2
-    input:
-        expand("NonCodingRNA/test/ncRNA.2states.{merge_distance}bp_merge.sorted.bed.gz",
-                merge_distance = ['0', '200', '400', '600', '800', '1000', '2000', '3000', '4000', '5000',
-                '6000', '7000', '8000', '9000', '10000', '15000', '20000']),
-        expand("NonCodingRNA/test/ncRNA.2states.{merge_distance}bp_merge.TSS.bed.gz",
-        merge_distance = ['0', '200', '400', '600', '800', '1000', '2000', '3000', '4000', '5000',
-                '6000', '7000', '8000', '9000', '10000', '15000', '20000']),
-        expand("NonCodingRNA/test/HistonePeaksTSS/ncRNA_filtered.2states.{merge_distance}bp_merge.TSS.{Peaks}_overlap.bed.gz",
-        merge_distance = ['0', '200', '400', '600', '800', '1000', '2000', '3000', '4000', '5000',
-                '6000', '7000', '8000', '9000', '10000', '15000', '20000'],
-        Peaks = ['H3K27AC', 'H3K4ME1', 'H3K4ME3']),
         
 rule plotNonCodingRNA:
     priority: 3
@@ -335,7 +324,11 @@ rule quantNonCodingRNA:
     input:
         expand("featureCounts/{Phenotype}_ncRNA/Counts.txt", 
         Phenotype=["polyA.Expression", "chRNA.Expression", "MetabolicLabelled.30min", "MetabolicLabelled.60min"]
-        )
+        ),
+        expand(
+          "QTLs/QTLTools/chRNA.Expression{RNA_type}/OnlyFirstReps.{data_type}.bed.gz",
+          RNA_type = [".Splicing", "_ncRNA"], data_type = ['qqnorm', 'RPKM']
+        ),
         
   
         
