@@ -377,18 +377,20 @@ rule GetTSSAnnotations:
         plus_bed = "NonCodingRNA/deeptools/bed/ncRNA.plus.bed",
         minus_bed = "NonCodingRNA/deeptools/bed/ncRNA.minus.bed",
         genes_bed = "NonCodingRNA/annotation/allGenes.bed.gz",
-        chrom_sizes = "../data/Chrome.sizes"
+        chrom_sizes = "../data/Chrome.sizes",
+        tss_bed = "ReferenceGenome/Annotations/GTFTools/gencode.v34.chromasomal.tss.bed",
     output:
         ncRNA_temp = temp("NonCodingRNA/annotation/ncRNA.TSS_temp.bed"),
         ncRNA_tss = "NonCodingRNA/annotation/ncRNA.TSS.bed.gz",
         genes_temp = temp("NonCodingRNA/annotation/allGenes.FirstTSS_temp.bed"),
-        genes_tss = "NonCodingRNA/annotation/allGenes.FirstTSS.bed.gz"
+        genes_tss = "NonCodingRNA/annotation/allGenes.FirstTSS.bed.gz",
+        all_genes_tss = "NonCodingRNA/annotation/allGenes.TSS.bed.gz"
     log:
         "logs/TSSAnnotations.log",
     params:
         window = 1000
     resources:
-        mem_mb = 12000
+        mem_mb = 58000
     shell:
         """
         (awk -F'\\t' '{{print $1"\\t"$2"\\t"$2"\\t"$4"\\t"$5"\\t"$6}}' {input.plus_bed} > {output.ncRNA_temp}) &> {log};
@@ -397,6 +399,7 @@ rule GetTSSAnnotations:
         (zcat {input.genes_bed} | awk '$6=="+" {{print $1, $2, $2, $4, $5, $6}}' FS='\\t' OFS='\\t' - > {output.genes_temp}) &>> {log};
         (zcat {input.genes_bed} | awk '$6=="-" {{print $1, $3, $3, $4, $5, $6}}' FS='\\t' OFS='\\t' - >> {output.genes_temp}) &>> {log};
         (bedtools sort -i {output.genes_temp} | bedtools slop -b {params.window} -g {input.chrom_sizes} -i - | gzip - > {output.genes_tss}) &>> {log};
+        (awk '{{print "chr"$1, $2, $3, $6, $7, $4}}' FS='\\t' OFS='\\t' {input.tss_bed} | bedtools slop -b 999 -i - -g {input.chrom_sizes} | gzip - > {output.all_genes_tss}) & >> {log};
         """
         
        
@@ -454,7 +457,7 @@ rule Get3PrimeEndAnnotations:
     params:
         window = 200
     resources:
-        mem_mb = 24000
+        mem_mb = 58000
     shell:
         """
         (awk '{{print $1, $3, $3, $4, $5, $6}}' FS='\\t' OFS='\\t' {input.plus_bed} > {output.ncRNA_temp}) &> {log};

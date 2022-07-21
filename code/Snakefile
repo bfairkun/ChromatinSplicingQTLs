@@ -272,7 +272,7 @@ rule assembly:
         "ReferenceGenome/Annotations/Assembly/chRNA.Expression.Splicing.stringtie.assembly.gtf",
         
 rule chRNAExpressionPhenotypes:
-    priority: 1
+    priority: 9
     input:
         expand(
           "QTLs/QTLTools/chRNA.Expression{RNA_type}/OnlyFirstReps.{data_type}.bed.gz",
@@ -285,7 +285,7 @@ rule chRNAExpressionPhenotypes:
         ),
 
 rule getHMMInput:
-    priority: 1
+    priority: 10
     input:
         "NonCodingRNA/annotation/ncRNA.bed.gz",
         "NonCodingRNA/annotation/ncRNA.TSS.bed.gz",
@@ -293,6 +293,7 @@ rule getHMMInput:
         "NonCodingRNA/annotation/allGenes.3PrimeEnd.bed.gz",
         "NonCodingRNA/annotation/allGenes.FirstTSS.bed.gz",
         "NonCodingRNA/annotation/allGenes.Last3PrimeEnd.bed.gz",
+        "NonCodingRNA/annotation/allGenes.TSS.bed.gz",
         "NonCodingRNA/annotation/AnnotatedHMM.bed.gz"
         
         

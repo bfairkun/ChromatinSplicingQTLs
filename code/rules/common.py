@@ -14,15 +14,16 @@ N_PermutationChunks = 100
 #     else:
 #         return 100
 
-ncRNA_Phenotypes = []
+#ncRNA_Phenotypes = []
 
-for pheno in ["polyA.Expression", "chRNA.Expression", "MetabolicLabelled.30min", "MetabolicLabelled.60min"]:
-    for ncRNA in ['cheRNA', 'eRNA', 'lncRNA', 'snoRNA']:
-        ncRNA_Phenotypes.append(pheno + '_' + ncRNA)# + '.Subset_YRI')
+#for pheno in ["polyA.Expression", "chRNA.Expression", "MetabolicLabelled.30min", "MetabolicLabelled.60min"]:
+#    for ncRNA in ['cheRNA', 'eRNA', 'lncRNA', 'snoRNA']:
+#        ncRNA_Phenotypes.append(pheno + '_' + ncRNA)# + '.Subset_YRI')
 
 MyPhenotypes = ["chRNA.IR", "Expression.Splicing", "chRNA.Expression.Splicing",  "H3K27AC", "CTCF", "H3K4ME3", "chRNA.Splicing", "polyA.Splicing", "MetabolicLabelled.30min", "MetabolicLabelled.60min", "Expression.Splicing.Subset_YRI", "polyA.Splicing.Subset_YRI",
-               "polyA.IR", "polyA.IR.Subset_YRI", "chRNA.Expression_cheRNA", "chRNA.Expression_eRNA",
-               "chRNA.Expression_lncRNA", "chRNA.Expression_snoRNA", "chRNA.Slopes", "H3K4ME1", "ProCap", "H3K36ME3",
+               "polyA.IR", "polyA.IR.Subset_YRI", #"chRNA.Expression_cheRNA", "chRNA.Expression_eRNA",
+               "chRNA.Expression_ncRNA", #"chRNA.Expression_lncRNA", "chRNA.Expression_snoRNA", 
+               "chRNA.Slopes", "H3K4ME1", "ProCap", "H3K36ME3",
                'chRNA.IER', 'polyA.IER', 'chRNA.IRjunctions', 'polyA.IRjunctions',
                'MetabolicLabelled.30min.IER', 'MetabolicLabelled.60min.IER', 
                 'MetabolicLabelled.30min.IRjunctions', 'MetabolicLabelled.60min.IRjunctions',
