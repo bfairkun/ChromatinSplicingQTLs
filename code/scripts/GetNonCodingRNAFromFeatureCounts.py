@@ -12,7 +12,13 @@ if __name__ == '__main__':
     ncRNA = args.ncRNA
         
     gtf = read_gtf('ReferenceGenome/Annotations/gencode.v34.chromasomal.annotation.gtf')
-    ncRNA_genes = gtf.loc[(gtf.gene_type == ncRNA) & (gtf.feature == 'gene')].gene_id
+    
+    if ncRNA == 'lncRNA':
+        ncRNA_genes = gtf.loc[(gtf.gene_type.isin(['lncRNA', 'unprocessed_pseudogene', 
+                                                   'transcribed_unprocessed_pseudogene'])) & (gtf.feature == 'gene')].gene_id
+        
+    else:
+        ncRNA_genes = gtf.loc[(gtf.gene_type == ncRNA) & (gtf.feature == 'gene')].gene_id
 
     
     counts = pd.read_csv('featureCounts/{phenotype}/Counts.txt'.format(phenotype=phenotype), 

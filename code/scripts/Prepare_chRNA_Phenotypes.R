@@ -230,7 +230,7 @@ ncRNA.Out <- bed %>%
 write_tsv(protein_coding.Out, "QTLs/QTLTools/chRNA.Expression.Splicing/OnlyFirstReps.qqnorm.bed.gz")
 # write_tsv(snoRNA.Out, "QTLs/QTLTools/chRNA.Expression_snoRNA/OnlyFirstReps.qqnorm.bed.gz")
 # write_tsv(lncRNA.Out, "QTLs/QTLTools/chRNA.Expression_lncRNA/OnlyFirstReps.qqnorm.bed.gz")
-#######################write_tsv(ncRNA.Out, "NonCodingRNA/chRNA.Expression_ncRNA/OnlyFirstReps.qqnorm.bed.gz")
+write_tsv(ncRNA.Out, "QTLs/QTLTools/chRNA.Expression_ncRNA/OnlyFirstReps.qqnorm.bed.gz")
 # write_tsv(eRNA.Out, "QTLs/QTLTools/chRNA.Expression_eRNA/OnlyFirstReps.qqnorm.bed.gz")
 
 

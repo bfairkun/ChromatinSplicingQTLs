@@ -60,7 +60,7 @@ rule Prepare_chRNA_ExpressionPhenotypes:
         "ExpressionAnalysis/polyA/ExpressedGeneList.txt",
     output:
         "QTLs/QTLTools/chRNA.Expression.Splicing/OnlyFirstReps.qqnorm.bed.gz",
-        #"NonCodingRNA/chRNA.Expression_ncRNA/OnlyFirstReps.qqnorm.bed.gz",
+        "QTLs/QTLTools/chRNA.Expression_ncRNA/OnlyFirstReps.qqnorm.bed.gz",
         "QTLs/QTLTools/chRNA.Expression.Splicing/OnlyFirstReps.RPKM.bed.gz",
         "QTLs/QTLTools/chRNA.Expression_ncRNA/OnlyFirstReps.RPKM.bed.gz",
     log:

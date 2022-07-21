@@ -63,6 +63,8 @@ rule GetAdditionalNonCodingRNAFromFeatureCounts:
     log:
         snoRNA_log = "logs/{Phenotype}.get_snoRNA.log",
         lncRNA_log = "logs/{Phenotype}.get_lncRNA.log",
+    conda:
+        "../envs/py_tools.yml"
     shell:
         """
         python scripts/GetNonCodingRNAFromFeatureCounts.py --phenotype {wildcards.Phenotype} --ncRNA snoRNA &> {log.snoRNA_log};

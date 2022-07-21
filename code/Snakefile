@@ -288,8 +288,6 @@ rule getHMMInput:
     priority: 1
     input:
         "NonCodingRNA/annotation/ncRNA.bed.gz",
-        "NonCodingRNA/annotation/AnnotatedProteinCoding_overlap.bed.gz",
-        "NonCodingRNA/annotation/DeNovoProteinCoding_overlap.bed.gz",
         "NonCodingRNA/annotation/ncRNA.TSS.bed.gz",
         "NonCodingRNA/annotation/ncRNA.3PrimeEnd.bed.gz",
         "NonCodingRNA/annotation/allGenes.3PrimeEnd.bed.gz",
