@@ -4,9 +4,9 @@ chRNA.Expression_eRNA	chRNA_ncRNA	ncRNA_chRNA	T
 chRNA.Expression_lncRNA	chRNA_ncRNA	ncRNA_chRNA	T
 chRNA.Expression_snoRNA		ncRNA_chRNA	T
 chRNA.Expression.Splicing	ncRNA.Expression_chRNA	Expression_chRNA	T
-chRNA.IER		Splicing_chRNA	T
-chRNA.IR	chRNA_IR	Splicing_chRNA	F
-chRNA.IRjunctions		Splicing_chRNA	F
+chRNA.IER		Splicing.IR_chRNA	T
+chRNA.IR	chRNA_IR	Splicing.IR_chRNA	F
+chRNA.IRjunctions		Splicing.IR_chRNA	F
 chRNA.Slopes		slope_chRNA	F
 chRNA.Splicing	chRNA_Splicing	Splicing_chRNA	T
 CTCF		CTCF	F
@@ -26,10 +26,10 @@ MetabolicLabelled.60min.IER		Splicing_metabolic60	F
 MetabolicLabelled.60min.IR		Splicing_metabolic60	F
 MetabolicLabelled.60min.IRjunctions		Splicing_metabolic60	F
 MetabolicLabelled.60min.Splicing	Splicing.Metabolic60min	Splicing_metabolic60	F
-polyA.IER		Splicing_polyA	T
-polyA.IR	Splicing_polyA.IR	Splicing_polyA	F
-polyA.IR.Subset_YRI	Splicing_IR_polyA	Splicing_polyA	F
-polyA.IRjunctions		Splicing_polyA	F
+polyA.IER		Splicing.IR_polyA	T
+polyA.IR	Splicing_polyA.IR	Splicing.IR_polyA	F
+polyA.IR.Subset_YRI	Splicing_IR_polyA	Splicing.IR_polyA	F
+polyA.IRjunctions		Splicing.IR_polyA	F
 polyA.Splicing	Splicing_polyA.AllGeauvadis	Splicing_polyA	F
 polyA.Splicing.Subset_YRI	Splicing	Splicing_polyA	T
 ProCap	ProCap	ProCap	T

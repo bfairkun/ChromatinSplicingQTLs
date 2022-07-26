@@ -1,0 +1,61 @@
+---
+title: "RPKM_vs_TPM"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = F, warning = F)
+```
+
+## Analysis
+
+...Just curious how RPKM and TPM correlate in practice...
+
+```{r}
+library(tidyverse)
+library(edgeR)
+library(DGEobj.utils)
+
+#Read in data:
+dat <- read_tsv("../code/featureCounts/chRNA.Expression/Counts.txt", comment = '#')
+genes <- read_tsv("../code/ExpressionAnalysis/polyA/ExpressedGeneList.txt", col_names = c("chrom", "start", "stop", "Geneid", "score", "strand"))
+
+counts <- dat %>%
+  select(-c(2:6)) %>%
+  inner_join(genes, by="Geneid") %>%
+  select(1, matches("Alignments/STAR_Align/chRNA.Expression.Splicing/(.+?)/1/Filtered.bam")) %>%
+  rename_at(-1, ~ str_replace(.x, "Alignments/STAR_Align/chRNA.Expression.Splicing/(.+?)/1/Filtered.bam", "\\1")) %>%
+  column_to_rownames("Geneid") %>%
+  as.matrix() %>%
+  DGEList()
+
+geneLengths <- counts$counts %>%
+  as.data.frame() %>%
+  rownames_to_column("Geneid") %>%
+  select(Geneid) %>%
+  left_join(
+    dat %>% select(Geneid, Length)
+  ) %>% pull(Length)
+
+
+rpkm <- rpkm(counts, gene.length = geneLengths, prior.count=0.25, log=T)
+
+tpm <- convertCounts(counts$counts, unit="TPM", geneLength=geneLengths, log=T, prior.count = 0.25)
+rpkm.other <- convertCounts(counts$counts, unit="FPKM", geneLength=geneLengths, log=T, prior.count = 0.25)
+
+plot(rpkm.other[,1], rpkm[,1])
+
+plot(rpkm.other[,1], tpm[,1])
+
+rpkm %>% cor(use="complete.obs") %>% mean()
+tpm %>% cor(use="complete.obs") %>% mean()
+
+tpm %>%
+  as.data.frame() %>%
+  filter_all(any_vars(is.na(.))) 
+
+```
+
+## Conclusion:
+
+RPKM, TPM... It really doesn't matter! They are basically perfectly correlated within a sample and across samples the mean correlation coefficient is basically the same... But maybe TPM is slightly more interpretable units imo... But make sure to add a pseudocount otherwise the `convertCounts(method="TPM")` function will output NA values.
