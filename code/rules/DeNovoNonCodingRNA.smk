@@ -150,6 +150,17 @@ rule GetAllGenesForOverlap:
         """
         #awk -F'\\t' '{{print "chr"$1"\\t"$2"\\t"$3"\\t"$5"\\t"$6"\\t"$4}}' {input} | bedtools sort -i - | gzip -  > {output}
     
+rule GetAllGenesGencode:
+    input:
+        "ReferenceGenome/Annotations/gencode.v34.chromasomal.annotation.gtf"
+        #"ReferenceGenome/Annotations/GTFTools/gencode.v34.chromasomal.genes.bed"
+    output:
+        "NonCodingRNA/annotation/tmp/allGenes.Gencode.bed.gz"
+    shell:
+        """
+        awk -F'\\t' '$3=="gene" {{print $1"\\t"$4"\\t"$5"\\t"$7"\\t"$9}}' {input} | awk -F'"' '{{print $1"\\t"$2"\\t"$4}}' | awk -F'\\t' '{{print $1"\\t"$2"\\t"$3"\\t"$6"\\t"$7"\\t"$4}}' | bedtools sort -i - | gzip - > {output}
+        """
+    
 def GetMergedDistance(wildcards):
     if wildcards.nstates == '3':
         return 1000
@@ -384,7 +395,7 @@ rule GetTSSAnnotations:
     input:
         plus_bed = "NonCodingRNA/deeptools/bed/ncRNA.plus.bed",
         minus_bed = "NonCodingRNA/deeptools/bed/ncRNA.minus.bed",
-        genes_bed = "NonCodingRNA/annotation/allGenes.bed.gz",
+        genes_bed = "NonCodingRNA/annotation/tmp/allGenes.Gencode.bed.gz",
         chrom_sizes = "../data/Chrome.sizes",
         tss_bed = "ReferenceGenome/Annotations/GTFTools/gencode.v34.chromasomal.tss.bed",
     output:
@@ -407,8 +418,8 @@ rule GetTSSAnnotations:
         (zcat {input.genes_bed} | awk '$6=="+" {{print $1, $2, $2, $4, $5, $6}}' FS='\\t' OFS='\\t' - > {output.genes_temp}) &>> {log};
         (zcat {input.genes_bed} | awk '$6=="-" {{print $1, $3, $3, $4, $5, $6}}' FS='\\t' OFS='\\t' - >> {output.genes_temp}) &>> {log};
         (bedtools sort -i {output.genes_temp} | bedtools slop -b {params.window} -g {input.chrom_sizes} -i - | gzip - > {output.genes_tss}) &>> {log};
-        #(awk '{{print "chr"$1, $2, $3, $6, $7, $4}}' FS='\\t' OFS='\\t' {input.tss_bed} | bedtools slop -b 999 -i - -g {input.chrom_sizes} | gzip - > {output.all_genes_tss}) & >> {log};
         """
+#(awk '{{print "chr"$1, $2, $3, $6, $7, $4}}' FS='\\t' OFS='\\t' {input.tss_bed} | bedtools slop -b 999 -i - -g {input.chrom_sizes} | gzip - #> {output.all_genes_tss}) & >> {log};
  
 rule GetAllTSSAnnotations:
     input:
@@ -469,7 +480,7 @@ rule Get3PrimeEndAnnotations:
         plus_bed = "NonCodingRNA/deeptools/bed/ncRNA.plus.bed",
         minus_bed = "NonCodingRNA/deeptools/bed/ncRNA.minus.bed",
         utr_bed = "ReferenceGenome/Annotations/GTFTools/gencode.v34.chromasomal.utr.bed",
-        genes_bed = "NonCodingRNA/annotation/allGenes.bed.gz",
+        genes_bed = "NonCodingRNA/annotation/tmp/allGenes.Gencode.bed.gz",
         chrom_sizes = "../data/Chrome.sizes"
     output:
         ncRNA_temp = temp("NonCodingRNA/annotation/ncRNA.3PrimeEnd_temp.bed"),
@@ -552,7 +563,7 @@ rule uaRNA:
 rule rtRNA:
     input:
         ncRNA_bed = "NonCodingRNA/annotation/ncRNA.bed.gz",
-        genes_bed = "NonCodingRNA/annotation/allGenes.bed.gz"
+        genes_bed = "NonCodingRNA/annotation/tmp/allGenes.Gencode.bed.gz"
     resources:
         mem_mb = 58000,
     output:
@@ -569,7 +580,7 @@ rule rtRNA:
 rule srtRNA:
     input:
         ncRNA_bed = "NonCodingRNA/annotation/ncRNA.bed.gz",
-        genes_bed = "NonCodingRNA/annotation/allGenes.bed.gz"
+        genes_bed = "NonCodingRNA/annotation/tmp/allGenes.Gencode.bed.gz"
     resources:
         mem_mb = 58000,
     output:
@@ -604,7 +615,7 @@ rule coRNA:
 rule incRNA:
     input:
         ncRNA_bed = "NonCodingRNA/annotation/ncRNA.bed.gz",
-        genes_bed = "NonCodingRNA/annotation/allGenes.bed.gz"
+        genes_bed = "NonCodingRNA/annotation/tmp/allGenes.Gencode.bed.gz"
     resources:
         mem_mb = 58000,
     output:
@@ -619,7 +630,7 @@ rule incRNA:
 rule ctRNA:
     input:
         ncRNA_bed = "NonCodingRNA/annotation/ncRNA.bed.gz",
-        genes_bed = "NonCodingRNA/annotation/allGenes.bed.gz"
+        genes_bed = "NonCodingRNA/annotation/tmp/allGenes.Gencode.bed.gz"
     resources:
         mem_mb = 58000,
     output:
@@ -648,6 +659,23 @@ rule GetLncRNAs:
          (bedtools intersect -a {input.ncRNA} -b {output.bed} -F 0.9 -wo | gzip - > {output.out}) &>> {log}
         """
         
+rule GetSnoRNAs:
+    input:
+        gtf = "ReferenceGenome/Annotations/gencode.v34.chromasomal.annotation.gtf",
+        ncRNA = "NonCodingRNA/annotation/ncRNA.bed.gz"
+    output:
+        bed = "NonCodingRNA/annotation/tmp/snoRNA.bed.gz",
+        out = "NonCodingRNA/annotation/tmp/snoRNA.ncRNA.bed.gz"
+    resources:
+        mem_mb = 24000,
+    log:
+        "logs/ncRNA_annotation/getsnoRNA.log"
+    shell:
+        """
+        (awk '$3=="gene" {{print $1, $4, $5, $7, $9}}' FS='\\t' OFS='\\t' {input.gtf} | awk '{{print $1, $2, $4, $6}}' FS='"' OFS='\\t' | awk '$7=="snoRNA" {{print $1, $2, $3, $6, $8, $4}}' FS='\\t' OFS='\\t' - | gzip - > {output.bed}) &> {log};
+         (bedtools intersect -a {input.ncRNA} -b {output.bed} -F 0.9 -wo | gzip - > {output.out}) &>> {log}
+        """
+        
 rule GetPsuedogenes:
     input:
         gtf = "ReferenceGenome/Annotations/gencode.v34.chromasomal.annotation.gtf",
@@ -668,10 +696,11 @@ rule GetPsuedogenes:
 rule ClassifyNcRNAs:
     input:
         "NonCodingRNA/annotation/ncRNA.bed.gz",
-        "NonCodingRNA/annotation/allGenes.bed.gz",
+        "NonCodingRNA/annotation/tmp/allGenes.Gencode.bed.gz",
         "NonCodingRNA/annotation/tmp/uaRNA.bed.gz",
         "NonCodingRNA/annotation/tmp/rtRNA.bed.gz",
         "NonCodingRNA/annotation/tmp/srtRNA.bed.gz",
+        "NonCodingRNA/annotation/tmp/snoRNA.bed.gz",
         "NonCodingRNA/annotation/tmp/coRNA.bed.gz",
         "NonCodingRNA/annotation/tmp/incRNA.bed.gz",
         "NonCodingRNA/annotation/tmp/ctRNA.bed.gz",
@@ -687,8 +716,21 @@ rule ClassifyNcRNAs:
         "../envs/py_tools.yml"
     shell:
         """
-        python scripts/classify_ncRNA.py
+        python scripts/classify_ncRNA.py &> {log}
         """
+        
+        
+# coRNA: colliding RNA. ncRNA overlaps 3' end of the gene on the reverse strand, but not the entire gene.
+# ctRNA: cotranscribed RNA. Less than 15% of a ncRNA overlaps an annotated gene in the sense strand.
+# lncRNA: long non-coding RNA. > 90% of a Gencode annotated lncRNA is contained within the ncRNA, but this
+#         corresponds to < 15% of the ncRNA. More than one lncRNA can be associated to a ncRNA.
+# pseudogene: same as lncRNA, but with annotated pseudogenes.
+# rtRNA: reverse transcribed RNA. A ncRNA is mostly contained within the reverse strand of a gene, but it's not
+#        already classified as another class of ncRNA. rna_type is srtRNA (strict rtRNA) if the entire ncRNA
+#        is contained within the gene.
+# uaRNA: upstream antisense RNA. ncRNA TSS is within 1000 bp of another gene or ncRNA, on the reverse strand.
+#        A ncRNA can be close to more than one annotated gene. If an annotated gene has two or more ncRNAs,
+#        only the closest ncRNA is annotated as uaRNA for that gene.
 
 #rule AnnotateNonCodingRNA:
 

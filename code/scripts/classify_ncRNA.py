@@ -123,7 +123,7 @@ if __name__ == '__main__':
     
     print("loading files")
     
-    allGenes = read_bed('NonCodingRNA/annotation/allGenes.bed.gz', '-wa')
+    allGenes = read_bed('NonCodingRNA/annotation/tmp/allGenes.Gencode.bed.gz', '-wa')
     ncRNA = read_bed('NonCodingRNA/annotation/ncRNA.bed.gz', '-wa')
     incRNA = read_bed('NonCodingRNA/annotation/tmp/incRNA.bed.gz', '-wa')
     uaRNA = read_bed('NonCodingRNA/annotation/tmp/uaRNA.bed.gz', '-wo')
@@ -132,17 +132,28 @@ if __name__ == '__main__':
     rtRNA = read_bed('NonCodingRNA/annotation/tmp/rtRNA.bed.gz', '-wo')
     srtRNA = read_bed('NonCodingRNA/annotation/tmp/srtRNA.bed.gz', '-wo')
     lncRNA = read_bed('NonCodingRNA/annotation/tmp/lncRNA.ncRNA.bed.gz', '-wo')
+    snoRNA = read_bed('NonCodingRNA/annotation/tmp/snoRNA.ncRNA.bed.gz', '-wo')
     pseudogenes = read_bed('NonCodingRNA/annotation/tmp/pseudogenes.ncRNA.bed.gz', '-wo')
     
     print("ncRNA:gene")
     
-    uaRNA_idx = pd.Index((uaRNA['gene_name'] + ':' + uaRNA['gene_name_']).unique())
+    uaRNA_gene = uaRNA.loc[[x[:5] != 'ncRNA' for x in uaRNA.gene_name_]]
+    uaRNA_ncRNA = uaRNA.loc[[x[:5] == 'ncRNA' for x in uaRNA.gene_name_]]
+
+    uaRNA_idx_gene = pd.Index((uaRNA_gene['gene_name'] + ':' + uaRNA_gene['id_']).unique())
+    uaRNA_idx_ncRNA = pd.Index((uaRNA_ncRNA['gene_name'] + ':' + uaRNA_ncRNA['gene_name_']).unique())
+
+    uaRNA_idx = uaRNA_idx_gene.union(uaRNA_idx_ncRNA)
+    
+    #uaRNA_idx = pd.Index((uaRNA['gene_name'] + ':' + uaRNA['id_']).unique())
     rtRNA_idx = pd.Index((rtRNA['gene_name'] + ':' + rtRNA['gene_name_']).unique())
     srtRNA_idx = pd.Index((srtRNA['gene_name'] + ':' + srtRNA['gene_name_']).unique())
     rtRNA_rev_idx = pd.Index([x.split(':')[1] +':' + x.split(':')[0] for x in srtRNA_idx])
     coRNA_idx = pd.Index((coRNA['gene_name'] + ':' + coRNA['gene_name_']).unique())
     ctRNA_idx = pd.Index((ctRNA['gene_name'] + ':' + ctRNA['gene_name_']).unique())
+    
     lncRNA_idx = pd.Index((lncRNA['gene_name'] + ':' + lncRNA['gene_name_']).unique())
+    snoRNA_idx = pd.Index((snoRNA['gene_name'] + ':' + snoRNA['gene_name_']).unique())
     pseudo_idx = pd.Index((pseudogenes['gene_name'] + ':' + pseudogenes['gene_name_']).unique())
     
     allGenes.index = allGenes.gene_name
@@ -163,6 +174,7 @@ if __name__ == '__main__':
     rtRNA_dict = make_pair_dict(rtRNA_idx.difference(srtRNA_idx))
     srtRNA_dict = make_pair_dict(srtRNA_idx)
     lncRNA_dict = make_pair_dict(lncRNA_idx)
+    snoRNA_dict = make_pair_dict(snoRNA_idx)
     pseudo_dict = make_pair_dict(pseudo_idx)
     ctRNA_dict = make_pair_dict(ctRNA_idx)
     
@@ -175,6 +187,7 @@ if __name__ == '__main__':
     rtRNA_annot = []
     srtRNA_annot = []
     lncRNA_annot = []
+    snoRNA_annot = []
     pseudo_annot = []
     ctRNA_annot = []
 
@@ -207,6 +220,13 @@ if __name__ == '__main__':
             rna_type.append('lncRNA')
         else:
             lncRNA_annot.append('.')
+            
+        if idx in snoRNA_dict.keys():
+            snoRNA_annot.append('|'.join(snoRNA_dict[idx]))
+            rna_type.append('snoRNA')
+        else:
+            snoRNA_annot.append('.')
+            
         if idx in pseudo_dict.keys():
             pseudo_annot.append('|'.join(pseudo_dict[idx]))
             rna_type.append('pseudo')
@@ -227,6 +247,7 @@ if __name__ == '__main__':
     annotation_df['rtRNA'] = rtRNA_annot
     annotation_df['ctRNA'] = ctRNA_annot
     annotation_df['lncRNA'] = lncRNA_annot
+    annotation_df['snoRNA'] = snoRNA_annot
     annotation_df['pseudogene'] =pseudo_annot
     
     annotation_df.to_csv('NonCodingRNA/annotation/ncRNA.annotation.tab.gz', sep='\t', index=True, header=True)
