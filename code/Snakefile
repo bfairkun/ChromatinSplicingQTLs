@@ -330,5 +330,7 @@ rule quantNonCodingRNA:
         ),
         
   
-        
+rule classify_ncRNA:
+    input:
+        "NonCodingRNA/annotation/ncRNA.annotation.tab.gz"
         
