@@ -121,6 +121,8 @@ def make_pair_dict(pair_list):
 
 if __name__ == '__main__':
     
+    print("loading files")
+    
     allGenes = read_bed('NonCodingRNA/annotation/allGenes.bed.gz', '-wa')
     ncRNA = read_bed('NonCodingRNA/annotation/ncRNA.bed.gz', '-wa')
     incRNA = read_bed('NonCodingRNA/annotation/tmp/incRNA.bed.gz', '-wa')
@@ -132,6 +134,7 @@ if __name__ == '__main__':
     lncRNA = read_bed('NonCodingRNA/annotation/tmp/lncRNA.ncRNA.bed.gz', '-wo')
     pseudogenes = read_bed('NonCodingRNA/annotation/tmp/pseudogenes.ncRNA.bed.gz', '-wo')
     
+    print("ncRNA:gene")
     
     uaRNA_idx = pd.Index((uaRNA['gene_name'] + ':' + uaRNA['gene_name_']).unique())
     rtRNA_idx = pd.Index((rtRNA['gene_name'] + ':' + rtRNA['gene_name_']).unique())
@@ -146,11 +149,14 @@ if __name__ == '__main__':
     ncRNA.index = ncRNA.gene_name
     allTranscripts = pd.concat([allGenes, ncRNA], axis=0)
     
+    print("Filter classifications")
+    
     true_uaRNA = filter_uaRNA(allTranscripts, uaRNA_idx, srtRNA_idx, rtRNA_rev_idx, coRNA_idx)
     true_coRNA = coRNA_idx.difference(srtRNA_idx).difference(rtRNA_rev_idx)
-    # uaRNAs = pd.Index([x.split(':')[0] for x in true_uaRNA])
+    uaRNAs = pd.Index([x.split(':')[0] for x in true_uaRNA])
     true_incRNA = pd.Index(incRNA.gene_name).difference(uaRNAs)
     # true_coRNA = coRNA_idx.difference(srtRNA_idx).difference(rtRNA_rev_idx)
+    
     
     uaRNA_dict = make_pair_dict(true_uaRNA)
     coRNA_dict = make_pair_dict(true_coRNA)
@@ -159,6 +165,8 @@ if __name__ == '__main__':
     lncRNA_dict = make_pair_dict(lncRNA_idx)
     pseudo_dict = make_pair_dict(pseudo_idx)
     ctRNA_dict = make_pair_dict(ctRNA_idx)
+    
+    print("make annotation table")
     
     annotation_df = pd.DataFrame(index = ncRNA.gene_name)
     
