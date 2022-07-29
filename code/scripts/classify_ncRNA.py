@@ -232,7 +232,7 @@ if __name__ == '__main__':
             rna_type.append('pseudo')
         else:
             pseudo_annot.append('.')
-        if (idx in  pd.Index(incRNA.gene_name)) and (idx not in coRNA_dict.keys()):
+        if (idx in  pd.Index(incRNA.gene_name)) and ((idx not in coRNA_dict.keys()) and (idx not in ctRNA_dict.keys()) and (idx not in uaRNA_dict.keys()) and ((idx not in rtRNA_dict.keys())) and (idx not in srtRNA_dict.keys()) ):
             rna_type.append('incRNA')
         if (idx not in srtRNA_dict.keys()) and (idx not in rtRNA_dict.keys()) and (idx not in lncRNA_dict.keys()) and (idx not in pseudo_dict.keys()) and (idx in ctRNA_dict.keys()): 
             ctRNA_annot.append('|'.join(ctRNA_dict[idx]))
