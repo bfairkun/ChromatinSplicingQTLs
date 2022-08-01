@@ -170,19 +170,19 @@ def GetMergedDistance(wildcards):
 rule ProcessAnnotationsHMM:
     input:
         pred = "NonCodingRNA/tables/{chrom}.{strand}.predicted_{nstates}states.tab.gz",
-        #genes_bed = "NonCodingRNA/annotation/allGenes.bed.gz"
+        genes_bed = "NonCodingRNA/annotation/allGenes.bed.gz"
     output:
         TU_bed = "NonCodingRNA/tables/{chrom}.{strand}.TU_{nstates}states.tab.gz",
-        #merged_bed = "NonCodingRNA/tables/{chrom}.{strand}.merged_{nstates}states.tab.gz",
-        #ncRNA_bed = "NonCodingRNA/tables/{chrom}.{strand}.{nstates}states.ncRNA.bed.gz",
+        merged_bed = "NonCodingRNA/tables/{chrom}.{strand}.merged_{nstates}states.tab.gz",
+        ncRNA_bed = "NonCodingRNA/tables/{chrom}.{strand}.{nstates}states.ncRNA.bed.gz",
     wildcard_constraints:
         chrom = "|".join(chrom_list),
         strand = 'minus|plus',
         nstates = '2|3'
     params:
         strand = getStrandString,
-        #merge_distance = 1000,#GetMergedDistance,
-        #max_overlap = 0.1
+        merge_distance = 1000,#GetMergedDistance,
+        max_overlap = 0.1
     log:
         "logs/NonCodingRNA/process_hmm.{chrom}.{strand}.{nstates}states.log"
     resources:
