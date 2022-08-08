@@ -178,19 +178,14 @@ def GetMergedDistance(wildcards):
 rule ProcessAnnotationsHMM:
     input:
         pred = "NonCodingRNA/tables/{chrom}.{strand}.predicted_{nstates}states.tab.gz",
-        genes_bed = "NonCodingRNA/annotation/allGenes.bed.gz"
     output:
         TU_bed = "NonCodingRNA/tables/{chrom}.{strand}.TU_{nstates}states.tab.gz",
-        merged_bed = "NonCodingRNA/tables/{chrom}.{strand}.merged_{nstates}states.tab.gz",
-        ncRNA_bed = "NonCodingRNA/tables/{chrom}.{strand}.{nstates}states.ncRNA.bed.gz",
     wildcard_constraints:
         chrom = "|".join(chrom_list),
         strand = 'minus|plus',
         nstates = '2|3'
     params:
         strand = getStrandString,
-        merge_distance = 1000,#GetMergedDistance,
-        max_overlap = 0.1
     log:
         "logs/NonCodingRNA/process_hmm.{chrom}.{strand}.{nstates}states.log"
     resources:
@@ -198,8 +193,6 @@ rule ProcessAnnotationsHMM:
     shell:
         """
         python scripts/processHMM.py --input {input.pred} --output {output.TU_bed} --nstates {wildcards.nstates} &> {log};
-        #(bedtools merge -i {output.TU_bed} -d {params.merge_distance} | awk -F'\\t' '{{print $0"\\t"$1"_"$2"_"$3"_{params.strand}\\t"$1"_"$2"_"$3"_{params.strand}\\t{params.strand}"}}' - | sort -u | gzip - > {output.merged_bed}) &>> {log};
-        #(bedtools subtract -A -s -a {output.merged_bed} -b {input.genes_bed} -f {params.max_overlap} | sort -u | gzip - > {output.ncRNA_bed}) &>> {log}
         """
    
 rule MergeNonCodingRNA:
@@ -214,7 +207,6 @@ rule MergeNonCodingRNA:
     params:
         strand = getStrandString,
         merge_distance = 0,
-        #merge_distance = 1000,
     log:
         "logs/NonCodingRNA/merge_hmm.{chrom}.{strand}.{nstates}states.log"
     resources:
