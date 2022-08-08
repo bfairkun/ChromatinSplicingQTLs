@@ -315,5 +315,28 @@ rule BgzipAndTabixPsiTables:
 
 
 
+###########################################
+#          Out of order splicing          #
+###########################################
+
+rule QQnormOutOfOrder:
+    input:
+        "/project2/yangili1/yangili/chRNA_order/splicing_order/splice_order/table.txt"
+    output:
+        "QTLs/QTLTools/chRNA.Splicing.Order/OnlyFirstReps.qqnorm.bed.gz"
+    log:
+        "logs/qqnorm_splicing_order.log"
+    resources:
+        mem_mb = 58000
+    params:
+        min_obs = 10
+    conda:
+        "../envs/py_tools.yml"
+    shell:
+        """
+        python scripts/PrepareOutOfOrderQQnorm.py --input_file {input} --output {output} --min_obs {params.min_obs} &> {log}
+        """
+    
+
 
 

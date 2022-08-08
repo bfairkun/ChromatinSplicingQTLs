@@ -7,11 +7,11 @@ rule SortQTLtoolsPhenotypeTable:
     log:
         "logs/SortQTLtoolsPhenotypeTable/{Phenotype}.log"
     resources:
-        mem_mb = 12000
+        mem_mb = 24000
     shell:
         """
-        bedtools sort -header -i {input} | bgzip /dev/stdin -c > {output.bed}
-        tabix -p bed {output.bed}
+        (bedtools sort -header -i {input} | bgzip /dev/stdin -c > {output.bed}) &> {log}
+        (tabix -p bed {output.bed}) &>> {log}
         """
 
 rule PhenotypePCs:
@@ -241,11 +241,6 @@ rule Gather_QTLtools_cis_pass:
         (cat {input} | gzip - > {output}) &> {log}
         """
         
-#use rule Gather_QTLtools_cis_pass as Gather_QTLtools_cis_pass_ncRNA with:
-#    input:
-#        expand( "QTLs/QTLTools/{{Phenotype}}/{{Pass}}{{QTLsGenotypeSet}}{{FeatureCoordinatesRedefinedFor}}Chunks/{n}.txt", n=range(0, #1+N_PermutationChunks_ncRNA) )
-#    wildcard_constraints:
-#        Phenotype = "chRNA.Expression_eRNA|chRNA.Expression_cheRNA"
 
 rule AddQValueToPermutationPass:
     input:
@@ -294,7 +289,7 @@ rule MakePhenotypeTableToColocPeaksWithGenes:
 
 use rule MakePhenotypeTableToColocPeaksWithGenes as MakePhenotypeTableToColocIntronsWithGenes with:
     wildcard_constraints:
-        Phenotype = "MetabolicLabelled.30min.IRjunctions|MetabolicLabelled.60min.IRjunctions|polyA.IRjunctions|chRNA.IRjunctions|MetabolicLabelled.30min.IER|MetabolicLabelled.60min.IER|polyA.IER|chRNA.IER|MetabolicLabelled.30min.IR|MetabolicLabelled.30min.Splicing|MetabolicLabelled.60min.IR|MetabolicLabelled.60min.Splicing|chRNA.IR|chRNA.Splicing|polyA.Splicing|polyA.IR|polyA.Splicing.Subset_YRI|polyA.IR.Subset_YRI|chRNA.Slopes"
+        Phenotype = "MetabolicLabelled.30min.IRjunctions|MetabolicLabelled.60min.IRjunctions|polyA.IRjunctions|chRNA.IRjunctions|MetabolicLabelled.30min.IER|MetabolicLabelled.60min.IER|polyA.IER|chRNA.IER|MetabolicLabelled.30min.IR|MetabolicLabelled.30min.Splicing|MetabolicLabelled.60min.IR|MetabolicLabelled.60min.Splicing|chRNA.IR|chRNA.Splicing|polyA.Splicing|polyA.IR|polyA.Splicing.Subset_YRI|polyA.IR.Subset_YRI|chRNA.Slopes|chRNA.Splicing.Order"
     params:
         cis_window = 0,
         bedtools_intersect_params = "-s",

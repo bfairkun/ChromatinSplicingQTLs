@@ -1,3 +1,7 @@
+#######################################
+#    Prepare input for HMM and run    #
+#######################################
+
 rule MakeWindows:
     input:
         "../data/Chrome.sizes"
@@ -5,7 +9,7 @@ rule MakeWindows:
         plus = "NonCodingRNA/bed/{chrom}.windows.plus.bed.gz",
         minus = "NonCodingRNA/bed/{chrom}.windows.minus.bed.gz",
     params:
-        win_size = 200,#50,
+        win_size = 200,
     wildcard_constraints:
         chrom = "|".join(chrom_list),
         strand = 'minus|plus',
@@ -34,8 +38,6 @@ rule FilterLongJunc:
         """
         (samtools view -h -F256 {input} | perl -lane 'print if (( $F[0] =~ /^@/ ) || ( abs($F[8]) <= {params.max_junc_length}  ))' | samtools view -bh > {output}) &> {log}
         """
-        
-#python scripts/filter_long_junc.py --input {input} --output {output} --max_junc_length {params.max_junc_length} &> {log}
         
         
 rule IndexBam:
@@ -91,7 +93,6 @@ rule WindowCountsChRNA:
         """
         (samtools view -bh -F 256 -f 64 {input.bam} | bedtools intersect -sorted -S -g {input.faidx} -a {input.chrom_bed} -b - -c | gzip - > {output}) &> {log}
         """
-        #(samtools view -bh -F 256 -f 64 {input.bam} | bedtools intersect -sorted -S -g {input.faidx} -a {input.chrom_bed} -b - -c -split | gzip - > {output}) &> {log}
 
 
 rule MakeInputForHMM:
@@ -130,6 +131,13 @@ rule RunHMM:
         Rscript scripts/runHMM.R {wildcards.chrom} {wildcards.strand} {wildcards.states} &> {log};
         gzip NonCodingRNA/tables/{wildcards.chrom}.{wildcards.strand}.predicted_{wildcards.states}states.tab
         """
+
+
+
+########################################
+#          Process HMM output          #
+########################################
+
 
 def getStrandString(wildcards):
     if wildcards.strand == 'plus':
@@ -276,26 +284,56 @@ rule GetNonCodingRNAFromHMM:
         (zcat {output.annotated_HMM} >> {output.temp_merged}) &>> {log};
         (bedtools sort -i {output.temp_merged} | gzip - > {output.merged_allHMM}) &>> {log}
         """
-        #(bedtools merge -s -i {output.tmp_ncRNA_bed} -d 1000 -c 4,5,6 -o first | sort -u | gzip - > {output.tmp_ncRNA_merged}) &>> {log};
-        #(bedtools sort -i {output.tmp_ncRNA_merged} | gzip - > {output.unfiltered_ncRNA_bed}) &>> {log};
-        #(zcat {output.unfiltered_ncRNA_bed} | awk '$3-$2>={params.length}' - > {output.tmp_filtered_bed}) &>> {log} 
+
+
+##################################################
+#    Get expression to filter trailing ncRNAs    #
+##################################################
+
+rule MakeSAFAnnotationForNonCodingRNA:
+    input:
+        "NonCodingRNA/annotation/ncRNA.bed.gz",
+    output:
+        "NonCodingRNA/annotation/ncRNA.saf",
+    shell:
+        """
+        echo -e 'GeneID\\tChr\\tStart\\tEnd\\tStrand' > {output};
+        zcat {input} | awk '{{print sep='\\t' $4, $1, $2, $3, $6 }}' FS='\\t' OFS='\\t' >> {output}
+        """
         
-#rule GetCombinedBed:
-#    input:
-#        pc = "QTLs/QTLTools/chRNA.Expression.Splicing/OnlyFirstReps.RPKM.bed.gz",
-#        nc = "QTLs/QTLTools/chRNA.Expression_ncRNA/OnlyFirstReps.RPKM.bed.gz",
-#    output:
-#        unsorted = temp("NonCodingRNA/annotation/allTranscriptsUnsorted.bed"),
-#        allTranscripts = "NonCodingRNA/annotation/allTranscripts.bed.gz"
-#    log:
-#        "logs/combineAnnotations.log"
-#    shell:
-#        """
-#        (zcat {input.pc} | tail -n +2 - | awk '{{ print $1, $2, $3, $4, $5, $6}}' FS='\\t' OFS='\\t' > {output.unsorted}) &>> {log} ;
-#        (zcat {input.nc} | tail -n +2 - | awk '{{ print $1, $2, $3, $4, $5, $6}}' FS='\\t' OFS='\\t' >> {output.unsorted}) &>> {log} ;
-#        (bedtools sort -i {output.unsorted} | gzip - > {output.allTranscripts}) &>> {log} 
-#        """
-        
+
+use rule MakeSAFAnnotationForNonCodingRNA as MakeSAFAnnotationForAllHMM with:
+    input:
+        "NonCodingRNA/annotation/allHMM.merged.bed.gz",
+    output:
+        "NonCodingRNA/annotation/allHMM.merged.saf",
+    log:
+        "logs/getSAFforAllHMM.log"
+
+
+rule featureCountsAllHMM:
+    input:
+        bam = GetBamForPhenotype,
+        saf = "NonCodingRNA/annotation/allHMM.merged.saf",
+    output:
+        "NonCodingRNA/Expression_HMM/{Phenotype}_featureCounts/Counts.txt",
+    log:
+        "logs/featureCounts_for_allHMM{Phenotype}.log"
+    params:
+        extraParams = PairedEndParams,
+        strandParams = FeatureCountsNonCodingStrandParams
+    threads:
+        8
+    wildcard_constraints:
+        Phenotype = "chRNA.Expression",
+    resources:
+        mem_mb = 12000,
+        cpus_per_node = 9,
+    shell:
+        """
+        featureCounts {params.extraParams} {params.strandParams} -F SAF -T {threads} --ignoreDup --primary -a {input.saf} -o NonCodingRNA/Expression_HMM/{wildcards.Phenotype}_featureCounts/Counts.txt {input.bam} &> {log};
+        """
+
 
 rule GetRPKMForAllHMM:
     input:
@@ -340,41 +378,36 @@ rule FilterNonCodingRNA:
         python scripts/filter_ncRNAs.py --min_RPKM {params.min_RPKM} --distance {params.distance} --min_correlation {params.min_correlation} --RPKM_ratio {params.RPKM_ratio} &> {log}
         """
         
+
         
-#rule QQnormNonCodingRNAs:
-#    input:
-#        "QTLs/QTLTools/chRNA.Expression_ncRNA/OnlyFirstReps.RPKM.filtered.bed.gz"
-#    output:
-#        "QTLs/QTLTools/chRNA.Expression_ncRNA/OnlyFirstReps.qqnorm.bed.gz"
-#    log:
-#        "logs/qqnorm_ncRNAs.log"
-#    conda:
-#        "../envs/r_essentials.yml"
-#    shell:
-#        """
-#        Rscript scripts/qqnorm_ncRNAs.R &> {log}
-#        """
-    
+rule featureCountsNonCodingRNA:
+    input:
+        bam = GetBamForPhenotype,
+        saf = "NonCodingRNA/annotation/ncRNA.saf",
+    output:
+        "featureCounts/{Phenotype}_ncRNA/Counts.txt",
+    params:
+        extraParams = PairedEndParams,
+        strandParams = FeatureCountsNonCodingStrandParams
+    threads:
+        8
+    wildcard_constraints:
+        Phenotype = "|".join(["polyA.Expression", "chRNA.Expression", "MetabolicLabelled.30min", "MetabolicLabelled.60min"])
+    resources:
+        mem = 12000,
+        cpus_per_node = 9,
+    log:
+        "logs/featureCounts/{Phenotype}_ncRNA.log"
+    shell:
+        """
+        featureCounts {params.extraParams} {params.strandParams} -F SAF -T {threads} --ignoreDup --primary -a {input.saf} -o featureCounts/{wildcards.Phenotype}_ncRNA/Counts.txt {input.bam} &> {log};
+        """
 
 
-#rule ProteinCodingOverlap:
-#    input:
-#        gene_list = "ExpressionAnalysis/polyA/ExpressedGeneList.txt",
-#        hmm_bed = "NonCodingRNA/annotation/allHMM.2states.sorted.bed.gz"
-#    output:
-#        annotated_hmm = "NonCodingRNA/annotation/AnnotatedHMM.bed.gz",
-#        protein_coding = "NonCodingRNA/annotation/AnnotatedProteinCoding_overlap.bed.gz",
-#        de_novo = "NonCodingRNA/annotation/DeNovoProteinCoding_overlap.bed.gz"
-#    log:
-#        "logs/NonCodingRNA/hmm_protein_coding.log"
-#    resources:
-#        mem_mb = 12000
-#    shell:
-#        """
-#        (bedtools sort -i {input.hmm_bed} | bedtools merge -s -i - -d 1000 -c 4,5,6 -o first | gzip - > {output.annotated_hmm}) &> {log};
-#        (bedtools intersect -s -a {input.gene_list} -b {output.annotated_hmm} -f 0.5 -wa | sort -u | gzip - > {output.protein_coding}) &>>{log};
-#        (bedtools intersect -s -b {input.gene_list} -a {output.annotated_hmm} -f 0.5 -wa | sort -u | gzip - > {output.de_novo}) &>> {log}
-#        """
+########################################
+#          Get TSS and 3' end          #
+########################################
+
     
 rule SplitAnnotationByStrand:
     input:
@@ -419,8 +452,8 @@ rule GetTSSAnnotations:
         (zcat {input.genes_bed} | awk '$6=="-" {{print $1, $3, $3, $4, $5, $6}}' FS='\\t' OFS='\\t' - >> {output.genes_temp}) &>> {log};
         (bedtools sort -i {output.genes_temp} | bedtools slop -b {params.window} -g {input.chrom_sizes} -i - | gzip - > {output.genes_tss}) &>> {log};
         """
-#(awk '{{print "chr"$1, $2, $3, $6, $7, $4}}' FS='\\t' OFS='\\t' {input.tss_bed} | bedtools slop -b 999 -i - -g {input.chrom_sizes} | gzip - #> {output.all_genes_tss}) & >> {log};
- 
+
+
 rule GetAllTSSAnnotations:
     input:
         chrom_sizes = "../data/Chrome.sizes",
@@ -440,40 +473,6 @@ rule GetAllTSSAnnotations:
         (awk '{{print "chr"$1, $2, $3, $7, $6, $4}}' FS='\\t' OFS='\\t' {input.tss_bed} | bedtools slop -b 999 -i - -g {input.chrom_sizes} | gzip - > {output.all_genes_tss}) & >> {log};
         """
        
-rule MakeSAFAnnotationForNonCodingRNA:
-    input:
-        "NonCodingRNA/annotation/ncRNA.bed.gz",
-    output:
-        "NonCodingRNA/annotation/ncRNA.saf",
-    shell:
-        """
-        echo -e 'GeneID\\tChr\\tStart\\tEnd\\tStrand' > {output};
-        zcat {input} | awk '{{print sep='\\t' $4, $1, $2, $3, $6 }}' FS='\\t' OFS='\\t' >> {output}
-        """
-        
-rule featureCountsNonCodingRNA:
-    input:
-        bam = GetBamForPhenotype,
-        saf = "NonCodingRNA/annotation/ncRNA.saf",
-    output:
-        "featureCounts/{Phenotype}_ncRNA/Counts.txt",
-    params:
-        extraParams = PairedEndParams,
-        strandParams = FeatureCountsNonCodingStrandParams
-    threads:
-        8
-    wildcard_constraints:
-        Phenotype = "|".join(["polyA.Expression", "chRNA.Expression", "MetabolicLabelled.30min", "MetabolicLabelled.60min"])
-    resources:
-        mem = 12000,
-        cpus_per_node = 9,
-    log:
-        "logs/featureCounts/{Phenotype}_ncRNA.log"
-    shell:
-        """
-        featureCounts {params.extraParams} {params.strandParams} -F SAF -T {threads} --ignoreDup --primary -a {input.saf} -o featureCounts/{wildcards.Phenotype}_ncRNA/Counts.txt {input.bam} &> {log};
-        """
-
 
 rule Get3PrimeEndAnnotations:
     input:
@@ -508,40 +507,10 @@ rule Get3PrimeEndAnnotations:
         (bedtools sort -i {output.genes_last_temp} | bedtools slop -b {params.window} -g {input.chrom_sizes} -i - | gzip - > {output.genes_3prime_last}) &>> {log};
         """
  
-use rule MakeSAFAnnotationForNonCodingRNA as MakeSAFAnnotationForAllHMM with:
-    input:
-        "NonCodingRNA/annotation/allHMM.merged.bed.gz",
-    output:
-        "NonCodingRNA/annotation/allHMM.merged.saf",
-    log:
-        "logs/getSAFforAllHMM.log"
-
-
         
-rule featureCountsAllHMM:
-    input:
-        bam = GetBamForPhenotype,
-        saf = "NonCodingRNA/annotation/allHMM.merged.saf",
-    output:
-        "NonCodingRNA/Expression_HMM/{Phenotype}_featureCounts/Counts.txt",
-    log:
-        "logs/featureCounts_for_allHMM{Phenotype}.log"
-    params:
-        extraParams = PairedEndParams,
-        strandParams = FeatureCountsNonCodingStrandParams
-    threads:
-        8
-    wildcard_constraints:
-        Phenotype = "chRNA.Expression",
-    resources:
-        mem_mb = 12000,
-        cpus_per_node = 9,
-    shell:
-        """
-        featureCounts {params.extraParams} {params.strandParams} -F SAF -T {threads} --ignoreDup --primary -a {input.saf} -o NonCodingRNA/Expression_HMM/{wildcards.Phenotype}_featureCounts/Counts.txt {input.bam} &> {log};
-        """
-        
-#################################################
+###################################
+#        Classify ncRNAs          #
+###################################
 
 rule uaRNA:
     input:
@@ -720,21 +689,6 @@ rule ClassifyNcRNAs:
         """
         
         
-# coRNA: colliding RNA. ncRNA overlaps 3' end of the gene on the reverse strand, but not the entire gene.
-# ctRNA: cotranscribed RNA. Less than 15% of a ncRNA overlaps an annotated gene in the sense strand.
-# lncRNA: long non-coding RNA. > 90% of a Gencode annotated lncRNA is contained within the ncRNA, but this
-#         corresponds to < 15% of the ncRNA. More than one lncRNA can be associated to a ncRNA.
-# pseudogene: same as lncRNA, but with annotated pseudogenes.
-# rtRNA: reverse transcribed RNA. A ncRNA is mostly contained within the reverse strand of a gene, but it's not
-#        already classified as another class of ncRNA. rna_type is srtRNA (strict rtRNA) if the entire ncRNA
-#        is contained within the gene.
-# uaRNA: upstream antisense RNA. ncRNA TSS is within 1000 bp of another gene or ncRNA, on the reverse strand.
-#        A ncRNA can be close to more than one annotated gene. If an annotated gene has two or more ncRNAs,
-#        only the closest ncRNA is annotated as uaRNA for that gene.
-
-#rule AnnotateNonCodingRNA:
-
-
 
 
 

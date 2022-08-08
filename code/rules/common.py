@@ -28,7 +28,7 @@ MyPhenotypes = ["chRNA.IR", "Expression.Splicing", "chRNA.Expression.Splicing", 
                'MetabolicLabelled.30min.IER', 'MetabolicLabelled.60min.IER', 
                 'MetabolicLabelled.30min.IRjunctions', 'MetabolicLabelled.60min.IRjunctions',
                'MetabolicLabelled.30min.Splicing', 'MetabolicLabelled.60min.Splicing', 
-                'MetabolicLabelled.30min.IR', 'MetabolicLabelled.60min.IR']
+                'MetabolicLabelled.30min.IR', 'MetabolicLabelled.60min.IR', 'chRNA.Splicing.Order']
 # "polyA.Expression.AllRNA.Subset_YRI", "MetabolicLabelled.30min.AllRNA.Subset_YRI", 
 #                 "MetabolicLabelled.60min.AllRNA.Subset_YRI", "chRNA.Expression.AllRNA.Subset_YRI"]
 

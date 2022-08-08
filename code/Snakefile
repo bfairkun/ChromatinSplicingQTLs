@@ -284,6 +284,10 @@ rule chRNAExpressionPhenotypes:
           Pass = ["PermutationPass.FDR_Added", "NominalPass"]
         ),
 
+rule splicing_order:
+    input:
+        "QTLs/QTLTools/chRNA.Splicing.Order/PermutationPass.FDR_Added.txt.gz"
+
 rule getHMMInput:
     priority: 10
     input:

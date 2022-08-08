@@ -70,5 +70,6 @@ rule GetAdditionalNonCodingRNAFromFeatureCounts:
         python scripts/GetNonCodingRNAFromFeatureCounts.py --phenotype {wildcards.Phenotype} --ncRNA snoRNA &> {log.snoRNA_log};
         python scripts/GetNonCodingRNAFromFeatureCounts.py --phenotype {wildcards.Phenotype} --ncRNA lncRNA &> {log.lncRNA_log}
         """
-        ### Add transcribed_unprocessed_pseudogene, other annotated ncRNAs
+        ### Here pseudogenes are included with lncRNAs. There are probably more efficient ways to do this;
+        ### Might change later
 
