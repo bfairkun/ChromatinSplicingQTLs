@@ -57,23 +57,69 @@ rule leafcutter_cluster:
         python scripts/davidaknowles_leafcutter/scripts/leafcutter_cluster_regtools_py3.py -j {input.juncfile_list} -r SplicingAnalysis/leafcutter/clustering/autosomes/ &> {log}
         """
 
+def GetAnnotationTypeGtf(wildcards):
+    if wildcards.AnnotationType == "basic":
+        return "ReferenceGenome/Annotations/gencode.v34.chromasomal.basic.annotation.gtf"
+    elif wildcards.AnnotationType == "comprehensive":
+        return "ReferenceGenome/Annotations/gencode.v34.chromasomal.annotation.gtf"
+
 rule annotate_juncfiles:
     input:
         fa = "ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa",
-        Comprehensive_gtf = "ReferenceGenome/Annotations/gencode.v34.chromasomal.annotation.gtf",
-        basic_gtf = "ReferenceGenome/Annotations/gencode.v34.chromasomal.basic.annotation.gtf",
         junc_autosomes = "SplicingAnalysis/leafcutter/juncfiles/autosomes/{Phenotype}_{IndID}_{Rep}.junc",
+        gtf = GetAnnotationTypeGtf
     output:
-        basic = "SplicingAnalysis/leafcutter/regtools_annotate/basic/{Phenotype}_{IndID}_{Rep}.bed.gz",
-        comprehensive = "SplicingAnalysis/leafcutter/regtools_annotate/comprehensive/{Phenotype}_{IndID}_{Rep}.bed.gz"
+        "SplicingAnalysis/leafcutter/regtools_annotate/{AnnotationType}/{Phenotype}_{IndID}_{Rep}.bed.gz",
+    wildcard_constraints:
+        AnnotationType = "basic|comprehensive"
     conda:
         "../envs/regtools.yml"
     log:
-        "logs/annotate_juncfiles/{Phenotype}_{IndID}_{Rep}.log"
+        "logs/annotate_juncfiles/{AnnotationType}/{Phenotype}_{IndID}_{Rep}.log"
     shell:
         """
-        (regtools junctions annotate {input.junc_autosomes} {input.fa} {input.basic_gtf} | gzip - > {output.basic} ) &> {log}
-        (regtools junctions annotate {input.junc_autosomes} {input.fa} {input.Comprehensive_gtf} | gzip - > {output.comprehensive} ) &>> log
+        (regtools junctions annotate {input.junc_autosomes} {input.fa} {input.gtf} | gzip - > {output} ) &> {log}
+        """
+
+rule ConcatUniqJuncs:
+    input:
+        regtools_annotate = expand ("SplicingAnalysis/leafcutter/regtools_annotate/{{AnnotationType}}/{Phenotype}_{IndID}_{Rep}.bed.gz",  zip, Phenotype=RNASeqSamplesNoProcap_df['Phenotype'], IndID=RNASeqSamplesNoProcap_df['IndID'], Rep=RNASeqSamplesNoProcap_df['RepNumber']),
+    output:
+        "SplicingAnalysis/regtools_annotate_combined/{AnnotationType}.bed.gz"
+    wildcard_constraints:
+        AnnotationType = "basic|comprehensive"
+    log:
+        "logs/ConcatUniqJuncs/{AnnotationType}.log"
+    resources:
+        mem = much_more_mem_after_first_attempt
+    shell:
+        """
+        (cat <(printf "chrom\\tstart\\tend\\tstrand\\tsplice_site\\tacceptors_skipped\\texons_skipped\\tdonors_skipped\\tanchor\\tknown_donor\\tknown_acceptor\\tknown_junction\\tgene_names\\tgene_id\\n") <(zcat {input.regtools_annotate} | awk -v OFS='\\t' '$1 != "chrom" {{print $1,$2,$3, $6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16}}' | sort | uniq ) | gzip - > {output}) &> {log}
+        """
+
+rule GatherConcatUniqJuncs:
+    input:
+        expand("SplicingAnalysis/regtools_annotate_combined/{AnnotationType}.bed.gz", AnnotationType = ["basic", "comprehensive"])
+
+rule GetObservedSpliceSites:
+    input:
+        bed = "SplicingAnalysis/regtools_annotate_combined/{AnnotationType}.bed.gz",
+        fa = "ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa",
+    output:
+        donors = "SplicingAnalysis/regtools_annotate_combined/{AnnotationType}.5ss.bed.gz",
+        acceptors = "SplicingAnalysis/regtools_annotate_combined/{AnnotationType}.3ss.bed.gz",
+        bptregions = "SplicingAnalysis/regtools_annotate_combined/{AnnotationType}.bptregion.bed.gz",
+        donors_tbi = "SplicingAnalysis/regtools_annotate_combined/{AnnotationType}.5ss.bed.gz.tbi",
+        acceptors_tbi = "SplicingAnalysis/regtools_annotate_combined/{AnnotationType}.3ss.bed.gz.tbi",
+        bptregions_tbi = "SplicingAnalysis/regtools_annotate_combined/{AnnotationType}.bptregion.bed.gz.tbi"
+    shell:
+        """
+        zcat {input.bed} | awk -F'\\t' -v OFS='\\t' 'NR>1 {{print $1,$2,$3,".", $10,$4}}' | awk -F'\\t' -v OFS='\\t' '$6=="+" {{print $1, $2-3, $2+7, ".", $5, $6}} $6=="-" {{print $1, $3-8, $3+2, ".", $5, $6}}' | bedtools getfasta -s -bedOut -bed - -fi {input.fa} | awk -F'\\t' -v OFS='\\t' '{{print $1,$2,$3, "SpliceDonor_"$5, $1"_"$2"_"$3"_"$6"_"$7, $6}}' | sort | uniq | bedtools sort -i - | bgzip /dev/stdin -c > {output.donors}
+        zcat {input.bed} | awk -F'\\t' -v OFS='\\t' 'NR>1 {{print $1,$2,$3,".", $11,$4}}' | awk -F'\\t' -v OFS='\\t' '$6=="+" {{print $1, $3-11, $3-1, ".", $5, $6}} $6=="-" {{print $1, $2, $2+10, ".", $5, $6}}' | bedtools getfasta -s -bedOut -bed - -fi {input.fa} | awk -F'\\t' -v OFS='\\t' '{{print $1,$2,$3, "SpliceAcceptor_"$5, $1"_"$2"_"$3"_"$6"_"$7, $6}}' | sort | uniq | bedtools sort -i - | bgzip /dev/stdin -c > {output.acceptors}
+        zcat {input.bed} | awk -F'\\t' -v OFS='\\t' 'NR>1 {{print $1,$2,$3,".", $11,$4}}' | awk -F'\\t' -v OFS='\\t' '$6=="+" {{print $1, $3-41, $3-11, ".", $5, $6}} $6=="-" {{print $1, $2+10, $2+40, ".", $5, $6}}' | bedtools getfasta -s -bedOut -bed - -fi {input.fa} | awk -F'\\t' -v OFS='\\t' '{{print $1,$2,$3, "SpliceBranchpointRegion_"$5, $1"_"$2"_"$3"_"$6"_"$7, $6}}' | sort | uniq | bedtools sort -i - | bgzip /dev/stdin -c > {output.bptregions}
+        tabix -p bed {output.donors}
+        tabix -p bed {output.acceptors}
+        tabix -p bed {output.bptregions}
         """
 
 rule GetIntronFeatures:

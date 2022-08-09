@@ -1,0 +1,381 @@
+---
+title: "CheckFinemapSNPEnrichments"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=F, warning=F)
+```
+
+## Intro
+
+One way to explore my QTL results is to look for enrichments in QTL SNPs. There are many ways to do this. I propose something simple: Start with the finemapping results from hyprcoloc (the posterior probability for each SNP for each hyprcoloc cluster) and ask to what degree that posterior probability mass is enriched in annotations, compared to some other set of SNPs (eg sQTLs versus eQTLs). The annotations could be anything, but here I am just going to explore this method and make some initial plots using GM12878 ChromHMM annotations from ENCODE (lifted over from hg19->hg38).
+
+```{r}
+library(tidyverse)
+library(data.table)
+library(boot)
+
+dat <- fread("../code/QTL_SNP_Enrichment/FinemapIntersections.bed.gz", col.names=c("SNP_chrom", "SNP_start", "SNP_end", "SNP", "PosteriorPr", "Annotation_chrom", "Annotation_start", "Annotation_stop", "Annotation", "Overlap")) %>%
+  separate(SNP, into=c("SNP", "HyprcolocCluster", "GeneLocus"), sep="_")
+
+hyprcoloc_results <- read_tsv("../code/hyprcoloc/Results/ForColoc/MolColocStandard/tidy_results_OnlyColocalized.txt.gz")
+
+
+
+hyprcoloc_results_finemap <- read_tsv("../code/hyprcoloc/Results/ForColoc/MolColocStandard/snpscores.txt.gz")
+```
+
+
+First I want to verify that I can match up the right TopSNPs by the clusterNumber. If I matching these TopSNPs correctly, the finemapping probability should be equal from both tables...
+
+```{r}
+hyprcoloc_results_finemap %>%
+  group_by(ColocalizedCluster, Locus) %>%
+  filter(FinemapPr == max(FinemapPr)) %>%
+  ungroup() %>%
+  full_join(
+    hyprcoloc_results %>% distinct(snp, iteration, Locus, .keep_all=T),
+    by = c("Locus", "snp", "ColocalizedCluster"="iteration")
+  ) %>%
+  ggplot(aes(x=FinemapPr, y=TopSNPFinemapPr)) +
+  geom_point()
+  
+```
+
+That looks right...
+
+Now let's pick clusters with only splicing phenotypes, and compare to clusters with an eQTL
+
+
+```{r}
+
+hyprcoloc_results %>%
+  separate(phenotype_full, into=c("PC", "P"), sep=";") %>%
+  pull(PC) %>% unique()
+
+SplicingClusters <- hyprcoloc_results %>%
+  separate(phenotype_full, into=c("PC", "P"), sep=";") %>%
+  rowwise() %>%
+  mutate(PC_new = if_else(
+    any(str_detect(PC, c("polyA.Splicing","chRNA.IR", "polyA.IR", "polyA.IR.Subset_YRI", "chRNA.IER", "chRNA.IRjunctions", "polyA.Splicing.Subset_YRI", "chRNA.Splicing"))),
+    "Splicing",
+    "NotSplicing"
+  )) %>%
+  ungroup() %>%
+  group_by(Locus, iteration) %>%
+  filter(all(PC_new == "Splicing")) %>%
+  ungroup() %>%
+  distinct(Locus,iteration) %>%
+  unite(Locus.iteration, Locus,iteration) %>%
+  mutate(ClusterGroup = "SplicingClusters")
+
+
+
+H3K27AC_AndEqtlClusters <- hyprcoloc_results %>%
+  separate(phenotype_full, into=c("PC", "P"), sep=";") %>%
+  rowwise() %>%
+  mutate(PC_new = if_else(
+    any(str_detect(PC, c("H3K27AC","H3K4ME1", "H3K36ME3", "H3K4ME3", "Expression.Splicing", "Expression.Splicing.Subset_YRI", "chRNA.Expression.Splicing", "MetabolicLabelled.30min", "MetabolicLabelled.60min"))),
+    "EnhancerOrExpression",
+    "NotEnhancerOrExpression"
+  )) %>%
+  ungroup() %>%
+  group_by(Locus, iteration) %>%
+  filter(all(PC_new == "EnhancerOrExpression")) %>%
+  ungroup() %>%
+  distinct(Locus,iteration) %>%
+  unite(Locus.iteration, Locus,iteration) %>%
+  mutate(ClusterGroup = "EnhancerOrExpression")
+
+intersect(H3K27AC_AndEqtlClusters$Locus.iteration, SplicingClusters$Locus.iteration)
+
+
+FractionPosteriorInEachAnnotation <- bind_rows(H3K27AC_AndEqtlClusters, SplicingClusters) %>%
+  left_join(
+    dat %>%
+    mutate(Locus.iteration = paste(GeneLocus, HyprcolocCluster, sep="_")),
+    by = "Locus.iteration"
+  ) %>%
+  group_by(Annotation, ClusterGroup) %>%
+  summarise(Sum = sum(PosteriorPr)) %>%
+  group_by(ClusterGroup) %>%
+  mutate(FractionAnnotatedPosteriorInGroup = Sum/sum(Sum, na.rm=T)) %>%
+  ungroup()
+
+FractionPosteriorInEachAnnotation %>%
+  pivot_wider(names_from = "ClusterGroup", values_from = c("FractionAnnotatedPosteriorInGroup", "Sum"), id_cols="Annotation") %>%
+  mutate(Enrichment = FractionAnnotatedPosteriorInGroup_SplicingClusters/FractionAnnotatedPosteriorInGroup_EnhancerOrExpression) %>%
+  mutate(Annotation = str_replace_all(Annotation, "_0$", "_UnannotatedButObserved")) %>%
+  mutate(Annotation = str_replace_all(Annotation, "_1$", "_Annotated")) %>%
+ggplot(aes(x=Annotation, y=Enrichment)) +
+  geom_col() +
+  theme_bw() +
+  scale_y_continuous(trans='log2') +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+  coord_flip() +
+  labs(x = "Annotation", y="Finemapping posterior mass fold enrichment\n(ChromatinQTL|eQTL <-- --> sQTL)")
+  
+
+
+
+```
+
+Let's try to add error bars by bootstrapping. Perhaps randomly sample the QTL clusters. Let's try 100 bootstrap replicates and make the plot twice to see how stable the confidence interval is.
+
+```{r}
+set.seed(0)
+
+dat$Annotation %>% unique()
+
+results <- list()
+
+for (i in 1:100){
+  results[[i]] <-
+  bind_rows(
+  sample_frac(H3K27AC_AndEqtlClusters, replace=T),
+  sample_frac(SplicingClusters, replace=T)) %>%
+  left_join(
+    dat %>%
+    mutate(Locus.iteration = paste(GeneLocus, HyprcolocCluster, sep="_")),
+    by = "Locus.iteration"
+  ) %>%
+  mutate(Annotation = str_replace_all(Annotation, "_0$", "_UnannotatedButObserved")) %>%
+  mutate(Annotation = str_replace_all(Annotation, "_1$", "_Annotated")) %>%
+  mutate(Annotation = str_replace_all(Annotation, "^\\d+?_", "ChromHMM:")) %>%
+  filter(!is.na(Annotation)) %>%
+  mutate(Annotation = if_else(Annotation==".", "No annotation", Annotation)) %>%
+  group_by(Annotation, ClusterGroup) %>%
+  summarise(Sum = sum(PosteriorPr)) %>%
+  group_by(ClusterGroup) %>%
+  mutate(FractionAnnotatedPosteriorInGroup = Sum/sum(Sum, na.rm=T)) %>%
+  ungroup() %>%
+  pivot_wider(names_from = "ClusterGroup", values_from = c("FractionAnnotatedPosteriorInGroup", "Sum"), id_cols="Annotation") %>%
+  mutate(Enrichment = FractionAnnotatedPosteriorInGroup_SplicingClusters/FractionAnnotatedPosteriorInGroup_EnhancerOrExpression) %>%
+  mutate(i=i)
+}
+
+bind_rows(results) %>%
+  group_by(Annotation) %>%
+  summarise(mean = exp(mean(log(Enrichment), na.rm=T)),
+            Percentile10 = quantile(Enrichment, probs = 0.05, na.rm=T),
+            Percentile90 = quantile(Enrichment, probs = 0.95, na.rm=T)) %>%
+  ggplot(aes(x=Annotation, y=mean)) +
+    # geom_vline(xintercept = 1) +
+    geom_col() +
+    geom_errorbar(aes(ymin=Percentile10, ymax=Percentile90)) +
+    theme_bw() +
+    scale_y_continuous(trans='log2') +
+    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+    coord_flip() +
+    labs(x = "Annotation", y="Finemapping posterior mass fold enrichment\n(ChromatinQTL|eQTL <-- --> sQTL)",
+         caption = "Bootsrapped 90% confidence interval")
+  
+set.seed(100)
+results <- list()
+
+for (i in 1:100){
+  results[[i]] <-
+  bind_rows(
+  sample_frac(H3K27AC_AndEqtlClusters, replace=T),
+  sample_frac(SplicingClusters, replace=T)) %>%
+  left_join(
+    dat %>%
+    mutate(Locus.iteration = paste(GeneLocus, HyprcolocCluster, sep="_")),
+    by = "Locus.iteration"
+  ) %>%
+  mutate(Annotation = str_replace_all(Annotation, "_0$", "_UnannotatedButObserved")) %>%
+  mutate(Annotation = str_replace_all(Annotation, "_1$", "_Annotated")) %>%
+  mutate(Annotation = str_replace_all(Annotation, "^\\d+?_", "ChromHMM:")) %>%
+  filter(!is.na(Annotation)) %>%
+  mutate(Annotation = if_else(Annotation==".", "No annotation", Annotation)) %>%
+  group_by(Annotation, ClusterGroup) %>%
+  summarise(Sum = sum(PosteriorPr)) %>%
+  group_by(ClusterGroup) %>%
+  mutate(FractionAnnotatedPosteriorInGroup = Sum/sum(Sum, na.rm=T)) %>%
+  ungroup() %>%
+  pivot_wider(names_from = "ClusterGroup", values_from = c("FractionAnnotatedPosteriorInGroup", "Sum"), id_cols="Annotation") %>%
+  mutate(Enrichment = FractionAnnotatedPosteriorInGroup_SplicingClusters/FractionAnnotatedPosteriorInGroup_EnhancerOrExpression) %>%
+  mutate(i=i)
+}
+
+bind_rows(results) %>%
+  group_by(Annotation) %>%
+  summarise(mean = exp(mean(log(Enrichment), na.rm=T)),
+            Percentile10 = quantile(Enrichment, probs = 0.05, na.rm=T),
+            Percentile90 = quantile(Enrichment, probs = 0.95, na.rm=T)) %>%
+  ggplot(aes(x=Annotation, y=mean)) +
+    # geom_vline(xintercept = 1) +
+    geom_col() +
+    geom_errorbar(aes(ymin=Percentile10, ymax=Percentile90)) +
+    theme_bw() +
+    scale_y_continuous(trans='log2') +
+    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+    coord_flip() +
+    labs(x = "Annotation", y="Finemapping posterior mass fold enrichment\n(ChromatinQTL|eQTL <-- --> sQTL)",
+         caption = "Bootsrapped 90% confidence interval")
+
+```
+
+Ok those two separate graphs look similar enough for me, that I think this is enough bootstrap replicates. Let's wrap this process into a function and try making similar plots comparing different sets of QTLs...
+
+Actually, first, before considering "relative enrichment" in comparing two sets of QTLs, I want to get a sense of the total mass under each annotation in both sets...
+
+```{r}
+FractionPosteriorInEachAnnotation %>%
+  ggplot(aes(x=Annotation, y=FractionAnnotatedPosteriorInGroup*100)) +
+  geom_col() +
+  facet_wrap(~ClusterGroup) +
+  coord_flip() +
+  theme_bw()
+
+FractionPosteriorInEachAnnotation %>%
+  ggplot(aes(x=ClusterGroup, y=FractionAnnotatedPosteriorInGroup*100, fill=Annotation)) +
+  geom_col(position='fill') +
+  theme_bw()
+```
+
+Ok, so perhaps only a 1/3 of the posterior mass for sQTLs lies in splice site regions.
+
+
+Now, let's go back to wrapping the enrichment plot between two sets of QTLs into a function, so I can reuse it to comapre different sets of QTLs
+
+```{r}
+
+iterations = 100
+GeneLocus_Cluster_QTLSet1 = H3K27AC_AndEqtlClusters
+GeneLocus_Cluster_QTLSet2 = SplicingClusters
+
+#Define the function
+PlotDifferentialEnrichmentBetweenQTLSets <- function(dat, GeneLocus_Cluster_QTLSet1, GeneLocus_Cluster_QTLSet2, seed=0, iterations=100){
+  output <- list()
+  results <- list()
+  for (i in 1:iterations){
+    results[[i]] <-
+    bind_rows(
+    sample_frac(GeneLocus_Cluster_QTLSet1, replace=T),
+    sample_frac(GeneLocus_Cluster_QTLSet2, replace=T),
+    .id="QTL.Set") %>%
+    left_join(
+      dat %>%
+      mutate(Locus.iteration = paste(GeneLocus, HyprcolocCluster, sep="_")),
+      by = "Locus.iteration"
+    ) %>%
+    mutate(Annotation = str_replace_all(Annotation, "_0$", "_UnannotatedButObserved")) %>%
+    mutate(Annotation = str_replace_all(Annotation, "_1$", "_Annotated")) %>%
+    mutate(Annotation = str_replace_all(Annotation, "^\\d+?_", "ChromHMM:")) %>%
+    filter(!is.na(Annotation)) %>%
+    mutate(Annotation = if_else(Annotation==".", "No annotation", Annotation)) %>%
+    group_by(Annotation, ClusterGroup, QTL.Set) %>%
+    summarise(Sum = sum(PosteriorPr)) %>%
+    group_by(ClusterGroup, QTL.Set) %>%
+    mutate(FractionAnnotatedPosteriorInGroup = Sum/sum(Sum, na.rm=T)) %>%
+    ungroup() %>%
+    # select(-ClusterGroup) %>%
+    pivot_wider(names_from = "QTL.Set", values_from = c("FractionAnnotatedPosteriorInGroup", "Sum"), id_cols="Annotation") %>%
+    mutate(Enrichment = FractionAnnotatedPosteriorInGroup_1/FractionAnnotatedPosteriorInGroup_2) %>%
+    mutate(i=i)
+  }
+  output[["data"]] <- bind_rows(results)
+  output[["plot"]] <- output[["data"]] %>%
+  group_by(Annotation) %>%
+  summarise(mean = exp(mean(log(Enrichment), na.rm=T)),
+            Percentile10 = quantile(Enrichment, probs = 0.05, na.rm=T),
+            Percentile90 = quantile(Enrichment, probs = 0.95, na.rm=T)) %>%
+  ggplot(aes(x=Annotation, y=mean)) +
+    # geom_vline(xintercept = 1) +
+    geom_col() +
+    geom_errorbar(aes(ymin=Percentile10, ymax=Percentile90)) +
+    theme_bw() +
+    scale_y_continuous(trans='log2') +
+    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+    coord_flip() +
+    labs(x = "Annotation", y="Finemapping posterior mass relative fold enrichment\nQTL.Set2 <----> QTL.Set1",
+         caption = "Bootsrapped 90% confidence interval")
+  return(output)
+}
+
+#Test the function
+test.results <- PlotDifferentialEnrichmentBetweenQTLSets(dat, H3K27AC_AndEqtlClusters, SplicingClusters)
+
+test.results$data %>% head()
+
+test.results$plot +
+  labs(y="FoldEnrichment\nSplicingQTLs <----> Chromatin|Expression QTLs")
+```
+
+
+Another hypothesis I have is that the chromatin-specific sQTLs will more reflect splicing and therefore be more enriched to splice sites, whereas the poly-A specific sQTLs will more reflect isoform stability. Let's see...
+
+```{r}
+hyprcoloc_results %>%
+  separate(phenotype_full, into=c("PC", "P"), sep=";") %>%
+  pull(PC) %>% unique()
+
+# chRNA.Splicing.PCs <- c("chRNA.Splicing", "chRNA.IER")
+# polyA.Splicing.PCs <- c("polyA.Splicing.Subset_YRI", "polyA.IER")
+
+chRNA.Splicing.PCs <- c("chRNA.Splicing")
+polyA.Splicing.PCs <- c("polyA.Splicing.Subset_YRI")
+
+
+chRNA.Specific.SplicingClusters <- hyprcoloc_results %>%
+  separate(phenotype_full, into=c("PC", "P"), sep=";") %>%
+  group_by(Locus, iteration) %>%
+  filter(any(PC %in% chRNA.Splicing.PCs)) %>%
+  filter(any(PC %in% polyA.Splicing.PCs)) %>%
+  distinct(Locus,iteration) %>%
+  unite(Locus.iteration, Locus,iteration) %>%
+  mutate(ClusterGroup = "chRNA.Specific.SplicingClusters")
+
+polyA.Specific.SplicingClusters <- hyprcoloc_results %>%
+  separate(phenotype_full, into=c("PC", "P"), sep=";") %>%
+  group_by(Locus, iteration) %>%
+  filter(any(PC %in% polyA.Splicing.PCs)) %>%
+  filter(!any(PC %in% chRNA.Splicing.PCs)) %>%
+  distinct(Locus,iteration) %>%
+  unite(Locus.iteration, Locus,iteration) %>%
+  mutate(ClusterGroup = "polyA.Specific.SplicingClusters")
+
+results <- PlotDifferentialEnrichmentBetweenQTLSets(dat, chRNA.Specific.SplicingClusters, polyA.Specific.SplicingClusters, iterations=400)
+
+
+results$plot +
+  labs(y = "FoldEnrichment\npolyA-specific sQTLs <----> chromatin-specific sQTLs")
+  
+```
+
+Now let's compare eQTLs with colocalizing H3K27AC, versus eQTLs that colocalize with something but not H3K27AC
+
+```{r}
+chRNA.Splicing.PCs <- c("chRNA.Splicing")
+polyA.Splicing.PCs <- c("polyA.Splicing.Subset_YRI")
+
+
+eQTL.Chromatin.Clusters <- hyprcoloc_results %>%
+  separate(phenotype_full, into=c("PC", "P"), sep=";") %>%
+  group_by(Locus, iteration) %>%
+  filter(any(PC == "Expression.Splicing.Subset_YRI")) %>%
+  filter(any(PC %in% c("H3K27AC", "H3K4ME3", "H3K4ME1"))) %>%
+  distinct(Locus,iteration) %>%
+  unite(Locus.iteration, Locus,iteration) %>%
+  mutate(ClusterGroup = "eQTL.Chromatin.Clusters")
+
+eQTL.NoChromatin.Clusters <- hyprcoloc_results %>%
+  separate(phenotype_full, into=c("PC", "P"), sep=";") %>%
+  group_by(Locus, iteration) %>%
+  filter(any(PC == "Expression.Splicing.Subset_YRI")) %>%
+  filter(!any(PC %in% c("H3K27AC", "H3K4ME3", "H3K4ME1"))) %>%
+  distinct(Locus,iteration) %>%
+  unite(Locus.iteration, Locus,iteration) %>%
+  mutate(ClusterGroup = "eQTL.NoChromatin.Clusters")
+
+intersect(eQTL.Chromatin.Clusters$Locus.iteration, eQTL.NoChromatin.Clusters$Locus.iteration)
+
+results <- PlotDifferentialEnrichmentBetweenQTLSets(dat, eQTL.Chromatin.Clusters, eQTL.NoChromatin.Clusters, iterations=400)
+
+
+results$plot +
+  labs(y = "FoldEnrichment\neQTL.NoChromatin.Clusters <----> eQTL.Chromatin.Clusters")
+```
+

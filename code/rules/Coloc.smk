@@ -254,12 +254,10 @@ rule CopyGenewiseHyprcolocResultsToTrackedOutputDir:
         results = "hyprcoloc/Results/{FeatureCoordinatesRedefinedFor}/{ColocName}/results.txt.gz",
         snpscores = "hyprcoloc/Results/{FeatureCoordinatesRedefinedFor}/{ColocName}/snpscores.txt.gz",
         tidy_results = "hyprcoloc/Results/{FeatureCoordinatesRedefinedFor}/{ColocName}/tidy_results_OnlyColocalized.txt.gz",
-        pairwisecor = "hyprcoloc/Results/{FeatureCoordinatesRedefinedFor}/{ColocName}/pairwisecor.txt.gz"
     output:
         results = "../output/hyprcoloc_results/{FeatureCoordinatesRedefinedFor}/{ColocName}/hyprcoloc.results.txt.gz",
         snpscores = "../output/hyprcoloc_results/{FeatureCoordinatesRedefinedFor}/{ColocName}/snpscores.txt.gz",
         tidy_results = "../output/hyprcoloc_results/{FeatureCoordinatesRedefinedFor}/{ColocName}/hyprcoloc.results.OnlyColocalized.Stats.txt.gz",
-        pairwisecor = "../output/hyprcoloc_results/{FeatureCoordinatesRedefinedFor}/{ColocName}/pairwisecor.txt.gz"
     wildcard_constraints:
         FeatureCoordinatesRedefinedFor = "ForColoc",
         ColocName = '|'.join(colocs_genewise.index)
@@ -268,7 +266,6 @@ rule CopyGenewiseHyprcolocResultsToTrackedOutputDir:
         cp {input.results} {output.results}
         cp {input.snpscores} {output.snpscores}
         cp {input.tidy_results} {output.tidy_results}
-        cp {input.pairwisecor} {output.pairwisecor}
         """
 
 rule CopyGwasHyprcolocResultsToTrackedOutputDir:

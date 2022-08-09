@@ -27,6 +27,7 @@ include: "rules/IntronRetention.smk"
 include: "rules/SpliceSiteMutation.smk"
 include: "rules/DeNovoNonCodingRNA.smk"
 include: "rules/DeNovoNonCodingRNA_plots.smk"
+include: "rules/QTL_SNP_Enrichment.smk"
 
 
 wildcard_constraints:
@@ -56,6 +57,7 @@ localrules:
     Download_hg19_to_hg38_chain,
     DownloadHg38Gencode_basic,
     DownloadKristjansdottirSupplementData2,
+    DownloadChromHMM,
 
 
 ruleorder: CopyFastqFromLocal > DownloadFastqFromLink
