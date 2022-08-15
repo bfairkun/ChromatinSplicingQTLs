@@ -681,6 +681,82 @@ rule ClassifyNcRNAs:
         """
         
         
+#######################
+
+
+rule Prepare_polyA_ExpressionPhenotypes:
+    input:
+        "featureCounts/polyA.Expression/Counts.txt",
+        "featureCounts/polyA.Expression_ncRNA/Counts.txt",
+        "featureCounts/polyA.Expression_lncRNA/Counts.txt",
+        "featureCounts/polyA.Expression_snoRNA/Counts.txt",
+        "ExpressionAnalysis/polyA/ExpressedGeneList.txt",
+    output:
+        "QTLs/QTLTools/polyA.Expression_ncRNA/OnlyFirstReps.qqnorm.bed.gz",
+        "QTLs/QTLTools/polyA.Expression_ncRNA/OnlyFirstReps.RPKM.bed.gz",
+    log:
+        "logs/Prepare_polyA_Expression_Phenotypes.log"
+    conda:
+        "../envs/r_essentials.yml"
+    shell:
+        """
+        Rscript scripts/prepare_polyA_ncRNA_Phenotypes.R &> {log}
+        """
+        
+rule Prepare_polyA_Subset_YRI_ExpressionPhenotypes:
+    input:
+        "QTLs/QTLTools/polyA.Expression_ncRNA/OnlyFirstReps.RPKM.bed.gz",
+        "QTLs/QTLTools/Expression.Splicing.Subset_YRI/OnlyFirstReps.qqnorm.bed.gz",
+    output:
+        "QTLs/QTLTools/polyA.Expression_ncRNA.Subset_YRI/OnlyFirstReps.qqnorm.bed.gz",
+    log:
+        "logs/Prepare_polyA_Expression_Phenotypes.Subset_YRI.log"
+    conda:
+        "../envs/r_essentials.yml"
+    shell:
+        """
+        Rscript scripts/prepare_polyA_SubsetYRI_ncRNA_Phenotypes.R &> {log}
+        """
+        
+rule Prepare_ml30_ExpressionPhenotypes:
+    input:
+        "ExpressionAnalysis/polyA/ExpressedGeneList.txt",
+        "featureCounts/MetabolicLabelled.30min/Counts.txt",
+        "featureCounts/MetabolicLabelled.30min_ncRNA/Counts.txt",
+        "featureCounts/MetabolicLabelled.30min_lncRNA/Counts.txt",
+        "featureCounts/MetabolicLabelled.30min_snoRNA/Counts.txt",
+    output:
+        "QTLs/QTLTools/MetabolicLabelled.30min_ncRNA/OnlyFirstReps.qqnorm.bed.gz",
+        "QTLs/QTLTools/MetabolicLabelled.30min_ncRNA/OnlyFirstReps.RPKM.bed.gz",
+    log:
+        "logs/Prepare_ml30_Expression_Phenotypes.log"
+    conda:
+        "../envs/r_essentials.yml"
+    shell:
+        """
+        Rscript scripts/prepare_ml30_ncRNA_Phenotypes.R &> {log}
+        """
+        
+        
+rule Prepare_ml60_ExpressionPhenotypes:
+    input:
+        "ExpressionAnalysis/polyA/ExpressedGeneList.txt",
+        "featureCounts/MetabolicLabelled.60min/Counts.txt",
+        "featureCounts/MetabolicLabelled.60min_ncRNA/Counts.txt",
+        "featureCounts/MetabolicLabelled.60min_lncRNA/Counts.txt",
+        "featureCounts/MetabolicLabelled.60min_snoRNA/Counts.txt",
+    output:
+        "QTLs/QTLTools/MetabolicLabelled.60min_ncRNA/OnlyFirstReps.qqnorm.bed.gz",
+        "QTLs/QTLTools/MetabolicLabelled.60min_ncRNA/OnlyFirstReps.RPKM.bed.gz",
+    log:
+        "logs/Prepare_ml60_Expression_Phenotypes.log"
+    conda:
+        "../envs/r_essentials.yml"
+    shell:
+        """
+        Rscript scripts/prepare_ml60_ncRNA_Phenotypes.R &> {log}
+        """
+        
 
 
 

@@ -173,7 +173,7 @@ def GetQTLtoolsFlags(wildcards):
         return "--window 1"
     else:
         if wildcards.Phenotype in ["polyA.Splicing", "chRNA.Splicing", "polyA.Splicing.Subset_YRI", 
-        "MetabolicLabelled.30min.Splicing", "MetabolicLabelled.60min.Splicing"]:
+        "MetabolicLabelled.30min.Splicing", "MetabolicLabelled.60min.Splicing", "chRNA.RNA.Editing", "chRNA.Splicing.Order"]:
             return "--grp-best --window 10000"
         elif wildcards.Phenotype.split('.')[-1] in ['5PrimeSS', '3PrimeSS']:
             return "--window 0"
@@ -289,7 +289,7 @@ rule MakePhenotypeTableToColocPeaksWithGenes:
 
 use rule MakePhenotypeTableToColocPeaksWithGenes as MakePhenotypeTableToColocIntronsWithGenes with:
     wildcard_constraints:
-        Phenotype = "MetabolicLabelled.30min.IRjunctions|MetabolicLabelled.60min.IRjunctions|polyA.IRjunctions|chRNA.IRjunctions|MetabolicLabelled.30min.IER|MetabolicLabelled.60min.IER|polyA.IER|chRNA.IER|MetabolicLabelled.30min.IR|MetabolicLabelled.30min.Splicing|MetabolicLabelled.60min.IR|MetabolicLabelled.60min.Splicing|chRNA.IR|chRNA.Splicing|polyA.Splicing|polyA.IR|polyA.Splicing.Subset_YRI|polyA.IR.Subset_YRI|chRNA.Slopes|chRNA.Splicing.Order"
+        Phenotype = "MetabolicLabelled.30min.IRjunctions|MetabolicLabelled.60min.IRjunctions|polyA.IRjunctions|chRNA.IRjunctions|MetabolicLabelled.30min.IER|MetabolicLabelled.60min.IER|polyA.IER|chRNA.IER|MetabolicLabelled.30min.IR|MetabolicLabelled.30min.Splicing|MetabolicLabelled.60min.IR|MetabolicLabelled.60min.Splicing|chRNA.IR|chRNA.Splicing|polyA.Splicing|polyA.IR|polyA.Splicing.Subset_YRI|polyA.IR.Subset_YRI|chRNA.Slopes|chRNA.Splicing.Order|chRNA.RNA.Editing"
     params:
         cis_window = 0,
         bedtools_intersect_params = "-s",

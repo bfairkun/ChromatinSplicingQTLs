@@ -110,16 +110,7 @@ rule CountReadsInIntronWindows:
         set +o pipefail;
         (samtools view -bh -F 256 -f 64 {input.bam} | bedtools intersect -sorted -S -g {input.faidx} -a {input.bed} -b - -c -split | gzip - > {output}) &> {log}
         """
-        #"""
-        #echo {input.bam};
-        #echo {input.faidx};
-        #echo {input.bed};
-        #echo {output};
-        #set +o pipefail;
-        #(samtools view -bh -F 256 {input.bam} | bedtools intersect -sorted -S -g {input.faidx} -a {input.bed} -b - -c -split -F 0.5 | gzip - > {output}) &> {log}
-        #"""
         
-
 rule GetSlopes:
     input:
         bed = "IntronSlopes/IntronWindowCounts/{IndID}.{windowStyle}.bed.gz"
@@ -147,7 +138,7 @@ rule GetSlopes:
         (Rscript scripts/GetSlopes.R {input.bed} {params.minIntronCounts} {params.minCoverageCounts} {params.minCoverage} {params.WinLen} {params.minIntronLen}) &> {log}
         """
         
-rule SlopesPreparePhenotypes:
+rule SlopesQQnorm:
     input: 
         expand("IntronSlopes/slopes/{IndID}.IntronWindows_equalLength.tab.gz", IndID=chRNASeqSamples)
         #expand("IntronSlopes/IntronWindowCounts/{IndID}.IntronWindows_equalLength.bed.gz", IndID=chRNASeqSamples)
@@ -216,7 +207,7 @@ rule SlopesPreparePhenotypes:
         "logs/slopes/OnlyFirstReps.log"
     shell:
         """
-        python scripts/PreparePhenotypeTablesSlopes.py --windowStyle IntronWindows_equalLength --skip_samples {params.skip_samples} --skip_introns {params.skip_introns} --max_missing {params.max_missing} --top_introns {params.top_introns} &> {log}
+        python scripts/PrepareSlopesQQnorm.py --windowStyle IntronWindows_equalLength --skip_samples {params.skip_samples} --skip_introns {params.skip_introns} --max_missing {params.max_missing} --top_introns {params.top_introns} &> {log}
         """
         
 
@@ -231,8 +222,6 @@ rule GetAllExpressedIntrons:
         faidx = "../data/Chrome.sizes"
     output:
         "IntronSlopes/Annotation/GencodeHg38_all_introns.non_corrected.uniq.bed"
-    params:
-        max_overlap = 0.01,
     shell:
         """
         zcat {input.bed} | awk -F'\\t' -v OFS='\\t' '$1 !~ "_" {{ print $1, $2, $3,$7"_"$1"_"$2"_"$3"_"$6,".", $6 }}' | sort | uniq | bedtools sort -i - -faidx {input.faidx} > {output}
@@ -282,7 +271,7 @@ rule GetSlopesAll:
         (Rscript scripts/GetSlopesAll.R {input.bed} {params.minIntronCounts} {params.minCoverageCounts} {params.minCoverage} {params.WinLen} {params.minIntronLen}) &> {log}
         """
         
-rule AllSlopesPreparePhenotypes:
+rule AllSlopesQQnorm:
     input: 
         expand("IntronSlopes/AllIntronWindowCounts/{IndID}.IntronWindows_equalLength.bed.gz", IndID=chRNASeqSamples),
         expand("IntronSlopes/AllSlopes/{IndID}.IntronWindows_equalLength.tab.gz", IndID=chRNASeqSamples),
@@ -344,16 +333,13 @@ rule AllSlopesPreparePhenotypes:
                                 'ENSG00000275778.2_chr12_11047188_11171421_-',
                                 'ENSG00000014164.7_chr8_143475585_143507745_-',
                                 'ENSG00000111877.17_chr6_118829250_118856370_-']),
-        #max_missing = '0.25',
-        #top_introns = '5000',
         max_missing = '0.1',
         top_introns = '10000',
-        #FDR = "0.25"
     log:
         "logs/AllSlopes/OnlyFirstReps.log"
     shell:
         """
-        python scripts/PreparePhenotypeTablesAllSlopes.py --windowStyle IntronWindows_equalLength --skip_samples {params.skip_samples} --skip_introns {params.skip_introns} --max_missing {params.max_missing} --top_introns {params.top_introns} &> {log}
+        python scripts/PrepareSlopesAllQQnorm.py --windowStyle IntronWindows_equalLength --skip_samples {params.skip_samples} --skip_introns {params.skip_introns} --max_missing {params.max_missing} --top_introns {params.top_introns} &> {log}
         """
         
 skip_introns = ':'.join(['ENSG00000153944.11_chr17_57596950_57615969_+',

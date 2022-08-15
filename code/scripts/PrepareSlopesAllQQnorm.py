@@ -49,17 +49,11 @@ def qqnorm_slopes(df_slopes):
     imputed_df.columns = df_slopes.columns 
     imputed_df.index = df_slopes.index
     
-    df_scale = pd.DataFrame()
+    df_scale = pd.DataFrame(scale(imputed_df, axis=1))
+    df_scale.columns = imputed_df.columns
+    df_scale.index = imputed_df.index
+    
     df_qqnorm = pd.DataFrame()
-    
-    for idx, row in imputed_df.iterrows():#, leave=True, position=0):
-        
-        scale_row = scale(row)
-        df_scale[idx] = scale_row
-        
-    df_scale.index = imputed_df.columns
-    
-    df_scale = df_scale.T
     
     for sample in df_scale.columns:
         

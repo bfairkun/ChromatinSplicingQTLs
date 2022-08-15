@@ -329,12 +329,31 @@ rule QQnormOutOfOrder:
     resources:
         mem_mb = 58000
     params:
-        min_obs = 10
+        min_obs = 35
     conda:
         "../envs/py_tools.yml"
     shell:
         """
         python scripts/PrepareOutOfOrderQQnorm.py --input_file {input} --output {output} --min_obs {params.min_obs} &> {log}
+        """
+    
+
+rule QQnormRNAEditing:
+    input:
+        "/project2/yangili1/cdai/aicher/code/chRNA/Results/hs38/GatherEditing/EL.txt"
+    output:
+        "QTLs/QTLTools/chRNA.RNA.Editing/OnlyFirstReps.qqnorm.bed.gz"
+    log:
+        "logs/qqnorm_rna_editing.log"
+    resources:
+        mem_mb = 58000
+    params:
+        min_obs = 35
+    conda:
+        "../envs/py_tools.yml"
+    shell:
+        """
+        python scripts/PrepareRNAEditingQQnorm.py --input_file {input} --output {output} --min_obs {params.min_obs} &> {log}
         """
     
 

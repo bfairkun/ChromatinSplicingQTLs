@@ -72,6 +72,3 @@ rule Prepare_chRNA_ExpressionPhenotypes:
         Rscript scripts/Prepare_chRNA_Phenotypes.R &> {log}
         """
         
-
-
-

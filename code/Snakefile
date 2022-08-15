@@ -19,7 +19,7 @@ include: "rules/report.smk"
 include: "rules/BensJupyterNotebookRules.smk"
 include: "rules/NonCodingRNA.smk"
 include: "rules/GWAS_PrepForColoc.smk"
-include: "rules/chRNASeqSlopes.smk"
+include: "rules/IntronSlopes.smk"
 include: "rules/ProcessTehranchi.smk"
 include: "rules/PlotQTLs.smk"
 include: "rules/CalculateExonicPSI.smk"
@@ -334,7 +334,17 @@ rule quantNonCodingRNA:
         ),
         
   
-rule classify_ncRNA:
+rule RNAediting_n_other:
     input:
-        "NonCodingRNA/annotation/ncRNA.annotation.tab.gz"
+        "QTLs/QTLTools/chRNA.Slopes.All/PermutationPass.FDR_Added.txt.gz",
+        "QTLs/QTLTools/chRNA.Slopes/PermutationPass.FDR_Added.txt.gz",
+        "QTLs/QTLTools/chRNA.RNA.Editing/PermutationPass.FDR_Added.txt.gz",
+        "QTLs/QTLTools/chRNA.Splicing.Order/PermutationPass.FDR_Added.txt.gz",
+        "QTLs/QTLTools/polyA.Expression_ncRNA.Subset_YRI/PermutationPass.FDR_Added.txt.gz",
+        "QTLs/QTLTools/polyA.Expression_ncRNA/PermutationPass.FDR_Added.txt.gz",
+        "QTLs/QTLTools/polyA.Expression_ncRNA/NominalPass.txt.gz",
+        "QTLs/QTLTools/MetabolicLabelled.30min_ncRNA/PermutationPass.FDR_Added.txt.gz",
+        "QTLs/QTLTools/MetabolicLabelled.30min_ncRNA/NominalPass.txt.gz",
+        "QTLs/QTLTools/MetabolicLabelled.60min_ncRNA/PermutationPass.FDR_Added.txt.gz",
+        "QTLs/QTLTools/MetabolicLabelled.60min_ncRNA/NominalPass.txt.gz"
         
