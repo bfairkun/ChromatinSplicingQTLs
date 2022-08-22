@@ -19,6 +19,7 @@ MolColocTest_005		ForColoc	0.005
 MolColocTest_001		ForColoc	0.001	
 # MolColocTest_0001		ForColoc	0.0005	
 MolColocStandard		ForColoc	0.01	
+MolColocTestOnlyExpression		ForColoc	0.01	MetabolicLabelled.30min MetabolicLabelled.60min Expression.Splicing.Subset_YRI chRNA.Expression.Splicing
 GWASColocStandard		ForGWASColoc	0.01	
 GWASColoc_AllRNASeq		ForGWASColoc	0.01	chRNA.IR chRNA.Expression.Splicing H3K27AC CTCF H3K4ME3 chRNA.Splicing MetabolicLabelled.30min MetabolicLabelled.60min Expression.Splicing.Subset_YRI polyA.Splicing.Subset polyA.IR.Subset_YRI chRNA.Expression_cheRNA chRNA.Expression_eRNA chRNA.Expression_lncRNA chRNA.Expression_snoRNA
 
