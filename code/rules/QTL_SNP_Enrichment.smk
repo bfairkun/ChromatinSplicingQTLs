@@ -43,12 +43,16 @@ rule IntersectFinemapSNPsWithAnnotations:
     """
     input:
         bed = "QTL_SNP_Enrichment/Annotations.bed.gz",
-        Finemap = "hyprcoloc/Results/ForColoc/MolColocStandard/snpscores.txt.gz"
+        Finemap = "hyprcoloc/Results/ForColoc/{ColocRun}/snpscores.txt.gz"
     output:
-        "QTL_SNP_Enrichment/FinemapIntersections.bed.gz"
+        "QTL_SNP_Enrichment/FinemapIntersections/{ColocRun}.bed.gz"
     log:
-        "logs/IntersectFinemapSNPsWithAnnotations.log"
+        "logs/IntersectFinemapSNPsWithAnnotations/{ColocRun}.log"
     shell:
         """
         zcat {input.Finemap} | awk -v OFS='\\t' -F'\\t' 'NR>1 {{split($1,snp,":"); print "chr"snp[1], snp[2], snp[2]+1, $1"_"$2"_"$4, $3}}' | bedtools sort -i - | bedtools intersect -a - -b <(zcat {input.bed} | awk -F'\\t' -v OFS='\\t' '{{ print $1, $2, $3, $4 }}')  -wao | gzip - > {output}
         """ 
+
+rule GatherFinemapSNPAnnotationIntersections:
+    input:
+        expand("QTL_SNP_Enrichment/FinemapIntersections/{ColocRun}.bed.gz", ColocRun = colocs_genewise.index)

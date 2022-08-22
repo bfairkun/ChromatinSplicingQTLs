@@ -379,3 +379,60 @@ results$plot +
   labs(y = "FoldEnrichment\neQTL.NoChromatin.Clusters <----> eQTL.Chromatin.Clusters")
 ```
 
+Update: Yang suggested making sure that the enrichment for splice sites in non-chromatinQTL eQTLs is not due to the inclusion of chromatin data in the finemapping that biases results by posterior mass towards enhancers (and away from splice sites). His suggestion was to repeat this analyses, using the same sets of eQTLs to compare, but using finemapping results based solely on RNA-seq datasets (polyA, chRNA, and metabolicRNA).
+
+```{r}
+dat.onlyRNASeq <- fread("../code/QTL_SNP_Enrichment/FinemapIntersections/MolColocTestOnlyExpression.bed.gz", col.names=c("SNP_chrom", "SNP_start", "SNP_end", "SNP", "PosteriorPr", "Annotation_chrom", "Annotation_start", "Annotation_stop", "Annotation", "Overlap")) %>%
+  separate(SNP, into=c("SNP", "HyprcolocCluster", "GeneLocus"), sep="_")
+
+hyprcoloc_results.onlyRNASeq <- read_tsv("../code/hyprcoloc/Results/ForColoc/MolColocTestOnlyExpression/tidy_results_OnlyColocalized.txt.gz")
+
+
+hyprcoloc_results_finemap.onlyRNASeq <- read_tsv("../code/hyprcoloc/Results/ForColoc/MolColocTestOnlyExpression/snpscores.txt.gz")
+
+  
+```
+
+Because the hyprcoloc clusters iteration IDs won't match up between hyprcoloc runs, let's hackishly just use hyprcoloc clusters in the RNASeq only results if there is only one colocalized cluster.
+
+```{r}
+hyprcoloc_results.onlyRNASeq %>%
+  distinct(Locus, iteration) %>%
+  count(iteration)
+```
+
+Notably, this only excludes at most 10 clusters
+
+```{r}
+LociWithEqtlsInRNASeqOnly <- hyprcoloc_results.onlyRNASeq %>%
+  group_by(Locus) %>%
+  filter(!any(iteration == 2)) %>%
+  ungroup() %>% pull(Locus)
+
+
+results <- 
+  dat.onlyRNASeq %>%
+  filter(GeneLocus %in% LociWithEqtlsInRNASeqOnly) %>%
+  PlotDifferentialEnrichmentBetweenQTLSets(
+    eQTL.Chromatin.Clusters %>%
+      mutate(Locus.iteration = str_replace(Locus.iteration, "(.+?)_.+?", "\\1_1")),
+    eQTL.NoChromatin.Clusters %>%
+      mutate(Locus.iteration = str_replace(Locus.iteration, "(.+?)_.+?", "\\1_1")),
+    iteration = 400
+  )
+
+results$plot +
+  labs(y = "FoldEnrichment\neQTL.NoChromatin.Clusters <----> eQTL.Chromatin.Clusters",
+       title="Finemapping based only on RNA-seq eQTL colocalizations")
+
+
+ 
+dat.onlyRNASeq %>%
+  mutate(Locus.iteration = paste(GeneLocus, HyprcolocCluster, sep="_")) %>%
+  filter(GeneLocus %in% LociWithEqtlsInRNASeqOnly) %>%
+  left_join(bind_rows(eQTL.Chromatin.Clusters, eQTL.NoChromatin.Clusters),
+            by = "Locus.iteration") %>%
+  distinct(GeneLocus, .keep_all=T) %>%
+  count(ClusterGroup)
+```
+
