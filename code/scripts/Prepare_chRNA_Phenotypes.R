@@ -4,12 +4,11 @@ library(edgeR)
 library(RNOmni)
 
 GeneCounts_f_in <- "featureCounts/chRNA.Expression/Counts.txt"
-# GeneCounts_eRNA_in <- "featureCounts/chRNA.Expression_eRNA/Counts.txt"
-# GeneCounts_cheRNA_in <- "featureCounts/chRNA.Expression_cheRNA/Counts.txt"
 GeneCounts_ncRNA_in <- "featureCounts/chRNA.Expression_ncRNA/Counts.txt"
 GeneCounts_lncRNA_in <- "featureCounts/chRNA.Expression_lncRNA/Counts.txt"
 GeneCounts_snoRNA_in <- "featureCounts/chRNA.Expression_snoRNA/Counts.txt"
 Genes_bed_f_in <- "ExpressionAnalysis/polyA/ExpressedGeneList.txt" 
+annotation_f_in <- "NonCodingRNA_annotation/annotation/ncRNA.annotation.tab.gz"
 
 rename_STAR_alignment_samples <- function(MyString){
     return(
@@ -53,11 +52,59 @@ dat.genes.snoRNA <- read_tsv(GeneCounts_snoRNA_in, comment = "#", n_max=Inf) %>%
 X <- rbind(dat.genes, dat.genes.ncRNA)
 
 
-dat.cpm <- X %>%
+
+
+annot <- read_tsv(annotation_f_in, )
+
+x <- apply(annot[annot$lncRNA != '.','lncRNA'], 2, function(x) c(strsplit(x, "\\|")))
+lncRNA_ <- do.call(c, unlist(x, recursive=FALSE))
+           
+           
+y <- apply(annot[annot$pseudogene != '.','pseudogene'], 2, function(x) c(strsplit(x, "\\|")))
+pseudogene_ <- do.call(c, unlist(y, recursive=FALSE))
+           
+#dat.cpm <- dat.cpm %>% as.data.frame() %>%
+#  filter(!rownames(dat.cpm) %in% c(lncRNA_, pseudogene_)) %>% as.matrix()
+
+################################################################################
+# print('vamos a ver')
+           
+# dat.matrix <- X %>%
+#     column_to_rownames("Geneid") %>%
+#     select(everything(), -c("Chr", "Start", "End", "Strand", "Length", "NA18855"))
+    
+# print('si este es el problema')
+#     #cpm(prior.count=0.1)
+           
+# dat.cpm <- dat.matrix %>%
+#     as.data.frame() %>%
+#     filter(!rownames(dat.matrix) %in% c(lncRNA_, pseudogene_)) %>% 
+#     as.matrix() %>%
+#     cpm(log=T, prior.count=0.1)
+#################################################################################
+           
+           
+dat.matrix <- X %>%
     column_to_rownames("Geneid") %>%
-    select(everything(), -c("Chr", "Start", "End", "Strand", "Length")) %>%
-    #cpm(prior.count=0.1)
+    select(everything(), -c("Chr", "Start", "End", "Strand", "Length", "NA18855"))
+    
+
+dat.matrix.renamed <- dat.matrix %>%
+    as.data.frame() %>%
+    filter(!rownames(dat.matrix) %in% c(lncRNA_, pseudogene_)) %>% 
+    as.matrix() 
+
+
+dat.cpm <- dat.matrix.renamed %>% # dat.matrix.expressed %>%
     cpm(log=T, prior.count=0.1)
+
+           
+           
+#dat.cpm <- X %>%
+#    column_to_rownames("Geneid") %>%
+#    select(everything(), -c("Chr", "Start", "End", "Strand", "Length", "NA18855")) %>%
+#    #cpm(prior.count=0.1)
+#    cpm(log=T, prior.count=0.1)
 
 
 protein_coding = dat.cpm[rownames(dat.cpm) %in% gene.list$Geneid, ]
@@ -69,7 +116,9 @@ ncRNA_names <- c(dat.genes.lncRNA$Geneid, dat.genes.ncRNA$Geneid, dat.genes.snoR
 
 # eRNA_ <- dat.cpm[rownames(dat.cpm) %in% dat.genes.eRNA$Geneid, ]
 
-ncRNA <- dat.cpm[rownames(dat.cpm) %in% ncRNA_names, ]
+ncRNA.dat <- dat.cpm[rownames(dat.cpm) %in% ncRNA_names, ]
+ncRNA <- ncRNA.dat[apply(exp(ncRNA.dat), 1, quantile, probs=0.9) >= 1e-4,]
+           
 ################## ncRNA <- ncRNA_[apply(ncRNA_, 1, median) > -7,]
 
 

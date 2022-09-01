@@ -20,15 +20,18 @@ N_PermutationChunks = 100
 #    for ncRNA in ['cheRNA', 'eRNA', 'lncRNA', 'snoRNA']:
 #        ncRNA_Phenotypes.append(pheno + '_' + ncRNA)# + '.Subset_YRI')
 
-MyPhenotypes = ["chRNA.IR", "Expression.Splicing", "chRNA.Expression.Splicing",  "H3K27AC", "CTCF", "H3K4ME3", "chRNA.Splicing", "polyA.Splicing", "MetabolicLabelled.30min", "MetabolicLabelled.60min", "Expression.Splicing.Subset_YRI", "polyA.Splicing.Subset_YRI",
-               "polyA.IR", "polyA.IR.Subset_YRI", #"chRNA.Expression_cheRNA", "chRNA.Expression_eRNA",
+MyPhenotypes = [#"chRNA.IR", "Expression.Splicing", 
+                "chRNA.Expression.Splicing",  "H3K27AC", "CTCF", "H3K4ME3", "chRNA.Splicing", #"polyA.Splicing", 
+    "MetabolicLabelled.30min", "MetabolicLabelled.60min", "Expression.Splicing.Subset_YRI", "polyA.Splicing.Subset_YRI",
+               #"polyA.IR", "polyA.IR.Subset_YRI", #"chRNA.Expression_cheRNA", "chRNA.Expression_eRNA",
                "chRNA.Expression_ncRNA", #"chRNA.Expression_lncRNA", "chRNA.Expression_snoRNA", 
-               "chRNA.Slopes", "H3K4ME1", "ProCap", "H3K36ME3",
-               'chRNA.IER', 'polyA.IER', 'chRNA.IRjunctions', 'polyA.IRjunctions',
+               "chRNA.Slopes.All", "H3K4ME1", "ProCap", "H3K36ME3",
+               'chRNA.IER', 'polyA.IER.Subset_YRI', #'chRNA.IRjunctions', 'polyA.IRjunctions',
                'MetabolicLabelled.30min.IER', 'MetabolicLabelled.60min.IER', 
-                'MetabolicLabelled.30min.IRjunctions', 'MetabolicLabelled.60min.IRjunctions',
+                #'MetabolicLabelled.30min.IRjunctions', 'MetabolicLabelled.60min.IRjunctions',
                'MetabolicLabelled.30min.Splicing', 'MetabolicLabelled.60min.Splicing', 
-                'MetabolicLabelled.30min.IR', 'MetabolicLabelled.60min.IR', 'chRNA.Splicing.Order', 'chRNA.RNA.Editing']
+                #'MetabolicLabelled.30min.IR', 'MetabolicLabelled.60min.IR', 
+    'chRNA.Splicing.Order']#, 'chRNA.RNA.Editing']
 # "polyA.Expression.AllRNA.Subset_YRI", "MetabolicLabelled.30min.AllRNA.Subset_YRI", 
 #                 "MetabolicLabelled.60min.AllRNA.Subset_YRI", "chRNA.Expression.AllRNA.Subset_YRI"]
 

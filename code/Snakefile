@@ -105,7 +105,7 @@ rule all:
         ####"ReferenceGenome/Annotations/GTFTools_BasicAnnotations/gencode.v34.chromasomal.tss.bed",
         expand(
             "featureCounts/AtTSS/{Phenotype}/Counts.txt",
-            Phenotype=["H3K27AC", "H3K4ME3", "H3K36ME3", "H3K4ME1", "ProCap"],
+            Phenotype=["H3K27AC", "H3K4ME3", "H3K4ME1", "ProCap"],
         ),
         ####expand(
         ####    "featureCounts/{Phenotype}/Counts.txt",
@@ -123,33 +123,8 @@ rule all:
         ####),
         ####"featureCounts/chRNA.Expression.Splicing/CountsExons.txt",
         ####"featureCounts/chRNA.Expression.Splicing/CountTable.MeanLogRPKM.txt.gz",
-        "../data/eRNA.saf",
-        expand(
-            "featureCounts/{Phenotype}_{ncRNA}/Counts.txt",
-            Phenotype=[
-                "polyA.Expression",
-                "chRNA.Expression",
-                "MetabolicLabelled.30min",
-                "MetabolicLabelled.60min",
-                "ProCap"
-            ],
-            ncRNA=["eRNA", "cheRNA", "lncRNA", "snoRNA"],#, "introns"],
-        ),
-        expand(
-          "QTLs/QTLTools/chRNA.Expression_{ncRNA}/OnlyFirstReps.qqnorm.bed.gz",
-          ncRNA = ["eRNA", "cheRNA", "snoRNA", "lncRNA"]
-        ),
         "featureCounts/ProCap/Counts.txt",
-        #"SplicingAnalysis/IR/chRNA.IR/Counts.txt",
-        #"SplicingAnalysis/IR/polyA.IR/Counts.txt",
-        "QTLs/QTLTools/chRNA.IR/OnlyFirstReps.qqnorm.bed.gz",
-        "QTLs/QTLTools/polyA.IR/OnlyFirstReps.qqnorm.bed.gz",
-        "SplicingAnalysis/IR/ProCap/Counts.txt",
         expand("QTLs/QTLTools/{Phenotype}/PermutationPass.FDR_Added.txt.gz", Phenotype=MyPhenotypes),
-        expand("QTLs/QTLTools/{Phenotype}/PermutationPass.FDR_Added.txt.gz", 
-        Phenotype=["MetabolicLabelled.30min.IR", "MetabolicLabelled.60min.IR",
-                   "MetabolicLabelled.30min.Splicing", "MetabolicLabelled.60min.Splicing"]
-        ),
         expand("QTLs/QTLTools/{Phenotype}/PermutationPassForColoc.txt.gz", Phenotype=MyPhenotypes),
         expand("hyprcoloc/Results/ForColoc/{ColocName}/tidy_results_OnlyColocalized.txt.gz", ColocName = colocs_genewise.index),
         expand("QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.tabix.gz", Pass="NominalPass", QTLsGenotypeSet="", FeatureCoordinatesRedefinedFor="ForColoc", Phenotype=MyPhenotypes),
@@ -178,7 +153,7 @@ rule CollectColocResultsToCodeDir:
     """
     input:
         expand("hyprcoloc/Results/ForColoc/{ColocName}/tidy_results_OnlyColocalized.txt.gz", ColocName = colocs_genewise.index),
-        expand("hyprcoloc/Results/ForGWASColoc/{ColocName}/results.txt.gz", ColocName = colocs_gwas.index )
+        #expand("hyprcoloc/Results/ForGWASColoc/{ColocName}/results.txt.gz", ColocName = colocs_gwas.index )
 
 rule CollectColocResultsToOutputDir:
     """
@@ -212,21 +187,7 @@ rule chRNAGetSlopes:
         "QTLs/QTLTools/chRNA.Slopes.All/PermutationPass.FDR_Added.txt.gz"
         
         
-rule testSpliceq:
-    input:
-        expand('SplicingAnalysis/SPLICEq/MetabolicLabelled.60min.{mode}/{IndID}.spliceq.tab',
-        IndID = metabolic60samples,
-        mode = ['IRjunctions', 'IER']),
-        expand('SplicingAnalysis/SPLICEq/MetabolicLabelled.30min.{mode}/{IndID}.spliceq.tab',
-        IndID = metabolic30samples,
-        mode = ['IRjunctions', 'IER']),
-        expand('SplicingAnalysis/SPLICEq/polyA.{mode}/{IndID}.spliceq.tab',
-        IndID = polyAsamples,
-        mode = ['IRjunctions', 'IER']),
-        expand('SplicingAnalysis/SPLICEq/chRNA.{mode}/{IndID}.spliceq.tab',
-        IndID = chRNAsamples,
-        mode = ['IRjunctions', 'IER']),
-        
+
         
 rule CollectSpliceq:
     input:
@@ -252,7 +213,7 @@ rule SpliceSitePhenotypes:
         ),
         expand(
         "featureCounts/{Phenotype}/NormFactors.tsv",
-        Phenotype = ['chRNA.Expression', 'chRNA.Expression_eRNA', 'chRNA.Expression_cheRNA', 'chRNA.Expression_snoRNA', 
+        Phenotype = ['chRNA.Expression', 'chRNA.Expression_snoRNA', 
         'chRNA.Expression_lncRNA', 'H3K27AC.3PrimeSS', 'H3K27AC.5PrimeSS', 'H3K4ME3.3PrimeSS', 'H3K4ME3.5PrimeSS',
         'H3K4ME1.3PrimeSS', 'H3K4ME1.5PrimeSS', 'H3K36ME3.5PrimeSS', 'H3K36ME3.3PrimeSS']
         ),
@@ -269,40 +230,7 @@ rule SpliceSitePhenotypes:
         #"QTLs/QTLTools/polyA.Splicing.5PrimeSS/PermutationPass.FDR_Added.txt.gz",
         #"QTLs/QTLTools/polyA.Splicing.3PrimeSS/PermutationPass.FDR_Added.txt.gz",
         
-rule assembly:
-    input:
-        "ReferenceGenome/Annotations/Assembly/chRNA.Expression.Splicing.stringtie.assembly.gtf",
-        
-rule chRNAExpressionPhenotypes:
-    priority: 9
-    input:
-        expand(
-          "QTLs/QTLTools/chRNA.Expression{RNA_type}/OnlyFirstReps.{data_type}.bed.gz",
-          RNA_type = [".Splicing", "_ncRNA"], data_type = ['qqnorm', 'RPKM']
-        ),
-        expand(
-          "QTLs/QTLTools/chRNA.Expression{RNA_type}/{Pass}.txt.gz",
-          RNA_type = [".Splicing", "_ncRNA"],
-          Pass = ["PermutationPass.FDR_Added", "NominalPass"]
-        ),
 
-rule splicing_order:
-    input:
-        "QTLs/QTLTools/chRNA.Splicing.Order/PermutationPass.FDR_Added.txt.gz"
-
-rule getHMMInput:
-    priority: 10
-    input:
-        "NonCodingRNA/annotation/ncRNA.bed.gz",
-        "NonCodingRNA/annotation/ncRNA.TSS.bed.gz",
-        "NonCodingRNA/annotation/ncRNA.3PrimeEnd.bed.gz",
-        "NonCodingRNA/annotation/allGenes.3PrimeEnd.bed.gz",
-        "NonCodingRNA/annotation/allGenes.FirstTSS.bed.gz",
-        "NonCodingRNA/annotation/allGenes.Last3PrimeEnd.bed.gz",
-        "NonCodingRNA/annotation/allGenes.TSS.bed.gz",
-        "NonCodingRNA/annotation/AnnotatedHMM.bed.gz"
-        
-        
 rule plotNonCodingRNA:
     priority: 3
     input:
@@ -323,30 +251,29 @@ rule plotNonCodingRNA:
         expand("NonCodingRNA/deeptools/plots/{IndID}.combined{strictness}.plot.png",  
         IndID = ["NA19201", "NA19210"], strictness=["", ".strict1", ".strict2", ".strict3"]),
         
-        
-rule quantNonCodingRNA:
-    priority: 2
+
+  
+rule ncRNA_caller:
+    priority: 10
     input:
-        expand("featureCounts/{Phenotype}_ncRNA/Counts.txt", 
-        Phenotype=["polyA.Expression", "chRNA.Expression", "MetabolicLabelled.30min", "MetabolicLabelled.60min"]
-        ),
+        "NonCodingRNA_annotation/annotation/ncRNA.annotation.tab.gz",
+        'NonCodingRNA_annotation/annotation/ncRNA.histone.tab.gz',
+        'NonCodingRNA_annotation/annotation/allGenes.histone.tab.gz'
+        
+rule QTLTools_caller:
+    input:
         expand(
           "QTLs/QTLTools/chRNA.Expression{RNA_type}/OnlyFirstReps.{data_type}.bed.gz",
           RNA_type = [".Splicing", "_ncRNA"], data_type = ['qqnorm', 'RPKM']
         ),
-        
-  
-rule RNAediting_n_other:
-    input:
-        "QTLs/QTLTools/chRNA.Slopes.All/PermutationPass.FDR_Added.txt.gz",
-        "QTLs/QTLTools/chRNA.Slopes/PermutationPass.FDR_Added.txt.gz",
-        "QTLs/QTLTools/chRNA.RNA.Editing/PermutationPass.FDR_Added.txt.gz",
-        "QTLs/QTLTools/chRNA.Splicing.Order/PermutationPass.FDR_Added.txt.gz",
-        "QTLs/QTLTools/polyA.Expression_ncRNA.Subset_YRI/PermutationPass.FDR_Added.txt.gz",
-        "QTLs/QTLTools/polyA.Expression_ncRNA/PermutationPass.FDR_Added.txt.gz",
-        "QTLs/QTLTools/polyA.Expression_ncRNA/NominalPass.txt.gz",
-        "QTLs/QTLTools/MetabolicLabelled.30min_ncRNA/PermutationPass.FDR_Added.txt.gz",
-        "QTLs/QTLTools/MetabolicLabelled.30min_ncRNA/NominalPass.txt.gz",
-        "QTLs/QTLTools/MetabolicLabelled.60min_ncRNA/PermutationPass.FDR_Added.txt.gz",
-        "QTLs/QTLTools/MetabolicLabelled.60min_ncRNA/NominalPass.txt.gz"
-        
+        expand(
+          "QTLs/QTLTools/{Phenotype}/{Pass}.txt.gz",
+          Phenotype = ["chRNA.Splicing", "chRNA.Expression.Splicing", "chRNA.Expression_ncRNA",
+                       "polyA.Splicing", "Expression.Splicing", "polyA.Expression_ncRNA", 
+                       "polyA.Splicing.Subset_YRI", "Expression.Splicing.Subset_YRI", "polyA.Expression_ncRNA.Subset_YRI",
+                       "MetabolicLabelled.30min_ncRNA", "MetabolicLabelled.60min_ncRNA",
+                       "chRNA.Slopes.All", "chRNA.Splicing.Order", "chRNA.IER", #"polyA.IER", 
+                       "polyA.IER.Subset_YRI"],
+          Pass = ["PermutationPass.FDR_Added", "NominalPass"]
+        ),
+

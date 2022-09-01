@@ -58,6 +58,7 @@ rule Prepare_chRNA_ExpressionPhenotypes:
         "featureCounts/chRNA.Expression_lncRNA/Counts.txt",
         "featureCounts/chRNA.Expression_snoRNA/Counts.txt",
         "ExpressionAnalysis/polyA/ExpressedGeneList.txt",
+        "NonCodingRNA_annotation/annotation/ncRNA.annotation.tab.gz"
     output:
         "QTLs/QTLTools/chRNA.Expression.Splicing/OnlyFirstReps.qqnorm.bed.gz",
         "QTLs/QTLTools/chRNA.Expression_ncRNA/OnlyFirstReps.qqnorm.bed.gz",

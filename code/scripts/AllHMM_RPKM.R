@@ -3,9 +3,11 @@ library(magrittr)
 library(edgeR)
 library(RNOmni)
 
+args <- commandArgs(trailingOnly=TRUE)
 
+merged <- args[1]
 
-GeneCounts_f_in <- "NonCodingRNA/Expression_HMM/chRNA.Expression_featureCounts/Counts.txt"
+GeneCounts_f_in <- paste0("NonCodingRNA", merged, "/Expression_HMM/chRNA.Expression_featureCounts/Counts.txt")
 
 rename_STAR_alignment_samples <- function(MyString){
     return(
@@ -24,7 +26,7 @@ dat <- read_tsv(GeneCounts_f_in, comment = "#", n_max=Inf) %>%
 
 dat.cpm <- dat %>%
     column_to_rownames("Geneid") %>%
-    select(everything(), -c("Chr", "Start", "End", "Strand", "Length")) %>%
+    select(everything(), -c("Chr", "Start", "End", "Strand", "Length", "NA18855")) %>%
     cpm(log=T, prior.count=0.1)
 
 
@@ -49,7 +51,7 @@ Out <- bed %>%
     arrange(`#Chr`, start)
 
 
-write_tsv(Out, "NonCodingRNA/Expression_HMM/OnlyFirstReps.qqnorm.bed.gz")
+write_tsv(Out, paste0("NonCodingRNA", merged, "/Expression_HMM/OnlyFirstReps.qqnorm.bed.gz"))
 
 
 
@@ -63,4 +65,4 @@ RPKM.Out <- bed %>%
     arrange(`#Chr`, start)
 
 
-write_tsv(RPKM.Out, "NonCodingRNA/Expression_HMM/OnlyFirstReps.RPKM.bed.gz")
+write_tsv(RPKM.Out, paste0("NonCodingRNA", merged, "/Expression_HMM/OnlyFirstReps.RPKM.bed.gz"))

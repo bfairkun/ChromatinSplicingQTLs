@@ -9,6 +9,10 @@ import pandas as pd
 import os
 import argparse
 
+def chunks(l, n):
+    for i in range(0, len(l), n):
+        yield l[i:i + n]
+
 def MakeCountsPerAssay(counts_dir, assay, chrom, strand):
     assay_dir = counts_dir + '/' + assay + '/'
     assay_samples = [x for x in os.listdir(assay_dir) if x.split('.')[0] == chrom]
@@ -60,6 +64,7 @@ parser.add_argument('--chrom', type=str, required=True)
 parser.add_argument('--counts_dir', type=str, required=True)
 parser.add_argument('--strand', type=str, required=False)
 parser.add_argument('--output', type=str, required=False)
+parser.add_argument('--merge', action='store_true', required=False)
 
 
 if __name__ == '__main__':
@@ -69,6 +74,7 @@ if __name__ == '__main__':
     counts_dir = args.counts_dir
     strand = args.strand
     output = args.output
+    merge = args.merge
 
     assay_list = os.listdir(counts_dir)
     print('Merging data from assays')
@@ -78,7 +84,33 @@ if __name__ == '__main__':
         df_assay = MakeCountsPerAssay(counts_dir, assay, chrom, strand)
         df = pd.concat([df, df_assay], axis=1)
         
-    df.to_csv(output, sep='\t', index=True, header=True)
+    if merge:
+        df_merged = pd.DataFrame()
+        groups_4 = list(chunks(df.columns[:56], 4))
+        groups_5 = list(chunks(df.columns[56:], 5))
+        
+        for i in range(14):
+            col_name = 'chRNA_' + str(i + 1)
+            df_merged[col_name] = df[groups_4[i]].sum(axis=1)
+        for i in range(6):
+            col_name = 'chRNA_' + str(i + 15)
+            df_merged[col_name] = df[groups_5[i]].sum(axis=1)
+#         df_merged['chRNA_1'] = df[df.columns[:9]].sum(axis=1)
+#         df_merged['chRNA_2'] = df[df.columns[9:(2*9)]].sum(axis=1)
+#         df_merged['chRNA_3'] = df[df.columns[(2*9):(3*9)]].sum(axis=1)
+#         df_merged['chRNA_4'] = df[df.columns[(3*9):(4*9)]].sum(axis=1)
+#         df_merged['chRNA_5'] = df[df.columns[(4*9):(5*9)]].sum(axis=1)
+#         df_merged['chRNA_6'] = df[df.columns[(5*9):(6*9)]].sum(axis=1)
+#         df_merged['chRNA_7'] = df[df.columns[(5*9):(6*9)]].sum(axis=1)
+#         df_merged['chRNA_8'] = df[df.columns[(5*9):(6*9)]].sum(axis=1)
+#         df_merged['chRNA_9'] = df[df.columns[(5*9):(6*9)]].sum(axis=1)
+#         df_merged['chRNA_10'] = df[df.columns[(5*9):(6*9)]].sum(axis=1)
+        
+        df_merged.to_csv(output, sep='\t', index=True, header=True)
+        
+    else:
+    
+        df.to_csv(output, sep='\t', index=True, header=True)
         
         
         

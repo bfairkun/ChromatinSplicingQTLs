@@ -12,26 +12,60 @@ def qqnorm(x):
     a=3.0/8.0 if n<=10 else 0.5
     return(norm.ppf( (rankdata(x)-a)/(n+1.0-2.0*a) ))
 
-def qqnorm_data(df_data):
+# def qqnorm_data(df_data):
     
+#     imputer = SimpleImputer()
+#     imputed_df = pd.DataFrame(imputer.fit_transform(df_data.T)).T
+    
+#     imputed_df.columns = df_data.columns 
+#     imputed_df.index = df_data.index
+    
+#     df_scale = pd.DataFrame(scale(imputed_df, axis=1))
+#     df_scale.columns = imputed_df.columns
+#     df_scale.index = imputed_df.index
+    
+#     df_qqnorm = pd.DataFrame()
+    
+#     for sample in df_scale.columns:
+        
+#         qqnorm_row = qqnorm(df_scale[sample])
+#         df_qqnorm[sample] = qqnorm_row
+        
+#     df_qqnorm.index = imputed_df.index
+    
+#     return df_qqnorm
+
+def qqnorm_data(df_data):
+    print('starting')
     imputer = SimpleImputer()
     imputed_df = pd.DataFrame(imputer.fit_transform(df_data.T)).T
     
+    print('1')
     imputed_df.columns = df_data.columns 
     imputed_df.index = df_data.index
     
+    print('2')
+    df_qqnorm = pd.DataFrame()
+
+        
+    print('3')
     df_scale = pd.DataFrame(scale(imputed_df, axis=1))
     df_scale.columns = imputed_df.columns
     df_scale.index = imputed_df.index
     
-    df_qqnorm = pd.DataFrame()
+    print('4')
+        
+
     
-    for sample in df_scale.columns:
+    for sample in tqdm(df_scale.columns, position=0, leave=True):
         
         qqnorm_row = qqnorm(df_scale[sample])
         df_qqnorm[sample] = qqnorm_row
         
+    
     df_qqnorm.index = imputed_df.index
+    
+    print('5')
     
     return df_qqnorm
 

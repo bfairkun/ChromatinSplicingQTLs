@@ -386,7 +386,7 @@ rule QQnormOutOfOrder:
 
 rule QQnormRNAEditing:
     input:
-        "/project2/yangili1/cdai/aicher/code/chRNA/Results/hs38/GatherEditing/EL.txt"
+        "/project2/yangili1/cdai/aicher/code/chRNA/Results/hs38/GatherEditing/EL.txt",
     output:
         "QTLs/QTLTools/chRNA.RNA.Editing/OnlyFirstReps.qqnorm.bed.gz"
     log:

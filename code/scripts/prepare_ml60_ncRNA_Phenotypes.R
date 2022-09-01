@@ -8,6 +8,7 @@ GeneCounts_ncRNA_in <- "featureCounts/MetabolicLabelled.60min_ncRNA/Counts.txt"
 GeneCounts_lncRNA_in <- "featureCounts/MetabolicLabelled.60min_lncRNA/Counts.txt"
 GeneCounts_snoRNA_in <- "featureCounts/MetabolicLabelled.60min_snoRNA/Counts.txt"
 Genes_bed_f_in <- "ExpressionAnalysis/polyA/ExpressedGeneList.txt" 
+annotation_f_in <- "NonCodingRNA_annotation/annotation/ncRNA.annotation.tab.gz"
 
 rename_STAR_alignment_samples <- function(MyString){
     return(
@@ -43,10 +44,33 @@ dat.genes.snoRNA <- read_tsv(GeneCounts_snoRNA_in, comment = "#", n_max=Inf) %>%
 X <- rbind(dat.genes, dat.genes.ncRNA)
 
 
-dat.cpm <- X %>%
+
+
+annot <- read_tsv(annotation_f_in, )
+
+x <- apply(annot[annot$lncRNA != '.','lncRNA'], 2, function(x) c(strsplit(x, "\\|")))
+lncRNA_ <- do.call(c, unlist(x, recursive=FALSE))
+           
+           
+y <- apply(annot[annot$pseudogene != '.','pseudogene'], 2, function(x) c(strsplit(x, "\\|")))
+pseudogene_ <- do.call(c, unlist(y, recursive=FALSE))
+           
+#dat.cpm <- dat.cpm %>% as.data.frame() %>%
+#  filter(!rownames(dat.cpm) %in% c(lncRNA_, pseudogene_)) %>% as.matrix()
+
+
+dat.matrix <- X %>%
     column_to_rownames("Geneid") %>%
-    select(everything(), -c("Chr", "Start", "End", "Strand", "Length")) %>%
-    #cpm(prior.count=0.1)
+    select(everything(), -c("Chr", "Start", "End", "Strand", "Length"))
+    
+
+dat.matrix.renamed <- dat.matrix %>%
+    as.data.frame() %>%
+    filter(!rownames(dat.matrix) %in% c(lncRNA_, pseudogene_)) %>% 
+    as.matrix() 
+
+
+dat.cpm <- dat.matrix.renamed %>% # dat.matrix.expressed %>%
     cpm(log=T, prior.count=0.1)
 
 
@@ -56,8 +80,9 @@ protein_coding = dat.cpm[rownames(dat.cpm) %in% gene.list$Geneid, ]
 
 
 ncRNA_names <- c(dat.genes.lncRNA$Geneid, dat.genes.ncRNA$Geneid, dat.genes.snoRNA$Geneid)
-ncRNA <- dat.cpm[rownames(dat.cpm) %in% ncRNA_names, ]
-
+ncRNA.dat <- dat.cpm[rownames(dat.cpm) %in% ncRNA_names, ]
+ncRNA <- ncRNA.dat[apply(exp(ncRNA.dat), 1, quantile, probs=0.9) >= 1e-4,]
+           
 ncRNA.standardized <- ncRNA %>% t() %>% scale() %>% t() %>% as.data.frame() %>% drop_na() %>% as.matrix()
 ncRNA.qqnormed <- apply(ncRNA.standardized, 2, RankNorm)
 

@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import argparse
 import os
 
 def read_bed(bed_file, flag='-wa'):
@@ -119,21 +120,33 @@ def make_pair_dict(pair_list):
     return pair_dict
 
 
+parser = argparse.ArgumentParser()
+parser.add_argument('--merge', action='store_true', required=False)
+
+
 if __name__ == '__main__':
+    
+    args = parser.parse_args()
+    merge = args.merge
+    
+    if merge:
+        dir_name = "NonCodingRNA_merged"
+    else:
+        dir_name = "NonCodingRNA_annotation"
     
     print("loading files")
     
-    allGenes = read_bed('NonCodingRNA/annotation/tmp/allGenes.Gencode.bed.gz', '-wa')
-    ncRNA = read_bed('NonCodingRNA/annotation/ncRNA.bed.gz', '-wa')
-    incRNA = read_bed('NonCodingRNA/annotation/tmp/incRNA.bed.gz', '-wa')
-    uaRNA = read_bed('NonCodingRNA/annotation/tmp/uaRNA.bed.gz', '-wo')
-    coRNA = read_bed('NonCodingRNA/annotation/tmp/coRNA.bed.gz', '-wo')
-    ctRNA = read_bed('NonCodingRNA/annotation/tmp/ctRNA.bed.gz', '-wo')
-    rtRNA = read_bed('NonCodingRNA/annotation/tmp/rtRNA.bed.gz', '-wo')
-    srtRNA = read_bed('NonCodingRNA/annotation/tmp/srtRNA.bed.gz', '-wo')
-    lncRNA = read_bed('NonCodingRNA/annotation/tmp/lncRNA.ncRNA.bed.gz', '-wo')
-    snoRNA = read_bed('NonCodingRNA/annotation/tmp/snoRNA.ncRNA.bed.gz', '-wo')
-    pseudogenes = read_bed('NonCodingRNA/annotation/tmp/pseudogenes.ncRNA.bed.gz', '-wo')
+    allGenes = read_bed(dir_name + '/annotation/tmp/allGenes.Gencode.bed.gz', '-wa')
+    ncRNA = read_bed(dir_name + '/annotation/ncRNA.bed.gz', '-wa')
+    incRNA = read_bed(dir_name + '/annotation/tmp/incRNA.bed.gz', '-wa')
+    uaRNA = read_bed(dir_name + '/annotation/tmp/uaRNA.bed.gz', '-wo')
+    coRNA = read_bed(dir_name + '/annotation/tmp/coRNA.bed.gz', '-wo')
+    ctRNA = read_bed(dir_name + '/annotation/tmp/ctRNA.bed.gz', '-wo')
+    rtRNA = read_bed(dir_name + '/annotation/tmp/rtRNA.bed.gz', '-wo')
+    srtRNA = read_bed(dir_name + '/annotation/tmp/srtRNA.bed.gz', '-wo')
+    lncRNA = read_bed(dir_name + '/annotation/tmp/lncRNA.ncRNA.bed.gz', '-wo')
+    snoRNA = read_bed(dir_name + '/annotation/tmp/snoRNA.ncRNA.bed.gz', '-wo')
+    pseudogenes = read_bed(dir_name + '/annotation/tmp/pseudogenes.ncRNA.bed.gz', '-wo')
     
     print("ncRNA:gene")
     
@@ -250,7 +263,7 @@ if __name__ == '__main__':
     annotation_df['snoRNA'] = snoRNA_annot
     annotation_df['pseudogene'] =pseudo_annot
     
-    annotation_df.to_csv('NonCodingRNA/annotation/ncRNA.annotation.tab.gz', sep='\t', index=True, header=True)
+    annotation_df.to_csv(dir_name + '/annotation/ncRNA.annotation.tab.gz', sep='\t', index=True, header=True)
 
 
 

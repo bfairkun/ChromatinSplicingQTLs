@@ -9,6 +9,7 @@ parser.add_argument('--min_RPKM',  type=float, required=True)
 parser.add_argument('--distance',  type=int, required=True)
 parser.add_argument('--min_correlation',  type=float, required=True)
 parser.add_argument('--RPKM_ratio',  type=float, required=True)
+parser.add_argument('--merge', action='store_true', required=False)
 
 
 from scipy.stats import pearsonr, spearmanr 
@@ -55,23 +56,43 @@ def filter_trailing_ncRNA(ncRNA_bed, ncRNA_RPKM, ncRNA_qqnorm, distance_thre, co
         
         if ncRNA[:3] == 'MIR':
             continue
+            
+        
         
         anchor_chrom = ncRNA_plus.loc[anchor, 'chrom']
         ncRNA_chrom = ncRNA_plus.loc[ncRNA, 'chrom']
         
-#         if len(ncRNA_chrom) > 1:
-#             continue
         
-        if (anchor_chrom != ncRNA_chrom) or (ncRNA[:5] != 'ncRNA'):
+        #if (anchor_chrom != ncRNA_chrom) or (ncRNA[:5] != 'ncRNA'):
+        #    anchor = ncRNA
+        #    current_trail = ncRNA
+        #    continue
+            
+        ##################################################################
+            
+        if (anchor_chrom != ncRNA_chrom):# or (ncRNA[:5] != 'ncRNA'):
             anchor = ncRNA
             current_trail = ncRNA
             continue
             
+        if int(ncRNA_plus.loc[anchor, 'end']) > int(ncRNA_plus.loc[ncRNA, 'end']):
+            continue
+            
+        if ncRNA[:5] != 'ncRNA':
+            anchor = ncRNA
+            current_trail = ncRNA
+            continue
+        
+        ###############################################################3
+            
         distance =  get_ncRNA_distance(ncRNA_plus, current_trail, ncRNA, '+')
-        corr = get_ncRNA_RPKM_correlation(ncRNA_qqnorm, anchor, current_trail)
+        corr = get_ncRNA_RPKM_correlation(ncRNA_qqnorm, anchor, ncRNA)
+        corr_trail = get_ncRNA_RPKM_correlation(ncRNA_qqnorm, current_trail, ncRNA)
         ratio = get_ncRNA_RPKM_ratio(ncRNA_RPKM, anchor, ncRNA)
         
-        is_trail = (distance <= distance_thre) and (corr >= cor_thre) and (ratio >= RPKM_ratio_thre)
+        
+        is_trail = (distance <= distance_thre) and ((corr >= cor_thre) or (corr_trail >= cor_thre)) and (ratio >= RPKM_ratio_thre)
+        is_trail = is_trail or ((distance < 1000) and ((corr >= 0.2) or (corr_trail >= 0.2)) and (ratio >= 10))
         
         if is_trail:
             plus_trail.append(ncRNA)
@@ -99,16 +120,41 @@ def filter_trailing_ncRNA(ncRNA_bed, ncRNA_RPKM, ncRNA_qqnorm, distance_thre, co
 #         if len(ncRNA_chrom) > 1:
 #             continue
         
-        if (anchor_chrom != ncRNA_chrom) or (ncRNA[:5] != 'ncRNA'):
+        #if (anchor_chrom != ncRNA_chrom) or (ncRNA[:5] != 'ncRNA'):
+        #    anchor = ncRNA
+        #    current_trail = ncRNA
+        #    continue
+        
+        #if (anchor_chrom != ncRNA_chrom) or (ncRNA[:5] != 'ncRNA'):
+        #    anchor = ncRNA
+        #    current_trail = ncRNA
+        #    continue
+            
+        ##################################################################
+            
+        if (anchor_chrom != ncRNA_chrom):# or (ncRNA[:5] != 'ncRNA'):
             anchor = ncRNA
             current_trail = ncRNA
             continue
             
+        if int(ncRNA_minus.loc[anchor, 'start']) < int(ncRNA_minus.loc[ncRNA, 'start']):
+            continue
+            
+        if ncRNA[:5] != 'ncRNA':
+            anchor = ncRNA
+            current_trail = ncRNA
+            continue
+        
+        ###############################################################3
+            
         distance =  get_ncRNA_distance(ncRNA_minus, current_trail, ncRNA, '-')
-        corr = get_ncRNA_RPKM_correlation(ncRNA_qqnorm, anchor, current_trail)
+        corr = get_ncRNA_RPKM_correlation(ncRNA_qqnorm, anchor, ncRNA)
+        corr_trail = get_ncRNA_RPKM_correlation(ncRNA_qqnorm, current_trail, ncRNA)
         ratio = get_ncRNA_RPKM_ratio(ncRNA_RPKM, anchor, ncRNA)
         
-        is_trail = (distance <= distance_thre) and (corr >= cor_thre) and (ratio >= RPKM_ratio_thre)
+        
+        is_trail = (distance <= distance_thre) and ((corr >= cor_thre) or (corr_trail >= cor_thre)) and (ratio >= RPKM_ratio_thre)
+        is_trail = is_trail or ((distance < 1000) and ((corr >= 0.2) or (corr_trail >= 0.2)) and (ratio >= 10))
         
         if is_trail:
             minus_trail.append(ncRNA)
@@ -128,19 +174,25 @@ if __name__ == '__main__':
     distance = args.distance
     min_correlation = args.min_correlation
     RPKM_ratio = args.RPKM_ratio
+    merge = args.merge
     
-    ncRNA_bed = pd.read_csv('NonCodingRNA/annotation/allHMM.merged.bed.gz', 
+    if merge:
+        dir_name = "NonCodingRNA_merged"
+    else:
+        dir_name = "NonCodingRNA_annotation"
+    
+    ncRNA_bed = pd.read_csv(dir_name + '/annotation/allHMM.merged.bed.gz', 
                          sep='\t', names = ['chrom', 'start', 'end', 'name', 'id', 'strand'])
     ncRNA_bed.index = ncRNA_bed.name
 
-    RPKM = pd.read_csv("NonCodingRNA/Expression_HMM/OnlyFirstReps.RPKM.bed.gz", sep='\t')
+    RPKM = pd.read_csv(dir_name + "/Expression_HMM/OnlyFirstReps.RPKM.bed.gz", sep='\t')
     RPKM.index = RPKM.pid
 
     samples = [x for x in RPKM.columns if ((x[:2]=='NA') and (x!='NA18855'))]
     
     
     
-    qqnorm = pd.read_csv("NonCodingRNA/Expression_HMM/OnlyFirstReps.qqnorm.bed.gz", sep='\t')
+    qqnorm = pd.read_csv(dir_name + "/Expression_HMM/OnlyFirstReps.qqnorm.bed.gz", sep='\t')
     qqnorm.index = qqnorm.pid
     
     
@@ -156,7 +208,7 @@ if __name__ == '__main__':
     ncRNA_filtered_bed = ncRNA_bed.loc[ncRNAs]
     ncRNA_filtered_RPKM  = RPKM.loc[filter2]
     
-    ncRNA_filtered_bed.to_csv("NonCodingRNA/annotation/ncRNA.bed.gz", sep='\t', index=False, header=False)
+    ncRNA_filtered_bed.to_csv(dir_name + "/annotation/ncRNA.bed.gz", sep='\t', index=False, header=False)
     #ncRNA_filtered_RPKM.to_csv("QTLs/QTLTools/chRNA.Expression_ncRNA/OnlyFirstReps.RPKM.filtered.bed.gz", 
     #                           sep='\t', index=False, header=True)
     
