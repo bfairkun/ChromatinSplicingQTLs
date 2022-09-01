@@ -434,7 +434,7 @@ div.tocify {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2022-08-04
+<strong>Last updated:</strong> 2022-08-22
 </p>
 <p>
 <strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 1
@@ -458,7 +458,7 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 </div>
 <div id="strongRMarkdownfilestronguncommittedchanges" class="panel-collapse collapse">
 <div class="panel-body">
-<p>The R Markdown is untracked by Git. To know which version of the R Markdown file created these results, you’ll want to first commit it to the Git repo. If you’re still working on the analysis, you can ignore this warning. When you’re finished, you can run <code>wflow_publish</code> to commit the R Markdown file and build the HTML.</p>
+<p>The R Markdown file has unstaged changes. To know which version of the R Markdown file created these results, you’ll want to first commit it to the Git repo. If you’re still working on the analysis, you can ignore this warning. When you’re finished, you can run <code>wflow_publish</code> to commit the R Markdown file and build the HTML.</p>
 </div>
 </div>
 </div>
@@ -525,16 +525,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstree2922f0778449d8dbcc69fbfb29830bcd95e3cfdatargetblank2922f07a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/2922f0778449d8dbcc69fbfb29830bcd95e3cfda" target="_blank">2922f07</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstree1ab52a531bfcde8a8c8fd176902be176521c0f70targetblank1ab52a5a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/1ab52a531bfcde8a8c8fd176902be176521c0f70" target="_blank">1ab52a5</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstree2922f0778449d8dbcc69fbfb29830bcd95e3cfdatargetblank2922f07a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstree1ab52a531bfcde8a8c8fd176902be176521c0f70targetblank1ab52a5a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/2922f0778449d8dbcc69fbfb29830bcd95e3cfda" target="_blank">2922f07</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/1ab52a531bfcde8a8c8fd176902be176521c0f70" target="_blank">1ab52a5</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -545,7 +545,6 @@ Ignored files:
     Ignored:    .Rhistory
     Ignored:    .Rproj.user/
     Ignored:    analysis/.Rhistory
-    Ignored:    analysis/figure/
     Ignored:    code/.DS_Store
     Ignored:    code/.RData
     Ignored:    code/._.DS_Store
@@ -594,6 +593,7 @@ Ignored files:
     Ignored:    code/log
     Ignored:    code/logs/
     Ignored:    code/notebooks/.ipynb_checkpoints/
+    Ignored:    code/rules/.QTL_SNP_Enrichment.smk.swp
     Ignored:    code/rules/.ipynb_checkpoints/
     Ignored:    code/rules/OldRules/
     Ignored:    code/rules/notebooks/
@@ -619,15 +619,13 @@ Ignored files:
     Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022.csv
 
 Untracked files:
-    Untracked:  analysis/20220728_CheckFinemapSNPEnrichments.Rmd
-    Untracked:  code/rules/QTL_SNP_Enrichment.smk
     Untracked:  code/snakemake_profiles/slurm/__pycache__/
 
 Unstaged changes:
-    Modified:   code/Snakefile
-    Modified:   code/rules/Coloc.smk
-    Modified:   code/rules/SplicingAnalysis.smk
+    Modified:   analysis/20220728_CheckFinemapSNPEnrichments.Rmd
+    Modified:   code/rules/QTL_SNP_Enrichment.smk
     Modified:   code/scripts/GenometracksByGenotype
+    Modified:   data/cheRNA_K562_GSE83531.saf
 
 </code></pre>
 <p>
@@ -640,9 +638,69 @@ Note that any generated files, e.g. HTML, png, CSS, etc., are not included in t
 <hr>
 </div>
 <div id="versions" class="tab-pane fade">
+
 <p>
-There are no past versions. Publish this analysis with <code>wflow_publish()</code> to start tracking its development.
+These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/20220728_CheckFinemapSNPEnrichments.Rmd</code>) and HTML (<code>docs/20220728_CheckFinemapSNPEnrichments.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
 </p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/bfb625eb2719f3fde37af38bfa3f13d0ff2818cc/analysis/20220728_CheckFinemapSNPEnrichments.Rmd" target="_blank">bfb625e</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-08-09
+</td>
+<td>
+added finemapping snp enrichment rules
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/bfb625eb2719f3fde37af38bfa3f13d0ff2818cc/docs/20220728_CheckFinemapSNPEnrichments.html" target="_blank">bfb625e</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-08-09
+</td>
+<td>
+added finemapping snp enrichment rules
+</td>
+</tr>
+</tbody>
+</table>
+</div>
 <hr>
 </div>
 </div>
@@ -674,6 +732,43 @@ hyprcoloc_results_finemap &lt;- read_tsv(&quot;../code/hyprcoloc/Results/ForColo
   ggplot(aes(x=FinemapPr, y=TopSNPFinemapPr)) +
   geom_point()</code></pre>
 <p><img src="figure/20220728_CheckFinemapSNPEnrichments.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-1">
+Past versions of unnamed-chunk-2-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/bfb625eb2719f3fde37af38bfa3f13d0ff2818cc/docs/figure/20220728_CheckFinemapSNPEnrichments.Rmd/unnamed-chunk-2-1.png" target="_blank">bfb625e</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-08-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>That looks right…</p>
 <p>Now let’s pick clusters with only splicing phenotypes, and compare to clusters with an eQTL</p>
 <pre class="r"><code>hyprcoloc_results %&gt;%
@@ -757,6 +852,43 @@ ggplot(aes(x=Annotation, y=Enrichment)) +
   coord_flip() +
   labs(x = &quot;Annotation&quot;, y=&quot;Finemapping posterior mass fold enrichment\n(ChromatinQTL|eQTL &lt;-- --&gt; sQTL)&quot;)</code></pre>
 <p><img src="figure/20220728_CheckFinemapSNPEnrichments.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-3-1">
+Past versions of unnamed-chunk-3-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-3-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/bfb625eb2719f3fde37af38bfa3f13d0ff2818cc/docs/figure/20220728_CheckFinemapSNPEnrichments.Rmd/unnamed-chunk-3-1.png" target="_blank">bfb625e</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-08-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Let’s try to add error bars by bootstrapping. Perhaps randomly sample the QTL clusters. Let’s try 100 bootstrap replicates and make the plot twice to see how stable the confidence interval is.</p>
 <pre class="r"><code>set.seed(0)
 
@@ -815,6 +947,43 @@ bind_rows(results) %&gt;%
     labs(x = &quot;Annotation&quot;, y=&quot;Finemapping posterior mass fold enrichment\n(ChromatinQTL|eQTL &lt;-- --&gt; sQTL)&quot;,
          caption = &quot;Bootsrapped 90% confidence interval&quot;)</code></pre>
 <p><img src="figure/20220728_CheckFinemapSNPEnrichments.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-4-1">
+Past versions of unnamed-chunk-4-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-4-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/bfb625eb2719f3fde37af38bfa3f13d0ff2818cc/docs/figure/20220728_CheckFinemapSNPEnrichments.Rmd/unnamed-chunk-4-1.png" target="_blank">bfb625e</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-08-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>set.seed(100)
 results &lt;- list()
 
@@ -859,6 +1028,43 @@ bind_rows(results) %&gt;%
     labs(x = &quot;Annotation&quot;, y=&quot;Finemapping posterior mass fold enrichment\n(ChromatinQTL|eQTL &lt;-- --&gt; sQTL)&quot;,
          caption = &quot;Bootsrapped 90% confidence interval&quot;)</code></pre>
 <p><img src="figure/20220728_CheckFinemapSNPEnrichments.Rmd/unnamed-chunk-4-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-4-2">
+Past versions of unnamed-chunk-4-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-4-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/bfb625eb2719f3fde37af38bfa3f13d0ff2818cc/docs/figure/20220728_CheckFinemapSNPEnrichments.Rmd/unnamed-chunk-4-2.png" target="_blank">bfb625e</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-08-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Ok those two separate graphs look similar enough for me, that I think this is enough bootstrap replicates. Let’s wrap this process into a function and try making similar plots comparing different sets of QTLs…</p>
 <p>Actually, first, before considering “relative enrichment” in comparing two sets of QTLs, I want to get a sense of the total mass under each annotation in both sets…</p>
 <pre class="r"><code>FractionPosteriorInEachAnnotation %&gt;%
@@ -868,11 +1074,85 @@ bind_rows(results) %&gt;%
   coord_flip() +
   theme_bw()</code></pre>
 <p><img src="figure/20220728_CheckFinemapSNPEnrichments.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-1">
+Past versions of unnamed-chunk-5-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-5-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/bfb625eb2719f3fde37af38bfa3f13d0ff2818cc/docs/figure/20220728_CheckFinemapSNPEnrichments.Rmd/unnamed-chunk-5-1.png" target="_blank">bfb625e</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-08-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>FractionPosteriorInEachAnnotation %&gt;%
   ggplot(aes(x=ClusterGroup, y=FractionAnnotatedPosteriorInGroup*100, fill=Annotation)) +
   geom_col(position=&#39;fill&#39;) +
   theme_bw()</code></pre>
 <p><img src="figure/20220728_CheckFinemapSNPEnrichments.Rmd/unnamed-chunk-5-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-2">
+Past versions of unnamed-chunk-5-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-5-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/bfb625eb2719f3fde37af38bfa3f13d0ff2818cc/docs/figure/20220728_CheckFinemapSNPEnrichments.Rmd/unnamed-chunk-5-2.png" target="_blank">bfb625e</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-08-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Ok, so perhaps only a 1/3 of the posterior mass for sQTLs lies in splice site regions.</p>
 <p>Now, let’s go back to wrapping the enrichment plot between two sets of QTLs into a function, so I can reuse it to comapre different sets of QTLs</p>
 <pre class="r"><code>iterations = 100
@@ -944,6 +1224,43 @@ test.results$data %&gt;% head()</code></pre>
 <pre class="r"><code>test.results$plot +
   labs(y=&quot;FoldEnrichment\nSplicingQTLs &lt;----&gt; Chromatin|Expression QTLs&quot;)</code></pre>
 <p><img src="figure/20220728_CheckFinemapSNPEnrichments.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-6-1">
+Past versions of unnamed-chunk-6-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-6-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/bfb625eb2719f3fde37af38bfa3f13d0ff2818cc/docs/figure/20220728_CheckFinemapSNPEnrichments.Rmd/unnamed-chunk-6-1.png" target="_blank">bfb625e</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-08-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Another hypothesis I have is that the chromatin-specific sQTLs will more reflect splicing and therefore be more enriched to splice sites, whereas the poly-A specific sQTLs will more reflect isoform stability. Let’s see…</p>
 <pre class="r"><code>hyprcoloc_results %&gt;%
   separate(phenotype_full, into=c(&quot;PC&quot;, &quot;P&quot;), sep=&quot;;&quot;) %&gt;%
@@ -996,6 +1313,43 @@ results &lt;- PlotDifferentialEnrichmentBetweenQTLSets(dat, chRNA.Specific.Splic
 results$plot +
   labs(y = &quot;FoldEnrichment\npolyA-specific sQTLs &lt;----&gt; chromatin-specific sQTLs&quot;)</code></pre>
 <p><img src="figure/20220728_CheckFinemapSNPEnrichments.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-7-1">
+Past versions of unnamed-chunk-7-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-7-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/bfb625eb2719f3fde37af38bfa3f13d0ff2818cc/docs/figure/20220728_CheckFinemapSNPEnrichments.Rmd/unnamed-chunk-7-1.png" target="_blank">bfb625e</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-08-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Now let’s compare eQTLs with colocalizing H3K27AC, versus eQTLs that colocalize with something but not H3K27AC</p>
 <pre class="r"><code>chRNA.Splicing.PCs &lt;- c(&quot;chRNA.Splicing&quot;)
 polyA.Splicing.PCs &lt;- c(&quot;polyA.Splicing.Subset_YRI&quot;)
@@ -1027,6 +1381,92 @@ intersect(eQTL.Chromatin.Clusters$Locus.iteration, eQTL.NoChromatin.Clusters$Loc
 results$plot +
   labs(y = &quot;FoldEnrichment\neQTL.NoChromatin.Clusters &lt;----&gt; eQTL.Chromatin.Clusters&quot;)</code></pre>
 <p><img src="figure/20220728_CheckFinemapSNPEnrichments.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-8-1">
+Past versions of unnamed-chunk-8-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-8-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/bfb625eb2719f3fde37af38bfa3f13d0ff2818cc/docs/figure/20220728_CheckFinemapSNPEnrichments.Rmd/unnamed-chunk-8-1.png" target="_blank">bfb625e</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-08-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Update: Yang suggested making sure that the enrichment for splice sites in non-chromatinQTL eQTLs is not due to the inclusion of chromatin data in the finemapping that biases results by posterior mass towards enhancers (and away from splice sites). His suggestion was to repeat this analyses, using the same sets of eQTLs to compare, but using finemapping results based solely on RNA-seq datasets (polyA, chRNA, and metabolicRNA).</p>
+<pre class="r"><code>dat.onlyRNASeq &lt;- fread(&quot;../code/QTL_SNP_Enrichment/FinemapIntersections/MolColocTestOnlyExpression.bed.gz&quot;, col.names=c(&quot;SNP_chrom&quot;, &quot;SNP_start&quot;, &quot;SNP_end&quot;, &quot;SNP&quot;, &quot;PosteriorPr&quot;, &quot;Annotation_chrom&quot;, &quot;Annotation_start&quot;, &quot;Annotation_stop&quot;, &quot;Annotation&quot;, &quot;Overlap&quot;)) %&gt;%
+  separate(SNP, into=c(&quot;SNP&quot;, &quot;HyprcolocCluster&quot;, &quot;GeneLocus&quot;), sep=&quot;_&quot;)
+
+hyprcoloc_results.onlyRNASeq &lt;- read_tsv(&quot;../code/hyprcoloc/Results/ForColoc/MolColocTestOnlyExpression/tidy_results_OnlyColocalized.txt.gz&quot;)
+
+
+hyprcoloc_results_finemap.onlyRNASeq &lt;- read_tsv(&quot;../code/hyprcoloc/Results/ForColoc/MolColocTestOnlyExpression/snpscores.txt.gz&quot;)</code></pre>
+<p>Because the hyprcoloc clusters iteration IDs won’t match up between hyprcoloc runs, let’s hackishly just use hyprcoloc clusters in the RNASeq only results if there is only one colocalized cluster.</p>
+<pre class="r"><code>hyprcoloc_results.onlyRNASeq %&gt;%
+  distinct(Locus, iteration) %&gt;%
+  count(iteration)</code></pre>
+<pre><code># A tibble: 2 × 2
+  iteration     n
+      &lt;dbl&gt; &lt;int&gt;
+1         1   966
+2         2    10</code></pre>
+<p>Notably, this only excludes at most 10 clusters</p>
+<pre class="r"><code>LociWithEqtlsInRNASeqOnly &lt;- hyprcoloc_results.onlyRNASeq %&gt;%
+  group_by(Locus) %&gt;%
+  filter(!any(iteration == 2)) %&gt;%
+  ungroup() %&gt;% pull(Locus)
+
+
+results &lt;- 
+  dat.onlyRNASeq %&gt;%
+  filter(GeneLocus %in% LociWithEqtlsInRNASeqOnly) %&gt;%
+  PlotDifferentialEnrichmentBetweenQTLSets(
+    eQTL.Chromatin.Clusters %&gt;%
+      mutate(Locus.iteration = str_replace(Locus.iteration, &quot;(.+?)_.+?&quot;, &quot;\\1_1&quot;)),
+    eQTL.NoChromatin.Clusters %&gt;%
+      mutate(Locus.iteration = str_replace(Locus.iteration, &quot;(.+?)_.+?&quot;, &quot;\\1_1&quot;)),
+    iteration = 400
+  )
+
+results$plot +
+  labs(y = &quot;FoldEnrichment\neQTL.NoChromatin.Clusters &lt;----&gt; eQTL.Chromatin.Clusters&quot;)</code></pre>
+<p><img src="figure/20220728_CheckFinemapSNPEnrichments.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>dat.onlyRNASeq %&gt;%
+  mutate(Locus.iteration = paste(GeneLocus, HyprcolocCluster, sep=&quot;_&quot;)) %&gt;%
+  filter(GeneLocus %in% LociWithEqtlsInRNASeqOnly) %&gt;%
+  left_join(bind_rows(eQTL.Chromatin.Clusters, eQTL.NoChromatin.Clusters),
+            by = &quot;Locus.iteration&quot;) %&gt;%
+  distinct(GeneLocus, .keep_all=T) %&gt;%
+  count(ClusterGroup)</code></pre>
+<pre><code>                ClusterGroup   n
+1:   eQTL.Chromatin.Clusters 368
+2: eQTL.NoChromatin.Clusters 295
+3:                      &lt;NA&gt; 297</code></pre>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
@@ -1063,18 +1503,18 @@ loaded via a namespace (and not attached):
  [5] digest_0.6.20     utf8_1.1.4        R6_2.4.0          cellranger_1.1.0 
  [9] backports_1.4.1   reprex_0.3.0      evaluate_0.15     highr_0.9        
 [13] httr_1.4.1        pillar_1.7.0      rlang_1.0.3       readxl_1.3.1     
-[17] rstudioapi_0.10   R.utils_2.9.0     R.oo_1.22.0       rmarkdown_1.13   
-[21] labeling_0.3      munsell_0.5.0     broom_1.0.0       compiler_3.6.1   
-[25] httpuv_1.5.1      modelr_0.1.8      xfun_0.31         pkgconfig_2.0.2  
-[29] htmltools_0.3.6   tidyselect_1.1.2  workflowr_1.6.2   fansi_0.4.0      
-[33] crayon_1.3.4      dbplyr_1.4.2      withr_2.4.1       later_0.8.0      
-[37] R.methodsS3_1.7.1 grid_3.6.1        jsonlite_1.6      gtable_0.3.0     
-[41] lifecycle_1.0.1   DBI_1.1.0         git2r_0.26.1      magrittr_1.5     
-[45] scales_1.1.0      cli_3.3.0         stringi_1.4.3     farver_2.1.0     
-[49] fs_1.3.1          promises_1.0.1    xml2_1.3.2        ellipsis_0.3.2   
-[53] generics_0.1.3    vctrs_0.4.1       tools_3.6.1       glue_1.6.2       
-[57] hms_0.5.3         yaml_2.2.0        colorspace_1.4-1  rvest_0.3.5      
-[61] knitr_1.39        haven_2.3.1      </code></pre>
+[17] rstudioapi_0.10   whisker_0.3-2     R.utils_2.9.0     R.oo_1.22.0      
+[21] rmarkdown_1.13    labeling_0.3      munsell_0.5.0     broom_1.0.0      
+[25] compiler_3.6.1    httpuv_1.5.1      modelr_0.1.8      xfun_0.31        
+[29] pkgconfig_2.0.2   htmltools_0.3.6   tidyselect_1.1.2  workflowr_1.6.2  
+[33] fansi_0.4.0       crayon_1.3.4      dbplyr_1.4.2      withr_2.4.1      
+[37] later_0.8.0       R.methodsS3_1.7.1 grid_3.6.1        jsonlite_1.6     
+[41] gtable_0.3.0      lifecycle_1.0.1   DBI_1.1.0         git2r_0.26.1     
+[45] magrittr_1.5      scales_1.1.0      cli_3.3.0         stringi_1.4.3    
+[49] farver_2.1.0      fs_1.3.1          promises_1.0.1    xml2_1.3.2       
+[53] ellipsis_0.3.2    generics_0.1.3    vctrs_0.4.1       tools_3.6.1      
+[57] glue_1.6.2        hms_0.5.3         yaml_2.2.0        colorspace_1.4-1 
+[61] rvest_0.3.5       knitr_1.39        haven_2.3.1      </code></pre>
 </div>
 </div>
 

@@ -6,32 +6,18 @@ import glob
 autosomes = [str(i) for i in range(1,23)]
 
 N_PermutationChunks = 100
-# N_PermutationChunks_ncRNA = 10
 
-# def Get_N_PermutationChunks(wildcards):
-#     if wildcards.Phenotype in ['eRNA', 'cheRNA']:
-#         return 10
-#     else:
-#         return 100
+MyPhenotypes = ["Expression.Splicing", "Expression.Splicing.Subset_YRI", "chRNA.Expression.Splicing", 
+                "MetabolicLabelled.30min", "MetabolicLabelled.60min",
+                "CTCF", "H3K27AC", "H3K4ME3", "H3K4ME1", "H3K36ME3", "ProCap",
+                "polyA.Splicing", "polyA.Splicing.Subset_YRI", "chRNA.Splicing", 
+                'MetabolicLabelled.30min.Splicing', 'MetabolicLabelled.60min.Splicing', 
+                "polyA.Expression_ncRNA", "polyA.Expression_ncRNA.Subset_YRI", "chRNA.Expression_ncRNA", 
+                'MetabolicLabelled.30min_ncRNA', 'MetabolicLabelled.60min_ncRNA',
+                'polyA.IER', 'polyA.IER.Subset_YRI', 'chRNA.IER','MetabolicLabelled.30min.IER', 'MetabolicLabelled.60min.IER',
+                "chRNA.Slopes", 'chRNA.Splicing.Order']
 
-#ncRNA_Phenotypes = []
-
-#for pheno in ["polyA.Expression", "chRNA.Expression", "MetabolicLabelled.30min", "MetabolicLabelled.60min"]:
-#    for ncRNA in ['cheRNA', 'eRNA', 'lncRNA', 'snoRNA']:
-#        ncRNA_Phenotypes.append(pheno + '_' + ncRNA)# + '.Subset_YRI')
-
-MyPhenotypes = [#"chRNA.IR", "Expression.Splicing", 
-                "chRNA.Expression.Splicing",  "H3K27AC", "CTCF", "H3K4ME3", "chRNA.Splicing", #"polyA.Splicing", 
-    "MetabolicLabelled.30min", "MetabolicLabelled.60min", "Expression.Splicing.Subset_YRI", "polyA.Splicing.Subset_YRI",
-               #"polyA.IR", "polyA.IR.Subset_YRI", #"chRNA.Expression_cheRNA", "chRNA.Expression_eRNA",
-               "chRNA.Expression_ncRNA", #"chRNA.Expression_lncRNA", "chRNA.Expression_snoRNA", 
-               "chRNA.Slopes.All", "H3K4ME1", "ProCap", "H3K36ME3",
-               'chRNA.IER', 'polyA.IER.Subset_YRI', #'chRNA.IRjunctions', 'polyA.IRjunctions',
-               'MetabolicLabelled.30min.IER', 'MetabolicLabelled.60min.IER', 
-                #'MetabolicLabelled.30min.IRjunctions', 'MetabolicLabelled.60min.IRjunctions',
-               'MetabolicLabelled.30min.Splicing', 'MetabolicLabelled.60min.Splicing', 
-                #'MetabolicLabelled.30min.IR', 'MetabolicLabelled.60min.IR', 
-    'chRNA.Splicing.Order']#, 'chRNA.RNA.Editing']
+#, 'chRNA.RNA.Editing']
 # "polyA.Expression.AllRNA.Subset_YRI", "MetabolicLabelled.30min.AllRNA.Subset_YRI", 
 #                 "MetabolicLabelled.60min.AllRNA.Subset_YRI", "chRNA.Expression.AllRNA.Subset_YRI"]
 
