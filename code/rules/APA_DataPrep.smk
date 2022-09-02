@@ -34,3 +34,19 @@ rule liftoverAPA_Tables:
 rule GatherLiftedOverAPA_Tables:
     input:
         expand("QTLs/QTLTools/APA_{Fraction}/OnlyFirstReps.sorted.qqnorm.bed.gz", Fraction=["Nuclear", "Total"])
+
+# rule GetSeqContainingPutativePASMotifs:
+#     input:
+#         bed = expand("QTLs/QTLTools/APA_{Fraction}/OnlyFirstReps.sorted.qqnorm.bed.gz", Fraction=["Nuclear", "Total"]),
+#         fa = "ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa",
+#         fai = "ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa.fai"
+#     output:
+#     conda:
+#         ""
+#     shell:
+#         """
+#         zcat {input.bed} | awk -v OFS='\\t' '$1 !~ "^#" {{print $1,$2,$3,$4,$5,$6}}' | sort | uniq | grep -P '^chr[0-9]+\\t' |  bedtools sort -i - | bedtools flank -s -l 0  -r 50 -g {input.fai} | bedtools shift -i - -m 50 -p -50 -g {input.fai} | shuf -n 1000 | bedtools sort -i - | bedtools getfasta -s -fi {input.fa} -bed - | meme /dev/stdin -oc scratch/memetest -w 7 -nmotifs 1
+#         """
+
+
+

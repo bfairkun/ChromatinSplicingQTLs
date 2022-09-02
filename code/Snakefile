@@ -128,7 +128,6 @@ rule all:
         expand("QTLs/QTLTools/{Phenotype}/PermutationPassForColoc.txt.gz", Phenotype=MyPhenotypes),
         expand("hyprcoloc/Results/ForColoc/{ColocName}/tidy_results_OnlyColocalized.txt.gz", ColocName = colocs_genewise.index),
         expand("QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.tabix.gz", Pass="NominalPass", QTLsGenotypeSet="", FeatureCoordinatesRedefinedFor="ForColoc", Phenotype=MyPhenotypes),
-        "QC/PvalsForPi1_0.1.txt.gz",
         # expand("hyprcoloc/Results/ForGWASColoc/{ColocName}/results.txt.gz", ColocName = colocs_gwas.index )
         "NonCodingRNA_annotation/annotation/ncRNA.bed.gz",
         'NonCodingRNA_annotation/annotation/ncRNA.histone.tab.gz',

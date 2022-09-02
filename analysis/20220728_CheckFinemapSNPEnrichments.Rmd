@@ -16,7 +16,9 @@ library(tidyverse)
 library(data.table)
 library(boot)
 
-dat <- fread("../code/QTL_SNP_Enrichment/FinemapIntersections.bed.gz", col.names=c("SNP_chrom", "SNP_start", "SNP_end", "SNP", "PosteriorPr", "Annotation_chrom", "Annotation_start", "Annotation_stop", "Annotation", "Overlap")) %>%
+# dat <- fread("../code/QTL_SNP_Enrichment/FinemapIntersections.bed.gz", col.names=c("SNP_chrom", "SNP_start", "SNP_end", "SNP", "PosteriorPr", "Annotation_chrom", "Annotation_start", "Annotation_stop", "Annotation", "Overlap")) %>%
+dat <- fread("../code/QTL_SNP_Enrichment/FinemapIntersections/MolColocStandard.bed.gz", col.names=c("SNP_chrom", "SNP_start", "SNP_end", "SNP", "PosteriorPr", "Annotation_chrom", "Annotation_start", "Annotation_stop", "Annotation", "Overlap")) %>%
+
   separate(SNP, into=c("SNP", "HyprcolocCluster", "GeneLocus"), sep="_")
 
 hyprcoloc_results <- read_tsv("../code/hyprcoloc/Results/ForColoc/MolColocStandard/tidy_results_OnlyColocalized.txt.gz")

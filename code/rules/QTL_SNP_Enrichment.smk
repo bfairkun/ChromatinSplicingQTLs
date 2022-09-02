@@ -22,12 +22,25 @@ rule liftOverChromHMM:
         tabix -p bed {output.bedgz}
         """
 
+rule CreatePAS_RegionAnnotation:
+    input:
+        bed = expand("QTLs/QTLTools/APA_{Fraction}/OnlyFirstReps.sorted.qqnorm.bed.gz", Fraction=["Nuclear", "Total"]),
+        fai = "ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa.fai"
+    output:
+        "APA_Processing/hg38.TestFeature.SetWidthRegions.bed.gz"
+    shell:
+        """
+        zcat {input.bed} | awk -v OFS='\\t' '$1 !~ "^#" {{print $1,$2,$3,$4,$5,$6}}' | sort | uniq | grep -P '^chr[0-9]+\\t' |  bedtools sort -i - | bedtools flank -s -l 0  -r 50 -g {input.fai} | bedtools shift -i - -m 50 -p -50 -g {input.fai} | bedtools slop -s -l 0 -r 10 -g {input.fai} | awk -v OFS='\\t' '{{print $1,$2,$3, "PAS_Region", $4, $6}}' | bedtools sort -i - | gzip - > {output}
+        """
+
+
 rule ConcatAllAnnotations:
     input:
         "ChromHMM/hg38.wgEncodeBroadHmmGm12878HMM.bed.gz",
         "SplicingAnalysis/regtools_annotate_combined/comprehensive.3ss.bed.gz",
         "SplicingAnalysis/regtools_annotate_combined/comprehensive.5ss.bed.gz",
-        "SplicingAnalysis/regtools_annotate_combined/comprehensive.bptregion.bed.gz"
+        "SplicingAnalysis/regtools_annotate_combined/comprehensive.bptregion.bed.gz",
+        "APA_Processing/hg38.TestFeature.SetWidthRegions.bed.gz"
     output:
         bed = "QTL_SNP_Enrichment/Annotations.bed.gz",
         tbi = "QTL_SNP_Enrichment/Annotations.bed.gz.tbi"

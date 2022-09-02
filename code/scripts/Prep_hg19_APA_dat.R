@@ -16,6 +16,15 @@ Sys.glob("../data/APA_dat/APApeak_BrianasPermutationTestResults.*.tsv.gz") %>%
   lapply(read_delim, delim=' ') %>%
   bind_rows(.id="Fraction")
 
+# Check size distribution of features
+# permutation.pass.dat %>%
+#   separate(pid, into=c("Chrom", "start", "stop", "feat"), convert=T, sep=":") %>%
+#   mutate(size=stop-start) %>%
+#   ggplot(aes(x=size)) +
+#   geom_histogram() +
+#   xlim(c(0,250)) +
+#   facet_wrap(~Fraction)
+
 count.ratios.dat <-
   Sys.glob("../data/APA_dat/APApeak_Phenotype_GeneLocAnno.*.tsv.gz") %>%
   set_names(str_replace(., "../data/APA_dat/APApeak_Phenotype_GeneLocAnno.(.+?).tsv.gz", "\\1")) %>%
@@ -68,6 +77,7 @@ Filtered.ratios %>%
       select(`#Chr`=Chrom, start, end=stop, pid, gid=Gene, strand),
     by="pid"
   ) %>%
+  mutate(strand=recode(strand, "+"="-", "-"="+")) %>%
   select(`#Chr`, start, end, pid, gid, strand, everything()) %>%
   arrange(`#Chr`, start) %>%
   write_tsv("APA_Processing/PhenotypeTables/Nuclear.hg19.bed")
@@ -91,6 +101,7 @@ Filtered.ratios %>%
       select(`#Chr`=Chrom, start, end=stop, pid, gid=Gene, strand),
     by="pid"
   ) %>%
+  mutate(strand=recode(strand, "+"="-", "-"="+")) %>%
   select(`#Chr`, start, end, pid, gid, strand, everything()) %>%
   arrange(`#Chr`, start) %>%
   write_tsv("APA_Processing/PhenotypeTables/Total.hg19.bed")

@@ -36,21 +36,3 @@ rule GetPvalsForPi1AllTraitPairs:
 rule GatherPvalsForPi1AllTraitPairs:
     input:
         expand("scratch/PairwisePi1Traits.P.{chunk}.txt.gz", chunk=range(1, NumPvalsForPi1Chunks+1))
-
-rule GetPvalsForPiStats:
-    """
-    
-    """
-    input:
-        Nominal = expand("QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.tabix.gz", Pass="NominalPass", QTLsGenotypeSet="", FeatureCoordinatesRedefinedFor="ForColoc", Phenotype=MyPhenotypes),
-        Permutation = expand("QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.gz", Pass="PermutationPass", QTLsGenotypeSet="", FeatureCoordinatesRedefinedFor="ForColoc", Phenotype=MyPhenotypes)
-    output:
-        "QC/PvalsForPi1_{FDR}.txt.gz"
-    params:
-        phenotypes = ' '.join(MyPhenotypes)
-    log:
-        "logs/GetPvalsForPiStats/{FDR}.log"
-    shell:
-        """
-        python scripts/GatherTopSNPPvalsCrossTraits.py {output} {wildcards.FDR} {params.phenotypes} &> {log}
-        """
