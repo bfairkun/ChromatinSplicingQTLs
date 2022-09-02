@@ -758,6 +758,12 @@ def GetTSSFile(wildcards):
         return "NonCodingRNA_annotation/annotation/ncRNA.TSS.bed.gz"
     elif wildcards.Annotation == 'allGenes':
         return "NonCodingRNA_annotation/annotation/allGenes.TSS.bed.gz"
+        
+def GetAnnotationFile(wildcards):
+    if wildcards.Annotation == 'ncRNA':
+        return "NonCodingRNA_annotation/annotation/ncRNA.bed.gz"
+    elif wildcards.Annotation == 'allGenes':
+        return "NonCodingRNA_annotation/annotation/allGenes.bed.gz"
 
 def GetHistonePeaks(wildcards):
     if wildcards.Histone == 'H3K4ME1':
@@ -773,9 +779,9 @@ rule OvelapHistonePeaksWithTSS:
         TSS_file = GetTSSFile,
         histone_peaks = GetHistonePeaks
     output:
-        'NonCodingRNA_annotation/annotation/histone_marks/{Annotation}.{Histone}.overlaps.bed.gz'
+        'NonCodingRNA_annotation/annotation/histone_marks/{Annotation}.{Histone}.TSS_overlaps.bed.gz'
     log:
-        'logs/NonCodingRNA_annotation/{Annotation}.{Histone}.overlaps.log'
+        'logs/NonCodingRNA_annotation/{Annotation}.{Histone}.TSS_overlaps.log'
     resources:
         mem_mb = 12000
     shell:
@@ -783,12 +789,21 @@ rule OvelapHistonePeaksWithTSS:
         (bedtools intersect -a {input.TSS_file} -b {input.histone_peaks} -wa | bedtools sort -i - | gzip - > {output}) &> {log}
         """
         
+use rule OvelapHistonePeaksWithTSS as OvelapHistonePeaksWithGene with:
+    input:
+        TSS_file = GetAnnotationFile,
+        histone_peaks = GetHistonePeaks
+    output:
+        'NonCodingRNA_annotation/annotation/histone_marks/{Annotation}.{Histone}.overlaps.bed.gz'
+    log:
+        'logs/NonCodingRNA_annotation/{Annotation}.{Histone}.overlaps.log'
+        
 rule HistoneAnnotation:
     input:
         'NonCodingRNA_annotation/annotation/ncRNA.annotation.tab.gz',
         'NonCodingRNA_annotation/annotation/allGenes.TSS.bed.gz',
-        expand("NonCodingRNA_annotation/annotation/histone_marks/{Annotation}.{Histone}.overlaps.bed.gz",
-            Annotation = ["ncRNA", "allGenes"], Histone = ["H3K4ME1", "H3K4ME3", "H3K27AC"]
+        expand("NonCodingRNA_annotation/annotation/histone_marks/{Annotation}.{Histone}.{overlap_type}overlaps.bed.gz",
+            Annotation = ["ncRNA", "allGenes"], Histone = ["H3K4ME1", "H3K4ME3", "H3K27AC"], overlap_type=["", "TSS_"]
         )
     output:
         'NonCodingRNA_annotation/annotation/ncRNA.histone.tab.gz',
@@ -799,7 +814,7 @@ rule HistoneAnnotation:
         mem_mb = 12000
     shell:
         """
-        python scripts/make_histone_tss_annotations.py &> {log}
+        python scripts/make_histone_ncRNA_annotations.py &> {log}
         """
         
         
