@@ -1,7 +1,6 @@
 
 # use tabix genewise qtltools output to ascertain p value in trait2 for top SNP determined from trait1 discoveries.
 # There are so many potential trait pairs, so i am going to break this down into chunks to parralelize
-NumPvalsForPi1Chunks = 10
 rule CalculatePi1_GetTraitPairs_AllTraits:
     input:
         Nominal = expand("QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.tabix.gz", Pass="NominalPass", QTLsGenotypeSet="", FeatureCoordinatesRedefinedFor="ForColoc", Phenotype=MyPhenotypes),
@@ -23,9 +22,9 @@ rule GatherChunks:
 
 rule GetPvalsForPi1AllTraitPairs:
     input:
-        "scratch/PairwisePi1Traits.{chunk}.txt.gz"
+        "pi1/PairwiseTraitsToCompare/{chunk}.txt.gz"
     output:
-        "scratch/PairwisePi1Traits.P.{chunk}.txt.gz"
+        "pi1/PairwiseTraitsToCompare/P.{chunk}.txt.gz"
     log:
         "logs/GetPvalsForPi1AllTraitPairs/{chunk}.log"
     shell:

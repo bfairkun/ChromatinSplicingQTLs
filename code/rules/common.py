@@ -6,6 +6,7 @@ import glob
 autosomes = [str(i) for i in range(1,23)]
 
 N_PermutationChunks = 100
+NumPvalsForPi1Chunks = 10
 
 MyPhenotypes = ["Expression.Splicing", "Expression.Splicing.Subset_YRI", "chRNA.Expression.Splicing", 
                 "MetabolicLabelled.30min", "MetabolicLabelled.60min",

@@ -66,64 +66,10 @@ ruleorder: CopyFastqFromLocal > DownloadFastqFromLink
 
 rule all:
     input:
-        # expand("logs/PlotGruberQTLs/PlotFromShellScript.{pheno}.log", pheno=["H3K4ME3", "H3K27AC", "H3K4ME1"]),
-        ####expand(
-        ####    "QC/mbv/plots/{Phenotype}/{IndID}.{Rep}.pdf",
-        ####    zip,
-        ####    Phenotype=chRNASeqSamples_df["Phenotype"],
-        ####    IndID=chRNASeqSamples_df["IndID"],
-        ####    Rep=chRNASeqSamples_df["RepNumber"],
-        ####),
-        #Make bigwigs from test cut and tag
-        # "../output/QC/AutosomeCountsPerSamples.tsv",
-        # expand("bigwigs_FromNonWASPFilteredReads/{Phenotype}/{IndID}.{Rep}.bw", Phenotype=["POL2S5", "POL2S2", "H3K9ME3", "H3K36ME3", "H3K79ME2"], IndID="NA19210", Rep="1"),
-        ####multiext(
-        ####    "ReferenceGenome/Annotations/gencode.v34.primary_assembly.annotation.gtf",
-        ####    "_all_exons.txt.gz",
-        ####    "_all_introns.bed.gz",
-        ####    "_fiveprime.bed.gz",
-        ####    "_threeprime.bed.gz",
-        ####),
-        ####expand("SplicingAnalysis/IR/{Phenotype}/Counts.txt", Phenotype=RNASeqPhenotypes),
-        ####"SplicingAnalysis/leafcutter/clustering/autosomes/leafcutter_perind.counts.gz",
-        # "Multiqc/multiqc_report.html",
-        ####expand(
-        ####    "QTLs/QTLTools/{Phenotype}/{Pass}.FDR_Added.txt.gz",
-        ####    Phenotype=MyPhenotypes,
-        ####    Pass=["PermutationPass"],
-        ####),
-        ####expand(
-        ####    "featureCounts/{Phenotype}/NormFactors.tsv",
-        ####    Phenotype=[
-        ####        "chRNA.Expression.Splicing",
-        ####        "Expression.Splicing",
-        ####        "H3K4ME1",
-        ####        "H3K4ME3",
-        ####        "H3K27AC",
-        ####        "CTCF",
-        ####    ],
-        ####),
-        ####"ReferenceGenome/Annotations/GTFTools_BasicAnnotations/gencode.v34.chromasomal.tss.bed",
         expand(
             "featureCounts/AtTSS/{Phenotype}/Counts.txt",
             Phenotype=["H3K27AC", "H3K4ME3", "H3K4ME1", "ProCap"],
         ),
-        ####expand(
-        ####    "featureCounts/{Phenotype}/Counts.txt",
-        ####    Phenotype=["MetabolicLabelled.30min", "MetabolicLabelled.60min"],
-        ####),
-        #expand(
-        #   "gwas_summary_stats/full_data/{accession}.tsv.gz", accession=gwas_df.index
-        #),
-        ####expand(
-        ####    "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.gz",
-        ####    Phenotype=PhenotypesToColoc,
-        ####    QTLsGenotypeSet=["", "HarmonizedSNPs"],
-        ####    FeatureCoordinatesRedefinedFor=["", "ForColoc", "ForGWASColoc"],
-        ####    Pass=["NominalPass", "PermutationPass"],
-        ####),
-        ####"featureCounts/chRNA.Expression.Splicing/CountsExons.txt",
-        ####"featureCounts/chRNA.Expression.Splicing/CountTable.MeanLogRPKM.txt.gz",
         expand("QTLs/QTLTools/{Phenotype}/PermutationPass.FDR_Added.txt.gz", Phenotype=MyPhenotypes),
         expand("QTLs/QTLTools/{Phenotype}/PermutationPassForColoc.txt.gz", Phenotype=MyPhenotypes),
         expand("hyprcoloc/Results/ForColoc/{ColocName}/tidy_results_OnlyColocalized.txt.gz", ColocName = colocs_genewise.index),
@@ -141,6 +87,7 @@ rule all:
         ),
         "QTLs/QTLTools/polyA.Splicing.5PrimeSS.Subset_YRI/NominalPass.txt.gz",
         "QTLs/QTLTools/polyA.Splicing.3PrimeSS.Subset_YRI/NominalPass.txt.gz",
+        expand("scratch/PairwisePi1Traits.P.{chunk}.txt.gz", chunk=range(1, NumPvalsForPi1Chunks+1))
 
 rule Collect_chRNASeq_Fastq:
     """
