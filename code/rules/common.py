@@ -12,8 +12,9 @@ MyPhenotypes = ["Expression.Splicing", "Expression.Splicing.Subset_YRI", "chRNA.
                 "CTCF", "H3K27AC", "H3K4ME3", "H3K4ME1", "H3K36ME3", "ProCap",
                 "polyA.Splicing", "polyA.Splicing.Subset_YRI", "chRNA.Splicing", 
                 'MetabolicLabelled.30min.Splicing', 'MetabolicLabelled.60min.Splicing', 
-                "polyA.Expression_ncRNA", "polyA.Expression_ncRNA.Subset_YRI", "chRNA.Expression_ncRNA", 
-                'MetabolicLabelled.30min_ncRNA', 'MetabolicLabelled.60min_ncRNA',
+                #"polyA.Expression_ncRNA", "polyA.Expression_ncRNA.Subset_YRI", 
+                "chRNA.Expression_ncRNA", 
+                #'MetabolicLabelled.30min_ncRNA', 'MetabolicLabelled.60min_ncRNA',
                 'polyA.IER', 'polyA.IER.Subset_YRI', 'chRNA.IER','MetabolicLabelled.30min.IER', 'MetabolicLabelled.60min.IER',
                 "chRNA.Slopes", 'chRNA.Splicing.Order']
 
