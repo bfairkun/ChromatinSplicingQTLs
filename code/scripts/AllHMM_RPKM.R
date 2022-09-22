@@ -53,12 +53,16 @@ Out <- bed %>%
 
 write_tsv(Out, paste0("NonCodingRNA", merged, "/Expression_HMM/OnlyFirstReps.qqnorm.bed.gz"))
 
+dat.rpkm <- dat %>%
+    column_to_rownames("Geneid") %>%
+    select(everything(), -c("Chr", "Start", "End", "Strand", "Length", "NA18855")) %>%
+    rpkm(gene.length=dat$Length, prior.count=0.1)
 
 
 RPKM.Out <- bed %>%
     select(Geneid, Chr, Start, End, Strand) %>%
     inner_join(
-               (dat.cpm %>% as.data.frame() %>% rownames_to_column("Geneid")),
+               (dat.rpkm %>% as.data.frame() %>% rownames_to_column("Geneid")),
                by = "Geneid") %>%
     mutate(across(where(is.numeric), round, 5)) %>%
     dplyr::select(`#Chr`=Chr, start=Start, end=End, pid=Geneid, gid=Geneid, strand=Strand, everything()) %>%

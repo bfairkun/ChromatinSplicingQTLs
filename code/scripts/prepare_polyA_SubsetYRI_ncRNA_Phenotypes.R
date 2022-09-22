@@ -4,24 +4,24 @@ library(edgeR)
 library(RNOmni)
 
 subset_YRI_in <- "QTLs/QTLTools/Expression.Splicing.Subset_YRI/OnlyFirstReps.qqnorm.bed.gz"
-ncRNA_RPKM_in <- "QTLs/QTLTools/polyA.Expression_ncRNA/OnlyFirstReps.RPKM.bed.gz"
+ncRNA_CPM_in <- "QTLs/QTLTools/polyA.Expression_ncRNA/OnlyFirstReps.CPM.bed.gz"
 Genes_bed_f_in <- "ExpressionAnalysis/polyA/ExpressedGeneList.txt" 
 
 subset_YRI <- read_tsv(subset_YRI_in, n_max=Inf) %>%
             select(everything(), -c("#Chr", "start", "end", "pid", "gid", "strand")) %>% colnames()
 
 
-bed_rpkm <- read_tsv(ncRNA_RPKM_in, n_max=Inf) #%>%
+bed_cpm <- read_tsv(ncRNA_CPM_in, n_max=Inf) #%>%
     #rename_with(get(ColumnRenamerFunction), starts_with("Alignments")) %>%
     #select(1:6, matches("\\.1$")) #%>%
     #rename_with(~str_remove(., '\\.1$')) #%>%
 
-bed <- bed_rpkm %>% select(1:6)
+bed <- bed_cpm %>% select(1:6)
 
 rownames(bed) <- bed$pid
 
 
-dat.cpm <- bed_rpkm %>% select(subset_YRI)
+dat.cpm <- bed_cpm %>% select(subset_YRI)
 
 rownames(dat.cpm) <- bed$pid
 

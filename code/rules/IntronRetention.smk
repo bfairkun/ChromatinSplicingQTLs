@@ -132,3 +132,40 @@ use rule CollectSPLICEq_chRNA as CollectSPLICEq_M60 with:
         min_fraction = 0.1
 
 
+rule MakeGeneIntronCounts_chRNA:
+    input:
+        expand("SplicingAnalysis/SPLICEq/{{Phenotype}}.IER/{IndID}.spliceq.tab", IndID=chRNAsamples)
+    output:
+        "SplicingAnalysis/GeneIntronCounts/{Phenotype}.GeneIntronCounts.bed.gz"
+    log:
+        "logs/spliceq/{Phenotype}.gene_counts.log"
+    wildcard_constraints:
+        Phenotype = 'chRNA'
+    shell:
+        """
+        python scripts/make_intron_counts.py --phenotype {wildcards.Phenotype} --output {output} &> {log}
+        """
+        
+use rule MakeGeneIntronCounts_chRNA as MakeGeneIntronCounts_polyA:
+    input:
+        expand("SplicingAnalysis/SPLICEq/{{Phenotype}}.IER/{IndID}.spliceq.tab", IndID=polyAsamples)
+    wildcard_constraints:
+        Phenotype = 'polyA'
+        
+use rule MakeGeneIntronCounts_chRNA as MakeGeneIntronCounts_ml30:
+    input:
+        expand("SplicingAnalysis/SPLICEq/{{Phenotype}}.IER/{IndID}.spliceq.tab", IndID=metabolic30samples)
+    wildcard_constraints:
+        Phenotype = 'MetabolicLabelled.30min'
+        
+use rule MakeGeneIntronCounts_chRNA as MakeGeneIntronCounts_ml60:
+    input:
+        expand("SplicingAnalysis/SPLICEq/{{Phenotype}}.IER/{IndID}.spliceq.tab", IndID=metabolic60samples)
+    wildcard_constraints:
+        Phenotype = 'MetabolicLabelled.60min'
+        
+        
+        
+        
+        
+        

@@ -25,22 +25,30 @@ def get_ncRNA_distance(ncRNA_strand, ncRNA1, ncRNA2, strand):
         distance = FivePrimeEnd - ThreePrimeStart
     return distance
 
-def get_ncRNA_RPKM_ratio(ncRNA_RPKM_median, ncRNA1, ncRNA2):
-    rpkm1 = np.array(np.exp(ncRNA_RPKM_median.loc[ncRNA1]))
-    rpkm2 = np.array(np.exp(ncRNA_RPKM_median.loc[ncRNA2]))
+# def get_ncRNA_RPKM_ratio(ncRNA_RPKM_median, ncRNA1, ncRNA2):
+#     rpkm1 = np.array(np.exp(ncRNA_RPKM_median.loc[ncRNA1]))
+#     rpkm2 = np.array(np.exp(ncRNA_RPKM_median.loc[ncRNA2]))
     
-    ratio = np.median(rpkm1/rpkm2)
+#     ratio = np.median(rpkm1/rpkm2)
+    
+#     return ratio
+
+def get_ncRNA_RPKM_ratio(ncRNA_RPKM_median, ncRNA1, ncRNA2):
+    rpkm1 = np.array(ncRNA_RPKM_median.loc[ncRNA1])
+    rpkm2 = np.array(ncRNA_RPKM_median.loc[ncRNA2])
+    
+    ratio = np.median(rpkm1/(rpkm2+1e-20))
     
     return ratio
 
-def get_ncRNA_RPKM_correlation(qqnorm, ncRNA1, ncRNA2):
+def get_ncRNA_qqnorm_correlation(qqnorm, ncRNA1, ncRNA2):
     r = pearsonr(qqnorm.loc[ncRNA1], qqnorm.loc[ncRNA2])[0]
     return r
 
 
 def filter_trailing_ncRNA(ncRNA_bed, ncRNA_RPKM, ncRNA_qqnorm, distance_thre, cor_thre, RPKM_ratio_thre):
     ncRNA_plus = ncRNA_bed.loc[(ncRNA_bed.strand == '+') & (ncRNA_bed.chrom != 'chrY')]
-    ncRNA_minus = ncRNA_bed.loc[(ncRNA_bed.strand == '-') & (ncRNA_bed.chrom != 'chrY')]
+    ncRNA_minus = ncRNA_bed.loc[(ncRNA_bed.strand == '-') & (ncRNA_bed.chrom != 'chrY')].sort_values(['chrom', 'end'])
 #     ncRNA_corr = ncRNA_qqnorm.T.corr()
     ncRNA_RPKM_median = ncRNA_RPKM.median(axis=1)
     
@@ -78,21 +86,26 @@ def filter_trailing_ncRNA(ncRNA_bed, ncRNA_RPKM, ncRNA_qqnorm, distance_thre, co
         if int(ncRNA_plus.loc[anchor, 'end']) > int(ncRNA_plus.loc[ncRNA, 'end']):
             continue
             
-        if ncRNA[:5] != 'ncRNA':
-            anchor = ncRNA
-            current_trail = ncRNA
+        if int(ncRNA_plus.loc[current_trail, 'end']) > int(ncRNA_plus.loc[ncRNA, 'end']):
             continue
+            
+#         if ncRNA[:5] != 'ncRNA':
+#             anchor = ncRNA
+#             current_trail = ncRNA
+#             continue
         
         ###############################################################3
             
         distance =  get_ncRNA_distance(ncRNA_plus, current_trail, ncRNA, '+')
-        corr = get_ncRNA_RPKM_correlation(ncRNA_qqnorm, anchor, ncRNA)
-        corr_trail = get_ncRNA_RPKM_correlation(ncRNA_qqnorm, current_trail, ncRNA)
+        corr = get_ncRNA_qqnorm_correlation(ncRNA_qqnorm, anchor, ncRNA)
+        corr_trail = get_ncRNA_qqnorm_correlation(ncRNA_qqnorm, current_trail, ncRNA)
         ratio = get_ncRNA_RPKM_ratio(ncRNA_RPKM, anchor, ncRNA)
         
         
         is_trail = (distance <= distance_thre) and ((corr >= cor_thre) or (corr_trail >= cor_thre)) and (ratio >= RPKM_ratio_thre)
-        is_trail = is_trail or ((distance < 1000) and ((corr >= 0.2) or (corr_trail >= 0.2)) and (ratio >= 10))
+        is_trail = is_trail or ((distance < 10000) and ((corr >= 0.2) or (corr_trail >= 0.2)) and (ratio >= 2))
+        is_trail = is_trail or ((distance < 100000) and ((corr >= 0.5) or (corr_trail >= 0.5)) and (ratio >= 2))
+        is_trail = is_trail or ((distance < distance_thre) and ((corr > 0) and (corr_trail > 0)) and (ratio >= 10))
         
         if is_trail:
             plus_trail.append(ncRNA)
@@ -140,21 +153,26 @@ def filter_trailing_ncRNA(ncRNA_bed, ncRNA_RPKM, ncRNA_qqnorm, distance_thre, co
         if int(ncRNA_minus.loc[anchor, 'start']) < int(ncRNA_minus.loc[ncRNA, 'start']):
             continue
             
-        if ncRNA[:5] != 'ncRNA':
-            anchor = ncRNA
-            current_trail = ncRNA
+        if int(ncRNA_minus.loc[current_trail, 'start']) < int(ncRNA_minus.loc[ncRNA, 'start']):
             continue
+            
+#         if ncRNA[:5] != 'ncRNA':
+#             anchor = ncRNA
+#             current_trail = ncRNA
+#             continue
         
         ###############################################################3
             
         distance =  get_ncRNA_distance(ncRNA_minus, current_trail, ncRNA, '-')
-        corr = get_ncRNA_RPKM_correlation(ncRNA_qqnorm, anchor, ncRNA)
-        corr_trail = get_ncRNA_RPKM_correlation(ncRNA_qqnorm, current_trail, ncRNA)
+        corr = get_ncRNA_qqnorm_correlation(ncRNA_qqnorm, anchor, ncRNA)
+        corr_trail = get_ncRNA_qqnorm_correlation(ncRNA_qqnorm, current_trail, ncRNA)
         ratio = get_ncRNA_RPKM_ratio(ncRNA_RPKM, anchor, ncRNA)
         
         
         is_trail = (distance <= distance_thre) and ((corr >= cor_thre) or (corr_trail >= cor_thre)) and (ratio >= RPKM_ratio_thre)
-        is_trail = is_trail or ((distance < 1000) and ((corr >= 0.2) or (corr_trail >= 0.2)) and (ratio >= 10))
+        is_trail = is_trail or ((distance < 10000) and ((corr >= 0.2) or (corr_trail >= 0.2)) and (ratio >= 2))
+        is_trail = is_trail or ((distance < 50000) and ((corr >= 0.5) or (corr_trail >= 0.5)) and (ratio >= 2))
+        is_trail = is_trail or ((distance < distance_thre) and ((corr > 0) and (corr_trail > 0)) and (ratio >= 10))
         
         if is_trail:
             minus_trail.append(ncRNA)
@@ -196,10 +214,10 @@ if __name__ == '__main__':
     qqnorm.index = qqnorm.pid
     
     
+    
     ncRNA_trail = filter_trailing_ncRNA(ncRNA_bed, RPKM[samples], qqnorm[samples], distance_thre = distance, 
                                    cor_thre = min_correlation, RPKM_ratio_thre = RPKM_ratio)
     
-    print(ncRNA_trail)
     filter1 = pd.Index([x for x in RPKM.index if x not in ncRNA_trail])
     filter2 = filter1[np.exp(RPKM.loc[filter1, samples]).quantile(0.9, axis=1) >= min_RPKM]
     
