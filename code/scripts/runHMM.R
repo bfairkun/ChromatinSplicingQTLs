@@ -1,5 +1,9 @@
+print('loading tidyverse')
 library(tidyverse)
+print('loading STAN')
 library(STAN)
+
+print('Running...')
 
 args <- commandArgs(trailingOnly=TRUE)
 

@@ -207,12 +207,12 @@ if __name__ == '__main__':
     annot = []
     for idx in annotation_df.index:
         rna_type = []
-        if idx in uaRNA_dict.keys():
+        if ((idx in uaRNA_dict.keys()) and not (idx in srtRNA_dict.keys())):
             uaRNA_annot.append('|'.join(uaRNA_dict[idx]))
             rna_type.append('uaRNA')
         else:
             uaRNA_annot.append('.')
-        if idx in coRNA_dict.keys():
+        if ((idx in coRNA_dict.keys()) and not (idx in srtRNA_dict.keys())):
             coRNA_annot.append('|'.join(coRNA_dict[idx]))
             rna_type.append('coRNA')
         else:

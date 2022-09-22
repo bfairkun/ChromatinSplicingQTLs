@@ -123,7 +123,6 @@ rule all:
         ####    Pass=["NominalPass", "PermutationPass"],
         ####),
         ####"featureCounts/chRNA.Expression.Splicing/CountsExons.txt",
-        ####"featureCounts/chRNA.Expression.Splicing/CountTable.MeanLogRPKM.txt.gz",
         expand("QTLs/QTLTools/{Phenotype}/PermutationPass.FDR_Added.txt.gz", Phenotype=MyPhenotypes),
         expand("QTLs/QTLTools/{Phenotype}/PermutationPassForColoc.txt.gz", Phenotype=MyPhenotypes),
         expand("hyprcoloc/Results/ForColoc/{ColocName}/tidy_results_OnlyColocalized.txt.gz", ColocName = colocs_genewise.index),
@@ -215,15 +214,19 @@ rule plotNonCodingRNA:
   
 rule ncRNA_annotation_caller:
     input:
-        "NonCodingRNA_annotation/annotation/ncRNA.bed.gz",
-        'NonCodingRNA_annotation/annotation/ncRNA.histone.tab.gz',
-        'NonCodingRNA_annotation/annotation/allGenes.histone.tab.gz'
+        "NonCodingRNA_merged/annotation/ncRNA.bed.gz",
+        'NonCodingRNA_merged/annotation/ncRNA.histone.tab.gz',
+        'NonCodingRNA_merged/annotation/allGenes.histone.tab.gz',
+        "NonCodingRNA_merged/Expression_ncRNA_and_reverse/chRNA.Expression_featureCounts/Counts.txt"
         
 rule QTLTools_caller:
     input:
         expand(
-          "QTLs/QTLTools/chRNA.Expression{RNA_type}/OnlyFirstReps.{data_type}.bed.gz",
-          RNA_type = [".Splicing", "_ncRNA"], data_type = ['qqnorm', 'RPKM']
+          "QTLs/QTLTools/chRNA.Expression{RNA_type}/OnlyFirstReps.qqnorm.bed.gz",
+          RNA_type = [".Splicing", "_ncRNA"],
+        ),
+        expand("RPKM_tables/{Phenotype}.RPKM.bed.gz",
+               Phenotype = ["chRNA", "polyA", "MetabolicLabelled.30min", "MetabolicLabelled.60min"]
         ),
         expand(
           "QTLs/QTLTools/{Phenotype}/{Pass}.txt.gz",

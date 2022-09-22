@@ -278,7 +278,7 @@ rule GetNonCodingRNAFromHMM:
         annotated_temp = "NonCodingRNA{HMM_pass}/annotation/tmp/AnnotatedTemp.bed",
         annotated_HMM = "NonCodingRNA{HMM_pass}/annotation/AnnotatedHMM.bed.gz",
         temp_merged = "NonCodingRNA{HMM_pass}/annotation/tmp/allHMM.merged_temp.bed",
-        merged_allHMM = "NonCodingRNA{HMM_pass}/annotation/allHMM.merged.bed.gz",
+        merged_allHMM = "NonCodingRNA{HMM_pass}/annotation/tmp/allHMM.merged.bed.gz",
         protein_coding_HMM = "NonCodingRNA{HMM_pass}/annotation/protein_coding_HMM.bed.gz",
     params:
         #length = 1000,
@@ -307,9 +307,9 @@ rule GetNonCodingRNAFromHMM:
         """
 
 
-##################################################
-#    Get expression to filter trailing ncRNAs    #
-##################################################
+######################################################
+#    Get expression to filter out trailing ncRNAs    #
+######################################################
 
 rule MakeSAFAnnotationForNonCodingRNA:
     input:
@@ -330,8 +330,6 @@ use rule MakeSAFAnnotationForNonCodingRNA as MakeSAFAnnotationForAllHMM with:
         "NonCodingRNA{HMM_pass}/annotation/allHMM.merged.bed.gz",
     output:
         "NonCodingRNA{HMM_pass}/annotation/allHMM.merged.saf",
-    wildcard_constraints:
-        HMM_pass = '_annotation|_merged',
     log:
         "logs/NonCodingRNA{HMM_pass}/getSAFforAllHMM.log"
 
@@ -401,19 +399,71 @@ rule FilterNonCodingRNA:
         min_RPKM = -1,
         distance = 20000,
         min_correlation = 0.3, 
-        RPKM_ratio = 2
+        RPKM_ratio = 0.9
     shell:
         """
         python scripts/filter_ncRNAs.py --min_RPKM {params.min_RPKM} --distance {params.distance} --min_correlation {params.min_correlation} --RPKM_ratio {params.RPKM_ratio} {params.merge} &> {log}
         """
         
-
-### For now, only standard HMM_pass for phenotype.
         
+#####################
+#   Merge incRNAs   #
+#####################
+
+rule MergeIntergenicNonCodingRNAs:
+    input:
+        chrom = "../data/Chrome.sizes",
+        genes = "NonCodingRNA{HMM_pass}/annotation/allGenes.bed.gz",
+        ncRNA = "NonCodingRNA{HMM_pass}/annotation/ncRNA.2states.sorted.bed.gz"
+        #ncRNA = "NonCodingRNA{HMM_pass}/annotation/tmp/ncRNA.filter_trailers.bed.gz",
+    output:
+        "NonCodingRNA{HMM_pass}/annotation/tmp/merged_incRNA.bed.gz",
+    log:
+        "logs/NonCodingRNA{HMM_pass}/get_merged_incRNA.log"
+    wildcard_constraints:
+        HMM_pass = '_annotation|_merged',
+    shell:
+        """
+        (bedtools slop -b 50000 -g {input.chrom} -i {input.genes} | bedtools intersect -v -a {input.ncRNA} -b - -wa | bedtools merge -s -d 50000 -i - -c 4,5,6 -o first | bedtools sort -i - | gzip - > {output}) &> {log}
+        """
+        
+rule GetAllHMMMerged:
+    input:
+        ncRNA = "NonCodingRNA{HMM_pass}/annotation/tmp/allHMM.merged.bed.gz",
+        #ncRNA = "NonCodingRNA{HMM_pass}/annotation/tmp/ncRNA.filter_trailers.bed.gz",
+        incRNA = "NonCodingRNA{HMM_pass}/annotation/tmp/merged_incRNA.bed.gz",
+    output:
+        ncRNA = "NonCodingRNA{HMM_pass}/annotation/allHMM.merged.bed.gz"
+    log:
+        "logs/NonCodingRNA{HMM_pass}/get_ncRNA.log"
+    wildcard_constraints:
+        HMM_pass = '_annotation|_merged',
+    shell:
+        """
+        (bedtools intersect -v -s -a {input.ncRNA} -b {input.incRNA} -wa > NonCodingRNA{wildcards.HMM_pass}/annotation/tmp/allHMM.merged.unsorted.bed) &> {log};
+        (zcat {input.incRNA} >> NonCodingRNA{wildcards.HMM_pass}/annotation/tmp/allHMM.merged.unsorted.bed) &>> {log};
+        (bedtools sort -i NonCodingRNA{wildcards.HMM_pass}/annotation/tmp/allHMM.merged.unsorted.bed | gzip - > {output}) &>> {log}
+        """
+        
+
+#######################################
+# Get SAF for phenotype featureCounts #
+#######################################
+
+use rule MakeSAFAnnotationForNonCodingRNA as MakeSAFAnnotationForNonCodingRNAPhenotype with:
+    input:
+        "NonCodingRNA{HMM_pass}/annotation/NonCodingRNA.bed.gz",
+    output:
+        "NonCodingRNA{HMM_pass}/annotation/NonCodingRNA.saf",
+    wildcard_constraints:
+        HMM_pass = '_merged'
+    log:
+        "logs/NonCodingRNA{HMM_pass}/getSAFforNonCodingRNA.log"
+
 rule featureCountsNonCodingRNA:
     input:
         bam = GetBamForPhenotype,
-        saf = "NonCodingRNA_annotation/annotation/ncRNA.saf",
+        saf = "NonCodingRNA_merged/annotation/NonCodingRNA.saf",
     output:
         "featureCounts/{Phenotype}_ncRNA/Counts.txt",
     params:
@@ -433,6 +483,49 @@ rule featureCountsNonCodingRNA:
         featureCounts {params.extraParams} {params.strandParams} -F SAF -T {threads} --ignoreDup --primary -a {input.saf} -o featureCounts/{wildcards.Phenotype}_ncRNA/Counts.txt {input.bam} &> {log};
         """
 
+
+####################################
+# Get reverse counts for filtering #
+####################################
+
+rule GetNonCodingRNAReverseSAF:
+    input:
+        "NonCodingRNA{HMM_pass}/annotation/ncRNA.saf",
+    output:
+        "NonCodingRNA{HMM_pass}/annotation/tmp/ncRNA_and_reverse.saf",
+    wildcard_constraints:
+        HMM_pass = '_annotation|_merged',
+    log:
+        "logs/NonCodingRNA{HMM_pass}/make_negative_ncRNA_saf.log"
+    shell:
+        """
+        python scripts/make_ncRNA_saf_with_reverse.py --saf {input} --output {output} &> {log}
+        """
+    
+rule featureCountsReverseNonCodingRNA:
+    input:
+        bam = GetBamForPhenotype,
+        saf = "NonCodingRNA{HMM_pass}/annotation/tmp/ncRNA_and_reverse.saf",
+    output:
+        "NonCodingRNA{HMM_pass}/Expression_ncRNA_and_reverse/{Phenotype}_featureCounts/Counts.txt",
+    log:
+        "logs/NonCodingRNA{HMM_pass}/featureCounts_for_ncRNA_and_reverse/{Phenotype}.log"
+    params:
+        extraParams = PairedEndParams,
+        strandParams = FeatureCountsNonCodingStrandParams
+    threads:
+        8
+    wildcard_constraints:
+        HMM_pass = '_annotation|_merged',
+        Phenotype = "chRNA.Expression",
+    resources:
+        mem_mb = 12000,
+        cpus_per_node = 9,
+    shell:
+        """
+        featureCounts {params.extraParams} {params.strandParams} -F SAF -T {threads} --ignoreDup --primary -a {input.saf} -o NonCodingRNA{wildcards.HMM_pass}/Expression_ncRNA_and_reverse/{wildcards.Phenotype}_featureCounts/Counts.txt {input.bam} &> {log};
+        """
+        
 
 ########################################
 #          Get TSS and 3' end          #
@@ -468,7 +561,6 @@ rule GetTSSAnnotations:
         ncRNA_tss = "NonCodingRNA{HMM_pass}/annotation/ncRNA.TSS.bed.gz",
         genes_temp = temp("NonCodingRNA{HMM_pass}/annotation/allGenes.FirstTSS_temp.bed"),
         genes_tss = "NonCodingRNA{HMM_pass}/annotation/allGenes.FirstTSS.bed.gz",
-        #all_genes_tss = "NonCodingRNA{HMM_pass}/annotation/allGenes.TSS.bed.gz"
     wildcard_constraints:
         HMM_pass = '_annotation|_merged',
     log:
@@ -545,6 +637,22 @@ rule Get3PrimeEndAnnotations:
         (bedtools sort -i {output.genes_last_temp} | bedtools slop -b {params.window} -g {input.chrom_sizes} -i - | gzip - > {output.genes_3prime_last}) &>> {log};
         """
  
+ 
+rule FilterNonCodingRNAsByExpression:
+    input:
+        'NonCodingRNA_merged/annotation/ncRNA.bed.gz',
+        'NonCodingRNA_merged/Expression_HMM/OnlyFirstReps.RPKM.bed.gz',
+        'NonCodingRNA_merged/Expression_ncRNA_and_reverse/chRNA.Expression_featureCounts/Counts.txt',
+        'NonCodingRNA_merged/annotation/ncRNA.histone.tab.gz'
+    output:
+        'NonCodingRNA_merged/annotation/NonCodingRNA.bed.gz',
+        'NonCodingRNA_merged/annotation/NonCodingRNA.annotation.tab.gz'
+    log:
+        'logs/NonCodingRNA/filter_ncRNA_by_expression.log'
+    shell:
+        '''
+        python scripts/filter_ncRNAs_by_expression.py &> {log}
+        '''
         
 ###################################
 #        Classify ncRNAs          #
@@ -569,6 +677,25 @@ rule uaRNA:
         (gzip NonCodingRNA{wildcards.HMM_pass}/annotation/tmp/uaRNA.bed) &>> {log}
         """
 
+rule uaRNA_annotated:
+    input:
+        ncRNA_tss = "NonCodingRNA{HMM_pass}/annotation/ncRNA.TSS.bed.gz",
+        genes_tss = "NonCodingRNA{HMM_pass}/annotation/allGenes.TSS.bed.gz",
+    resources:
+        mem_mb = 58000,
+    output:
+        uaRNA = "NonCodingRNA{HMM_pass}/annotation/tmp/uaRNA.annotated.bed.gz",
+    log:
+        "logs/NonCodingRNA{HMM_pass}/ncRNA_annotation/uaRNAs.annotated.log"
+    wildcard_constraints:
+        HMM_pass = '_annotation|_merged',
+    shell:
+        """
+        (bedtools intersect -S -a {input.genes_tss} -b {input.genes_tss} -wo | awk -F"\\t" '{{$4=$5;NF--}}1' OFS="\\t" - > NonCodingRNA{wildcards.HMM_pass}/annotation/tmp/uaRNA.annotated.bed) &> {log}
+        (bedtools intersect -S -a {input.genes_tss} -b {input.ncRNA_tss} -wo | awk -F"\\t" '{{$4=$5;NF--}}1' OFS="\\t" - >> NonCodingRNA{wildcards.HMM_pass}/annotation/tmp/uaRNA.annotated.bed) &>> {log}
+        (gzip NonCodingRNA{wildcards.HMM_pass}/annotation/tmp/uaRNA.annotated.bed) &>> {log}
+        """
+
 rule rtRNA:
     input:
         ncRNA_bed = "NonCodingRNA{HMM_pass}/annotation/ncRNA.bed.gz",
@@ -584,8 +711,27 @@ rule rtRNA:
     shell:
         """
         (bedtools intersect -S -a {input.ncRNA_bed} -b {input.genes_bed} -wo > NonCodingRNA{wildcards.HMM_pass}/annotation/tmp/rtRNA.bed) &> {log}
-        (bedtools intersect -S -a {input.ncRNA_bed} -b {input.ncRNA_bed} -wo >> NonCodingRNA{wildcards.HMM_pass}/annotation/tmp/rtRNA.bed) &>> {log}
+        #(bedtools intersect -S -a {input.ncRNA_bed} -b {input.ncRNA_bed} -wo >> NonCodingRNA{wildcards.HMM_pass}/annotation/tmp/rtRNA.bed) &>> {log}
         (gzip NonCodingRNA{wildcards.HMM_pass}/annotation/tmp/rtRNA.bed) &>> {log}
+        """
+        
+rule rtRNA_annotated:
+    input:
+        ncRNA_bed = "NonCodingRNA{HMM_pass}/annotation/ncRNA.bed.gz",
+        genes_bed = "NonCodingRNA{HMM_pass}/annotation/tmp/allGenes.Gencode.bed.gz"
+    resources:
+        mem_mb = 58000,
+    output:
+        rtRNA = "NonCodingRNA{HMM_pass}/annotation/tmp/rtRNA.annotated.bed.gz",
+    log:
+        "logs/NonCodingRNA{HMM_pass}/ncRNA_annotation/rtRNAs.annotated.log"
+    wildcard_constraints:
+        HMM_pass = '_annotation|_merged',
+    shell:
+        """
+        (bedtools intersect -S -a {input.genes_bed} -b {input.genes_bed} -wo | awk -F"\\t" '{{$4=$5;NF--}}1' OFS="\\t" - > NonCodingRNA{wildcards.HMM_pass}/annotation/tmp/rtRNA.annotated.bed) &> {log}
+        #(bedtools intersect -S -a {input.genes_bed} -b {input.ncRNA_bed} -wo | awk -F"\\t" '{{$4=$5;NF--}}1' OFS="\\t" - >> NonCodingRNA{wildcards.HMM_pass}/annotation/tmp/rtRNA.annotated.bed) &>> {log}
+        (gzip NonCodingRNA{wildcards.HMM_pass}/annotation/tmp/rtRNA.annotated.bed) &>> {log}
         """
 
 rule srtRNA:
@@ -605,6 +751,25 @@ rule srtRNA:
         (bedtools intersect -S -a {input.ncRNA_bed} -b {input.genes_bed} -wo -f 1  > NonCodingRNA{wildcards.HMM_pass}/annotation/tmp/srtRNA.bed) &> {log}
         (bedtools intersect -S -a {input.ncRNA_bed} -b {input.ncRNA_bed} -wo -f 1 >> NonCodingRNA{wildcards.HMM_pass}/annotation/tmp/srtRNA.bed) &>> {log}
         (gzip NonCodingRNA{wildcards.HMM_pass}/annotation/tmp/srtRNA.bed) &>> {log}
+        """
+        
+rule srtRNA_annotated:
+    input:
+        ncRNA_bed = "NonCodingRNA{HMM_pass}/annotation/ncRNA.bed.gz",
+        genes_bed = "NonCodingRNA{HMM_pass}/annotation/tmp/allGenes.Gencode.bed.gz"
+    resources:
+        mem_mb = 58000,
+    output:
+        rtRNA = "NonCodingRNA{HMM_pass}/annotation/tmp/srtRNA.annotated.bed.gz",
+    log:
+        "logs/NonCodingRNA{HMM_pass}/ncRNA_annotation/srtRNAs.annotated.log"
+    wildcard_constraints:
+        HMM_pass = '_annotation|_merged',
+    shell:
+        """
+        (bedtools intersect -S -a {input.genes_bed} -b {input.genes_bed} -wo -f 1 | awk -F"\\t" '{{$4=$5;NF--}}1' OFS="\\t" - > NonCodingRNA{wildcards.HMM_pass}/annotation/tmp/srtRNA.annotated.bed) &> {log}
+        (bedtools intersect -S -a {input.genes_bed} -b {input.ncRNA_bed} -wo -f 1 | awk -F"\\t" '{{$4=$5;NF--}}1' OFS="\\t" - >> NonCodingRNA{wildcards.HMM_pass}/annotation/tmp/srtRNA.annotated.bed) &>> {log}
+        (gzip NonCodingRNA{wildcards.HMM_pass}/annotation/tmp/srtRNA.annotated.bed) &>> {log}
         """
 
 rule coRNA:
@@ -626,6 +791,26 @@ rule coRNA:
         (bedtools intersect -S -a {input.ncRNA_bed} -b {input.ncRNA_3prime_end} -wo >> NonCodingRNA{wildcards.HMM_pass}/annotation/tmp/coRNA.bed) &>> {log}
         (gzip NonCodingRNA{wildcards.HMM_pass}/annotation/tmp/coRNA.bed) &>> {log}
         """
+        
+rule coRNA_annotated:
+    input:
+        ncRNA_bed = "NonCodingRNA{HMM_pass}/annotation/tmp/noncoding.annotated.bed.gz",
+        ncRNA_3prime_end = "NonCodingRNA{HMM_pass}/annotation/ncRNA.3PrimeEnd.bed.gz",
+        genes_3prime_last = "NonCodingRNA{HMM_pass}/annotation/allGenes.Last3PrimeEnd.bed.gz",
+    resources:
+        mem_mb = 58000,
+    output:
+        coRNA = "NonCodingRNA{HMM_pass}/annotation/tmp/coRNA.annotated.bed.gz",
+    wildcard_constraints:
+        HMM_pass = '_annotation|_merged',
+    log:
+        "logs/NonCodingRNA{HMM_pass}/ncRNA_annotation/coRNAs.annotated.log"
+    shell:
+        """
+        (bedtools intersect -S -a {input.ncRNA_bed} -b {input.genes_3prime_last} -wo > NonCodingRNA{wildcards.HMM_pass}/annotation/tmp/coRNA.annotated.bed) &> {log}
+        (bedtools intersect -S -a {input.ncRNA_bed} -b {input.ncRNA_3prime_end} -wo >> NonCodingRNA{wildcards.HMM_pass}/annotation/tmp/coRNA.annotated.bed) &>> {log}
+        (gzip NonCodingRNA{wildcards.HMM_pass}/annotation/tmp/coRNA.annotated.bed) &>> {log}
+        """
 
 rule incRNA:
     input:
@@ -644,6 +829,26 @@ rule incRNA:
         (bedtools intersect -v -a {input.ncRNA_bed} -b {input.genes_bed} -wa | gzip - > {output.incRNA}) &> {log}
         """
         
+rule incRNA_annotated: 
+    input:
+        ncRNA_bed = "NonCodingRNA{HMM_pass}/annotation/tmp/noncoding.annotated.bed.gz",
+        ncRNA_bed_unnanotated = "NonCodingRNA{HMM_pass}/annotation/ncRNA.bed.gz",
+        genes_bed = "NonCodingRNA{HMM_pass}/annotation/tmp/protein_coding.bed.gz"
+    resources:
+        mem_mb = 58000,
+    output:
+        incRNA_temp = temp("NonCodingRNA{HMM_pass}/annotation/tmp/incRNA.annotated.tmp.bed.gz"),
+        incRNA = "NonCodingRNA{HMM_pass}/annotation/tmp/incRNA.annotated.bed.gz",
+    log:
+        "logs/NonCodingRNA{HMM_pass}/ncRNA_annotation/incRNAs.annotated.log"
+    wildcard_constraints:
+        HMM_pass = '_annotation|_merged',
+    shell:
+        """
+        (bedtools intersect -v -a {input.ncRNA_bed} -b {input.genes_bed} -wa | gzip - > {output.incRNA_temp}) &> {log};
+        (bedtools intersect -v -a {output.incRNA_temp} -b {input.ncRNA_bed_unnanotated} -wa | gzip - > {output.incRNA}) &> {log}
+        """
+        
 rule ctRNA:
     input:
         ncRNA_bed = "NonCodingRNA{HMM_pass}/annotation/ncRNA.bed.gz",
@@ -659,6 +864,26 @@ rule ctRNA:
     shell:
         """
         (bedtools intersect -s -a {input.ncRNA_bed} -b {input.genes_bed} -wo | gzip - > {output.ctRNA}) &> {log}
+        """
+        
+rule ctRNA_annotated:
+    input:
+        ncRNA_bed = "NonCodingRNA{HMM_pass}/annotation/tmp/noncoding.annotated.bed.gz",
+        ncRNA_bed_unnanotated = "NonCodingRNA{HMM_pass}/annotation/ncRNA.bed.gz",
+        genes_bed = "NonCodingRNA{HMM_pass}/annotation/tmp/protein_coding.bed.gz"
+    resources:
+        mem_mb = 58000,
+    output:
+        ctRNA = "NonCodingRNA{HMM_pass}/annotation/tmp/ctRNA.annotated.bed.gz",
+    log:
+        "logs/NonCodingRNA{HMM_pass}/ncRNA_annotation/ctRNAs.annotated.log"
+    wildcard_constraints:
+        HMM_pass = '_annotation|_merged',
+    shell:
+        """
+        (bedtools intersect -s -a {input.ncRNA_bed} -b {input.genes_bed} -wo > NonCodingRNA{wildcards.HMM_pass}/annotation/tmp/ctRNA.annotated.bed) &> {log};
+        (bedtools intersect -s -a {input.ncRNA_bed} -b {input.ncRNA_bed_unnanotated} -wo >> NonCodingRNA{wildcards.HMM_pass}/annotation/tmp/ctRNA.annotated.bed) &>> {log};
+        (gzip NonCodingRNA{wildcards.HMM_pass}/annotation/tmp/ctRNA.annotated.bed) &>> {log};
         """
         
 rule GetLncRNAs:
@@ -718,6 +943,41 @@ rule GetPsuedogenes:
         (bedtools intersect -a {input.ncRNA} -b {output.bed} -F 0.9 -wo | gzip - > {output.out}) &>> {log}
         """
         
+rule GetProteinCoding:
+    input:
+        gtf = "ReferenceGenome/Annotations/gencode.v34.chromasomal.annotation.gtf",
+    output:
+        bed = "NonCodingRNA{HMM_pass}/annotation/tmp/protein_coding.bed.gz",
+    resources:
+        mem_mb = 24000,
+    wildcard_constraints:
+        HMM_pass = '_annotation|_merged',
+    log:
+        "logs/NonCodingRNA{HMM_pass}/ncRNA_annotation/get_protein_coding.log"
+    shell:
+        """
+        (awk '$3=="gene" {{print $1, $4, $5, $7, $9}}' FS='\\t' OFS='\\t' {input.gtf} | awk '{{print $1, $2, $4, $6}}' FS='"' OFS='\\t' | awk '$7=="protein_coding" {{print $1, $2, $3, $6, $8, $4}}' FS='\\t' OFS='\\t' - | gzip - > {output.bed}) &> {log};
+        """
+        
+rule GetNonCodingAnnotated:
+    input:
+        pseudogenes = "NonCodingRNA{HMM_pass}/annotation/tmp/pseudogenes.bed.gz",
+        lncrna = "NonCodingRNA{HMM_pass}/annotation/tmp/lncRNA.bed.gz",
+    output:
+        bed = "NonCodingRNA{HMM_pass}/annotation/tmp/noncoding.annotated.bed.gz",
+    resources:
+        mem_mb = 24000,
+    wildcard_constraints:
+        HMM_pass = '_annotation|_merged',
+    log:
+        "logs/NonCodingRNA{HMM_pass}/ncRNA_annotation/noncoding.annotated.bed.log"
+    shell:
+        """
+        (zcat {input.lncrna} > NonCodingRNA{wildcards.HMM_pass}/annotation/tmp/noncoding.annotated.bed) &> {log};
+        (zcat {input.pseudogenes} >> NonCodingRNA{wildcards.HMM_pass}/annotation/tmp/noncoding.annotated.bed) &> {log};
+        (gzip NonCodingRNA{wildcards.HMM_pass}/annotation/tmp/noncoding.annotated.bed) &> {log};
+        """
+        
 rule ClassifyNcRNAs:
     input:
         "NonCodingRNA{HMM_pass}/annotation/ncRNA.bed.gz",
@@ -748,6 +1008,15 @@ rule ClassifyNcRNAs:
         python scripts/classify_ncRNA.py {params} &> {log}
         """
 
+rule ClassifyNcRNAsAnnotated:
+    input:
+        "NonCodingRNA_merged/annotation/tmp/noncoding.annotated.bed.gz",
+        "NonCodingRNA_merged/annotation/tmp/uaRNA.annotated.bed.gz",
+        "NonCodingRNA_merged/annotation/tmp/rtRNA.annotated.bed.gz",
+        "NonCodingRNA_merged/annotation/tmp/srtRNA.annotated.bed.gz",
+        "NonCodingRNA_merged/annotation/tmp/coRNA.annotated.bed.gz",
+        "NonCodingRNA_merged/annotation/tmp/incRNA.annotated.bed.gz",
+        "NonCodingRNA_merged/annotation/tmp/ctRNA.annotated.bed.gz",
 
 ###################################
 #   Overlap with histone marks    #
@@ -755,15 +1024,15 @@ rule ClassifyNcRNAs:
 
 def GetTSSFile(wildcards):
     if wildcards.Annotation == 'ncRNA':
-        return "NonCodingRNA_annotation/annotation/ncRNA.TSS.bed.gz"
+        return "NonCodingRNA{HMM_pass}/annotation/ncRNA.TSS.bed.gz"
     elif wildcards.Annotation == 'allGenes':
-        return "NonCodingRNA_annotation/annotation/allGenes.TSS.bed.gz"
+        return "NonCodingRNA{HMM_pass}/annotation/allGenes.TSS.bed.gz"
         
 def GetAnnotationFile(wildcards):
     if wildcards.Annotation == 'ncRNA':
-        return "NonCodingRNA_annotation/annotation/ncRNA.bed.gz"
+        return "NonCodingRNA{HMM_pass}/annotation/ncRNA.bed.gz"
     elif wildcards.Annotation == 'allGenes':
-        return "NonCodingRNA_annotation/annotation/allGenes.bed.gz"
+        return "NonCodingRNA{HMM_pass}/annotation/allGenes.bed.gz"
 
 def GetHistonePeaks(wildcards):
     if wildcards.Histone == 'H3K4ME1':
@@ -779,11 +1048,13 @@ rule OvelapHistonePeaksWithTSS:
         TSS_file = GetTSSFile,
         histone_peaks = GetHistonePeaks
     output:
-        'NonCodingRNA_annotation/annotation/histone_marks/{Annotation}.{Histone}.TSS_overlaps.bed.gz'
+        'NonCodingRNA{HMM_pass}/annotation/histone_marks/{Annotation}.{Histone}.TSS_overlaps.bed.gz'
     log:
-        'logs/NonCodingRNA_annotation/{Annotation}.{Histone}.TSS_overlaps.log'
+        'logs/NonCodingRNA{HMM_pass}/{Annotation}.{Histone}.TSS_overlaps.log'
     resources:
         mem_mb = 12000
+    wildcard_constraints:
+        HMM_pass = "_annotation|_merged"
     shell:
         """
         (bedtools intersect -a {input.TSS_file} -b {input.histone_peaks} -wa | bedtools sort -i - | gzip - > {output}) &> {log}
@@ -794,27 +1065,29 @@ use rule OvelapHistonePeaksWithTSS as OvelapHistonePeaksWithGene with:
         TSS_file = GetAnnotationFile,
         histone_peaks = GetHistonePeaks
     output:
-        'NonCodingRNA_annotation/annotation/histone_marks/{Annotation}.{Histone}.overlaps.bed.gz'
+        'NonCodingRNA{HMM_pass}/annotation/histone_marks/{Annotation}.{Histone}.overlaps.bed.gz'
     log:
-        'logs/NonCodingRNA_annotation/{Annotation}.{Histone}.overlaps.log'
+        'logs/NonCodingRNA{HMM_pass}/{Annotation}.{Histone}.overlaps.log'
         
 rule HistoneAnnotation:
     input:
-        'NonCodingRNA_annotation/annotation/ncRNA.annotation.tab.gz',
-        'NonCodingRNA_annotation/annotation/allGenes.TSS.bed.gz',
-        expand("NonCodingRNA_annotation/annotation/histone_marks/{Annotation}.{Histone}.{overlap_type}overlaps.bed.gz",
+        'NonCodingRNA{HMM_pass}/annotation/ncRNA.annotation.tab.gz',
+        'NonCodingRNA{HMM_pass}/annotation/allGenes.TSS.bed.gz',
+        expand("NonCodingRNA{{HMM_pass}}/annotation/histone_marks/{Annotation}.{Histone}.{overlap_type}overlaps.bed.gz",
             Annotation = ["ncRNA", "allGenes"], Histone = ["H3K4ME1", "H3K4ME3", "H3K27AC"], overlap_type=["", "TSS_"]
         )
     output:
-        'NonCodingRNA_annotation/annotation/ncRNA.histone.tab.gz',
-        'NonCodingRNA_annotation/annotation/allGenes.histone.tab.gz'
+        'NonCodingRNA{HMM_pass}/annotation/ncRNA.histone.tab.gz',
+        'NonCodingRNA{HMM_pass}/annotation/allGenes.histone.tab.gz'
     log:
-        'logs/NonCodingRNA_annotation/histone_annotation.log'
+        'logs/NonCodingRNA{HMM_pass}/histone_annotation.log'
     resources:
         mem_mb = 12000
+    wildcard_constraints:
+        HMM_pass = "_annotation|_merged"
     shell:
         """
-        python scripts/make_histone_ncRNA_annotations.py &> {log}
+        python scripts/make_histone_ncRNA_annotations.py --hmm {wildcards.HMM_pass} &> {log}
         """
         
         
@@ -830,22 +1103,25 @@ rule Prepare_polyA_ExpressionPhenotypes:
         "featureCounts/polyA.Expression_lncRNA/Counts.txt",
         "featureCounts/polyA.Expression_snoRNA/Counts.txt",
         "ExpressionAnalysis/polyA/ExpressedGeneList.txt",
-        "NonCodingRNA_annotation/annotation/ncRNA.annotation.tab.gz"
+        "NonCodingRNA_merged/annotation/NonCodingRNA.bed.gz",
+        "NonCodingRNA_merged/annotation/NonCodingRNA.annotation.tab.gz"
     output:
         "QTLs/QTLTools/polyA.Expression_ncRNA/OnlyFirstReps.qqnorm.bed.gz",
-        "QTLs/QTLTools/polyA.Expression_ncRNA/OnlyFirstReps.RPKM.bed.gz",
+        "QTLs/QTLTools/polyA.Expression_ncRNA/OnlyFirstReps.CPM.bed.gz",
+        "RPKM_tables/polyA.RPKM.bed.gz"
     log:
         "logs/NonCodingRNA/Prepare_polyA_Expression_Phenotypes.log"
     conda:
         "../envs/r_essentials.yml"
     shell:
         """
+        mkdir -p RPKM_tables/;
         Rscript scripts/prepare_polyA_ncRNA_Phenotypes.R &> {log}
         """
         
 rule Prepare_polyA_Subset_YRI_ExpressionPhenotypes:
     input:
-        "QTLs/QTLTools/polyA.Expression_ncRNA/OnlyFirstReps.RPKM.bed.gz",
+        "QTLs/QTLTools/polyA.Expression_ncRNA/OnlyFirstReps.CPM.bed.gz",
         "QTLs/QTLTools/Expression.Splicing.Subset_YRI/OnlyFirstReps.qqnorm.bed.gz",
     output:
         "QTLs/QTLTools/polyA.Expression_ncRNA.Subset_YRI/OnlyFirstReps.qqnorm.bed.gz",
@@ -855,6 +1131,7 @@ rule Prepare_polyA_Subset_YRI_ExpressionPhenotypes:
         "../envs/r_essentials.yml"
     shell:
         """
+        mkdir -p RPKM_tables/;
         Rscript scripts/prepare_polyA_SubsetYRI_ncRNA_Phenotypes.R &> {log}
         """
         
@@ -865,16 +1142,18 @@ rule Prepare_ml30_ExpressionPhenotypes:
         "featureCounts/MetabolicLabelled.30min_ncRNA/Counts.txt",
         "featureCounts/MetabolicLabelled.30min_lncRNA/Counts.txt",
         "featureCounts/MetabolicLabelled.30min_snoRNA/Counts.txt",
-        "NonCodingRNA_annotation/annotation/ncRNA.annotation.tab.gz"
+        "NonCodingRNA_merged/annotation/NonCodingRNA.bed.gz",
+        "NonCodingRNA_merged/annotation/NonCodingRNA.annotation.tab.gz"
     output:
         "QTLs/QTLTools/MetabolicLabelled.30min_ncRNA/OnlyFirstReps.qqnorm.bed.gz",
-        "QTLs/QTLTools/MetabolicLabelled.30min_ncRNA/OnlyFirstReps.RPKM.bed.gz",
+        "RPKM_tables/MetabolicLabelled.30min.RPKM.bed.gz",
     log:
         "logs/NonCodingRNA/Prepare_ml30_Expression_Phenotypes.log"
     conda:
         "../envs/r_essentials.yml"
     shell:
         """
+        mkdir -p RPKM_tables/;
         Rscript scripts/prepare_ml30_ncRNA_Phenotypes.R &> {log}
         """
         
@@ -886,16 +1165,18 @@ rule Prepare_ml60_ExpressionPhenotypes:
         "featureCounts/MetabolicLabelled.60min_ncRNA/Counts.txt",
         "featureCounts/MetabolicLabelled.60min_lncRNA/Counts.txt",
         "featureCounts/MetabolicLabelled.60min_snoRNA/Counts.txt",
-        "NonCodingRNA_annotation/annotation/ncRNA.annotation.tab.gz"
+        "NonCodingRNA_merged/annotation/NonCodingRNA.bed.gz",
+        "NonCodingRNA_merged/annotation/NonCodingRNA.annotation.tab.gz"
     output:
         "QTLs/QTLTools/MetabolicLabelled.60min_ncRNA/OnlyFirstReps.qqnorm.bed.gz",
-        "QTLs/QTLTools/MetabolicLabelled.60min_ncRNA/OnlyFirstReps.RPKM.bed.gz",
+        "RPKM_tables/MetabolicLabelled.60min.RPKM.bed.gz",
     log:
         "logs/NonCodingRNA/Prepare_ml60_Expression_Phenotypes.log"
     conda:
         "../envs/r_essentials.yml"
     shell:
         """
+        mkdir -p RPKM_tables/;
         Rscript scripts/prepare_ml60_ncRNA_Phenotypes.R &> {log}
         """
         
