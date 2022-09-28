@@ -21,9 +21,9 @@ dat <- read_tsv("../code/featureCounts/chRNA.Expression/Counts.txt", comment = '
 genes <- read_tsv("../code/ExpressionAnalysis/polyA/ExpressedGeneList.txt", col_names = c("chrom", "start", "stop", "Geneid", "score", "strand"))
 
 counts <- dat %>%
-  select(-c(2:6)) %>%
+  dplyr::select(-c(2:6)) %>%
   inner_join(genes, by="Geneid") %>%
-  select(1, matches("Alignments/STAR_Align/chRNA.Expression.Splicing/(.+?)/1/Filtered.bam")) %>%
+  dplyr::select(1, matches("Alignments/STAR_Align/chRNA.Expression.Splicing/(.+?)/1/Filtered.bam")) %>%
   rename_at(-1, ~ str_replace(.x, "Alignments/STAR_Align/chRNA.Expression.Splicing/(.+?)/1/Filtered.bam", "\\1")) %>%
   column_to_rownames("Geneid") %>%
   as.matrix() %>%
@@ -32,9 +32,9 @@ counts <- dat %>%
 geneLengths <- counts$counts %>%
   as.data.frame() %>%
   rownames_to_column("Geneid") %>%
-  select(Geneid) %>%
+  dplyr::select(Geneid) %>%
   left_join(
-    dat %>% select(Geneid, Length)
+    dat %>% dplyr::select(Geneid, Length)
   ) %>% pull(Length)
 
 
@@ -49,6 +49,14 @@ plot(rpkm.other[,1], tpm[,1])
 
 rpkm %>% cor(use="complete.obs") %>% mean()
 tpm %>% cor(use="complete.obs") %>% mean()
+
+data.frame(tpm = tpm[,1], rpkm=rpkm.other[,1]) %>%
+  ggplot(aes(x=tpm, y=rpkm)) +
+  geom_point() +
+  geom_abline(color='red') +
+  theme_bw()
+
+2**median(tpm[,1]-rpkm.other[,1])
 
 tpm %>%
   as.data.frame() %>%
