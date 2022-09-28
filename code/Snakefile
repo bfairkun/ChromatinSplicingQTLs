@@ -20,12 +20,13 @@ include: "rules/BensJupyterNotebookRules.smk"
 include: "rules/NonCodingRNA.smk"
 include: "rules/GWAS_PrepForColoc.smk"
 include: "rules/IntronSlopes.smk"
+include: "rules/IntronRetention.smk"
 include: "rules/ProcessTehranchi.smk"
 include: "rules/PlotQTLs.smk"
 include: "rules/CalculateExonicPSI.smk"
-include: "rules/IntronRetention.smk"
 include: "rules/SpliceSiteMutation.smk"
-include: "rules/DeNovoNonCodingRNA.smk"
+#include: "rules/DeNovoNonCodingRNA.smk"
+include: "rules/AnnotationNonCodingRNA.smk"
 include: "rules/DeNovoNonCodingRNA_plots.smk"
 include: "rules/QTL_SNP_Enrichment.smk"
 include: "rules/APA_DataPrep.smk"
@@ -187,3 +188,22 @@ rule QTLTools_caller:
           Pass = ["PermutationPass.FDR_Added", "NominalPass"]
         ),
 
+
+rule HMM_develop:
+    input:
+        expand("NonCodingRNA/tables/{chrom}.{strand}.counts.tab.gz",
+        chrom  = chrom_list, strand = ['minus', 'plus']),
+        expand("NonCodingRNA/tables/{chrom}.{strand}.counts.all_samples.tab.gz",
+        chrom  = chrom_list, strand = ['minus', 'plus']),
+        expand("NonCodingRNA/tables/{chrom}.{strand}.predicted_states.tab.gz",
+        chrom  = chrom_list, strand = ['minus', 'plus']),
+        expand("NonCodingRNA/tables/{chrom}.{strand}.hmm.sorted.bed.gz",
+        chrom  = chrom_list, strand = ['minus', 'plus']),
+        
+rule IntronCounts_develop:
+    input:
+        "SplicingAnalysis/GeneIntronCounts/chRNA.GeneIntronCounts.bed.gz",
+        "SplicingAnalysis/GeneIntronCounts/polyA.GeneIntronCounts.bed.gz",
+        "SplicingAnalysis/GeneIntronCounts/MetabolicLabelled.30min.GeneIntronCounts.bed.gz",
+        "SplicingAnalysis/GeneIntronCounts/MetabolicLabelled.60min.GeneIntronCounts.bed.gz",
+        

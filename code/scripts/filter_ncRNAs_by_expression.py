@@ -36,8 +36,8 @@ if __name__ == '__main__':
 
     other = annotation.index.difference(incRNA).difference(uaRNA).difference(srtRNA).difference(rtRNA).difference(coRNA)
 
-    mean_ratio = (counts/(counts+counts_reverse)).mean(axis=1)
-    median_ratio = (counts/(counts+counts_reverse)).median(axis=1)
+    mean_ratio = (counts/(counts+counts_reverse+1e-10)).mean(axis=1)
+    median_ratio = (counts/(counts+counts_reverse+1e-10)).median(axis=1)
 
     length = ncRNA_bed.loc[annotation.index].end - ncRNA_bed.loc[annotation.index].start
 

@@ -64,7 +64,7 @@ parser.add_argument('--chrom', type=str, required=True)
 parser.add_argument('--counts_dir', type=str, required=True)
 parser.add_argument('--strand', type=str, required=False)
 parser.add_argument('--output', type=str, required=False)
-parser.add_argument('--merge', action='store_true', required=False)
+# parser.add_argument('--merge', action='store_true', required=False)
 
 
 if __name__ == '__main__':
@@ -74,7 +74,7 @@ if __name__ == '__main__':
     counts_dir = args.counts_dir
     strand = args.strand
     output = args.output
-    merge = args.merge
+#     merge = args.merge
 
     assay_list = os.listdir(counts_dir)
     print('Merging data from assays')
@@ -84,20 +84,20 @@ if __name__ == '__main__':
         df_assay = MakeCountsPerAssay(counts_dir, assay, chrom, strand)
         df = pd.concat([df, df_assay], axis=1)
         
-    if merge:
+#     if merge:
         
         
         
-        # THIS IS FOR 20 GROUPS of 4 and 5
+        # THIS IS FOR 10 GROUPS of 8 and 9
 #         df_merged = pd.DataFrame()
-#         groups_4 = list(chunks(df.columns[:56], 4))
-#         groups_5 = list(chunks(df.columns[56:], 5))
+#         groups_4 = list(chunks(df.columns[:32], 8))
+#         groups_5 = list(chunks(df.columns[32:], 9))
         
-#         for i in range(14):
+#         for i in range(len(groups_4)):
 #             col_name = 'chRNA_' + str(i + 1)
 #             df_merged[col_name] = df[groups_4[i]].sum(axis=1)
-#         for i in range(6):
-#             col_name = 'chRNA_' + str(i + 15)
+#         for i in range(len(groups_5)):
+#             col_name = 'chRNA_' + str(i + 5)
 #             df_merged[col_name] = df[groups_5[i]].sum(axis=1)
 
 
@@ -116,34 +116,34 @@ if __name__ == '__main__':
 
 
 #         # THIS IS FOR 30 GROUPS of 3 and 2 THIS IS WHAT I WILL MOST LIKELY USE
-        df_merged = pd.DataFrame()
-        groups_4 = list(chunks(df.columns[:85], 3))
-        groups_5 = df.columns[85:]
-        
-        for i in range(29):
-            col_name = 'chRNA_' + str(i + 1)
-            df_merged[col_name] = df[groups_4[i]].sum(axis=1)
-        col_name = 'chRNA_30'
-        df_merged[col_name] = df[groups_5].sum(axis=1)
-
-    
-        # THIS IS FOR 5 GROUPS of 18 and 17
 #         df_merged = pd.DataFrame()
-#         groups_4 = list(chunks(df.columns[:68], 17))
-#         groups_5 = df.columns[68:]
+#         groups_4 = list(chunks(df.columns[:85], 3))
+#         groups_5 = df.columns[85:]
         
-#         for i in range(len(groups_4)):
+#         for i in range(29):
 #             col_name = 'chRNA_' + str(i + 1)
 #             df_merged[col_name] = df[groups_4[i]].sum(axis=1)
 #         col_name = 'chRNA_30'
 #         df_merged[col_name] = df[groups_5].sum(axis=1)
+
     
-    
-        df_merged.to_csv(output, sep='\t', index=True, header=True)
+        # THIS IS FOR 5 GROUPS of 18 and 17
+    df_merged = pd.DataFrame()
+    groups_4 = list(chunks(df.columns[:68], 17))
+    groups_5 = df.columns[68:]
+
+    for i in range(len(groups_4)):
+        col_name = 'chRNA_' + str(i + 1)
+        df_merged[col_name] = df[groups_4[i]].sum(axis=1)
+    col_name = 'chRNA_5'
+    df_merged[col_name] = df[groups_5].sum(axis=1)
+
+
+    df_merged.to_csv(output + ".counts.tab.gz", sep='\t', index=True, header=True)
         
-    else:
+#     else:
     
-        df.to_csv(output, sep='\t', index=True, header=True)
+    df.to_csv(output + ".counts.all_samples.tab.gz", sep='\t', index=True, header=True)
         
         
         

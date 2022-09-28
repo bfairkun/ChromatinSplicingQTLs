@@ -161,18 +161,18 @@ write_tsv(ncRNA.CPM.Out, "QTLs/QTLTools/polyA.Expression_ncRNA/OnlyFirstReps.CPM
 dat.rpkm <- dat.matrix.renamed %>% # dat.matrix.expressed %>%
     rpkm(gene.length=X$Length, prior.count=0.1)
          
-rna.list <- rbind(gene.list, bed)
+#rna.list <- rbind(gene.list, bed)
+           
+#RPKM.Out <- rna.list %>%
+#    select(Geneid, Chr, Start, End, Strand) %>%
+#    inner_join(
+#               (dat.rpkm %>% as.data.frame() %>% rownames_to_column("Geneid")),
+#               by = "Geneid") %>%
+#    mutate(across(where(is.numeric), round, 5)) %>%
+#    dplyr::select(`#Chr`=Chr, start=Start, end=End, pid=Geneid, gid=Geneid, strand=Strand, everything()) %>%
+#    arrange(`#Chr`, start)
+RPKM.Out <- dat.rpkm
 
-RPKM.Out <- rna.list %>%
-    select(Geneid, Chr, Start, End, Strand) %>%
-    inner_join(
-               (dat.rpkm %>% as.data.frame() %>% rownames_to_column("Geneid")),
-               by = "Geneid") %>%
-    # mutate(start= as.numeric(Start)) %>%
-    mutate(across(where(is.numeric), round, 5)) %>%
-    dplyr::select(`#Chr`=Chr, start=Start, end=End, pid=Geneid, gid=Geneid, strand=Strand, everything()) %>%
-    arrange(`#Chr`, start)
 
-
-write_tsv(RPKM.Out, "RPKM_tables/polyA.RPKM.bed.gz")
+write_tsv(RPKM.Out, "RPKM_tables/polyA.RPKM.bed.gz", )
 

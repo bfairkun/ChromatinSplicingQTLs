@@ -141,24 +141,26 @@ rule MakeGeneIntronCounts_chRNA:
         "logs/spliceq/{Phenotype}.gene_counts.log"
     wildcard_constraints:
         Phenotype = 'chRNA'
+    resources:
+        mem_mb = 58000
     shell:
         """
         python scripts/make_intron_counts.py --phenotype {wildcards.Phenotype} --output {output} &> {log}
         """
         
-use rule MakeGeneIntronCounts_chRNA as MakeGeneIntronCounts_polyA:
+use rule MakeGeneIntronCounts_chRNA as MakeGeneIntronCounts_polyA with:
     input:
         expand("SplicingAnalysis/SPLICEq/{{Phenotype}}.IER/{IndID}.spliceq.tab", IndID=polyAsamples)
     wildcard_constraints:
         Phenotype = 'polyA'
         
-use rule MakeGeneIntronCounts_chRNA as MakeGeneIntronCounts_ml30:
+use rule MakeGeneIntronCounts_chRNA as MakeGeneIntronCounts_ml30 with:
     input:
         expand("SplicingAnalysis/SPLICEq/{{Phenotype}}.IER/{IndID}.spliceq.tab", IndID=metabolic30samples)
     wildcard_constraints:
         Phenotype = 'MetabolicLabelled.30min'
         
-use rule MakeGeneIntronCounts_chRNA as MakeGeneIntronCounts_ml60:
+use rule MakeGeneIntronCounts_chRNA as MakeGeneIntronCounts_ml60 with:
     input:
         expand("SplicingAnalysis/SPLICEq/{{Phenotype}}.IER/{IndID}.spliceq.tab", IndID=metabolic60samples)
     wildcard_constraints:
