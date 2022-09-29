@@ -69,7 +69,7 @@ read_and_rename <- function(fn){
 Genes <- read_tsv("../code/ExpressionAnalysis/polyA/ExpressedGeneList.txt", col_names=c("chrom", "start","stop", "name", "score","strand"))
 
 dat.exonic.expression <- paste0("../code/featureCounts/", c("chRNA.Expression", "Expression.Splicing", "MetabolicLabelled.30min", "MetabolicLabelled.60min"), "/Counts.txt") %>%
-  setNames(nm=c("polyA", "chRNA", "MetabolicLabelled.30min", "MetabolicLabelled.60min")) %>%
+  setNames(nm=c("chRNA", "polyA", "MetabolicLabelled.30min", "MetabolicLabelled.60min")) %>%
   lapply(read_and_rename) %>%
   bind_rows(.id="dataset") %>%
   select_if(~ !any(is.na(.))) %>%
@@ -200,7 +200,7 @@ dat.Normalized <- dat.combined.rpkm %>%
 Colors <- ConvertToColorVector(colnames(dat.Normalized) %>% str_replace(".+?;(.+?);(.+?)", "\\1;\\2"))
 
 cor(dat.Normalized, method='s') %>%
-  heatmap.2(trace='none', Rowv=F,Colv=F, RowSideColors = Colors$ColorVector, ColSideColors = Colors$ColorVector)
+  heatmap.2(trace='none', Rowv=F,Colv=F, RowSideColors = Colors$ColorVector, ColSideColors = Colors$ColorVector, col=viridis(50, direction = -1))
 
 PlotColorKey(Colors$Key)
 
@@ -221,6 +221,7 @@ BetweenVsWithinIndividualCorrelations <- cor(dat.Normalized, method='s') %>%
   mutate(Comparison = if_else(IndID.A == IndID.B, "WithinIndividual", "BetweenIndividual"))
 
 ggplot(BetweenVsWithinIndividualCorrelations, aes(x=CorrelationCoef, color=Comparison)) +
+  geom_vline(xintercept=0) +
   stat_ecdf() +
   facet_grid(rows=vars(Assay.A), cols=vars(Assay.B)) +
   theme_bw() +
@@ -232,20 +233,23 @@ BetweenVsWithinIndividualCorrelations %>%
   summarise(medianCorr = median(CorrelationCoef)) %>%
   ungroup() %>%
   pivot_wider(names_from="Comparison", values_from="medianCorr") %>%
-  mutate(DifferenceInMedian = WithinIndividual-BetweenIndividual) %>%
-  ggplot(aes(x=Assay.A, y=Assay.B, fill=DifferenceInMedian)) +
+  ggplot(aes(x=Assay.A, y=Assay.B, fill=WithinIndividual)) +
   geom_raster() +
-  scale_fill_viridis_c() +
-  theme_classic()
+  scale_fill_viridis_c(direction=-1) +
+  theme_classic() +
+  labs(title="Median within-individual correlation coefficient")
+```
 
+Maybe it will be easier/quicker to interpret if I plot with `heatmap.2` function which automatically clusters the rows and columns.
+
+```{r}
 BetweenVsWithinIndividualCorrelations %>%
   group_by(Assay.A, Assay.B, Comparison) %>%
   summarise(medianCorr = median(CorrelationCoef)) %>%
   ungroup() %>%
   pivot_wider(names_from="Comparison", values_from="medianCorr") %>%
-  mutate(DifferenceInMedian = WithinIndividual-BetweenIndividual) %>%
-  dplyr::select(Assay.A, Assay.B, DifferenceInMedian) %>%
-  pivot_wider(names_from="Assay.B", values_from="DifferenceInMedian") %>%
+  dplyr::select(Assay.A, Assay.B, WithinIndividual) %>%
+  pivot_wider(names_from="Assay.B", values_from="WithinIndividual") %>%
   column_to_rownames("Assay.A") %>%
   as.matrix() %>%
   heatmap.2(trace="none", col=viridis(50, direction = -1), cexRow=0.5, cexCol=0.5)
