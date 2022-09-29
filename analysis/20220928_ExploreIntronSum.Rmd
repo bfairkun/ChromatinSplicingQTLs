@@ -1,0 +1,254 @@
+---
+title: "20220928_Explore_IntronSumPhenotype"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, error=F, warning=F)
+```
+
+## Intro
+
+Yang had the idea of summing all intronic reads across a gene as a measure of transcriptional output, to help us interpret the mechanistic nature of eQTLs that may effect intron retention, versus those that are actually picking up transcriptional eQTL effects. Carlos made a phenotype table that is as simple as the sum of the intron conuts for each gene. Here I will explroe that phenotype table, just to get some intuitions on how it correlates to intron retention, vs polyA gene exonic expression, vs chRNA exonic gene expression, etc, before we go about QTL mapping and trying to interpret the QTLs
+
+```{r}
+library(tidyverse)
+library(edgeR)
+library(gplots)
+library(RColorBrewer)
+library(viridis)
+
+ConvertToColorVector <- function(Vector, PalletteString="Set1"){
+  ConversionKey <- setNames(brewer.pal(length(unique(Vector)), PalletteString), unique(Vector))[1:length(unique(Vector))]
+  ColorVector <- recode(Vector, !!!ConversionKey)
+  return( list(Key=ConversionKey, ColorVector=ColorVector))
+}
+
+PlotColorKey <- function(NamedColorLabelVector){
+  data.frame(Colors=NamedColorLabelVector) %>%
+  rownames_to_column("Label") %>%
+  distinct() %>%
+  mutate(row_number=row_number()) %>%
+  ggplot(aes(x=1, vjust=row_number, label=Label, color=Colors)) +
+  geom_text(y=Inf) +
+  scale_color_identity() +
+  theme_void()
+}
+
+
+dat <- Sys.glob("../code/SplicingAnalysis/GeneIntronCounts/*.GeneIntronCounts.bed.gz") %>%
+  setNames(str_replace(., "../code/SplicingAnalysis/GeneIntronCounts/(.+?).GeneIntronCounts.bed.gz", "\\1")) %>%
+  lapply(read_tsv) %>%
+  bind_rows(.id="dataset")
+```
+
+```{r}
+dat %>%
+  count(dataset)
+
+dat %>%
+  summarise(across(-c(1:8), ~ sum(is.na(.x))))
+
+
+```
+
+Ok, the data is one row per gene. individuals are columns. because not all individuals were used in all datasets, some columns have tons of NAs. For simplicity of this exploration, I will later have to subset just the columns with no NAs. Also, I need to read in the data from feature counts that just counts exonic expression.
+
+```{r}
+
+
+Sys.glob("../code/featureCounts/*/Counts.txt")
+
+read_and_rename <- function(fn){
+  read_tsv(fn, comment="#") %>%
+  dplyr::select(Geneid, Length, contains("Alignments")) %>%
+  rename_at(vars(contains("Alignments")), ~str_replace(., "Alignments/STAR_Align/.+?/(.+?)/1/Filtered.bam", "\\1")) %>%
+    return()
+}
+
+Genes <- read_tsv("../code/ExpressionAnalysis/polyA/ExpressedGeneList.txt", col_names=c("chrom", "start","stop", "name", "score","strand"))
+
+dat.exonic.expression <- paste0("../code/featureCounts/", c("chRNA.Expression", "Expression.Splicing", "MetabolicLabelled.30min", "MetabolicLabelled.60min"), "/Counts.txt") %>%
+  setNames(nm=c("polyA", "chRNA", "MetabolicLabelled.30min", "MetabolicLabelled.60min")) %>%
+  lapply(read_and_rename) %>%
+  bind_rows(.id="dataset") %>%
+  select_if(~ !any(is.na(.))) %>%
+  filter(Geneid %in% Genes$name) %>%
+  pivot_wider(names_from=c("dataset"), values_from=contains("NA"), names_sep=";")
+
+dat.intronic.expression <- 
+  dat %>%
+  select_if(~ !any(is.na(.))) %>%
+  dplyr::select(dataset, length, Geneid=gid, contains("NA")) %>%
+  filter(Geneid %in% Genes$name) %>%
+  group_by(Geneid) %>%
+  mutate(Length = max(length)) %>%
+  ungroup() %>%
+  dplyr::select(dataset, Length, Geneid, contains("NA")) %>%
+  pivot_wider(names_from=c("dataset"), values_from=contains("NA"), names_sep=";") %>%
+  replace(is.na(.), 0)
+
+dat.exonic.expression.rpkm <- dat.exonic.expression %>%
+  dplyr::select(-Length) %>%
+  column_to_rownames("Geneid") %>%
+  DGEList() %>%
+  calcNormFactors() %>%
+  rpkm(prior.count=0.1, log=T, gene.length=dat.exonic.expression$Length)
+
+dat.intronic.expression.rpkm <- dat.intronic.expression %>%
+  dplyr::select(-Length) %>%
+  column_to_rownames("Geneid") %>%
+  DGEList() %>%
+  calcNormFactors() %>%
+  rpkm(prior.count=0.1, log=T, gene.length=dat.exonic.expression$Length)
+
+```
+
+Plot exonic expression correlation heatmap
+
+```{r}
+Colors <- ConvertToColorVector(colnames(dat.exonic.expression.rpkm) %>% str_replace(".+?;(.+?)", "\\1"))
+
+cor(dat.exonic.expression.rpkm) %>%
+  heatmap.2(trace='none', RowSideColors = Colors$ColorVector)
+
+PlotColorKey(Colors$Key)
+```
+
+Plot intronic expression correlation heatmap
+
+```{r}
+Colors <- ConvertToColorVector(colnames(dat.intronic.expression.rpkm) %>% str_replace(".+?;(.+?)", "\\1"))
+
+cor(dat.intronic.expression.rpkm) %>%
+  heatmap.2(trace='none', RowSideColors = Colors$ColorVector)
+
+PlotColorKey(Colors$Key)
+
+```
+
+Plot them all together...
+
+```{r}
+
+dat.combined.rpkm <- inner_join(
+  dat.intronic.expression.rpkm %>%
+    as.data.frame() %>%
+    rownames_to_column("Geneid") %>%
+    dplyr::rename_with(~paste0(.x, ";Intronic"), contains("NA")),
+  dat.exonic.expression.rpkm %>%
+    as.data.frame() %>%
+    rownames_to_column("Geneid") %>%
+    dplyr::rename_with(~paste0(.x, ";Exonic"), contains("NA")),
+  by="Geneid"
+)
+
+ReorderedCols <- dat.combined.rpkm %>%
+  dplyr::select(contains("NA")) %>%
+  colnames() %>%
+  as.data.frame() %>%
+  separate(".", into=c("IndID", "Dataset", "Type"), sep=";") %>%
+  mutate(Dataset = factor(Dataset, levels=c("chRNA","MetabolicLabelled.30min", "MetabolicLabelled.60min", "polyA"))) %>%
+  arrange(Type, Dataset, IndID) %>%
+  unite(Name, 1:3, sep=";") %>%
+  pull(Name)
+
+dat.combined.rpkm <- dat.combined.rpkm %>%
+  dplyr::select(Geneid, all_of(ReorderedCols)) %>%
+  column_to_rownames("Geneid")
+
+Colors <- ConvertToColorVector(colnames(dat.combined.rpkm) %>% str_replace(".+?;(.+?);(.+?)", "\\1;\\2"))
+
+cor(dat.combined.rpkm, method='p') %>%
+  heatmap.2(trace='none', Rowv=F,Colv=F, RowSideColors = Colors$ColorVector, ColSideColors = Colors$ColorVector)
+
+PlotColorKey(Colors$Key)
+
+
+
+
+```
+
+Ok, so the chRNA intronic in general correlates well with exonic measurements, while intronic measurements from the other ones do not correlate well. I'm a bit surprised at that the chRNA intronic is closer to polyA exonic than metabolic labelled exonic or chRNA exonic.
+
+Does it make sense to look at these same correlation matrices after standardizing and normalizing the table? I think so. Let's just try it...
+
+```{r}
+scale_this <- function(x){
+  (x - mean(x, na.rm=TRUE)) / sd(x, na.rm=TRUE)
+}
+
+dat.Normalized <- dat.combined.rpkm %>%
+  rownames_to_column("Geneid") %>%
+  gather("SampleName", "rpkm", -Geneid) %>%
+  separate(SampleName, into=c("IndID", "dataset", "Type"), sep=";") %>%
+  group_by(dataset, Type, Geneid) %>%
+  mutate(scaled_rpkm = scale_this(rpkm)) %>%
+  ungroup() %>%
+  group_by(dataset, Type, IndID) %>%
+  mutate(scaled_rpkm_percentiles = min_rank(scaled_rpkm)/(n()+1)) %>%
+  mutate(ScaledAndInverseNormalized = qnorm(scaled_rpkm_percentiles)) %>%
+  ungroup() %>%
+  unite(SampleName, IndID, dataset, Type, sep=";") %>%
+  dplyr::select(Geneid, SampleName, ScaledAndInverseNormalized) %>%
+  pivot_wider(names_from="SampleName", values_from="ScaledAndInverseNormalized") %>%
+  dplyr::select(Geneid, all_of(ReorderedCols)) %>%
+  column_to_rownames("Geneid")
+
+
+
+Colors <- ConvertToColorVector(colnames(dat.Normalized) %>% str_replace(".+?;(.+?);(.+?)", "\\1;\\2"))
+
+cor(dat.Normalized, method='s') %>%
+  heatmap.2(trace='none', Rowv=F,Colv=F, RowSideColors = Colors$ColorVector, ColSideColors = Colors$ColorVector)
+
+PlotColorKey(Colors$Key)
+
+```
+
+Ok, keep in mind I kept the order of individuals the same in each of the [assay];[Intron|Exon] boxes. So the diagonal streaks make sense. I think the genetic signals I would pick up in the chRNA intronic region will generally similar to ones in the exonic.
+
+Let me plot what I'm trying to say in a more intuitive way:
+
+```{r}
+
+BetweenVsWithinIndividualCorrelations <- cor(dat.Normalized, method='s') %>%
+  as.data.frame() %>%
+  rownames_to_column("SampleA") %>%
+  gather("SampleB", "CorrelationCoef", contains("NA")) %>%
+  separate(SampleA, into=c("IndID.A", "Assay.A"), sep=";", remove=F, extra="merge") %>%
+  separate(SampleB, into=c("IndID.B", "Assay.B"), sep=";", remove=F, extra="merge") %>%
+  mutate(Comparison = if_else(IndID.A == IndID.B, "WithinIndividual", "BetweenIndividual"))
+
+ggplot(BetweenVsWithinIndividualCorrelations, aes(x=CorrelationCoef, color=Comparison)) +
+  stat_ecdf() +
+  facet_grid(rows=vars(Assay.A), cols=vars(Assay.B)) +
+  theme_bw() +
+  labs(y="ecdf", x="Distribution of spearman correlation coef") +
+  theme(strip.text = element_text(size = 5))
+
+BetweenVsWithinIndividualCorrelations %>%
+  group_by(Assay.A, Assay.B, Comparison) %>%
+  summarise(medianCorr = median(CorrelationCoef)) %>%
+  ungroup() %>%
+  pivot_wider(names_from="Comparison", values_from="medianCorr") %>%
+  mutate(DifferenceInMedian = WithinIndividual-BetweenIndividual) %>%
+  ggplot(aes(x=Assay.A, y=Assay.B, fill=DifferenceInMedian)) +
+  geom_raster() +
+  scale_fill_viridis_c() +
+  theme_classic()
+
+BetweenVsWithinIndividualCorrelations %>%
+  group_by(Assay.A, Assay.B, Comparison) %>%
+  summarise(medianCorr = median(CorrelationCoef)) %>%
+  ungroup() %>%
+  pivot_wider(names_from="Comparison", values_from="medianCorr") %>%
+  mutate(DifferenceInMedian = WithinIndividual-BetweenIndividual) %>%
+  dplyr::select(Assay.A, Assay.B, DifferenceInMedian) %>%
+  pivot_wider(names_from="Assay.B", values_from="DifferenceInMedian") %>%
+  column_to_rownames("Assay.A") %>%
+  as.matrix() %>%
+  heatmap.2(trace="none", col=viridis(50, direction = -1), cexRow=0.5, cexCol=0.5)
+```
+
+Ok, so the median difference between within-individual correlation vs between-individual correlation is greater between chRNA-intronic and polyA-exonic than chRNA-intronic and chRNA-exonic. All that is to say, I think the chRNA intronic gene expression, moreso than the chRNA exonic gene expression, is measuring something similar to polyA exonic gene expression. I think the chRNA intronic gene expression sum is might better read out for transcription than the chRNA exonic.

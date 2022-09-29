@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+
+
+<title>20220928_Explore_IntronSumPhenotype</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/master/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">myproject</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">20220928_Explore_IntronSumPhenotype</h1>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2022-09-29
+</p>
+<p>
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 1
+</p>
+<p>
+<strong>Knit directory:</strong> <code>ChromatinSplicingQTLs/analysis/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
+</p>
+<p>
+This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
+  href="https://github.com/jdblischak/workflowr">workflowr</a> (version 1.6.2). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges"> <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted changes </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguncommittedchanges" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The R Markdown is untracked by Git. To know which version of the R Markdown file created these results, you’ll want to first commit it to the Git repo. If you’re still working on the analysis, you can ignore this warning. When you’re finished, you can run <code>wflow_publish</code> to commit the R Markdown file and build the HTML.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20191126code"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Seed:</strong> <code>set.seed(20191126)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20191126code" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20191126)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Session information:</strong> recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be confident that you successfully produced the results during this run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstreece8b35d09920690a0fd46aea82e641c8a7da3004targetblankce8b35da"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/ce8b35d09920690a0fd46aea82e641c8a7da3004" target="_blank">ce8b35d</a> </a>
+</p>
+</div>
+<div id="strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstreece8b35d09920690a0fd46aea82e641c8a7da3004targetblankce8b35da" class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/ce8b35d09920690a0fd46aea82e641c8a7da3004" target="_blank">ce8b35d</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    analysis/.Rhistory
+    Ignored:    code/.DS_Store
+    Ignored:    code/.RData
+    Ignored:    code/._.DS_Store
+    Ignored:    code/._README.md
+    Ignored:    code/._report.html
+    Ignored:    code/.ipynb_checkpoints/
+    Ignored:    code/.snakemake/
+    Ignored:    code/APA_Processing/
+    Ignored:    code/Alignments/
+    Ignored:    code/ChromHMM/
+    Ignored:    code/ENCODE/
+    Ignored:    code/ExpressionAnalysis/
+    Ignored:    code/FastqFastp/
+    Ignored:    code/FastqFastpSE/
+    Ignored:    code/Genotypes/
+    Ignored:    code/IntronSlopes/
+    Ignored:    code/Misc/
+    Ignored:    code/MiscCountTables/
+    Ignored:    code/Multiqc/
+    Ignored:    code/Multiqc_chRNA/
+    Ignored:    code/NonCodingRNA_annotation/
+    Ignored:    code/PeakCalling/
+    Ignored:    code/Phenotypes/
+    Ignored:    code/PlotGruberQTLs/
+    Ignored:    code/PlotQTLs/
+    Ignored:    code/ProCapAnalysis/
+    Ignored:    code/QC/
+    Ignored:    code/QTL_SNP_Enrichment/
+    Ignored:    code/QTLs/
+    Ignored:    code/ReferenceGenome/
+    Ignored:    code/Rplots.pdf
+    Ignored:    code/Session.vim
+    Ignored:    code/SplicingAnalysis/
+    Ignored:    code/TODO
+    Ignored:    code/Tehranchi/
+    Ignored:    code/bigwigs/
+    Ignored:    code/bigwigs_FromNonWASPFilteredReads/
+    Ignored:    code/config/.DS_Store
+    Ignored:    code/config/._.DS_Store
+    Ignored:    code/config/.ipynb_checkpoints/
+    Ignored:    code/debug.ipynb
+    Ignored:    code/debug_python.ipynb
+    Ignored:    code/deepTools/
+    Ignored:    code/featureCounts/
+    Ignored:    code/gwas_summary_stats/
+    Ignored:    code/hyprcoloc/
+    Ignored:    code/igv_session.xml
+    Ignored:    code/log
+    Ignored:    code/logs/
+    Ignored:    code/notebooks/.ipynb_checkpoints/
+    Ignored:    code/rules/.ipynb_checkpoints/
+    Ignored:    code/rules/OldRules/
+    Ignored:    code/rules/notebooks/
+    Ignored:    code/scratch/
+    Ignored:    code/scripts/.ipynb_checkpoints/
+    Ignored:    code/scripts/GTFtools_0.8.0/
+    Ignored:    code/scripts/__pycache__/
+    Ignored:    code/scripts/liftOverBedpe/liftOverBedpe.py
+    Ignored:    code/snakemake.log
+    Ignored:    code/snakemake.sbatch.log
+    Ignored:    data/.DS_Store
+    Ignored:    data/._.DS_Store
+    Ignored:    data/._20220414203249_JASPAR2022_combined_matrices_25818_jaspar.txt
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-10.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-11.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-2.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-3.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-4.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-5.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-6.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-7.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-8.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022.csv
+
+Untracked files:
+    Untracked:  analysis/20220928_ExploreIntronSum.Rmd
+    Untracked:  code/snakemake_profiles/slurm/__pycache__/
+
+Unstaged changes:
+    Modified:   code/scripts/GenometracksByGenotype
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+<p>
+There are no past versions. Publish this analysis with <code>wflow_publish()</code> to start tracking its development.
+</p>
+<hr>
+</div>
+</div>
+</div>
+<div id="intro" class="section level2">
+<h2>Intro</h2>
+<p>Yang had the idea of summing all intronic reads across a gene as a measure of transcriptional output, to help us interpret the mechanistic nature of eQTLs that may effect intron retention, versus those that are actually picking up transcriptional eQTL effects. Carlos made a phenotype table that is as simple as the sum of the intron conuts for each gene. Here I will explroe that phenotype table, just to get some intuitions on how it correlates to intron retention, vs polyA gene exonic expression, vs chRNA exonic gene expression, etc, before we go about QTL mapping and trying to interpret the QTLs</p>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>── Attaching packages ─────────────────────────────────────── tidyverse 1.3.0 ──</code></pre>
+<pre><code>✔ ggplot2 3.3.6     ✔ purrr   0.3.4
+✔ tibble  3.1.7     ✔ dplyr   1.0.9
+✔ tidyr   1.2.0     ✔ stringr 1.4.0
+✔ readr   1.3.1     ✔ forcats 0.4.0</code></pre>
+<pre><code>── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>library(edgeR)</code></pre>
+<pre><code>Loading required package: limma</code></pre>
+<pre class="r"><code>library(gplots)</code></pre>
+<pre><code>
+Attaching package: &#39;gplots&#39;</code></pre>
+<pre><code>The following object is masked from &#39;package:stats&#39;:
+
+    lowess</code></pre>
+<pre class="r"><code>library(RColorBrewer)
+library(viridis)</code></pre>
+<pre><code>Loading required package: viridisLite</code></pre>
+<pre class="r"><code>ConvertToColorVector &lt;- function(Vector, PalletteString=&quot;Set1&quot;){
+  ConversionKey &lt;- setNames(brewer.pal(length(unique(Vector)), PalletteString), unique(Vector))[1:length(unique(Vector))]
+  ColorVector &lt;- recode(Vector, !!!ConversionKey)
+  return( list(Key=ConversionKey, ColorVector=ColorVector))
+}
+
+PlotColorKey &lt;- function(NamedColorLabelVector){
+  data.frame(Colors=NamedColorLabelVector) %&gt;%
+  rownames_to_column(&quot;Label&quot;) %&gt;%
+  distinct() %&gt;%
+  mutate(row_number=row_number()) %&gt;%
+  ggplot(aes(x=1, vjust=row_number, label=Label, color=Colors)) +
+  geom_text(y=Inf) +
+  scale_color_identity() +
+  theme_void()
+}
+
+
+dat &lt;- Sys.glob(&quot;../code/SplicingAnalysis/GeneIntronCounts/*.GeneIntronCounts.bed.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/SplicingAnalysis/GeneIntronCounts/(.+?).GeneIntronCounts.bed.gz&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(read_tsv) %&gt;%
+  bind_rows(.id=&quot;dataset&quot;)</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  Chr = col_character(),
+  pid = col_character(),
+  gid = col_character(),
+  strand = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  Chr = col_character(),
+  pid = col_character(),
+  gid = col_character(),
+  strand = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  Chr = col_character(),
+  pid = col_character(),
+  gid = col_character(),
+  strand = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  Chr = col_character(),
+  pid = col_character(),
+  gid = col_character(),
+  strand = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre class="r"><code>dat %&gt;%
+  count(dataset)</code></pre>
+<pre><code># A tibble: 4 × 2
+  dataset                     n
+  &lt;chr&gt;                   &lt;int&gt;
+1 MetabolicLabelled.30min 22279
+2 MetabolicLabelled.60min 22669
+3 chRNA                   29560
+4 polyA                   27213</code></pre>
+<pre class="r"><code>dat %&gt;%
+  summarise(across(-c(1:8), ~ sum(is.na(.x))))</code></pre>
+<pre><code># A tibble: 1 × 492
+  NA19209 NA19238 NA19141 NA19137 NA19102 NA18486 NA19144 NA18505 NA19092
+    &lt;int&gt;   &lt;int&gt;   &lt;int&gt;   &lt;int&gt;   &lt;int&gt;   &lt;int&gt;   &lt;int&gt;   &lt;int&gt;   &lt;int&gt;
+1       0   27213       0       0       0       0   29560       0       0
+# … with 483 more variables: NA19200 &lt;int&gt;, NA19190 &lt;int&gt;, NA18499 &lt;int&gt;,
+#   NA19239 &lt;int&gt;, NA19130 &lt;int&gt;, NA19206 &lt;int&gt;, NA18858 &lt;int&gt;, NA18510 &lt;int&gt;,
+#   NA18856 &lt;int&gt;, NA19225 &lt;int&gt;, NA19101 &lt;int&gt;, NA18859 &lt;int&gt;, NA18913 &lt;int&gt;,
+#   NA19257 &lt;int&gt;, NA18907 &lt;int&gt;, NA19223 &lt;int&gt;, NA19140 &lt;int&gt;, NA18502 &lt;int&gt;,
+#   NA18511 &lt;int&gt;, NA19152 &lt;int&gt;, NA19153 &lt;int&gt;, NA19138 &lt;int&gt;, NA19099 &lt;int&gt;,
+#   NA18516 &lt;int&gt;, NA19147 &lt;int&gt;, NA18853 &lt;int&gt;, NA18498 &lt;int&gt;, NA19127 &lt;int&gt;,
+#   NA19131 &lt;int&gt;, NA18861 &lt;int&gt;, NA18870 &lt;int&gt;, NA19192 &lt;int&gt;, …</code></pre>
+<p>Ok, the data is one row per gene. individuals are columns. because not all individuals were used in all datasets, some columns have tons of NAs. For simplicity of this exploration, I will later have to subset just the columns with no NAs. Also, I need to read in the data from feature counts that just counts exonic expression.</p>
+<pre class="r"><code>Sys.glob(&quot;../code/featureCounts/*/Counts.txt&quot;)</code></pre>
+<pre><code> [1] &quot;../code/featureCounts/CTCF/Counts.txt&quot;                          
+ [2] &quot;../code/featureCounts/Expression.Splicing/Counts.txt&quot;           
+ [3] &quot;../code/featureCounts/H3K27AC.3PrimeSS/Counts.txt&quot;              
+ [4] &quot;../code/featureCounts/H3K27AC.5PrimeSS/Counts.txt&quot;              
+ [5] &quot;../code/featureCounts/H3K27AC/Counts.txt&quot;                       
+ [6] &quot;../code/featureCounts/H3K36ME3.3PrimeSS/Counts.txt&quot;             
+ [7] &quot;../code/featureCounts/H3K36ME3.5PrimeSS/Counts.txt&quot;             
+ [8] &quot;../code/featureCounts/H3K36ME3/Counts.txt&quot;                      
+ [9] &quot;../code/featureCounts/H3K4ME1.3PrimeSS/Counts.txt&quot;              
+[10] &quot;../code/featureCounts/H3K4ME1.5PrimeSS/Counts.txt&quot;              
+[11] &quot;../code/featureCounts/H3K4ME1/Counts.txt&quot;                       
+[12] &quot;../code/featureCounts/H3K4ME3.3PrimeSS/Counts.txt&quot;              
+[13] &quot;../code/featureCounts/H3K4ME3.5PrimeSS/Counts.txt&quot;              
+[14] &quot;../code/featureCounts/H3K4ME3/Counts.txt&quot;                       
+[15] &quot;../code/featureCounts/MetabolicLabelled.30min/Counts.txt&quot;       
+[16] &quot;../code/featureCounts/MetabolicLabelled.30min_cheRNA/Counts.txt&quot;
+[17] &quot;../code/featureCounts/MetabolicLabelled.30min_eRNA/Counts.txt&quot;  
+[18] &quot;../code/featureCounts/MetabolicLabelled.30min_lncRNA/Counts.txt&quot;
+[19] &quot;../code/featureCounts/MetabolicLabelled.30min_snoRNA/Counts.txt&quot;
+[20] &quot;../code/featureCounts/MetabolicLabelled.60min/Counts.txt&quot;       
+[21] &quot;../code/featureCounts/MetabolicLabelled.60min_cheRNA/Counts.txt&quot;
+[22] &quot;../code/featureCounts/MetabolicLabelled.60min_eRNA/Counts.txt&quot;  
+[23] &quot;../code/featureCounts/MetabolicLabelled.60min_lncRNA/Counts.txt&quot;
+[24] &quot;../code/featureCounts/MetabolicLabelled.60min_snoRNA/Counts.txt&quot;
+[25] &quot;../code/featureCounts/POL2S2/Counts.txt&quot;                        
+[26] &quot;../code/featureCounts/POL2S5/Counts.txt&quot;                        
+[27] &quot;../code/featureCounts/ProCap/Counts.txt&quot;                        
+[28] &quot;../code/featureCounts/ProCap_cheRNA/Counts.txt&quot;                 
+[29] &quot;../code/featureCounts/ProCap_eRNA/Counts.txt&quot;                   
+[30] &quot;../code/featureCounts/ProCap_lncRNA/Counts.txt&quot;                 
+[31] &quot;../code/featureCounts/ProCap_snoRNA/Counts.txt&quot;                 
+[32] &quot;../code/featureCounts/chRNA.Expression/Counts.txt&quot;              
+[33] &quot;../code/featureCounts/chRNA.Expression_cheRNA/Counts.txt&quot;       
+[34] &quot;../code/featureCounts/chRNA.Expression_eRNA/Counts.txt&quot;         
+[35] &quot;../code/featureCounts/chRNA.Expression_lncRNA/Counts.txt&quot;       
+[36] &quot;../code/featureCounts/chRNA.Expression_ncRNA/Counts.txt&quot;        
+[37] &quot;../code/featureCounts/chRNA.Expression_snoRNA/Counts.txt&quot;       
+[38] &quot;../code/featureCounts/polyA.Expression/Counts.txt&quot;              
+[39] &quot;../code/featureCounts/polyA.Expression_cheRNA/Counts.txt&quot;       
+[40] &quot;../code/featureCounts/polyA.Expression_eRNA/Counts.txt&quot;         
+[41] &quot;../code/featureCounts/polyA.Expression_lncRNA/Counts.txt&quot;       
+[42] &quot;../code/featureCounts/polyA.Expression_snoRNA/Counts.txt&quot;       </code></pre>
+<pre class="r"><code>read_and_rename &lt;- function(fn){
+  read_tsv(fn, comment=&quot;#&quot;) %&gt;%
+  dplyr::select(Geneid, Length, contains(&quot;Alignments&quot;)) %&gt;%
+  rename_at(vars(contains(&quot;Alignments&quot;)), ~str_replace(., &quot;Alignments/STAR_Align/.+?/(.+?)/1/Filtered.bam&quot;, &quot;\\1&quot;)) %&gt;%
+    return()
+}
+
+Genes &lt;- read_tsv(&quot;../code/ExpressionAnalysis/polyA/ExpressedGeneList.txt&quot;, col_names=c(&quot;chrom&quot;, &quot;start&quot;,&quot;stop&quot;, &quot;name&quot;, &quot;score&quot;,&quot;strand&quot;))</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  chrom = col_character(),
+  start = col_double(),
+  stop = col_double(),
+  name = col_character(),
+  score = col_character(),
+  strand = col_character()
+)</code></pre>
+<pre class="r"><code>dat.exonic.expression &lt;- paste0(&quot;../code/featureCounts/&quot;, c(&quot;chRNA.Expression&quot;, &quot;Expression.Splicing&quot;, &quot;MetabolicLabelled.30min&quot;, &quot;MetabolicLabelled.60min&quot;), &quot;/Counts.txt&quot;) %&gt;%
+  setNames(nm=c(&quot;polyA&quot;, &quot;chRNA&quot;, &quot;MetabolicLabelled.30min&quot;, &quot;MetabolicLabelled.60min&quot;)) %&gt;%
+  lapply(read_and_rename) %&gt;%
+  bind_rows(.id=&quot;dataset&quot;) %&gt;%
+  select_if(~ !any(is.na(.))) %&gt;%
+  filter(Geneid %in% Genes$name) %&gt;%
+  pivot_wider(names_from=c(&quot;dataset&quot;), values_from=contains(&quot;NA&quot;), names_sep=&quot;;&quot;)</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  Geneid = col_character(),
+  Chr = col_character(),
+  Start = col_character(),
+  End = col_character(),
+  Strand = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  Geneid = col_character(),
+  Chr = col_character(),
+  Start = col_character(),
+  End = col_character(),
+  Strand = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  Geneid = col_character(),
+  Chr = col_character(),
+  Start = col_character(),
+  End = col_character(),
+  Strand = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  Geneid = col_character(),
+  Chr = col_character(),
+  Start = col_character(),
+  End = col_character(),
+  Strand = col_character()
+)</code></pre>
+<pre><code>See spec(...) for full column specifications.</code></pre>
+<pre class="r"><code>dat.intronic.expression &lt;- 
+  dat %&gt;%
+  select_if(~ !any(is.na(.))) %&gt;%
+  dplyr::select(dataset, length, Geneid=gid, contains(&quot;NA&quot;)) %&gt;%
+  filter(Geneid %in% Genes$name) %&gt;%
+  group_by(Geneid) %&gt;%
+  mutate(Length = max(length)) %&gt;%
+  ungroup() %&gt;%
+  dplyr::select(dataset, Length, Geneid, contains(&quot;NA&quot;)) %&gt;%
+  pivot_wider(names_from=c(&quot;dataset&quot;), values_from=contains(&quot;NA&quot;), names_sep=&quot;;&quot;) %&gt;%
+  replace(is.na(.), 0)
+
+dat.exonic.expression.rpkm &lt;- dat.exonic.expression %&gt;%
+  dplyr::select(-Length) %&gt;%
+  column_to_rownames(&quot;Geneid&quot;) %&gt;%
+  DGEList() %&gt;%
+  calcNormFactors() %&gt;%
+  rpkm(prior.count=0.1, log=T, gene.length=dat.exonic.expression$Length)
+
+dat.intronic.expression.rpkm &lt;- dat.intronic.expression %&gt;%
+  dplyr::select(-Length) %&gt;%
+  column_to_rownames(&quot;Geneid&quot;) %&gt;%
+  DGEList() %&gt;%
+  calcNormFactors() %&gt;%
+  rpkm(prior.count=0.1, log=T, gene.length=dat.exonic.expression$Length)</code></pre>
+<p>Plot exonic expression correlation heatmap</p>
+<pre class="r"><code>Colors &lt;- ConvertToColorVector(colnames(dat.exonic.expression.rpkm) %&gt;% str_replace(&quot;.+?;(.+?)&quot;, &quot;\\1&quot;))
+
+cor(dat.exonic.expression.rpkm) %&gt;%
+  heatmap.2(trace=&#39;none&#39;, RowSideColors = Colors$ColorVector)</code></pre>
+<p><img src="figure/20220928_ExploreIntronSum.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>PlotColorKey(Colors$Key)</code></pre>
+<p><img src="figure/20220928_ExploreIntronSum.Rmd/unnamed-chunk-4-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Plot intronic expression correlation heatmap</p>
+<pre class="r"><code>Colors &lt;- ConvertToColorVector(colnames(dat.intronic.expression.rpkm) %&gt;% str_replace(&quot;.+?;(.+?)&quot;, &quot;\\1&quot;))
+
+cor(dat.intronic.expression.rpkm) %&gt;%
+  heatmap.2(trace=&#39;none&#39;, RowSideColors = Colors$ColorVector)</code></pre>
+<p><img src="figure/20220928_ExploreIntronSum.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>PlotColorKey(Colors$Key)</code></pre>
+<p><img src="figure/20220928_ExploreIntronSum.Rmd/unnamed-chunk-5-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Plot them all together…</p>
+<pre class="r"><code>dat.combined.rpkm &lt;- inner_join(
+  dat.intronic.expression.rpkm %&gt;%
+    as.data.frame() %&gt;%
+    rownames_to_column(&quot;Geneid&quot;) %&gt;%
+    dplyr::rename_with(~paste0(.x, &quot;;Intronic&quot;), contains(&quot;NA&quot;)),
+  dat.exonic.expression.rpkm %&gt;%
+    as.data.frame() %&gt;%
+    rownames_to_column(&quot;Geneid&quot;) %&gt;%
+    dplyr::rename_with(~paste0(.x, &quot;;Exonic&quot;), contains(&quot;NA&quot;)),
+  by=&quot;Geneid&quot;
+)
+
+ReorderedCols &lt;- dat.combined.rpkm %&gt;%
+  dplyr::select(contains(&quot;NA&quot;)) %&gt;%
+  colnames() %&gt;%
+  as.data.frame() %&gt;%
+  separate(&quot;.&quot;, into=c(&quot;IndID&quot;, &quot;Dataset&quot;, &quot;Type&quot;), sep=&quot;;&quot;) %&gt;%
+  mutate(Dataset = factor(Dataset, levels=c(&quot;chRNA&quot;,&quot;MetabolicLabelled.30min&quot;, &quot;MetabolicLabelled.60min&quot;, &quot;polyA&quot;))) %&gt;%
+  arrange(Type, Dataset, IndID) %&gt;%
+  unite(Name, 1:3, sep=&quot;;&quot;) %&gt;%
+  pull(Name)
+
+dat.combined.rpkm &lt;- dat.combined.rpkm %&gt;%
+  dplyr::select(Geneid, all_of(ReorderedCols)) %&gt;%
+  column_to_rownames(&quot;Geneid&quot;)
+
+Colors &lt;- ConvertToColorVector(colnames(dat.combined.rpkm) %&gt;% str_replace(&quot;.+?;(.+?);(.+?)&quot;, &quot;\\1;\\2&quot;))
+
+cor(dat.combined.rpkm, method=&#39;p&#39;) %&gt;%
+  heatmap.2(trace=&#39;none&#39;, Rowv=F,Colv=F, RowSideColors = Colors$ColorVector, ColSideColors = Colors$ColorVector)</code></pre>
+<p><img src="figure/20220928_ExploreIntronSum.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>PlotColorKey(Colors$Key)</code></pre>
+<p><img src="figure/20220928_ExploreIntronSum.Rmd/unnamed-chunk-6-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok, so the chRNA intronic in general correlates well with exonic measurements, while intronic measurements from the other ones do not correlate well. I’m a bit surprised at that the chRNA intronic is closer to polyA exonic than metabolic labelled exonic or chRNA exonic.</p>
+<p>Does it make sense to look at these same correlation matrices after standardizing and normalizing the table? I think so. Let’s just try it…</p>
+<pre class="r"><code>scale_this &lt;- function(x){
+  (x - mean(x, na.rm=TRUE)) / sd(x, na.rm=TRUE)
+}
+
+dat.Normalized &lt;- dat.combined.rpkm %&gt;%
+  rownames_to_column(&quot;Geneid&quot;) %&gt;%
+  gather(&quot;SampleName&quot;, &quot;rpkm&quot;, -Geneid) %&gt;%
+  separate(SampleName, into=c(&quot;IndID&quot;, &quot;dataset&quot;, &quot;Type&quot;), sep=&quot;;&quot;) %&gt;%
+  group_by(dataset, Type, Geneid) %&gt;%
+  mutate(scaled_rpkm = scale_this(rpkm)) %&gt;%
+  ungroup() %&gt;%
+  group_by(dataset, Type, IndID) %&gt;%
+  mutate(scaled_rpkm_percentiles = min_rank(scaled_rpkm)/(n()+1)) %&gt;%
+  mutate(ScaledAndInverseNormalized = qnorm(scaled_rpkm_percentiles)) %&gt;%
+  ungroup() %&gt;%
+  unite(SampleName, IndID, dataset, Type, sep=&quot;;&quot;) %&gt;%
+  dplyr::select(Geneid, SampleName, ScaledAndInverseNormalized) %&gt;%
+  pivot_wider(names_from=&quot;SampleName&quot;, values_from=&quot;ScaledAndInverseNormalized&quot;) %&gt;%
+  dplyr::select(Geneid, all_of(ReorderedCols)) %&gt;%
+  column_to_rownames(&quot;Geneid&quot;)
+
+
+
+Colors &lt;- ConvertToColorVector(colnames(dat.Normalized) %&gt;% str_replace(&quot;.+?;(.+?);(.+?)&quot;, &quot;\\1;\\2&quot;))
+
+cor(dat.Normalized, method=&#39;s&#39;) %&gt;%
+  heatmap.2(trace=&#39;none&#39;, Rowv=F,Colv=F, RowSideColors = Colors$ColorVector, ColSideColors = Colors$ColorVector)</code></pre>
+<p><img src="figure/20220928_ExploreIntronSum.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>PlotColorKey(Colors$Key)</code></pre>
+<p><img src="figure/20220928_ExploreIntronSum.Rmd/unnamed-chunk-7-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok, keep in mind I kept the order of individuals the same in each of the [assay];[Intron|Exon] boxes. So the diagonal streaks make sense. I think the genetic signals I would pick up in the chRNA intronic region will generally similar to ones in the exonic.</p>
+<p>Let me plot what I’m trying to say in a more intuitive way:</p>
+<pre class="r"><code>BetweenVsWithinIndividualCorrelations &lt;- cor(dat.Normalized, method=&#39;s&#39;) %&gt;%
+  as.data.frame() %&gt;%
+  rownames_to_column(&quot;SampleA&quot;) %&gt;%
+  gather(&quot;SampleB&quot;, &quot;CorrelationCoef&quot;, contains(&quot;NA&quot;)) %&gt;%
+  separate(SampleA, into=c(&quot;IndID.A&quot;, &quot;Assay.A&quot;), sep=&quot;;&quot;, remove=F, extra=&quot;merge&quot;) %&gt;%
+  separate(SampleB, into=c(&quot;IndID.B&quot;, &quot;Assay.B&quot;), sep=&quot;;&quot;, remove=F, extra=&quot;merge&quot;) %&gt;%
+  mutate(Comparison = if_else(IndID.A == IndID.B, &quot;WithinIndividual&quot;, &quot;BetweenIndividual&quot;))
+
+ggplot(BetweenVsWithinIndividualCorrelations, aes(x=CorrelationCoef, color=Comparison)) +
+  stat_ecdf() +
+  facet_grid(rows=vars(Assay.A), cols=vars(Assay.B)) +
+  theme_bw() +
+  labs(y=&quot;ecdf&quot;, x=&quot;Distribution of spearman correlation coef&quot;) +
+  theme(strip.text = element_text(size = 5))</code></pre>
+<p><img src="figure/20220928_ExploreIntronSum.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>BetweenVsWithinIndividualCorrelations %&gt;%
+  group_by(Assay.A, Assay.B, Comparison) %&gt;%
+  summarise(medianCorr = median(CorrelationCoef)) %&gt;%
+  ungroup() %&gt;%
+  pivot_wider(names_from=&quot;Comparison&quot;, values_from=&quot;medianCorr&quot;) %&gt;%
+  mutate(DifferenceInMedian = WithinIndividual-BetweenIndividual) %&gt;%
+  ggplot(aes(x=Assay.A, y=Assay.B, fill=DifferenceInMedian)) +
+  geom_raster() +
+  scale_fill_viridis_c() +
+  theme_classic()</code></pre>
+<pre><code>`summarise()` has grouped output by &#39;Assay.A&#39;, &#39;Assay.B&#39;. You can override
+using the `.groups` argument.</code></pre>
+<p><img src="figure/20220928_ExploreIntronSum.Rmd/unnamed-chunk-8-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>BetweenVsWithinIndividualCorrelations %&gt;%
+  group_by(Assay.A, Assay.B, Comparison) %&gt;%
+  summarise(medianCorr = median(CorrelationCoef)) %&gt;%
+  ungroup() %&gt;%
+  pivot_wider(names_from=&quot;Comparison&quot;, values_from=&quot;medianCorr&quot;) %&gt;%
+  mutate(DifferenceInMedian = WithinIndividual-BetweenIndividual) %&gt;%
+  dplyr::select(Assay.A, Assay.B, DifferenceInMedian) %&gt;%
+  pivot_wider(names_from=&quot;Assay.B&quot;, values_from=&quot;DifferenceInMedian&quot;) %&gt;%
+  column_to_rownames(&quot;Assay.A&quot;) %&gt;%
+  as.matrix() %&gt;%
+  heatmap.2(trace=&quot;none&quot;, col=viridis(50, direction = -1), cexRow=0.5, cexCol=0.5)</code></pre>
+<pre><code>`summarise()` has grouped output by &#39;Assay.A&#39;, &#39;Assay.B&#39;. You can override
+using the `.groups` argument.</code></pre>
+<p><img src="figure/20220928_ExploreIntronSum.Rmd/unnamed-chunk-8-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok, so the median difference between within-individual correlation vs between-individual correlation is greater between chRNA-intronic and polyA-exonic than chRNA-intronic and chRNA-exonic. All that is to say, I think the chRNA intronic gene expression, moreso than the chRNA exonic gene expression, is measuring something similar to polyA exonic gene expression. I think the chRNA intronic gene expression sum is might better read out for transcription than the chRNA exonic.</p>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.6.1 (2019-07-05)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: CentOS Linux 7 (Core)
+
+Matrix products: default
+BLAS/LAPACK: /software/openblas-0.2.19-el7-x86_64/lib/libopenblas_haswellp-r0.2.19.so
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8 LC_NUMERIC=C         LC_TIME=C           
+ [4] LC_COLLATE=C         LC_MONETARY=C        LC_MESSAGES=C       
+ [7] LC_PAPER=C           LC_NAME=C            LC_ADDRESS=C        
+[10] LC_TELEPHONE=C       LC_MEASUREMENT=C     LC_IDENTIFICATION=C 
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] viridis_0.5.1      viridisLite_0.3.0  RColorBrewer_1.1-2 gplots_3.0.1.1    
+ [5] edgeR_3.26.5       limma_3.40.6       forcats_0.4.0      stringr_1.4.0     
+ [9] dplyr_1.0.9        purrr_0.3.4        readr_1.3.1        tidyr_1.2.0       
+[13] tibble_3.1.7       ggplot2_3.3.6      tidyverse_1.3.0   
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_1.0.5         locfit_1.5-9.1     lubridate_1.7.4    lattice_0.20-38   
+ [5] gtools_3.9.2.2     assertthat_0.2.1   rprojroot_2.0.2    digest_0.6.20     
+ [9] utf8_1.1.4         R6_2.4.0           cellranger_1.1.0   backports_1.4.1   
+[13] reprex_0.3.0       evaluate_0.15      highr_0.9          httr_1.4.4        
+[17] pillar_1.7.0       rlang_1.0.5        readxl_1.3.1       gdata_2.18.0      
+[21] rstudioapi_0.14    rmarkdown_1.13     labeling_0.3       munsell_0.5.0     
+[25] broom_1.0.0        compiler_3.6.1     httpuv_1.5.1       modelr_0.1.8      
+[29] xfun_0.31          pkgconfig_2.0.2    htmltools_0.5.3    tidyselect_1.1.2  
+[33] gridExtra_2.3      workflowr_1.6.2    fansi_0.4.0        crayon_1.3.4      
+[37] dbplyr_1.4.2       withr_2.5.0        later_0.8.0        bitops_1.0-6      
+[41] grid_3.6.1         jsonlite_1.6       gtable_0.3.0       lifecycle_1.0.1   
+[45] DBI_1.1.0          git2r_0.26.1       magrittr_1.5       scales_1.1.0      
+[49] KernSmooth_2.23-15 cli_3.3.0          stringi_1.4.3      farver_2.1.0      
+[53] fs_1.5.2           promises_1.0.1     xml2_1.3.2         ellipsis_0.3.2    
+[57] generics_0.1.3     vctrs_0.4.1        tools_3.6.1        glue_1.6.2        
+[61] hms_0.5.3          fastmap_1.1.0      yaml_2.2.0         colorspace_1.4-1  
+[65] caTools_1.17.1.2   rvest_0.3.5        knitr_1.39         haven_2.3.1       </code></pre>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+http://docs.mathjax.org/en/latest/configuration.html.  This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
