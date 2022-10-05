@@ -254,5 +254,20 @@ BetweenVsWithinIndividualCorrelations %>%
   as.matrix() %>%
   heatmap.2(trace="none", col=viridis(50, direction = -1), cexRow=0.5, cexCol=0.5)
 ```
+```{r, eval=F}
+pdf(file="../code/scratch/heatmap_intronic_exonic_geneexpression.pdf")
+BetweenVsWithinIndividualCorrelations %>%
+  group_by(Assay.A, Assay.B, Comparison) %>%
+  summarise(medianCorr = median(CorrelationCoef)) %>%
+  ungroup() %>%
+  pivot_wider(names_from="Comparison", values_from="medianCorr") %>%
+  dplyr::select(Assay.A, Assay.B, WithinIndividual) %>%
+  pivot_wider(names_from="Assay.B", values_from="WithinIndividual") %>%
+  column_to_rownames("Assay.A") %>%
+  as.matrix() %>%
+  heatmap.2(trace="none", col=viridis(50, direction = -1), cexRow=0.3, cexCol=0.3)
+dev.off()
+```
+
 
 Ok, so the median difference between within-individual correlation vs between-individual correlation is greater between chRNA-intronic and polyA-exonic than chRNA-intronic and chRNA-exonic. All that is to say, I think the chRNA intronic gene expression, moreso than the chRNA exonic gene expression, is measuring something similar to polyA exonic gene expression. I think the chRNA intronic gene expression sum is might better read out for transcription than the chRNA exonic.
