@@ -36,6 +36,7 @@ rule CreatePAS_RegionAnnotation:
 
 rule ConcatAllAnnotations:
     input:
+        "NonCodingRNA_annotation/annotation/ncRNA.categorized.bed.gz",
         "ChromHMM/hg38.wgEncodeBroadHmmGm12878HMM.bed.gz",
         "SplicingAnalysis/regtools_annotate_combined/comprehensive.3ss.bed.gz",
         "SplicingAnalysis/regtools_annotate_combined/comprehensive.5ss.bed.gz",

@@ -14,7 +14,6 @@ One way to explore my QTL results is to look for enrichments in QTL SNPs. There 
 ```{r}
 library(tidyverse)
 library(data.table)
-library(boot)
 
 # dat <- fread("../code/QTL_SNP_Enrichment/FinemapIntersections.bed.gz", col.names=c("SNP_chrom", "SNP_start", "SNP_end", "SNP", "PosteriorPr", "Annotation_chrom", "Annotation_start", "Annotation_stop", "Annotation", "Overlap")) %>%
 dat <- fread("../code/QTL_SNP_Enrichment/FinemapIntersections/MolColocStandard.bed.gz", col.names=c("SNP_chrom", "SNP_start", "SNP_end", "SNP", "PosteriorPr", "Annotation_chrom", "Annotation_start", "Annotation_stop", "Annotation", "Overlap")) %>%
@@ -347,7 +346,7 @@ results$plot +
   
 ```
 
-Now let's compare eQTLs with colocalizing H3K27AC, versus eQTLs that colocalize with something but not H3K27AC
+Now let's compare eQTLs with colocalizing H3K27AC|H3K4ME3|H3K4ME1, versus eQTLs that colocalize with something but not H3K27AC|H3K4ME3|H3K4ME1
 
 ```{r}
 chRNA.Splicing.PCs <- c("chRNA.Splicing")

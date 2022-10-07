@@ -360,4 +360,18 @@ rule tabixNominalPassQTLResults:
         tabix -b 10 -e10 -s9 {output.txt} &>> {log}
         """
 
+rule CombineChromosomalVcfs:
+    input:
+        vcf = expand("Genotypes/1KG_GRCh38/{chrom}.vcf.gz", chrom=autosomes),
+        tbi = expand("Genotypes/1KG_GRCh38/{chrom}.vcf.gz.tbi", chrom=autosomes),
+    output:
+        vcf = "Genotypes/1KG_GRCh38/Autosomes.vcf.gz",
+        tbi = "Genotypes/1KG_GRCh38/Autosomes.vcf.gz.tbi"
+
+    shell:
+        """
+        bcftools concat -o {output.vcf} -O z {input.vcf}
+        tabix -p vcf {output.vcf}
+        """
+
 

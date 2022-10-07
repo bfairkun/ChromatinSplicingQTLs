@@ -337,7 +337,7 @@ $(document).ready(function () {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2022-09-29
+<strong>Last updated:</strong> 2022-10-07
 </p>
 <p>
 <strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
@@ -428,16 +428,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstreef504ab695319ac239f9ec5ad06eb3384c4138dc3targetblankf504ab6a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/f504ab695319ac239f9ec5ad06eb3384c4138dc3" target="_blank">f504ab6</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstreeedfdacc2897647bc1368ee2d56dc5b4c2d618df3targetblankedfdacca"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/edfdacc2897647bc1368ee2d56dc5b4c2d618df3" target="_blank">edfdacc</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstreef504ab695319ac239f9ec5ad06eb3384c4138dc3targetblankf504ab6a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstreeedfdacc2897647bc1368ee2d56dc5b4c2d618df3targetblankedfdacca" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/f504ab695319ac239f9ec5ad06eb3384c4138dc3" target="_blank">f504ab6</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/edfdacc2897647bc1368ee2d56dc5b4c2d618df3" target="_blank">edfdacc</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -498,6 +498,7 @@ Ignored files:
     Ignored:    code/log
     Ignored:    code/logs/
     Ignored:    code/notebooks/.ipynb_checkpoints/
+    Ignored:    code/rules/.QTL_SNP_Enrichment.smk.swp
     Ignored:    code/rules/.ipynb_checkpoints/
     Ignored:    code/rules/OldRules/
     Ignored:    code/rules/notebooks/
@@ -523,13 +524,14 @@ Ignored files:
     Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022.csv
 
 Untracked files:
+    Untracked:  code/scripts/tidyNoncodingRNA_annotations.R
     Untracked:  code/snakemake_profiles/slurm/__pycache__/
 
 Unstaged changes:
+    Modified:   analysis/20220728_CheckFinemapSNPEnrichments.Rmd
+    Modified:   code/rules/QTLTools.smk
+    Modified:   code/rules/QTL_SNP_Enrichment.smk
     Modified:   code/scripts/GenometracksByGenotype
-
-Staged changes:
-    New:        analysis/20220928_ExploreIntronSum.Rmd
 
 </code></pre>
 <p>
@@ -568,6 +570,23 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/311db7d5d72412460463be9dc5e60d4668b2b8e4/docs/index.html" target="_blank">311db7d</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-09-29
+</td>
+<td>
+explore intron sum nb
+</td>
+</tr>
 <tr>
 <td>
 html
@@ -944,6 +963,7 @@ for(i in rmd_htmls){
 <p><a href="20220728_CheckFinemapSNPEnrichments.html" class="uri">20220728_CheckFinemapSNPEnrichments.html</a></p>
 <p><a href="20220920_Explore_chRNA_sQTLs.html" class="uri">20220920_Explore_chRNA_sQTLs.html</a></p>
 <p><a href="20220928_ExploreIntronSum.html" class="uri">20220928_ExploreIntronSum.html</a></p>
+<p><a href="20220930_CheckSNP_QTL_Positions.html" class="uri">20220930_CheckSNP_QTL_Positions.html</a></p>
 <p>Also, a list of links to ipynb files that were incorporated into the snakemake. Since github renders ipynbs directly, this is not a relative link from the site folder, but rather links directly to the file to view on github (code <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/master/code/notebooks">here</a>):</p>
 <pre class="r"><code>ipynbs &lt;- list.files(path = &quot;../docs/&quot;, pattern=&quot;^\\d+.+ipynb$&quot;)
 
