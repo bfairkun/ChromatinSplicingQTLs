@@ -256,3 +256,14 @@ coloc.results.tidycolocalized %>%
 ```
 
 Perhaps we should plot the same ideas but breaking out the introns into classes by whether we have some good reason to think it would be an NMD target (ie unannoated, and or annotated with nonsense mediated decay transcript tag)
+
+## Write out bed files for meta QTL plot
+
+As a side thing, I wrote a script to make metaQTL plots. That is, I lump the high/high allele genotypes for many QTLs and plot a metagene plot, along with the heterzygotes, and the low/low genotypes. This could be useful as an alternative to looking through a bunch of pygenometracks QTL plots. I think this list of eQTLs that coloc with hQTL only versus those that coloc with sQTL only would be a good test plot to look at. For example, I expect to see promoter effects at the hQTL eGenes but not so much at the sQTL eGenes, and definitely not at the sQTL eGenes with high finemapping probability as splice sites
+
+```{r, eval=F}
+
+
+
+```
+
