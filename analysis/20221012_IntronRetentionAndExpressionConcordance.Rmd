@@ -1,0 +1,258 @@
+---
+title: "Does intron retention down regulate gene expression"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+## Intro
+
+I previously showed that effect size directions for intron retention QTLs puzzingly positively correct with eQTLs (more intron retention = more expression). Somehow I think intron retention QTLs are often picking up on chromatin effects. Let's break up the intron retention QTLs into groups by the location of the SNP (in a enhancer/promoter vs a splice site) and reassess the concordance of expression effects. I can also look at the same idea with normal leafcutter sQTLs, comparing introns by their annotation type. For example increase in splicing of annotated or "basic" tagged introns might generally increase expression, versus increase in unannoated or "NMD" tagged introns might decrease expression.
+
+```{r}
+library(tidyverse)
+
+```
+
+First let's make some basic plots establishing that chRNA has more unannoated and NMD-specific splicing.
+
+```{r}
+#TODO
+```
+
+Let's 
+
+```{r}
+PhenotypeAliases <- read_tsv("../data/Phenotypes_recode_for_Plotting.txt")
+
+PC.ShortAliases <- PhenotypeAliases %>%
+  dplyr::select(PC, ShorterAlias) %>% deframe()
+
+coloc.results <- read_tsv("../code/hyprcoloc/Results/ForColoc/MolColocStandard/results.txt.gz")
+
+coloc.results.tidycolocalized <- read_tsv("../code/hyprcoloc/Results/ForColoc/MolColocStandard/tidy_results_OnlyColocalized.txt.gz") %>%
+  separate(phenotype_full, into=c("PC", "P"), sep=";")
+
+finemap.snps.annotated <- read_tsv("../code/QTL_SNP_Enrichment/FinemapIntersections/MolColocStandard.bed.gz", col_names=c("SNPchrom", "SNPstart", "SNPstop", "SNP_iteration_locus", "FinemapPP", "AnnotationChrom", "AnnotationStart", "AnnotatioStop", "AnnotationClass", "Overlap")) %>%
+  dplyr::select(-Overlap)
+```
+
+Count chromatin-colocalizing and splicing-colocalizing eQTLs, and recreate previous observation about concordant effects
+
+```{r}
+coloc.results.tidycolocalized %>%
+  group_by(Locus, snp) %>%
+  filter(any(PC=="Expression.Splicing.Subset_YRI")) %>%
+  summarise(
+    ContainsChromatinEqtl = any(PC %in% c("H3K27AC", "H3K4ME1", "H3K4ME3")),
+    ContainsSqtl = any(PC %in% c("polyA.Splicing.Subset_YRI", "chRNA.Splicing", "chRNA.IER"))
+    ) %>%
+  ggplot(aes(x=1, fill=paste(ContainsChromatinEqtl, ContainsSqtl))) +
+  geom_bar() +
+  labs(title="More chromatin localization with eQTLs than splicing", y="Number of colocalizing eQTLs") +
+  theme_classic() +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+
+coloc.results.tidycolocalized %>%
+  group_by(Locus, snp) %>%
+  filter(any(PC=="Expression.Splicing.Subset_YRI")) %>%
+  ungroup() %>%
+  filter(PC %in% c("Expression.Splicing.Subset_YRI","H3K27AC", "H3K4ME1", "H3K4ME3", "polyA.Splicing.Subset_YRI", "chRNA.Splicing", "chRNA.IER")) %>%
+  left_join(., ., by=c("Locus", "snp")) %>%
+  filter(!((P.x == P.y) & (PC.x == PC.y))) %>% 
+  group_by(Locus, snp) %>%
+  mutate(
+    ContainsChromatinEqtl = any(PC.x %in% c("H3K27AC", "H3K4ME1", "H3K4ME3")),
+    ContainsSqtl = any(PC.x %in% c("polyA.Splicing.Subset_YRI", "chRNA.Splicing", "chRNA.IER"))
+    ) %>%
+  ungroup() %>%
+  mutate(Contains.eQTL_Contains.sQTL = paste(ContainsChromatinEqtl, ContainsSqtl)) %>%
+  group_by(Contains.eQTL_Contains.sQTL, PC.x, PC.y) %>%
+  summarise(cor = cor(beta.x, beta.y, method="spearman")) %>%
+  mutate(PC.x = recode(PC.x, !!!PC.ShortAliases)) %>%
+  mutate(PC.y = recode(PC.y, !!!PC.ShortAliases)) %>%
+  ggplot(aes(x=PC.x, y=PC.y, fill=cor)) +
+  geom_raster() +
+  scale_fill_gradient2() +
+  facet_wrap(~Contains.eQTL_Contains.sQTL) +
+  scale_x_discrete(expand=c(0,0)) +
+  scale_y_discrete(expand=c(0,0)) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+  labs(x="TraitA Phenotype class", y="TraitB Phenotype class", fill="Spearman cor", title="Effect size correlation",
+       caption = "FacetTitle: IsChromatinQTL IsSplicingQTL")
+```
+
+Now split QTLs by location of SNP as either in splice site, in enhancer/promoter, or neither
+
+```{r}
+#annotation types
+finemap.snps.annotated$AnnotationClass %>% unique()
+```
+
+
+```{r}
+coloc.results.tidycolocalized %>%
+  group_by(Locus, snp) %>%
+  filter(any(PC=="Expression.Splicing.Subset_YRI")) %>%
+  ungroup() %>%
+  filter(PC %in% c("Expression.Splicing.Subset_YRI","H3K27AC", "H3K4ME1", "H3K4ME3", "polyA.Splicing.Subset_YRI", "chRNA.Splicing", "chRNA.IER")) %>%
+  left_join(., ., by=c("Locus", "snp")) %>%
+  filter(!((P.x == P.y) & (PC.x == PC.y))) %>% 
+  group_by(Locus, snp) %>%
+  mutate(
+    ContainsChromatinEqtl = any(PC.x %in% c("H3K27AC", "H3K4ME1", "H3K4ME3")),
+    ContainsSqtl = any(PC.x %in% c("polyA.Splicing.Subset_YRI", "chRNA.Splicing", "chRNA.IER"))
+    ) %>%
+  ungroup() %>%
+  mutate(Contains.eQTL_Contains.sQTL = paste(ContainsChromatinEqtl, ContainsSqtl)) %>%
+  dplyr::select(-iteration.y) %>%
+  left_join(
+    finemap.snps.annotated %>%
+      dplyr::select(SNP_iteration_locus, FinemapPP, AnnotationClass) %>%
+      separate(SNP_iteration_locus, into=c("snp", "iteration.x", "Locus"), convert=T, sep="_")
+  ) %>%
+  filter(FinemapPP >0.25) %>%
+  mutate(AnnotationSuperclass = case_when(
+    str_detect(AnnotationClass, "Splice.+_1") ~ "Annotated SS",
+    str_detect(AnnotationClass, "Splice.+_0$") ~ "Unannotated SS",
+    str_detect(AnnotationClass, "Enhancer") ~ "Enhancer",
+    str_detect(AnnotationClass, "Promoter") ~ "Promoter",
+    TRUE ~ "Other"
+  )) %>%
+  mutate(PC.x = recode(PC.x, !!!PC.ShortAliases)) %>%
+  mutate(PC.y = recode(PC.y, !!!PC.ShortAliases)) %>%
+  mutate(Contains.eQTL_Contains.sQTL = recode(Contains.eQTL_Contains.sQTL,
+                                              !!!c("TRUE TRUE"="hQTL+sQTL",
+                                                   "TRUE FALSE"="hQTL only",
+                                                   "FALSE TRUE"="sQTL only"))) %>%
+  group_by(Contains.eQTL_Contains.sQTL, PC.x, PC.y, AnnotationSuperclass) %>%
+  summarise(cor = cor(beta.x, beta.y, method="spearman"), n=n()) %>%
+  ggplot(aes(x=PC.x, y=PC.y, fill=cor)) +
+  geom_raster() +
+  geom_text(aes(label=n), size=1.5) +
+  scale_fill_gradient2() +
+  facet_grid(rows=vars(Contains.eQTL_Contains.sQTL), cols=vars(AnnotationSuperclass)) +
+  scale_x_discrete(expand=c(0,0)) +
+  scale_y_discrete(expand=c(0,0)) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+  labs(x="TraitA Phenotype class", y="TraitB Phenotype class", fill="Spearman cor", title="Effect size correlation for eQTLs that coloc with something",
+       caption = str_wrap("FacetCols=Annotation class of SNP (Onlyfinemap PP >0.25 included). FacetRows=Type of eQTL"))
+
+```
+
+I'm quite surprised just by the numbers of hQTL eQTLs with high finemap PP in unannoated splice site regions. This is clearly a really big annotation set that also includes lots of enhancer regions. This unannoated splice site region was defined as at least one spliced read mapping across all the data. Perhaps I shouldn't be surprised, as any region is sufficeintly transcribed (including enhancers) will at some rate have some splice sites.
+
+And even among the 7 intron retention QTLs that coloc with an eQTL but not hQTL, and are finemapped to annotated splice sites, the the direction of effects is if anything opposite what I was expecting
+
+```{r}
+coloc.results.tidycolocalized %>%
+  group_by(Locus, snp) %>%
+  filter(any(PC=="Expression.Splicing.Subset_YRI")) %>%
+  ungroup() %>%
+  filter(PC %in% c("Expression.Splicing.Subset_YRI","H3K27AC", "H3K4ME1", "H3K4ME3", "polyA.Splicing.Subset_YRI", "chRNA.Splicing", "chRNA.IER")) %>%
+  left_join(., ., by=c("Locus", "snp")) %>%
+  filter(!((P.x == P.y) & (PC.x == PC.y))) %>% 
+  group_by(Locus, snp) %>%
+  mutate(
+    ContainsChromatinEqtl = any(PC.x %in% c("H3K27AC", "H3K4ME1", "H3K4ME3")),
+    ContainsSqtl = any(PC.x %in% c("polyA.Splicing.Subset_YRI", "chRNA.Splicing", "chRNA.IER"))
+    ) %>%
+  ungroup() %>%
+  mutate(Contains.eQTL_Contains.sQTL = paste(ContainsChromatinEqtl, ContainsSqtl)) %>%
+  dplyr::select(-iteration.y) %>%
+  left_join(
+    finemap.snps.annotated %>%
+      dplyr::select(SNP_iteration_locus, FinemapPP, AnnotationClass) %>%
+      separate(SNP_iteration_locus, into=c("snp", "iteration.x", "Locus"), convert=T, sep="_")
+  ) %>%
+  filter(FinemapPP >0.25) %>%
+  mutate(AnnotationSuperclass = case_when(
+    str_detect(AnnotationClass, "Splice.+_1") ~ "Annotated SS",
+    str_detect(AnnotationClass, "Splice.+_0$") ~ "Unannotated SS",
+    str_detect(AnnotationClass, "Enhancer") ~ "Enhancer",
+    str_detect(AnnotationClass, "Promoter") ~ "Promoter",
+    TRUE ~ "Other"
+  )) %>%
+  mutate(PC.x = recode(PC.x, !!!PC.ShortAliases)) %>%
+  mutate(PC.y = recode(PC.y, !!!PC.ShortAliases)) %>%
+  mutate(Contains.eQTL_Contains.sQTL = recode(Contains.eQTL_Contains.sQTL,
+                                              !!!c("TRUE TRUE"="hQTL+sQTL",
+                                                   "TRUE FALSE"="hQTL only",
+                                                   "FALSE TRUE"="sQTL only"))) %>%
+  filter(Contains.eQTL_Contains.sQTL=="sQTL only" & AnnotationSuperclass=="Annotated SS") %>%
+  ggplot(aes(x=beta.x, y=beta.y)) +
+  geom_point() +
+  geom_vline(xintercept=0) +
+  geom_hline(yintercept=0) +
+  facet_grid(rows=vars(PC.x), cols=vars(PC.y)) +
+  theme_bw() +
+  labs(x="TraitA Phenotype class", y="TraitB Phenotype class", title="Effect size correlation for eQTLs/sQTLs that are not hQTLs",
+       caption = str_wrap("Only SNPs with finemap PP > 0.25 in annotated splice site SNP included"))
+  
+
+
+```
+
+Note there are only a few points of chRNA.IR intron retention with SNPs in splice sites that coloc with eQTL.
+
+Let's also break the original plot by ncRNAs for SNP regions
+
+```{r, fig.width=15}
+coloc.results.tidycolocalized %>%
+  group_by(Locus, snp) %>%
+  filter(any(PC=="Expression.Splicing.Subset_YRI")) %>%
+  ungroup() %>%
+  filter(PC %in% c("Expression.Splicing.Subset_YRI","H3K27AC", "H3K4ME1", "H3K4ME3", "polyA.Splicing.Subset_YRI", "chRNA.Splicing", "chRNA.IER")) %>%
+  left_join(., ., by=c("Locus", "snp")) %>%
+  filter(!((P.x == P.y) & (PC.x == PC.y))) %>% 
+  group_by(Locus, snp) %>%
+  mutate(
+    ContainsChromatinEqtl = any(PC.x %in% c("H3K27AC", "H3K4ME1", "H3K4ME3")),
+    ContainsSqtl = any(PC.x %in% c("polyA.Splicing.Subset_YRI", "chRNA.Splicing", "chRNA.IER"))
+    ) %>%
+  ungroup() %>%
+  mutate(Contains.eQTL_Contains.sQTL = paste(ContainsChromatinEqtl, ContainsSqtl)) %>%
+  dplyr::select(-iteration.y) %>%
+  left_join(
+    finemap.snps.annotated %>%
+      dplyr::select(SNP_iteration_locus, FinemapPP, AnnotationClass) %>%
+      separate(SNP_iteration_locus, into=c("snp", "iteration.x", "Locus"), convert=T, sep="_")
+  ) %>%
+  filter(FinemapPP >0.25) %>%
+  mutate(AnnotationSuperclass = case_when(
+    str_detect(AnnotationClass, "Splice.+_1") ~ "Annotated SS",
+    str_detect(AnnotationClass, "Splice.+_0$") ~ "Unannotated SS",
+    str_detect(AnnotationClass, "Enhancer") ~ "Enhancer",
+    str_detect(AnnotationClass, "Promoter") ~ "Promoter",
+    str_detect(AnnotationClass, "ncRNA") ~ AnnotationClass,
+    TRUE ~ "Other"
+  )) %>%
+  group_by(Contains.eQTL_Contains.sQTL, PC.x, PC.y, AnnotationSuperclass) %>%
+  summarise(cor = cor(beta.x, beta.y, method="spearman"), n=n()) %>%
+  mutate(PC.x = recode(PC.x, !!!PC.ShortAliases)) %>%
+  mutate(PC.y = recode(PC.y, !!!PC.ShortAliases)) %>%
+  mutate(Contains.eQTL_Contains.sQTL = recode(Contains.eQTL_Contains.sQTL,
+                                              !!!c("TRUE TRUE"="hQTL+sQTL",
+                                                   "TRUE FALSE"="hQTL only",
+                                                   "FALSE TRUE"="sQTL only"))) %>%
+  ggplot(aes(x=PC.x, y=PC.y, fill=cor)) +
+  geom_raster() +
+  geom_text(aes(label=n), size=1.5) +
+  scale_fill_gradient2() +
+  facet_grid(rows=vars(Contains.eQTL_Contains.sQTL), cols=vars(AnnotationSuperclass)) +
+  scale_x_discrete(expand=c(0,0)) +
+  scale_y_discrete(expand=c(0,0)) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+  labs(x="TraitA Phenotype class", y="TraitB Phenotype class", fill="Spearman cor", title="Effect size correlation for eQTLs that coloc with something",
+       caption = str_wrap("FacetCols=Annotation class of SNP (Onlyfinemap PP >0.25 included). FacetRows=Type of eQTL"))
+
+```
+
+Perhaps we should plot the same ideas but breaking out the introns into classes by whether we have some good reason to think it would be an NMD target (ie unannoated, and or annotated with nonsense mediated decay transcript tag)

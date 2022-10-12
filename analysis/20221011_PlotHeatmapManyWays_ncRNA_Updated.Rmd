@@ -1,0 +1,413 @@
+---
+title: "PlotHeatmapManyWays_ncRNA_Included"
+output: html_document
+---
+
+---
+title: "Plot heatmaps many ways"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+## Introduction
+
+I’ve been making heatmaps to communicate the fraction of xQTLs (eg eQTLs/sQTLs/chromatinQTLs) that colocalize with yQTLs. There are many slightly different methods I’ve been using to make this heatmap, with slightly different interpretations. In this notebook, I will make lots of those heatmaps to compare the different methods.
+
+Here is a list of the different methods I have been using, with the names I am calling these methods. Note that for all of these methods I can consider using different statistical thresholds for calling something a QTL, so in this notebook I’ll explore that too.
+
+- Pi1: “What is the pi1 statistic for yQTLs (ascertainment phenotype), in xQTLs (discovery phenotype)”. I can use different FDR thresholds for x (discovery phenotype)
+- ColocalizationRate: “What fraction of xQTLs have at least one colocalizing yQTL”.
+- ColocalizationRateAmongAttempted: “When there is both a xQTL and yQTL around the same gene, how often do they colocalize”
+- SpearmanCorrealtionThreshold: What fraction of xQTLs have at least one yQTL with correlated association signal (spearman correlation coef > Treshold)
+- SpearmanCorrealtionThresholdAmongAttempted: When there is both a xQTL and yQTL around the same gene, how often do they have correlation association signals (spearman correlation coef > Treshold)
+
+```{r}
+library(tidyverse)
+library(viridis)
+library(gplots)
+library(data.table)
+library(qvalue)
+library(purrr)
+library(GGally)
+library(pROC)
+
+# pi0est function breaks sometimes. this wrapper function returns 1 when that happens
+CalculatePi1 <- function (dat.in, ...) {
+  return(tryCatch(1-pi0est(dat.in$Pvals.For.Pi1, ...)$pi0, error=function(e) 1))
+}
+
+```
+
+# pi1
+
+First let’s read in data for Pi1 method
+
+```{r}
+dat <- fread("../code/pi1/PairwisePi1Traits.P.all.txt.gz", sep='\t')
+
+dat %>%
+  filter(PC2 == "ProCap") %>%
+  count(PC1)
+
+RecodeDat <- read_tsv("../data/Phenotypes_recode_for_Plotting.txt")
+
+RecodeVec <- RecodeDat %>%
+  select(PC, ShorterAlias) %>%
+  deframe()
+
+RecodeIncludePCs <- RecodeDat %>%
+  filter(Include) %>%
+  pull(PC)
+
+colnames(dat)
+```
+
+I also need to simulate the null distribution to deal with the one to many problem…
+
+```{r}
+MaxSampleSizeToCreateANull <- 250
+NSamplesToEstimateDistribution <- 10000
+NullSimulatedTestStats <- matrix(nrow=MaxSampleSizeToCreateANull, ncol=NSamplesToEstimateDistribution)
+rownames(NullSimulatedTestStats) <- paste0("runif_samplesize", 1:MaxSampleSizeToCreateANull)
+colnames(NullSimulatedTestStats) <- paste0("Sample_", 1:NSamplesToEstimateDistribution)
+
+
+for (i in 1:MaxSampleSizeToCreateANull){
+  SampleSizeFromUniform <- i
+  SampledDat <- matrix(runif(SampleSizeFromUniform*NSamplesToEstimateDistribution), nrow=NSamplesToEstimateDistribution)
+  SampleDatNullTestStatistics <- -log10(apply(SampledDat, 1, min))
+  NullSimulatedTestStats[i,] <- SampleDatNullTestStatistics
+}
+
+
+NullSimulatedTestStats %>%
+  as.data.frame() %>%
+  rownames_to_column("runif_samplesize") %>%
+  slice(1:20) %>%
+  # mutate(runif_samplesize = as.numeric(str_remove(runif_samplesize, "runif_samplesize"))) %>%
+  gather(key="Sample", value="value", -runif_samplesize) %>%
+  ggplot(aes(x=value, color=runif_samplesize)) +
+  geom_density() +
+  theme_bw()
+
+ecdf.functions <- apply(NullSimulatedTestStats, 1, ecdf)
+ecdf.functions[[1]](1)
+```
+
+Now calculate pi1. I will recode some phenotype classes to distinguish H3K4ME3 at host gene versus other genes, versus distal enhancers, and antisense RNAs from other types of ncRNAs. First read stuff to recode these phenotypes
+
+
+
+```{r}
+dat$PC1 %>% unique()
+
+ncRNA.annotations <- read_tsv("../code/NonCodingRNA_annotation/annotation/ncRNA.categorized.bed.gz", col_names=c("chrom", "start", "stop", "name", "score", "strand")) %>%
+  dplyr::select(P_ncRNA = score, PC_ncRNA=name) %>%
+  mutate(PC_P = paste0("chRNA.Expression_ncRNA;", P_ncRNA))
+
+
+PeaksToTSS <- Sys.glob("../code/Misc/PeaksClosestToTSS/*_assigned.tsv.gz") %>%
+  setNames(str_replace(., "../code/Misc/PeaksClosestToTSS/(.+?)_assigned.tsv.gz", "\\1")) %>%
+  lapply(read_tsv) %>%
+  bind_rows(.id="ChromatinMark") %>%
+  mutate(GenePeakPair = paste(gene, peak, sep = ";")) %>%
+  distinct(ChromatinMark, peak, gene, .keep_all=T)
+
+GeneWindows <- dat$GeneLocus %>% unique()
+TSSGenes <- PeaksToTSS$gene %>% unique()
+
+length(GeneWindows)
+length(TSSGenes)
+intersect(GeneWindows, TSSGenes) %>% length()
+```
+
+Now create dataframe for calculating pi1, first without recoding the chromatin marks
+
+```{r}
+dat.split <- dat %>%
+  filter(PC1 %in% RecodeIncludePCs) %>%
+  filter(PC2 %in% RecodeIncludePCs) %>%
+  mutate(PC1 = recode(PC1, !!!RecodeVec)) %>%
+  mutate(PC2 = recode(PC2, !!!RecodeVec)) %>%
+  mutate(PC_P1 = paste(PC1, P1, sep=";")) %>%
+  left_join(ncRNA.annotations, by=c("PC_P1"="PC_P")) %>%
+  mutate(PC1 = case_when(
+    !is.na(PC_ncRNA) ~ PC_ncRNA,
+    TRUE ~ PC1
+  )) %>%
+  dplyr::select(-P_ncRNA, -PC_ncRNA) %>%
+  mutate(PC_P2 = paste(PC2, P1, sep=";")) %>%
+  left_join(ncRNA.annotations, by=c("PC_P2"="PC_P")) %>%
+  mutate(PC2 = case_when(
+    !is.na(PC_ncRNA) ~ PC_ncRNA,
+    TRUE ~ PC2
+  )) %>%
+  dplyr::select(-P_ncRNA, -PC_ncRNA) %>%
+  group_by(PC1, P1, PC2) %>%
+  mutate(test.stat.obs = -log10(min(trait.x.p.in.y))) %>%
+  ungroup() %>%
+  add_count(PC1, P1, PC2) %>%
+  filter(n<=250) %>%
+  group_by(PC1, PC2) %>%
+  rowwise() %>%
+  mutate(Pvals.For.Pi1 = 1-ecdf.functions[[n]](test.stat.obs)) %>%
+  ungroup() %>%
+  select(PC1, PC2, Pvals.For.Pi1) %>%
+  filter(!PC1==PC2) %>%
+  split(paste(.$PC1, .$PC2, sep = ";"))
+
+dat.split %>% bind_rows(.id="PC1_PC2") %>%
+  filter(PC2=="ProCap") %>%
+  # filter(PC2=="H3K36ME3") %>%
+  ggplot(aes(x=Pvals.For.Pi1)) +
+  geom_histogram(scales="free") +
+  facet_wrap(~PC1)
+
+
+dat.pi1 <- lapply(dat.split, CalculatePi1, pi0.method="bootstrap") %>%
+  unlist() %>%
+  data.frame(pi1=.) %>%
+  rownames_to_column("PC1_PC2") %>%
+  separate(PC1_PC2, into=c("PC1", "PC2"), sep=';') %>%
+  mutate(TextColor = case_when(
+    pi1 >= 0.7 ~ "white",
+    TRUE ~ "black"
+  ))
+
+ggplot(dat.pi1, aes(x=PC1, y=PC2, fill=pi1, color=TextColor)) +
+  geom_raster() +
+  geom_text(aes(label=signif(pi1*100, 2))) +
+  scale_color_identity() +
+  scale_fill_viridis(option="A", direction = -1, limits=c(0,1)) +
+  coord_flip() +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(x="Discovery QTL phenotype", y="Phenotype assessed for overlap")
+```
+
+
+```{r}
+dat.split.added.union.activating.marks <- dat %>%
+  filter(PC1 %in% RecodeIncludePCs) %>%
+  filter(PC2 %in% RecodeIncludePCs) %>%
+  # mutate(PC_P1 = paste(PC1, P1, sep=";")) %>%
+  # left_join(ncRNA.annotations, by=c("PC_P1"="PC_P")) %>%
+  # mutate(PC1 = case_when(
+  #   !is.na(PC_ncRNA) ~ PC_ncRNA,
+  #   TRUE ~ PC1
+  # )) %>%
+  # dplyr::select(-P_ncRNA, -PC_ncRNA) %>%
+  # mutate(PC_P2 = paste(PC2, P1, sep=";")) %>%
+  # left_join(ncRNA.annotations, by=c("PC_P2"="PC_P")) %>%
+  # mutate(PC2 = case_when(
+  #   !is.na(PC_ncRNA) ~ PC_ncRNA,
+  #   TRUE ~ PC2
+  # )) %>%
+  # dplyr::select(-P_ncRNA, -PC_ncRNA) %>%
+  mutate(PC1 = recode(PC1, !!!RecodeVec)) %>%
+  mutate(PC2 = recode(PC2, !!!RecodeVec)) %>%
+  mutate(PC1 = case_when(
+    paste(GeneLocus, P1, sep=";") %in% PeaksToTSS$GenePeakPair ~ "ActivatingMark_HostGenePromoter",
+    P1 %in% PeaksToTSS$peak ~ "ActivatingMark_OtherGenePromoter",
+    PC1 %in% c("H3K4ME1", "H3K4ME3", "H3K27AC") ~ "ActivatingMark_Enhancer",
+    TRUE ~ PC1
+  )) %>%
+  mutate(PC2 = case_when(
+    paste(GeneLocus, P2, sep=";") %in% PeaksToTSS$GenePeakPair ~ "ActivatingMark_HostGenePromoter",
+    P2 %in% PeaksToTSS$peak ~ "ActivatingMark_OtherGenePromoter",
+    PC2 %in% c("H3K4ME1", "H3K4ME3", "H3K27AC") ~ "ActivatingMark_Enhancer",
+    TRUE ~ PC2
+  ))
+
+
+dat.split.added.union.activating.marks <-
+  bind_rows(dat.split.added.union.activating.marks, 
+    (dat.split.added.union.activating.marks %>% filter(str_detect(PC1, "ActivatingMark")) %>%
+    mutate(PC1 = case_when(
+      str_detect(PC1, "ActivatingMark") ~ "AnyActivatingMark",
+      TRUE ~ PC1
+    ))),
+    (dat.split.added.union.activating.marks %>% filter(str_detect(PC2, "ActivatingMark")) %>%
+    mutate(PC2 = case_when(
+      str_detect(PC2, "ActivatingMark") ~ "AnyActivatingMark",
+      TRUE ~ PC2
+    )))) %>%
+  group_by(PC1, P1, PC2) %>%
+  mutate(test.stat.obs = -log10(min(trait.x.p.in.y))) %>%
+  ungroup() %>%
+  add_count(PC1, P1, PC2) %>%
+  filter(n<=250) %>%
+  group_by(PC1, PC2) %>%
+  rowwise() %>%
+  mutate(Pvals.For.Pi1 = 1-ecdf.functions[[n]](test.stat.obs)) %>%
+  ungroup() %>%
+  select(PC1, PC2, Pvals.For.Pi1) %>%
+  filter(!PC1==PC2) %>%
+  split(paste(.$PC1, .$PC2, sep = ";"))
+
+
+dat.split.added.union.activating.marks %>%
+  bind_rows(.id="PC1_PC2") %>%
+  filter(PC1=="ActivatingMark_Enhancer") %>%
+  drop_na() %>%
+  ggplot(aes(x=Pvals.For.Pi1)) +
+  geom_histogram(scales="free") +
+  facet_wrap(~PC2)
+
+dat.pi1 <- lapply(dat.split.added.union.activating.marks, CalculatePi1, pi0.method="bootstrap") %>%
+  unlist() %>%
+  data.frame(pi1=.) %>%
+  rownames_to_column("PC1_PC2") %>%
+  separate(PC1_PC2, into=c("PC1", "PC2"), sep=';') %>%
+  # filter(!(PC1=="ActivatingMark" | PC2 == "ActivatingMark") ) %>%
+  mutate(TextColor = case_when(
+    pi1 >= 0.7 ~ "white",
+    TRUE ~ "black"
+  ))
+
+ggplot(dat.pi1, aes(x=PC1, y=PC2, fill=pi1, color=TextColor)) +
+  geom_raster() +
+  geom_text(aes(label=signif(pi1*100, 2))) +
+  scale_color_identity() +
+  scale_fill_viridis(option="A", direction = -1, limits=c(0,1)) +
+  coord_flip() +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(x="Discovery QTL phenotype", y="Phenotype assessed for overlap")
+
+```
+
+Some of these pi1 estimates don't make sense. When discovery QTL is "ActivatingMark_*", pi1 assessed in "AnyActivatingMark" should be 100%... Let's check the histograms...
+
+```{r, fig.height=7, fig.width=7}
+dat.split.added.union.activating.marks %>%
+  bind_rows(.id="ID") %>%
+  filter(PC2 == "AnyActivatingMark") %>%
+  split(paste(.$PC1, .$PC2, sep = ";")) %>%
+  lapply(CalculatePi1, lambda=0.5, pi0.method="bootstrap") %>%
+  unlist() %>%
+  data.frame(pi1=.)
+
+QvalueObj <- dat.split.added.union.activating.marks %>%
+  bind_rows(.id="ID") %>%
+  filter(PC1 == "ActivatingMark_Enhancer" & PC2 == "AnyActivatingMark") %>%
+  pull(Pvals.For.Pi1) %>%
+  pi0est(pi0.method="bootstrap")
+
+plot(QvalueObj$lambda, QvalueObj$pi0.lambda)
+  
+dat.split.added.union.activating.marks %>%
+  bind_rows(.id="ID") %>%
+  filter(str_detect(PC1, "ActivatingMark") & str_detect(PC2, "ActivatingMark")) %>%
+  ggplot(aes(x=Pvals.For.Pi1)) +
+  geom_histogram() +
+  facet_wrap(~ID, scales = "free_y") +
+  theme_bw()
+
+dat.split.added.union.activating.marks %>%
+  bind_rows(.id="ID") %>%
+  filter(PC1=="Expression_Metabolic.30min", str_detect(PC2, "ActivatingMark")) %>%
+  ggplot(aes(x=Pvals.For.Pi1)) +
+  geom_histogram() +
+  facet_wrap(~ID, scales = "free_y") +
+  theme_bw()
+```
+
+Hmm, I suspect this is another problem like I described before where there are many non-signifant non-independent tests that make the Pvalue distribution a tad conservative when there is a one-to-many phenotype mapping. I note that Metabolic.30min vs Metabolic.60min don't seem to have this problem, as the pi1 staistic is near 100%, and it doesn't have a the one-to-many mapping problem. Well I am not too concerned for now, I will just have to remember that when there are many ascertainment phenotypes that get tested against each discovery, that the pi1 estimates may be a bit convervatice (smaller than truth).
+
+Ok now make the plot with different FDR thresholds:
+
+
+
+```{r, fig.height=7, fig.width=12}
+# Make a function to re-use
+
+CalculatePi1Matrix <- function(dat, DiscoveryFDR=0.1){
+  dat.split.added.union.activating.marks <- dat %>%
+    filter(FDR.x <= DiscoveryFDR) %>%
+    filter(PC1 %in% RecodeIncludePCs) %>%
+    filter(PC2 %in% RecodeIncludePCs) %>%
+    mutate(PC1 = recode(PC1, !!!RecodeVec)) %>%
+    mutate(PC2 = recode(PC2, !!!RecodeVec)) %>%
+    mutate(PC1 = case_when(
+      paste(GeneLocus, P1, sep=";") %in% PeaksToTSS$GenePeakPair ~ "ActivatingMark_HostGenePromoter",
+      P1 %in% PeaksToTSS$peak ~ "ActivatingMark_OtherGenePromoter",
+      PC1 %in% c("H3K4ME1", "H3K4ME3", "H3K27AC") ~ "ActivatingMark_Enhancer",
+      TRUE ~ PC1
+    )) %>%
+    mutate(PC2 = case_when(
+      paste(GeneLocus, P2, sep=";") %in% PeaksToTSS$GenePeakPair ~ "ActivatingMark_HostGenePromoter",
+      P2 %in% PeaksToTSS$peak ~ "ActivatingMark_OtherGenePromoter",
+      PC2 %in% c("H3K4ME1", "H3K4ME3", "H3K27AC") ~ "ActivatingMark_Enhancer",
+      TRUE ~ PC2
+    ))
+  
+  dat.split.added.union.activating.marks <-
+    bind_rows(dat.split.added.union.activating.marks, 
+      (dat.split.added.union.activating.marks %>% filter(str_detect(PC1, "ActivatingMark")) %>%
+      mutate(PC1 = case_when(
+        str_detect(PC1, "ActivatingMark") ~ "AnyActivatingMark",
+        TRUE ~ PC1
+      ))),
+      (dat.split.added.union.activating.marks %>% filter(str_detect(PC2, "ActivatingMark")) %>%
+      mutate(PC2 = case_when(
+        str_detect(PC2, "ActivatingMark") ~ "AnyActivatingMark",
+        TRUE ~ PC2
+      )))) %>%
+    group_by(PC1, P1, PC2) %>%
+    mutate(test.stat.obs = -log10(min(trait.x.p.in.y))) %>%
+    ungroup() %>%
+    add_count(PC1, P1, PC2) %>%
+    filter(n<=250) %>%
+    group_by(PC1, PC2) %>%
+    rowwise() %>%
+    mutate(Pvals.For.Pi1 = 1-ecdf.functions[[n]](test.stat.obs)) %>%
+    ungroup() %>%
+    select(PC1, PC2, Pvals.For.Pi1) %>%
+    filter(!PC1==PC2) %>%
+    split(paste(.$PC1, .$PC2, sep = ";"))
+  
+  dat.pi1 <- lapply(dat.split.added.union.activating.marks, CalculatePi1, pi0.method="bootstrap") %>%
+    unlist() %>%
+    data.frame(pi1=.) %>%
+    rownames_to_column("PC1_PC2") %>%
+    separate(PC1_PC2, into=c("PC1", "PC2"), sep=';') %>%
+    mutate(DiscoveryFDR = DiscoveryFDR) %>%
+    mutate(TextColor = case_when(
+      pi1 >= 0.7 ~ "white",
+      TRUE ~ "black"
+    ))
+return(dat.pi1)
+}
+
+dat.pi.AtThresholds <- bind_rows(
+  CalculatePi1Matrix(dat, DiscoveryFDR=0.1),
+  CalculatePi1Matrix(dat, DiscoveryFDR=0.05),
+  CalculatePi1Matrix(dat, DiscoveryFDR=0.01)
+)
+
+pi.heatmap <- ggplot(dat.pi.AtThresholds, aes(x=PC1, y=PC2, fill=pi1, color=TextColor)) +
+  geom_raster() +
+  geom_text(aes(label=signif(pi1*100, 2))) +
+  scale_fill_viridis(option="A", direction = -1, limits=c(0,1)) +
+  scale_color_identity() +
+  facet_wrap(~DiscoveryFDR) +
+  coord_flip() +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(x="Discovery QTL phenotype", y="Phenotype assessed for overlap", "Pi1 of xQTL among Discovery QTL classes")
+pi.heatmap
+```
+
+Consistent with the one-to-many explanation of pi1 being overly conservatice, when there are less phenotypes to map to one (ie when the 0.01 facet), the ActinvatingMark_* to AnyActivatingMark approaches 100%.
+
+### Update: let's break out ncRNA into some subcategories
+
+```{r}
+dat %>% pull(PC1) %>% unique()
+```
+
+Ok, I will have to update this.

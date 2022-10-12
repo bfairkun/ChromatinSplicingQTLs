@@ -344,8 +344,8 @@ rule tabixNominalPassQTLResults:
     wildcard_constraints:
         Pass = "NominalPass"
     params:
-        # sort_temp = '-T ' + config['scratch'][:-1]
-        sort_temp = ""
+        sort_temp = '-T ' + config['scratch'][:-1]
+        # sort_temp = ""
     output:
         txt = "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.tabix.gz",
         tbi = "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.tabix.gz.tbi"

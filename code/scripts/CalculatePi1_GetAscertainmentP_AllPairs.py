@@ -15,7 +15,6 @@
 import sys
 import pysam
 import pandas as pd
-import glob
 import re
 import numpy as np
 
@@ -23,9 +22,10 @@ import numpy as np
 # interactive interpreter to script quick args with sys.argv, parse_args with
 # hardcoded args below
 if hasattr(sys, 'ps1'):
-    sys.argv = ["", "scratch/PairwisePi1Traits.1.txt.gz" ,"scratch/PairwisePi1Traits.P.1.txt.gz"]
+    sys.argv = ["", "scratch/PairwisePi1Traits.1.txt.gz" ,"scratch/PairwisePi1Traits.P.1.txt.gz"] + "QTLs/QTLTools/chRNA.Expression_cheRNA/NominalPassForColoc.txt.tabix.gz QTLs/QTLTools/chRNA.Expression_eRNA/NominalPassForColoc.txt.tabix.gz QTLs/QTLTools/chRNA.Expression_lncRNA/NominalPassForColoc.txt.tabix.gz QTLs/QTLTools/chRNA.Expression_ncRNA/NominalPassForColoc.txt.tabix.gz QTLs/QTLTools/chRNA.Expression_snoRNA/NominalPassForColoc.txt.tabix.gz".split(' ')
 
-_, f_in, f_out = sys.argv
+_, f_in, f_out = sys.argv[:3]
+tabix_f_in_list = sys.argv[3:]
 
 
 def GetAscertainmentSNP_P(row, TabixFilesDict):
@@ -43,7 +43,7 @@ def GetAscertainmentSNP_P(row, TabixFilesDict):
 
 df = pd.read_csv(f_in, sep='\t')
 
-TabixFilesDict = {re.search("QTLs/QTLTools/(.+?)/NominalPassForColoc.txt.tabix.gz", fn).group(1):pysam.TabixFile(fn, parser=pysam.asTuple()) for fn in glob.glob("QTLs/QTLTools/*/NominalPassForColoc.txt.tabix.gz")}
+TabixFilesDict = {re.search("QTLs/QTLTools/(.+?)/NominalPassForColoc.txt.tabix.gz", fn).group(1):pysam.TabixFile(fn, parser=pysam.asTuple()) for fn in tabix_f_in_list}
 
 # dfhead = df.head(100)
 # dfhead['trait.x.p.in.y'] = dfhead.apply(GetAscertainmentSNP_P, axis=1, TabixFilesDict=TabixFilesDict )

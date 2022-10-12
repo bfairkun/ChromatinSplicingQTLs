@@ -18,15 +18,16 @@ if(interactive()){
 
 Num_f_out_chunks <- args[1]
 f_out_prefix <- args[2]
+permutation_f_in <- args[-c(1:2)]
 
 library(tidyverse)
-library(data.table)
+# library(data.table)
 library(qvalue)
 
 
-PermutationPass.dat <- Sys.glob("../code/QTLs/QTLTools/*/PermutationPassForColoc.txt.gz") %>%
-  setNames(str_replace(., "../code/QTLs/QTLTools/(.+?)/PermutationPassForColoc.txt.gz", "\\1")) %>%
-  lapply(fread, sep=' ') %>%
+PermutationPass.dat <- permutation_f_in %>%
+  setNames(str_replace(., "QTLs/QTLTools/(.+?)/PermutationPassForColoc.txt.gz", "\\1")) %>%
+  lapply(read_delim, delim=' ') %>%
   bind_rows(.id="Phenotype") %>%
   select(PC=Phenotype, phe_id, p_permutation=adj_beta_pval, singletrait_topvar=var_id, singletrait_topvar_chr = var_chr, singletrait_topvar_pos=var_from) %>%
   group_by(PC) %>%
