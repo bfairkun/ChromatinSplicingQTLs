@@ -14,21 +14,21 @@ rule LogTransformBigWig:
         chrom_sizes = "../data/Chrome.sizes", 
         bigwig = GetBigWigFile,
     output:
-        bedgraph = temp("NonCodingRNA_annotation/bigwig/chRNA.{IndID}.{strand}.bedgraph"),
-        bedgraph_log = temp("NonCodingRNA_annotation/bigwig/chRNA.{IndID}.{strand}.log1p.bedgraph"),
-        bigwig_log = "NonCodingRNA_annotation/bigwig/chRNA.{IndID}.{strand}.log1p.bw"
+        bedgraph = temp("NonCodingRNA/bigwig/chRNA.{IndID}.{strand}.bedgraph"),
+        bedgraph_log = temp("NonCodingRNA/bigwig/chRNA.{IndID}.{strand}.log1p.bedgraph"),
+        bigwig_log = "NonCodingRNA/bigwig/chRNA.{IndID}.{strand}.log1p.bw"
     wildcard_constraints:
         IndID = "NA18486|NA19201|NA19210",
         strand = 'plus|minus'
     log:
-        "logs/NonCodingRNA_annotation/chRNA.log1p.{IndID}.{strand}.log"
+        "logs/NonCodingRNA/chRNA.log1p.{IndID}.{strand}.log"
     resources:
         mem_mb = 12000
     shell:
         """
-        (bigWigToBedGraph {input.bigwig} {output.bedgraph}) &> {log};
+        ({config[bigWigToBedGraph]} {input.bigwig} {output.bedgraph}) &> {log};
         python scripts/LogTransformBigWig.py --input {output.bedgraph} --output {output.bedgraph_log} &>> {log};
-        (bedGraphToBigWig {output.bedgraph_log} {input.chrom_sizes} {output.bigwig_log}) &>> {log};
+        ({config[bedGraphToBigWig]} {output.bedgraph_log} {input.chrom_sizes} {output.bigwig_log}) &>> {log};
         """
 
 rule LogTransformPolyA:
@@ -36,20 +36,20 @@ rule LogTransformPolyA:
         chrom_sizes = "../data/Chrome.sizes", 
         bigwig = "/project2/yangili1/bjf79/ChromatinSplicingQTLs/code/bigwigs/Expression.Splicing/{IndID}.1.bw"
     output:
-        bedgraph = temp("NonCodingRNA_annotation/bigwig/polyA.{IndID}.bedgraph"),
-        bedgraph_log = temp("NonCodingRNA_annotation/bigwig/polyA.{IndID}.log1p.bedgraph"),
-        bigwig_log = "NonCodingRNA_annotation/bigwig/polyA.{IndID}.log1p.bw"
+        bedgraph = temp("NonCodingRNA/bigwig/polyA.{IndID}.bedgraph"),
+        bedgraph_log = temp("NonCodingRNA/bigwig/polyA.{IndID}.log1p.bedgraph"),
+        bigwig_log = "NonCodingRNA/bigwig/polyA.{IndID}.log1p.bw"
     wildcard_constraints:
         IndID = "NA18486|NA19201|NA19210",
     log:
-        "logs/NonCodingRNA_annotation/polyA.log1p.{IndID}.log"
+        "logs/NonCodingRNA/polyA.log1p.{IndID}.log"
     resources:
         mem_mb = 12000
     shell:
         """
-        (bigWigToBedGraph {input.bigwig} {output.bedgraph}) &> {log};
+        ({config[bigWigToBedGraph]} {input.bigwig} {output.bedgraph}) &> {log};
         python scripts/LogTransformBigWig.py --input {output.bedgraph} --output {output.bedgraph_log} &>> {log};
-        (bedGraphToBigWig {output.bedgraph_log} {input.chrom_sizes} {output.bigwig_log}) &>> {log};
+        ({config[bedGraphToBigWig]} {output.bedgraph_log} {input.chrom_sizes} {output.bigwig_log}) &>> {log};
         """
 
 
@@ -57,18 +57,18 @@ rule LogTransformPolyA:
 
 rule deepTools_chRNA_plotHeatmap:
     input:
-        chRNA_plus = "NonCodingRNA_annotation/bigwig/chRNA.{IndID}.plus.log1p.bw",
-        chRNA_minus = "NonCodingRNA_annotation/bigwig/chRNA.{IndID}.minus.log1p.bw",
-        polyA = "NonCodingRNA_annotation/bigwig/polyA.{IndID}.log1p.bw",
-        plus_bed = "NonCodingRNA_annotation/deeptools/bed/ncRNA.plus{strictness}.bed",
-        minus_bed = "NonCodingRNA_annotation/deeptools/bed/ncRNA.minus{strictness}.bed",
+        chRNA_plus = "NonCodingRNA/bigwig/chRNA.{IndID}.plus.log1p.bw",
+        chRNA_minus = "NonCodingRNA/bigwig/chRNA.{IndID}.minus.log1p.bw",
+        polyA = "NonCodingRNA/bigwig/polyA.{IndID}.log1p.bw",
+        plus_bed = "NonCodingRNA/deeptools/bed/ncRNA.plus{strictness}.bed",
+        minus_bed = "NonCodingRNA/deeptools/bed/ncRNA.minus{strictness}.bed",
     output:
-        mat = "NonCodingRNA_annotation/deeptools/matrix/{IndID}.RNA{strictness}.matrix.gz",
-        png = "NonCodingRNA_annotation/deeptools/plots/{IndID}.RNA{strictness}.plot.png"
+        mat = "NonCodingRNA/deeptools/matrix/{IndID}.RNA{strictness}.matrix.gz",
+        png = "NonCodingRNA/deeptools/plots/{IndID}.RNA{strictness}.plot.png"
     conda:
         "../envs/deeptools.yml"
     log:
-        "logs/NonCodingRNA_annotation/plots.{IndID}{strictness}.log"
+        "logs/NonCodingRNA/plots.{IndID}{strictness}.log"
     resources:
         mem_mb = 12000
     wildcard_constraints:
@@ -80,24 +80,37 @@ rule deepTools_chRNA_plotHeatmap:
         plotHeatmap -m {output.mat} -o {output.png} --regionsLabel "ncRNA.plus{wildcards.strictness}" "ncRNA.minus{wildcards.strictness}" --samplesLabel "chRNA plus {wildcards.IndID}" "chRNA minus {wildcards.IndID}" "polyA {wildcards.IndID}" --averageTypeSummaryPlot mean &>> {log}
         """
         
+rule SplitStrandBED:
+    input:
+        "NonCodingRNA/annotation/ncRNA.bed.gz"
+    output:
+        ncPlus = "NonCodingRNA/deeptools/bed/ncRNA.plus.bed",
+        ncMinus = "NonCodingRNA/deeptools/bed/ncRNA.minus.bed"
+    log:
+        "logs/NonCodingRNA/split_strand_bed.log"
+    shell:
+        """
+        (zcat {input} | awk '$6=="+"' - > {output.ncPlus}) &> {log}
+        (zcat {input} | awk '$6=="-"' - > {output.ncMinus}) &>> {log}
+        """
 
 rule StrictFilter:
     input:
-        ncPlus = "NonCodingRNA_annotation/deeptools/bed/ncRNA.plus.bed",
-        ncMinus = "NonCodingRNA_annotation/deeptools/bed/ncRNA.minus.bed",
-        genes = "NonCodingRNA_annotation/annotation/allGenes.bed.gz",
+        ncPlus = "NonCodingRNA/deeptools/bed/ncRNA.plus.bed",
+        ncMinus = "NonCodingRNA/deeptools/bed/ncRNA.minus.bed",
+        genes = "NonCodingRNA/annotation/allGenes.bed.gz",
         chrom = "../data/Chrome.sizes"
     output:
-        genes1 = "NonCodingRNA_annotation/deeptools/bed/allGenes_expanded1.bed.gz",
-        genes2 = "NonCodingRNA_annotation/deeptools/bed/allGenes_expanded2.bed.gz",
-        ncPlus1 = "NonCodingRNA_annotation/deeptools/bed/ncRNA.plus.strict1.bed",
-        ncMinus1 = "NonCodingRNA_annotation/deeptools/bed/ncRNA.minus.strict1.bed",
-        ncPlus2 = "NonCodingRNA_annotation/deeptools/bed/ncRNA.plus.strict2.bed",
-        ncMinus2 = "NonCodingRNA_annotation/deeptools/bed/ncRNA.minus.strict2.bed",
-        ncPlus3 = "NonCodingRNA_annotation/deeptools/bed/ncRNA.plus.strict3.bed",
-        ncMinus3 = "NonCodingRNA_annotation/deeptools/bed/ncRNA.minus.strict3.bed",
+        genes1 = "NonCodingRNA/deeptools/bed/allGenes_expanded1.bed.gz",
+        genes2 = "NonCodingRNA/deeptools/bed/allGenes_expanded2.bed.gz",
+        ncPlus1 = "NonCodingRNA/deeptools/bed/ncRNA.plus.strict1.bed",
+        ncMinus1 = "NonCodingRNA/deeptools/bed/ncRNA.minus.strict1.bed",
+        ncPlus2 = "NonCodingRNA/deeptools/bed/ncRNA.plus.strict2.bed",
+        ncMinus2 = "NonCodingRNA/deeptools/bed/ncRNA.minus.strict2.bed",
+        ncPlus3 = "NonCodingRNA/deeptools/bed/ncRNA.plus.strict3.bed",
+        ncMinus3 = "NonCodingRNA/deeptools/bed/ncRNA.minus.strict3.bed",
     log:
-        "logs/NonCodingRNA_annotation/strict_filtering.log"
+        "logs/NonCodingRNA/strict_filtering.log"
     resources:
         mem_mb = 12000
     shell:
@@ -122,32 +135,32 @@ use rule LogTransformPolyA as LogTransformHistone with:
         chrom_sizes = "../data/Chrome.sizes", 
         bigwig = "/project2/yangili1/bjf79/ChromatinSplicingQTLs/code/bigwigs/{Phenotype}/{IndID}.1.bw"
     output:
-        bedgraph = temp("NonCodingRNA_annotation/bigwig/{Phenotype}.{IndID}.bedgraph"),
-        bedgraph_log = temp("NonCodingRNA_annotation/bigwig/{Phenotype}.{IndID}.log1p.bedgraph"),
-        bigwig_log = "NonCodingRNA_annotation/bigwig/{Phenotype}.{IndID}.log1p.bw"
+        bedgraph = temp("NonCodingRNA/bigwig/{Phenotype}.{IndID}.bedgraph"),
+        bedgraph_log = temp("NonCodingRNA/bigwig/{Phenotype}.{IndID}.log1p.bedgraph"),
+        bigwig_log = "NonCodingRNA/bigwig/{Phenotype}.{IndID}.log1p.bw"
     wildcard_constraints:
         IndID = "NA19201|NA19210",
         Phenotype = "H3K27AC|H3K4ME1|H3K4ME3|H3K36ME3|ProCap"
     log:
-        "logs/NonCodingRNA_annotation/{Phenotype}.log1p.{IndID}.log"
+        "logs/NonCodingRNA/{Phenotype}.log1p.{IndID}.log"
         
 
 rule deepTools_histone_plotHeatmap:
     input:
-        procap = "NonCodingRNA_annotation/bigwig/ProCap.{IndID}.log1p.bw",
-        h3k4me1 = "NonCodingRNA_annotation/bigwig/H3K4ME1.{IndID}.log1p.bw",
-        h3k4me3 = "NonCodingRNA_annotation/bigwig/H3K4ME3.{IndID}.log1p.bw",
-        h3k27ac = "NonCodingRNA_annotation/bigwig/H3K27AC.{IndID}.log1p.bw",
-        h3k36me3 = "NonCodingRNA_annotation/bigwig/H3K36ME3.{IndID}.log1p.bw",
-        plus_bed = "NonCodingRNA_annotation/deeptools/bed/ncRNA.plus{strictness}.bed",
-        minus_bed = "NonCodingRNA_annotation/deeptools/bed/ncRNA.minus{strictness}.bed",
+        procap = "NonCodingRNA/bigwig/ProCap.{IndID}.log1p.bw",
+        h3k4me1 = "NonCodingRNA/bigwig/H3K4ME1.{IndID}.log1p.bw",
+        h3k4me3 = "NonCodingRNA/bigwig/H3K4ME3.{IndID}.log1p.bw",
+        h3k27ac = "NonCodingRNA/bigwig/H3K27AC.{IndID}.log1p.bw",
+        h3k36me3 = "NonCodingRNA/bigwig/H3K36ME3.{IndID}.log1p.bw",
+        plus_bed = "NonCodingRNA/deeptools/bed/ncRNA.plus{strictness}.bed",
+        minus_bed = "NonCodingRNA/deeptools/bed/ncRNA.minus{strictness}.bed",
     output:
-        mat = "NonCodingRNA_annotation/deeptools/matrix/{IndID}.histone{strictness}.matrix.gz",
-        png = "NonCodingRNA_annotation/deeptools/plots/{IndID}.histone{strictness}.plot.png"
+        mat = "NonCodingRNA/deeptools/matrix/{IndID}.histone{strictness}.matrix.gz",
+        png = "NonCodingRNA/deeptools/plots/{IndID}.histone{strictness}.plot.png"
     conda:
         "../envs/deeptools.yml"
     log:
-        "logs/NonCodingRNA_annotation/histone_plots.{IndID}{strictness}.log"
+        "logs/NonCodingRNA/histone_plots.{IndID}{strictness}.log"
     resources:
         mem_mb = 12000
     wildcard_constraints:
@@ -161,23 +174,23 @@ rule deepTools_histone_plotHeatmap:
         
 rule plotHeatmapAll:
     input:
-        chRNA_plus = "NonCodingRNA_annotation/bigwig/chRNA.{IndID}.plus.log1p.bw",
-        chRNA_minus = "NonCodingRNA_annotation/bigwig/chRNA.{IndID}.minus.log1p.bw",
-        polyA = "NonCodingRNA_annotation/bigwig/polyA.{IndID}.log1p.bw",
-        procap = "NonCodingRNA_annotation/bigwig/ProCap.{IndID}.log1p.bw",
-        h3k4me1 = "NonCodingRNA_annotation/bigwig/H3K4ME1.{IndID}.log1p.bw",
-        h3k4me3 = "NonCodingRNA_annotation/bigwig/H3K4ME3.{IndID}.log1p.bw",
-        h3k27ac = "NonCodingRNA_annotation/bigwig/H3K27AC.{IndID}.log1p.bw",
-        h3k36me3 = "NonCodingRNA_annotation/bigwig/H3K36ME3.{IndID}.log1p.bw",
-        plus_bed = "NonCodingRNA_annotation/deeptools/bed/ncRNA.plus{strictness}.bed",
-        minus_bed = "NonCodingRNA_annotation/deeptools/bed/ncRNA.minus{strictness}.bed",
+        chRNA_plus = "NonCodingRNA/bigwig/chRNA.{IndID}.plus.log1p.bw",
+        chRNA_minus = "NonCodingRNA/bigwig/chRNA.{IndID}.minus.log1p.bw",
+        polyA = "NonCodingRNA/bigwig/polyA.{IndID}.log1p.bw",
+        procap = "NonCodingRNA/bigwig/ProCap.{IndID}.log1p.bw",
+        h3k4me1 = "NonCodingRNA/bigwig/H3K4ME1.{IndID}.log1p.bw",
+        h3k4me3 = "NonCodingRNA/bigwig/H3K4ME3.{IndID}.log1p.bw",
+        h3k27ac = "NonCodingRNA/bigwig/H3K27AC.{IndID}.log1p.bw",
+        h3k36me3 = "NonCodingRNA/bigwig/H3K36ME3.{IndID}.log1p.bw",
+        plus_bed = "NonCodingRNA/deeptools/bed/ncRNA.plus{strictness}.bed",
+        minus_bed = "NonCodingRNA/deeptools/bed/ncRNA.minus{strictness}.bed",
     output:
-        mat = "NonCodingRNA_annotation/deeptools/matrix/{IndID}.combined{strictness}.matrix.gz",
-        png = "NonCodingRNA_annotation/deeptools/plots/{IndID}.combined{strictness}.plot.png"
+        mat = "NonCodingRNA/deeptools/matrix/{IndID}.combined{strictness}.matrix.gz",
+        png = "NonCodingRNA/deeptools/plots/{IndID}.combined{strictness}.plot.png"
     conda:
         "../envs/deeptools.yml"
     log:
-        "logs/NonCodingRNA_annotation/combined_plots.{IndID}{strictness}.log"
+        "logs/NonCodingRNA/combined_plots.{IndID}{strictness}.log"
     resources:
         mem_mb = 12000
     wildcard_constraints:
@@ -188,6 +201,25 @@ rule plotHeatmapAll:
         computeMatrix reference-point --regionBodyLength 5000 -a 3000 -b 3000 -R {input.plus_bed} {input.minus_bed} -S {input.chRNA_plus} {input.chRNA_minus} {input.polyA} {input.procap} {input.h3k27ac} {input.h3k4me1} {input.h3k4me3} {input.h3k36me3} -o {output.mat} &> {log}
         plotHeatmap -m {output.mat} -o {output.png} --regionsLabel "ncRNA.plus{wildcards.strictness}" "ncRNA.minus{wildcards.strictness}" --samplesLabel "chRNA plus {wildcards.IndID}" "chRNA minus {wildcards.IndID}" "polyA {wildcards.IndID}" "ProCap {wildcards.IndID}" "H3K27ac {wildcards.IndID}" "H3K4me1 {wildcards.IndID}" "H3K4me3 {wildcards.IndID}" "H3K36me3 {wildcards.IndID}" --averageTypeSummaryPlot mean &>> {log}
         """
+        
+use rule plotHeatmapAll as plotHeatmapPC with:
+    input:
+        chRNA_plus = "NonCodingRNA/bigwig/chRNA.{IndID}.plus.log1p.bw",
+        chRNA_minus = "NonCodingRNA/bigwig/chRNA.{IndID}.minus.log1p.bw",
+        polyA = "NonCodingRNA/bigwig/polyA.{IndID}.log1p.bw",
+        procap = "NonCodingRNA/bigwig/ProCap.{IndID}.log1p.bw",
+        h3k4me1 = "NonCodingRNA/bigwig/H3K4ME1.{IndID}.log1p.bw",
+        h3k4me3 = "NonCodingRNA/bigwig/H3K4ME3.{IndID}.log1p.bw",
+        h3k27ac = "NonCodingRNA/bigwig/H3K27AC.{IndID}.log1p.bw",
+        h3k36me3 = "NonCodingRNA/bigwig/H3K36ME3.{IndID}.log1p.bw",
+        plus_bed = "../../top_pc.plus.bed",
+        minus_bed = "../../top_pc.minus.bed",
+    output:
+        mat = "NonCodingRNA/deeptools/matrix/{IndID}.protein_coding{strictness}.matrix.gz",
+        png = "NonCodingRNA/deeptools/plots/{IndID}.protein_coding{strictness}.plot.png"
+    wildcard_constraints:
+        IndID = "NA19201|NA19210",
+        strictness = "|"
  
 rule BamToBWWithIntronCoverage:
     input:
@@ -195,14 +227,14 @@ rule BamToBWWithIntronCoverage:
         bam = "Alignments/STAR_Align/chRNA.Expression.Splicing/{IndID}/1/Filtered.bam",
         bai = "Alignments/STAR_Align/chRNA.Expression.Splicing/{IndID}/1/Filtered.bam.bai"
     output:
-        bw_plus = "NonCodingRNA_annotation/bigwig/{IndID}.plus.bw",
-        bw_minus = "NonCodingRNA_annotation/bigwig/{IndID}.minus.bw",
+        bw_plus = "NonCodingRNA/bigwig/{IndID}.plus.bw",
+        bw_minus = "NonCodingRNA/bigwig/{IndID}.minus.bw",
     wildcard_constraints:
         IndID = "NA18486|NA18497|NA18498|NA18499|NA19201|NA19210"
     resources:
         mem_mb = 12000
     log:
-        "logs/NonCodingRNA_annotation/{IndID}.bed2bigwig.log"
+        "logs/NonCodingRNA/{IndID}.bed2bigwig.log"
     shell:
         """
         bash scripts/BamToBigwig_PrefilterBySize.sh {input.fai} {input.bam} {output.bw_minus} bw_minus={output.bw_plus} SORT_ARGS='-T /scratch/midway2/cnajar/' MKTEMP_ARGS='-p /scratch/midway2/cnajar/'

@@ -8,7 +8,7 @@ GeneCounts_ncRNA_in <- "featureCounts/MetabolicLabelled.60min_ncRNA/Counts.txt"
 GeneCounts_lncRNA_in <- "featureCounts/MetabolicLabelled.60min_lncRNA/Counts.txt"
 GeneCounts_snoRNA_in <- "featureCounts/MetabolicLabelled.60min_snoRNA/Counts.txt"
 Genes_bed_f_in <- "ExpressionAnalysis/polyA/ExpressedGeneList.txt" 
-annotation_f_in <- "NonCodingRNA_merged/annotation/NonCodingRNA.annotation.tab.gz"
+annotation_f_in <- "NonCodingRNA/annotation/NonCodingRNA.annotation.tab.gz"
 
 rename_STAR_alignment_samples <- function(MyString){
     return(
@@ -52,10 +52,10 @@ x <- apply(annot[annot$lncRNA != '.','lncRNA'], 2, function(x) c(strsplit(x, "\\
 lncRNA_ <- do.call(c, unlist(x, recursive=FALSE))
            
            
-y <- apply(annot[annot$pseudogene != '.','pseudogene'], 2, function(x) c(strsplit(x, "\\|")))
-pseudogene_ <- do.call(c, unlist(y, recursive=FALSE))
+# y <- apply(annot[annot$pseudogene != '.','pseudogene'], 2, function(x) c(strsplit(x, "\\|")))
+# pseudogene_ <- do.call(c, unlist(y, recursive=FALSE))
 
-snoRNA_ <- rownames(annot[annot$snoRNA != '.',])
+# snoRNA_ <- rownames(annot[annot$snoRNA != '.',])
            
 #dat.cpm <- dat.cpm %>% as.data.frame() %>%
 #  filter(!rownames(dat.cpm) %in% c(lncRNA_, pseudogene_)) %>% as.matrix()
@@ -68,26 +68,26 @@ dat.matrix <- X %>%
 
 dat.matrix.renamed <- dat.matrix %>%
     as.data.frame() %>%
-    filter(!rownames(dat.matrix) %in% c(lncRNA_, pseudogene_, snoRNA_)) %>% 
+    filter(!rownames(dat.matrix) %in% lncRNA_) %>% #c(lncRNA_, pseudogene_, snoRNA_)) %>% 
     as.matrix() 
 
 
 dat.cpm <- dat.matrix.renamed %>% # dat.matrix.expressed %>%
     cpm(log=T, prior.count=0.1)
 
-
+print('created dat.cpm')
 protein_coding = dat.cpm[rownames(dat.cpm) %in% gene.list$Geneid, ]
 
 
 
-
+print('selected protein coding')
 ncRNA_names <- c(dat.genes.lncRNA$Geneid, dat.genes.ncRNA$Geneid, dat.genes.snoRNA$Geneid)
 ncRNA.dat <- dat.cpm[rownames(dat.cpm) %in% ncRNA_names, ]
 ncRNA <- ncRNA.dat[apply(exp(ncRNA.dat), 1, quantile, probs=0.9) >= 1e-4,]
-           
+print('ncRNA')
 ncRNA.standardized <- ncRNA %>% t() %>% scale() %>% t() %>% as.data.frame() %>% drop_na() %>% as.matrix()
 ncRNA.qqnormed <- apply(ncRNA.standardized, 2, RankNorm)
-
+print('qqnormed')
 protein_coding.standardized <- protein_coding %>% t() %>% scale() %>% t() %>% as.data.frame() %>% drop_na() %>% as.matrix()
 protein_coding.qqnormed <- apply(protein_coding.standardized, 2, RankNorm)
 
@@ -138,25 +138,16 @@ ncRNA.Out <- bed %>%
     # mutate(start= as.numeric(Start)) %>%
     mutate(across(where(is.numeric), round, 5)) %>%
     dplyr::select(`#Chr`=Chr, start=Start, end=End, pid=Geneid, gid=Geneid, strand=Strand, everything()) %>%
-    arrange(`#Chr`, start)
+    arrange(`#Chr`, start)  %>% as.data.frame()
 
 
 write_tsv(ncRNA.Out, "QTLs/QTLTools/MetabolicLabelled.60min_ncRNA/OnlyFirstReps.qqnorm.bed.gz")
 
-dat.rpkm <- dat.matrix.renamed %>% # dat.matrix.expressed %>%
-    rpkm(gene.length=X$Length, prior.count=0.1)
-
-#rna.list <- rbind(gene.list, bed)
+gene.length = X[X$Geneid %in% rownames(dat.matrix.renamed),'Length']
+dat.rpkm <- rpkm(dat.matrix.renamed, gene.length=gene.length$Length, prior.count=0.1)
            
-#RPKM.Out <- rna.list %>%
-#    select(Geneid, Chr, Start, End, Strand) %>%
-#    inner_join(
-#               (dat.rpkm %>% as.data.frame() %>% rownames_to_column("Geneid")),
-#               by = "Geneid") %>%
-#    mutate(across(where(is.numeric), round, 5)) %>%
-#    dplyr::select(`#Chr`=Chr, start=Start, end=End, pid=Geneid, gid=Geneid, strand=Strand, everything()) %>%
-#    arrange(`#Chr`, start)
-RPKM.Out <- dat.rpkm
+RPKM.Out <- cbind(GeneID = rownames(dat.rpkm), dat.rpkm) %>% as.data.frame()
+rownames(RPKM.Out) <- 1:nrow(RPKM.Out) 
 
 
 write_tsv(RPKM.Out, "RPKM_tables/MetabolicLabelled.60min.RPKM.bed.gz", )

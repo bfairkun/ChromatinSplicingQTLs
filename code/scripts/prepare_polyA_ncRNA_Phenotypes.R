@@ -8,7 +8,7 @@ GeneCounts_ncRNA_in <- "featureCounts/polyA.Expression_ncRNA/Counts.txt"
 GeneCounts_lncRNA_in <- "featureCounts/polyA.Expression_lncRNA/Counts.txt"
 GeneCounts_snoRNA_in <- "featureCounts/polyA.Expression_snoRNA/Counts.txt"
 Genes_bed_f_in <- "ExpressionAnalysis/polyA/ExpressedGeneList.txt" 
-annotation_f_in <- "NonCodingRNA_merged/annotation/NonCodingRNA.annotation.tab.gz"
+annotation_f_in <- "NonCodingRNA/annotation/NonCodingRNA.annotation.tab.gz"
 
 rename_STAR_alignment_samples <- function(MyString){
     return(
@@ -52,10 +52,10 @@ x <- apply(annot[annot$lncRNA != '.','lncRNA'], 2, function(x) c(strsplit(x, "\\
 lncRNA_ <- do.call(c, unlist(x, recursive=FALSE))
            
            
-y <- apply(annot[annot$pseudogene != '.','pseudogene'], 2, function(x) c(strsplit(x, "\\|")))
-pseudogene_ <- do.call(c, unlist(y, recursive=FALSE))
+# y <- apply(annot[annot$pseudogene != '.','pseudogene'], 2, function(x) c(strsplit(x, "\\|")))
+# pseudogene_ <- do.call(c, unlist(y, recursive=FALSE))
            
-snoRNA_ <- rownames(annot[annot$snoRNA != '.',])
+# snoRNA_ <- rownames(annot[annot$snoRNA != '.',])
 #dat.cpm <- dat.cpm %>% as.data.frame() %>%
 #  filter(!rownames(dat.cpm) %in% c(lncRNA_, pseudogene_)) %>% as.matrix()
 
@@ -67,7 +67,7 @@ dat.matrix <- X %>%
 
 dat.matrix.renamed <- dat.matrix %>%
     as.data.frame() %>%
-    filter(!rownames(dat.matrix) %in% c(lncRNA_, snoRNA_, pseudogene_)) %>% 
+    filter(!rownames(dat.matrix) %in% lncRNA_) %>% #c(lncRNA_, snoRNA_, pseudogene_)) %>% 
     as.matrix() 
 
 
@@ -137,7 +137,7 @@ ncRNA.Out <- bed %>%
     # mutate(start= as.numeric(Start)) %>%
     mutate(across(where(is.numeric), round, 5)) %>%
     dplyr::select(`#Chr`=Chr, start=Start, end=End, pid=Geneid, gid=Geneid, strand=Strand, everything()) %>%
-    arrange(`#Chr`, start)
+    arrange(`#Chr`, start)  %>% as.data.frame()
 
 
 write_tsv(ncRNA.Out, "QTLs/QTLTools/polyA.Expression_ncRNA/OnlyFirstReps.qqnorm.bed.gz")
@@ -151,27 +151,16 @@ ncRNA.CPM.Out <- bed %>%
     # mutate(start= as.numeric(Start)) %>%
     mutate(across(where(is.numeric), round, 5)) %>%
     dplyr::select(`#Chr`=Chr, start=Start, end=End, pid=Geneid, gid=Geneid, strand=Strand, everything()) %>%
-    arrange(`#Chr`, start)
-
+    arrange(`#Chr`, start)  %>% as.data.frame()
 
 write_tsv(ncRNA.CPM.Out, "QTLs/QTLTools/polyA.Expression_ncRNA/OnlyFirstReps.CPM.bed.gz")
 
            
-
-dat.rpkm <- dat.matrix.renamed %>% # dat.matrix.expressed %>%
-    rpkm(gene.length=X$Length, prior.count=0.1)
-         
-#rna.list <- rbind(gene.list, bed)
+gene.length = X[X$Geneid %in% rownames(dat.matrix.renamed),'Length']
+dat.rpkm <- rpkm(dat.matrix.renamed, gene.length=gene.length$Length, prior.count=0.1)
            
-#RPKM.Out <- rna.list %>%
-#    select(Geneid, Chr, Start, End, Strand) %>%
-#    inner_join(
-#               (dat.rpkm %>% as.data.frame() %>% rownames_to_column("Geneid")),
-#               by = "Geneid") %>%
-#    mutate(across(where(is.numeric), round, 5)) %>%
-#    dplyr::select(`#Chr`=Chr, start=Start, end=End, pid=Geneid, gid=Geneid, strand=Strand, everything()) %>%
-#    arrange(`#Chr`, start)
-RPKM.Out <- dat.rpkm
+RPKM.Out <- cbind(GeneID = rownames(dat.rpkm), dat.rpkm) %>% as.data.frame()
+rownames(RPKM.Out) <- 1:nrow(RPKM.Out) 
 
 
 write_tsv(RPKM.Out, "RPKM_tables/polyA.RPKM.bed.gz", )

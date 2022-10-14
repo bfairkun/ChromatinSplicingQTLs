@@ -58,8 +58,8 @@ rule Prepare_chRNA_ExpressionPhenotypes:
         "featureCounts/chRNA.Expression_lncRNA/Counts.txt",
         "featureCounts/chRNA.Expression_snoRNA/Counts.txt",
         "ExpressionAnalysis/polyA/ExpressedGeneList.txt",
-        "NonCodingRNA_merged/annotation/NonCodingRNA.bed.gz",
-        "NonCodingRNA_merged/annotation/NonCodingRNA.annotation.tab.gz"
+        "NonCodingRNA/annotation/NonCodingRNA.bed.gz",
+        "NonCodingRNA/annotation/NonCodingRNA.annotation.tab.gz"
     output:
         "QTLs/QTLTools/chRNA.Expression.Splicing/OnlyFirstReps.qqnorm.bed.gz",
         "QTLs/QTLTools/chRNA.Expression_ncRNA/OnlyFirstReps.qqnorm.bed.gz",
@@ -68,6 +68,8 @@ rule Prepare_chRNA_ExpressionPhenotypes:
         "logs/Prepare_chRNA_Expression_Phenotypes.log"
     conda:
         "../envs/r_essentials.yml"
+    resources:
+        mem = 48000,
     shell:
         """
         mkdir -p RPKM_tables/;

@@ -297,7 +297,7 @@ use rule MakePhenotypeTableToColocPeaksWithGenes as MakePhenotypeTableToColocInt
 
 use rule MakePhenotypeTableToColocPeaksWithGenes as MakePhenotypeTableToColocGenes with:
     wildcard_constraints:
-        Phenotype = "Expression.Splicing.Subset_YRI|chRNA.Expression.Splicing|Expression.Splicing|MetabolicLabelled.30min|MetabolicLabelled.60min|H3K36ME3"
+        Phenotype = "Expression.Splicing.Subset_YRI|chRNA.Expression.Splicing|Expression.Splicing|MetabolicLabelled.30min|MetabolicLabelled.60min|H3K36ME3|H3K36ME3_ncRNA"
     params:
         cis_window = 0,
         bedtools_intersect_params = "-s -f 1 -r",

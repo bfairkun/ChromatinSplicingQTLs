@@ -184,21 +184,27 @@ rule QTLTools_caller:
                        "polyA.Splicing.Subset_YRI", "Expression.Splicing.Subset_YRI", "polyA.Expression_ncRNA.Subset_YRI",
                        "MetabolicLabelled.30min_ncRNA", "MetabolicLabelled.60min_ncRNA",
                        "chRNA.Splicing.Order", "chRNA.IER", "polyA.IER", 
-                       "polyA.IER.Subset_YRI", "chRNA.Slopes", "H3K36ME3"],
+                       "polyA.IER.Subset_YRI", "chRNA.Slopes", "H3K36ME3", "H3K4ME3", "H3K4ME1","H3K27AC",
+                       "H3K36ME3_ncRNA", "MetabolicLabelled.30min.IER", "MetabolicLabelled.60min.IER"],
           Pass = ["PermutationPass.FDR_Added", "NominalPass"]
         ),
 
 
 rule HMM_develop:
     input:
-        expand("NonCodingRNA/tables/{chrom}.{strand}.counts.tab.gz",
-        chrom  = chrom_list, strand = ['minus', 'plus']),
-        expand("NonCodingRNA/tables/{chrom}.{strand}.counts.all_samples.tab.gz",
-        chrom  = chrom_list, strand = ['minus', 'plus']),
-        expand("NonCodingRNA/tables/{chrom}.{strand}.predicted_states.tab.gz",
-        chrom  = chrom_list, strand = ['minus', 'plus']),
-        expand("NonCodingRNA/tables/{chrom}.{strand}.hmm.sorted.bed.gz",
-        chrom  = chrom_list, strand = ['minus', 'plus']),
+        "NonCodingRNA/annotation/ncRNA.TSS.bed.gz",
+        "NonCodingRNA/annotation/allGenes.TSS.bed.gz",
+        "NonCodingRNA/annotation/ncRNA.3PrimeEnd.bed.gz",
+        "NonCodingRNA/annotation/tmp/uaRNA.bed.gz",
+        "NonCodingRNA/annotation/tmp/uaRNA.annotated.bed.gz",
+        "NonCodingRNA/annotation/tmp/incRNA.bed.gz",
+        "NonCodingRNA/annotation/tmp/incRNA.annotated.bed.gz",
+        "NonCodingRNA/annotation/ncRNA.bed.gz",
+        "NonCodingRNA/annotation/tmp/lncRNA.ncRNA.bed.gz",
+        "NonCodingRNA/annotation/tmp/srtRNA.bed.gz",
+        'NonCodingRNA/annotation/NonCodingRNA.annotation.tab.gz',
+        'NonCodingRNA/annotation/allGenes.annotation.tab.gz'
+        
         
 rule IntronCounts_develop:
     input:
