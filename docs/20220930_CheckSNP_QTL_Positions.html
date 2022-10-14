@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+
+
+<title>CheckQTL_SNPPositionsMetagene</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/master/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">myproject</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">CheckQTL_SNPPositionsMetagene</h1>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2022-10-05
+</p>
+<p>
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 1
+</p>
+<p>
+<strong>Knit directory:</strong> <code>ChromatinSplicingQTLs/analysis/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
+</p>
+<p>
+This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
+  href="https://github.com/jdblischak/workflowr">workflowr</a> (version 1.6.2). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges"> <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted changes </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguncommittedchanges" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The R Markdown is untracked by Git. To know which version of the R Markdown file created these results, you’ll want to first commit it to the Git repo. If you’re still working on the analysis, you can ignore this warning. When you’re finished, you can run <code>wflow_publish</code> to commit the R Markdown file and build the HTML.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20191126code"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Seed:</strong> <code>set.seed(20191126)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20191126code" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20191126)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Session information:</strong> recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be confident that you successfully produced the results during this run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstree97983612e335de98a8820a7a16ee5564a8a080a7targetblank9798361a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/97983612e335de98a8820a7a16ee5564a8a080a7" target="_blank">9798361</a> </a>
+</p>
+</div>
+<div id="strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstree97983612e335de98a8820a7a16ee5564a8a080a7targetblank9798361a" class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/97983612e335de98a8820a7a16ee5564a8a080a7" target="_blank">9798361</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    analysis/.Rhistory
+    Ignored:    code/.DS_Store
+    Ignored:    code/.RData
+    Ignored:    code/._.DS_Store
+    Ignored:    code/._README.md
+    Ignored:    code/._report.html
+    Ignored:    code/.ipynb_checkpoints/
+    Ignored:    code/.snakemake/
+    Ignored:    code/APA_Processing/
+    Ignored:    code/Alignments/
+    Ignored:    code/ChromHMM/
+    Ignored:    code/ENCODE/
+    Ignored:    code/ExpressionAnalysis/
+    Ignored:    code/FastqFastp/
+    Ignored:    code/FastqFastpSE/
+    Ignored:    code/Genotypes/
+    Ignored:    code/IntronSlopes/
+    Ignored:    code/Misc/
+    Ignored:    code/MiscCountTables/
+    Ignored:    code/Multiqc/
+    Ignored:    code/Multiqc_chRNA/
+    Ignored:    code/NonCodingRNA_annotation/
+    Ignored:    code/PeakCalling/
+    Ignored:    code/Phenotypes/
+    Ignored:    code/PlotGruberQTLs/
+    Ignored:    code/PlotQTLs/
+    Ignored:    code/ProCapAnalysis/
+    Ignored:    code/QC/
+    Ignored:    code/QTL_SNP_Enrichment/
+    Ignored:    code/QTLs/
+    Ignored:    code/ReferenceGenome/
+    Ignored:    code/Rplots.pdf
+    Ignored:    code/Session.vim
+    Ignored:    code/SplicingAnalysis/
+    Ignored:    code/TODO
+    Ignored:    code/Tehranchi/
+    Ignored:    code/bigwigs/
+    Ignored:    code/bigwigs_FromNonWASPFilteredReads/
+    Ignored:    code/config/.DS_Store
+    Ignored:    code/config/._.DS_Store
+    Ignored:    code/config/.ipynb_checkpoints/
+    Ignored:    code/debug.ipynb
+    Ignored:    code/debug_python.ipynb
+    Ignored:    code/deepTools/
+    Ignored:    code/featureCounts/
+    Ignored:    code/gwas_summary_stats/
+    Ignored:    code/hyprcoloc/
+    Ignored:    code/igv_session.xml
+    Ignored:    code/log
+    Ignored:    code/logs/
+    Ignored:    code/notebooks/.ipynb_checkpoints/
+    Ignored:    code/rules/.QTL_SNP_Enrichment.smk.swp
+    Ignored:    code/rules/.ipynb_checkpoints/
+    Ignored:    code/rules/OldRules/
+    Ignored:    code/rules/notebooks/
+    Ignored:    code/scratch/
+    Ignored:    code/scripts/.ipynb_checkpoints/
+    Ignored:    code/scripts/GTFtools_0.8.0/
+    Ignored:    code/scripts/__pycache__/
+    Ignored:    code/scripts/liftOverBedpe/liftOverBedpe.py
+    Ignored:    code/snakemake.log
+    Ignored:    code/snakemake.sbatch.log
+    Ignored:    data/.DS_Store
+    Ignored:    data/._.DS_Store
+    Ignored:    data/._20220414203249_JASPAR2022_combined_matrices_25818_jaspar.txt
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-10.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-11.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-2.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-3.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-4.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-5.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-6.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-7.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-8.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022.csv
+
+Untracked files:
+    Untracked:  analysis/20220930_CheckSNP_QTL_Positions.Rmd
+    Untracked:  code/snakemake_profiles/slurm/__pycache__/
+
+Unstaged changes:
+    Modified:   analysis/20220928_ExploreIntronSum.Rmd
+    Modified:   code/rules/QTL_SNP_Enrichment.smk
+    Modified:   code/scripts/GenometracksByGenotype
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+<p>
+There are no past versions. Publish this analysis with <code>wflow_publish()</code> to start tracking its development.
+</p>
+<hr>
+</div>
+</div>
+</div>
+<div id="intro" class="section level2">
+<h2>Intro</h2>
+<p>I will for each class of QTLs, check the SNP positions of significant QTLs, reading in the output from QTLtools permutation pass.</p>
+<pre class="r"><code>library(tidyverse)
+library(data.table)
+library(GGally)
+
+PhenotypeAliases &lt;- read_tsv(&quot;../data/Phenotypes_recode_for_Plotting.txt&quot;)
+
+PermutationPass.dat &lt;- Sys.glob(&quot;../code/QTLs/QTLTools/*/PermutationPass.FDR_Added.txt.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/QTLs/QTLTools/(.+?)/PermutationPass.FDR_Added.txt.gz&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(read_delim, delim=&#39; &#39;) %&gt;%
+  bind_rows(.id=&quot;PhenotypeClass&quot;)</code></pre>
+<p>First explore the data a bit… count QTLs for example…</p>
+<pre class="r"><code>NumTestFeats &lt;- PermutationPass.dat %&gt;%
+  count(PhenotypeClass)
+NumQTLs &lt;- PermutationPass.dat %&gt;%
+  filter(q&lt;0.1) %&gt;%
+  count(PhenotypeClass)
+
+ggplot(data = NumTestFeats,
+         aes(x=PhenotypeClass, y=n)) +
+  geom_col() +
+  geom_text(aes(label=n), color=&quot;black&quot;, angle=70, hjust=-0.4, size=2) +
+  geom_errorbar(
+    data = NumQTLs,
+    aes(y = n, ymin = n, ymax = n), color=&quot;black&quot;,lty=1, size=1.5) +
+  geom_text(
+    data = NumQTLs,
+    aes(y=n, label=n), color=&quot;red&quot;, angle=90, hjust=-0.4, size=2) +
+  scale_y_continuous(trans=&#39;log10&#39;, limits=c(1,1E6)) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+  labs(y=&quot;Number features/QTLs&quot;, caption=&quot;Number of test features (black) and QTLs (red); FDR&lt;10%&quot;)</code></pre>
+<p><img src="figure/20220930_CheckSNP_QTL_Positions.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Now plot metaplot of where QTLs in relation to the phenotype. for sQTLs, I used the <code>--group</code> setting for permutation testing for a cluster-level test, though for now (out of convenience) i’m going to plot positions of top SNPs relative to the top intron.</p>
+<p>First just plot distances…</p>
+<p>First explore the data a bit… are all strands either + or - in a sensible way?</p>
+<pre class="r"><code>PermutationPass.dat %&gt;%
+  count(PhenotypeClass, phe_strd)</code></pre>
+<pre><code># A tibble: 69 × 3
+   PhenotypeClass                 phe_strd      n
+   &lt;chr&gt;                          &lt;chr&gt;     &lt;int&gt;
+ 1 CTCF                           +         50000
+ 2 Expression.Splicing            +          7112
+ 3 Expression.Splicing            -          6888
+ 4 Expression.Splicing.Subset_YRI +          7112
+ 5 Expression.Splicing.Subset_YRI -          6888
+ 6 H3K27AC                        +        100858
+ 7 H3K36ME3                       +          7112
+ 8 H3K36ME3                       -          6888
+ 9 H3K4ME1                        +        182749
+10 H3K4ME3                        +         55769
+# … with 59 more rows</code></pre>
+<p>Notice the ChIP-seq data should not technically be stranded. Let’s replace those “+” strand entries with “.”…</p>
+<pre class="r"><code>PermutationPass.dat &lt;- PermutationPass.dat %&gt;%
+  mutate(phe_strd = case_when(
+     PhenotypeClass %in% c(&quot;H3K27AC&quot;, &quot;H3K4ME1&quot;, &quot;H3K4ME3&quot;, &quot;CTCF&quot;) ~ &quot;.&quot;,
+     TRUE ~ phe_strd
+  ))
+
+PermutationPass.dat %&gt;%
+  count(PhenotypeClass, phe_strd)</code></pre>
+<pre><code># A tibble: 69 × 3
+   PhenotypeClass                 phe_strd      n
+   &lt;chr&gt;                          &lt;chr&gt;     &lt;int&gt;
+ 1 CTCF                           .         50000
+ 2 Expression.Splicing            +          7112
+ 3 Expression.Splicing            -          6888
+ 4 Expression.Splicing.Subset_YRI +          7112
+ 5 Expression.Splicing.Subset_YRI -          6888
+ 6 H3K27AC                        .        100858
+ 7 H3K36ME3                       +          7112
+ 8 H3K36ME3                       -          6888
+ 9 H3K4ME1                        .        182749
+10 H3K4ME3                        .         55769
+# … with 59 more rows</code></pre>
+<p>Next to make a metaplot we need to decide on some details, specifically on how to plot thing around boundaries… Should we scale all features to the same plot length? Around the edges should we just plot absolute distance (as kilobases)?</p>
+<p>Let’s first plot the distribution of feature lengths before further making these decisions…</p>
+<pre class="r"><code>PermutationPass.dat %&gt;%
+  mutate(feat_length = phe_to-phe_from) %&gt;%
+  ggplot(aes(x=feat_length)) +
+  stat_ecdf() +
+  geom_label(
+    data = . %&gt;%
+      group_by(PhenotypeClass) %&gt;%
+      summarise(label = median(feat_length)),
+    aes(label=label),
+    x=Inf, y=-Inf, size=3, hjust=1, vjust=0) +
+  scale_x_continuous(trans=&#39;log10&#39;) +
+  facet_wrap(~PhenotypeClass) +
+  theme_bw() +
+  labs(caption=&quot;feature length. median labelled&quot;)</code></pre>
+<p><img src="figure/20220930_CheckSNP_QTL_Positions.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Hm, for now, let’s just focus on making a reasonable metagene plot rather than figuring out the details of how to make reasonable meta-intron, meta-cluster, or meta-ChIP-peak plot (each of which may require different amounts of squeezing to fairly represent distances within the feature versus flanking the feature).</p>
+<p>Making metagene plots like this in a reasonable way takes some thought, since features are different sizes so some features get squeezed more than others, while the flanking regions i want to make a set distance (eg, each bin is a contant 1kb). So how many bins to squeeze the middle part into? Let’s try to make the size of the middle bins similarly to the size of the flanking bins, based on the median gene size…</p>
+<pre class="r"><code># Determine breaks for `cut`.
+## Number of bins for middle part
+NumBinsInMiddle &lt;- 20
+MedianGeneLength &lt;- 32431
+
+MetaplotBreaks &lt;- c(seq(-50000, 0, MedianGeneLength/NumBinsInMiddle), seq(0,1, length.out=NumBinsInMiddle), rev(seq(50000,1, by=-MedianGeneLength/NumBinsInMiddle)))
+
+PermutationPass.dat %&gt;%
+  mutate(feat_length = phe_to-phe_from) %&gt;%
+  add_count(PhenotypeClass) %&gt;%
+  filter(n &lt; 14001 &amp; n &gt; 13000) %&gt;%
+  filter(q&lt;0.1) %&gt;%
+  mutate(DistForPlot = case_when(
+    #Var within feature
+    (phe_strd == &quot;+&quot;) &amp; (dist_phe_var == 0) ~ (var_from  - phe_from)/feat_length,
+    (phe_strd == &quot;-&quot;) &amp; (dist_phe_var == 0) ~ (phe_to  - var_from)/feat_length,
+    #Var downstream of feature
+    phe_strd == &quot;+&quot; &amp; (var_from &gt; phe_to) ~ var_from - phe_to,
+    phe_strd == &quot;-&quot; &amp; (var_from &lt; phe_from) ~ phe_from - var_from,
+    #Var upstream of feature
+    phe_strd == &quot;+&quot; &amp; (var_from &lt; phe_from) ~ var_from - phe_from,
+    phe_strd == &quot;-&quot; &amp; (var_from &gt; phe_to) ~ var_from - phe_to
+  )) %&gt;%
+  # mutate(RelativeDistForPlot = cut(DistForPlot, breaks=c(-Inf, MetaplotBreaks, Inf))) %&gt;%
+  mutate(RelativeDistForPlot = cut(DistForPlot, breaks=c(MetaplotBreaks))) %&gt;%
+  filter(!is.na(RelativeDistForPlot)) %&gt;%
+  ggplot(aes(x=RelativeDistForPlot)) +
+  geom_bar() +
+  facet_wrap(~PhenotypeClass, scales = &quot;free_y&quot;) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1, size=4))</code></pre>
+<p><img src="figure/20220930_CheckSNP_QTL_Positions.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok, those look nice and as expected. I think later about making similar plots for introns/sQTLs.</p>
+</div>
+<div id="looking-at-snp-annotation-enrichments" class="section level2">
+<h2>Looking at SNP annotation enrichments</h2>
+<p>Let’s also look for enrichment for top SNPs (not “finemapped” in any fancy way, just the nominally most significant SNP as output from QTLtools) among genome annotation sets (eg enhancer, promoter, splice site, etc). For each top SNP, I have already intersected it with a list of annotations. Here I will read in that data and explore it…</p>
+<p>First let’s read in the annotation region set and explore</p>
+<pre class="r"><code>annotation.regions &lt;- fread(&quot;../code/QTL_SNP_Enrichment/Annotations.bed.gz&quot;, sep=&#39;\t&#39;,col.names=c(&quot;chrom&quot;, &quot;start&quot;, &quot;stop&quot;, &quot;category&quot;, &quot;name&quot;, &quot;strand&quot;))
+
+annotation.regions.lengths &lt;- annotation.regions %&gt;%
+  mutate(Length = stop-start) %&gt;%
+  group_by(category) %&gt;%
+  summarise(Total.length = sum(Length))
+
+annotation.regions.lengths %&gt;%
+  mutate(Total.length.M = signif(Total.length/1E6, 3)) %&gt;%
+ggplot(aes(x=category, y=Total.length.M, label=Total.length.M)) +
+  geom_col(position = &quot;dodge2&quot;, color=&quot;black&quot;) +
+    geom_text(angle=90, hjust=-0.1, size=2.5) +
+    scale_y_continuous(expand=c(0,0), trans=&quot;log10&quot;, limits=c(1, 5E4)) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+  labs(y=&quot;Total length of annotationa category\n(Megabases)&quot;)</code></pre>
+<p><img src="figure/20220930_CheckSNP_QTL_Positions.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>CategoryFactorOrderedLevels &lt;- annotation.regions.lengths %&gt;%
+  mutate(ChromHMMCategory = as.numeric(str_extract(category, &quot;^\\d+&quot;))) %&gt;%
+  arrange(ChromHMMCategory, category) %&gt;%
+  mutate(SuperCategory = case_when(
+    str_detect(category,&quot;Splice&quot;) ~ &quot;Splicing&quot;,
+    str_detect(category,&quot;PAS&quot;) ~ &quot;PAS&quot;,
+    str_detect(category,&quot;Enhancer&quot;) ~ &quot;Enhancer&quot;,
+    str_detect(category,&quot;Promoter&quot;) ~ &quot;Promoter&quot;,
+    str_detect(category,&quot;Txn&quot;) ~ &quot;Transcribed&quot;,
+    str_detect(category,&quot;Repetitive&quot;) ~ &quot;Repetitive&quot;,
+    TRUE ~ NA_character_
+    ))</code></pre>
+<p>Now, let’s calculate an enrichment score just by the number of topSNPs intersecting each category, divided by the total length of the annotation category. This does not control for some things that maybe should be controlled for, like some level of background enrichment for test SNPs (test SNPs will by definition be close/cis to genes). I think the head to head comparisons like I have done previously (ie, comparing <em>relative</em> enrichments of sQTLs versus eQTLs between categories, and using the same gene-wise test SNP windows) should implicitly control for a lot of these things, and I’ll do something like that later. Also, previously I estimated a confidence interval with bootstrap samples. But first let’s just do this more simple enrichment analysis to get a quicker feel for things…</p>
+<pre class="r"><code>TopSNPs.intersectedWithRegions &lt;- Sys.glob(&quot;../code/QTL_SNP_Enrichment/TopSNPIntersections/*.bed.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/QTL_SNP_Enrichment/TopSNPIntersections/(.+?).bed.gz&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(fread, col.names=c(&quot;chrom&quot;, &quot;start&quot;, &quot;stop&quot;, &quot;SNP.ID&quot;, &quot;gid&quot;, &quot;score&quot;,&quot;p.extras&quot;, &quot;annotation.chrom&quot;, &quot;annotation.start&quot;, &quot;annotation.stop&quot;, &quot;category&quot;, &quot;basesOverlap&quot;)) %&gt;%
+  bind_rows(.id=&quot;PhenotypeClass&quot;) %&gt;%
+  dplyr::select(PhenotypeClass, chrom, start, stop, SNP.ID, gid, p.extras, category) %&gt;%
+  separate(p.extras, into=c(&quot;pid&quot;, &quot;p.start&quot;, &quot;p.stop&quot;, &quot;p.beta&quot;, &quot;p.p&quot;, &quot;p.q&quot;), convert=T, sep=&quot;;&quot;)
+
+Simple.EnrichmentScores &lt;- TopSNPs.intersectedWithRegions %&gt;%
+  filter(p.q &lt; 0.1) %&gt;%
+  add_count(PhenotypeClass) %&gt;%
+  count(PhenotypeClass, category, n) %&gt;%
+  mutate(FractionSNPsInClass = nn/n) %&gt;%
+  left_join(
+    annotation.regions.lengths %&gt;%
+      mutate(FractionCategoryInGenome = Total.length/sum(Total.length))
+    ) %&gt;%
+  drop_na() %&gt;%
+  mutate(enrichment = FractionSNPsInClass/FractionCategoryInGenome) %&gt;%
+  mutate(PhenotypeClass_n = paste0(PhenotypeClass, &quot;(&quot;, n, &quot;)&quot;)) %&gt;%
+  left_join(CategoryFactorOrderedLevels) %&gt;%
+  mutate(category = factor(category, levels=CategoryFactorOrderedLevels$category))
+
+ggplot(Simple.EnrichmentScores, aes(y=log2(enrichment), x=category)) +
+  geom_col(aes(fill=SuperCategory)) +
+  coord_flip() +
+  scale_x_discrete(limits=rev) +
+  facet_wrap(~PhenotypeClass_n) +
+  theme_bw() +
+  labs(x=&quot;log2(Enrichment)&quot;, caption=str_wrap(&quot;Enrichment calculated as fraction of TopSNPs in each cateory divided by fraction category in the genome&quot;))</code></pre>
+<p><img src="figure/20220930_CheckSNP_QTL_Positions.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Yeah, this is kind of hard to interpret…</p>
+<p>Let’s just focus on a few phenotypes of interest…</p>
+<pre class="r"><code>Simple.EnrichmentScores %&gt;%
+  filter(str_detect(PhenotypeClass, &quot;chRNA&quot;)) %&gt;%
+  ggplot(aes(y=log2(enrichment), x=category)) +
+  geom_col(aes(fill=SuperCategory)) +
+  geom_text(aes(label=nn), size=3, color=&#39;red&#39;) +
+  coord_flip() +
+  scale_x_discrete(limits=rev) +
+  facet_wrap(~PhenotypeClass_n) +
+  theme_bw() +
+  labs(x=&quot;log2(Enrichment)&quot;, caption=str_wrap(&quot;Enrichment calculated as fraction of TopSNPs in each cateory divided by fraction category in the genome. Numbers of QTLs in each category labelelled&quot;))</code></pre>
+<p><img src="figure/20220930_CheckSNP_QTL_Positions.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>But I do see some notable things, like sQTLs enriched in splice sites compared to eQTLs. Let’s go back to doing head to head comparisons and making confidence intervals.</p>
+</div>
+<div id="different-metrics-for-intron-retention" class="section level2">
+<h2>Different metrics for intron retention</h2>
+<p>3 methods: - IR.juncs: fraction of spliced junction reads out of splice+unspliced junction reads (splice-q) - IER: “Intron excision ratio”, ratio of intronic coverage over exonic coverage (splice-q) - IR: Ratio of intronic coverage to gene-wise median exonic coverage:</p>
+<p>Let’s explore the p-val correlation for the three methods</p>
+<pre class="r"><code>diag_limitrange &lt;- function(data, mapping, ...) { 
+  ggplot(data = data, mapping = mapping, ...) + 
+    geom_density(...) + 
+    theme_bw()
+}
+
+upper_point &lt;- function(data, mapping, ...) { 
+  ggplot(data = data, mapping = mapping, ...) + 
+    geom_point(..., alpha=0.05) + 
+    geom_abline() +
+    theme_bw()
+}
+
+qq &lt;- function(data, mapping, ...) { 
+  ggplot(data = data, mapping = mapping, ...) + 
+    geom_point(aes(y=-log10(1-percent_rank(mapping)))) + 
+    theme_bw()
+}
+
+
+
+PermutationPass.dat %&gt;%
+  filter(PhenotypeClass %in% c(&quot;chRNA.IER&quot;, &quot;chRNA.IRjunctions&quot;, &quot;chRNA.IR&quot;)) %&gt;%
+  ggplot(aes(x=adj_beta_pval)) +
+  geom_histogram() +
+  facet_wrap(~PhenotypeClass) +
+  theme_bw() +
+  labs(title=&quot;histogram of permutation pass P&quot;)</code></pre>
+<p><img src="figure/20220930_CheckSNP_QTL_Positions.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>PermutationPass.dat$PhenotypeClass %&gt;% unique()</code></pre>
+<pre><code> [1] &quot;CTCF&quot;                                &quot;Expression.Splicing.Subset_YRI&quot;     
+ [3] &quot;Expression.Splicing&quot;                 &quot;H3K27AC&quot;                            
+ [5] &quot;H3K36ME3&quot;                            &quot;H3K4ME1&quot;                            
+ [7] &quot;H3K4ME3&quot;                             &quot;MetabolicLabelled.30min.IER&quot;        
+ [9] &quot;MetabolicLabelled.30min.IR&quot;          &quot;MetabolicLabelled.30min.IRjunctions&quot;
+[11] &quot;MetabolicLabelled.30min.Splicing&quot;    &quot;MetabolicLabelled.30min&quot;            
+[13] &quot;MetabolicLabelled.60min.IER&quot;         &quot;MetabolicLabelled.60min.IR&quot;         
+[15] &quot;MetabolicLabelled.60min.IRjunctions&quot; &quot;MetabolicLabelled.60min.Splicing&quot;   
+[17] &quot;MetabolicLabelled.60min&quot;             &quot;ProCap&quot;                             
+[19] &quot;chRNA.Expression.Splicing&quot;           &quot;chRNA.Expression_cheRNA&quot;            
+[21] &quot;chRNA.Expression_eRNA&quot;               &quot;chRNA.Expression_lncRNA&quot;            
+[23] &quot;chRNA.Expression_ncRNA&quot;              &quot;chRNA.Expression_snoRNA&quot;            
+[25] &quot;chRNA.IER&quot;                           &quot;chRNA.IR&quot;                           
+[27] &quot;chRNA.IRjunctions&quot;                   &quot;chRNA.Slopes&quot;                       
+[29] &quot;chRNA.Splicing.Order&quot;                &quot;chRNA.Splicing&quot;                     
+[31] &quot;polyA.IER.Subset_YRI&quot;                &quot;polyA.IER&quot;                          
+[33] &quot;polyA.IR.Subset_YRI&quot;                 &quot;polyA.IR&quot;                           
+[35] &quot;polyA.IRjunctions&quot;                   &quot;polyA.Splicing.Subset_YRI&quot;          
+[37] &quot;polyA.Splicing&quot;                     </code></pre>
+<pre class="r"><code>PermutationPass.dat %&gt;%
+  filter(PhenotypeClass==&quot;chRNA.IR&quot;)</code></pre>
+<pre><code># A tibble: 91,126 × 25
+   PhenotypeClass phe_id      phe_chr phe_from phe_to phe_strd n_var_in_cis
+   &lt;chr&gt;          &lt;chr&gt;       &lt;chr&gt;      &lt;dbl&gt;  &lt;dbl&gt; &lt;chr&gt;           &lt;dbl&gt;
+ 1 chRNA.IR       IntID.52863 chr1      944804 945038 -                 173
+ 2 chRNA.IR       IntID.52986 chr1      945426 945514 -                 167
+ 3 chRNA.IR       IntID.53017 chr1      945657 946169 -                 167
+ 4 chRNA.IR       IntID.53078 chr1      946290 946398 -                 161
+ 5 chRNA.IR       IntID.53261 chr1      948236 948486 -                 156
+ 6 chRNA.IR       IntID.53340 chr1      948607 951123 -                 167
+ 7 chRNA.IR       IntID.53829 chr1      951242 951996 -                 152
+ 8 chRNA.IR       IntID.53899 chr1      952143 952408 -                 152
+ 9 chRNA.IR       IntID.53951 chr1      952604 953171 -                 153
+10 chRNA.IR       IntID.54005 chr1      953292 953778 -                 153
+# … with 91,116 more rows, and 18 more variables: dist_phe_var &lt;dbl&gt;,
+#   var_id &lt;chr&gt;, var_chr &lt;chr&gt;, var_from &lt;dbl&gt;, var_to &lt;dbl&gt;, dof1 &lt;dbl&gt;,
+#   dof2 &lt;dbl&gt;, bml1 &lt;dbl&gt;, bml2 &lt;dbl&gt;, nom_pval &lt;dbl&gt;, r_squared &lt;dbl&gt;,
+#   slope &lt;dbl&gt;, slope_se &lt;dbl&gt;, adj_emp_pval &lt;dbl&gt;, adj_beta_pval &lt;dbl&gt;,
+#   q &lt;dbl&gt;, grp_id &lt;chr&gt;, n_phe_in_grp &lt;dbl&gt;</code></pre>
+<pre class="r"><code>P.dat &lt;-PermutationPass.dat %&gt;%
+  filter(PhenotypeClass %in% c(&quot;chRNA.IER&quot;, &quot;chRNA.IRjunctions&quot;, &quot;chRNA.IR&quot;)) %&gt;%
+  dplyr::select(phe_id:phe_strd, PhenotypeClass, adj_beta_pval) %&gt;%
+  mutate(LogP = -log10(adj_beta_pval)) %&gt;%
+  pivot_wider(names_from = &quot;PhenotypeClass&quot;, values_from = &quot;LogP&quot;, id_cols=phe_chr:phe_strd) %&gt;%
+  dplyr::select(chRNA.IER, chRNA.IR, chRNA.IRjunctions)
+
+P &lt;- ggpairs(P.dat,
+    # upper=list(continuous = my_fn),
+    upper=list(continuous = wrap(&quot;cor&quot;, method = &quot;spearman&quot;, hjust=0.7)),
+    lower=list(continuous = upper_point),
+    diag=list(continuous = &quot;blankDiag&quot;)) +
+  theme_classic()
+  
+
+
+SymetricMatrixLabels &lt;- colnames(P.dat)
+for (i in seq_along(SymetricMatrixLabels)){
+    ToPlotForQQ &lt;- P.dat %&gt;%
+        select(SymetricMatrixLabels[i]) %&gt;%
+        rename(&quot;LogP&quot;=1) %&gt;%
+        mutate(ExpectedLogP = -log10(1-percent_rank(LogP)))
+    P[i,i] &lt;- ggplot(ToPlotForQQ) +
+        geom_point(aes(x=ExpectedLogP, y=LogP)) +
+        geom_abline()
+        theme_bw() +
+        theme(
+        panel.grid.major.y = element_blank(),
+        panel.grid.minor.y = element_blank()
+        # axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1)
+        )
+}
+
+P +
+  labs(&quot;Comparing Pvals from three intron-retention quantification methods&quot;)</code></pre>
+<p><img src="figure/20220930_CheckSNP_QTL_Positions.Rmd/unnamed-chunk-10-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>PermutationPass.dat %&gt;%
+  filter(PhenotypeClass %in% c(&quot;chRNA.IER&quot;, &quot;chRNA.IRjunctions&quot;, &quot;chRNA.IR&quot;)) %&gt;%
+  dplyr::select(phe_id:phe_strd, var_id, PhenotypeClass, q, slope) %&gt;%
+  pivot_wider(names_from = &quot;PhenotypeClass&quot;, values_from = c(&quot;q&quot;, &quot;slope&quot;), id_cols=phe_chr:var_id) %&gt;%
+  drop_na() %&gt;%
+  filter(q_chRNA.IR &lt; 0.1) %&gt;%
+  dplyr::select(contains(&quot;slope&quot;)) %&gt;%
+  ggpairs() +
+  theme_bw()</code></pre>
+<p><img src="figure/20220930_CheckSNP_QTL_Positions.Rmd/unnamed-chunk-10-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok, this verifies that I coded the chRNA.IR phenotype in such a way that a bigger number means more intron retention. The other metrics, IER and IR.junctions, are reversed so that a bigger number means less intron retention. Also, given the really high overlap between QTLs called using these different methods, it is clear to me that the previously observed effect of lots of intron retention QTLs with same direction effects as eQTL (more intron retention coinciding with higher exonic-gene expression) will not go away no matter which of the three methods I use. Yet, all of these three phenotypes are enriched for splice sites, about to a similar degree as standard leafcutter sQTLs. I should more carefully investigate this phenomena about intron retention and direction of effects…</p>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.6.1 (2019-07-05)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: CentOS Linux 7 (Core)
+
+Matrix products: default
+BLAS/LAPACK: /software/openblas-0.2.19-el7-x86_64/lib/libopenblas_haswellp-r0.2.19.so
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8 LC_NUMERIC=C         LC_TIME=C           
+ [4] LC_COLLATE=C         LC_MONETARY=C        LC_MESSAGES=C       
+ [7] LC_PAPER=C           LC_NAME=C            LC_ADDRESS=C        
+[10] LC_TELEPHONE=C       LC_MEASUREMENT=C     LC_IDENTIFICATION=C 
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] GGally_1.4.0      data.table_1.14.2 forcats_0.4.0     stringr_1.4.0    
+ [5] dplyr_1.0.9       purrr_0.3.4       readr_1.3.1       tidyr_1.2.0      
+ [9] tibble_3.1.7      ggplot2_3.3.6     tidyverse_1.3.0  
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_1.0.5         lubridate_1.7.4    assertthat_0.2.1   rprojroot_2.0.2   
+ [5] digest_0.6.20      utf8_1.1.4         R6_2.4.0           cellranger_1.1.0  
+ [9] plyr_1.8.4         backports_1.4.1    reprex_0.3.0       evaluate_0.15     
+[13] highr_0.9          httr_1.4.4         pillar_1.7.0       rlang_1.0.5       
+[17] readxl_1.3.1       rstudioapi_0.14    R.oo_1.22.0        R.utils_2.9.0     
+[21] rmarkdown_1.13     labeling_0.3       munsell_0.5.0      broom_1.0.0       
+[25] compiler_3.6.1     httpuv_1.5.1       modelr_0.1.8       xfun_0.31         
+[29] pkgconfig_2.0.2    htmltools_0.5.3    tidyselect_1.1.2   workflowr_1.6.2   
+[33] reshape_0.8.8      fansi_0.4.0        crayon_1.3.4       dbplyr_1.4.2      
+[37] withr_2.5.0        later_0.8.0        R.methodsS3_1.7.1  grid_3.6.1        
+[41] jsonlite_1.6       gtable_0.3.0       lifecycle_1.0.1    DBI_1.1.0         
+[45] git2r_0.26.1       magrittr_1.5       scales_1.1.0       cli_3.3.0         
+[49] stringi_1.4.3      farver_2.1.0       fs_1.5.2           promises_1.0.1    
+[53] xml2_1.3.2         ellipsis_0.3.2     generics_0.1.3     vctrs_0.4.1       
+[57] RColorBrewer_1.1-2 tools_3.6.1        glue_1.6.2         hms_0.5.3         
+[61] fastmap_1.1.0      yaml_2.2.0         colorspace_1.4-1   rvest_0.3.5       
+[65] knitr_1.39         haven_2.3.1       </code></pre>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+http://docs.mathjax.org/en/latest/configuration.html.  This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

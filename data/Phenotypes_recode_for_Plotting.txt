@@ -1,8 +1,9 @@
 PC	Alias	ShorterAlias	Include
-chRNA.Expression_cheRNA	Expression_chRNA.ncRNA	ncRNA_chRNA	T
-chRNA.Expression_eRNA	chRNA_ncRNA	ncRNA_chRNA	T
-chRNA.Expression_lncRNA	chRNA_ncRNA	ncRNA_chRNA	T
-chRNA.Expression_snoRNA		ncRNA_chRNA	T
+chRNA.Expression_ncRNA	Expression_chRNA.ncRNA	ncRNA_chRNA	T
+chRNA.Expression_cheRNA	Expression_chRNA.ncRNA	ncRNA_chRNA	F
+chRNA.Expression_eRNA	chRNA_ncRNA	ncRNA_chRNA	F
+chRNA.Expression_lncRNA	chRNA_ncRNA	ncRNA_chRNA	F
+chRNA.Expression_snoRNA		ncRNA_chRNA	F
 chRNA.Expression.Splicing	ncRNA.Expression_chRNA	Expression_chRNA	T
 chRNA.IER		Splicing.IR_chRNA	T
 chRNA.IR	chRNA_IR	Splicing.IR_chRNA	F

@@ -1,0 +1,332 @@
+---
+title: "CheckQTL_SNPPositionsMetagene"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+## Intro
+
+I will for each class of QTLs, check the SNP positions of significant QTLs, reading in the output from QTLtools permutation pass.
+
+```{r}
+library(tidyverse)
+library(data.table)
+library(GGally)
+
+PhenotypeAliases <- read_tsv("../data/Phenotypes_recode_for_Plotting.txt")
+
+PermutationPass.dat <- Sys.glob("../code/QTLs/QTLTools/*/PermutationPass.FDR_Added.txt.gz") %>%
+  setNames(str_replace(., "../code/QTLs/QTLTools/(.+?)/PermutationPass.FDR_Added.txt.gz", "\\1")) %>%
+  lapply(read_delim, delim=' ') %>%
+  bind_rows(.id="PhenotypeClass")
+```
+
+First explore the data a bit... count QTLs for example...
+
+```{r}
+
+NumTestFeats <- PermutationPass.dat %>%
+  count(PhenotypeClass)
+NumQTLs <- PermutationPass.dat %>%
+  filter(q<0.1) %>%
+  count(PhenotypeClass)
+
+ggplot(data = NumTestFeats,
+         aes(x=PhenotypeClass, y=n)) +
+  geom_col() +
+  geom_text(aes(label=n), color="black", angle=70, hjust=-0.4, size=2) +
+  geom_errorbar(
+    data = NumQTLs,
+    aes(y = n, ymin = n, ymax = n), color="black",lty=1, size=1.5) +
+  geom_text(
+    data = NumQTLs,
+    aes(y=n, label=n), color="red", angle=90, hjust=-0.4, size=2) +
+  scale_y_continuous(trans='log10', limits=c(1,1E6)) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+  labs(y="Number features/QTLs", caption="Number of test features (black) and QTLs (red); FDR<10%")
+
+```
+
+Now plot metaplot of where QTLs in relation to the phenotype. for sQTLs, I used the `--group` setting for permutation testing for a cluster-level test, though for now (out of convenience) i'm going to plot positions of top SNPs relative to the top intron.
+
+First just plot distances...
+
+First explore the data a bit... are all strands either + or - in a sensible way?
+
+```{r}
+PermutationPass.dat %>%
+  count(PhenotypeClass, phe_strd)
+```
+
+Notice the ChIP-seq data should not technically be stranded. Let's replace those "+" strand entries with "."...
+
+```{r}
+PermutationPass.dat <- PermutationPass.dat %>%
+  mutate(phe_strd = case_when(
+     PhenotypeClass %in% c("H3K27AC", "H3K4ME1", "H3K4ME3", "CTCF") ~ ".",
+     TRUE ~ phe_strd
+  ))
+
+PermutationPass.dat %>%
+  count(PhenotypeClass, phe_strd)
+```
+
+Next to make a metaplot we need to decide on some details, specifically on how to plot thing around boundaries... Should we scale all features to the same plot length? Around the edges should we just plot absolute distance (as kilobases)?
+
+Let's first plot the distribution of feature lengths before further making these decisions...
+
+```{r}
+PermutationPass.dat %>%
+  mutate(feat_length = phe_to-phe_from) %>%
+  ggplot(aes(x=feat_length)) +
+  stat_ecdf() +
+  geom_label(
+    data = . %>%
+      group_by(PhenotypeClass) %>%
+      summarise(label = median(feat_length)),
+    aes(label=label),
+    x=Inf, y=-Inf, size=3, hjust=1, vjust=0) +
+  scale_x_continuous(trans='log10') +
+  facet_wrap(~PhenotypeClass) +
+  theme_bw() +
+  labs(caption="feature length. median labelled")
+
+```
+
+Hm, for now, let's just focus on making a reasonable metagene plot rather than figuring out the details of how to make reasonable meta-intron, meta-cluster, or meta-ChIP-peak plot (each of which may require different amounts of squeezing to fairly represent distances within the feature versus flanking the feature).
+
+Making metagene plots like this in a reasonable way takes some thought, since features are different sizes so some features get squeezed more than others, while the flanking regions i want to make a set distance (eg, each bin is a contant 1kb). So how many bins to squeeze the middle part into? Let's try to make the size of the middle bins similarly to the size of the flanking bins, based on the median gene size... 
+
+```{r}
+
+# Determine breaks for `cut`.
+## Number of bins for middle part
+NumBinsInMiddle <- 20
+MedianGeneLength <- 32431
+
+MetaplotBreaks <- c(seq(-50000, 0, MedianGeneLength/NumBinsInMiddle), seq(0,1, length.out=NumBinsInMiddle), rev(seq(50000,1, by=-MedianGeneLength/NumBinsInMiddle)))
+
+PermutationPass.dat %>%
+  mutate(feat_length = phe_to-phe_from) %>%
+  add_count(PhenotypeClass) %>%
+  filter(n < 14001 & n > 13000) %>%
+  filter(q<0.1) %>%
+  mutate(DistForPlot = case_when(
+    #Var within feature
+    (phe_strd == "+") & (dist_phe_var == 0) ~ (var_from  - phe_from)/feat_length,
+    (phe_strd == "-") & (dist_phe_var == 0) ~ (phe_to  - var_from)/feat_length,
+    #Var downstream of feature
+    phe_strd == "+" & (var_from > phe_to) ~ var_from - phe_to,
+    phe_strd == "-" & (var_from < phe_from) ~ phe_from - var_from,
+    #Var upstream of feature
+    phe_strd == "+" & (var_from < phe_from) ~ var_from - phe_from,
+    phe_strd == "-" & (var_from > phe_to) ~ var_from - phe_to
+  )) %>%
+  # mutate(RelativeDistForPlot = cut(DistForPlot, breaks=c(-Inf, MetaplotBreaks, Inf))) %>%
+  mutate(RelativeDistForPlot = cut(DistForPlot, breaks=c(MetaplotBreaks))) %>%
+  filter(!is.na(RelativeDistForPlot)) %>%
+  ggplot(aes(x=RelativeDistForPlot)) +
+  geom_bar() +
+  facet_wrap(~PhenotypeClass, scales = "free_y") +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1, size=4))
+
+```
+
+Ok, those look nice and as expected. I think later about making similar plots for introns/sQTLs.
+
+## Looking at SNP annotation enrichments
+
+Let's also look for enrichment for top SNPs (not "finemapped" in any fancy way, just the nominally most significant SNP as output from QTLtools) among genome annotation sets (eg enhancer, promoter, splice site, etc). For each top SNP, I have already intersected it with a list of annotations. Here I will read in that data and explore it...
+
+First let's read in the annotation region set and explore
+
+```{r}
+
+annotation.regions <- fread("../code/QTL_SNP_Enrichment/Annotations.bed.gz", sep='\t',col.names=c("chrom", "start", "stop", "category", "name", "strand"))
+
+annotation.regions.lengths <- annotation.regions %>%
+  mutate(Length = stop-start) %>%
+  group_by(category) %>%
+  summarise(Total.length = sum(Length))
+
+annotation.regions.lengths %>%
+  mutate(Total.length.M = signif(Total.length/1E6, 3)) %>%
+ggplot(aes(x=category, y=Total.length.M, label=Total.length.M)) +
+  geom_col(position = "dodge2", color="black") +
+    geom_text(angle=90, hjust=-0.1, size=2.5) +
+    scale_y_continuous(expand=c(0,0), trans="log10", limits=c(1, 5E4)) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+  labs(y="Total length of annotationa category\n(Megabases)")
+
+CategoryFactorOrderedLevels <- annotation.regions.lengths %>%
+  mutate(ChromHMMCategory = as.numeric(str_extract(category, "^\\d+"))) %>%
+  arrange(ChromHMMCategory, category) %>%
+  mutate(SuperCategory = case_when(
+    str_detect(category,"Splice") ~ "Splicing",
+    str_detect(category,"PAS") ~ "PAS",
+    str_detect(category,"Enhancer") ~ "Enhancer",
+    str_detect(category,"Promoter") ~ "Promoter",
+    str_detect(category,"Txn") ~ "Transcribed",
+    str_detect(category,"Repetitive") ~ "Repetitive",
+    TRUE ~ NA_character_
+    ))
+
+```
+
+
+Now, let's calculate an enrichment score just by the number of topSNPs intersecting each category, divided by the total length of the annotation category. This does not control for some things that maybe should be controlled for, like some level of background enrichment for test SNPs (test SNPs will by definition be close/cis to genes). I think the head to head comparisons like I have done previously (ie, comparing *relative* enrichments of sQTLs versus eQTLs between categories, and using the same gene-wise test SNP windows) should implicitly control for a lot of these things, and I'll do something like that later. Also, previously I estimated a confidence interval with bootstrap samples. But first let's just do this more simple enrichment analysis to get a quicker feel for things...
+
+```{r}
+TopSNPs.intersectedWithRegions <- Sys.glob("../code/QTL_SNP_Enrichment/TopSNPIntersections/*.bed.gz") %>%
+  setNames(str_replace(., "../code/QTL_SNP_Enrichment/TopSNPIntersections/(.+?).bed.gz", "\\1")) %>%
+  lapply(fread, col.names=c("chrom", "start", "stop", "SNP.ID", "gid", "score","p.extras", "annotation.chrom", "annotation.start", "annotation.stop", "category", "basesOverlap")) %>%
+  bind_rows(.id="PhenotypeClass") %>%
+  dplyr::select(PhenotypeClass, chrom, start, stop, SNP.ID, gid, p.extras, category) %>%
+  separate(p.extras, into=c("pid", "p.start", "p.stop", "p.beta", "p.p", "p.q"), convert=T, sep=";")
+
+Simple.EnrichmentScores <- TopSNPs.intersectedWithRegions %>%
+  filter(p.q < 0.1) %>%
+  add_count(PhenotypeClass) %>%
+  count(PhenotypeClass, category, n) %>%
+  mutate(FractionSNPsInClass = nn/n) %>%
+  left_join(
+    annotation.regions.lengths %>%
+      mutate(FractionCategoryInGenome = Total.length/sum(Total.length))
+    ) %>%
+  drop_na() %>%
+  mutate(enrichment = FractionSNPsInClass/FractionCategoryInGenome) %>%
+  mutate(PhenotypeClass_n = paste0(PhenotypeClass, "(", n, ")")) %>%
+  left_join(CategoryFactorOrderedLevels) %>%
+  mutate(category = factor(category, levels=CategoryFactorOrderedLevels$category))
+
+ggplot(Simple.EnrichmentScores, aes(y=log2(enrichment), x=category)) +
+  geom_col(aes(fill=SuperCategory)) +
+  coord_flip() +
+  scale_x_discrete(limits=rev) +
+  facet_wrap(~PhenotypeClass_n) +
+  theme_bw() +
+  labs(x="log2(Enrichment)", caption=str_wrap("Enrichment calculated as fraction of TopSNPs in each cateory divided by fraction category in the genome"))
+  
+```
+
+Yeah, this is kind of hard to interpret... 
+
+Let's just focus on a few phenotypes of interest...
+
+```{r}
+
+Simple.EnrichmentScores %>%
+  filter(str_detect(PhenotypeClass, "chRNA")) %>%
+  ggplot(aes(y=log2(enrichment), x=category)) +
+  geom_col(aes(fill=SuperCategory)) +
+  geom_text(aes(label=nn), size=3, color='red') +
+  coord_flip() +
+  scale_x_discrete(limits=rev) +
+  facet_wrap(~PhenotypeClass_n) +
+  theme_bw() +
+  labs(x="log2(Enrichment)", caption=str_wrap("Enrichment calculated as fraction of TopSNPs in each cateory divided by fraction category in the genome. Numbers of QTLs in each category labelelled"))
+```
+
+
+But I do see some notable things, like sQTLs enriched in splice sites compared to eQTLs. Let's go back to doing head to head comparisons and making confidence intervals.
+
+
+## Different metrics for intron retention
+
+3 methods:
+- IR.juncs: fraction of spliced junction reads out of splice+unspliced junction reads (splice-q)
+- IER: "Intron excision ratio", ratio of intronic coverage over exonic coverage (splice-q)
+- IR: Ratio of intronic coverage to gene-wise median exonic coverage:
+
+Let's explore the p-val correlation for the three methods
+
+```{r}
+diag_limitrange <- function(data, mapping, ...) { 
+  ggplot(data = data, mapping = mapping, ...) + 
+    geom_density(...) + 
+    theme_bw()
+}
+
+upper_point <- function(data, mapping, ...) { 
+  ggplot(data = data, mapping = mapping, ...) + 
+    geom_point(..., alpha=0.05) + 
+    geom_abline() +
+    theme_bw()
+}
+
+qq <- function(data, mapping, ...) { 
+  ggplot(data = data, mapping = mapping, ...) + 
+    geom_point(aes(y=-log10(1-percent_rank(mapping)))) + 
+    theme_bw()
+}
+
+
+
+PermutationPass.dat %>%
+  filter(PhenotypeClass %in% c("chRNA.IER", "chRNA.IRjunctions", "chRNA.IR")) %>%
+  ggplot(aes(x=adj_beta_pval)) +
+  geom_histogram() +
+  facet_wrap(~PhenotypeClass) +
+  theme_bw() +
+  labs(title="histogram of permutation pass P")
+
+PermutationPass.dat$PhenotypeClass %>% unique()
+
+PermutationPass.dat %>%
+  filter(PhenotypeClass=="chRNA.IR")
+
+P.dat <-PermutationPass.dat %>%
+  filter(PhenotypeClass %in% c("chRNA.IER", "chRNA.IRjunctions", "chRNA.IR")) %>%
+  dplyr::select(phe_id:phe_strd, PhenotypeClass, adj_beta_pval) %>%
+  mutate(LogP = -log10(adj_beta_pval)) %>%
+  pivot_wider(names_from = "PhenotypeClass", values_from = "LogP", id_cols=phe_chr:phe_strd) %>%
+  dplyr::select(chRNA.IER, chRNA.IR, chRNA.IRjunctions)
+
+P <- ggpairs(P.dat,
+    # upper=list(continuous = my_fn),
+    upper=list(continuous = wrap("cor", method = "spearman", hjust=0.7)),
+    lower=list(continuous = upper_point),
+    diag=list(continuous = "blankDiag")) +
+  theme_classic()
+  
+
+
+SymetricMatrixLabels <- colnames(P.dat)
+for (i in seq_along(SymetricMatrixLabels)){
+    ToPlotForQQ <- P.dat %>%
+        select(SymetricMatrixLabels[i]) %>%
+        rename("LogP"=1) %>%
+        mutate(ExpectedLogP = -log10(1-percent_rank(LogP)))
+    P[i,i] <- ggplot(ToPlotForQQ) +
+        geom_point(aes(x=ExpectedLogP, y=LogP)) +
+        geom_abline()
+        theme_bw() +
+        theme(
+        panel.grid.major.y = element_blank(),
+        panel.grid.minor.y = element_blank()
+        # axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1)
+        )
+}
+
+P +
+  labs("Comparing Pvals from three intron-retention quantification methods")
+
+PermutationPass.dat %>%
+  filter(PhenotypeClass %in% c("chRNA.IER", "chRNA.IRjunctions", "chRNA.IR")) %>%
+  dplyr::select(phe_id:phe_strd, var_id, PhenotypeClass, q, slope) %>%
+  pivot_wider(names_from = "PhenotypeClass", values_from = c("q", "slope"), id_cols=phe_chr:var_id) %>%
+  drop_na() %>%
+  filter(q_chRNA.IR < 0.1) %>%
+  dplyr::select(contains("slope")) %>%
+  ggpairs() +
+  theme_bw()
+
+```
+
+Ok, this verifies that I coded the chRNA.IR phenotype in such a way that a bigger number means more intron retention. The other metrics, IER and IR.junctions, are reversed so that a bigger number means less intron retention. Also, given the really high overlap between QTLs called using these different methods, it is clear to me that the previously observed effect of lots of intron retention QTLs with same direction effects as eQTL (more intron retention coinciding with higher exonic-gene expression) will not go away no matter which of the three methods I use. Yet, all of these three phenotypes are enriched for splice sites, about to a similar degree as standard leafcutter sQTLs. I should more carefully investigate this phenomena about intron retention and direction of effects...

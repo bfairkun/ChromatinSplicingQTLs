@@ -344,8 +344,8 @@ rule tabixNominalPassQTLResults:
     wildcard_constraints:
         Pass = "NominalPass"
     params:
-        # sort_temp = '-T ' + config['scratch'][:-1]
-        sort_temp = ""
+        sort_temp = '-T ' + config['scratch'][:-1]
+        # sort_temp = ""
     output:
         txt = "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.tabix.gz",
         tbi = "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.tabix.gz.tbi"
@@ -358,6 +358,20 @@ rule tabixNominalPassQTLResults:
         """
         (cat <(zcat {input} | head -1 | perl -p -e 'printf("#") if $. ==1; s/ /\\t/g') <(zcat {input} | awk 'NR>1' |  perl -p -e 's/ /\\t/g' | sort {params.sort_temp} -k9,9 -k10,10n  ) | bgzip /dev/stdin -c > {output.txt}) &> {log}
         tabix -b 10 -e10 -s9 {output.txt} &>> {log}
+        """
+
+rule CombineChromosomalVcfs:
+    input:
+        vcf = expand("Genotypes/1KG_GRCh38/{chrom}.vcf.gz", chrom=autosomes),
+        tbi = expand("Genotypes/1KG_GRCh38/{chrom}.vcf.gz.tbi", chrom=autosomes),
+    output:
+        vcf = "Genotypes/1KG_GRCh38/Autosomes.vcf.gz",
+        tbi = "Genotypes/1KG_GRCh38/Autosomes.vcf.gz.tbi"
+
+    shell:
+        """
+        bcftools concat -o {output.vcf} -O z {input.vcf}
+        tabix -p vcf {output.vcf}
         """
 
 

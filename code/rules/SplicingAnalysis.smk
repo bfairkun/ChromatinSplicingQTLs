@@ -97,6 +97,21 @@ rule ConcatUniqJuncs:
         (cat <(printf "chrom\\tstart\\tend\\tstrand\\tsplice_site\\tacceptors_skipped\\texons_skipped\\tdonors_skipped\\tanchor\\tknown_donor\\tknown_acceptor\\tknown_junction\\tgene_names\\tgene_id\\n") <(zcat {input.regtools_annotate} | awk -v OFS='\\t' '$1 != "chrom" {{print $1,$2,$3, $6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16}}' | sort | uniq ) | gzip - > {output}) &> {log}
         """
 
+rule NMD_transcript_tag_introns:
+    input:
+        "ReferenceGenome/Annotations/gencode.v34.chromasomal.annotation.gtf"
+    output:
+        NMD = "SplicingAnalysis/Annotations/NMD/NMD_trancsript_introns.bed.gz",
+        NonNMD = "SplicingAnalysis/Annotations/NMD/NonNMD_trancsript_introns.bed.gz"
+    conda:
+        "../envs/bedparse.yml"
+    shell:
+        """
+        grep 'nonsense_mediated_decay' {input} | bedparse gtf2bed /dev/stdin --extraFields gene_id,gene_name,transcript_type | gzip - > {output.NMD}
+        grep -v 'nonsense_mediated_decay' {input} | bedparse gtf2bed /dev/stdin --extraFields gene_id,gene_name,transcript_type | gzip - > {output.NonNMD}
+
+        """
+
 rule GatherConcatUniqJuncs:
     input:
         expand("SplicingAnalysis/regtools_annotate_combined/{AnnotationType}.bed.gz", AnnotationType = ["basic", "comprehensive"])

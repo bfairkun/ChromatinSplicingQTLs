@@ -10,10 +10,14 @@ rule CalculatePi1_GetTraitPairs_AllTraits:
     output:
         expand("pi1/PairwiseTraitsToCompare/{n}.txt.gz", n=range(1, 1+NumPvalsForPi1Chunks))
     conda:
-        "../envs/r_2.yaml"
+        "../envs/r_essentials.yml"
+    resources:
+        mem_mb = 32000
+    log:
+        "logs/CalculatePi1_GetTraitPairs_AllTraits.log"
     shell:
         """
-        Rscript scripts/CalculatePi1_GetTraitPairs_AllTraits.R {params.NumChunks} pi/PairwiseTraitsToCompare/
+        Rscript scripts/CalculatePi1_GetTraitPairs_AllTraits.R {params.NumChunks} pi1/PairwiseTraitsToCompare/ {input.Permutation} &> {log}
         """
 
 rule GatherChunks:
@@ -22,16 +26,24 @@ rule GatherChunks:
 
 rule GetPvalsForPi1AllTraitPairs:
     input:
-        "pi1/PairwiseTraitsToCompare/{chunk}.txt.gz"
+        TraitsToCompare = "pi1/PairwiseTraitsToCompare/{chunk}.txt.gz",
+        tabix_QTLsOut = expand("QTLs/QTLTools/{Phenotype}/NominalPassForColoc.txt.tabix.gz", Phenotype=MyPhenotypes)
     output:
         "pi1/PairwiseTraitsToCompare/P.{chunk}.txt.gz"
     log:
         "logs/GetPvalsForPi1AllTraitPairs/{chunk}.log"
     shell:
         """
-        python scripts/CalculatePi1_GetAscertainmentP_AllPairs.py {input} {output} &> {log}
+        python scripts/CalculatePi1_GetAscertainmentP_AllPairs.py {input.TraitsToCompare} {output} {input.tabix_QTLsOut} &> {log}
         """
 
 rule GatherPvalsForPi1AllTraitPairs:
     input:
-        expand("scratch/PairwisePi1Traits.P.{chunk}.txt.gz", chunk=range(1, NumPvalsForPi1Chunks+1))
+        # expand("scratch/PairwisePi1Traits.P.{chunk}.txt.gz", chunk=range(1, NumPvalsForPi1Chunks+1))
+        expand("pi1/PairwiseTraitsToCompare/P.{chunk}.txt.gz", chunk=range(1, NumPvalsForPi1Chunks+1))
+    output:
+        "pi1/PairwisePi1Traits.P.all.txt.gz"
+    shell:
+        """
+        cat <(zcat {input[0]} | head -1) <(zcat {input} | grep -v -P '^PC1\\t') | gzip - > {output}
+        """

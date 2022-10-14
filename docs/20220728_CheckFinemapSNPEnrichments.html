@@ -434,7 +434,7 @@ div.tocify {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2022-08-22
+<strong>Last updated:</strong> 2022-10-07
 </p>
 <p>
 <strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 1
@@ -525,16 +525,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstree1ab52a531bfcde8a8c8fd176902be176521c0f70targetblank1ab52a5a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/1ab52a531bfcde8a8c8fd176902be176521c0f70" target="_blank">1ab52a5</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstreeedfdacc2897647bc1368ee2d56dc5b4c2d618df3targetblankedfdacca"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/edfdacc2897647bc1368ee2d56dc5b4c2d618df3" target="_blank">edfdacc</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstree1ab52a531bfcde8a8c8fd176902be176521c0f70targetblank1ab52a5a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstreeedfdacc2897647bc1368ee2d56dc5b4c2d618df3targetblankedfdacca" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/1ab52a531bfcde8a8c8fd176902be176521c0f70" target="_blank">1ab52a5</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/edfdacc2897647bc1368ee2d56dc5b4c2d618df3" target="_blank">edfdacc</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -552,6 +552,7 @@ Ignored files:
     Ignored:    code/._report.html
     Ignored:    code/.ipynb_checkpoints/
     Ignored:    code/.snakemake/
+    Ignored:    code/APA_Processing/
     Ignored:    code/Alignments/
     Ignored:    code/ChromHMM/
     Ignored:    code/ENCODE/
@@ -564,6 +565,7 @@ Ignored files:
     Ignored:    code/MiscCountTables/
     Ignored:    code/Multiqc/
     Ignored:    code/Multiqc_chRNA/
+    Ignored:    code/NonCodingRNA_annotation/
     Ignored:    code/PeakCalling/
     Ignored:    code/Phenotypes/
     Ignored:    code/PlotGruberQTLs/
@@ -619,13 +621,14 @@ Ignored files:
     Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022.csv
 
 Untracked files:
+    Untracked:  code/scripts/tidyNoncodingRNA_annotations.R
     Untracked:  code/snakemake_profiles/slurm/__pycache__/
 
 Unstaged changes:
     Modified:   analysis/20220728_CheckFinemapSNPEnrichments.Rmd
+    Modified:   code/rules/QTLTools.smk
     Modified:   code/rules/QTL_SNP_Enrichment.smk
     Modified:   code/scripts/GenometracksByGenotype
-    Modified:   data/cheRNA_K562_GSE83531.saf
 
 </code></pre>
 <p>
@@ -664,6 +667,57 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/dbada73271ed520d2f114c8c149d5245b704bb52/analysis/20220728_CheckFinemapSNPEnrichments.Rmd" target="_blank">dbada73</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-09-02
+</td>
+<td>
+added APA, removed redudant file
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/971cb7f2a63048d932929f70524003de0921b4e8/analysis/20220728_CheckFinemapSNPEnrichments.Rmd" target="_blank">971cb7f</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-08-22
+</td>
+<td>
+update SNP enrichment analysis
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/971cb7f2a63048d932929f70524003de0921b4e8/docs/20220728_CheckFinemapSNPEnrichments.html" target="_blank">971cb7f</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-08-22
+</td>
+<td>
+update SNP enrichment analysis
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -710,9 +764,10 @@ added finemapping snp enrichment rules
 <p>One way to explore my QTL results is to look for enrichments in QTL SNPs. There are many ways to do this. I propose something simple: Start with the finemapping results from hyprcoloc (the posterior probability for each SNP for each hyprcoloc cluster) and ask to what degree that posterior probability mass is enriched in annotations, compared to some other set of SNPs (eg sQTLs versus eQTLs). The annotations could be anything, but here I am just going to explore this method and make some initial plots using GM12878 ChromHMM annotations from ENCODE (lifted over from hg19-&gt;hg38).</p>
 <pre class="r"><code>library(tidyverse)
 library(data.table)
-library(boot)
 
-dat &lt;- fread(&quot;../code/QTL_SNP_Enrichment/FinemapIntersections.bed.gz&quot;, col.names=c(&quot;SNP_chrom&quot;, &quot;SNP_start&quot;, &quot;SNP_end&quot;, &quot;SNP&quot;, &quot;PosteriorPr&quot;, &quot;Annotation_chrom&quot;, &quot;Annotation_start&quot;, &quot;Annotation_stop&quot;, &quot;Annotation&quot;, &quot;Overlap&quot;)) %&gt;%
+# dat &lt;- fread(&quot;../code/QTL_SNP_Enrichment/FinemapIntersections.bed.gz&quot;, col.names=c(&quot;SNP_chrom&quot;, &quot;SNP_start&quot;, &quot;SNP_end&quot;, &quot;SNP&quot;, &quot;PosteriorPr&quot;, &quot;Annotation_chrom&quot;, &quot;Annotation_start&quot;, &quot;Annotation_stop&quot;, &quot;Annotation&quot;, &quot;Overlap&quot;)) %&gt;%
+dat &lt;- fread(&quot;../code/QTL_SNP_Enrichment/FinemapIntersections/MolColocStandard.bed.gz&quot;, col.names=c(&quot;SNP_chrom&quot;, &quot;SNP_start&quot;, &quot;SNP_end&quot;, &quot;SNP&quot;, &quot;PosteriorPr&quot;, &quot;Annotation_chrom&quot;, &quot;Annotation_start&quot;, &quot;Annotation_stop&quot;, &quot;Annotation&quot;, &quot;Overlap&quot;)) %&gt;%
+
   separate(SNP, into=c(&quot;SNP&quot;, &quot;HyprcolocCluster&quot;, &quot;GeneLocus&quot;), sep=&quot;_&quot;)
 
 hyprcoloc_results &lt;- read_tsv(&quot;../code/hyprcoloc/Results/ForColoc/MolColocStandard/tidy_results_OnlyColocalized.txt.gz&quot;)
@@ -774,23 +829,18 @@ Benjmain Fair
 <pre class="r"><code>hyprcoloc_results %&gt;%
   separate(phenotype_full, into=c(&quot;PC&quot;, &quot;P&quot;), sep=&quot;;&quot;) %&gt;%
   pull(PC) %&gt;% unique()</code></pre>
-<pre><code> [1] &quot;polyA.Splicing&quot;                      &quot;chRNA.IR&quot;                           
- [3] &quot;polyA.IR&quot;                            &quot;MetabolicLabelled.60min.IR&quot;         
- [5] &quot;MetabolicLabelled.30min.IR&quot;          &quot;MetabolicLabelled.30min&quot;            
- [7] &quot;MetabolicLabelled.60min&quot;             &quot;Expression.Splicing&quot;                
- [9] &quot;H3K27AC&quot;                             &quot;H3K4ME3&quot;                            
-[11] &quot;H3K4ME1&quot;                             &quot;chRNA.Expression_eRNA&quot;              
-[13] &quot;polyA.IR.Subset_YRI&quot;                 &quot;chRNA.IER&quot;                          
-[15] &quot;chRNA.IRjunctions&quot;                   &quot;ProCap&quot;                             
-[17] &quot;polyA.Splicing.Subset_YRI&quot;           &quot;CTCF&quot;                               
-[19] &quot;chRNA.Expression_lncRNA&quot;             &quot;Expression.Splicing.Subset_YRI&quot;     
-[21] &quot;chRNA.Splicing&quot;                      &quot;MetabolicLabelled.30min.Splicing&quot;   
-[23] &quot;MetabolicLabelled.60min.Splicing&quot;    &quot;chRNA.Expression.Splicing&quot;          
-[25] &quot;H3K36ME3&quot;                            &quot;polyA.IER&quot;                          
-[27] &quot;polyA.IRjunctions&quot;                   &quot;chRNA.Expression_cheRNA&quot;            
-[29] &quot;chRNA.Slopes&quot;                        &quot;MetabolicLabelled.30min.IER&quot;        
-[31] &quot;MetabolicLabelled.60min.IER&quot;         &quot;MetabolicLabelled.60min.IRjunctions&quot;
-[33] &quot;MetabolicLabelled.30min.IRjunctions&quot; &quot;chRNA.Expression_snoRNA&quot;            </code></pre>
+<pre><code> [1] &quot;polyA.Splicing&quot;                   &quot;MetabolicLabelled.30min&quot;         
+ [3] &quot;MetabolicLabelled.60min&quot;          &quot;H3K27AC&quot;                         
+ [5] &quot;H3K4ME3&quot;                          &quot;H3K4ME1&quot;                         
+ [7] &quot;chRNA.IER&quot;                        &quot;ProCap&quot;                          
+ [9] &quot;polyA.Splicing.Subset_YRI&quot;        &quot;CTCF&quot;                            
+[11] &quot;chRNA.Splicing.Order&quot;             &quot;chRNA.Expression_ncRNA&quot;          
+[13] &quot;Expression.Splicing&quot;              &quot;Expression.Splicing.Subset_YRI&quot;  
+[15] &quot;chRNA.Splicing&quot;                   &quot;MetabolicLabelled.30min.Splicing&quot;
+[17] &quot;MetabolicLabelled.60min.Splicing&quot; &quot;chRNA.Expression.Splicing&quot;       
+[19] &quot;H3K36ME3&quot;                         &quot;polyA.IER&quot;                       
+[21] &quot;MetabolicLabelled.30min.IER&quot;      &quot;MetabolicLabelled.60min.IER&quot;     
+[23] &quot;polyA.IER.Subset_YRI&quot;             &quot;chRNA.Slopes&quot;                    </code></pre>
 <pre class="r"><code>SplicingClusters &lt;- hyprcoloc_results %&gt;%
   separate(phenotype_full, into=c(&quot;PC&quot;, &quot;P&quot;), sep=&quot;;&quot;) %&gt;%
   rowwise() %&gt;%
@@ -899,11 +949,16 @@ dat$Annotation %&gt;% unique()</code></pre>
  [7] &quot;1_Active_Promoter&quot;         &quot;12_Repressed&quot;             
  [9] &quot;4_Strong_Enhancer&quot;         &quot;13_Heterochrom/lo&quot;        
 [11] &quot;SpliceAcceptor_0&quot;          &quot;SpliceBranchpointRegion_1&quot;
-[13] &quot;7_Weak_Enhancer&quot;           &quot;9_Txn_Transition&quot;         
-[15] &quot;SpliceAcceptor_1&quot;          &quot;SpliceDonor_1&quot;            
-[17] &quot;.&quot;                         &quot;5_Strong_Enhancer&quot;        
-[19] &quot;8_Insulator&quot;               &quot;3_Poised_Promoter&quot;        
-[21] &quot;14_Repetitive/CNV&quot;         &quot;15_Repetitive/CNV&quot;        </code></pre>
+[13] &quot;ncRNA_coRNA&quot;               &quot;ncRNA_pseudo&quot;             
+[15] &quot;9_Txn_Transition&quot;          &quot;SpliceAcceptor_1&quot;         
+[17] &quot;ncRNA_srtRNA&quot;              &quot;8_Insulator&quot;              
+[19] &quot;ncRNA_uaRNA&quot;               &quot;5_Strong_Enhancer&quot;        
+[21] &quot;7_Weak_Enhancer&quot;           &quot;SpliceDonor_1&quot;            
+[23] &quot;PAS_Region&quot;                &quot;ncRNA_incRNA&quot;             
+[25] &quot;3_Poised_Promoter&quot;         &quot;.&quot;                        
+[27] &quot;14_Repetitive/CNV&quot;         &quot;ncRNA_ctRNA&quot;              
+[29] &quot;15_Repetitive/CNV&quot;         &quot;ncRNA_lncRNA&quot;             
+[31] &quot;ncRNA_rtRNA&quot;               &quot;ncRNA_snoRNA&quot;             </code></pre>
 <pre class="r"><code>results &lt;- list()
 
 for (i in 1:100){
@@ -1215,12 +1270,12 @@ test.results$data %&gt;% head()</code></pre>
 <pre><code># A tibble: 6 × 7
   Annotation    FractionAnnotat… FractionAnnotat…  Sum_1  Sum_2 Enrichment     i
   &lt;chr&gt;                    &lt;dbl&gt;            &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;      &lt;dbl&gt; &lt;int&gt;
-1 ChromHMM:Act…          0.0585           0.0438  3.58e2 142.        1.33      1
-2 ChromHMM:Het…          0.207            0.144   1.27e3 465.        1.45      1
-3 ChromHMM:Ins…          0.00775          0.00438 4.74e1  14.2       1.77      1
-4 ChromHMM:Poi…          0.00399          0.00161 2.44e1   5.21      2.48      1
-5 ChromHMM:Rep…          0.00124          0.00151 7.58e0   4.88      0.822     1
-6 ChromHMM:Rep…          0.0177           0.00780 1.08e2  25.3       2.27      1</code></pre>
+1 ChromHMM:Act…          0.0563          0.0391    383.   98.1       1.44      1
+2 ChromHMM:Het…          0.199           0.153    1355.  385.        1.30      1
+3 ChromHMM:Ins…          0.00639         0.00709    43.5  17.8       0.902     1
+4 ChromHMM:Poi…          0.00378         0.000789   25.7   1.98      4.80      1
+5 ChromHMM:Rep…          0.00178         0.00303    12.1   7.60      0.587     1
+6 ChromHMM:Rep…          0.0160          0.00790   109.   19.8       2.02      1</code></pre>
 <pre class="r"><code>test.results$plot +
   labs(y=&quot;FoldEnrichment\nSplicingQTLs &lt;----&gt; Chromatin|Expression QTLs&quot;)</code></pre>
 <p><img src="figure/20220728_CheckFinemapSNPEnrichments.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
@@ -1265,23 +1320,18 @@ Benjmain Fair
 <pre class="r"><code>hyprcoloc_results %&gt;%
   separate(phenotype_full, into=c(&quot;PC&quot;, &quot;P&quot;), sep=&quot;;&quot;) %&gt;%
   pull(PC) %&gt;% unique()</code></pre>
-<pre><code> [1] &quot;polyA.Splicing&quot;                      &quot;chRNA.IR&quot;                           
- [3] &quot;polyA.IR&quot;                            &quot;MetabolicLabelled.60min.IR&quot;         
- [5] &quot;MetabolicLabelled.30min.IR&quot;          &quot;MetabolicLabelled.30min&quot;            
- [7] &quot;MetabolicLabelled.60min&quot;             &quot;Expression.Splicing&quot;                
- [9] &quot;H3K27AC&quot;                             &quot;H3K4ME3&quot;                            
-[11] &quot;H3K4ME1&quot;                             &quot;chRNA.Expression_eRNA&quot;              
-[13] &quot;polyA.IR.Subset_YRI&quot;                 &quot;chRNA.IER&quot;                          
-[15] &quot;chRNA.IRjunctions&quot;                   &quot;ProCap&quot;                             
-[17] &quot;polyA.Splicing.Subset_YRI&quot;           &quot;CTCF&quot;                               
-[19] &quot;chRNA.Expression_lncRNA&quot;             &quot;Expression.Splicing.Subset_YRI&quot;     
-[21] &quot;chRNA.Splicing&quot;                      &quot;MetabolicLabelled.30min.Splicing&quot;   
-[23] &quot;MetabolicLabelled.60min.Splicing&quot;    &quot;chRNA.Expression.Splicing&quot;          
-[25] &quot;H3K36ME3&quot;                            &quot;polyA.IER&quot;                          
-[27] &quot;polyA.IRjunctions&quot;                   &quot;chRNA.Expression_cheRNA&quot;            
-[29] &quot;chRNA.Slopes&quot;                        &quot;MetabolicLabelled.30min.IER&quot;        
-[31] &quot;MetabolicLabelled.60min.IER&quot;         &quot;MetabolicLabelled.60min.IRjunctions&quot;
-[33] &quot;MetabolicLabelled.30min.IRjunctions&quot; &quot;chRNA.Expression_snoRNA&quot;            </code></pre>
+<pre><code> [1] &quot;polyA.Splicing&quot;                   &quot;MetabolicLabelled.30min&quot;         
+ [3] &quot;MetabolicLabelled.60min&quot;          &quot;H3K27AC&quot;                         
+ [5] &quot;H3K4ME3&quot;                          &quot;H3K4ME1&quot;                         
+ [7] &quot;chRNA.IER&quot;                        &quot;ProCap&quot;                          
+ [9] &quot;polyA.Splicing.Subset_YRI&quot;        &quot;CTCF&quot;                            
+[11] &quot;chRNA.Splicing.Order&quot;             &quot;chRNA.Expression_ncRNA&quot;          
+[13] &quot;Expression.Splicing&quot;              &quot;Expression.Splicing.Subset_YRI&quot;  
+[15] &quot;chRNA.Splicing&quot;                   &quot;MetabolicLabelled.30min.Splicing&quot;
+[17] &quot;MetabolicLabelled.60min.Splicing&quot; &quot;chRNA.Expression.Splicing&quot;       
+[19] &quot;H3K36ME3&quot;                         &quot;polyA.IER&quot;                       
+[21] &quot;MetabolicLabelled.30min.IER&quot;      &quot;MetabolicLabelled.60min.IER&quot;     
+[23] &quot;polyA.IER.Subset_YRI&quot;             &quot;chRNA.Slopes&quot;                    </code></pre>
 <pre class="r"><code># chRNA.Splicing.PCs &lt;- c(&quot;chRNA.Splicing&quot;, &quot;chRNA.IER&quot;)
 # polyA.Splicing.PCs &lt;- c(&quot;polyA.Splicing.Subset_YRI&quot;, &quot;polyA.IER&quot;)
 
@@ -1350,7 +1400,7 @@ Benjmain Fair
 </table>
 </div>
 </div>
-<p>Now let’s compare eQTLs with colocalizing H3K27AC, versus eQTLs that colocalize with something but not H3K27AC</p>
+<p>Now let’s compare eQTLs with colocalizing H3K27AC|H3K4ME3|H3K4ME1, versus eQTLs that colocalize with something but not H3K27AC|H3K4ME3|H3K4ME1</p>
 <pre class="r"><code>chRNA.Splicing.PCs &lt;- c(&quot;chRNA.Splicing&quot;)
 polyA.Splicing.PCs &lt;- c(&quot;polyA.Splicing.Subset_YRI&quot;)
 
@@ -1433,8 +1483,8 @@ hyprcoloc_results_finemap.onlyRNASeq &lt;- read_tsv(&quot;../code/hyprcoloc/Resu
 <pre><code># A tibble: 2 × 2
   iteration     n
       &lt;dbl&gt; &lt;int&gt;
-1         1   966
-2         2    10</code></pre>
+1         1   969
+2         2     7</code></pre>
 <p>Notably, this only excludes at most 10 clusters</p>
 <pre class="r"><code>LociWithEqtlsInRNASeqOnly &lt;- hyprcoloc_results.onlyRNASeq %&gt;%
   group_by(Locus) %&gt;%
@@ -1454,8 +1504,46 @@ results &lt;-
   )
 
 results$plot +
-  labs(y = &quot;FoldEnrichment\neQTL.NoChromatin.Clusters &lt;----&gt; eQTL.Chromatin.Clusters&quot;)</code></pre>
+  labs(y = &quot;FoldEnrichment\neQTL.NoChromatin.Clusters &lt;----&gt; eQTL.Chromatin.Clusters&quot;,
+       title=&quot;Finemapping based only on RNA-seq eQTL colocalizations&quot;)</code></pre>
 <p><img src="figure/20220728_CheckFinemapSNPEnrichments.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-11-1">
+Past versions of unnamed-chunk-11-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-11-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/971cb7f2a63048d932929f70524003de0921b4e8/docs/figure/20220728_CheckFinemapSNPEnrichments.Rmd/unnamed-chunk-11-1.png" target="_blank">971cb7f</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-08-22
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>dat.onlyRNASeq %&gt;%
   mutate(Locus.iteration = paste(GeneLocus, HyprcolocCluster, sep=&quot;_&quot;)) %&gt;%
   filter(GeneLocus %in% LociWithEqtlsInRNASeqOnly) %&gt;%
@@ -1464,9 +1552,9 @@ results$plot +
   distinct(GeneLocus, .keep_all=T) %&gt;%
   count(ClusterGroup)</code></pre>
 <pre><code>                ClusterGroup   n
-1:   eQTL.Chromatin.Clusters 368
-2: eQTL.NoChromatin.Clusters 295
-3:                      &lt;NA&gt; 297</code></pre>
+1:   eQTL.Chromatin.Clusters 378
+2: eQTL.NoChromatin.Clusters 305
+3:                      &lt;NA&gt; 281</code></pre>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
@@ -1477,44 +1565,42 @@ results$plot +
 <pre class="r"><code>sessionInfo()</code></pre>
 <pre><code>R version 3.6.1 (2019-07-05)
 Platform: x86_64-pc-linux-gnu (64-bit)
-Running under: Scientific Linux 7.4 (Nitrogen)
+Running under: CentOS Linux 7 (Core)
 
 Matrix products: default
 BLAS/LAPACK: /software/openblas-0.2.19-el7-x86_64/lib/libopenblas_haswellp-r0.2.19.so
 
 locale:
- [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
- [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
- [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
- [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 
- [9] LC_ADDRESS=C               LC_TELEPHONE=C            
-[11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+ [1] LC_CTYPE=en_US.UTF-8 LC_NUMERIC=C         LC_TIME=C           
+ [4] LC_COLLATE=C         LC_MONETARY=C        LC_MESSAGES=C       
+ [7] LC_PAPER=C           LC_NAME=C            LC_ADDRESS=C        
+[10] LC_TELEPHONE=C       LC_MEASUREMENT=C     LC_IDENTIFICATION=C 
 
 attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
- [1] boot_1.3-23       data.table_1.14.2 forcats_0.4.0     stringr_1.4.0    
- [5] dplyr_1.0.9       purrr_0.3.4       readr_1.3.1       tidyr_1.2.0      
- [9] tibble_3.1.7      ggplot2_3.3.6     tidyverse_1.3.0  
+ [1] data.table_1.14.2 forcats_0.4.0     stringr_1.4.0     dplyr_1.0.9      
+ [5] purrr_0.3.4       readr_1.3.1       tidyr_1.2.0       tibble_3.1.7     
+ [9] ggplot2_3.3.6     tidyverse_1.3.0  
 
 loaded via a namespace (and not attached):
  [1] Rcpp_1.0.5        lubridate_1.7.4   assertthat_0.2.1  rprojroot_2.0.2  
  [5] digest_0.6.20     utf8_1.1.4        R6_2.4.0          cellranger_1.1.0 
  [9] backports_1.4.1   reprex_0.3.0      evaluate_0.15     highr_0.9        
-[13] httr_1.4.1        pillar_1.7.0      rlang_1.0.3       readxl_1.3.1     
-[17] rstudioapi_0.10   whisker_0.3-2     R.utils_2.9.0     R.oo_1.22.0      
+[13] httr_1.4.4        pillar_1.7.0      rlang_1.0.5       readxl_1.3.1     
+[17] rstudioapi_0.14   whisker_0.3-2     R.utils_2.9.0     R.oo_1.22.0      
 [21] rmarkdown_1.13    labeling_0.3      munsell_0.5.0     broom_1.0.0      
 [25] compiler_3.6.1    httpuv_1.5.1      modelr_0.1.8      xfun_0.31        
-[29] pkgconfig_2.0.2   htmltools_0.3.6   tidyselect_1.1.2  workflowr_1.6.2  
-[33] fansi_0.4.0       crayon_1.3.4      dbplyr_1.4.2      withr_2.4.1      
+[29] pkgconfig_2.0.2   htmltools_0.5.3   tidyselect_1.1.2  workflowr_1.6.2  
+[33] fansi_0.4.0       crayon_1.3.4      dbplyr_1.4.2      withr_2.5.0      
 [37] later_0.8.0       R.methodsS3_1.7.1 grid_3.6.1        jsonlite_1.6     
 [41] gtable_0.3.0      lifecycle_1.0.1   DBI_1.1.0         git2r_0.26.1     
 [45] magrittr_1.5      scales_1.1.0      cli_3.3.0         stringi_1.4.3    
-[49] farver_2.1.0      fs_1.3.1          promises_1.0.1    xml2_1.3.2       
+[49] farver_2.1.0      fs_1.5.2          promises_1.0.1    xml2_1.3.2       
 [53] ellipsis_0.3.2    generics_0.1.3    vctrs_0.4.1       tools_3.6.1      
-[57] glue_1.6.2        hms_0.5.3         yaml_2.2.0        colorspace_1.4-1 
-[61] rvest_0.3.5       knitr_1.39        haven_2.3.1      </code></pre>
+[57] glue_1.6.2        hms_0.5.3         fastmap_1.1.0     yaml_2.2.0       
+[61] colorspace_1.4-1  rvest_0.3.5       knitr_1.39        haven_2.3.1      </code></pre>
 </div>
 </div>
 
