@@ -139,12 +139,14 @@ def filter_trailing_ncRNA(hmm, hmm_rev, ncRNA_RPKM, distance_thre, cor_thre, RPK
         token = True
         is_trail = False
         
-        if (ncRNA_rev_ratio < 0.1) and (distance > 10000):
+#         if (ncRNA_rev_ratio < 0.1) and (distance > 10000):
+        if (ncRNA_rev_ratio < 0.03) and (distance > 10000):
             print(ncRNA + ' is being removed because strand/reverse ratio is too low and too far to merge')
             is_trail = True
             token = False
         
-        elif ncRNA_rev_ratio < 0.25:
+#         elif ncRNA_rev_ratio < 0.25:
+        elif ncRNA_rev_ratio < 0.1:
             remove_distance = 30000
             print('long distance removal for ' + ncRNA)
 
@@ -153,7 +155,7 @@ def filter_trailing_ncRNA(hmm, hmm_rev, ncRNA_RPKM, distance_thre, cor_thre, RPK
             remove_distance = distance_thre
             
         max_merge_ratio = 10
-        min_merge_ratio = 0.1
+        min_merge_ratio = 0.25
         
         
         if len(current_merge) >= 2:
@@ -170,16 +172,21 @@ def filter_trailing_ncRNA(hmm, hmm_rev, ncRNA_RPKM, distance_thre, cor_thre, RPK
         else:
             remove_distance = 20000
             
-        if (ncRNA_rev_ratio < 0.25) and (current_trail_rev_ratio < 0.25):
+#         if (ncRNA_rev_ratio < 0.25) and (current_trail_rev_ratio < 0.25):
+        if (ncRNA_rev_ratio < 0.1) and (current_trail_rev_ratio < 0.1):
             merge_distance = 10000
+            max_merge_ratio = 1e100
+            min_merge_ratio = -1
+            corr_min = 0
         elif (RPKM_current_ncRNA <= 0.5) and (RPKM_current_trail <= 0.5):
             merge_distance = 10000
             max_merge_ratio = 1e100
             min_merge_ratio = -1
+            corr_min = 0
         elif (len_trail > 100000):
             merge_distance = 10000
         else:
-            merge_distance = 5000
+            merge_distance = 3000
         
         if verbose:
 
@@ -210,11 +217,11 @@ def filter_trailing_ncRNA(hmm, hmm_rev, ncRNA_RPKM, distance_thre, cor_thre, RPK
         print('criteria 6: ' + str(is_trail))
         is_trail = is_trail or ((distance < 1000) and (ratio >= 50) and (ratio_trail >= 0.1))
         print('criteria 7: ' + str(is_trail))
-        is_trail = is_trail or ((distance < 100000) and (ratio >= 50) and ((corr >= 0.75) or (corr_trail >= 0.5)) and (ratio_trail >= 0.1))
+        is_trail = is_trail or ((distance < 100000) and (ratio >= 50) and (corr >= 0.75) and (ratio_trail >= 0.5))
         print('criteria 8: ' + str(is_trail))
         
         
-        m = merge_pair(hmm, current_trail, ncRNA, ncRNA_RPKM, strand = strand, 
+        m = merge_pair(hmm, current_merge, current_trail, ncRNA, ncRNA_RPKM, strand = strand, 
                    distance_max=merge_distance, corr_min = 0.1, RPKM_max = 1e100,
                    max_ratio = max_merge_ratio, min_ratio = min_merge_ratio)
         
@@ -258,7 +265,7 @@ def filter_trailing_ncRNA(hmm, hmm_rev, ncRNA_RPKM, distance_thre, cor_thre, RPK
     return trail_list, merge_list
 
 
-def merge_pair(hmm, ncRNA_1, ncRNA_2, RPKM, strand, 
+def merge_pair(hmm, current_merge, ncRNA_1, ncRNA_2, RPKM, strand, 
                distance_max=10000, corr_min = 0.2, RPKM_max = 1e100, verbose=True,
                max_ratio = 10, min_ratio = 0.5):
     
@@ -277,7 +284,11 @@ def merge_pair(hmm, ncRNA_1, ncRNA_2, RPKM, strand,
     RPKM_ratio = get_RPKM_ratio(RPKM, ncRNA_1, ncRNA_2)
     
     distance = get_distance(hmm, ncRNA_1, ncRNA_2, strand)
-    corr = get_correlation(RPKM, ncRNA_1, ncRNA_2)
+    
+    corr_list = [get_correlation(RPKM, x, ncRNA_2) for x in current_merge]
+    corr_list.append(get_correlation(RPKM, ncRNA_1, ncRNA_2))
+    corr = np.max(corr_list)
+#     corr = get_correlation(RPKM, ncRNA_1, ncRNA_2)
     
     merge = (distance <= distance_max)
     merge = merge and (RPKM_med1 < RPKM_max) and (RPKM_med2 < RPKM_max)
@@ -301,7 +312,7 @@ def merge_pair(hmm, ncRNA_1, ncRNA_2, RPKM, strand,
         print('RPKM ratio = ' +str(RPKM_ratio) + ', max = {m1}, min = {m2}'.format(m1=max_ratio,
                                                                                    m2=min_ratio))
         print(RPKM_ratio < 10)
-        print(RPKM_ratio > 0.5)
+        print(RPKM_ratio > min_ratio)
     
     return merge
  
