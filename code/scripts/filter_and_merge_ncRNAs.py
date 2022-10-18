@@ -73,6 +73,17 @@ def filter_trailing_ncRNA(hmm, hmm_rev, ncRNA_RPKM, distance_thre, cor_thre, RPK
         if verbose:
             print('')
             print('')
+            print('')
+            print('')
+            print('')
+            print('')
+            print('##############################')
+            print('')
+            print('')
+            print('')
+            print('')
+            print('')
+            print('')
             print('filtering: ' + ncRNA)
             print('anchor: ' + anchor)
             print('current trail: ' + current_trail)
@@ -127,6 +138,7 @@ def filter_trailing_ncRNA(hmm, hmm_rev, ncRNA_RPKM, distance_thre, cor_thre, RPK
         ratio = get_RPKM_ratio(ncRNA_RPKM, anchor, ncRNA)
         ratio_trail = get_RPKM_ratio(ncRNA_RPKM, current_trail, ncRNA)
         RPKM_current_ncRNA = ncRNA_RPKM.loc[ncRNA].median()
+        RPKM_anchor = ncRNA_RPKM.loc[anchor].median()
         RPKM_current_trail = ncRNA_RPKM.loc[current_trail].median()
         
         corr_tail = [get_correlation(ncRNA_RPKM, x, ncRNA) for x in current_tail]
@@ -139,23 +151,10 @@ def filter_trailing_ncRNA(hmm, hmm_rev, ncRNA_RPKM, distance_thre, cor_thre, RPK
         token = True
         is_trail = False
         
-#         if (ncRNA_rev_ratio < 0.1) and (distance > 10000):
-        if (ncRNA_rev_ratio < 0.03) and (distance > 10000):
-            print(ncRNA + ' is being removed because strand/reverse ratio is too low and too far to merge')
-            is_trail = True
-            token = False
-        
-#         elif ncRNA_rev_ratio < 0.25:
-        elif ncRNA_rev_ratio < 0.1:
-            remove_distance = 30000
-            print('long distance removal for ' + ncRNA)
-
-        else:
-            print('close distance removal for ' + ncRNA)
-            remove_distance = distance_thre
+        #remove_distance = distance_thre
             
-        max_merge_ratio = 10
-        min_merge_ratio = 0.25
+#         max_merge_ratio = 10
+#         min_merge_ratio = 0.25
         
         
         if len(current_merge) >= 2:
@@ -167,26 +166,61 @@ def filter_trailing_ncRNA(hmm, hmm_rev, ncRNA_RPKM, distance_thre, cor_thre, RPK
         elif strand == 'minus':
             len_trail = hmm.loc[current_merge_anchor].end - hmm.loc[current_trail].start
             
-        if len_trail >= 100000:
-            remove_distance = 50000
+        
+        if ratio > 10:
+            remove_distance = 10000
         else:
-            remove_distance = 20000
+            remove_distance = 3000
             
-#         if (ncRNA_rev_ratio < 0.25) and (current_trail_rev_ratio < 0.25):
-        if (ncRNA_rev_ratio < 0.1) and (current_trail_rev_ratio < 0.1):
-            merge_distance = 10000
-            max_merge_ratio = 1e100
-            min_merge_ratio = -1
-            corr_min = 0
-        elif (RPKM_current_ncRNA <= 0.5) and (RPKM_current_trail <= 0.5):
-            merge_distance = 10000
-            max_merge_ratio = 1e100
-            min_merge_ratio = -1
-            corr_min = 0
-        elif (len_trail > 100000):
-            merge_distance = 10000
+        remove_distance = np.max([remove_distance, len_trail])
+        
+        remove_distance = np.min([remove_distance, 50000])
+          
+        low_reverse =  (ncRNA_rev_ratio < 0.1) and (current_trail_rev_ratio < 0.1)
+        low_expression = (RPKM_current_ncRNA <= 0.5) and (RPKM_current_trail <= 0.5)
+        long_trail = (len_trail > 100000)
+        
+        high_corr = ((corr >= 0.5) and (corr_trail >= 0.5)) or (corr >= 0.75)
+        high_ratio = (ratio >= 50)
+        
+        
+        
+        high_corr_and_ratio = high_corr and high_ratio
+        
+        anchor_is_pc = anchor[:3]=='pc_'
+        
+        corr_min = 0.2
+        
+        if anchor_is_pc or (RPKM_current_ncRNA < 5):
+            RPKM_ratio_thre = 1
         else:
-            merge_distance = 3000
+            RPKM_ratio_thre = 2
+            
+             
+        if high_ratio or long_trail:
+            merge_distance = 20000
+#             remove_distance = 100000
+#             corr_min = 0
+        
+        if low_reverse or low_expression:
+            if long_trail or high_ratio:
+                merge_distance = 20000
+                corr_min = 0
+            else:
+                merge_distance = 5000
+                corr_min = 0.1
+            max_merge_ratio = 1e100
+            min_merge_ratio = -1
+            merge_corr_min = 0.1
+        
+        else:
+            merge_corr_min = 0.1
+            merge_distance = 1000
+            max_merge_ratio = 1e100
+            min_merge_ratio = 0.1
+            
+            
+        
         
         if verbose:
 
@@ -194,37 +228,68 @@ def filter_trailing_ncRNA(hmm, hmm_rev, ncRNA_RPKM, distance_thre, cor_thre, RPK
             print('distance: ' + str(distance))
             print('distance from anchor: ' + str(distance_from_anchor))
             print('correlation: ' + str(corr))
+            print('correlation tail: ' + str(np.mean(corr_tail)))
             print('ratio anchor: ' + str(ratio))
             print('ratio trail: ' + str(ratio_trail))
             print('correlation trail: ' + str(corr_tail))
             print('length trail: ' + str(len_trail))
+            print('remove distance: ' + str(remove_distance))
+            print('RPKM: ' + str(RPKM_current_ncRNA))
+            print('RPKM anchor: ' + str(RPKM_anchor))
+            print('merge distance: ' + str(merge_distance))
+            print('min_merge_ratio: ' + str(min_merge_ratio))
+            
+            print('max_merge_ratio: ' + str(max_merge_ratio))
+            print('correlation min: ' + str(merge_corr_min))
             print('')
+            
+        rev_ratio_too_low = ncRNA_rev_ratio < 0.03
+        print("criteria 0: reverse ratio is too low " + str(rev_ratio_too_low))
+                
+        too_close_to_pc = ( (distance < 1) and ((anchor[:5] != 'ncRNA') or (current_trail[:5] != 'ncRNA')))
+        print("criteria 1: It's extension of pc gene " + str(too_close_to_pc))
         
-        print('rev criteria: ' + str(is_trail))
+        standard_criteria =  (distance < remove_distance and ( (corr >= corr_min) or (np.mean(corr_tail) >= corr_min)) and (ratio >= RPKM_ratio_thre) and (ratio_trail >= 0.1)) #any([x >= corr_min for x in corr_tail])       ) 
         
-        is_trail = is_trail or ( (distance < 1) and ((anchor[:5] != 'ncRNA') or (current_trail[:5] != 'ncRNA')))
-        print('criteria 1: ' + str(is_trail))
-        is_trail = is_trail or ((distance < distance_thre) and any([x >= cor_thre for x in corr_tail]) and (ratio >= RPKM_ratio_thre) and (ratio_trail >= 0.5))
-        print('criteria 2: ' + str(is_trail))
-        is_trail = is_trail or ((distance < distance_thre) and any([x >= cor_thre for x in corr_tail]) and (ratio >= 1) and (ratio_trail >= 0.1) and (anchor[:3]=='pc_'))
-        print('criteria 3: ' + str(is_trail))
-        #is_trail = is_trail or ((distance < 30000) and any([x >= 0.2 for x in corr_tail]) and (ratio >= 1.1) and (ratio_trail >= 0.1) and (RPKM_current_ncRNA < 1))
-        is_trail = is_trail or ((distance < remove_distance) and ((corr > 0) or (corr_trail > 0)) and (((ratio >= 50) and (ratio_trail >= 0.1)) or ((len_trail > 100000) and (ratio > 1))))
-        print('criteria 4: ' + str(is_trail))
-        is_trail = is_trail or ((distance < remove_distance) and ((corr >= 0.5) or (corr_trail >= 0.5)) and (ratio >= 2) and (ratio_trail >= 0.1))
-        print('criteria 5: ' + str(is_trail))
-        is_trail = is_trail or ((distance < remove_distance) and ((corr >= 0.5) or (corr_trail >= 0.5)) and ((ratio >= 1) and (anchor[:3]=='pc_')) and (ratio_trail >= 0.1))
-        print('criteria 6: ' + str(is_trail))
-        is_trail = is_trail or ((distance < 1000) and (ratio >= 50) and (ratio_trail >= 0.1))
-        print('criteria 7: ' + str(is_trail))
-        is_trail = is_trail or ((distance < 100000) and (ratio >= 50) and (corr >= 0.75) and (ratio_trail >= 0.5))
-        print('criteria 8: ' + str(is_trail))
+        print('distance:')
+        print(distance)
+        print(remove_distance)
+        print('correlation:')
+        print(corr)
+        print(corr_tail)
+        print(corr_min)
+        print('ratio:')
+        print(ratio)
+        print(ratio_trail)
+        print(RPKM_ratio_thre)
+        print((ratio >= RPKM_ratio_thre))
+        print("criteria 2: thresholds " + str(standard_criteria))
+                              
         
+        
+#         is_trail = is_trail or ((distance < distance_thre) and any([x >= cor_thre for x in corr_tail]) and (ratio >= RPKM_ratio_thre) and (ratio_trail >= 0.5))
+#         print('criteria 2: ' + str(is_trail))
+#         is_trail = is_trail or ((distance < distance_thre) and any([x >= cor_thre for x in corr_tail]) and (ratio >= 1) and (ratio_trail >= 0.1) and (anchor[:3]=='pc_'))
+#         print('criteria 3: ' + str(is_trail))
+#         is_trail = is_trail or ((distance < remove_distance) and ((corr > 0) or (corr_trail > 0)) and (((ratio >= 50) and (ratio_trail >= 0.1)) or ((len_trail > 100000) and (ratio > 1))))
+#         print('criteria 4: ' + str(is_trail))
+#         is_trail = is_trail or ((distance < remove_distance) and ((corr >= 0.5) or (corr_trail >= 0.5)) and (ratio >= 2) and (ratio_trail >= 0.1))
+#         print('criteria 5: ' + str(is_trail))
+#         is_trail = is_trail or ((distance < remove_distance) and ((corr >= 0.5) or (corr_trail >= 0.5)) and ((ratio >= 1) and (anchor[:3]=='pc_')) and (ratio_trail >= 0.1))
+#         print('criteria 6: ' + str(is_trail))
+       
+        too_close_high_ratio = ((distance < 1000) and high_ratio)
+        print('criteria 3: too close and ratio is too high: ' + str(too_close_high_ratio))
+        
+        is_trail = rev_ratio_too_low or too_close_to_pc or standard_criteria or too_close_high_ratio
+        
+        print('is trail: ' + str(is_trail))
+        print('')
         
         m = merge_pair(hmm, current_merge, current_trail, ncRNA, ncRNA_RPKM, strand = strand, 
-                   distance_max=merge_distance, corr_min = 0.1, RPKM_max = 1e100,
+                   distance_max=merge_distance, corr_min = merge_corr_min, RPKM_max = 1e100,
                    max_ratio = max_merge_ratio, min_ratio = min_merge_ratio)
-        
+                              
         
         if m and (current_trail not in trail_list) and token:
             print('Merge: ' + str(m))    
@@ -238,11 +303,13 @@ def filter_trailing_ncRNA(hmm, hmm_rev, ncRNA_RPKM, distance_thre, cor_thre, RPK
                 print('')
             
             current_trail = ncRNA
-            anchor = ncRNA
-            current_tail = [ncRNA]
+            current_tail.append(ncRNA)
+            #anchor = ncRNA
+            #current_tail[ncRNA]
             
         elif is_trail:
             print("Removing because it's trail")
+                              
             trail_list.append(ncRNA)
             current_trail = ncRNA
             current_tail.append(ncRNA)
@@ -268,10 +335,12 @@ def filter_trailing_ncRNA(hmm, hmm_rev, ncRNA_RPKM, distance_thre, cor_thre, RPK
 def merge_pair(hmm, current_merge, ncRNA_1, ncRNA_2, RPKM, strand, 
                distance_max=10000, corr_min = 0.2, RPKM_max = 1e100, verbose=True,
                max_ratio = 10, min_ratio = 0.5):
+                              
     
     if (ncRNA_1[:5] != 'ncRNA') or (ncRNA_2[:5] != 'ncRNA'):
         if verbose:
             print('One of the genes is not an ncRNA.')
+                              
             
         return False
     
@@ -287,7 +356,7 @@ def merge_pair(hmm, current_merge, ncRNA_1, ncRNA_2, RPKM, strand,
     
     corr_list = [get_correlation(RPKM, x, ncRNA_2) for x in current_merge]
     corr_list.append(get_correlation(RPKM, ncRNA_1, ncRNA_2))
-    corr = np.max(corr_list)
+    corr = np.mean(corr_list)
 #     corr = get_correlation(RPKM, ncRNA_1, ncRNA_2)
     
     merge = (distance <= distance_max)
@@ -296,6 +365,7 @@ def merge_pair(hmm, current_merge, ncRNA_1, ncRNA_2, RPKM, strand,
     merge = merge and (corr >= corr_min)
     
     merge = merge and (RPKM_ratio < max_ratio) and (RPKM_ratio > min_ratio)
+                              
     
     if verbose:
         print('Check if merging {nc1} and {nc2}:'.format(nc1=ncRNA_1, nc2=ncRNA_2))
@@ -309,14 +379,19 @@ def merge_pair(hmm, current_merge, ncRNA_1, ncRNA_2, RPKM, strand,
         print('RPKM ' + str(ncRNA_2) + ' = ' +str(RPKM_med2) + ', max = ' + str(RPKM_max))
         print(RPKM_med2 < RPKM_max)
         print(RPKM_med2 > 0)
+                              
         print('RPKM ratio = ' +str(RPKM_ratio) + ', max = {m1}, min = {m2}'.format(m1=max_ratio,
                                                                                    m2=min_ratio))
-        print(RPKM_ratio < 10)
+                              
+        print(RPKM_ratio < max_ratio)
         print(RPKM_ratio > min_ratio)
+        print('merge: ' + str(merge))
+                              
+              
+                              
     
     return merge
- 
-    
+                              
 def merge_ncrnas(hmm, ncrnas, RPKM, strand, verbose=True):
     
     names = []
