@@ -14,6 +14,39 @@ rule SortQTLtoolsPhenotypeTable:
         (tabix -p bed {output.bed}) &>> {log}
         """
 
+use rule SortQTLtoolsPhenotypeTable as SortQTLtoolsUnstandardizedPhenotypeTable with:
+    input:
+        "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsUnstandardized.qqnorm.bed.gz"
+    output:
+        bed = "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsUnstandardized.sorted.qqnorm.bed.gz",
+        tbi = "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsUnstandardized.sorted.qqnorm.bed.gz.tbi"
+    log:
+        "logs/SortQTLtoolsUnstandardizedPhenotypeTable/{Phenotype}.log"
+
+rule MakeExtraInputFilesForUnstandardizedQTLToolsMapping:
+    """
+    I can run QTLtools cis to re-estimate beta with unstandardized effect
+    sizes, but there is no need to calculate all SNP:feature tests, just the
+    top hit for each phenotype. For splicing with the --group option I think I
+    still want to create a phenotype_include file
+    """
+    input:
+        "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.gz"
+    output:
+        phenotypes_include = "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.phenotypes_include.txt",
+        sites_include = "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.sites_include.txt",
+    wildcard_constraints:
+        Pass = "PermutationPass"
+    log:
+        "logs/MakeExtraInputFilesForUnstandardizedQTLToolsMapping/{Phenotype}.{Pass}.{QTLsGenotypeSet}.{FeatureCoordinatesRedefinedFor}.log"
+    conda:
+        "../envs/r_2.yaml"
+    shell:
+        """
+        Rscript
+        """
+
+
 rule PhenotypePCs:
     """
     QTLtools format expression PCs as covariates
@@ -217,7 +250,6 @@ rule QTLtools_generalized:
         Flags = GetQTLtoolsFlags,
         PassFlags = GetQTLtoolsPassFlags,
         ExcFlag = GetExcludeFile,
-        #N_PermutationChunks = Get_N_PermutationChunks
     shell:
         """
         {config[QTLtools]} cis --std-err --chunk {wildcards.n} {N_PermutationChunks} --vcf {input.vcf} --bed {input.bed} --cov {input.cov} --out {output} {params.Flags} {params.PassFlags} {params.ExcFlag} &> {log}
@@ -232,8 +264,6 @@ rule Gather_QTLtools_cis_pass:
         expand( "QTLs/QTLTools/{{Phenotype}}/{{Pass}}{{QTLsGenotypeSet}}{{FeatureCoordinatesRedefinedFor}}Chunks/{n}.txt", n=range(0, 1+N_PermutationChunks) )
     output:
         "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.gz"
-    #wildcard_constraints:
-    #    Phenotype = "|".join([x for x in MyPhenotypes if ((x != 'chRNA.Expression_eRNA') and (x != 'chRNA.Expression_cheRNA'))])
     log:
         "logs/Gather_QTLtools_cis_pass/{Phenotype}.{Pass}.{QTLsGenotypeSet}.{FeatureCoordinatesRedefinedFor}.log"
     shell:

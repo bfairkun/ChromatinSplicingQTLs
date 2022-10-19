@@ -1,0 +1,59 @@
+---
+title: "20221019_PlotFigs1"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+## Intro
+
+Here I will plot a lot of figures
+
+
+```{r}
+library(tidyverse)
+library(gplots)
+library(data.table)
+
+
+```
+
+### Number QTLs
+
+```{r}
+
+PhenotypeAliases <- read_tsv("../data/Phenotypes_recode_for_Plotting.txt")
+
+PhenotypeColors <- readxl::read_excel("../data/ColorsForPhenotypes.xlsx", sheet=1)
+AssayColors <- readxl::read_excel("../data/ColorsForPhenotypes.xlsx", sheet=2)
+
+
+PermutationPass.dat <- Sys.glob("../code/QTLs/QTLTools/*/PermutationPass.FDR_Added.txt.gz") %>%
+  setNames(str_replace(., "../code/QTLs/QTLTools/(.+?)/PermutationPass.FDR_Added.txt.gz", "\\1")) %>%
+  lapply(read_delim, delim=' ') %>%
+  bind_rows(.id="PhenotypeClass")
+
+NumTestFeats <- PermutationPass.dat %>%
+  count(PhenotypeClass)
+NumQTLs <- PermutationPass.dat %>%
+  filter(q<0.1) %>%
+  count(PhenotypeClass)
+
+ggplot(data = NumTestFeats,
+         aes(x=PhenotypeClass, y=n)) +
+  geom_col() +
+  geom_text(aes(label=n), color="black", angle=70, hjust=-0.4, size=2) +
+  geom_errorbar(
+    data = NumQTLs,
+    aes(y = n, ymin = n, ymax = n), color="black",lty=1, size=1.5) +
+  geom_text(
+    data = NumQTLs,
+    aes(y=n, label=n), color="red", angle=90, hjust=-0.4, size=2) +
+  scale_y_continuous(trans='log10', limits=c(1,1E6)) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+  labs(y="Number features/QTLs", caption="Number of test features (black) and QTLs (red); FDR<10%")
+```
+

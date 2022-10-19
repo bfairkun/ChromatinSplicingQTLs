@@ -41,6 +41,19 @@ def GetAscertainmentSNP_P(row, TabixFilesDict):
     except ValueError:
         return None
 
+def GetAscertainmentSNP_beta(row, TabixFilesDict):
+    """
+    from row of df
+    """
+    fetch_region = row["singletrait_topvar_chr.x"], row["singletrait_topvar_pos.x"]-1, row["singletrait_topvar_pos.x"]
+    try:
+        tbx_fetch = TabixFilesDict[row["PC2"]].fetch(*fetch_region)
+        for line in tbx_fetch:
+            if (row["singletrait_topvar.x"] == line[7]) and f'{row["P2"]}:{row["GeneLocus"]}' == line[0]:
+                return float(line[13])
+    except ValueError:
+        return None
+
 df = pd.read_csv(f_in, sep='\t')
 
 TabixFilesDict = {re.search("QTLs/QTLTools/(.+?)/NominalPassForColoc.txt.tabix.gz", fn).group(1):pysam.TabixFile(fn, parser=pysam.asTuple()) for fn in tabix_f_in_list}
@@ -52,5 +65,6 @@ TabixFilesDict = {re.search("QTLs/QTLTools/(.+?)/NominalPassForColoc.txt.tabix.g
 
 
 df['trait.x.p.in.y'] = df.apply(GetAscertainmentSNP_P, axis=1, TabixFilesDict=TabixFilesDict )
+df['trait.x.beta.in.y'] = df.apply(GetAscertainmentSNP_beta, axis=1, TabixFilesDict=TabixFilesDict )
 df.to_csv(f_out, sep='\t', index=False)
 

@@ -23,7 +23,7 @@ ClusterMax.mat <- Count.Table.mat %>%
     rownames_to_column("junc") %>%
     mutate(cluster=str_replace(junc, "^(.+?):.+?:.+?:(.+)$", "\\1_\\2")) %>%
     group_by(cluster) %>%
-    mutate(across(where(is.numeric), max)) %>%
+    mutate(across(where(is.numeric), sum)) %>%
     ungroup() %>%
     select(junc, everything(), -cluster) %>%
     column_to_rownames("junc") %>%
@@ -49,4 +49,15 @@ for (p in CountTablePhenotypes){
         select(`#Chrom`, start, end, junc, gid, strand, everything(), -cluster) %>%
         arrange(`#Chrom`, start, end) %>%
         write_tsv(paste0(PrefixOut, p, ".bed"))
+     Count.Table.mat %>%
+        as.data.frame() %>%
+        rownames_to_column("junc") %>%
+        select(junc, starts_with(p) & ends_with("_1")) %>%
+        rename_with(~ str_replace(.x, "^.+?_(.+?)_.+$", "\\1"), starts_with(p)) %>%
+        separate(junc, into=c("#Chrom", "start", "end", "cluster"), convert=T, remove=F, sep=":") %>%
+        mutate(gid = paste(`#Chrom`, cluster, sep="_" )) %>%
+        mutate(strand = str_extract(cluster, "[+-]")) %>%
+        select(`#Chrom`, start, end, junc, gid, strand, everything(), -cluster) %>%
+        arrange(`#Chrom`, start, end) %>%
+        write_tsv(paste0(PrefixOut,"JunctionCounts.", p, ".bed"))
 }

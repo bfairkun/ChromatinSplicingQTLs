@@ -13,16 +13,81 @@ I previously showed that effect size directions for intron retention QTLs puzzin
 
 ```{r}
 library(tidyverse)
+library(data.table)
+library(qvalue)
 
 ```
 
 First let's make some basic plots establishing that chRNA has more unannoated and NMD-specific splicing.
 
 ```{r}
-#TODO
+NMD.transcript.introns <- read_tsv("../code/SplicingAnalysis/Annotations/NMD/NMD_trancsript_introns.bed.gz", col_names=c("chrom", "start", "stop", "name", "score", "strand")) %>%
+  mutate(stop=stop+1) %>%
+  unite(intron, chrom:stop, strand)
+
+Non.NMD.transcript.introns <- read_tsv("../code/SplicingAnalysis/Annotations/NMD/NonNMD_trancsript_introns.bed.gz", col_names=c("chrom", "start", "stop", "name", "score", "strand")) %>%
+  mutate(stop=stop+1) %>%
+  unite(intron, chrom:stop, strand)
+
+
+NMD.specific.introns <- setdiff(NMD.transcript.introns$intron, Non.NMD.transcript.introns$intron)
+
+
+SpliceJunctionCountTables <- Sys.glob("../code/SplicingAnalysis/leafcutter/NormalizedPsiTables/PSI.JunctionCounts.*.bed.gz") %>%
+  setNames(str_replace(., "../code/SplicingAnalysis/leafcutter/NormalizedPsiTables/PSI.JunctionCounts.(.+?).bed.gz", "\\1")) %>%
+  lapply(read_tsv)
+
+lapply(SpliceJunctionCountTables, dim)
+
+SpliceJunctionCountTables$Expression.Splicing %>%
+  mutate(Intron=paste(`#Chrom`, start, end, strand, sep="_")) %>%
+  mutate(Is.NMD.Intron = Intron %in% NMD.specific.introns) %>%
+  group_by(Is.NMD.Intron) %>%
+  summarise_if(is.numeric, sum, na.rm = TRUE) %>%
+  dplyr::select(-start, -end) %>%
+  column_to_rownames("Is.NMD.Intron") %>%
+  t()
+
+Sum.NMD.Intron.Counts <- function(df){
+  df %>%
+  mutate(Intron=paste(`#Chrom`, start, end, strand, sep="_")) %>%
+  mutate(Is.NMD.Intron = Intron %in% NMD.specific.introns) %>%
+  group_by(Is.NMD.Intron) %>%
+  summarise_if(is.numeric, sum, na.rm = TRUE) %>%
+  dplyr::select(-start, -end) %>%
+  column_to_rownames("Is.NMD.Intron") %>%
+  t() %>%
+  as.data.frame() %>%
+  rownames_to_column("IndID") %>%
+  return()
+}
+
+lapply(SpliceJunctionCountTables, Sum.NMD.Intron.Counts) %>%
+  bind_rows(.id="Source") %>%
+  dplyr::rename(c("NotNMD"="FALSE", "NMD"="TRUE")) %>%
+  mutate(Fraction = NMD/(NMD+NotNMD)*100) %>%
+  ggplot(aes(x=Source, y=Fraction, color=Source)) +
+  geom_boxplot(outlier.position="none") +
+  geom_jitter() +
+  theme_bw()
+
+lapply(SpliceJunctionCountTables, Sum.NMD.Intron.Counts) %>%
+  bind_rows(.id="Source") %>%
+  dplyr::rename(c("NotNMD"="FALSE", "NMD"="TRUE")) %>%
+  mutate(TotalJunctionCounts = NMD+NotNMD) %>%
+  ggplot(aes(x=Source, y=TotalJunctionCounts, color=Source)) +
+  geom_boxplot(outlier.position="none") +
+  geom_jitter() +
+  theme_bw() +
+  labs(title="Total juncs per dataset", y="Total num juncs")
+
+  
+
 ```
 
-Let's 
+Hmmm, consistent with [previous analysis](https://bfairkun.github.io/cheRNA_pilot/20190805_PlotIntronPositions.html) with a smaller number of samples that I uniformly processed (trimmed reads to single end, constant read length across positions) has metabolic labelled was in between chRNA and polyA.
+
+let's prcoeed to reading in other files
 
 ```{r}
 PhenotypeAliases <- read_tsv("../data/Phenotypes_recode_for_Plotting.txt")
@@ -201,9 +266,405 @@ coloc.results.tidycolocalized %>%
 
 Note there are only a few points of chRNA.IR intron retention with SNPs in splice sites that coloc with eQTL.
 
+Let's check how these plots look for NMD-specific introns...
+
+```{r}
+dat.to.plot <- coloc.results.tidycolocalized %>%
+  group_by(Locus, snp) %>%
+  filter(any(PC=="Expression.Splicing.Subset_YRI")) %>%
+  ungroup() %>%
+  filter(PC %in% c("Expression.Splicing.Subset_YRI","H3K27AC", "H3K4ME1", "H3K4ME3", "polyA.Splicing.Subset_YRI", "chRNA.Splicing", "chRNA.IER")) %>%
+  left_join(., ., by=c("Locus", "snp")) %>%
+  filter(!((P.x == P.y) & (PC.x == PC.y))) %>% 
+  group_by(Locus, snp) %>%
+  mutate(
+    ContainsChromatinEqtl = any(PC.x %in% c("H3K27AC", "H3K4ME1", "H3K4ME3")),
+    ContainsSqtl = any(PC.x %in% c("polyA.Splicing.Subset_YRI", "chRNA.Splicing", "chRNA.IER"))
+    ) %>%
+  ungroup() %>%
+  mutate(Contains.eQTL_Contains.sQTL = paste(ContainsChromatinEqtl, ContainsSqtl)) %>%
+  dplyr::select(-iteration.y) %>%
+  left_join(
+    finemap.snps.annotated %>%
+      dplyr::select(SNP_iteration_locus, FinemapPP, AnnotationClass) %>%
+      separate(SNP_iteration_locus, into=c("snp", "iteration.x", "Locus"), convert=T, sep="_")
+  ) %>%
+  filter(FinemapPP >0.25) %>%
+  mutate(AnnotationSuperclass = case_when(
+    str_detect(AnnotationClass, "Splice.+_1") ~ "Annotated SS",
+    str_detect(AnnotationClass, "Splice.+_0$") ~ "Unannotated SS",
+    str_detect(AnnotationClass, "Enhancer") ~ "Enhancer",
+    str_detect(AnnotationClass, "Promoter") ~ "Promoter",
+    TRUE ~ "Other"
+  )) %>%
+  mutate(PC.x = recode(PC.x, !!!PC.ShortAliases)) %>%
+  mutate(PC.y = recode(PC.y, !!!PC.ShortAliases)) %>%
+  mutate(Contains.eQTL_Contains.sQTL = recode(Contains.eQTL_Contains.sQTL,
+                                              !!!c("TRUE TRUE"="hQTL+sQTL",
+                                                   "TRUE FALSE"="hQTL only",
+                                                   "FALSE TRUE"="sQTL only"))) %>%
+  filter(Contains.eQTL_Contains.sQTL=="sQTL only") %>%
+  mutate(New.x = str_replace(P.x, "^(.+?):(.+?):(.+?):.+?_([-+])$", "chr\\1_\\2_\\3_\\4")) %>%
+  mutate(New.y = str_replace(P.x, "^(.+?):(.+?):(.+?):.+?_([-+])$", "chr\\1_\\2_\\3_\\4")) %>%
+  mutate(ContainsNMDJunc = (New.x %in% NMD.specific.introns) | (New.y %in% NMD.specific.introns)) %>%
+  arrange(ContainsNMDJunc)
+ggplot(dat.to.plot, aes(x=beta.x, y=beta.y, color=ContainsNMDJunc)) +
+  geom_point(alpha=0.5) +
+  geom_vline(xintercept=0) +
+  geom_hline(yintercept=0) +
+  geom_smooth(method='lm') +
+  facet_grid(rows=vars(PC.x), cols=vars(PC.y)) +
+  theme_bw() +
+  labs(x="TraitA Phenotype class", y="TraitB Phenotype class", caption="Effect size correlation for eQTLs/sQTLs that are not hQTLs", title="sQTLs that increase annotated NMD junctions coloc with downward eQTLs")
+  
+```
+
+
+So there's clearly a negative correlation between NMD-specific intron splicing and expression. But there's only so many NMD introns annotated, and I expect a lot of splice changes due to genetic variation to be unannotated. Additionally, a lot of the red dots might the necessary down-regulated junctions when a NMD-junction gets up-regulated.
+
+Let's plot all the blue points with pygenometracks
+
+```{r, eval=F}
+dir.create("../code/scratch/PlotNMDsQTLeQTLs/")
+
+dat.to.plot.filtered <- dat.to.plot %>%
+  filter(ContainsNMDJunc) %>%
+  filter(PC.y %in% "Expression_polyA") %>%
+  distinct(Locus, .keep_all=T)
+
+#Write out all juncs in clusters
+dat.to.plot.filtered %>%
+  mutate(gid = str_replace(P.x, "^(.+?):.+?:.+?:(.+?)", "chr\\1_\\2")) %>%
+  inner_join(
+    SpliceJunctionCountTables$Expression.Splicing %>% dplyr::select(junc, gid)
+  ) %>%
+  dplyr::select(junc) %>%
+  separate(junc, into=c("chrom", "start", "stop", "name"), sep=":", convert=T) %>%
+  arrange(chrom, start, stop) %>%
+  write_tsv("../code/scratch/PlotNMDsQTLeQTLs/.juncs.bed")
+
+# # Write out NMD introns
+# dat.to.plot.filtered %>%
+#   dplyr::select(junc = P.x) %>%
+#   separate(junc, into=c("chrom", "start", "stop", "name"), sep=":", convert=T) %>%
+#   mutate(chrom=paste0("chr", chrom)) %>%
+#   dplyr::select(chrom, start=newstart, stop) %>%
+#   arrange(chrom, start, stop) %>%
+#   write_tsv("../code/scratch/PlotNMDsQTLeQTLs/.NMD.introns.bed", col_names = F)
+# 
+# # Write out ini file for NMD introns track
+# fileConn<-file("../code/scratch/PlotNMDsQTLeQTLs/.NMD.introns.ini")
+# writeLines(c("[NMD.introns]","file_type = bed", "type = vlines", "color=red","file = scratch/PlotNMDsQTLeQTLs/.NMD.introns.bed"), con=fileConn)
+# close(fileConn)
+
+# Write out NMD introns
+dat.to.plot.filtered %>%
+  dplyr::select(junc = P.x) %>%
+  separate(junc, into=c("chrom", "start", "stop", "name"), sep=":", convert=T) %>%
+  mutate(chrom=paste0("chr", chrom)) %>%
+  arrange(chrom, start, stop) %>%
+  write_tsv("../code/scratch/PlotNMDsQTLeQTLs/.NMD.introns.bed", col_names = F)
+
+# Write out ini file for NMD introns track
+fileConn<-file("../code/scratch/PlotNMDsQTLeQTLs/.NMD.introns.ini")
+writeLines(c("[NMD.introns]","file_type = bed", "color=red","file = scratch/PlotNMDsQTLeQTLs/.NMD.introns.bed"), con=fileConn)
+close(fileConn)
+
+# Write out bash script
+dat.to.plot.filtered %>%
+  separate(P.x, into=c("chrom", "start", "stop", "name"), sep=":", convert=T) %>%
+  mutate(chrom=paste0("chr", chrom)) %>%
+  mutate(min=start-10000, max=stop+10000) %>%
+  mutate(SnpPos = str_replace(snp, "^(.+?:.+?):.+?:.+?$", "chr\\1")) %>%
+  mutate(rn = str_pad(row_number(), 2, pad=0)) %>%
+  mutate(cmd = str_glue("python scripts/GenometracksByGenotype/AggregateBigwigsForPlotting.py --VCF Genotypes/1KG_GRCh38/Autosomes.vcf.gz --SnpPos {SnpPos} --GroupSettingsFile Metaplots/bwGroups.tsv --BigwigList Metaplots/bwList.tsv --Normalization WholeGenome --Region {chrom}:{min}-{max} --BigwigListType KeyFile --OutputPrefix scratch/PlotNMDsQTLeQTLs/. -v --Bed12GenesToIni scripts/GenometracksByGenotype/PremadeTracks/gencode.v26.FromGTEx.genes.bed12.gz  --FilterJuncsByBed scratch/PlotNMDsQTLeQTLs/.juncs.bed\npyGenomeTracks --tracks <(cat scratch/PlotNMDsQTLeQTLs/.tracks.ini scratch/PlotNMDsQTLeQTLs/.NMD.introns.ini) --out scratch/PlotNMDsQTLeQTLs/Plot_{rn}_{Locus}.pdf --region {chrom}:{min}-{max} --trackLabelFraction 0.15\n\n")) %>%
+  select(cmd) %>%
+  write.table("../code/scratch/PlotNMDsQTLeQTLs/MakePlots.sh", quote=F, row.names = F, col.names = F)
+  
+```
+
+..And plot them
+
+```{bash, eval=F}
+conda activate GenometracksByGenotype
+cd /project2/yangili1/bjf79/ChromatinSplicingQTLs/code
+bash scratch/PlotNMDsQTLeQTLs/MakePlots.sh
+
+```
+
+
+
+And Let's also expand these results by taking all NMD sQTLs and consider the beta on gene expression...
+
+
+
+```{r}
+
+sQTLs <- c("../code/QTLs/QTLTools/polyA.Splicing.Subset_YRI/PermutationPassForColoc.txt.gz", "../code/QTLs/QTLTools/chRNA.Splicing/PermutationPassForColoc.txt.gz") %>%
+  setNames(str_replace(., "../code/QTLs/QTLTools/(.+?)/PermutationPassForColoc.txt.gz", "\\1")) %>%
+  lapply(fread) %>%
+  bind_rows(.id="source") %>%
+  mutate(gene = str_replace(phe_id, ".+:(EN.+?)$", "\\1")) %>%
+  mutate(intron = str_replace(phe_id, "^(.+):(.+?):(.+?):clu.+?_([+-]):EN.+$", "chr\\1_\\2_\\3_\\4")) %>%
+  group_by(source) %>%
+  mutate(q = qvalue(adj_emp_pval)$qvalues) %>%
+  ungroup()
+
+
+eQTLs <- c("../code/QTLs/QTLTools/Expression.Splicing.Subset_YRI/PermutationPassForColoc.txt.gz", "../code/QTLs/QTLTools/chRNA.Expression.Splicing/PermutationPassForColoc.txt.gz") %>%
+  setNames(str_replace(., "../code/QTLs/QTLTools/(.+?)/PermutationPassForColoc.txt.gz", "\\1")) %>%
+  lapply(fread) %>%
+  bind_rows(.id="source") %>%
+  mutate(gene = str_replace(phe_id, ".+:(EN.+?)$", "\\1")) %>%
+  group_by(source) %>%
+  mutate(q = qvalue(adj_emp_pval)$qvalues) %>%
+  ungroup()
+
+H3K4me3.QTLs <- c("../code/QTLs/QTLTools/H3K4ME3/PermutationPassForColoc.txt.gz") %>%
+  setNames(str_replace(., "../code/QTLs/QTLTools/(.+?)/PermutationPassForColoc.txt.gz", "\\1")) %>%
+  lapply(fread) %>%
+  bind_rows(.id="source") %>%
+  mutate(gene = str_replace(phe_id, ".+:(EN.+?)$", "\\1")) %>%
+  mutate(gene_peak = str_replace(phe_id, "^(.+?):(.+?)$", "\\2;\\1")) %>%
+  group_by(source) %>%
+  mutate(q = qvalue(adj_emp_pval)$qvalues) %>%
+  ungroup()
+
+PeaksToTSS <- Sys.glob("../code/Misc/PeaksClosestToTSS/*_assigned.tsv.gz") %>%
+  setNames(str_replace(., "../code/Misc/PeaksClosestToTSS/(.+?)_assigned.tsv.gz", "\\1")) %>%
+  lapply(read_tsv) %>%
+  bind_rows(.id="ChromatinMark") %>%
+  mutate(GenePeakPair = paste(gene, peak, sep = ";")) %>%
+  distinct(ChromatinMark, peak, gene, .keep_all=T)
+
+inner_join(eQTLs, sQTLs, by="gene", suffix=c(".eQTL", ".sQTL")) %>%
+  mutate(Is.NMD.intron = intron %in% NMD.specific.introns) %>%
+  filter(q.eQTL < 0.1 & q.sQTL < 0.1) %>%
+  mutate(source.eQTL = recode(source.eQTL, !!!c("polyA.Expression.YRI"="Expression.Splicing.Subset_YRI", "chRNA.Expression"="chRNA.Expression.Splicing"))) %>%
+  arrange(Is.NMD.intron) %>%
+  ggplot(aes(x=slope.eQTL, y=slope.sQTL, color=Is.NMD.intron)) +
+  geom_point(alpha=0.5) +
+  geom_vline(xintercept=0) +
+  geom_hline(yintercept=0) +
+  geom_smooth(method='lm') +
+  facet_grid(rows = vars(source.eQTL), cols=vars(source.sQTL)) +
+  theme_bw() +
+  labs(title="genetic effects of NMD introns and host gene expression", x="beta, eQTL", y="beta, sQTL", caption="Only FDR<10% sQTLs and eQTLs plotted")
+  
+
+inner_join(eQTLs, H3K4me3.QTLs, by="gene", suffix=c(".eQTL", ".sQTL")) %>%
+  filter(gene_peak %in% PeaksToTSS$GenePeakPair) %>%
+  filter(q.eQTL < 0.1 & q.sQTL < 0.1) %>%
+  mutate(source.eQTL = recode(source.eQTL, !!!c("polyA.Expression.YRI"="Expression.Splicing.Subset_YRI", "chRNA.Expression"="chRNA.Expression.Splicing"))) %>%
+  ggplot(aes(x=slope.eQTL, y=slope.sQTL)) +
+  geom_point(alpha=0.5) +
+  geom_vline(xintercept=0) +
+  geom_hline(yintercept=0) +
+  geom_smooth(method='lm') +
+  facet_grid(rows = vars(source.eQTL), cols=vars(source.sQTL)) +
+  theme_bw() +
+  labs(title="genetic effects of H3K4ME promoters and host gene expression", x="beta, eQTL", y="beta, H3K4ME3 QTL", caption="Only FDR<10% H3K4ME3 QTLs and eQTLs plotted")
+  
+
+```
+
+Wait, upon further thought, I think I didn't make the above plots correctly. I was just plotting the beta for the topSNP for each feature, not the same SNP between sQTL and eQTL, so the directions of SNP effect (which are always ALT/REF) might not be polarized the same way.
+
+```{r}
+TopSNPEffects.ByPairs <- fread("../code/pi1/PairwisePi1Traits.P.all.txt.gz")
+
+TopSNPEffects.ByPairs %>%
+  filter(
+      (PC1 %in% c("chRNA.Expression.Splicing", "Expression.Splicing.Subset_YRI")) &
+      (PC2 %in% c("polyA.Splicing.Subset_YRI", "chRNA.Splicing")) &
+      (FDR.x < 0.1) &
+      (FDR.y < 0.1)) %>%
+  mutate(source.eQTL = recode(PC1, !!!c("Expression.Splicing.Subset_YRI"="polyA.Expression.YRI", "chRNA.Expression.Splicing"="chRNA.Expression"))) %>%
+  rename(source.sQTL=PC2) %>%
+  mutate(intron = str_replace(P2, "^(.+):(.+?):(.+?):clu.+?_([+-])$", "chr\\1_\\2_\\3_\\4")) %>%
+  mutate(Is.NMD.intron = intron %in% NMD.specific.introns) %>%
+  arrange(Is.NMD.intron) %>%
+  ggplot(aes(x=beta.x, y=trait.x.beta.in.y
+, color=Is.NMD.intron)) +
+  geom_point(alpha=0.5) +
+  geom_vline(xintercept=0) +
+  geom_hline(yintercept=0) +
+  geom_smooth(method='lm') +
+  facet_grid(rows = vars(source.eQTL), cols=vars(source.sQTL)) +
+  theme_bw() +
+  labs(title="genetic effects of NMD introns and host gene expression", x="beta, eQTL", y="beta, sQTL", caption="Only FDR<10% sQTLs and eQTLs plotted. sQTL effects are relative to top eQTL SNP")
+
+
+TopSNPEffects.ByPairs %>%
+  filter(
+      (PC2 %in% c("chRNA.Expression.Splicing", "Expression.Splicing.Subset_YRI")) &
+      (PC1 %in% c("polyA.Splicing.Subset_YRI", "chRNA.Splicing")) &
+      (FDR.x < 0.1) &
+      (FDR.y < 0.1)) %>%
+  mutate(source.eQTL = recode(PC2, !!!c("Expression.Splicing.Subset_YRI"="polyA.Expression.YRI", "chRNA.Expression.Splicing"="chRNA.Expression"))) %>%
+  rename(source.sQTL=PC1) %>%
+  mutate(intron = str_replace(P1, "^(.+):(.+?):(.+?):clu.+?_([+-])$", "chr\\1_\\2_\\3_\\4")) %>%
+  mutate(Is.NMD.intron = intron %in% NMD.specific.introns) %>%
+  arrange(Is.NMD.intron) %>%
+  ggplot(aes(y=beta.x, x=trait.x.beta.in.y
+, color=Is.NMD.intron)) +
+  geom_point(alpha=0.5) +
+  geom_vline(xintercept=0) +
+  geom_hline(yintercept=0) +
+  geom_smooth(method='lm') +
+  facet_grid(rows = vars(source.eQTL), cols=vars(source.sQTL)) +
+  theme_bw() +
+  labs(title="genetic effects of NMD introns and host gene expression", x="beta, eQTL", y="beta, sQTL", caption="Only FDR<10% sQTLs and eQTLs plotted. eQTL effects are relative to top sQTL SNP")
+
+  
+```
+I think I'll want to further break down introns into 
+- annotatic basic transcripts
+- annotated transripts (not NMD)
+- annotated NMD
+- unannotated
+
+
+First read in the annotations...
+```{r}
+Intron.Annotations.basic <- read_tsv("../code/SplicingAnalysis/regtools_annotate_combined/basic.bed.gz") %>%
+  filter(known_junction ==1) %>%
+  unite(intron, chrom, start, end, strand)
+Introns.Annotations.comprehensive <- read_tsv("../code/SplicingAnalysis/regtools_annotate_combined/comprehensive.bed.gz") %>%
+  filter(known_junction ==1) %>%
+  unite(intron, chrom, start, end, strand)
+
+```
+
+Now remake the plots
+
+```{r}
+TopSNPEffects.ByPairs %>%
+  filter(
+      (PC1 %in% c("chRNA.Expression.Splicing", "Expression.Splicing.Subset_YRI")) &
+      (PC2 %in% c("polyA.Splicing.Subset_YRI", "chRNA.Splicing")) &
+      (FDR.x < 0.1) &
+      (FDR.y < 0.1)) %>%
+  mutate(source.eQTL = recode(PC1, !!!c("Expression.Splicing.Subset_YRI"="polyA.Expression.YRI", "chRNA.Expression.Splicing"="chRNA.Expression"))) %>%
+  rename(source.sQTL=PC2) %>%
+  mutate(intron = str_replace(P2, "^(.+):(.+?):(.+?):clu.+?_([+-])$", "chr\\1_\\2_\\3_\\4")) %>%
+  mutate(IntronAnnotation = case_when(
+    intron %in% NMD.specific.introns ~ "Annotated NMD",
+    intron %in% Intron.Annotations.basic$intron ~ "Annotated basic",
+    intron %in% Introns.Annotations.comprehensive$intron ~ "Annotated Not basic",
+    TRUE ~ "Unannotated"
+  )) %>%
+  count(IntronAnnotation) %>%
+  ggplot(aes(x=IntronAnnotation, y=n, fill=IntronAnnotation)) +
+  geom_col() +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+  labs(title="Number sQTLs that are in an eGene", x="Intron Type", caption="FDR10% for sQTL and eQTL")
+
+
+TopSNPEffects.ByPairs %>%
+  filter(
+      (PC1 %in% c("chRNA.Expression.Splicing", "Expression.Splicing.Subset_YRI")) &
+      (PC2 %in% c("polyA.Splicing.Subset_YRI", "chRNA.Splicing")) &
+      (FDR.x < 0.1) &
+      (FDR.y < 0.1)) %>%
+  mutate(source.eQTL = recode(PC1, !!!c("Expression.Splicing.Subset_YRI"="polyA.Expression.YRI", "chRNA.Expression.Splicing"="chRNA.Expression"))) %>%
+  rename(source.sQTL=PC2) %>%
+  mutate(intron = str_replace(P2, "^(.+):(.+?):(.+?):clu.+?_([+-])$", "chr\\1_\\2_\\3_\\4")) %>%
+  mutate(IntronAnnotation = case_when(
+    intron %in% NMD.specific.introns ~ "Annotated NMD",
+    intron %in% Intron.Annotations.basic$intron ~ "Annotated basic",
+    intron %in% Introns.Annotations.comprehensive$intron ~ "Annotated Not basic",
+    TRUE ~ "Unannotated"
+  )) %>%
+  ggplot(aes(y=beta.x, x=trait.x.beta.in.y
+, color=IntronAnnotation)) +
+  geom_point(alpha=0.5) +
+  geom_vline(xintercept=0) +
+  geom_hline(yintercept=0) +
+  geom_smooth(method='lm') +
+  facet_grid(rows = vars(source.eQTL), cols=vars(source.sQTL)) +
+  theme_bw() +
+  labs(title="genetic effects of NMD introns and host gene expression", x="beta, sQTL", y="beta, eQTL", caption="Only FDR<10% sQTLs and eQTLs plotted. sQTL effects are relative to top eQTL SNP")
+
+TopSNPEffects.ByPairs %>%
+  filter(
+      (PC2 %in% c("chRNA.Expression.Splicing", "Expression.Splicing.Subset_YRI")) &
+      (PC1 %in% c("polyA.Splicing.Subset_YRI", "chRNA.Splicing")) &
+      (FDR.x < 0.1) &
+      (FDR.y < 0.1)) %>%
+  mutate(source.eQTL = recode(PC2, !!!c("Expression.Splicing.Subset_YRI"="polyA.Expression.YRI", "chRNA.Expression.Splicing"="chRNA.Expression"))) %>%
+  rename(source.sQTL=PC1) %>%
+  mutate(intron = str_replace(P1, "^(.+):(.+?):(.+?):clu.+?_([+-])$", "chr\\1_\\2_\\3_\\4")) %>%
+  mutate(IntronAnnotation = case_when(
+    intron %in% NMD.specific.introns ~ "Annotated NMD",
+    intron %in% Intron.Annotations.basic$intron ~ "Annotated basic",
+    intron %in% Introns.Annotations.comprehensive$intron ~ "Annotated Not basic",
+    TRUE ~ "Unannotated"
+  )) %>%
+  ggplot(aes(y=beta.x, x=trait.x.beta.in.y
+, color=IntronAnnotation)) +
+  geom_point(alpha=0.5) +
+  geom_vline(xintercept=0) +
+  geom_hline(yintercept=0) +
+  geom_smooth(method='lm') +
+  facet_grid(rows = vars(source.eQTL), cols=vars(source.sQTL)) +
+  theme_bw() +
+  labs(title="genetic effects of NMD introns and host gene expression", x="beta, sQTL", y="beta, eQTL", caption="Only FDR<10% sQTLs and eQTLs plotted. eQTL effects are relative to top sQTL SNP")
+```
+
+### enrichment of NMD sQTLs in eQTLs
+
+> Another way to show this, which would look more significant I think is to ask what % of non-eQTL sQTL affect NMD junctions of all non-eQTL sQTLs versus the same for sQTLs that are eQTLs
+
+```{r}
+TopSNPEffects.ByPairs %>%
+  filter(
+      (PC1 %in% c("chRNA.Expression.Splicing", "Expression.Splicing.Subset_YRI"))) %>%
+  # filter(
+  #     (PC2 %in% c("chRNA.Expression.Splicing", "Expression.Splicing.Subset_YRI")) &
+  #     (PC1 %in% c("polyA.Splicing.Subset_YRI", "chRNA.Splicing")) ) %>%
+  filter(FDR.x < 0.1) %>%
+  distinct(P1) %>% nrow()
+
+TopSNPEffects.ByPairs %>%
+  filter(
+      (PC1 %in% c("polyA.Splicing.Subset_YRI", "chRNA.Splicing")) ) %>%
+  distinct(GeneLocus) %>% nrow()
+  
+
+datToPlot <- TopSNPEffects.ByPairs %>%
+  filter(
+      (PC2 %in% c("chRNA.Expression.Splicing", "Expression.Splicing.Subset_YRI")) &
+      (PC1 %in% c("polyA.Splicing.Subset_YRI", "chRNA.Splicing")) ) %>%
+  filter(FDR.x < 0.1) %>%
+  mutate(intron = str_replace(P1, "^(.+):(.+?):(.+?):clu.+?_([+-])$", "chr\\1_\\2_\\3_\\4")) %>%
+  mutate(IntronAnnotation = case_when(
+    intron %in% NMD.specific.introns ~ "Annotated NMD",
+    intron %in% Intron.Annotations.basic$intron ~ "Annotated basic",
+    intron %in% Introns.Annotations.comprehensive$intron ~ "Annotated Not basic",
+    TRUE ~ "Unannotated"
+  )) %>%
+  mutate(Is_HostGene_eQTL = if_else(FDR.y < 0.1, "eGene", "not eGene")) %>%
+  count(IntronAnnotation, Is_HostGene_eQTL) %>%
+  group_by(Is_HostGene_eQTL) %>%
+  mutate(Percent = n/sum(n)*100) %>%
+  mutate(rn = row_number()) %>%
+  ungroup()
+
+ggplot(datToPlot, aes(x=Is_HostGene_eQTL, y=n, fill=IntronAnnotation)) +
+  geom_col(position="stack") +
+  geom_label(aes(label=signif(Percent, 3), vjust=rn), y=Inf) +
+  theme_bw() +
+  labs(y="Number sQTLs", caption="1406 eGenes identified in YRI with a test intron")
+
+```
+
+
 Let's also break the original plot by ncRNAs for SNP regions
 
 ```{r, fig.width=15}
+
 coloc.results.tidycolocalized %>%
   group_by(Locus, snp) %>%
   filter(any(PC=="Expression.Splicing.Subset_YRI")) %>%
@@ -256,6 +717,56 @@ coloc.results.tidycolocalized %>%
 ```
 
 Perhaps we should plot the same ideas but breaking out the introns into classes by whether we have some good reason to think it would be an NMD target (ie unannoated, and or annotated with nonsense mediated decay transcript tag)
+
+```{r}
+
+coloc.results.tidycolocalized %>%
+  group_by(Locus, snp) %>%
+  filter(any(PC=="Expression.Splicing.Subset_YRI")) %>%
+  ungroup() %>%
+  filter(PC %in% c("Expression.Splicing.Subset_YRI","H3K27AC", "H3K4ME1", "H3K4ME3", "polyA.Splicing.Subset_YRI", "chRNA.Splicing", "chRNA.IER")) %>%
+  left_join(., ., by=c("Locus", "snp")) %>%
+  filter(!((P.x == P.y) & (PC.x == PC.y))) %>% 
+  group_by(Locus, snp) %>%
+  mutate(
+    ContainsChromatinEqtl = any(PC.x %in% c("H3K27AC", "H3K4ME1", "H3K4ME3")),
+    ContainsSqtl = any(PC.x %in% c("polyA.Splicing.Subset_YRI", "chRNA.Splicing", "chRNA.IER"))
+    ) %>%
+  ungroup() %>%
+  mutate(Contains.eQTL_Contains.sQTL = paste(ContainsChromatinEqtl, ContainsSqtl)) %>%
+  dplyr::select(-iteration.y) %>%
+  left_join(
+    finemap.snps.annotated %>%
+      dplyr::select(SNP_iteration_locus, FinemapPP, AnnotationClass) %>%
+      separate(SNP_iteration_locus, into=c("snp", "iteration.x", "Locus"), convert=T, sep="_")
+  ) %>%
+  filter(FinemapPP >0.25) %>%
+  mutate(AnnotationSuperclass = case_when(
+    str_detect(AnnotationClass, "Splice.+_1") ~ "Annotated SS",
+    str_detect(AnnotationClass, "Splice.+_0$") ~ "Unannotated SS",
+    str_detect(AnnotationClass, "Enhancer") ~ "Enhancer",
+    str_detect(AnnotationClass, "Promoter") ~ "Promoter",
+    TRUE ~ "Other"
+  )) %>%
+  mutate(PC.x = recode(PC.x, !!!PC.ShortAliases)) %>%
+  mutate(PC.y = recode(PC.y, !!!PC.ShortAliases)) %>%
+  mutate(Contains.eQTL_Contains.sQTL = recode(Contains.eQTL_Contains.sQTL,
+                                              !!!c("TRUE TRUE"="hQTL+sQTL",
+                                                   "TRUE FALSE"="hQTL only",
+                                                   "FALSE TRUE"="sQTL only"))) %>%
+  filter(Contains.eQTL_Contains.sQTL=="sQTL only" & AnnotationSuperclass=="Annotated SS") %>%
+  ggplot(aes(x=beta.x, y=beta.y)) +
+  geom_point() +
+  geom_vline(xintercept=0) +
+  geom_hline(yintercept=0) +
+  facet_grid(rows=vars(PC.x), cols=vars(PC.y)) +
+  theme_bw() +
+  labs(x="TraitA Phenotype class", y="TraitB Phenotype class", title="Effect size correlation for eQTLs/sQTLs that are not hQTLs",
+       caption = str_wrap("Only SNPs with finemap PP > 0.25 in annotated splice site SNP included"))
+  
+
+```
+
 
 ## Write out bed files for meta QTL plot
 

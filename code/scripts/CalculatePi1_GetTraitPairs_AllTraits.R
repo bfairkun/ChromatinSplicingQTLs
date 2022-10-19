@@ -29,7 +29,7 @@ PermutationPass.dat <- permutation_f_in %>%
   setNames(str_replace(., "QTLs/QTLTools/(.+?)/PermutationPassForColoc.txt.gz", "\\1")) %>%
   lapply(read_delim, delim=' ') %>%
   bind_rows(.id="Phenotype") %>%
-  select(PC=Phenotype, phe_id, p_permutation=adj_beta_pval, singletrait_topvar=var_id, singletrait_topvar_chr = var_chr, singletrait_topvar_pos=var_from) %>%
+  select(PC=Phenotype, phe_id, p_permutation=adj_beta_pval, beta=slope, singletrait_topvar=var_id, singletrait_topvar_chr = var_chr, singletrait_topvar_pos=var_from) %>%
   group_by(PC) %>%
   mutate(FDR = qvalue(p_permutation)$qvalues) %>%
   mutate(phe_id = str_replace(phe_id, "(.+):(.+)$", "\\1;\\2")) %>%

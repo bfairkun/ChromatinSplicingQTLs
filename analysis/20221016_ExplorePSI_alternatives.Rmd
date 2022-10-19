@@ -1,0 +1,140 @@
+---
+title: "Consider Other metrics for PSI"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+## Intro
+
+The leafcutter intron excision ratio (IER) is roughly analogous to a intron-centered version of the "Percent spliced in, PSI" metric used widely in the splicing field. However, it leaves a bit to be desired in terms of interpretability in a way analogous to PSI. For example, clusters with many introns will naturally have lower IER because the have to share with more introns, even though that aspect doesn't reflect the percentage of transcripts with the particular intron spliced out. Here I will explore some other ideas to use the splice junction count (from which leafcutter IER is based) to consider alternative measures of splicing...
+
+```{r}
+library(tidyverse)
+library(data.table)
+library(GGally)
+library(edgeR)
+
+
+
+intron.annotations <- fread("../code/SplicingAnalysis/regtools_annotate_combined/basic.bed.gz", sep='\t')
+
+
+Normalized.IER.table.YRI <- fread("../code/QTLs/QTLTools/polyA.Splicing.Subset_YRI/OnlyFirstReps.sorted.qqnorm.bed.gz", sep='\t') %>%
+  dplyr::rename("#Chrom"="#Chr", "junc"="pid") %>%
+  mutate(junc = paste0("chr", junc)) %>%
+  dplyr::select(1:6, NA18486, NA18487)
+
+leafcutter.IER <- fread("../code/SplicingAnalysis/leafcutter/NormalizedPsiTables/PSI.Expression.Splicing.bed.gz",sep = "\t") %>%
+  dplyr::select(colnames(Normalized.IER.table.YRI)) %>%
+  filter(junc %in% Normalized.IER.table.YRI$junc)
+
+leafcutter.junctioncounts <- read_tsv("../code/SplicingAnalysis/leafcutter/NormalizedPsiTables/PSI.JunctionCounts.Expression.Splicing.bed.gz") %>%
+  dplyr::select(colnames(Normalized.IER.table.YRI)) %>%
+  filter(junc %in% Normalized.IER.table.YRI$junc)
+
+rpkm <- read_tsv("../code/QTLs/QTLTools/Expression.Splicing.Subset_YRI/OnlyFirstRepsUnstandardized.qqnorm.bed.gz") %>%
+  dplyr::select(pid, NA18486, NA18487)
+
+```
+
+
+### Tangent for Pheonix/Yang about PLCL1:
+
+```{r}
+rpkm.polyA <-read_tsv("../code/QTLs/QTLTools/Expression.Splicing.Subset_YRI/OnlyFirstRepsUnstandardized.qqnorm.bed.gz")
+
+rpkm.chRNA <- read_tsv("../code/QTLs/QTLTools/chRNA.Expression.Splicing/OnlyFirstRepsUnstandardized.qqnorm.bed.gz")
+
+
+Median.rpkm.chRNA <- rpkm.chRNA %>%
+  column_to_rownames("pid") %>%
+  dplyr::select(-c(1:6)) %>%
+  apply(1, median) %>%
+  as.data.frame() %>%
+  rownames_to_column("Geneid") %>%
+  dplyr::select(Geneid, Log2RPKM.chRNA = ".")
+
+
+Median.rpkm.polyA <- rpkm.polyA %>%
+  column_to_rownames("pid") %>%
+  dplyr::select(-c(1:6)) %>%
+  apply(1, median) %>%
+  as.data.frame() %>%
+  rownames_to_column("Geneid") %>%
+  dplyr::select(Geneid, Log2RPKM.polyA = ".")
+
+inner_join(Median.rpkm.polyA, Median.rpkm.chRNA) %>%
+  ggplot(aes(x=Log2RPKM.polyA, y=Log2RPKM.chRNA)) +
+  geom_point(alpha=0.1) +
+  theme_bw()
+
+PLCL1.juncs <- Sys.glob("../code/scratch/PLCL1/*.juncs.bed") %>%
+  setNames(str_replace(., "../code/scratch/PLCL1/(.+?).juncs.bed", "\\1")) %>%
+  lapply(read_tsv) %>% bind_rows(.id="source")
+
+PLCL1.juncs %>%
+  filter(end == 198083758) %>%
+  mutate(known_donor = factor(known_donor, levels=c(0, 1))) %>%
+  ggplot(aes(x=source, color=known_donor, fill=as.factor(start), y=score)) +
+  geom_col()
+
+```
+
+
+Let's just subset a single sample to play with for simplicity
+
+```{r}
+
+MetricsToCompare <- bind_rows(list(IER=leafcutter.IER, juncCounts=leafcutter.junctioncounts), .id="Metric") %>%
+  inner_join(intron.annotations, by=c("#Chrom"="chrom", "start", "end", "strand")) %>%
+  mutate(gene = str_replace(gene_id, "(^.+?)\\..+$", "\\1")) %>%
+  gather("Sample", "value", matches("^NA.+$")) %>%
+  inner_join(
+    rpkm %>%
+      mutate(gene = str_replace(pid, "(^.+?)\\..+$", "\\1")) %>%
+      gather("Sample", "log2rpkm", contains("NA"))) %>%
+  pivot_wider(names_from=c("Metric"), values_from=c("value")) %>%
+  group_by(Sample) %>%
+  mutate(TotalJuncCounts = sum(juncCounts)) %>%
+  ungroup() %>%
+  mutate(log2juncCountsPerTotal = log2((juncCounts+0.1)/TotalJuncCounts)) %>%
+  mutate(log2juncCountsPerRPKM = log2juncCountsPerTotal-log2rpkm) %>%
+  dplyr::select(known_junction, junc, gid, gene, Sample, log2rpkm, IER, log2juncCountsPerTotal, log2juncCountsPerRPKM) %>%
+  pivot_wider(names_from = "Sample", values_from = log2rpkm:log2juncCountsPerRPKM) %>%
+  mutate(known_junction = if_else(known_junction==1, "annotated", "unannotated"))
+
+MetricsToCompare %>%
+  pivot_longer(names_to=c("Metric", "Sample"), names_sep="_", -c(1:4)) %>%
+  ggplot(aes(x=value, fill=known_junction)) +
+    geom_histogram() +
+    facet_grid(cols=vars(Metric), rows=vars(Sample), scales = "free")
+
+upper_point <- function(data, mapping, ...) { 
+  ggplot(data = data, mapping = mapping, ...) + 
+    geom_hex(bins=100) +
+    scale_fill_viridis_c() +
+    # geom_point(..., alpha=0.05) + 
+    theme_bw()
+}
+
+MetricsToCompare %>%
+ggpairs(columns=5:ncol(MetricsToCompare),
+    upper=list(continuous = wrap("cor", method = "spearman", hjust=0.7)),
+    lower=list(continuous = upper_point)) +
+    theme(strip.text = element_text(size = 5))
+
+MetricsToCompare %>%
+  filter(known_junction=="annotated") %>%
+ggpairs(columns=5:ncol(MetricsToCompare),
+    upper=list(continuous = wrap("cor", method = "spearman", hjust=0.7)),
+    lower=list(continuous = upper_point)) +
+    theme(strip.text = element_text(size = 5))
+
+```
+
+I think I will just stick with the leafcutter intron excision ratio.
+

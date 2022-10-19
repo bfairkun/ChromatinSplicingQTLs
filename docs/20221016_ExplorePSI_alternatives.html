@@ -11,7 +11,7 @@
 
 
 
-<title>Home</title>
+<title>Consider Other metrics for PSI</title>
 
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -19,6 +19,9 @@
 <script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
@@ -268,6 +271,90 @@ $(document).ready(function () {
 
 
 
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
 
 </head>
 
@@ -275,6 +362,16 @@ $(document).ready(function () {
 
 
 <div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
 
 
 
@@ -312,14 +409,14 @@ $(document).ready(function () {
 
 
 
-<h1 class="title toc-ignore">Home</h1>
+<h1 class="title toc-ignore">Consider Other metrics for PSI</h1>
 
 </div>
 
 
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
-<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span>
 </button>
 </p>
 <div id="workflowr-report" class="collapse">
@@ -328,7 +425,7 @@ $(document).ready(function () {
 <a data-toggle="tab" href="#summary">Summary</a>
 </li>
 <li>
-<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> </a>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> </a>
 </li>
 <li>
 <a data-toggle="tab" href="#versions">Past versions</a>
@@ -337,10 +434,10 @@ $(document).ready(function () {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2022-10-19
+<strong>Last updated:</strong> 2022-10-18
 </p>
 <p>
-<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 1
 </p>
 <p>
 <strong>Knit directory:</strong> <code>ChromatinSplicingQTLs/analysis/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
@@ -356,12 +453,12 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges"> <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted changes </a>
 </p>
 </div>
-<div id="strongRMarkdownfilestronguptodate" class="panel-collapse collapse">
+<div id="strongRMarkdownfilestronguncommittedchanges" class="panel-collapse collapse">
 <div class="panel-body">
-<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
+<p>The R Markdown is untracked by Git. To know which version of the R Markdown file created these results, you’ll want to first commit it to the Git repo. If you’re still working on the analysis, you can ignore this warning. When you’re finished, you can run <code>wflow_publish</code> to commit the R Markdown file and build the HTML.</p>
 </div>
 </div>
 </div>
@@ -463,7 +560,6 @@ Ignored files:
     Ignored:    code/FastqFastp/
     Ignored:    code/FastqFastpSE/
     Ignored:    code/Genotypes/
-    Ignored:    code/H3K36me3_CutAndTag.pdf
     Ignored:    code/IntronSlopes/
     Ignored:    code/Metaplots/
     Ignored:    code/Misc/
@@ -530,13 +626,11 @@ Ignored files:
 
 Untracked files:
     Untracked:  analysis/20221016_ExplorePSI_alternatives.Rmd
-    Untracked:  analysis/20221019_PlotFigs1.Rmd
     Untracked:  code/rules/CreateUnstandardizedPhenotypeMatrices.smk
     Untracked:  code/scripts/PrepareLogCPM_PhenotypeTables.R
     Untracked:  code/scripts/PrepareLogRPKM_H3K36ME3_PhenotypeTables.R
     Untracked:  code/scripts/PrepareLogRPKM_PhenotypeTables.R
     Untracked:  code/scripts/PrepareUnstandardizedPSIPhenotypeTables.R
-    Untracked:  code/scripts/Subset_YRI.R
     Untracked:  code/snakemake_profiles/slurm/__pycache__/
 
 Unstaged changes:
@@ -566,489 +660,127 @@ Note that any generated files, e.g. HTML, png, CSS, etc., are not included in t
 <hr>
 </div>
 <div id="versions" class="tab-pane fade">
-
 <p>
-These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/index.Rmd</code>) and HTML (<code>docs/index.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
+There are no past versions. Publish this analysis with <code>wflow_publish()</code> to start tracking its development.
 </p>
-<div class="table-responsive">
-<table class="table table-condensed table-hover">
-<thead>
-<tr>
-<th>
-File
-</th>
-<th>
-Version
-</th>
-<th>
-Author
-</th>
-<th>
-Date
-</th>
-<th>
-Message
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-html
-</td>
-<td>
-<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/ef85e5320603653a3919d55d51162a3ada4b35d8/docs/index.html" target="_blank">ef85e53</a>
-</td>
-<td>
-Benjmain Fair
-</td>
-<td>
-2022-10-12
-</td>
-<td>
-update index
-</td>
-</tr>
-<tr>
-<td>
-html
-</td>
-<td>
-<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/ae6409c23e6e7fb2acd20f0c180a593ab3a0c7f6/docs/index.html" target="_blank">ae6409c</a>
-</td>
-<td>
-Benjmain Fair
-</td>
-<td>
-2022-10-07
-</td>
-<td>
-update pi1 nb
-</td>
-</tr>
-<tr>
-<td>
-html
-</td>
-<td>
-<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/149e3ef82b5a9e26bd4b86d40e5c057d0e726f39/docs/index.html" target="_blank">149e3ef</a>
-</td>
-<td>
-Benjmain Fair
-</td>
-<td>
-2022-10-07
-</td>
-<td>
-update enrichment nb
-</td>
-</tr>
-<tr>
-<td>
-html
-</td>
-<td>
-<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/311db7d5d72412460463be9dc5e60d4668b2b8e4/docs/index.html" target="_blank">311db7d</a>
-</td>
-<td>
-Benjmain Fair
-</td>
-<td>
-2022-09-29
-</td>
-<td>
-explore intron sum nb
-</td>
-</tr>
-<tr>
-<td>
-html
-</td>
-<td>
-<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/f94d014c256456e08c5d6bff2c16d4f1da8093a8/docs/index.html" target="_blank">f94d014</a>
-</td>
-<td>
-Benjmain Fair
-</td>
-<td>
-2022-09-22
-</td>
-<td>
-edit index
-</td>
-</tr>
-<tr>
-<td>
-html
-</td>
-<td>
-<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/a80e66e6d993523519eab2c54c0db7e8decc0dab/docs/index.html" target="_blank">a80e66e</a>
-</td>
-<td>
-Benjmain Fair
-</td>
-<td>
-2022-09-22
-</td>
-<td>
-update site
-</td>
-</tr>
-<tr>
-<td>
-html
-</td>
-<td>
-<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/bfb625eb2719f3fde37af38bfa3f13d0ff2818cc/docs/index.html" target="_blank">bfb625e</a>
-</td>
-<td>
-Benjmain Fair
-</td>
-<td>
-2022-08-09
-</td>
-<td>
-added finemapping snp enrichment rules
-</td>
-</tr>
-<tr>
-<td>
-html
-</td>
-<td>
-<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/125a5830bc86f4326934c0e0548c83afb03167ee/docs/index.html" target="_blank">125a583</a>
-</td>
-<td>
-Benjmain Fair
-</td>
-<td>
-2022-06-08
-</td>
-<td>
-update site
-</td>
-</tr>
-<tr>
-<td>
-html
-</td>
-<td>
-<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/fe6333bb3982433069d51165ab0291340093976d/docs/index.html" target="_blank">fe6333b</a>
-</td>
-<td>
-Benjmain Fair
-</td>
-<td>
-2022-05-25
-</td>
-<td>
-update site and molQTL coloc
-</td>
-</tr>
-<tr>
-<td>
-html
-</td>
-<td>
-<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/0c8ee9c65abd3ee8c00bed55cfafcfd2caa5bdbd/docs/index.html" target="_blank">0c8ee9c</a>
-</td>
-<td>
-Benjmain Fair
-</td>
-<td>
-2022-01-18
-</td>
-<td>
-update site
-</td>
-</tr>
-<tr>
-<td>
-html
-</td>
-<td>
-<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/237b54974507ae639dd505ca0019ae3c6c854af2/docs/index.html" target="_blank">237b549</a>
-</td>
-<td>
-Benjmain Fair
-</td>
-<td>
-2021-12-28
-</td>
-<td>
-rebuilt some site analyses
-</td>
-</tr>
-<tr>
-<td>
-html
-</td>
-<td>
-<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/2f0181fdb772c14d30a0d7af03e5b3576d95903a/docs/index.html" target="_blank">2f0181f</a>
-</td>
-<td>
-Benjmain Fair
-</td>
-<td>
-2021-12-15
-</td>
-<td>
-Added genewise hyprcoloc rules
-</td>
-</tr>
-<tr>
-<td>
-html
-</td>
-<td>
-<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/50ad81859f449c21a41bd45eac46c7208976dca3/docs/index.html" target="_blank">50ad818</a>
-</td>
-<td>
-Benjmain Fair
-</td>
-<td>
-2021-12-07
-</td>
-<td>
-update site
-</td>
-</tr>
-<tr>
-<td>
-html
-</td>
-<td>
-<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/a166e86d926af346299e8ec527cd15b96a2ac932/docs/index.html" target="_blank">a166e86</a>
-</td>
-<td>
-Benjmain Fair
-</td>
-<td>
-2021-10-06
-</td>
-<td>
-added test notebook
-</td>
-</tr>
-<tr>
-<td>
-Rmd
-</td>
-<td>
-<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/24331d7a50d3f935aeb26b9060bc539f194eabc2/analysis/index.Rmd" target="_blank">24331d7</a>
-</td>
-<td>
-cfbuenabadn
-</td>
-<td>
-2021-09-23
-</td>
-<td>
-adding chRNA-seq processing smk
-</td>
-</tr>
-<tr>
-<td>
-html
-</td>
-<td>
-<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/24331d7a50d3f935aeb26b9060bc539f194eabc2/docs/index.html" target="_blank">24331d7</a>
-</td>
-<td>
-cfbuenabadn
-</td>
-<td>
-2021-09-23
-</td>
-<td>
-adding chRNA-seq processing smk
-</td>
-</tr>
-<tr>
-<td>
-html
-</td>
-<td>
-<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/ee655cce83b515ff67db7b95a4a7158019356acf/docs/index.html" target="_blank">ee655cc</a>
-</td>
-<td>
-Benjmain Fair
-</td>
-<td>
-2021-09-23
-</td>
-<td>
-fixed site links
-</td>
-</tr>
-<tr>
-<td>
-html
-</td>
-<td>
-<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/afc10fbdc9952caeecd2639f070f357cef548aeb/docs/index.html" target="_blank">afc10fb</a>
-</td>
-<td>
-Benjmain Fair
-</td>
-<td>
-2021-09-23
-</td>
-<td>
-fixed ipynb links on site homepage
-</td>
-</tr>
-<tr>
-<td>
-html
-</td>
-<td>
-<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/91f067a6c30ae94dca690c73bd30d82f56d237e0/docs/index.html" target="_blank">91f067a</a>
-</td>
-<td>
-Benjmain Fair
-</td>
-<td>
-2021-09-23
-</td>
-<td>
-added example ipynb to site
-</td>
-</tr>
-<tr>
-<td>
-Rmd
-</td>
-<td>
-<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/53ba92f62702392ecd229616e12d4c4be32e2472/analysis/index.Rmd" target="_blank">53ba92f</a>
-</td>
-<td>
-Benjmain Fair
-</td>
-<td>
-2021-06-07
-</td>
-<td>
-update side and check sample swapping
-</td>
-</tr>
-<tr>
-<td>
-html
-</td>
-<td>
-<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/53ba92f62702392ecd229616e12d4c4be32e2472/docs/index.html" target="_blank">53ba92f</a>
-</td>
-<td>
-Benjmain Fair
-</td>
-<td>
-2021-06-07
-</td>
-<td>
-update side and check sample swapping
-</td>
-</tr>
-<tr>
-<td>
-Rmd
-</td>
-<td>
-<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/dd0eadbb209caea66e98ef74baf13cd7a9268eca/analysis/index.Rmd" target="_blank">dd0eadb</a>
-</td>
-<td>
-Benjmain Fair
-</td>
-<td>
-2020-08-21
-</td>
-<td>
-initial commit
-</td>
-</tr>
-<tr>
-<td>
-html
-</td>
-<td>
-<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/dd0eadbb209caea66e98ef74baf13cd7a9268eca/docs/index.html" target="_blank">dd0eadb</a>
-</td>
-<td>
-Benjmain Fair
-</td>
-<td>
-2020-08-21
-</td>
-<td>
-initial commit
-</td>
-</tr>
-</tbody>
-</table>
-</div>
 <hr>
 </div>
 </div>
 </div>
-<p>Welcome to my research website.</p>
-<p>This project will investigate the correlation of genetic effects on chromatin, splicing, transcription, and complex phenotypes, using naturally occuring human genetic variation.</p>
-<p>We are still collecting data, but I have also been perusing around published data a bit.</p>
-<p>Here are links to all of my rendered analysis Rmarkdowns (code <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/master/analysis">here</a>):</p>
-<pre class="r"><code>library(tidyverse)</code></pre>
-<pre><code>── Attaching packages ─────────────────────────────────────── tidyverse 1.3.0 ──</code></pre>
-<pre><code>✔ ggplot2 3.3.6     ✔ purrr   0.3.4
-✔ tibble  3.1.7     ✔ dplyr   1.0.9
-✔ tidyr   1.2.0     ✔ stringr 1.4.0
-✔ readr   1.3.1     ✔ forcats 0.4.0</code></pre>
-<pre><code>── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
-✖ dplyr::filter() masks stats::filter()
-✖ dplyr::lag()    masks stats::lag()</code></pre>
-<pre class="r"><code>rmds &lt;- list.files(path = &quot;../analysis/&quot;, pattern=&quot;^\\d+.+&quot;)
-rmd_htmls &lt;- str_replace(rmds, &quot;Rmd$&quot;, &quot;html&quot;)
+<div id="intro" class="section level2">
+<h2>Intro</h2>
+<p>The leafcutter intron excision ratio (IER) is roughly analogous to a intron-centered version of the “Percent spliced in, PSI” metric used widely in the splicing field. However, it leaves a bit to be desired in terms of interpretability in a way analogous to PSI. For example, clusters with many introns will naturally have lower IER because the have to share with more introns, even though that aspect doesn’t reflect the percentage of transcripts with the particular intron spliced out. Here I will explore some other ideas to use the splice junction count (from which leafcutter IER is based) to consider alternative measures of splicing…</p>
+<pre class="r"><code>library(tidyverse)
+library(data.table)
+library(GGally)
+library(edgeR)
 
-for(i in rmd_htmls){
-  cat(&quot;[&quot;, i, &quot;](&quot;, i,&quot;)\n\n&quot;, sep=&quot;&quot;)
-}</code></pre>
-<p><a href="20200110_PickSamplesForGrowth.html" class="uri">20200110_PickSamplesForGrowth.html</a></p>
-<p><a href="20200210_PickSamplesToOrder.html" class="uri">20200210_PickSamplesToOrder.html</a></p>
-<p><a href="20210604_CheckSampleGenotypes.html" class="uri">20210604_CheckSampleGenotypes.html</a></p>
-<p><a href="20211207_ExploreColocalizations.html" class="uri">20211207_ExploreColocalizations.html</a></p>
-<p><a href="20211217_GenewiseColocFirstLook.html" class="uri">20211217_GenewiseColocFirstLook.html</a></p>
-<p><a href="20220114_ColocalizationEffectSizeCorrelations.html" class="uri">20220114_ColocalizationEffectSizeCorrelations.html</a></p>
-<p><a href="20220228_PickCutAndTagSamples.html" class="uri">20220228_PickCutAndTagSamples.html</a></p>
-<p><a href="202204012_Cluster_TestGwasHarmonisation.html" class="uri">202204012_Cluster_TestGwasHarmonisation.html</a></p>
-<p><a href="20220401_Cluster_CheckOutNA18855chRNA.html" class="uri">20220401_Cluster_CheckOutNA18855chRNA.html</a></p>
-<p><a href="20220415_Cluster_CheckTehranchiConcordance.html" class="uri">20220415_Cluster_CheckTehranchiConcordance.html</a></p>
-<p><a href="20220424_CheckH3K36me3SampleGenotypes.html" class="uri">20220424_CheckH3K36me3SampleGenotypes.html</a></p>
-<p><a href="20220511_Cluster_CheckH3K36me3QC.html" class="uri">20220511_Cluster_CheckH3K36me3QC.html</a></p>
-<p><a href="20220511_ExploreColocsAtDifferentThresholds.html" class="uri">20220511_ExploreColocsAtDifferentThresholds.html</a></p>
-<p><a href="20220518_Explore_eQTLColocsAtDifferentThresholds.html" class="uri">20220518_Explore_eQTLColocsAtDifferentThresholds.html</a></p>
-<p><a href="20220524_CheckClosestPeakToTSS.html" class="uri">20220524_CheckClosestPeakToTSS.html</a></p>
-<p><a href="20220527_ExploreCarlosChromatinSplicingData.html" class="uri">20220527_ExploreCarlosChromatinSplicingData.html</a></p>
-<p><a href="20220606_PlotColocsForIntuitions.html" class="uri">20220606_PlotColocsForIntuitions.html</a></p>
-<p><a href="20220622_QuantifyColocRateMoreInterpretableWay.html" class="uri">20220622_QuantifyColocRateMoreInterpretableWay.html</a></p>
-<p><a href="20220623_CalculatePi1.html" class="uri">20220623_CalculatePi1.html</a></p>
-<p><a href="20220623_CalculatePi1_AllTraits.html" class="uri">20220623_CalculatePi1_AllTraits.html</a></p>
-<p><a href="20220627_CalculatePi1_AllTraits_AndCompareToColoc.html" class="uri">20220627_CalculatePi1_AllTraits_AndCompareToColoc.html</a></p>
-<p><a href="20220628_exploretiertwomethods.html" class="uri">20220628_exploretiertwomethods.html</a></p>
-<p><a href="20220713_PlotHeatmapManyWays.html" class="uri">20220713_PlotHeatmapManyWays.html</a></p>
-<p><a href="20220713_PlotHeatmapManyWays_JustPi1.html" class="uri">20220713_PlotHeatmapManyWays_JustPi1.html</a></p>
-<p><a href="20220713_RPKM_v_TPM.html" class="uri">20220713_RPKM_v_TPM.html</a></p>
-<p><a href="20220728_CheckFinemapSNPEnrichments.html" class="uri">20220728_CheckFinemapSNPEnrichments.html</a></p>
-<p><a href="20220920_Explore_chRNA_sQTLs.html" class="uri">20220920_Explore_chRNA_sQTLs.html</a></p>
-<p><a href="20220928_ExploreIntronSum.html" class="uri">20220928_ExploreIntronSum.html</a></p>
-<p><a href="20220930_CheckSNP_QTL_Positions.html" class="uri">20220930_CheckSNP_QTL_Positions.html</a></p>
-<p><a href="20221011_PlotHeatmapManyWays_ncRNA_Updated.html" class="uri">20221011_PlotHeatmapManyWays_ncRNA_Updated.html</a></p>
-<p><a href="20221012_IntronRetentionAndExpressionConcordance.html" class="uri">20221012_IntronRetentionAndExpressionConcordance.html</a></p>
-<p><a href="20221016_ExplorePSI_alternatives.html" class="uri">20221016_ExplorePSI_alternatives.html</a></p>
-<p><a href="20221019_PlotFigs1.html" class="uri">20221019_PlotFigs1.html</a></p>
-<p>Also, a list of links to ipynb files that were incorporated into the snakemake. Since github renders ipynbs directly, this is not a relative link from the site folder, but rather links directly to the file to view on github (code <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/master/code/notebooks">here</a>):</p>
-<pre class="r"><code>ipynbs &lt;- list.files(path = &quot;../docs/&quot;, pattern=&quot;^\\d+.+ipynb$&quot;)
 
-for(i in ipynbs){
-  cat(&quot;[&quot;, i, &quot;](&quot;,&quot;https://github.com/bfairkun/ChromatinSplicingQTLs/blob/master/docs/&quot;, i,&quot;)\n\n&quot;, sep=&quot;&quot;)
-}</code></pre>
-<p><a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/master/docs/20210921_CountSpliceSiteSNPsInSQTLs.py.ipynb">20210921_CountSpliceSiteSNPsInSQTLs.py.ipynb</a></p>
+
+intron.annotations &lt;- fread(&quot;../code/SplicingAnalysis/regtools_annotate_combined/basic.bed.gz&quot;, sep=&#39;\t&#39;)
+
+
+Normalized.IER.table.YRI &lt;- fread(&quot;../code/QTLs/QTLTools/polyA.Splicing.Subset_YRI/OnlyFirstReps.sorted.qqnorm.bed.gz&quot;, sep=&#39;\t&#39;) %&gt;%
+  dplyr::rename(&quot;#Chrom&quot;=&quot;#Chr&quot;, &quot;junc&quot;=&quot;pid&quot;) %&gt;%
+  mutate(junc = paste0(&quot;chr&quot;, junc)) %&gt;%
+  dplyr::select(1:6, NA18486, NA18487)
+
+leafcutter.IER &lt;- fread(&quot;../code/SplicingAnalysis/leafcutter/NormalizedPsiTables/PSI.Expression.Splicing.bed.gz&quot;,sep = &quot;\t&quot;) %&gt;%
+  dplyr::select(colnames(Normalized.IER.table.YRI)) %&gt;%
+  filter(junc %in% Normalized.IER.table.YRI$junc)
+
+leafcutter.junctioncounts &lt;- read_tsv(&quot;../code/SplicingAnalysis/leafcutter/NormalizedPsiTables/PSI.JunctionCounts.Expression.Splicing.bed.gz&quot;) %&gt;%
+  dplyr::select(colnames(Normalized.IER.table.YRI)) %&gt;%
+  filter(junc %in% Normalized.IER.table.YRI$junc)
+
+rpkm &lt;- read_tsv(&quot;../code/QTLs/QTLTools/Expression.Splicing.Subset_YRI/OnlyFirstRepsUnstandardized.qqnorm.bed.gz&quot;) %&gt;%
+  dplyr::select(pid, NA18486, NA18487)</code></pre>
+<div id="tangent-for-pheonixyang-about-plcl1" class="section level3">
+<h3>Tangent for Pheonix/Yang about PLCL1:</h3>
+<pre class="r"><code>rpkm.polyA &lt;-read_tsv(&quot;../code/QTLs/QTLTools/Expression.Splicing.Subset_YRI/OnlyFirstRepsUnstandardized.qqnorm.bed.gz&quot;)
+
+rpkm.chRNA &lt;- read_tsv(&quot;../code/QTLs/QTLTools/chRNA.Expression.Splicing/OnlyFirstRepsUnstandardized.qqnorm.bed.gz&quot;)
+
+
+Median.rpkm.chRNA &lt;- rpkm.chRNA %&gt;%
+  column_to_rownames(&quot;pid&quot;) %&gt;%
+  dplyr::select(-c(1:6)) %&gt;%
+  apply(1, median) %&gt;%
+  as.data.frame() %&gt;%
+  rownames_to_column(&quot;Geneid&quot;) %&gt;%
+  dplyr::select(Geneid, Log2RPKM.chRNA = &quot;.&quot;)
+
+
+Median.rpkm.polyA &lt;- rpkm.polyA %&gt;%
+  column_to_rownames(&quot;pid&quot;) %&gt;%
+  dplyr::select(-c(1:6)) %&gt;%
+  apply(1, median) %&gt;%
+  as.data.frame() %&gt;%
+  rownames_to_column(&quot;Geneid&quot;) %&gt;%
+  dplyr::select(Geneid, Log2RPKM.polyA = &quot;.&quot;)
+
+inner_join(Median.rpkm.polyA, Median.rpkm.chRNA) %&gt;%
+  ggplot(aes(x=Log2RPKM.polyA, y=Log2RPKM.chRNA)) +
+  geom_point(alpha=0.1) +
+  theme_bw()</code></pre>
+<p><img src="figure/20221016_ExplorePSI_alternatives.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>PLCL1.juncs &lt;- Sys.glob(&quot;../code/scratch/PLCL1/*.juncs.bed&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/scratch/PLCL1/(.+?).juncs.bed&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(read_tsv) %&gt;% bind_rows(.id=&quot;source&quot;)
+
+PLCL1.juncs %&gt;%
+  filter(end == 198083758) %&gt;%
+  mutate(known_donor = factor(known_donor, levels=c(0, 1))) %&gt;%
+  ggplot(aes(x=source, color=known_donor, fill=as.factor(start), y=score)) +
+  geom_col()</code></pre>
+<p><img src="figure/20221016_ExplorePSI_alternatives.Rmd/unnamed-chunk-2-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Let’s just subset a single sample to play with for simplicity</p>
+<pre class="r"><code>MetricsToCompare &lt;- bind_rows(list(IER=leafcutter.IER, juncCounts=leafcutter.junctioncounts), .id=&quot;Metric&quot;) %&gt;%
+  inner_join(intron.annotations, by=c(&quot;#Chrom&quot;=&quot;chrom&quot;, &quot;start&quot;, &quot;end&quot;, &quot;strand&quot;)) %&gt;%
+  mutate(gene = str_replace(gene_id, &quot;(^.+?)\\..+$&quot;, &quot;\\1&quot;)) %&gt;%
+  gather(&quot;Sample&quot;, &quot;value&quot;, matches(&quot;^NA.+$&quot;)) %&gt;%
+  inner_join(
+    rpkm %&gt;%
+      mutate(gene = str_replace(pid, &quot;(^.+?)\\..+$&quot;, &quot;\\1&quot;)) %&gt;%
+      gather(&quot;Sample&quot;, &quot;log2rpkm&quot;, contains(&quot;NA&quot;))) %&gt;%
+  pivot_wider(names_from=c(&quot;Metric&quot;), values_from=c(&quot;value&quot;)) %&gt;%
+  group_by(Sample) %&gt;%
+  mutate(TotalJuncCounts = sum(juncCounts)) %&gt;%
+  ungroup() %&gt;%
+  mutate(log2juncCountsPerTotal = log2((juncCounts+0.1)/TotalJuncCounts)) %&gt;%
+  mutate(log2juncCountsPerRPKM = log2juncCountsPerTotal-log2rpkm) %&gt;%
+  dplyr::select(known_junction, junc, gid, gene, Sample, log2rpkm, IER, log2juncCountsPerTotal, log2juncCountsPerRPKM) %&gt;%
+  pivot_wider(names_from = &quot;Sample&quot;, values_from = log2rpkm:log2juncCountsPerRPKM) %&gt;%
+  mutate(known_junction = if_else(known_junction==1, &quot;annotated&quot;, &quot;unannotated&quot;))
+
+MetricsToCompare %&gt;%
+  pivot_longer(names_to=c(&quot;Metric&quot;, &quot;Sample&quot;), names_sep=&quot;_&quot;, -c(1:4)) %&gt;%
+  ggplot(aes(x=value, fill=known_junction)) +
+    geom_histogram() +
+    facet_grid(cols=vars(Metric), rows=vars(Sample), scales = &quot;free&quot;)</code></pre>
+<p><img src="figure/20221016_ExplorePSI_alternatives.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>upper_point &lt;- function(data, mapping, ...) { 
+  ggplot(data = data, mapping = mapping, ...) + 
+    geom_hex(bins=100) +
+    scale_fill_viridis_c() +
+    # geom_point(..., alpha=0.05) + 
+    theme_bw()
+}
+
+MetricsToCompare %&gt;%
+ggpairs(columns=5:ncol(MetricsToCompare),
+    upper=list(continuous = wrap(&quot;cor&quot;, method = &quot;spearman&quot;, hjust=0.7)),
+    lower=list(continuous = upper_point)) +
+    theme(strip.text = element_text(size = 5))</code></pre>
+<p><img src="figure/20221016_ExplorePSI_alternatives.Rmd/unnamed-chunk-3-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>MetricsToCompare %&gt;%
+  filter(known_junction==&quot;annotated&quot;) %&gt;%
+ggpairs(columns=5:ncol(MetricsToCompare),
+    upper=list(continuous = wrap(&quot;cor&quot;, method = &quot;spearman&quot;, hjust=0.7)),
+    lower=list(continuous = upper_point)) +
+    theme(strip.text = element_text(size = 5))</code></pre>
+<p><img src="figure/20221016_ExplorePSI_alternatives.Rmd/unnamed-chunk-3-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>I think I will just stick with the leafcutter intron excision ratio.</p>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
@@ -1074,26 +806,32 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] forcats_0.4.0   stringr_1.4.0   dplyr_1.0.9     purrr_0.3.4    
-[5] readr_1.3.1     tidyr_1.2.0     tibble_3.1.7    ggplot2_3.3.6  
-[9] tidyverse_1.3.0
+ [1] edgeR_3.26.5      limma_3.40.6      GGally_1.4.0      data.table_1.14.2
+ [5] forcats_0.4.0     stringr_1.4.0     dplyr_1.0.9       purrr_0.3.4      
+ [9] readr_1.3.1       tidyr_1.2.0       tibble_3.1.7      ggplot2_3.3.6    
+[13] tidyverse_1.3.0  
 
 loaded via a namespace (and not attached):
- [1] tidyselect_1.1.2 xfun_0.31        haven_2.3.1      colorspace_1.4-1
- [5] vctrs_0.4.1      generics_0.1.3   htmltools_0.5.3  yaml_2.2.0      
- [9] utf8_1.1.4       rlang_1.0.5      later_0.8.0      pillar_1.7.0    
-[13] withr_2.5.0      glue_1.6.2       DBI_1.1.0        dbplyr_1.4.2    
-[17] readxl_1.3.1     modelr_0.1.8     lifecycle_1.0.1  cellranger_1.1.0
-[21] munsell_0.5.0    gtable_0.3.0     workflowr_1.6.2  rvest_0.3.5     
-[25] evaluate_0.15    knitr_1.39       fastmap_1.1.0    httpuv_1.5.1    
-[29] fansi_0.4.0      broom_1.0.0      Rcpp_1.0.5       promises_1.0.1  
-[33] backports_1.4.1  scales_1.1.0     jsonlite_1.6     fs_1.5.2        
-[37] hms_0.5.3        digest_0.6.20    stringi_1.4.3    rprojroot_2.0.2 
-[41] grid_3.6.1       cli_3.3.0        tools_3.6.1      magrittr_1.5    
-[45] crayon_1.3.4     whisker_0.3-2    pkgconfig_2.0.2  ellipsis_0.3.2  
-[49] xml2_1.3.2       reprex_0.3.0     lubridate_1.7.4  assertthat_0.2.1
-[53] rmarkdown_1.13   httr_1.4.4       rstudioapi_0.14  R6_2.4.0        
-[57] git2r_0.26.1     compiler_3.6.1  </code></pre>
+ [1] httr_1.4.4         jsonlite_1.6       viridisLite_0.3.0  R.utils_2.9.0     
+ [5] modelr_0.1.8       assertthat_0.2.1   highr_0.9          cellranger_1.1.0  
+ [9] yaml_2.2.0         pillar_1.7.0       backports_1.4.1    lattice_0.20-38   
+[13] glue_1.6.2         digest_0.6.20      RColorBrewer_1.1-2 promises_1.0.1    
+[17] rvest_0.3.5        colorspace_1.4-1   htmltools_0.5.3    httpuv_1.5.1      
+[21] R.oo_1.22.0        plyr_1.8.4         pkgconfig_2.0.2    broom_1.0.0       
+[25] haven_2.3.1        scales_1.1.0       later_0.8.0        git2r_0.26.1      
+[29] generics_0.1.3     farver_2.1.0       ellipsis_0.3.2     withr_2.5.0       
+[33] hexbin_1.27.3      cli_3.3.0          magrittr_1.5       crayon_1.3.4      
+[37] readxl_1.3.1       evaluate_0.15      R.methodsS3_1.7.1  fs_1.5.2          
+[41] fansi_0.4.0        xml2_1.3.2         tools_3.6.1        hms_0.5.3         
+[45] lifecycle_1.0.1    munsell_0.5.0      reprex_0.3.0       locfit_1.5-9.1    
+[49] compiler_3.6.1     rlang_1.0.5        grid_3.6.1         rstudioapi_0.14   
+[53] labeling_0.3       rmarkdown_1.13     gtable_0.3.0       DBI_1.1.0         
+[57] reshape_0.8.8      R6_2.4.0           lubridate_1.7.4    knitr_1.39        
+[61] fastmap_1.1.0      utf8_1.1.4         workflowr_1.6.2    rprojroot_2.0.2   
+[65] stringi_1.4.3      Rcpp_1.0.5         vctrs_0.4.1        dbplyr_1.4.2      
+[69] tidyselect_1.1.2   xfun_0.31         </code></pre>
+</div>
+</div>
 </div>
 
 
@@ -1110,6 +848,8 @@ footer is added to webpages before the MathJax javascript. -->
 </script>
 
 
+</div>
+</div>
 
 </div>
 

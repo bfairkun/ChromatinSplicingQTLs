@@ -107,8 +107,8 @@ rule NMD_transcript_tag_introns:
         "../envs/bedparse.yml"
     shell:
         """
-        grep 'nonsense_mediated_decay' {input} | bedparse gtf2bed /dev/stdin --extraFields gene_id,gene_name,transcript_type | gzip - > {output.NMD}
-        grep -v 'nonsense_mediated_decay' {input} | bedparse gtf2bed /dev/stdin --extraFields gene_id,gene_name,transcript_type | gzip - > {output.NonNMD}
+        grep 'nonsense_mediated_decay' {input} | bedparse gtf2bed /dev/stdin | awk '{{OFS="\\t";split($11,a,","); split($12,b,","); A=""; B=""; for(i=1;i<length(a)-1;i++) {{A=A""(b[i+1]-b[i]-a[i])",";B=B""(b[i]+a[i]-(b[1]+a[1]))",";}} if($10>1) print $1,$2+a[1], $3-a[length(a)-1], $4,$5,$6,$2+a[1], $3-a[length(a)-1],$9,$10-1,A,B;}}' | bed12ToBed6 -i /dev/stdin | awk -F'\\t' -v OFS='\\t' '{{print $4=""; print $0}}' | sort | uniq | gzip - > {output.NMD}
+        grep -v 'nonsense_mediated_decay' {input} | bedparse gtf2bed /dev/stdin | awk '{{OFS="\\t";split($11,a,","); split($12,b,","); A=""; B=""; for(i=1;i<length(a)-1;i++) {{A=A""(b[i+1]-b[i]-a[i])",";B=B""(b[i]+a[i]-(b[1]+a[1]))",";}} if($10>1) print $1,$2+a[1], $3-a[length(a)-1], $4,$5,$6,$2+a[1], $3-a[length(a)-1],$9,$10-1,A,B;}}' | bed12ToBed6 -i /dev/stdin | awk -F'\\t' -v OFS='\\t' '{{print $4=""; print $0}}' | sort | uniq | gzip - > {output.NonNMD}
 
         """
 
@@ -343,18 +343,17 @@ rule Subset_YRI_phenotype_table:
         """
         python scripts/subsample.Splicing_YRI.py --input {input.input_file} --output {output} &> {log}
         """
-        
-        
 
 rule MakeNormalizedPsiTables:
     input:
         numers = "SplicingAnalysis/leafcutter/clustering/autosomes/leafcutter_perind_numers.counts.gz"
     output:
-        expand("SplicingAnalysis/leafcutter/NormalizedPsiTables/PSI.{Phenotype}.bed", Phenotype = ["Expression.Splicing", "MetabolicLabelled.30min", "MetabolicLabelled.60min", "chRNA.Expression.Splicing"])
+        expand("SplicingAnalysis/leafcutter/NormalizedPsiTables/PSI.{Phenotype}.bed", Phenotype = ["Expression.Splicing", "MetabolicLabelled.30min", "MetabolicLabelled.60min", "chRNA.Expression.Splicing"]),
+        expand("SplicingAnalysis/leafcutter/NormalizedPsiTables/PSI.JunctionCounts.{Phenotype}.bed", Phenotype = ["Expression.Splicing", "MetabolicLabelled.30min", "MetabolicLabelled.60min", "chRNA.Expression.Splicing"])
     log:
         "logs/MakeNormalizedPsiTables.log"
     conda:
-        "envs/r_2.yaml"
+        "../envs/r_2.yaml"
     shell:
         """
         Rscript scripts/MakeNormalizedPSI.Tables.R SplicingAnalysis/leafcutter/NormalizedPsiTables/PSI. {input.numers} &> {log}
@@ -373,6 +372,11 @@ rule BgzipAndTabixPsiTables:
         bgzip {input}
         tabix -p bed {output.bed}
         """
+
+rule GatherBgzipedTabixPsiTables:
+    input:
+        expand("SplicingAnalysis/leafcutter/NormalizedPsiTables/PSI.JunctionCounts.{Phenotype}.bed.gz", Phenotype = ["Expression.Splicing", "MetabolicLabelled.30min", "MetabolicLabelled.60min", "chRNA.Expression.Splicing"]),
+        expand("SplicingAnalysis/leafcutter/NormalizedPsiTables/PSI.{Phenotype}.bed.gz", Phenotype = ["Expression.Splicing", "MetabolicLabelled.30min", "MetabolicLabelled.60min", "chRNA.Expression.Splicing"])
 
 
 
