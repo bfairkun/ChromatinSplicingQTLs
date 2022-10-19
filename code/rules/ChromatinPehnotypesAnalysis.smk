@@ -50,16 +50,26 @@ rule PrepareH3K36ME3PhenotypeTable:
         printf '{params.header}' > {output}
         (bedtools multicov -bed {input.bed} -bams {input.bams} >> {output}) 2> {log}
         """
+        
+use rule PrepareH3K36ME3PhenotypeTable as PrepareH3K36ME3NonCodingPhenotypeTable with:
+    input:
+        bams = expand("Alignments/Hisat2_Align/H3K36ME3/{IndID}.1.wasp_filterd.markdup.sorted.bam", IndID = H3K36ME3_IndIDs),
+        bais = expand("Alignments/Hisat2_Align/H3K36ME3/{IndID}.1.wasp_filterd.markdup.sorted.bam.bai", IndID = H3K36ME3_IndIDs),
+        bed = "NonCodingRNA/annotation/NonCodingRNA.bed.gz"
+    output:
+        "MiscCountTables/H3K36ME3_ncRNA.bed"
+    log:
+        "logs/PrepareH3K36ME3_ncRNAPhenotypeTable.log"
 
 rule PreparePhenotypeTableForQTLToolsFromWellFormatedCountTable:
     input:
-        "MiscCountTables/H3K36ME3.bed"
+        "MiscCountTables/{Phenotype}.bed"
     output:
         "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.qqnorm.bed.gz"
     conda:
         "../envs/r_essentials.yml"
     wildcard_constraints:
-        Phenotype = "H3K36ME3"
+        Phenotype = "H3K36ME3|H3K36ME3_ncRNA"
     log:
         "logs/PreparePhenotypeTableForQTLToolsFromWellFormatedCountTable/{Phenotype}.log"
     shell:

@@ -15,7 +15,15 @@ if __name__ == '__main__':
     
     if ncRNA == 'lncRNA':
         ncRNA_genes = gtf.loc[(gtf.gene_type.isin(['lncRNA', 'unprocessed_pseudogene', 
-                                                   'transcribed_unprocessed_pseudogene'])) & (gtf.feature == 'gene')].gene_id
+                                                   'transcribed_unprocessed_pseudogene',
+                                                   'pseudogene',
+                                                    'rRNA_pseudogene',
+                                                    'transcribed_processed_pseudogene',
+                                                    'transcribed_unitary_pseudogene',
+                                                    'transcribed_unprocessed_pseudogene',
+                                                    'translated_processed_pseudogene',
+                                                    'translated_unprocessed_pseudogene', 
+                                                   'unprocessed_pseudogene'])) & (gtf.feature == 'gene')].gene_id
         
     else:
         ncRNA_genes = gtf.loc[(gtf.gene_type == ncRNA) & (gtf.feature == 'gene')].gene_id

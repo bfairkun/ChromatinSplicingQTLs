@@ -10,7 +10,7 @@ NumPvalsForPi1Chunks = 10
 
 MyPhenotypes = ["Expression.Splicing", "Expression.Splicing.Subset_YRI", "chRNA.Expression.Splicing", 
                 "MetabolicLabelled.30min", "MetabolicLabelled.60min",
-                "CTCF", "H3K27AC", "H3K4ME3", "H3K4ME1", "H3K36ME3", "ProCap",
+                "CTCF", "H3K27AC", "H3K4ME3", "H3K4ME1", "H3K36ME3", "H3K36ME3_ncRNA", "ProCap",
                 "polyA.Splicing", "polyA.Splicing.Subset_YRI", "chRNA.Splicing", 
                 'MetabolicLabelled.30min.Splicing', 'MetabolicLabelled.60min.Splicing', 
                 #"polyA.Expression_ncRNA", "polyA.Expression_ncRNA.Subset_YRI", 

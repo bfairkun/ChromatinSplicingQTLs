@@ -46,7 +46,7 @@ if __name__ == '__main__':
     
     expression = []
     for idx, row in df.iterrows():
-        if (row.state == no_expression) or (median_ratio.loc[idx] <= 0.1):
+        if (row.state == no_expression) or (median_ratio.loc[idx] <= 0.03):#(median_ratio.loc[idx] <= 0.1):
             expression.append(-1)
         elif (row.state == low_expression):
             expression.append(1)
