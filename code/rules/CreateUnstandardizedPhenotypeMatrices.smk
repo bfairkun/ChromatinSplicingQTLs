@@ -106,7 +106,21 @@ rule Unstandardized_RPKM_Tables:
 
 rule CollectUnstandardizedTables:
     input:
-        expand("QTLs/QTLTools/{Phenotype}/OnlyFirstRepsUnstandardized.sorted.qqnorm.bed.gz", Phenotype=[i for i in RNASeqPhenotypes if i != "ProCap"] + ChromatinProfilingPhenotypes + ["Expression.Splicing.Subset_YRI", "polyA.Splicing.Subset_YRI"] + ["polyA.Splicing", "MetabolicLabelled.30min.Splicing", "MetabolicLabelled.60min.Splicing", "chRNA.Splicing"] )
+        expand("QTLs/QTLTools/{Phenotype}/OnlyFirstRepsUnstandardized.sorted.qqnorm.bed.gz", Phenotype=[i for i in RNASeqPhenotypes if i != "ProCap"] + ChromatinProfilingPhenotypes + ["Expression.Splicing.Subset_YRI", "polyA.Splicing.Subset_YRI"] + ["polyA.Splicing", "MetabolicLabelled.30min.Splicing", "MetabolicLabelled.60min.Splicing", "chRNA.Splicing"] ),
+        # expand("QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}_{StandardizedOrUnstandardized}.txt.gz",
+        #         Phenotype=[i for i in RNASeqPhenotypes if i != "ProCap"] + ChromatinProfilingPhenotypes + ["Expression.Splicing.Subset_YRI", "polyA.Splicing.Subset_YRI"] + ["polyA.Splicing", "MetabolicLabelled.30min.Splicing", "MetabolicLabelled.60min.Splicing", "chRNA.Splicing"],
+        #         Pass = "NominalPass",
+        #         QTLsGenotypeSet="",
+        #         FeatureCoordinatesRedefinedFor="",
+        #         StandardizedOrUnstandardized="Unstandardized"
+        #         ),
+        expand("QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}_{StandardizedOrUnstandardized}.txt.gz",
+                Phenotype=ChromatinProfilingPhenotypes + ["polyA.Splicing.Subset_YRI"] + ["polyA.Splicing", "MetabolicLabelled.30min.Splicing", "MetabolicLabelled.60min.Splicing", "chRNA.Splicing"],
+                Pass = "NominalPass",
+                QTLsGenotypeSet="",
+                FeatureCoordinatesRedefinedFor="",
+                StandardizedOrUnstandardized="Unstandardized"
+                )
 
             # ChromatinProfilingPhenotypes +
             # [i for i in RNASeqPhenotypes if i != "ProCap"] +

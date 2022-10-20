@@ -33,7 +33,6 @@ rule MakeExtraInputFilesForUnstandardizedQTLToolsMapping:
     input:
         "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.gz"
     output:
-        phenotypes_include = "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.phenotypes_include.txt",
         sites_include = "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.sites_include.txt",
     wildcard_constraints:
         Pass = "PermutationPass"
@@ -43,7 +42,7 @@ rule MakeExtraInputFilesForUnstandardizedQTLToolsMapping:
         "../envs/r_2.yaml"
     shell:
         """
-        Rscript
+        Rscript scripts/GetSitesFromPermutationPass.R {input} {output.sites_include}
         """
 
 
@@ -85,7 +84,6 @@ rule PlotPhenotypePCs:
         """
         Rscript {input} {output} &> {log}
         """
-
 
 
 rule GetSamplesVcfByChrom:
@@ -185,29 +183,46 @@ def GetQTLtoolsVcfTbi(wildcards):
         return "Genotypes/1KG_GRCh38_SubsetYRI/WholeGenome.vcf.gz.tbi"
 
 def GetQTLtoolsBed(wildcards):
-    if wildcards.FeatureCoordinatesRedefinedFor == "":
-        return "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.gz"
-    elif wildcards.FeatureCoordinatesRedefinedFor == "ForColoc":
-        return "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsForColoc.sorted.qqnorm.bed.gz"
-    elif wildcards.FeatureCoordinatesRedefinedFor == "ForGWASColoc":
-        return "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsForGWASColoc.sorted.qqnorm.bed.gz"
+    if wildcards.StandardizedOrUnstandardized == "":
+        if wildcards.FeatureCoordinatesRedefinedFor == "":
+            return "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.gz"
+        elif wildcards.FeatureCoordinatesRedefinedFor == "ForColoc":
+            return "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsForColoc.sorted.qqnorm.bed.gz"
+        elif wildcards.FeatureCoordinatesRedefinedFor == "ForGWASColoc":
+            return "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsForGWASColoc.sorted.qqnorm.bed.gz"
+    elif wildcards.StandardizedOrUnstandardized == "Unstandardized":
+        if wildcards.FeatureCoordinatesRedefinedFor == "":
+            return "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsUnstandardized.sorted.qqnorm.bed.gz"
+        elif wildcards.FeatureCoordinatesRedefinedFor == "ForColoc":
+            pass
+        elif wildcards.FeatureCoordinatesRedefinedFor == "ForGWASColoc":
+            pass
 
 def GetQTLtoolsBedTbi(wildcards):
-    if wildcards.FeatureCoordinatesRedefinedFor == "":
-        return "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.gz.tbi"
-    elif wildcards.FeatureCoordinatesRedefinedFor == "ForColoc":
-        return "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsForColoc.sorted.qqnorm.bed.gz.tbi"
-    elif wildcards.FeatureCoordinatesRedefinedFor == "ForGWASColoc":
-        return "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsForGWASColoc.sorted.qqnorm.bed.gz.tbi"
+    if wildcards.StandardizedOrUnstandardized == "":
+        if wildcards.FeatureCoordinatesRedefinedFor == "":
+            return "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.gz.tbi"
+        elif wildcards.FeatureCoordinatesRedefinedFor == "ForColoc":
+            return "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsForColoc.sorted.qqnorm.bed.gz.tbi"
+        elif wildcards.FeatureCoordinatesRedefinedFor == "ForGWASColoc":
+            return "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsForGWASColoc.sorted.qqnorm.bed.gz.tbi"
+    elif wildcards.StandardizedOrUnstandardized == "Unstandardized":
+        if wildcards.FeatureCoordinatesRedefinedFor == "":
+            return "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsUnstandardized.sorted.qqnorm.bed.gz.tbi"
+        elif wildcards.FeatureCoordinatesRedefinedFor == "ForColoc":
+            pass
+        elif wildcards.FeatureCoordinatesRedefinedFor == "ForGWASColoc":
+            pass
 
-def GetQTLtoolsFlags(wildcards):
+
+def GetQTLtoolsWindowFlag(wildcards):
     if wildcards.FeatureCoordinatesRedefinedFor in ["ForColoc", "ForGWASColoc" ]:
         # using --window 0 sometimes results in errors (exit code 139). No idea why
         return "--window 1"
     else:
         if wildcards.Phenotype in ["polyA.Splicing", "chRNA.Splicing", "polyA.Splicing.Subset_YRI", 
         "MetabolicLabelled.30min.Splicing", "MetabolicLabelled.60min.Splicing", "chRNA.RNA.Editing", "chRNA.Splicing.Order"]:
-            return "--grp-best --window 10000"
+            return "--window 10000"
         elif wildcards.Phenotype.split('.')[-1] in ['5PrimeSS', '3PrimeSS']:
             return "--window 0"
         elif ('5PrimeSS' in wildcards.Phenotype) or ('3PrimeSS' in wildcards.Phenotype):
@@ -217,6 +232,15 @@ def GetQTLtoolsFlags(wildcards):
             return "--window 10000"
         else:
             return "--window 100000"
+
+def GetQTLtoolsOtherFlags(wildcards):
+    if wildcards.StandardizedOrUnstandardized == "Unstandardized":
+        return ""
+    elif wildcards.Phenotype in ["polyA.Splicing", "chRNA.Splicing", "polyA.Splicing.Subset_YRI", 
+    "MetabolicLabelled.30min.Splicing", "MetabolicLabelled.60min.Splicing", "chRNA.RNA.Editing", "chRNA.Splicing.Order"]:
+        return "--grp-best"
+    else:
+        return ""
 
 
 def GetQTLtoolsPassFlags(wildcards):
@@ -239,25 +263,68 @@ rule QTLtools_generalized:
         bed_tbi = GetQTLtoolsBedTbi,
         cov = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.pca"
     output:
-        temp("QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}Chunks/{n}.txt")
+        temp("QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}Chunks/{n}{StandardizedOrUnstandardized}.txt")
     log:
-        "logs/QTLtools_cis_permutation_pass/{Phenotype}.{Pass}.{QTLsGenotypeSet}.{FeatureCoordinatesRedefinedFor}/{n}.log"
+        "logs/QTLtools_cis_permutation_pass/{Phenotype}.{Pass}.{QTLsGenotypeSet}.{FeatureCoordinatesRedefinedFor}/{StandardizedOrUnstandardized}{n}.log"
     resources:
         mem_mb = much_more_mem_after_first_attempt
     envmodules:
         "gsl/2.5"
     params:
-        Flags = GetQTLtoolsFlags,
+        WindowFlag = GetQTLtoolsWindowFlag,
+        OtherFlags = GetQTLtoolsOtherFlags,
         PassFlags = GetQTLtoolsPassFlags,
         ExcFlag = GetExcludeFile,
+    wildcard_constraints:
+        StandardizedOrUnstandardized = ""
     shell:
         """
-        {config[QTLtools]} cis --std-err --chunk {wildcards.n} {N_PermutationChunks} --vcf {input.vcf} --bed {input.bed} --cov {input.cov} --out {output} {params.Flags} {params.PassFlags} {params.ExcFlag} &> {log}
+        {config[QTLtools]} cis --std-err --chunk {wildcards.n} {N_PermutationChunks} --vcf {input.vcf} --bed {input.bed} --cov {input.cov} --out {output} {params.OtherFlags} {params.WindowFlag} {params.PassFlags} {params.ExcFlag} &> {log}
         if [ ! -f {output} ]
         then
             touch {output}
         fi
         """
+
+rule QTLtools_generalized_unstandardized:
+    input:
+        vcf = GetQTLtoolsVcf,
+        tbi = GetQTLtoolsVcfTbi,
+        bed = GetQTLtoolsBed,
+        bed_tbi = GetQTLtoolsBedTbi,
+        cov = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.pca"
+    output:
+        temp("QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}_{StandardizedOrUnstandardized}.txt")
+    log:
+        "logs/QTLtools_unstandardized/{Phenotype}.{Pass}.{QTLsGenotypeSet}.{FeatureCoordinatesRedefinedFor}/{StandardizedOrUnstandardized}.log"
+    resources:
+        mem_mb = much_more_mem_after_first_attempt
+    envmodules:
+        "gsl/2.5"
+    params:
+        WindowFlag = GetQTLtoolsWindowFlag,
+        OtherFlags = GetQTLtoolsOtherFlags,
+        PassFlags = GetQTLtoolsPassFlags,
+        ExcFlag = GetExcludeFile,
+    wildcard_constraints:
+        StandardizedOrUnstandardized = "Unstandardized",
+        Pass = "NominalPass"
+    shell:
+        """
+        {config[QTLtools]} cis --std-err --vcf {input.vcf} --bed {input.bed} --cov {input.cov} --out {output} {params.OtherFlags} {params.WindowFlag} {params.PassFlags} {params.ExcFlag} &> {log}
+        """
+
+rule gzip_unstandardized_QTLtools_output:
+    input:
+        "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}_{StandardizedOrUnstandardized}.txt"
+    output:
+        "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}_{StandardizedOrUnstandardized}.txt.gz"
+    wildcard_constraints:
+        StandardizedOrUnstandardized = "Unstandardized"
+    shell:
+        "gzip {input}"
+
+
 
 rule Gather_QTLtools_cis_pass:
     input:
