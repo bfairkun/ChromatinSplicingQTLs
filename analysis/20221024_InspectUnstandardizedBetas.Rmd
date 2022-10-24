@@ -1,0 +1,472 @@
+---
+title: "Inspect unstandardized betas"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+## Intro
+
+I mapped QTLs using phenotype table that was standardized, so the beta estimates are in standardized units which are less interpretable. I then used QTLtools again to get beta estimate where the input phenotype table was more interpretable units (ie, leafcutter intronic-psi for splicing, or log2CPM for expression), such that the betas will be more interpretable (ie, deltapsi for splicing, log2FoldChange for expression). Let's explore that output a bit. 
+
+```{r}
+library(tidyverse)
+library(data.table)
+library(GGally)
+
+PhenotypeAliases <- read_tsv("../data/Phenotypes_recode_for_Plotting.txt")
+
+PermutationPass.dat <- Sys.glob("../code/QTLs/QTLTools/*/PermutationPass.FDR_Added.txt.gz") %>%
+  setNames(str_replace(., "../code/QTLs/QTLTools/(.+?)/PermutationPass.FDR_Added.txt.gz", "\\1")) %>%
+  lapply(read_delim, delim=' ') %>%
+  bind_rows(.id="PhenotypeClass")
+
+
+```
+
+First explore the data a bit... count QTLs for example...
+
+```{r}
+
+NumTestFeats <- PermutationPass.dat %>%
+  count(PhenotypeClass)
+NumQTLs <- PermutationPass.dat %>%
+  filter(q<0.1) %>%
+  count(PhenotypeClass)
+
+ggplot(data = NumTestFeats,
+         aes(x=PhenotypeClass, y=n)) +
+  geom_col() +
+  geom_text(aes(label=n), color="black", angle=70, hjust=-0.4, size=2) +
+  geom_errorbar(
+    data = NumQTLs,
+    aes(y = n, ymin = n, ymax = n), color="black",lty=1, size=1.5) +
+  geom_text(
+    data = NumQTLs,
+    aes(y=n, label=n), color="red", angle=90, hjust=-0.4, size=2) +
+  scale_y_continuous(trans='log10', limits=c(1,1E6)) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+  labs(y="Number features/QTLs", caption="Number of test features (black) and QTLs (red); FDR<10%")
+
+```
+
+
+### Inspect in unstandardized QTLtools output
+
+```{r}
+
+unstandardized.dat <- Sys.glob("../code/QTLs/QTLTools/*/NominalPass_Unstandardized.txt.gz") %>%
+  setNames(str_replace(., "../code/QTLs/QTLTools/(.+?)/NominalPass_Unstandardized.txt.gz", "\\1")) %>%
+  lapply(read_delim, delim=' ', col_names=c(colnames(PermutationPass.dat)[c(2:12, 17:20)], "best_hit")) %>%
+  bind_rows(.id="PhenotypeClass")
+
+
+
+PermutationPass.dat.standardized <- PermutationPass.dat %>%
+  inner_join(
+    unstandardized.dat %>%
+      dplyr::select(PhenotypeClass, phe_id, var_id, slope),
+    by=c("PhenotypeClass", "phe_id", "var_id"),
+    suffix=c(".standardized", ".unstandardized")
+  )
+
+
+PermutationPass.dat.standardized %>%
+  filter(q<0.1) %>%
+  ggplot(aes(x=slope.unstandardized)) +
+  geom_histogram() +
+  facet_wrap(~PhenotypeClass, scales="free") +
+  theme_bw() +
+  labs(title="Histogram of unstandardized effect sizes for QTLs")
+  
+PermutationPass.dat.standardized %>%
+  filter(q<0.1) %>%
+  ggplot(aes(x=slope.standardized, y=slope.unstandardized)) +
+  geom_point(alpha=0.05) +
+  # geom_hex(bins=50) +
+  scale_fill_viridis_c() +
+  facet_wrap(~PhenotypeClass, scales="free") +
+  theme_bw() +
+  labs(title="Unstandardized vs standardized effect sizes")
+
+```
+
+Ok, these unstandardized effect sizes make sense. The sign is mostly always consistent with the sign of the standardized beta estimate, and the magnitude of things generally make sense... For example the beta for splicing (which is in units of delta psi for each dose of the alt allele) is generally capped at about 50%. The effect sizes for expression and chromatin QTLs are usually within abs(log2FC)<1, so less than two fold change, though there are plenty of examples with larger effects. This matches my intuitions based on plotting a bunch of QTLs.
+
+## Recheck splicing/expression concordance
+
+Remake plots from [this notebook](https://bfairkun.github.io/ChromatinSplicingQTLs/20221012_IntronRetentionAndExpressionConcordance.html) with more interpretable effect sizes (eg delta-psi, and log2FC for expression) to explore the relationship between activation of NMD-inducing or crpytic spice sites and expression changes.
+
+
+First, read in data...
+```{r}
+TopSNPEffects.ByPairs <- fread("../code/pi1/PairwisePi1Traits.P.all.txt.gz")
+
+NMD.transcript.introns <- read_tsv("../code/SplicingAnalysis/Annotations/NMD/NMD_trancsript_introns.bed.gz", col_names=c("chrom", "start", "stop", "name", "score", "strand")) %>%
+  mutate(stop=stop+1) %>%
+  unite(intron, chrom:stop, strand)
+
+Non.NMD.transcript.introns <- read_tsv("../code/SplicingAnalysis/Annotations/NMD/NonNMD_trancsript_introns.bed.gz", col_names=c("chrom", "start", "stop", "name", "score", "strand")) %>%
+  mutate(stop=stop+1) %>%
+  unite(intron, chrom:stop, strand)
+
+NMD.specific.introns <- setdiff(NMD.transcript.introns$intron, Non.NMD.transcript.introns$intron)
+
+Intron.Annotations.basic <- read_tsv("../code/SplicingAnalysis/regtools_annotate_combined/basic.bed.gz") %>%
+  filter(known_junction ==1) %>%
+  unite(intron, chrom, start, end, strand)
+Introns.Annotations.comprehensive <- read_tsv("../code/SplicingAnalysis/regtools_annotate_combined/comprehensive.bed.gz") %>%
+  filter(known_junction ==1) %>%
+  unite(intron, chrom, start, end, strand)
+
+```
+
+Now reproduce previous plot
+
+```{r}
+TopSNPEffects.ByPairs %>%
+  filter(
+      (PC1 %in% c("chRNA.Expression.Splicing", "Expression.Splicing.Subset_YRI")) &
+      (PC2 %in% c("polyA.Splicing.Subset_YRI", "chRNA.Splicing")) &
+      (FDR.x < 0.1) &
+      (FDR.y < 0.1)) %>%
+  mutate(source.eQTL = recode(PC1, !!!c("Expression.Splicing.Subset_YRI"="polyA.Expression.YRI", "chRNA.Expression.Splicing"="chRNA.Expression"))) %>%
+  rename(source.sQTL=PC2) %>%
+  mutate(intron = str_replace(P2, "^(.+):(.+?):(.+?):clu.+?_([+-])$", "chr\\1_\\2_\\3_\\4")) %>%
+  mutate(IntronAnnotation = case_when(
+    intron %in% NMD.specific.introns ~ "Annotated NMD",
+    intron %in% Intron.Annotations.basic$intron ~ "Annotated basic",
+    intron %in% Introns.Annotations.comprehensive$intron ~ "Annotated Not basic",
+    TRUE ~ "Unannotated"
+  )) %>%
+  ggplot(aes(y=beta.x, x=trait.x.beta.in.y
+, color=IntronAnnotation)) +
+  geom_point(alpha=0.5) +
+  geom_vline(xintercept=0) +
+  geom_hline(yintercept=0) +
+  geom_smooth(method='lm') +
+  facet_grid(rows = vars(source.eQTL), cols=vars(source.sQTL)) +
+  theme_bw() +
+  labs(title="genetic effects of NMD introns and host gene expression", x="beta, sQTL", y="beta, eQTL", caption="Only FDR<10% sQTLs and eQTLs plotted. sQTL effects are relative to top eQTL SNP")
+```
+
+
+Ok, now plot similar plot, but make use unstandardized betas. Note that the previous plot was using slightly different cis-windows for QTL-mapping that the unstandardized beta estimates I have on hand, so some points might dissapear if the top QTL (in the gene-wise "ForColoc"" style cis-QTL mapping) is outside the cis-window I used in the standard QTL mapping.
+
+```{r}
+
+unstandardized.dat %>% distinct(PhenotypeClass)
+  
+P <- TopSNPEffects.ByPairs %>%
+  filter(
+      (PC1 %in% c("chRNA.Expression.Splicing", "Expression.Splicing.Subset_YRI")) &
+      (PC2 %in% c("polyA.Splicing.Subset_YRI", "chRNA.Splicing")) &
+      (FDR.x < 0.1) &
+      (FDR.y < 0.1)) %>%
+  inner_join(
+    unstandardized.dat %>%
+      dplyr::select(PC1=PhenotypeClass, P1=phe_id, singletrait_topvar.x=var_id, beta.x.unstandardized=slope)
+    ) %>%
+  mutate(source.eQTL = recode(PC1, !!!c("Expression.Splicing.Subset_YRI"="polyA.Expression.YRI", "chRNA.Expression.Splicing"="chRNA.Expression"))) %>%
+rename(source.sQTL=PC2) %>%
+  mutate(intron = str_replace(P2, "^(.+):(.+?):(.+?):clu.+?_([+-])$", "chr\\1_\\2_\\3_\\4")) %>%
+  mutate(IntronAnnotation = case_when(
+    intron %in% NMD.specific.introns ~ "Annotated NMD",
+    intron %in% Intron.Annotations.basic$intron ~ "Annotated basic",
+    intron %in% Introns.Annotations.comprehensive$intron ~ "Annotated Not basic",
+    TRUE ~ "Unannotated"
+  )) %>%
+  ggplot(aes(y=beta.x.unstandardized, x=trait.x.beta.in.y
+, color=IntronAnnotation)) +
+  geom_point(alpha=0.5) +
+  geom_vline(xintercept=0) +
+  geom_hline(yintercept=0) +
+  geom_smooth(method='lm') +
+  facet_grid(rows = vars(source.eQTL), cols=vars(source.sQTL)) +
+  theme_bw() +
+  labs(title="genetic effects of NMD introns and host gene expression", x="standardized beta, sQTL", y="unstandardized beta, eQTL (Log2FC)", caption="Only FDR<10% sQTLs and eQTLs plotted. sQTL effects are relative to top eQTL SNP")
+
+P
+
+P +
+  coord_cartesian(ylim=c(-1,1))
+```
+
+Ok, I now realize I can't really do this plot correctly (with both the x-axis and y-axis in unstandardized units) without doing some editing to the snakemake pipeline to get nominal pass QTL results in the genewise way...
+
+For now, I can only do one axis unstandardized... Let's 'unstandardize' the sQTLs. It's also clear from this plot that the purple (unannotated) regression lines are driven by a few outlier points with many introns mapping to the same gene. Let's replot with one point per gene or one point per intron cluster...
+
+```{r}
+P2.dat <- TopSNPEffects.ByPairs %>%
+  filter(
+      (PC2 %in% c("chRNA.Expression.Splicing", "Expression.Splicing.Subset_YRI")) &
+      (PC1 %in% c("polyA.Splicing.Subset_YRI", "chRNA.Splicing")) &
+      (FDR.x < 0.1) &
+      (FDR.y < 0.1)) %>%
+  inner_join(
+    unstandardized.dat %>%
+      dplyr::select(PC1=PhenotypeClass, P1=phe_id, singletrait_topvar.x=var_id, beta.x.unstandardized=slope)
+    ) %>%
+  mutate(source.eQTL = recode(PC2, !!!c("Expression.Splicing.Subset_YRI"="polyA.Expression.YRI", "chRNA.Expression.Splicing"="chRNA.Expression"))) %>%
+  rename(source.sQTL=PC1) %>%
+  mutate(intron = str_replace(P1, "^(.+):(.+?):(.+?):clu.+?_([+-])$", "chr\\1_\\2_\\3_\\4")) %>%
+  mutate(IntronAnnotation = case_when(
+    intron %in% NMD.specific.introns ~ "Annotated NMD",
+    intron %in% Intron.Annotations.basic$intron ~ "Annotated basic",
+    intron %in% Introns.Annotations.comprehensive$intron ~ "Annotated Not basic",
+    TRUE ~ "Unannotated"
+  ))
+
+ggplot(P2.dat, aes(x=beta.x.unstandardized, y=trait.x.beta.in.y
+, color=IntronAnnotation)) +
+  geom_point(alpha=0.5) +
+  geom_vline(xintercept=0) +
+  geom_hline(yintercept=0) +
+  geom_smooth(method='lm') +
+  facet_grid(rows = vars(source.eQTL), cols=vars(source.sQTL)) +
+  theme_bw() +
+  labs(title="genetic effects of NMD introns and host gene expression", x="unstandardized beta, sQTL; deltapsi", y="standardized beta, eQTL", caption="Only FDR<10% sQTLs and eQTLs plotted. eQTL effects are relative to top sQTL SNP")
+
+```
+
+Now let's consider aggregating the intron QTL points by cluster or by gene
+
+```{r}
+
+P2.dat %>%
+  mutate(cluster = str_extract(P1, "clu.+$")) %>%
+  distinct(GeneLocus, cluster) %>%
+  count(cluster) %>%
+  count(n)
+
+```
+
+If we aggregated by gene, 21/700 of the genes will have multiple clusters. I think that's acceptable. Let's just aggregate by gene for simplicity...
+
+
+```{r}
+P2.dat %>%
+  group_by(IntronAnnotation, source.sQTL, source.eQTL, trait.x.beta.in.y) %>%
+  summarise(aggregated_deltapsi=sum(beta.x.unstandardized
+)) %>%
+  ungroup() %>%
+  ggplot(aes(x=aggregated_deltapsi, y=trait.x.beta.in.y
+, color=IntronAnnotation)) +
+  geom_point(alpha=0.5) +
+  geom_vline(xintercept=0) +
+  geom_hline(yintercept=0) +
+  geom_smooth(method='lm') +
+  facet_grid(rows = vars(source.eQTL), cols=vars(source.sQTL)) +
+  theme_bw() +
+  labs(title="genetic effects of NMD introns and host gene expression", x="unstandardized beta, sQTL; deltapsi", y="standardized beta, eQTL", caption="Only FDR<10% sQTLs and eQTLs plotted. eQTL effects are relative to top sQTL SNP")
+
+```
+
+There's so many overlapping points. Let me seperate the colors...
+
+```{r}
+P2.dat %>%
+  group_by(IntronAnnotation, P2, source.sQTL, source.eQTL, trait.x.beta.in.y) %>%
+  summarise(aggregated_deltapsi=sum(beta.x.unstandardized
+)) %>%
+  ungroup() %>%
+  ggplot(aes(x=aggregated_deltapsi, y=trait.x.beta.in.y
+, color=IntronAnnotation)) +
+  geom_point(alpha=0.5) +
+  geom_vline(xintercept=0) +
+  geom_hline(yintercept=0) +
+  geom_smooth(method='lm') +
+  facet_grid(source.eQTL ~ source.sQTL ~ IntronAnnotation ) +
+  theme_bw() +
+  labs(title="genetic effects of sQTLs and host gene expression", x="unstandardized beta, sQTL; deltapsi", y="standardized beta, eQTL", caption="Only FDR<10% sQTLs and eQTLs plotted. eQTL effects are relative to top sQTL SNP")
+```
+Hmm, from this where there aren't double plotting lot's of points because i aggregated the intron effects by gene, there isn't an obvious correlation between increase in unannotated splicing resulting in more expression.
+
+Let's also try expressing these correlations just by the overabundance of concordant/discordanct signs between the sQTL and eQTL after this gene-wise aggregation for sQTLs
+
+```{r}
+P2.dat %>%
+  group_by(IntronAnnotation, P2, source.sQTL, source.eQTL, trait.x.beta.in.y) %>%
+  summarise(aggregated_deltapsi=sum(beta.x.unstandardized
+)) %>%
+  ungroup() %>%
+  mutate(Concordance = if_else(sign(trait.x.beta.in.y) == sign(aggregated_deltapsi), "Concordant", "Discordant")) %>%
+  count(IntronAnnotation, source.sQTL, source.eQTL, Concordance) %>%
+  ggplot(aes(x=IntronAnnotation, y=n, fill=IntronAnnotation, color=Concordance)) +
+  geom_col() +
+  facet_grid(source.eQTL ~ source.sQTL) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+  
+
+```
+
+
+Now let's come up with a lower limit for how many eQTLs might be explained by these splicing effects. To do this I will count the overabundance of discordant sign eQTL/sQTLs, and ask what fraction those are out of all eQTLs.
+
+Said another way, I will consider an sQTLs mapped in either chRNA or polyA, and count how many have sQTL signs consistent with my expectations on how it would effect expression. For this analysis, it might be simplest to first just combine the "Annotated NMD", "Annotated Not basic", and "Unannotated" categories by summing their deltapsi... Before I do that, let's look at the deltapsi distributions...
+
+```{r}
+P2.dat %>%
+  group_by(IntronAnnotation, P2, source.sQTL, source.eQTL, trait.x.beta.in.y) %>%
+  summarise(aggregated_deltapsi=sum(beta.x.unstandardized
+)) %>%
+  ggplot(aes(x=aggregated_deltapsi, color=IntronAnnotation)) +
+  stat_ecdf() +
+  facet_grid(source.eQTL ~ source.sQTL) +
+  theme_bw()
+
+P2.dat %>%
+  mutate(IntronAnnotation = if_else(IntronAnnotation=="Annotated basic", "Annotated basic", "Not annotated basic")) %>%
+  group_by(IntronAnnotation, P2, source.sQTL, source.eQTL, trait.x.beta.in.y) %>%
+  summarise(aggregated_deltapsi=sum(beta.x.unstandardized
+)) %>%
+  ungroup() %>%
+  mutate(Concordance = if_else(sign(trait.x.beta.in.y) == sign(aggregated_deltapsi), "Concordant", "Discordant")) %>%
+  count(IntronAnnotation, source.sQTL, source.eQTL, Concordance) %>%
+  ggplot(aes(x=IntronAnnotation, y=n, fill=IntronAnnotation, color=Concordance)) +
+  geom_col() +
+  facet_grid(source.eQTL ~ source.sQTL) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+```
+
+Actually, below is perhaps a more intuitive graph of what I mean:
+
+```{r}
+Number_eQTLs_sQTLs_consistentWithNMD <- P2.dat %>%
+  filter(source.eQTL == "polyA.Expression.YRI") %>%
+  mutate(IntronAnnotation = if_else(IntronAnnotation=="Annotated basic", "Annotated basic", "Not annotated basic")) %>%
+  group_by(IntronAnnotation, P2, source.sQTL, source.eQTL, trait.x.beta.in.y) %>%
+  summarise(aggregated_deltapsi=sum(beta.x.unstandardized
+)) %>%
+  ungroup() %>%
+  mutate(Concordance = if_else(sign(trait.x.beta.in.y) == sign(aggregated_deltapsi), "Concordant", "Discordant")) %>%
+  mutate(ConcordanceConsistentWithNMD = case_when(
+    IntronAnnotation == "Annotated basic" & Concordance=="Concordant" ~ "Consistent",
+    IntronAnnotation == "Not annotated basic" & Concordance=="Discordant" ~ "Consistent",
+    TRUE ~ "Inconsistent"
+  )) %>%
+  distinct(P2, .keep_all=T) %>%
+  count(ConcordanceConsistentWithNMD)
+
+Number_eQTLs_sQTLs_consistentWithNMD$n[1] - Number_eQTLs_sQTLs_consistentWithNMD$n[2]
+
+
+```
+
+So perhaps 73 QTLs might be due to NMD mechanism... That is out of how many eQTLs...
+
+
+```{r}
+TopSNPEffects.ByPairs %>%
+  filter(
+      (PC1 %in% c("Expression.Splicing.Subset_YRI")) &
+      (FDR.x < 0.1)) %>%
+  distinct(P1) %>% nrow()
+
+LowerBound <- 73/4021 * 100
+LowerBound
+```
+
+Ok, so not many. perhaps 2% of eQTLs might be explained by that mechanism. Note that here I filtered for sQTLs < 10% FDR. Perhaps that strictness is part of why it is important to view this as a conservative estimate or lower bound.. Right now I'm now set up to be more lenient than that, I would have to reprocess some other datafiles...
+
+Let's also crudley verify that these QTLs are more aligned (the top eQTL and sQTL SNP is the same or close) in the NMD model cases, versus the other QTLs...
+
+
+```{r}
+DistanceDist.dat <- P2.dat %>%
+  mutate(HighConfidenceNMD_eQTLs = if_else(
+    source.eQTL == "polyA.Expression.YRI" &
+    source.sQTL %in% c("polyA.Splicing.Subset_YRI", "chRNA.Splicing") &
+    IntronAnnotation == c("Annotated NMD") &
+    !sign(beta.x) == trait.x.beta.in.y,
+    "High confidence NMD sQTL --> eQTL",
+    "Other"
+  )) %>%
+  mutate(Dist = abs(singletrait_topvar_pos.y-singletrait_topvar_pos.x)) %>%
+  mutate(Dist=pmax(1, Dist))
+
+ggplot(DistanceDist.dat, aes(x=Dist)) +
+  geom_histogram() +
+  scale_x_continuous(trans='log10') +
+  facet_wrap(~HighConfidenceNMD_eQTLs, scales="free_y") +
+  theme_bw() +
+  labs(title="Distance between top sQTL and top eQTL SNP", x="Dist b/n top eQTL and sQTL SNP", caption=str_wrap("High confidence NMD means polyA|chRNA sQTL and eQTL in polyA with opposite sign betas for annotated NMD introns", 30))
+
+ggplot(DistanceDist.dat, aes(x=Dist, color=HighConfidenceNMD_eQTLs)) +
+  stat_ecdf() +
+  scale_x_continuous(trans='log10') +
+  theme_bw() +
+  labs(title="Distance between top sQTL and top eQTL SNP", x="Dist b/n top eQTL and sQTL SNP", caption=str_wrap("High confidence NMD means polyA|chRNA sQTL and eQTL in polyA with opposite sign betas for annotated NMD introns", 30))
+```
+
+
+Hmm... this makes me skeptical whether this distance between top SNPs is even a useful way to think about stuff. I don't think there is a bug in my code, given how the beta signs make sense.
+
+
+Anyway, what if we included the whole geuvadis dataset for splicing.. Just curious what that the results will like considering more sQTLs... Now go back to counting sQTLs/eQTLs consistent/inconsistent with NMD mechanism when we include all GEUVADIS samples.
+
+```{r}
+P2.dat <- TopSNPEffects.ByPairs %>%
+  filter(
+      (PC2 %in% c("chRNA.Expression.Splicing", "Expression.Splicing.Subset_YRI")) &
+      (PC1 %in% c("polyA.Splicing.Subset_YRI", "chRNA.Splicing", "polyA.Splicing")) &
+      (FDR.x < 0.1) &
+      (FDR.y < 0.1)) %>%
+  inner_join(
+    unstandardized.dat %>%
+      dplyr::select(PC1=PhenotypeClass, P1=phe_id, singletrait_topvar.x=var_id, beta.x.unstandardized=slope)
+    ) %>%
+  mutate(source.eQTL = recode(PC2, !!!c("Expression.Splicing.Subset_YRI"="polyA.Expression.YRI", "chRNA.Expression.Splicing"="chRNA.Expression"))) %>%
+  rename(source.sQTL=PC1) %>%
+  mutate(intron = str_replace(P1, "^(.+):(.+?):(.+?):clu.+?_([+-])$", "chr\\1_\\2_\\3_\\4")) %>%
+  mutate(IntronAnnotation = case_when(
+    intron %in% NMD.specific.introns ~ "Annotated NMD",
+    intron %in% Intron.Annotations.basic$intron ~ "Annotated basic",
+    intron %in% Introns.Annotations.comprehensive$intron ~ "Annotated Not basic",
+    TRUE ~ "Unannotated"
+  ))
+
+P2.dat %>%
+  group_by(IntronAnnotation, P2, source.sQTL, source.eQTL, trait.x.beta.in.y) %>%
+  summarise(aggregated_deltapsi=sum(beta.x.unstandardized
+)) %>%
+  ungroup() %>%
+  ggplot(aes(x=aggregated_deltapsi, y=trait.x.beta.in.y
+, color=IntronAnnotation)) +
+  geom_point(alpha=0.5) +
+  geom_vline(xintercept=0) +
+  geom_hline(yintercept=0) +
+  geom_smooth(method='lm') +
+  facet_grid(source.eQTL ~ source.sQTL ~ IntronAnnotation ) +
+  theme_bw() +
+  labs(title="genetic effects of sQTLs and host gene expression", x="unstandardized beta, sQTL; deltapsi", y="standardized beta, eQTL", caption=str_wrap("Only FDR<10% sQTLs and eQTLs plotted. eQTL effects are relative to top sQTL SNP. Full geauvadis sQTLs are 'polyA.Splicing'"))
+
+Number_eQTLs_sQTLs_consistentWithNMD <- P2.dat %>%
+  filter(source.eQTL == "polyA.Expression.YRI") %>%
+  mutate(IntronAnnotation = if_else(IntronAnnotation=="Annotated basic", "Annotated basic", "Not annotated basic")) %>%
+  group_by(IntronAnnotation, P2, source.sQTL, source.eQTL, trait.x.beta.in.y) %>%
+  summarise(aggregated_deltapsi=sum(beta.x.unstandardized
+)) %>%
+  ungroup() %>%
+  mutate(Concordance = if_else(sign(trait.x.beta.in.y) == sign(aggregated_deltapsi), "Concordant", "Discordant")) %>%
+  mutate(ConcordanceConsistentWithNMD = case_when(
+    IntronAnnotation == "Annotated basic" & Concordance=="Concordant" ~ "Consistent",
+    IntronAnnotation == "Not annotated basic" & Concordance=="Discordant" ~ "Consistent",
+    TRUE ~ "Inconsistent"
+  )) %>%
+  distinct(P2, .keep_all=T) %>%
+  count(ConcordanceConsistentWithNMD)
+
+Number_eQTLs_sQTLs_consistentWithNMD
+
+```
+
+Ok, so now when I consider all sQTLs mapped with the whole GEUVADIS the overabundance of sQTL/eQTLs signs consistent with NMD model is actually fewer. So maybe just adding power this way isn't actually helpful.
+
+
+

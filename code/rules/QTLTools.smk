@@ -31,13 +31,13 @@ rule MakeExtraInputFilesForUnstandardizedQTLToolsMapping:
     still want to create a phenotype_include file
     """
     input:
-        "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.gz"
+        "QTLs/QTLTools/{Phenotype}/PermutationPass{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.gz"
     output:
-        sites_include = "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.sites_include.txt",
+        sites_include = "QTLs/QTLTools/{Phenotype}/TopSNPsList_{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.sites_include.txt",
     wildcard_constraints:
         Pass = "PermutationPass"
     log:
-        "logs/MakeExtraInputFilesForUnstandardizedQTLToolsMapping/{Phenotype}.{Pass}.{QTLsGenotypeSet}.{FeatureCoordinatesRedefinedFor}.log"
+        "logs/MakeExtraInputFilesForUnstandardizedQTLToolsMapping/{Phenotype}.{QTLsGenotypeSet}.{FeatureCoordinatesRedefinedFor}.log"
     conda:
         "../envs/r_2.yaml"
     shell:
@@ -292,9 +292,10 @@ rule QTLtools_generalized_unstandardized:
         tbi = GetQTLtoolsVcfTbi,
         bed = GetQTLtoolsBed,
         bed_tbi = GetQTLtoolsBedTbi,
-        cov = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.pca"
+        cov = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.pca",
+        sites_include = "QTLs/QTLTools/{Phenotype}/TopSNPsList_{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.sites_include.txt",
     output:
-        temp("QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}_{StandardizedOrUnstandardized}.txt")
+        temp("QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}_{StandardizedOrUnstandardized}.OnlyTopSites.txt")
     log:
         "logs/QTLtools_unstandardized/{Phenotype}.{Pass}.{QTLsGenotypeSet}.{FeatureCoordinatesRedefinedFor}/{StandardizedOrUnstandardized}.log"
     resources:
@@ -311,14 +312,14 @@ rule QTLtools_generalized_unstandardized:
         Pass = "NominalPass"
     shell:
         """
-        {config[QTLtools]} cis --std-err --vcf {input.vcf} --bed {input.bed} --cov {input.cov} --out {output} {params.OtherFlags} {params.WindowFlag} {params.PassFlags} {params.ExcFlag} &> {log}
+        {config[QTLtools]} cis --std-err --vcf {input.vcf} --bed {input.bed} --cov {input.cov} --out {output} {params.OtherFlags} {params.WindowFlag} {params.PassFlags} {params.ExcFlag} --include-sites {input.sites_include} &> {log}
         """
 
 rule gzip_unstandardized_QTLtools_output:
     input:
-        "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}_{StandardizedOrUnstandardized}.txt"
+        "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}_{StandardizedOrUnstandardized}.OnlyTopSites.txt"
     output:
-        "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}_{StandardizedOrUnstandardized}.txt.gz"
+        "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}_{StandardizedOrUnstandardized}.OnlyTopSites.txt.gz"
     wildcard_constraints:
         StandardizedOrUnstandardized = "Unstandardized"
     shell:

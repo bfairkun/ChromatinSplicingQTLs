@@ -114,8 +114,8 @@ rule CollectUnstandardizedTables:
         #         FeatureCoordinatesRedefinedFor="",
         #         StandardizedOrUnstandardized="Unstandardized"
         #         ),
-        expand("QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}_{StandardizedOrUnstandardized}.txt.gz",
-                Phenotype=ChromatinProfilingPhenotypes + ["polyA.Splicing.Subset_YRI"] + ["polyA.Splicing", "MetabolicLabelled.30min.Splicing", "MetabolicLabelled.60min.Splicing", "chRNA.Splicing"],
+        expand("QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}_{StandardizedOrUnstandardized}.OnlyTopSites.txt.gz",
+                Phenotype=ChromatinProfilingPhenotypes + ["polyA.Splicing.Subset_YRI", "Expression.Splicing.Subset_YRI"] + ["polyA.Splicing", "MetabolicLabelled.30min.Splicing", "MetabolicLabelled.60min.Splicing", "chRNA.Splicing"] + [i for i in RNASeqPhenotypes if i != "ProCap"],
                 Pass = "NominalPass",
                 QTLsGenotypeSet="",
                 FeatureCoordinatesRedefinedFor="",

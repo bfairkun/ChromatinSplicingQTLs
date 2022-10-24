@@ -39,14 +39,14 @@ SpliceJunctionCountTables <- Sys.glob("../code/SplicingAnalysis/leafcutter/Norma
 
 lapply(SpliceJunctionCountTables, dim)
 
-SpliceJunctionCountTables$Expression.Splicing %>%
-  mutate(Intron=paste(`#Chrom`, start, end, strand, sep="_")) %>%
-  mutate(Is.NMD.Intron = Intron %in% NMD.specific.introns) %>%
-  group_by(Is.NMD.Intron) %>%
-  summarise_if(is.numeric, sum, na.rm = TRUE) %>%
-  dplyr::select(-start, -end) %>%
-  column_to_rownames("Is.NMD.Intron") %>%
-  t()
+# SpliceJunctionCountTables$Expression.Splicing %>%
+#   mutate(Intron=paste(`#Chrom`, start, end, strand, sep="_")) %>%
+#   mutate(Is.NMD.Intron = Intron %in% NMD.specific.introns) %>%
+#   group_by(Is.NMD.Intron) %>%
+#   summarise_if(is.numeric, sum, na.rm = TRUE) %>%
+#   dplyr::select(-start, -end) %>%
+#   column_to_rownames("Is.NMD.Intron") %>%
+#   t()
 
 Sum.NMD.Intron.Counts <- function(df){
   df %>%
@@ -613,6 +613,71 @@ TopSNPEffects.ByPairs %>%
   labs(title="genetic effects of NMD introns and host gene expression", x="beta, sQTL", y="beta, eQTL", caption="Only FDR<10% sQTLs and eQTLs plotted. eQTL effects are relative to top sQTL SNP")
 ```
 
+There's a few things I could do to improve this... one being that the effect sizes are standardized and therefore hard to interpret. Plotting eQTL effect sizes as logFC and splicing effect sizes as deltaPSI could be more interpretable. Also, Yang suggesting exploring these ideas by plotting things as QQ plots... let's do that now...
+
+For example, let's plot eQTL P-values for different groups of SNPs, including sQTLs, hQTLs, etc...
+
+```{r}
+TopSNPEffects.ByPairs %>%
+  filter(
+      (PC2 %in% c("chRNA.Expression.Splicing", "Expression.Splicing.Subset_YRI")) &
+      (PC1 %in% c("polyA.Splicing.Subset_YRI", "chRNA.Splicing", "H3K4ME3", "H3K27AC")) &
+      (FDR.x < 0.1)) %>%
+  mutate(intron = case_when(
+    PC1 %in% c("polyA.Splicing.Subset_YRI", "chRNA.Splicing") ~ str_replace(P1, "^(.+):(.+?):(.+?):clu.+?_([+-])$", "chr\\1_\\2_\\3_\\4"),
+    TRUE ~ NA_character_)) %>%
+  mutate(IntronAnnotation = case_when(
+    intron %in% NMD.specific.introns ~ "Annotated NMD",
+    intron %in% Intron.Annotations.basic$intron ~ "Annotated basic",
+    intron %in% Introns.Annotations.comprehensive$intron ~ "Annotated Not basic",
+    !is.na(intron) ~ "Unannotated",
+    TRUE ~ ""
+  )) %>%
+  mutate(SnpSet = paste(PC1, IntronAnnotation)) %>%
+  group_by(SnpSet, PC2) %>%
+  mutate(ExpectedP = percent_rank(trait.x.p.in.y)) %>%
+  ungroup() %>%
+  ggplot(aes(x=-log10(ExpectedP), y=-log10(trait.x.p.in.y), color=SnpSet)) +
+  geom_abline() +
+  geom_point() +
+  facet_wrap(~PC2) +
+  theme_bw() +
+  labs(title="QQ plot of eQTL P-values", color="xQTL SNP", y="-log10(P)")
+
+```
+
+Ok, hmm, is that even informative.. Well there is eQTL enrichment in all the types of QTLs tested. Though, I don't have a set of control SNPs... Let's try breaking out the QQ plots by concordance of effect directions...
+
+```{r}
+TopSNPEffects.ByPairs %>%
+  filter(
+      (PC2 %in% c("chRNA.Expression.Splicing", "Expression.Splicing.Subset_YRI")) &
+      (PC1 %in% c("polyA.Splicing.Subset_YRI", "chRNA.Splicing", "H3K4ME3", "H3K27AC")) &
+      (FDR.x < 0.1)) %>%
+  mutate(intron = case_when(
+    PC1 %in% c("polyA.Splicing.Subset_YRI", "chRNA.Splicing") ~ str_replace(P1, "^(.+):(.+?):(.+?):clu.+?_([+-])$", "chr\\1_\\2_\\3_\\4"),
+    TRUE ~ NA_character_)) %>%
+  mutate(IntronAnnotation = case_when(
+    intron %in% NMD.specific.introns ~ "Annotated NMD",
+    intron %in% Intron.Annotations.basic$intron ~ "Annotated basic",
+    intron %in% Introns.Annotations.comprehensive$intron ~ "Annotated Not basic",
+    !is.na(intron) ~ "Unannotated",
+    TRUE ~ ""
+  )) %>%
+  mutate(SnpSet = paste(PC1, IntronAnnotation)) %>%
+  mutate(Concordance = if_else(sign(beta.x)==sign(beta.y), "Concordant", "Discordant")) %>%
+  group_by(SnpSet, PC2, Concordance) %>%
+  mutate(ExpectedP = percent_rank(trait.x.p.in.y)) %>%
+  ungroup() %>%
+  ggplot(aes(x=-log10(ExpectedP), y=-log10(trait.x.p.in.y), color=SnpSet)) +
+  geom_abline() +
+  geom_point() +
+  facet_grid(rows=vars(Concordance), cols=vars(PC2)) +
+  theme_bw() +
+  labs(title="QQ plot of eQTL P-values", color="xQTL SNP", y="-log10(P)")
+```
+
+
 ### enrichment of NMD sQTLs in eQTLs
 
 > Another way to show this, which would look more significant I think is to ask what % of non-eQTL sQTL affect NMD junctions of all non-eQTL sQTLs versus the same for sQTLs that are eQTLs
@@ -777,4 +842,6 @@ As a side thing, I wrote a script to make metaQTL plots. That is, I lump the hig
 
 
 ```
+
+
 
