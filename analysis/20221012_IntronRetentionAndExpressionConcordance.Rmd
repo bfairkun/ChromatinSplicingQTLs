@@ -778,9 +778,7 @@ ggplot(QQ.plot.dat, aes(x=-log10(ExpectedP)*Sign, y=-log10(trait.x.p.in.y)*Sign,
   geom_point() +
   facet_wrap(~PC2) +
   theme_bw() +
-  labs(title="QQ plot of eQTL P-values", color="xQTL SNP", y="Observed -log10(P)", x="Theoretical -log10(P)", caption=str_wrap("If eQTL and xQTL beta signs are same, right-side-up. If opposite, plot upside-down", 30)) +
-  theme(legend.position = "bottom") +
-  guides(fill=guide_legend(nrow=4,byrow=TRUE))
+  labs(title="QQ plot of eQTL P-values", color="xQTL SNP", y="Observed -log10(P)", x="Theoretical -log10(P)", caption=str_wrap("If eQTL and xQTL beta signs are same, right-side-up. If opposite, plot upside-down", 30))
 ```
 
 I like these plots but there is just too many colors... Let's just plot sQTLs from polyA, to cut down on colors. Then seperately we can do just sQTLs from chRNA...
@@ -793,9 +791,7 @@ ggplot(aes(x=-log10(ExpectedP)*Sign, y=-log10(trait.x.p.in.y)*Sign, color=SnpSet
   geom_point() +
   facet_wrap(~PC2) +
   theme_bw() +
-  labs(title="QQ plot of eQTL P-values", color="xQTL SNP", y="Observed -log10(P)", x="Theoretical -log10(P)", caption=str_wrap("If eQTL and xQTL beta signs are same, right-side-up. If opposite, plot upside-down", 30)) +
-  theme(legend.position = "bottom") +
-  guides(fill=guide_legend(nrow=4,byrow=TRUE))
+  labs(title="QQ plot of eQTL P-values", color="xQTL SNP", y="Observed -log10(P)", x="Theoretical -log10(P)", caption=str_wrap("If eQTL and xQTL beta signs are same, right-side-up. If opposite, plot upside-down", 30))
 
 QQ.plot.dat %>%
   filter(!str_detect(SnpSet, "polyA")) %>%
@@ -804,9 +800,7 @@ ggplot(aes(x=-log10(ExpectedP)*Sign, y=-log10(trait.x.p.in.y)*Sign, color=SnpSet
   geom_point() +
   facet_wrap(~PC2) +
   theme_bw() +
-  labs(title="QQ plot of eQTL P-values", color="xQTL SNP", y="Observed -log10(P)", x="Theoretical -log10(P)", caption=str_wrap("If eQTL and xQTL beta signs are same, right-side-up. If opposite, plot upside-down", 30)) +
-  theme(legend.position = "bottom") +
-  guides(fill=guide_legend(nrow=4,byrow=TRUE))
+  labs(title="QQ plot of eQTL P-values", color="xQTL SNP", y="Observed -log10(P)", x="Theoretical -log10(P)", caption=str_wrap("If eQTL and xQTL beta signs are same, right-side-up. If opposite, plot upside-down", 30))
 ```
 
 
