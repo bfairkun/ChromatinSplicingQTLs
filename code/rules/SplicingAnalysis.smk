@@ -116,6 +116,10 @@ rule GatherConcatUniqJuncs:
     input:
         expand("SplicingAnalysis/regtools_annotate_combined/{AnnotationType}.bed.gz", AnnotationType = ["basic", "comprehensive"])
 
+rule IntronsToGenes:
+    input:
+        expand("SplicingAnalysis/regtools_annotate_combined/comprehensive.bed.gz", AnnotationType = ["basic", "comprehensive"])
+
 rule GetObservedSpliceSites:
     input:
         bed = "SplicingAnalysis/regtools_annotate_combined/{AnnotationType}.bed.gz",

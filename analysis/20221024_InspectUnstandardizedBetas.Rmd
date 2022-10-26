@@ -151,6 +151,14 @@ TopSNPEffects.ByPairs %>%
   facet_grid(rows = vars(source.eQTL), cols=vars(source.sQTL)) +
   theme_bw() +
   labs(title="genetic effects of NMD introns and host gene expression", x="beta, sQTL", y="beta, eQTL", caption="Only FDR<10% sQTLs and eQTLs plotted. sQTL effects are relative to top eQTL SNP")
+
+TopSNPEffects.ByPairs %>%
+  filter(
+      (PC1 %in% c("chRNA.Expression.Splicing", "Expression.Splicing.Subset_YRI")) &
+      # (PC2 %in% c("polyA.Splicing.Subset_YRI", "chRNA.Splicing")) &
+      (FDR.x < 0.1) &
+      (FDR.y < 0.1)) %>%
+  distinct(GeneLocus) %>% nrow()
 ```
 
 

@@ -41,7 +41,8 @@ wildcard_constraints:
     QTLsGenotypeSet="|".join(["", "HarmonizedSNPs"]),
     FeatureCoordinatesRedefinedFor="|".join(["", "ForColoc", "ForGWASColoc"]),
     Pass="|".join(["PermutationPass", "NominalPass"]),
-    StandardizedOrUnstandardized="|Unstandardized"
+    StandardizedOrUnstandardized="|Unstandardized",
+    QTLTools_chunk_n = "|".join([str(i) for i in ChunkNumbers])
 
 
 localrules:

@@ -14,37 +14,6 @@ rule SortQTLtoolsPhenotypeTable:
         (tabix -p bed {output.bed}) &>> {log}
         """
 
-# use rule SortQTLtoolsPhenotypeTable as SortQTLtoolsUnstandardizedPhenotypeTable with:
-#     input:
-#         "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsUnstandardized.qqnorm.bed.gz"
-#     output:
-#         bed = "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsUnstandardized.sorted.qqnorm.bed.gz",
-#         tbi = "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsUnstandardized.sorted.qqnorm.bed.gz.tbi"
-#     log:
-#         "logs/SortQTLtoolsUnstandardizedPhenotypeTable/{Phenotype}.log"
-
-# rule MakeExtraInputFilesForUnstandardizedQTLToolsMapping:
-#     """
-#     I can run QTLtools cis to re-estimate beta with unstandardized effect
-#     sizes, but there is no need to calculate all SNP:feature tests, just the
-#     top hit for each phenotype. For splicing with the --group option I think I
-#     still want to create a phenotype_include file
-#     """
-#     input:
-#         "QTLs/QTLTools/{Phenotype}/PermutationPass{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.gz"
-#     output:
-#         sites_include = "QTLs/QTLTools/{Phenotype}/TopSNPsList_{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.sites_include.txt",
-#     wildcard_constraints:
-#         Pass = "PermutationPass"
-#     log:
-#         "logs/MakeExtraInputFilesForUnstandardizedQTLToolsMapping/{Phenotype}.{QTLsGenotypeSet}.{FeatureCoordinatesRedefinedFor}.log"
-#     conda:
-#         "../envs/r_2.yaml"
-#     shell:
-#         """
-#         Rscript scripts/GetSitesFromPermutationPass.R {input} {output.sites_include}
-#         """
-
 
 rule PhenotypePCs:
     """
@@ -239,6 +208,7 @@ def GetExcludeFile(wildcards):
     else:
         return ''
 
+
 rule QTLtools_generalized:
     input:
         vcf = GetQTLtoolsVcf,
@@ -247,9 +217,9 @@ rule QTLtools_generalized:
         bed_tbi = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps{StandardizedOrUnstandardized}{FeatureCoordinatesRedefinedFor}.sorted.qqnorm.bed.gz.tbi",
         cov = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.pca"
     output:
-        temp("QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}Chunks/{n}{StandardizedOrUnstandardized}.txt")
+        temp("QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}Chunks/{QTLTools_chunk_n}{StandardizedOrUnstandardized}.txt")
     log:
-        "logs/QTLtools_cis_permutation_pass/{Phenotype}.{Pass}.{QTLsGenotypeSet}.{FeatureCoordinatesRedefinedFor}/{StandardizedOrUnstandardized}{n}.log"
+        "logs/QTLtools_cis_permutation_pass/{Phenotype}.{Pass}.{QTLsGenotypeSet}.{FeatureCoordinatesRedefinedFor}/{StandardizedOrUnstandardized}{QTLTools_chunk_n}.log"
     resources:
         mem_mb = much_more_mem_after_first_attempt
     envmodules:
@@ -259,61 +229,21 @@ rule QTLtools_generalized:
         OtherFlags = GetQTLtoolsOtherFlags,
         PassFlags = GetQTLtoolsPassFlags,
         ExcFlag = GetExcludeFile,
-    # wildcard_constraints:
-    #     StandardizedOrUnstandardized = ""
+    wildcard_constraints:
+        n = "|".join(str(i) for i in ChunkNumbers)
     shell:
         """
-        {config[QTLtools]} cis --std-err --chunk {wildcards.n} {N_PermutationChunks} --vcf {input.vcf} --bed {input.bed} --cov {input.cov} --out {output} {params.OtherFlags} {params.WindowFlag} {params.PassFlags} {params.ExcFlag} &> {log}
+        {config[QTLtools]} cis --std-err --chunk {wildcards.QTLTools_chunk_n} {N_PermutationChunks} --vcf {input.vcf} --bed {input.bed} --cov {input.cov} --out {output} {params.OtherFlags} {params.WindowFlag} {params.PassFlags} {params.ExcFlag} &> {log}
         if [ ! -f {output} ]
         then
             touch {output}
         fi
         """
 
-# rule QTLtools_generalized_unstandardized:
-#     input:
-#         vcf = GetQTLtoolsVcf,
-#         tbi = GetQTLtoolsVcfTbi,
-#         bed = GetQTLtoolsBed,
-#         bed_tbi = GetQTLtoolsBedTbi,
-#         cov = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.pca",
-#         sites_include = "QTLs/QTLTools/{Phenotype}/TopSNPsList_{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.sites_include.txt",
-#     output:
-#         temp("QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}_{StandardizedOrUnstandardized}.OnlyTopSites.txt")
-#     log:
-#         "logs/QTLtools_unstandardized/{Phenotype}.{Pass}.{QTLsGenotypeSet}.{FeatureCoordinatesRedefinedFor}/{StandardizedOrUnstandardized}.log"
-#     resources:
-#         mem_mb = much_more_mem_after_first_attempt
-#     envmodules:
-#         "gsl/2.5"
-#     params:
-#         WindowFlag = GetQTLtoolsWindowFlag,
-#         OtherFlags = GetQTLtoolsOtherFlags,
-#         PassFlags = GetQTLtoolsPassFlags,
-#         ExcFlag = GetExcludeFile,
-#     wildcard_constraints:
-#         StandardizedOrUnstandardized = "Unstandardized",
-#         Pass = "NominalPass"
-#     shell:
-#         """
-#         {config[QTLtools]} cis --std-err --vcf {input.vcf} --bed {input.bed} --cov {input.cov} --out {output} {params.OtherFlags} {params.WindowFlag} {params.PassFlags} {params.ExcFlag} --include-sites {input.sites_include} &> {log}
-#         """
-
-# rule gzip_unstandardized_QTLtools_output:
-#     input:
-#         "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}_{StandardizedOrUnstandardized}.OnlyTopSites.txt"
-#     output:
-#         "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}_{StandardizedOrUnstandardized}.OnlyTopSites.txt.gz"
-#     wildcard_constraints:
-#         StandardizedOrUnstandardized = "Unstandardized"
-#     shell:
-#         "gzip {input}"
-
-
 
 rule Gather_QTLtools_cis_pass:
     input:
-        expand( "QTLs/QTLTools/{{Phenotype}}/{{Pass}}{{QTLsGenotypeSet}}{{FeatureCoordinatesRedefinedFor}}Chunks/{n}{{StandardizedOrUnstandardized}}.txt", n=range(0, 1+N_PermutationChunks) )
+        expand( "QTLs/QTLTools/{{Phenotype}}/{{Pass}}{{QTLsGenotypeSet}}{{FeatureCoordinatesRedefinedFor}}Chunks/{QTLTools_chunk_n}{{StandardizedOrUnstandardized}}.txt", QTLTools_chunk_n=ChunkNumbers )
     output:
         "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}{StandardizedOrUnstandardized}.txt.gz"
     log:
@@ -442,18 +372,16 @@ rule tabixNominalPassQTLResults:
         tabix -b 10 -e10 -s9 {output.txt} &>> {log}
         """
 
-rule CombineChromosomalVcfs:
+rule SampleRandomPvals:
     input:
-        vcf = expand("Genotypes/1KG_GRCh38/{chrom}.vcf.gz", chrom=autosomes),
-        tbi = expand("Genotypes/1KG_GRCh38/{chrom}.vcf.gz.tbi", chrom=autosomes),
+        txt = "QTLs/QTLTools/{Phenotype}/NominalPass{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.tabix.gz",
     output:
-        vcf = "Genotypes/1KG_GRCh38/Autosomes.vcf.gz",
-        tbi = "Genotypes/1KG_GRCh38/Autosomes.vcf.gz.tbi"
-
+        "QTLs/QTLTools/{Phenotype}/NominalPass{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.RandomSamplePvals.txt.gz"
+    log:
+        "logs/SampleRandomPvals/{Phenotype}.{QTLsGenotypeSet}.{FeatureCoordinatesRedefinedFor}.log"
+    params:
+        NumVals = 1000000
     shell:
         """
-        bcftools concat -o {output.vcf} -O z {input.vcf}
-        tabix -p vcf {output.vcf}
+        (zcat {input.txt} | awk -F'\\t' 'NR>1 {{print $12}}' | shuf -n {params.NumVals} | gzip - > {output} ) &> {log}
         """
-
-

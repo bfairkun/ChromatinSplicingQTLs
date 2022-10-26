@@ -85,7 +85,92 @@ lapply(SpliceJunctionCountTables, Sum.NMD.Intron.Counts) %>%
 
 ```
 
-Hmmm, consistent with [previous analysis](https://bfairkun.github.io/cheRNA_pilot/20190805_PlotIntronPositions.html) with a smaller number of samples that I uniformly processed (trimmed reads to single end, constant read length across positions) has metabolic labelled was in between chRNA and polyA.
+#### Update:
+Yang is asking for the following plots to follow up on this one:
+
+>(i) same plot with unannotated junctions
+(ii) instead of overall, compute % for each gene separately, and plot the CDF
+
+```{r}
+
+Intron.Annotations.basic <- read_tsv("../code/SplicingAnalysis/regtools_annotate_combined/basic.bed.gz") %>%
+  filter(known_junction ==1) %>%
+  unite(intron, chrom, start, end, strand)
+Introns.Annotations.comprehensive <- read_tsv("../code/SplicingAnalysis/regtools_annotate_combined/comprehensive.bed.gz") %>%
+  filter(known_junction ==1) %>%
+  unite(intron, chrom, start, end, strand)
+Introns.Annotations.all <- read_tsv("../code/SplicingAnalysis/regtools_annotate_combined/comprehensive.bed.gz") %>%
+  unite(intron, chrom, start, end, strand)
+
+AddIntronAnnotations <- function(df){
+  df %>%
+  mutate(intron = str_replace(junc, "^(.+):(.+?):(.+?):clu.+?_([+-])$", "\\1_\\2_\\3_\\4")) %>%
+  mutate(IntronAnnotation = case_when(
+    intron %in% NMD.specific.introns ~ "Annotated NMD",
+    intron %in% Intron.Annotations.basic$intron ~ "Annotated basic",
+    intron %in% Introns.Annotations.comprehensive$intron ~ "Annotated Not basic",
+    TRUE ~ "Unannotated"
+  )) %>%
+  dplyr::select(1:6, intron, IntronAnnotation, everything())
+}
+
+Long.table <- lapply(SpliceJunctionCountTables, AddIntronAnnotations) %>%
+  lapply(pivot_longer,names_to="Sample", values_to="Count", -c(1:8)) %>%
+  bind_rows(.id="Dataset")
+```
+
+And now make those plots
+
+```{r}
+P.i.dat <- Long.table %>%
+  group_by(Sample, Dataset, IntronAnnotation) %>%
+  summarise(SumCounts = sum(Count)) %>%
+  ungroup() %>%
+  group_by(Sample, Dataset) %>%
+  mutate(Percent = SumCounts / sum(SumCounts) * 100) %>%
+  ungroup()
+P.i <- ggplot(P.i.dat, aes(x=Dataset, y=Percent, color=IntronAnnotation)) +
+  geom_jitter(alpha=0.2, size=0.5) +
+  geom_boxplot(outlier.shape=NA, color='black', fill=NA) +
+  facet_wrap(~IntronAnnotation, scales="free_y") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+  labs(y="Percent of splice junction reads")
+P.i
+
+genes <- read_tsv("../code/ExpressionAnalysis/polyA/ExpressedGeneList.txt", col_names=c("chrom", "start", "stop", "name")) %>%
+  mutate(name = str_replace(name, "^(E.+?)\\..+$", "\\1"))
+
+p.ii.dat.joined <- Introns.Annotations.all %>%
+  separate_rows(gene_id, sep = ",") %>%
+  mutate(gene_id = str_replace(gene_id, "^(E.+?)\\..+$", "\\1")) %>%
+  filter(gene_id %in% genes$name) %>%
+  inner_join(Long.table)
+
+p.ii.dat <- p.ii.dat.joined %>%
+  group_by(gene_id, Dataset, IntronAnnotation) %>%
+  summarise(SumCounts = sum(Count, na.rm=F)) %>%
+  ungroup() %>%
+  group_by(Dataset, gene_id) %>%
+  mutate(Percent = SumCounts / sum(SumCounts, na.rm=F) * 100) %>%
+  ungroup()
+
+p.ii <- ggplot(p.ii.dat, aes(x=Percent, color=Dataset)) +
+  stat_ecdf() +
+  facet_wrap(~IntronAnnotation) +
+  theme_bw() +
+  labs(y="ecdf (14000 ProteinCodingGenes)", x="Percent splice junctions within gene")
+p.ii
+
+```
+
+```{r, eval=F}
+ggsave("figure/orig/SpliceJunctionsByTypeAndDataset.pdf", P.i, height=4, width=5.5)
+
+ggsave("figure/orig/SpliceJunctionsByGeneTypeAndDataset.pdf", p.ii, height=4, width=5.5)
+
+```
+
 
 let's prcoeed to reading in other files
 
@@ -618,11 +703,21 @@ There's a few things I could do to improve this... one being that the effect siz
 For example, let's plot eQTL P-values for different groups of SNPs, including sQTLs, hQTLs, etc...
 
 ```{r}
+test.SNPs <- paste0("../code/QTLs/QTLTools/", c("chRNA.Expression.Splicing", "Expression.Splicing.Subset_YRI"), "/NominalPassForColoc.RandomSamplePvals.txt.gz") %>%
+  setNames(str_replace(., "../code/QTLs/QTLTools/(.+?)/NominalPassForColoc.RandomSamplePvals.txt.gz", "\\1")) %>%
+  lapply(read_tsv, col_names=c("trait.x.p.in.y")) %>%
+  bind_rows(.id="PC2") %>%
+  mutate(PC1 = "TestSNPs") %>%
+  group_by(PC2) %>%
+  sample_n(5000) %>%
+  ungroup()
+
 TopSNPEffects.ByPairs %>%
   filter(
       (PC2 %in% c("chRNA.Expression.Splicing", "Expression.Splicing.Subset_YRI")) &
       (PC1 %in% c("polyA.Splicing.Subset_YRI", "chRNA.Splicing", "H3K4ME3", "H3K27AC")) &
       (FDR.x < 0.1)) %>%
+  bind_rows(test.SNPs) %>%
   mutate(intron = case_when(
     PC1 %in% c("polyA.Splicing.Subset_YRI", "chRNA.Splicing") ~ str_replace(P1, "^(.+):(.+?):(.+?):clu.+?_([+-])$", "chr\\1_\\2_\\3_\\4"),
     TRUE ~ NA_character_)) %>%
@@ -646,10 +741,10 @@ TopSNPEffects.ByPairs %>%
 
 ```
 
-Ok, hmm, is that even informative.. Well there is eQTL enrichment in all the types of QTLs tested. Though, I don't have a set of control SNPs... Let's try breaking out the QQ plots by concordance of effect directions...
+Ok, hmm, is that even informative.. Well there is eQTL enrichment in all the types of QTLs tested. Let's try breaking out the QQ plots by concordance of effect directions... I'll plot the two mirror image QQ plots by concordance of effect directions
 
 ```{r}
-TopSNPEffects.ByPairs %>%
+QQ.plot.dat <- TopSNPEffects.ByPairs %>%
   filter(
       (PC2 %in% c("chRNA.Expression.Splicing", "Expression.Splicing.Subset_YRI")) &
       (PC1 %in% c("polyA.Splicing.Subset_YRI", "chRNA.Splicing", "H3K4ME3", "H3K27AC")) &
@@ -666,15 +761,52 @@ TopSNPEffects.ByPairs %>%
   )) %>%
   mutate(SnpSet = paste(PC1, IntronAnnotation)) %>%
   mutate(Concordance = if_else(sign(beta.x)==sign(beta.y), "Concordant", "Discordant")) %>%
+  bind_rows(
+    test.SNPs %>%
+      mutate(Concordance = "Concordant", SnpSet=PC1),
+    test.SNPs %>%
+      mutate(Concordance = "Discordant", SnpSet=PC1)
+    ) %>%
   group_by(SnpSet, PC2, Concordance) %>%
   mutate(ExpectedP = percent_rank(trait.x.p.in.y)) %>%
   ungroup() %>%
-  ggplot(aes(x=-log10(ExpectedP), y=-log10(trait.x.p.in.y), color=SnpSet)) +
+  mutate(Sign = recode(Concordance, !!!c("Discordant"=-1, "Concordant"=1))) %>%
+  mutate(PC2 = recode(PC2, !!!c("chRNA.Expression.Splicing"="chRNA", "Expression.Splicing.Subset_YRI"="polyA"))) %>%
+  arrange(desc(trait.x.p.in.y))
+ggplot(QQ.plot.dat, aes(x=-log10(ExpectedP)*Sign, y=-log10(trait.x.p.in.y)*Sign, color=SnpSet)) +
   geom_abline() +
   geom_point() +
-  facet_grid(rows=vars(Concordance), cols=vars(PC2)) +
+  facet_wrap(~PC2) +
   theme_bw() +
-  labs(title="QQ plot of eQTL P-values", color="xQTL SNP", y="-log10(P)")
+  labs(title="QQ plot of eQTL P-values", color="xQTL SNP", y="Observed -log10(P)", x="Theoretical -log10(P)", caption=str_wrap("If eQTL and xQTL beta signs are same, right-side-up. If opposite, plot upside-down", 30)) +
+  theme(legend.position = "bottom") +
+  guides(fill=guide_legend(nrow=4,byrow=TRUE))
+```
+
+I like these plots but there is just too many colors... Let's just plot sQTLs from polyA, to cut down on colors. Then seperately we can do just sQTLs from chRNA...
+
+```{r}
+QQ.plot.dat %>%
+  filter(!str_detect(SnpSet, "chRNA")) %>%
+ggplot(aes(x=-log10(ExpectedP)*Sign, y=-log10(trait.x.p.in.y)*Sign, color=SnpSet)) +
+  geom_abline() +
+  geom_point() +
+  facet_wrap(~PC2) +
+  theme_bw() +
+  labs(title="QQ plot of eQTL P-values", color="xQTL SNP", y="Observed -log10(P)", x="Theoretical -log10(P)", caption=str_wrap("If eQTL and xQTL beta signs are same, right-side-up. If opposite, plot upside-down", 30)) +
+  theme(legend.position = "bottom") +
+  guides(fill=guide_legend(nrow=4,byrow=TRUE))
+
+QQ.plot.dat %>%
+  filter(!str_detect(SnpSet, "polyA")) %>%
+ggplot(aes(x=-log10(ExpectedP)*Sign, y=-log10(trait.x.p.in.y)*Sign, color=SnpSet)) +
+  geom_abline() +
+  geom_point() +
+  facet_wrap(~PC2) +
+  theme_bw() +
+  labs(title="QQ plot of eQTL P-values", color="xQTL SNP", y="Observed -log10(P)", x="Theoretical -log10(P)", caption=str_wrap("If eQTL and xQTL beta signs are same, right-side-up. If opposite, plot upside-down", 30)) +
+  theme(legend.position = "bottom") +
+  guides(fill=guide_legend(nrow=4,byrow=TRUE))
 ```
 
 

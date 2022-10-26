@@ -434,7 +434,7 @@ div.tocify {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2022-10-19
+<strong>Last updated:</strong> 2022-10-26
 </p>
 <p>
 <strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 1
@@ -525,16 +525,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstreeef85e5320603653a3919d55d51162a3ada4b35d8targetblankef85e53a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/ef85e5320603653a3919d55d51162a3ada4b35d8" target="_blank">ef85e53</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstreeb47f16f5983ce4aace7e4da635bd11de49845c9ctargetblankb47f16fa"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/b47f16f5983ce4aace7e4da635bd11de49845c9c" target="_blank">b47f16f</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstreeef85e5320603653a3919d55d51162a3ada4b35d8targetblankef85e53a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstreeb47f16f5983ce4aace7e4da635bd11de49845c9ctargetblankb47f16fa" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/ef85e5320603653a3919d55d51162a3ada4b35d8" target="_blank">ef85e53</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/b47f16f5983ce4aace7e4da635bd11de49845c9c" target="_blank">b47f16f</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -545,6 +545,7 @@ Ignored files:
     Ignored:    .Rhistory
     Ignored:    .Rproj.user/
     Ignored:    analysis/.Rhistory
+    Ignored:    analysis/figure/
     Ignored:    code/.DS_Store
     Ignored:    code/.RData
     Ignored:    code/._.DS_Store
@@ -567,6 +568,7 @@ Ignored files:
     Ignored:    code/MiscCountTables/
     Ignored:    code/Multiqc/
     Ignored:    code/Multiqc_chRNA/
+    Ignored:    code/NonCodingRNA/
     Ignored:    code/NonCodingRNA_annotation/
     Ignored:    code/PeakCalling/
     Ignored:    code/Phenotypes/
@@ -576,6 +578,7 @@ Ignored files:
     Ignored:    code/QC/
     Ignored:    code/QTL_SNP_Enrichment/
     Ignored:    code/QTLs/
+    Ignored:    code/RPKM_tables/
     Ignored:    code/ReferenceGenome/
     Ignored:    code/Rplots.pdf
     Ignored:    code/Session.vim
@@ -587,6 +590,9 @@ Ignored files:
     Ignored:    code/config/.DS_Store
     Ignored:    code/config/._.DS_Store
     Ignored:    code/config/.ipynb_checkpoints/
+    Ignored:    code/dag.pdf
+    Ignored:    code/dag.png
+    Ignored:    code/dag.svg
     Ignored:    code/debug.ipynb
     Ignored:    code/debug_python.ipynb
     Ignored:    code/deepTools/
@@ -598,7 +604,6 @@ Ignored files:
     Ignored:    code/logs/
     Ignored:    code/notebooks/.ipynb_checkpoints/
     Ignored:    code/pi1/
-    Ignored:    code/rules/.CreateUnstandardizedPhenotypeMatrices.smk.swp
     Ignored:    code/rules/.ipynb_checkpoints/
     Ignored:    code/rules/OldRules/
     Ignored:    code/rules/notebooks/
@@ -607,6 +612,7 @@ Ignored files:
     Ignored:    code/scripts/GTFtools_0.8.0/
     Ignored:    code/scripts/__pycache__/
     Ignored:    code/scripts/liftOverBedpe/liftOverBedpe.py
+    Ignored:    code/snakemake.dryrun.log
     Ignored:    code/snakemake.log
     Ignored:    code/snakemake.sbatch.log
     Ignored:    code/test.introns.bed
@@ -626,31 +632,18 @@ Ignored files:
     Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022.csv
 
 Untracked files:
-    Untracked:  analysis/20221016_ExplorePSI_alternatives.Rmd
-    Untracked:  analysis/20221019_PlotFigs1.Rmd
-    Untracked:  code/rules/CreateUnstandardizedPhenotypeMatrices.smk
-    Untracked:  code/scripts/PrepareLogCPM_PhenotypeTables.R
-    Untracked:  code/scripts/PrepareLogRPKM_H3K36ME3_PhenotypeTables.R
-    Untracked:  code/scripts/PrepareLogRPKM_PhenotypeTables.R
-    Untracked:  code/scripts/PrepareUnstandardizedPSIPhenotypeTables.R
-    Untracked:  code/scripts/Subset_YRI.R
     Untracked:  code/snakemake_profiles/slurm/__pycache__/
 
 Unstaged changes:
-    Modified:   analysis/20220928_ExploreIntronSum.Rmd
-    Modified:   analysis/20221011_PlotHeatmapManyWays_ncRNA_Updated.Rmd
     Modified:   analysis/20221012_IntronRetentionAndExpressionConcordance.Rmd
+    Modified:   analysis/20221024_InspectUnstandardizedBetas.Rmd
     Modified:   code/Snakefile
-    Modified:   code/envs/bedparse.yml
-    Modified:   code/rules/ExpressionAnalysis.smk
-    Modified:   code/rules/Metaplots.smk
+    Modified:   code/rules/DownloadAndPreprocess.smk
     Modified:   code/rules/QTLTools.smk
+    Modified:   code/rules/QTL_SNP_Enrichment.smk
     Modified:   code/rules/SplicingAnalysis.smk
-    Modified:   code/scripts/CalculatePi1_GetAscertainmentP_AllPairs.py
-    Modified:   code/scripts/CalculatePi1_GetTraitPairs_AllTraits.R
+    Modified:   code/rules/common.py
     Modified:   code/scripts/GenometracksByGenotype
-    Modified:   code/scripts/MakeBigwigList.R
-    Modified:   code/scripts/MakeNormalizedPSI.Tables.R
 
 </code></pre>
 <p>
@@ -689,6 +682,57 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/61a245fa779318e64d6bb6154b21c4a792509781/analysis/20221012_IntronRetentionAndExpressionConcordance.Rmd" target="_blank">61a245f</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-10-24
+</td>
+<td>
+update nb
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/c17b6b2fcd112a08cc7e7a2fb5bb45538dc3d339/analysis/20221012_IntronRetentionAndExpressionConcordance.Rmd" target="_blank">c17b6b2</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-10-19
+</td>
+<td>
+add un qqnorm phenotypes
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/c17b6b2fcd112a08cc7e7a2fb5bb45538dc3d339/docs/20221012_IntronRetentionAndExpressionConcordance.html" target="_blank">c17b6b2</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-10-19
+</td>
+<td>
+add un qqnorm phenotypes
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -782,478 +826,16 @@ $MetabolicLabelled.60min
 
 $chRNA.Expression.Splicing
 [1] 198246     93</code></pre>
-<pre class="r"><code>SpliceJunctionCountTables$Expression.Splicing %&gt;%
-  mutate(Intron=paste(`#Chrom`, start, end, strand, sep=&quot;_&quot;)) %&gt;%
-  mutate(Is.NMD.Intron = Intron %in% NMD.specific.introns) %&gt;%
-  group_by(Is.NMD.Intron) %&gt;%
-  summarise_if(is.numeric, sum, na.rm = TRUE) %&gt;%
-  dplyr::select(-start, -end) %&gt;%
-  column_to_rownames(&quot;Is.NMD.Intron&quot;) %&gt;%
-  t()</code></pre>
-<pre><code>           FALSE  TRUE
-HG00096  3709149 17830
-HG00097  5970288 25340
-HG00099  3264484 12455
-HG00100  3341315 12673
-HG00101  3014382 13597
-HG00102  2798030 12136
-HG00103  3493738 16343
-HG00104  3198591 17035
-HG00105  6660181 26858
-HG00106  4213349 16764
-HG00108  5343418 25128
-HG00109  2476507  9483
-HG00110  5874235 25022
-HG00111  5103426 19924
-HG00112  3954505 17357
-HG00114  3143081 13341
-HG00115  4159089 18277
-HG00116  4459861 16656
-HG00117  7020550 34687
-HG00118  4452455 21158
-HG00119  4819485 22125
-HG00120  1971592  9648
-HG00121  2799478 12366
-HG00122  4555019 18539
-HG00123  5037802 19918
-HG00124  4624537 19468
-HG00125  2934475 13474
-HG00126  4763900 20625
-HG00127  5040019 20127
-HG00128  3499064 13486
-HG00129  3831033 16600
-HG00130  4438788 16820
-HG00131  4378333 22526
-HG00132  5803042 21307
-HG00133  4032972 18635
-HG00134  6118321 27548
-HG00135  2042680  8802
-HG00136  4249736 18012
-HG00137  3478431 17251
-HG00138  4193157 16761
-HG00139  5748104 24970
-HG00141  5762495 23982
-HG00142  3812175 18077
-HG00143  3806730 14021
-HG00145  4494523 18326
-HG00146  4306866 24053
-HG00148  3018315 12151
-HG00149  3902925 18418
-HG00150  4436945 19361
-HG00151  2447286  8044
-HG00152  7448106 38066
-HG00154  4705735 22636
-HG00155  2685738 11240
-HG00156  3679685 14311
-HG00157  5741376 24613
-HG00158  4009332 18344
-HG00159  5021558 17151
-HG00160  2505076 10112
-HG00171  2032306  7776
-HG00173  2191587  8847
-HG00174  3941240 16968
-HG00176  3667589 14634
-HG00177  4116980 18940
-HG00178  4534062 20179
-HG00179  3205059 12474
-HG00180  4628325 20671
-HG00181  3650049 16708
-HG00182  3382004 17015
-HG00183  4358898 21750
-HG00185  4446719 17583
-HG00186  2270761  8636
-HG00187  5107996 22778
-HG00188  4646271 21645
-HG00189  3308923 14809
-HG00231  4370995 14095
-HG00232  2313245 13634
-HG00233  4750956 25677
-HG00234  6830836 33353
-HG00235  2924441 13550
-HG00236  5054446 23572
-HG00238  4413807 19029
-HG00239  5314160 25755
-HG00240  5893909 23249
-HG00242  3467779 14811
-HG00243  4132949 17434
-HG00244  4897465 21724
-HG00245  4142296 20418
-HG00246  4937568 19255
-HG00247  4079683 16616
-HG00249  2465695  8834
-HG00250  3021206 13199
-HG00251  4917143 18681
-HG00252  3713856 13296
-HG00253  4936315 17540
-HG00255  4617945 20945
-HG00256  5099634 18872
-HG00257  3665301 17242
-HG00258  3895815 14408
-HG00259  7911053 37589
-HG00260  4667808 26120
-HG00261  4537491 19724
-HG00262  5856944 24388
-HG00263  4390463 18371
-HG00264  3344525 13163
-HG00265  4353067 17439
-HG00266  5010139 23162
-HG00267  4296377 18259
-HG00268  4307832 19355
-HG00269  3926061 16034
-HG00271  6400367 21977
-HG00272  4319763 18987
-HG00273  2510226  8462
-HG00274  4628827 18244
-HG00275  3834973 17482
-HG00276  6058418 24514
-HG00277  3195087 14855
-HG00278  3227170 15964
-HG00280  3443262 17597
-HG00281  4320498 17993
-HG00282  4784231 17814
-HG00284  4376866 17114
-HG00285  3673413 18046
-HG00306  3050528 17782
-HG00308  2463042  9289
-HG00309  8010977 37454
-HG00310  4898982 18995
-HG00311  3909493 17731
-HG00312  7405868 30994
-HG00313  4012941 15541
-HG00315  5428181 22548
-HG00319  3887748 18426
-HG00320  4161739 16666
-HG00321  4917234 22371
-HG00323  2961773 12363
-HG00324  4372388 18374
-HG00325  4976154 24845
-HG00326  4646613 17412
-HG00327  2843277 11606
-HG00328  5674146 20867
-HG00329  1775654  7067
-HG00330  4132218 15337
-HG00331  4901185 26314
-HG00332  4016403 24887
-HG00334  4028498 18298
-HG00335  4711437 19610
-HG00336  3772473 15268
-HG00337  3575607 15512
-HG00338  7310290 27602
-HG00339  4025943 17363
-HG00341  4535953 17363
-HG00342  4925542 20968
-HG00343  5094171 23952
-HG00344  3822899 21535
-HG00345  3439202 13667
-HG00346  5599558 19967
-HG00349  3908654 16915
-HG00350  2135650  8408
-HG00351  2888931 10522
-HG00353  3529837 15394
-HG00355  6269425 27740
-HG00356  5925857 21602
-HG00358  3462158 16527
-HG00359  3948910 16191
-HG00360  3301681 13905
-HG00361  4787098 23595
-HG00362  3734270 17125
-HG00364  5230488 19609
-HG00365  8141836 39026
-HG00366  4785057 22726
-HG00367  5222882 19541
-HG00369  4835865 21794
-HG00371  3625286 14187
-HG00372  4105444 18350
-HG00373  5937275 27804
-HG00375  4670034 21369
-HG00376  4620808 19631
-HG00377  5093916 18791
-HG00378  5201981 22356
-HG00379    52857   200
-HG00380  2935953 11289
-HG00381  1719664  7117
-HG00382  4059788 17628
-HG00383  4481158 18802
-HG00384  6386093 30301
-HG01334  6089787 21667
-HG01789  3812203 17195
-HG01790  1929228  6488
-HG01791  4912019 18892
-HG02215  4357410 16058
-NA06984  2708135 11676
-NA06985  4436740 16220
-NA06986  4947141 19865
-NA06989  3083551 12025
-NA06994  5712127 24546
-NA07037  3991273 17642
-NA07048  3664840 16638
-NA07051  3652844 15410
-NA07056  3731176 16451
-NA07346  4982321 16266
-NA07347  4626890 20315
-NA07357  3926419 17919
-NA10847  4656732 17627
-NA10851  3711762 13600
-NA11829  3015970 10951
-NA11830  3602959 14119
-NA11831  5853937 24663
-NA11832  5357051 19423
-NA11840  4122582 14721
-NA11843  4290776 18859
-NA11881  4566621 16360
-NA11892  3064872 15400
-NA11893  5968405 30384
-NA11894  5188518 19978
-NA11918  3332691 12608
-NA11920  4965471 19041
-NA11930  2906896 13776
-NA11931  3297081 11411
-NA11992  3667446 13436
-NA11993  5006117 17528
-NA11994  6621933 22006
-NA11995  3757594 15068
-NA12004  2689434 10437
-NA12005  4273209 17992
-NA12006  4712133 17421
-NA12043  4568353 13867
-NA12044  4756870 19920
-NA12045  2805376 10438
-NA12058  4525160 20435
-NA12144  5082748 19258
-NA12154  3819808 12964
-NA12155  3476005 11791
-NA12156  4425007 20955
-NA12234  4887260 20323
-NA12249  3760956 11892
-NA12272  2615984 10034
-NA12273  4033963 18188
-NA12275  4245904 20067
-NA12282  2266286  8710
-NA12283  3933023 15318
-NA12286  4571418 19997
-NA12287  2542428 10037
-NA12340  4439386 19697
-NA12341  4201906 16161
-NA12342  3780276 15435
-NA12347  4137411 17212
-NA12348  2138806  7364
-NA12383  3653658 15763
-NA12399  1655077  6208
-NA12400  3925633 12910
-NA12413  5681034 19661
-NA12489  4272378 17029
-NA12546  2789900  9949
-NA12716 11515675 48076
-NA12717  3733058 14061
-NA12718  4670146 20307
-NA12749  3058040 13270
-NA12750  4280818 16678
-NA12751  5702382 21297
-NA12760  2267191  7497
-NA12761  4541986 18917
-NA12762  3651656 13246
-NA12763  4804979 19865
-NA12775  6685775 32504
-NA12776  4648704 21329
-NA12777  3848971 16697
-NA12778  3727973 14819
-NA12812  2777345 11330
-NA12813  4106195 16696
-NA12814  6563804 28440
-NA12815  4825636 18697
-NA12827  2346154  9569
-NA12829  5670688 23333
-NA12830  2762144  9209
-NA12842  5002673 20768
-NA12843  3402590 13247
-NA12872  5094271 18992
-NA12873  4486308 17137
-NA12874  3968589 17188
-NA12889  5089067 20378
-NA12890  3448926 15343
-NA18486  6392603 29693
-NA18487  3509994 15725
-NA18488  2664882 11001
-NA18489  4285770 16941
-NA18498  5703609 22499
-NA18499  4389402 19086
-NA18502  8527863 34758
-NA18505  2337208  8365
-NA18508  3568030 12657
-NA18510  3099265 13139
-NA18511  7355949 36864
-NA18517  2036033  6928
-NA18519  3348557 11801
-NA18520  3914753 12883
-NA18858  4419347 16005
-NA18861  2150847  8389
-NA18867  3805544 15181
-NA18868  4459176 16287
-NA18870  3475632 13925
-NA18873  4021058 18075
-NA18907  2926979 11021
-NA18908  5132520 20888
-NA18909  4777260 19066
-NA18910  2718491  8935
-NA18912  6539369 24850
-NA18916  6459892 26793
-NA18917  3741327 16588
-NA18923  4953481 18205
-NA18933  3367847 12818
-NA18934  7077478 30049
-NA19092  4536589 18204
-NA19093  5145790 18394
-NA19095  6422144 22765
-NA19096  3888047 15239
-NA19098  6330312 27602
-NA19099  5976613 20245
-NA19102  3244244 12671
-NA19107  4263857 17886
-NA19108  7541158 32076
-NA19113  2286263  8052
-NA19114  4962358 17240
-NA19116  6009816 24465
-NA19117  4885102 20525
-NA19118  6545544 24407
-NA19119  2620952 10111
-NA19121  3569276 14914
-NA19129  3701726 16594
-NA19130  4050529 16537
-NA19131  5876765 25474
-NA19137  3612162 14903
-NA19138  2964898 12086
-NA19141  4120838 18342
-NA19143  5179458 18286
-NA19144  2620186  9596
-NA19146  5084546 22434
-NA19147  6793799 28862
-NA19149  3591796 16002
-NA19150  4513741 18959
-NA19152  4455900 19009
-NA19153  3985531 15904
-NA19159 12085171 55435
-NA19160  2882162  9919
-NA19171  4888230 20935
-NA19172  4113566 14793
-NA19175  4573481 20389
-NA19184  5513791 22694
-NA19185  4301998 16756
-NA19189  5259112 21188
-NA19190  4527256 19726
-NA19197  2655390 12332
-NA19198  5124685 20410
-NA19200  4284716 14102
-NA19201  4065061 18006
-NA19204  3279983 13666
-NA19206  5500752 21098
-NA19207  4567051 20001
-NA19209  3537760 15313
-NA19210  3671149 13832
-NA19213  5474128 20626
-NA19214  4795815 18566
-NA19222  5014274 19037
-NA19223  6461058 28695
-NA19225  3505683 13048
-NA19235  4912111 22322
-NA19236  3242259 14193
-NA19247  4332756 18392
-NA19248  4625652 16562
-NA19256  4496254 19039
-NA19257  5355988 18457
-NA20502  3609428 13463
-NA20503  3540626 13731
-NA20504  3605850 16487
-NA20505  5158963 19391
-NA20506  3129044 14439
-NA20507  3541199 18181
-NA20508  4524233 15803
-NA20509  8349744 34255
-NA20510  2225638  8418
-NA20512  3645431 13203
-NA20513  4090869 17775
-NA20514  3193367 16394
-NA20515  5154752 25517
-NA20516  4503303 17217
-NA20517  3039969 13430
-NA20518  4655493 18220
-NA20519  4821993 22205
-NA20520  2184890  6749
-NA20521  3162387 13549
-NA20524  4943563 18496
-NA20525  3644787 14916
-NA20527  5977643 26619
-NA20528  4805622 21690
-NA20529  4684125 17918
-NA20530  5425699 29442
-NA20531  4170078 19614
-NA20532  2675278 11824
-NA20534  5268093 21901
-NA20535  3816371 14859
-NA20536  3201797 12773
-NA20537  2977027 11177
-NA20538  2192032  9527
-NA20539  3888629 17010
-NA20540  2765585 12055
-NA20541  4788497 19581
-NA20542  2586825 11225
-NA20543  4050804 13271
-NA20544  4176707 15346
-NA20581  3293928 12192
-NA20582  5091495 22005
-NA20585  2732358 11307
-NA20586  4818464 16463
-NA20588  4239713 23156
-NA20589  2739576  9850
-NA20752  5400758 20717
-NA20754  3935155 14795
-NA20756  4266291 16442
-NA20757  4057917 16915
-NA20758  6184580 24057
-NA20759  3347631 16488
-NA20760  2667378 12282
-NA20761  3667974 16458
-NA20765  6186872 28668
-NA20766  3687854 14904
-NA20768  4001112 17214
-NA20769  3336409 13279
-NA20770  2533934  9995
-NA20771  4545077 16515
-NA20772  4997333 28151
-NA20773  3946830 15855
-NA20774  2600558 11448
-NA20778  1257095  5160
-NA20783  5009501 18817
-NA20785  3958258 15069
-NA20786  5237921 15719
-NA20787  4854000 25222
-NA20790  4104832 14035
-NA20792  4144541 15760
-NA20795  5381487 22938
-NA20796  6965737 28422
-NA20797  6344504 26211
-NA20798  3285299 13126
-NA20799  4276502 19998
-NA20800  5097081 21696
-NA20801  5222605 19297
-NA20802  3755236 13648
-NA20803  7751162 26444
-NA20804  4176025 16293
-NA20805  2753391 12522
-NA20806  2391712 12558
-NA20807  4885933 20361
-NA20808  4304608 17827
-NA20809  4006770 16573
-NA20810  5330072 20639
-NA20811  3204473 14761
-NA20812  4884054 16939
-NA20813  5015426 22240
-NA20814  4873701 18876
-NA20815  5015517 18986
-NA20816  4097123 18260
-NA20819  2902477 13864
-NA20826  3834408 14608
-NA20828  6421596 32532</code></pre>
-<pre class="r"><code>Sum.NMD.Intron.Counts &lt;- function(df){
+<pre class="r"><code># SpliceJunctionCountTables$Expression.Splicing %&gt;%
+#   mutate(Intron=paste(`#Chrom`, start, end, strand, sep=&quot;_&quot;)) %&gt;%
+#   mutate(Is.NMD.Intron = Intron %in% NMD.specific.introns) %&gt;%
+#   group_by(Is.NMD.Intron) %&gt;%
+#   summarise_if(is.numeric, sum, na.rm = TRUE) %&gt;%
+#   dplyr::select(-start, -end) %&gt;%
+#   column_to_rownames(&quot;Is.NMD.Intron&quot;) %&gt;%
+#   t()
+
+Sum.NMD.Intron.Counts &lt;- function(df){
   df %&gt;%
   mutate(Intron=paste(`#Chrom`, start, end, strand, sep=&quot;_&quot;)) %&gt;%
   mutate(Is.NMD.Intron = Intron %in% NMD.specific.introns) %&gt;%
@@ -1276,6 +858,43 @@ lapply(SpliceJunctionCountTables, Sum.NMD.Intron.Counts) %&gt;%
   geom_jitter() +
   theme_bw()</code></pre>
 <p><img src="figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-1">
+Past versions of unnamed-chunk-2-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/c17b6b2fcd112a08cc7e7a2fb5bb45538dc3d339/docs/figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-2-1.png" target="_blank">c17b6b2</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-10-19
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>lapply(SpliceJunctionCountTables, Sum.NMD.Intron.Counts) %&gt;%
   bind_rows(.id=&quot;Source&quot;) %&gt;%
   dplyr::rename(c(&quot;NotNMD&quot;=&quot;FALSE&quot;, &quot;NMD&quot;=&quot;TRUE&quot;)) %&gt;%
@@ -1286,7 +905,194 @@ lapply(SpliceJunctionCountTables, Sum.NMD.Intron.Counts) %&gt;%
   theme_bw() +
   labs(title=&quot;Total juncs per dataset&quot;, y=&quot;Total num juncs&quot;)</code></pre>
 <p><img src="figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-2-2.png" width="672" style="display: block; margin: auto;" /></p>
-<p>Hmmm, consistent with <a href="https://bfairkun.github.io/cheRNA_pilot/20190805_PlotIntronPositions.html">previous analysis</a> with a smaller number of samples that I uniformly processed (trimmed reads to single end, constant read length across positions) has metabolic labelled was in between chRNA and polyA.</p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-2">
+Past versions of unnamed-chunk-2-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/c17b6b2fcd112a08cc7e7a2fb5bb45538dc3d339/docs/figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-2-2.png" target="_blank">c17b6b2</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-10-19
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="update" class="section level4">
+<h4>Update:</h4>
+<p>Yang is asking for the following plots to follow up on this one:</p>
+<blockquote>
+<ol style="list-style-type: lower-roman">
+<li>same plot with unannotated junctions</li>
+<li>instead of overall, compute % for each gene separately, and plot the CDF</li>
+</ol>
+</blockquote>
+<pre class="r"><code>Intron.Annotations.basic &lt;- read_tsv(&quot;../code/SplicingAnalysis/regtools_annotate_combined/basic.bed.gz&quot;) %&gt;%
+  filter(known_junction ==1) %&gt;%
+  unite(intron, chrom, start, end, strand)
+Introns.Annotations.comprehensive &lt;- read_tsv(&quot;../code/SplicingAnalysis/regtools_annotate_combined/comprehensive.bed.gz&quot;) %&gt;%
+  filter(known_junction ==1) %&gt;%
+  unite(intron, chrom, start, end, strand)
+Introns.Annotations.all &lt;- read_tsv(&quot;../code/SplicingAnalysis/regtools_annotate_combined/comprehensive.bed.gz&quot;) %&gt;%
+  unite(intron, chrom, start, end, strand)
+
+AddIntronAnnotations &lt;- function(df){
+  df %&gt;%
+  mutate(intron = str_replace(junc, &quot;^(.+):(.+?):(.+?):clu.+?_([+-])$&quot;, &quot;\\1_\\2_\\3_\\4&quot;)) %&gt;%
+  mutate(IntronAnnotation = case_when(
+    intron %in% NMD.specific.introns ~ &quot;Annotated NMD&quot;,
+    intron %in% Intron.Annotations.basic$intron ~ &quot;Annotated basic&quot;,
+    intron %in% Introns.Annotations.comprehensive$intron ~ &quot;Annotated Not basic&quot;,
+    TRUE ~ &quot;Unannotated&quot;
+  )) %&gt;%
+  dplyr::select(1:6, intron, IntronAnnotation, everything())
+}
+
+Long.table &lt;- lapply(SpliceJunctionCountTables, AddIntronAnnotations) %&gt;%
+  lapply(pivot_longer,names_to=&quot;Sample&quot;, values_to=&quot;Count&quot;, -c(1:8)) %&gt;%
+  bind_rows(.id=&quot;Dataset&quot;)</code></pre>
+<p>And now make those plots</p>
+<pre class="r"><code>P.i.dat &lt;- Long.table %&gt;%
+  group_by(Sample, Dataset, IntronAnnotation) %&gt;%
+  summarise(SumCounts = sum(Count)) %&gt;%
+  ungroup() %&gt;%
+  group_by(Sample, Dataset) %&gt;%
+  mutate(Percent = SumCounts / sum(SumCounts) * 100) %&gt;%
+  ungroup()
+P.i &lt;- ggplot(P.i.dat, aes(x=Dataset, y=Percent, color=IntronAnnotation)) +
+  geom_jitter(alpha=0.2, size=0.5) +
+  geom_boxplot(outlier.shape=NA, color=&#39;black&#39;, fill=NA) +
+  facet_wrap(~IntronAnnotation, scales=&quot;free_y&quot;) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+  labs(y=&quot;Percent of splice junction reads&quot;)
+P.i</code></pre>
+<p><img src="figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-4-1">
+Past versions of unnamed-chunk-4-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-4-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/3201a1943ba4ad08cdd1d521bbacbc97ad8e3689/docs/figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-4-1.png" target="_blank">3201a19</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-10-12
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>genes &lt;- read_tsv(&quot;../code/ExpressionAnalysis/polyA/ExpressedGeneList.txt&quot;, col_names=c(&quot;chrom&quot;, &quot;start&quot;, &quot;stop&quot;, &quot;name&quot;)) %&gt;%
+  mutate(name = str_replace(name, &quot;^(E.+?)\\..+$&quot;, &quot;\\1&quot;))
+
+p.ii.dat.joined &lt;- Introns.Annotations.all %&gt;%
+  separate_rows(gene_id, sep = &quot;,&quot;) %&gt;%
+  mutate(gene_id = str_replace(gene_id, &quot;^(E.+?)\\..+$&quot;, &quot;\\1&quot;)) %&gt;%
+  filter(gene_id %in% genes$name) %&gt;%
+  inner_join(Long.table)
+
+p.ii.dat &lt;- p.ii.dat.joined %&gt;%
+  group_by(gene_id, Dataset, IntronAnnotation) %&gt;%
+  summarise(SumCounts = sum(Count, na.rm=F)) %&gt;%
+  ungroup() %&gt;%
+  group_by(Dataset, gene_id) %&gt;%
+  mutate(Percent = SumCounts / sum(SumCounts, na.rm=F) * 100) %&gt;%
+  ungroup()
+
+p.ii &lt;- ggplot(p.ii.dat, aes(x=Percent, color=Dataset)) +
+  stat_ecdf() +
+  facet_wrap(~IntronAnnotation) +
+  theme_bw() +
+  labs(y=&quot;ecdf (14000 ProteinCodingGenes)&quot;, x=&quot;Percent splice junctions within gene&quot;)
+p.ii</code></pre>
+<p><img src="figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-4-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-4-2">
+Past versions of unnamed-chunk-4-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-4-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/3201a1943ba4ad08cdd1d521bbacbc97ad8e3689/docs/figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-4-2.png" target="_blank">3201a19</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-10-12
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>ggsave(&quot;figure/orig/SpliceJunctionsByTypeAndDataset.pdf&quot;, P.i, height=4, width=5.5)
+
+ggsave(&quot;figure/orig/SpliceJunctionsByGeneTypeAndDataset.pdf&quot;, p.ii, height=4, width=5.5)</code></pre>
 <p>let’s prcoeed to reading in other files</p>
 <pre class="r"><code>PhenotypeAliases &lt;- read_tsv(&quot;../data/Phenotypes_recode_for_Plotting.txt&quot;)
 
@@ -1315,13 +1121,13 @@ finemap.snps.annotated &lt;- read_tsv(&quot;../code/QTL_SNP_Enrichment/FinemapIn
   theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
         axis.ticks.x=element_blank())</code></pre>
-<p><img src="figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
-<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-4-1">
-Past versions of unnamed-chunk-4-1.png
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-7-1">
+Past versions of unnamed-chunk-7-1.png
 </button>
 </p>
-<div id="fig-unnamed-chunk-4-1" class="collapse">
+<div id="fig-unnamed-chunk-7-1" class="collapse">
 <div class="table-responsive">
 <table class="table table-condensed table-hover">
 <thead>
@@ -1340,7 +1146,7 @@ Date
 <tbody>
 <tr>
 <td>
-<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/3201a1943ba4ad08cdd1d521bbacbc97ad8e3689/docs/figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-4-1.png" target="_blank">3201a19</a>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/3201a1943ba4ad08cdd1d521bbacbc97ad8e3689/docs/figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-7-1.png" target="_blank">3201a19</a>
 </td>
 <td>
 Benjmain Fair
@@ -1381,44 +1187,7 @@ Benjmain Fair
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
   labs(x=&quot;TraitA Phenotype class&quot;, y=&quot;TraitB Phenotype class&quot;, fill=&quot;Spearman cor&quot;, title=&quot;Effect size correlation&quot;,
        caption = &quot;FacetTitle: IsChromatinQTL IsSplicingQTL&quot;)</code></pre>
-<p><img src="figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-4-2.png" width="672" style="display: block; margin: auto;" /></p>
-<p>
-<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-4-2">
-Past versions of unnamed-chunk-4-2.png
-</button>
-</p>
-<div id="fig-unnamed-chunk-4-2" class="collapse">
-<div class="table-responsive">
-<table class="table table-condensed table-hover">
-<thead>
-<tr>
-<th>
-Version
-</th>
-<th>
-Author
-</th>
-<th>
-Date
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/3201a1943ba4ad08cdd1d521bbacbc97ad8e3689/docs/figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-4-2.png" target="_blank">3201a19</a>
-</td>
-<td>
-Benjmain Fair
-</td>
-<td>
-2022-10-12
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
+<p><img src="figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-7-2.png" width="672" style="display: block; margin: auto;" /></p>
 <p>Now split QTLs by location of SNP as either in splice site, in enhancer/promoter, or neither</p>
 <pre class="r"><code>#annotation types
 finemap.snps.annotated$AnnotationClass %&gt;% unique()</code></pre>
@@ -1485,13 +1254,13 @@ finemap.snps.annotated$AnnotationClass %&gt;% unique()</code></pre>
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
   labs(x=&quot;TraitA Phenotype class&quot;, y=&quot;TraitB Phenotype class&quot;, fill=&quot;Spearman cor&quot;, title=&quot;Effect size correlation for eQTLs that coloc with something&quot;,
        caption = str_wrap(&quot;FacetCols=Annotation class of SNP (Onlyfinemap PP &gt;0.25 included). FacetRows=Type of eQTL&quot;))</code></pre>
-<p><img src="figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
-<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-6-1">
-Past versions of unnamed-chunk-6-1.png
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-1">
+Past versions of unnamed-chunk-9-1.png
 </button>
 </p>
-<div id="fig-unnamed-chunk-6-1" class="collapse">
+<div id="fig-unnamed-chunk-9-1" class="collapse">
 <div class="table-responsive">
 <table class="table table-condensed table-hover">
 <thead>
@@ -1510,13 +1279,13 @@ Date
 <tbody>
 <tr>
 <td>
-<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/3201a1943ba4ad08cdd1d521bbacbc97ad8e3689/docs/figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-6-1.png" target="_blank">3201a19</a>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/c17b6b2fcd112a08cc7e7a2fb5bb45538dc3d339/docs/figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-9-1.png" target="_blank">c17b6b2</a>
 </td>
 <td>
 Benjmain Fair
 </td>
 <td>
-2022-10-12
+2022-10-19
 </td>
 </tr>
 </tbody>
@@ -1568,13 +1337,13 @@ Benjmain Fair
   theme_bw() +
   labs(x=&quot;TraitA Phenotype class&quot;, y=&quot;TraitB Phenotype class&quot;, title=&quot;Effect size correlation for eQTLs/sQTLs that are not hQTLs&quot;,
        caption = str_wrap(&quot;Only SNPs with finemap PP &gt; 0.25 in annotated splice site SNP included&quot;))</code></pre>
-<p><img src="figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
-<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-7-1">
-Past versions of unnamed-chunk-7-1.png
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-10-1">
+Past versions of unnamed-chunk-10-1.png
 </button>
 </p>
-<div id="fig-unnamed-chunk-7-1" class="collapse">
+<div id="fig-unnamed-chunk-10-1" class="collapse">
 <div class="table-responsive">
 <table class="table table-condensed table-hover">
 <thead>
@@ -1593,13 +1362,13 @@ Date
 <tbody>
 <tr>
 <td>
-<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/3201a1943ba4ad08cdd1d521bbacbc97ad8e3689/docs/figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-7-1.png" target="_blank">3201a19</a>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/c17b6b2fcd112a08cc7e7a2fb5bb45538dc3d339/docs/figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-10-1.png" target="_blank">c17b6b2</a>
 </td>
 <td>
 Benjmain Fair
 </td>
 <td>
-2022-10-12
+2022-10-19
 </td>
 </tr>
 </tbody>
@@ -1655,13 +1424,13 @@ ggplot(dat.to.plot, aes(x=beta.x, y=beta.y, color=ContainsNMDJunc)) +
   facet_grid(rows=vars(PC.x), cols=vars(PC.y)) +
   theme_bw() +
   labs(x=&quot;TraitA Phenotype class&quot;, y=&quot;TraitB Phenotype class&quot;, caption=&quot;Effect size correlation for eQTLs/sQTLs that are not hQTLs&quot;, title=&quot;sQTLs that increase annotated NMD junctions coloc with downward eQTLs&quot;)</code></pre>
-<p><img src="figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
-<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-8-1">
-Past versions of unnamed-chunk-8-1.png
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-11-1">
+Past versions of unnamed-chunk-11-1.png
 </button>
 </p>
-<div id="fig-unnamed-chunk-8-1" class="collapse">
+<div id="fig-unnamed-chunk-11-1" class="collapse">
 <div class="table-responsive">
 <table class="table table-condensed table-hover">
 <thead>
@@ -1680,13 +1449,13 @@ Date
 <tbody>
 <tr>
 <td>
-<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/3201a1943ba4ad08cdd1d521bbacbc97ad8e3689/docs/figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-8-1.png" target="_blank">3201a19</a>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/c17b6b2fcd112a08cc7e7a2fb5bb45538dc3d339/docs/figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-11-1.png" target="_blank">c17b6b2</a>
 </td>
 <td>
 Benjmain Fair
 </td>
 <td>
-2022-10-12
+2022-10-19
 </td>
 </tr>
 </tbody>
@@ -1806,7 +1575,44 @@ inner_join(eQTLs, sQTLs, by=&quot;gene&quot;, suffix=c(&quot;.eQTL&quot;, &quot;
   facet_grid(rows = vars(source.eQTL), cols=vars(source.sQTL)) +
   theme_bw() +
   labs(title=&quot;genetic effects of NMD introns and host gene expression&quot;, x=&quot;beta, eQTL&quot;, y=&quot;beta, sQTL&quot;, caption=&quot;Only FDR&lt;10% sQTLs and eQTLs plotted&quot;)</code></pre>
-<p><img src="figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-14-1">
+Past versions of unnamed-chunk-14-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-14-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/c17b6b2fcd112a08cc7e7a2fb5bb45538dc3d339/docs/figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-14-1.png" target="_blank">c17b6b2</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-10-19
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>inner_join(eQTLs, H3K4me3.QTLs, by=&quot;gene&quot;, suffix=c(&quot;.eQTL&quot;, &quot;.sQTL&quot;)) %&gt;%
   filter(gene_peak %in% PeaksToTSS$GenePeakPair) %&gt;%
   filter(q.eQTL &lt; 0.1 &amp; q.sQTL &lt; 0.1) %&gt;%
@@ -1819,7 +1625,44 @@ inner_join(eQTLs, sQTLs, by=&quot;gene&quot;, suffix=c(&quot;.eQTL&quot;, &quot;
   facet_grid(rows = vars(source.eQTL), cols=vars(source.sQTL)) +
   theme_bw() +
   labs(title=&quot;genetic effects of H3K4ME promoters and host gene expression&quot;, x=&quot;beta, eQTL&quot;, y=&quot;beta, H3K4ME3 QTL&quot;, caption=&quot;Only FDR&lt;10% H3K4ME3 QTLs and eQTLs plotted&quot;)</code></pre>
-<p><img src="figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-11-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-14-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-14-2">
+Past versions of unnamed-chunk-14-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-14-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/c17b6b2fcd112a08cc7e7a2fb5bb45538dc3d339/docs/figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-14-2.png" target="_blank">c17b6b2</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-10-19
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Wait, upon further thought, I think I didn’t make the above plots correctly. I was just plotting the beta for the topSNP for each feature, not the same SNP between sQTL and eQTL, so the directions of SNP effect (which are always ALT/REF) might not be polarized the same way.</p>
 <pre class="r"><code>TopSNPEffects.ByPairs &lt;- fread(&quot;../code/pi1/PairwisePi1Traits.P.all.txt.gz&quot;)
 
@@ -1843,7 +1686,44 @@ TopSNPEffects.ByPairs %&gt;%
   facet_grid(rows = vars(source.eQTL), cols=vars(source.sQTL)) +
   theme_bw() +
   labs(title=&quot;genetic effects of NMD introns and host gene expression&quot;, x=&quot;beta, eQTL&quot;, y=&quot;beta, sQTL&quot;, caption=&quot;Only FDR&lt;10% sQTLs and eQTLs plotted. sQTL effects are relative to top eQTL SNP&quot;)</code></pre>
-<p><img src="figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-15-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-15-1">
+Past versions of unnamed-chunk-15-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-15-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/c17b6b2fcd112a08cc7e7a2fb5bb45538dc3d339/docs/figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-15-1.png" target="_blank">c17b6b2</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-10-19
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>TopSNPEffects.ByPairs %&gt;%
   filter(
       (PC2 %in% c(&quot;chRNA.Expression.Splicing&quot;, &quot;Expression.Splicing.Subset_YRI&quot;)) &amp;
@@ -1864,7 +1744,7 @@ TopSNPEffects.ByPairs %&gt;%
   facet_grid(rows = vars(source.eQTL), cols=vars(source.sQTL)) +
   theme_bw() +
   labs(title=&quot;genetic effects of NMD introns and host gene expression&quot;, x=&quot;beta, eQTL&quot;, y=&quot;beta, sQTL&quot;, caption=&quot;Only FDR&lt;10% sQTLs and eQTLs plotted. eQTL effects are relative to top sQTL SNP&quot;)</code></pre>
-<p><img src="figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-12-2.png" width="672" style="display: block; margin: auto;" /> I think I’ll want to further break down introns into - annotatic basic transcripts - annotated transripts (not NMD) - annotated NMD - unannotated</p>
+<p><img src="figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-15-2.png" width="672" style="display: block; margin: auto;" /> I think I’ll want to further break down introns into - annotatic basic transcripts - annotated transripts (not NMD) - annotated NMD - unannotated</p>
 <p>First read in the annotations…</p>
 <pre class="r"><code>Intron.Annotations.basic &lt;- read_tsv(&quot;../code/SplicingAnalysis/regtools_annotate_combined/basic.bed.gz&quot;) %&gt;%
   filter(known_junction ==1) %&gt;%
@@ -1894,7 +1774,44 @@ Introns.Annotations.comprehensive &lt;- read_tsv(&quot;../code/SplicingAnalysis/
   theme_bw() +
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
   labs(title=&quot;Number sQTLs that are in an eGene&quot;, x=&quot;Intron Type&quot;, caption=&quot;FDR10% for sQTL and eQTL&quot;)</code></pre>
-<p><img src="figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-17-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-17-1">
+Past versions of unnamed-chunk-17-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-17-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/c17b6b2fcd112a08cc7e7a2fb5bb45538dc3d339/docs/figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-17-1.png" target="_blank">c17b6b2</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-10-19
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>TopSNPEffects.ByPairs %&gt;%
   filter(
       (PC1 %in% c(&quot;chRNA.Expression.Splicing&quot;, &quot;Expression.Splicing.Subset_YRI&quot;)) &amp;
@@ -1919,7 +1836,7 @@ Introns.Annotations.comprehensive &lt;- read_tsv(&quot;../code/SplicingAnalysis/
   facet_grid(rows = vars(source.eQTL), cols=vars(source.sQTL)) +
   theme_bw() +
   labs(title=&quot;genetic effects of NMD introns and host gene expression&quot;, x=&quot;beta, sQTL&quot;, y=&quot;beta, eQTL&quot;, caption=&quot;Only FDR&lt;10% sQTLs and eQTLs plotted. sQTL effects are relative to top eQTL SNP&quot;)</code></pre>
-<p><img src="figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-14-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-17-2.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>TopSNPEffects.ByPairs %&gt;%
   filter(
       (PC2 %in% c(&quot;chRNA.Expression.Splicing&quot;, &quot;Expression.Splicing.Subset_YRI&quot;)) &amp;
@@ -1944,7 +1861,108 @@ Introns.Annotations.comprehensive &lt;- read_tsv(&quot;../code/SplicingAnalysis/
   facet_grid(rows = vars(source.eQTL), cols=vars(source.sQTL)) +
   theme_bw() +
   labs(title=&quot;genetic effects of NMD introns and host gene expression&quot;, x=&quot;beta, sQTL&quot;, y=&quot;beta, eQTL&quot;, caption=&quot;Only FDR&lt;10% sQTLs and eQTLs plotted. eQTL effects are relative to top sQTL SNP&quot;)</code></pre>
-<p><img src="figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-14-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-17-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>There’s a few things I could do to improve this… one being that the effect sizes are standardized and therefore hard to interpret. Plotting eQTL effect sizes as logFC and splicing effect sizes as deltaPSI could be more interpretable. Also, Yang suggesting exploring these ideas by plotting things as QQ plots… let’s do that now…</p>
+<p>For example, let’s plot eQTL P-values for different groups of SNPs, including sQTLs, hQTLs, etc…</p>
+<pre class="r"><code>test.SNPs &lt;- paste0(&quot;../code/QTLs/QTLTools/&quot;, c(&quot;chRNA.Expression.Splicing&quot;, &quot;Expression.Splicing.Subset_YRI&quot;), &quot;/NominalPassForColoc.RandomSamplePvals.txt.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/QTLs/QTLTools/(.+?)/NominalPassForColoc.RandomSamplePvals.txt.gz&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(read_tsv, col_names=c(&quot;trait.x.p.in.y&quot;)) %&gt;%
+  bind_rows(.id=&quot;PC2&quot;) %&gt;%
+  mutate(PC1 = &quot;TestSNPs&quot;) %&gt;%
+  group_by(PC2) %&gt;%
+  sample_n(5000) %&gt;%
+  ungroup()
+
+TopSNPEffects.ByPairs %&gt;%
+  filter(
+      (PC2 %in% c(&quot;chRNA.Expression.Splicing&quot;, &quot;Expression.Splicing.Subset_YRI&quot;)) &amp;
+      (PC1 %in% c(&quot;polyA.Splicing.Subset_YRI&quot;, &quot;chRNA.Splicing&quot;, &quot;H3K4ME3&quot;, &quot;H3K27AC&quot;)) &amp;
+      (FDR.x &lt; 0.1)) %&gt;%
+  bind_rows(test.SNPs) %&gt;%
+  mutate(intron = case_when(
+    PC1 %in% c(&quot;polyA.Splicing.Subset_YRI&quot;, &quot;chRNA.Splicing&quot;) ~ str_replace(P1, &quot;^(.+):(.+?):(.+?):clu.+?_([+-])$&quot;, &quot;chr\\1_\\2_\\3_\\4&quot;),
+    TRUE ~ NA_character_)) %&gt;%
+  mutate(IntronAnnotation = case_when(
+    intron %in% NMD.specific.introns ~ &quot;Annotated NMD&quot;,
+    intron %in% Intron.Annotations.basic$intron ~ &quot;Annotated basic&quot;,
+    intron %in% Introns.Annotations.comprehensive$intron ~ &quot;Annotated Not basic&quot;,
+    !is.na(intron) ~ &quot;Unannotated&quot;,
+    TRUE ~ &quot;&quot;
+  )) %&gt;%
+  mutate(SnpSet = paste(PC1, IntronAnnotation)) %&gt;%
+  group_by(SnpSet, PC2) %&gt;%
+  mutate(ExpectedP = percent_rank(trait.x.p.in.y)) %&gt;%
+  ungroup() %&gt;%
+  ggplot(aes(x=-log10(ExpectedP), y=-log10(trait.x.p.in.y), color=SnpSet)) +
+  geom_abline() +
+  geom_point() +
+  facet_wrap(~PC2) +
+  theme_bw() +
+  labs(title=&quot;QQ plot of eQTL P-values&quot;, color=&quot;xQTL SNP&quot;, y=&quot;-log10(P)&quot;)</code></pre>
+<p><img src="figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-18-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok, hmm, is that even informative.. Well there is eQTL enrichment in all the types of QTLs tested. Let’s try breaking out the QQ plots by concordance of effect directions… I’ll plot the two mirror image QQ plots by concordance of effect directions</p>
+<pre class="r"><code>QQ.plot.dat &lt;- TopSNPEffects.ByPairs %&gt;%
+  filter(
+      (PC2 %in% c(&quot;chRNA.Expression.Splicing&quot;, &quot;Expression.Splicing.Subset_YRI&quot;)) &amp;
+      (PC1 %in% c(&quot;polyA.Splicing.Subset_YRI&quot;, &quot;chRNA.Splicing&quot;, &quot;H3K4ME3&quot;, &quot;H3K27AC&quot;)) &amp;
+      (FDR.x &lt; 0.1)) %&gt;%
+  mutate(intron = case_when(
+    PC1 %in% c(&quot;polyA.Splicing.Subset_YRI&quot;, &quot;chRNA.Splicing&quot;) ~ str_replace(P1, &quot;^(.+):(.+?):(.+?):clu.+?_([+-])$&quot;, &quot;chr\\1_\\2_\\3_\\4&quot;),
+    TRUE ~ NA_character_)) %&gt;%
+  mutate(IntronAnnotation = case_when(
+    intron %in% NMD.specific.introns ~ &quot;Annotated NMD&quot;,
+    intron %in% Intron.Annotations.basic$intron ~ &quot;Annotated basic&quot;,
+    intron %in% Introns.Annotations.comprehensive$intron ~ &quot;Annotated Not basic&quot;,
+    !is.na(intron) ~ &quot;Unannotated&quot;,
+    TRUE ~ &quot;&quot;
+  )) %&gt;%
+  mutate(SnpSet = paste(PC1, IntronAnnotation)) %&gt;%
+  mutate(Concordance = if_else(sign(beta.x)==sign(beta.y), &quot;Concordant&quot;, &quot;Discordant&quot;)) %&gt;%
+  bind_rows(
+    test.SNPs %&gt;%
+      mutate(Concordance = &quot;Concordant&quot;, SnpSet=PC1),
+    test.SNPs %&gt;%
+      mutate(Concordance = &quot;Discordant&quot;, SnpSet=PC1)
+    ) %&gt;%
+  group_by(SnpSet, PC2, Concordance) %&gt;%
+  mutate(ExpectedP = percent_rank(trait.x.p.in.y)) %&gt;%
+  ungroup() %&gt;%
+  mutate(Sign = recode(Concordance, !!!c(&quot;Discordant&quot;=-1, &quot;Concordant&quot;=1))) %&gt;%
+  mutate(PC2 = recode(PC2, !!!c(&quot;chRNA.Expression.Splicing&quot;=&quot;chRNA&quot;, &quot;Expression.Splicing.Subset_YRI&quot;=&quot;polyA&quot;))) %&gt;%
+  arrange(desc(trait.x.p.in.y))
+ggplot(QQ.plot.dat, aes(x=-log10(ExpectedP)*Sign, y=-log10(trait.x.p.in.y)*Sign, color=SnpSet)) +
+  geom_abline() +
+  geom_point() +
+  facet_wrap(~PC2) +
+  theme_bw() +
+  labs(title=&quot;QQ plot of eQTL P-values&quot;, color=&quot;xQTL SNP&quot;, y=&quot;Observed -log10(P)&quot;, x=&quot;Theoretical -log10(P)&quot;, caption=str_wrap(&quot;If eQTL and xQTL beta signs are same, right-side-up. If opposite, plot upside-down&quot;, 30)) +
+  theme(legend.position = &quot;bottom&quot;) +
+  guides(fill=guide_legend(nrow=4,byrow=TRUE))</code></pre>
+<p><img src="figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-19-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>I like these plots but there is just too many colors… Let’s just plot sQTLs from polyA, to cut down on colors. Then seperately we can do just sQTLs from chRNA…</p>
+<pre class="r"><code>QQ.plot.dat %&gt;%
+  filter(!str_detect(SnpSet, &quot;chRNA&quot;)) %&gt;%
+ggplot(aes(x=-log10(ExpectedP)*Sign, y=-log10(trait.x.p.in.y)*Sign, color=SnpSet)) +
+  geom_abline() +
+  geom_point() +
+  facet_wrap(~PC2) +
+  theme_bw() +
+  labs(title=&quot;QQ plot of eQTL P-values&quot;, color=&quot;xQTL SNP&quot;, y=&quot;Observed -log10(P)&quot;, x=&quot;Theoretical -log10(P)&quot;, caption=str_wrap(&quot;If eQTL and xQTL beta signs are same, right-side-up. If opposite, plot upside-down&quot;, 30)) +
+  theme(legend.position = &quot;bottom&quot;) +
+  guides(fill=guide_legend(nrow=4,byrow=TRUE))</code></pre>
+<p><img src="figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-20-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>QQ.plot.dat %&gt;%
+  filter(!str_detect(SnpSet, &quot;polyA&quot;)) %&gt;%
+ggplot(aes(x=-log10(ExpectedP)*Sign, y=-log10(trait.x.p.in.y)*Sign, color=SnpSet)) +
+  geom_abline() +
+  geom_point() +
+  facet_wrap(~PC2) +
+  theme_bw() +
+  labs(title=&quot;QQ plot of eQTL P-values&quot;, color=&quot;xQTL SNP&quot;, y=&quot;Observed -log10(P)&quot;, x=&quot;Theoretical -log10(P)&quot;, caption=str_wrap(&quot;If eQTL and xQTL beta signs are same, right-side-up. If opposite, plot upside-down&quot;, 30)) +
+  theme(legend.position = &quot;bottom&quot;) +
+  guides(fill=guide_legend(nrow=4,byrow=TRUE))</code></pre>
+<p><img src="figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-20-2.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
 <div id="enrichment-of-nmd-sqtls-in-eqtls" class="section level3">
 <h3>enrichment of NMD sQTLs in eQTLs</h3>
 <blockquote>
@@ -1988,7 +2006,7 @@ ggplot(datToPlot, aes(x=Is_HostGene_eQTL, y=n, fill=IntronAnnotation)) +
   geom_label(aes(label=signif(Percent, 3), vjust=rn), y=Inf) +
   theme_bw() +
   labs(y=&quot;Number sQTLs&quot;, caption=&quot;1406 eGenes identified in YRI with a test intron&quot;)</code></pre>
-<p><img src="figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-15-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-21-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>Let’s also break the original plot by ncRNAs for SNP regions</p>
 <pre class="r"><code>coloc.results.tidycolocalized %&gt;%
   group_by(Locus, snp) %&gt;%
@@ -2038,7 +2056,7 @@ ggplot(datToPlot, aes(x=Is_HostGene_eQTL, y=n, fill=IntronAnnotation)) +
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
   labs(x=&quot;TraitA Phenotype class&quot;, y=&quot;TraitB Phenotype class&quot;, fill=&quot;Spearman cor&quot;, title=&quot;Effect size correlation for eQTLs that coloc with something&quot;,
        caption = str_wrap(&quot;FacetCols=Annotation class of SNP (Onlyfinemap PP &gt;0.25 included). FacetRows=Type of eQTL&quot;))</code></pre>
-<p><img src="figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-16-1.png" width="1440" style="display: block; margin: auto;" /></p>
+<p><img src="figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-22-1.png" width="1440" style="display: block; margin: auto;" /></p>
 <p>Perhaps we should plot the same ideas but breaking out the introns into classes by whether we have some good reason to think it would be an NMD target (ie unannoated, and or annotated with nonsense mediated decay transcript tag)</p>
 <pre class="r"><code>coloc.results.tidycolocalized %&gt;%
   group_by(Locus, snp) %&gt;%
@@ -2083,7 +2101,7 @@ ggplot(datToPlot, aes(x=Is_HostGene_eQTL, y=n, fill=IntronAnnotation)) +
   theme_bw() +
   labs(x=&quot;TraitA Phenotype class&quot;, y=&quot;TraitB Phenotype class&quot;, title=&quot;Effect size correlation for eQTLs/sQTLs that are not hQTLs&quot;,
        caption = str_wrap(&quot;Only SNPs with finemap PP &gt; 0.25 in annotated splice site SNP included&quot;))</code></pre>
-<p><img src="figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-17-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/20221012_IntronRetentionAndExpressionConcordance.Rmd/unnamed-chunk-23-1.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 </div>
 <div id="write-out-bed-files-for-meta-qtl-plot" class="section level2">

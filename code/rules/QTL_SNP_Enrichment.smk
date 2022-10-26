@@ -22,6 +22,23 @@ rule liftOverChromHMM:
         tabix -p bed {output.bedgz}
         """
 
+rule Download_miRNA_BindingSites:
+    output:
+        "Misc/miRNA_binding_sites.hg19.bed"
+    shell:
+        """
+        wget -O- --no-check-certificate "https://www.targetscan.org/vert_80/vert_80_data_download/Predicted_Target_Locations.default_predictions.hg19.bed.zip" | zcat | awk -v OFS='\\t' -F'\\t' '{{print $1,$2,$3,"miRNA_BS", $4, $6}}' > {output}
+        """
+
+use rule liftOverChromHMM as liftOver_miRNA with:
+    input:
+        bed = "Misc/miRNA_binding_sites.hg19.bed",
+        chain = "ReferenceGenome/Chains/hg19ToHg38.over.chain.gz",
+    output:
+        bed = "Misc/miRNA_binding_sites.hg38.bed",
+        bedgz = "Misc/miRNA_binding_sites.hg38.bed.gz",
+        tbi = "Misc/miRNA_binding_sites.hg38.bed.gz.tbi"
+
 rule CreatePAS_RegionAnnotation:
     input:
         bed = expand("QTLs/QTLTools/APA_{Fraction}/OnlyFirstReps.sorted.qqnorm.bed.gz", Fraction=["Nuclear", "Total"]),
@@ -35,13 +52,17 @@ rule CreatePAS_RegionAnnotation:
 
 
 rule ConcatAllAnnotations:
+    """
+    annotation type in column 4. optional feature name in col 5.
+    """
     input:
         "NonCodingRNA_annotation/annotation/ncRNA.categorized.bed.gz",
         "ChromHMM/hg38.wgEncodeBroadHmmGm12878HMM.bed.gz",
         "SplicingAnalysis/regtools_annotate_combined/comprehensive.3ss.bed.gz",
         "SplicingAnalysis/regtools_annotate_combined/comprehensive.5ss.bed.gz",
         "SplicingAnalysis/regtools_annotate_combined/comprehensive.bptregion.bed.gz",
-        "APA_Processing/hg38.TestFeature.SetWidthRegions.bed.gz"
+        "APA_Processing/hg38.TestFeature.SetWidthRegions.bed.gz",
+        "Misc/miRNA_binding_sites.hg38.bed.gz"
     output:
         bed = "QTL_SNP_Enrichment/Annotations.bed.gz",
         tbi = "QTL_SNP_Enrichment/Annotations.bed.gz.tbi"
