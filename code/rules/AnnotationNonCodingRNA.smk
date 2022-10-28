@@ -427,8 +427,8 @@ rule GetTSSAnnotations:
         mem_mb = 24000
     shell:
         """
-        (awk '{{if (($3-$2)/10>1000) a=($3-$2)/10; else a=1000}} {{print $1, $2-a, $2+a, $4, $4, $6}}' OFS='\\t' {input.plus_bed} > {output.ncRNA_temp}) &> {log};
-        (awk '{{if (($3-$2)/10>1000) a=($3-$2)/10; else a=1000}} {{print $1, $3-a, $3+a, $4, $4, $6}}' OFS='\\t' {input.minus_bed} >> {output.ncRNA_temp}) &>> {log};
+        (awk '{{if ((($3-$2)/10)>1000) a=int(($3-$2)/10); else a=1000}} {{print $1, $2-a, $2+a, $4, $4, $6}}' OFS='\\t' {input.plus_bed} > {output.ncRNA_temp}) &> {log};
+        (awk '{{if ((($3-$2)/10)>1000) a=int(($3-$2)/10); else a=1000}} {{print $1, $3-a, $3+a, $4, $4, $6}}' OFS='\\t' {input.minus_bed} >> {output.ncRNA_temp}) &>> {log};
         (bedtools sort -i {output.ncRNA_temp} | gzip - > {output.ncRNA_tss}) &>> {log};
         """
 

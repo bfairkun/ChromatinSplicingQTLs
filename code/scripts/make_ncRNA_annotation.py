@@ -269,7 +269,7 @@ if __name__ == '__main__':
     
     annotation['RPKM'] = ncRNA.loc[annotation.index].id
     
-    ncRNA_filtered = ncRNA.loc[annotation.loc[(annotation.histone_marks == 'promoter') | ((annotation.histone_marks != 'no mark') & (annotation.RPKM >= 3) )| (annotation.RPKM >= 10)].index]
+    ncRNA_filtered = ncRNA.loc[annotation.loc[(annotation.histone_marks != 'no mark') | (annotation.RPKM >= 10)].index]
     
 #     ncRNA_filtered = ncRNA.loc[annotation.loc[(annotation.histone_marks != 'no mark') | (annotation.RPKM >= 10)].index]
     

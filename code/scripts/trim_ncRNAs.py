@@ -28,6 +28,104 @@ def trim_expression(expression_list, strict):
                 break
     return trim_length
     
+# def trim_and_split(hmm, ncRNA, split_len = 50, min_len=200, min_portion = 0.2, strict=True,
+#                   strand = 'plus'):
+    
+#     current_pos = 0
+#     start_list = []
+#     end_list = []
+    
+#     transcript_length = hmm.loc[ncRNA].end - hmm.loc[ncRNA].start
+    
+#     transcripto = hmm.loc[ncRNA].score
+    
+#     if strand == 'minus':
+#         transcripto = transcripto[::-1]
+    
+#     if strict:
+#         transcripto_split = transcripto.split(',')
+#         counts = [int(x) for x in transcripto_split]
+#         #if (np.max(counts)==4):
+#         if (np.max(counts)==4) or (np.quantile(counts, 0.75)>=3):
+#             transcripto_split = ['1' if x == '2' else x for x in transcripto_split]
+#         transcripto = ','.join(transcripto_split)
+        
+#     split_transcripts = transcripto.split(','.join(['1']*split_len))
+    
+#     longest = max([len(x) for x in split_transcripts])
+    
+#     high_scores = []
+#     for transcript in split_transcripts:
+#         try:
+#             sc = np.mean([int(x) for x in transcript.strip(',').split(',')])
+#             high_scores.append(sc)
+#         except:
+#             continue
+#     highest = np.max(high_scores)
+#     inherited = False
+#     for transcript in split_transcripts:
+#         current_longest = ((len(transcript) == longest) and (len(transcript) > 3))
+        
+#         if transcript == ',':
+#             if strand == 'minus':
+#                 current_pos += (50*split_len)
+#         elif transcript == '':
+#             current_pos += (50*split_len)
+#         else:
+            
+#             transcript_counts = transcript.strip(',').split(',')
+#             if (transcript[0] == ',') and (strand == 'plus'):
+#                 current_pos += 50
+#             if (strand == 'minus') and inherited:
+#                 current_pos += (50*split_len)
+# #             if (transcript[-1] == ',') and (strand == '-'):
+# #                 current_pos += (50*split_len)
+                
+#             transcript_counts = [int(x) for x in transcript_counts]
+            
+#             current_highest = np.abs(np.mean(transcript_counts) - highest) <= 1e-100
+        
+#             transcript_portion = (len(transcript_counts)*50)/transcript_length
+#             if ((len(transcript_counts) > min_len) and (transcript_portion >= min_portion)) or current_highest or current_longest:
+                
+#                 start_pos = current_pos
+
+#                 for i in range(len(transcript_counts)):
+                    
+#                     if transcript_counts[i] == 1:
+#                         start_pos += 50
+                        
+#                     else:
+#                         break
+
+#                 if np.mean(transcript_counts) > 1.1:
+#                     start_list.append(start_pos)
+                    
+#                 trim = trim_expression(transcript_counts, True)
+                
+#                 if trim:
+#                     if np.mean(transcript_counts) > 1.1:
+#                         end_list.append(current_pos + ((len(transcript_counts)*50)-trim))
+                        
+#                 else:
+#                     if np.mean(transcript_counts) > 1.1:
+#                         if strand == 'plus':
+#                             trimmer = 50
+#                         elif strand == 'minus':
+#                             trimmer = 0
+#                         else:
+#                             raise Exception('strand error')
+#                         end_list.append(current_pos + (len(transcript_counts)*50) - trimmer)
+
+#             current_pos += (len(transcript_counts)*50)
+            
+#             if transcript[-1] == ',':
+#                 inherited = True
+            
+    
+        
+#     return start_list, end_list
+
 def trim_and_split(hmm, ncRNA, split_len = 50, min_len=200, min_portion = 0.2, strict=True,
                   strand = 'plus'):
     
@@ -63,12 +161,14 @@ def trim_and_split(hmm, ncRNA, split_len = 50, min_len=200, min_portion = 0.2, s
             continue
     highest = np.max(high_scores)
     inherited = False
+    print(counts)
+    print(split_transcripts)
+    len_to_add = 0
     for transcript in split_transcripts:
         current_longest = ((len(transcript) == longest) and (len(transcript) > 3))
         
         if transcript == ',':
-            if strand == 'minus':
-                current_pos += (50*split_len)
+            current_pos += (50*split_len)
         elif transcript == '':
             current_pos += (50*split_len)
         else:
@@ -82,6 +182,8 @@ def trim_and_split(hmm, ncRNA, split_len = 50, min_len=200, min_portion = 0.2, s
 #                 current_pos += (50*split_len)
                 
             transcript_counts = [int(x) for x in transcript_counts]
+        
+            print(transcript_counts)
             
             current_highest = np.abs(np.mean(transcript_counts) - highest) <= 1e-100
         
@@ -93,6 +195,7 @@ def trim_and_split(hmm, ncRNA, split_len = 50, min_len=200, min_portion = 0.2, s
                 for i in range(len(transcript_counts)):
                     
                     if transcript_counts[i] == 1:
+                        print('trimmin')
                         start_pos += 50
                         
                     else:
@@ -117,6 +220,9 @@ def trim_and_split(hmm, ncRNA, split_len = 50, min_len=200, min_portion = 0.2, s
                             raise Exception('strand error')
                         end_list.append(current_pos + (len(transcript_counts)*50) - trimmer)
 
+            print('adding')
+            if transcript[-1] == ',':
+                current_pos += (50*split_len)
             current_pos += (len(transcript_counts)*50)
             
             if transcript[-1] == ',':
@@ -125,8 +231,6 @@ def trim_and_split(hmm, ncRNA, split_len = 50, min_len=200, min_portion = 0.2, s
     
         
     return start_list, end_list
-
-
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--chrom', type=str, required=True)
