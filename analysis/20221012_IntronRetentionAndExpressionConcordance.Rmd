@@ -698,6 +698,49 @@ TopSNPEffects.ByPairs %>%
   labs(title="genetic effects of NMD introns and host gene expression", x="beta, sQTL", y="beta, eQTL", caption="Only FDR<10% sQTLs and eQTLs plotted. eQTL effects are relative to top sQTL SNP")
 ```
 
+Yang asked for a pretty version of the above plot for a slide deck... Let me plot just the bottom right facet for him in a prettier way...
+
+```{r}
+P <- TopSNPEffects.ByPairs %>%
+  filter(
+      (PC1 %in% c("Expression.Splicing.Subset_YRI")) &
+      (PC2 %in% c("polyA.Splicing.Subset_YRI")) &
+      (FDR.x < 0.1) &
+      (FDR.y < 0.1)) %>%
+  mutate(source.eQTL = recode(PC1, !!!c("Expression.Splicing.Subset_YRI"="polyA.Expression.YRI", "chRNA.Expression.Splicing"="chRNA.Expression"))) %>%
+  rename(source.sQTL=PC2) %>%
+  mutate(intron = str_replace(P2, "^(.+):(.+?):(.+?):clu.+?_([+-])$", "chr\\1_\\2_\\3_\\4")) %>%
+  mutate(IntronAnnotation = case_when(
+    intron %in% NMD.specific.introns ~ "Annotated NMD",
+    intron %in% Intron.Annotations.basic$intron ~ "Annotated basic",
+    intron %in% Introns.Annotations.comprehensive$intron ~ "Annotated Not basic",
+    TRUE ~ "Unannotated"
+  )) %>%
+  group_by(IntronAnnotation, P1) %>%
+  slice_min(order_by = p_permutation.y, with_ties=F) %>%
+  ungroup() %>%
+  ggplot(aes(y=beta.x, x=trait.x.beta.in.y
+, color=IntronAnnotation)) +
+  geom_point(alpha=0.5) +
+  geom_vline(xintercept=0) +
+  geom_hline(yintercept=0) +
+  geom_smooth(method='lm') +
+  facet_wrap(~IntronAnnotation) +
+  theme_bw() +
+  labs(title="genetic effects of NMD introns and host gene expression", x="beta, sQTL", y="beta, eQTL", caption="Only FDR<10% sQTLs and eQTLs plotted. sQTL effects are relative to top eQTL SNP")
+P
+```
+
+
+
+```{r, eval=F}
+P+
+  theme(legend.position="bottom") +
+  guides(color=guide_legend(nrow=2,byrow=TRUE))
+ggsave("figure/orig/Standardized_eQTL_sQTL_betas.pdf", height=6, width=6)
+```
+
+
 There's a few things I could do to improve this... one being that the effect sizes are standardized and therefore hard to interpret. Plotting eQTL effect sizes as logFC and splicing effect sizes as deltaPSI could be more interpretable. Also, Yang suggesting exploring these ideas by plotting things as QQ plots... let's do that now...
 
 For example, let's plot eQTL P-values for different groups of SNPs, including sQTLs, hQTLs, etc...
@@ -801,6 +844,65 @@ ggplot(aes(x=-log10(ExpectedP)*Sign, y=-log10(trait.x.p.in.y)*Sign, color=SnpSet
   facet_wrap(~PC2) +
   theme_bw() +
   labs(title="QQ plot of eQTL P-values", color="xQTL SNP", y="Observed -log10(P)", x="Theoretical -log10(P)", caption=str_wrap("If eQTL and xQTL beta signs are same, right-side-up. If opposite, plot upside-down", 30))
+```
+### Check NMD intron abundance in chRNA
+I have previously established that the fraction of NMD juncs out of total juncs is about 2x higher in chRNA than polyA. It goes to reason that the leafcutter PSI should also be higher. Let's check that for the 
+
+```{r}
+
+PSI.chRNA <- read_tsv("../code/QTLs/QTLTools/chRNA.Splicing/OnlyFirstRepsUnstandardized.sorted.qqnorm.bed.gz") %>%
+  dplyr::select(-c(1,2,3, 5,6)) %>%
+  mutate(mean = rowMeans(across(where(is.numeric)), na.rm=T)) %>%
+  dplyr::select(pid, mean) %>%
+  mutate(Dataset= "PSI.chRNA")
+
+PSI.polyA <- read_tsv("../code/QTLs/QTLTools/polyA.Splicing.Subset_YRI/OnlyFirstRepsUnstandardized.sorted.qqnorm.bed.gz") %>%
+  dplyr::select(-c(1,2,3, 5,6)) %>%
+  mutate(mean = rowMeans(across(where(is.numeric)), na.rm=T)) %>%
+  dplyr::select(pid, mean) %>%
+  mutate(Dataset = "PSI.polyA")
+
+chRNA.polyRNA.deltaPSI <- bind_rows(PSI.chRNA, PSI.polyA) %>%
+  pivot_wider(names_from = "Dataset", values_from="mean") %>%
+  drop_na() %>%
+  mutate(DeltaPSI = PSI.chRNA-PSI.polyA)
+
+TopSNPEffects.ByPairs %>%
+  filter(
+      (PC1 %in% c("Expression.Splicing.Subset_YRI")) &
+      (PC2 %in% c("polyA.Splicing.Subset_YRI")) &
+      (FDR.x < 0.1) &
+      (FDR.y < 0.1)) %>%
+  mutate(source.eQTL = recode(PC1, !!!c("Expression.Splicing.Subset_YRI"="polyA.Expression.YRI", "chRNA.Expression.Splicing"="chRNA.Expression"))) %>%
+  rename(source.sQTL=PC2) %>%
+  mutate(intron = str_replace(P2, "^(.+):(.+?):(.+?):clu.+?_([+-])$", "chr\\1_\\2_\\3_\\4")) %>%
+  mutate(IntronAnnotation = case_when(
+    intron %in% NMD.specific.introns ~ "Annotated NMD",
+    intron %in% Intron.Annotations.basic$intron ~ "Annotated basic",
+    intron %in% Introns.Annotations.comprehensive$intron ~ "Annotated Not basic",
+    TRUE ~ "Unannotated"
+  )) %>%
+  mutate(Concordance = if_else(
+    sign(beta.x) == sign(trait.x.beta.in.y),
+    "Concordant", "Discordant"
+  )) %>%
+  filter(!is.na(Concordance)) %>%
+  inner_join(chRNA.polyRNA.deltaPSI, by=c("P2"="pid")) %>%
+  ggplot(aes(x=DeltaPSI, color=IntronAnnotation)) +
+  stat_ecdf() +
+  geom_label(data=
+               . %>%
+               group_by(Concordance, IntronAnnotation) %>%
+               summarise(n=n()) %>%
+               group_by(Concordance) %>%
+               mutate(rn = row_number()) %>%
+               ungroup(),
+             aes(label=paste("n=",n), color=IntronAnnotation, vjust=rn),
+             x=-Inf, y=Inf, hjust=-1) +
+  facet_wrap(~Concordance) +
+  coord_cartesian(xlim=c(-10,10)) +
+  theme_bw() +
+  labs(y="ecdf", x="leafcutter DeltaPSI\nmean(PSI_chRNA)-mean(PSI_polyA)")
 ```
 
 
@@ -968,6 +1070,5 @@ As a side thing, I wrote a script to make metaQTL plots. That is, I lump the hig
 
 
 ```
-
 
 

@@ -18,6 +18,7 @@ MyPhenotypes = ["Expression.Splicing", "Expression.Splicing.Subset_YRI", "chRNA.
                 #"polyA.Expression_ncRNA", "polyA.Expression_ncRNA.Subset_YRI", 
                 "chRNA.Expression_ncRNA", 
                 #'MetabolicLabelled.30min_ncRNA', 'MetabolicLabelled.60min_ncRNA',
+                # 'APA_Nuclear', 'APA_Total',
                 'polyA.IER', 'polyA.IER.Subset_YRI', 'chRNA.IER','MetabolicLabelled.30min.IER', 'MetabolicLabelled.60min.IER',
                 "chRNA.Slopes", 'chRNA.Splicing.Order']
 

@@ -76,3 +76,15 @@ rule Prepare_chRNA_ExpressionPhenotypes:
         Rscript scripts/Prepare_chRNA_Phenotypes.R &> {log}
         """
         
+rule tabix_genes_bed:
+    input:
+        "ExpressionAnalysis/polyA/ExpressedGeneList.txt",
+    output:
+        bed = "ExpressionAnalysis/polyA/ExpressedGeneList.bed.gz",
+        tbi = "ExpressionAnalysis/polyA/ExpressedGeneList.bed.gz.tbi"
+    shell:
+        """
+        cat {input} | bgzip /dev/stdin -c > {output.bed}
+        tabix -p bed {output.bed}
+        """
+
