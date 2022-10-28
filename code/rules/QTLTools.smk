@@ -2,10 +2,10 @@ rule SortQTLtoolsPhenotypeTable:
     input:
         "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.qqnorm.bed.gz"
     output:
-        bed = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.gz",
-        tbi = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.gz.tbi"
+        bed = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps{StandardizedOrUnstandardized}.sorted.qqnorm.bed.gz",
+        tbi = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps{StandardizedOrUnstandardized}.sorted.qqnorm.bed.gz.tbi"
     log:
-        "logs/SortQTLtoolsPhenotypeTable/{Phenotype}.log"
+        "logs/SortQTLtoolsPhenotypeTable/{Phenotype}/{StandardizedOrUnstandardized}.log"
     resources:
         mem_mb = 24000
     shell:
@@ -13,6 +13,7 @@ rule SortQTLtoolsPhenotypeTable:
         (bedtools sort -header -i {input} | bgzip /dev/stdin -c > {output.bed}) &> {log}
         (tabix -p bed {output.bed}) &>> {log}
         """
+
 
 rule PhenotypePCs:
     """
@@ -52,7 +53,6 @@ rule PlotPhenotypePCs:
         """
         Rscript {input} {output} &> {log}
         """
-
 
 
 rule GetSamplesVcfByChrom:
@@ -153,28 +153,29 @@ def GetQTLtoolsVcfTbi(wildcards):
 
 def GetQTLtoolsBed(wildcards):
     if wildcards.FeatureCoordinatesRedefinedFor == "":
-        return "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.gz"
+        return "QTLs/QTLTools/{Phenotype}/OnlyFirstReps{StandardizedOrUnstandardized}.sorted.qqnorm.bed.gz"
     elif wildcards.FeatureCoordinatesRedefinedFor == "ForColoc":
-        return "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsForColoc.sorted.qqnorm.bed.gz"
+        return "QTLs/QTLTools/{Phenotype}/OnlyFirstReps{StandardizedOrUnstandardized}ForColoc.sorted.qqnorm.bed.gz"
     elif wildcards.FeatureCoordinatesRedefinedFor == "ForGWASColoc":
-        return "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsForGWASColoc.sorted.qqnorm.bed.gz"
+        return "QTLs/QTLTools/{Phenotype}/OnlyFirstReps{StandardizedOrUnstandardized}ForGWASColoc.sorted.qqnorm.bed.gz"
 
 def GetQTLtoolsBedTbi(wildcards):
     if wildcards.FeatureCoordinatesRedefinedFor == "":
-        return "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.gz.tbi"
+        return "QTLs/QTLTools/{Phenotype}/OnlyFirstReps{StandardizedOrUnstandardized}.sorted.qqnorm.bed.gz.tbi"
     elif wildcards.FeatureCoordinatesRedefinedFor == "ForColoc":
-        return "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsForColoc.sorted.qqnorm.bed.gz.tbi"
+        return "QTLs/QTLTools/{Phenotype}/OnlyFirstReps{StandardizedOrUnstandardized}ForColoc.sorted.qqnorm.bed.gz.tbi"
     elif wildcards.FeatureCoordinatesRedefinedFor == "ForGWASColoc":
-        return "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsForGWASColoc.sorted.qqnorm.bed.gz.tbi"
+        return "QTLs/QTLTools/{Phenotype}/OnlyFirstReps{StandardizedOrUnstandardized}ForGWASColoc.sorted.qqnorm.bed.gz.tbi"
 
-def GetQTLtoolsFlags(wildcards):
+
+def GetQTLtoolsWindowFlag(wildcards):
     if wildcards.FeatureCoordinatesRedefinedFor in ["ForColoc", "ForGWASColoc" ]:
         # using --window 0 sometimes results in errors (exit code 139). No idea why
         return "--window 1"
     else:
         if wildcards.Phenotype in ["polyA.Splicing", "chRNA.Splicing", "polyA.Splicing.Subset_YRI", 
         "MetabolicLabelled.30min.Splicing", "MetabolicLabelled.60min.Splicing", "chRNA.RNA.Editing", "chRNA.Splicing.Order"]:
-            return "--grp-best --window 10000"
+            return "--window 10000"
         elif wildcards.Phenotype.split('.')[-1] in ['5PrimeSS', '3PrimeSS']:
             return "--window 0"
         elif ('5PrimeSS' in wildcards.Phenotype) or ('3PrimeSS' in wildcards.Phenotype):
@@ -184,6 +185,15 @@ def GetQTLtoolsFlags(wildcards):
             return "--window 10000"
         else:
             return "--window 100000"
+
+def GetQTLtoolsOtherFlags(wildcards):
+    if wildcards.StandardizedOrUnstandardized == "Unstandardized":
+        return ""
+    elif wildcards.Phenotype in ["polyA.Splicing", "chRNA.Splicing", "polyA.Splicing.Subset_YRI", 
+    "MetabolicLabelled.30min.Splicing", "MetabolicLabelled.60min.Splicing", "chRNA.RNA.Editing", "chRNA.Splicing.Order"]:
+        return "--grp-best"
+    else:
+        return ""
 
 
 def GetQTLtoolsPassFlags(wildcards):
@@ -198,44 +208,46 @@ def GetExcludeFile(wildcards):
     else:
         return ''
 
+
 rule QTLtools_generalized:
     input:
         vcf = GetQTLtoolsVcf,
         tbi = GetQTLtoolsVcfTbi,
-        bed = GetQTLtoolsBed,
-        bed_tbi = GetQTLtoolsBedTbi,
+        bed = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps{StandardizedOrUnstandardized}{FeatureCoordinatesRedefinedFor}.sorted.qqnorm.bed.gz",
+        bed_tbi = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps{StandardizedOrUnstandardized}{FeatureCoordinatesRedefinedFor}.sorted.qqnorm.bed.gz.tbi",
         cov = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.pca"
     output:
-        temp("QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}Chunks/{n}.txt")
+        temp("QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}Chunks/{QTLTools_chunk_n}{StandardizedOrUnstandardized}.txt")
     log:
-        "logs/QTLtools_cis_permutation_pass/{Phenotype}.{Pass}.{QTLsGenotypeSet}.{FeatureCoordinatesRedefinedFor}/{n}.log"
+        "logs/QTLtools_cis_permutation_pass/{Phenotype}.{Pass}.{QTLsGenotypeSet}.{FeatureCoordinatesRedefinedFor}/{StandardizedOrUnstandardized}{QTLTools_chunk_n}.log"
     resources:
         mem_mb = much_more_mem_after_first_attempt
     envmodules:
         "gsl/2.5"
     params:
-        Flags = GetQTLtoolsFlags,
+        WindowFlag = GetQTLtoolsWindowFlag,
+        OtherFlags = GetQTLtoolsOtherFlags,
         PassFlags = GetQTLtoolsPassFlags,
         ExcFlag = GetExcludeFile,
-        #N_PermutationChunks = Get_N_PermutationChunks
+    wildcard_constraints:
+        n = "|".join(str(i) for i in ChunkNumbers)
     shell:
         """
-        {config[QTLtools]} cis --std-err --chunk {wildcards.n} {N_PermutationChunks} --vcf {input.vcf} --bed {input.bed} --cov {input.cov} --out {output} {params.Flags} {params.PassFlags} {params.ExcFlag} &> {log}
+        {config[QTLtools]} cis --std-err --chunk {wildcards.QTLTools_chunk_n} {N_PermutationChunks} --vcf {input.vcf} --bed {input.bed} --cov {input.cov} --out {output} {params.OtherFlags} {params.WindowFlag} {params.PassFlags} {params.ExcFlag} &> {log}
         if [ ! -f {output} ]
         then
             touch {output}
         fi
         """
 
+
 rule Gather_QTLtools_cis_pass:
     input:
-        expand( "QTLs/QTLTools/{{Phenotype}}/{{Pass}}{{QTLsGenotypeSet}}{{FeatureCoordinatesRedefinedFor}}Chunks/{n}.txt", n=range(0, 1+N_PermutationChunks) )
+        expand( "QTLs/QTLTools/{{Phenotype}}/{{Pass}}{{QTLsGenotypeSet}}{{FeatureCoordinatesRedefinedFor}}Chunks/{QTLTools_chunk_n}{{StandardizedOrUnstandardized}}.txt", QTLTools_chunk_n=ChunkNumbers )
     output:
-        "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.gz"
-    #wildcard_constraints:
-    #    Phenotype = "|".join([x for x in MyPhenotypes if ((x != 'chRNA.Expression_eRNA') and (x != 'chRNA.Expression_cheRNA'))])
+        "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}{StandardizedOrUnstandardized}.txt.gz"
     log:
-        "logs/Gather_QTLtools_cis_pass/{Phenotype}.{Pass}.{QTLsGenotypeSet}.{FeatureCoordinatesRedefinedFor}.log"
+        "logs/Gather_QTLtools_cis_pass/{Phenotype}.{Pass}.{QTLsGenotypeSet}.{FeatureCoordinatesRedefinedFor}.{StandardizedOrUnstandardized}.log"
     shell:
         """
         (cat {input} | gzip - > {output}) &> {log}
@@ -263,12 +275,12 @@ rule AddQValueToPermutationPass:
 
 rule MakePhenotypeTableToColocPeaksWithGenes:
     input:
-        bed = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.gz",
+        bed = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps{StandardizedOrUnstandardized}.sorted.qqnorm.bed.gz",
         fai = "ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa.fai",
         genes = "ExpressionAnalysis/polyA/ExpressedGeneList.txt"
     output:
-        bed = "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsForColoc.sorted.qqnorm.bed.gz",
-        tbi = "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsForColoc.sorted.qqnorm.bed.gz.tbi"
+        bed = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps{StandardizedOrUnstandardized}ForColoc.sorted.qqnorm.bed.gz",
+        tbi = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps{StandardizedOrUnstandardized}ForColoc.sorted.qqnorm.bed.gz.tbi"
     params:
         #max distance between gene and peaks to attempt coloc
         cis_window = 100000,
@@ -276,7 +288,7 @@ rule MakePhenotypeTableToColocPeaksWithGenes:
         #coloc window from gene
         coloc_window = 100000
     log:
-        "logs/MakePhenotypeTableToColocPeaksWithGenes/{Phenotype}.log"
+        "logs/MakePhenotypeTableToColocPeaksWithGenes/{Phenotype}.{StandardizedOrUnstandardized}.log"
     resources:
         mem_mb = 12000
     wildcard_constraints:
@@ -318,16 +330,16 @@ rule MakePhenotypeTableToColocFeaturesWithGWASLoci:
     stats in those windows
     """
     input:
-        bed = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.gz",
+        bed = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps{StandardizedOrUnstandardized}.sorted.qqnorm.bed.gz",
         fai = "ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa.fai",
         loci = "gwas_summary_stats/LeadSnpWindows.bed"
     output:
-        bed = "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsForGWASColoc.sorted.qqnorm.bed.gz",
-        tbi = "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsForGWASColoc.sorted.qqnorm.bed.gz.tbi"
+        bed = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps{StandardizedOrUnstandardized}ForGWASColoc.sorted.qqnorm.bed.gz",
+        tbi = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps{StandardizedOrUnstandardized}ForGWASColoc.sorted.qqnorm.bed.gz.tbi"
     resources:
         mem_mb = 48000
     log:
-        "logs/MakePhenotypeTableToColocFeaturesWithGWASLoci/{Phenotype}.log"
+        "logs/MakePhenotypeTableToColocFeaturesWithGWASLoci/{Phenotype}.{StandardizedOrUnstandardized}.log"
     shell:
         """
         (cat <(zcat {input.bed} | head -1) <(  bedtools intersect  -wo -a {input.bed} -b {input.loci} -sorted | awk -F'\\t' -v OFS='\\t' '{{$4=$4":"$(NF-1); $5=$(NF-1); $2=$(NF-3); $3=$(NF-2); print $0}}' | rev | cut -f 6- | rev ) | tr ' ' '\\t' | bedtools sort -i - -header | bgzip /dev/stdin -c > {output.bed} ) &> {log}
@@ -340,19 +352,19 @@ rule tabixNominalPassQTLResults:
     for easy access with tabix
     """
     input:
-        "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.gz"
+        "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}{StandardizedOrUnstandardized}.txt.gz"
     wildcard_constraints:
         Pass = "NominalPass"
     params:
         sort_temp = '-T ' + config['scratch'][:-1]
         # sort_temp = ""
     output:
-        txt = "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.tabix.gz",
-        tbi = "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.tabix.gz.tbi"
+        txt = "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}{StandardizedOrUnstandardized}.txt.tabix.gz",
+        tbi = "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}{StandardizedOrUnstandardized}.txt.tabix.gz.tbi"
     resources:
         mem_mb = much_more_mem_after_first_attempt
     log:
-        "logs/tabixNominalPassQTLResults/{Phenotype}.{Pass}.{QTLsGenotypeSet}.{FeatureCoordinatesRedefinedFor}.log"
+        "logs/tabixNominalPassQTLResults/{Phenotype}.{Pass}.{QTLsGenotypeSet}.{FeatureCoordinatesRedefinedFor}.{StandardizedOrUnstandardized}.log"
     shadow: "shallow"
     shell:
         """
@@ -360,18 +372,16 @@ rule tabixNominalPassQTLResults:
         tabix -b 10 -e10 -s9 {output.txt} &>> {log}
         """
 
-rule CombineChromosomalVcfs:
+rule SampleRandomPvals:
     input:
-        vcf = expand("Genotypes/1KG_GRCh38/{chrom}.vcf.gz", chrom=autosomes),
-        tbi = expand("Genotypes/1KG_GRCh38/{chrom}.vcf.gz.tbi", chrom=autosomes),
+        txt = "QTLs/QTLTools/{Phenotype}/NominalPass{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.tabix.gz",
     output:
-        vcf = "Genotypes/1KG_GRCh38/Autosomes.vcf.gz",
-        tbi = "Genotypes/1KG_GRCh38/Autosomes.vcf.gz.tbi"
-
+        "QTLs/QTLTools/{Phenotype}/NominalPass{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.RandomSamplePvals.txt.gz"
+    log:
+        "logs/SampleRandomPvals/{Phenotype}.{QTLsGenotypeSet}.{FeatureCoordinatesRedefinedFor}.log"
+    params:
+        NumVals = 1000000
     shell:
         """
-        bcftools concat -o {output.vcf} -O z {input.vcf}
-        tabix -p vcf {output.vcf}
+        (zcat {input.txt} | awk -F'\\t' 'NR>1 {{print $12}}' | shuf -n {params.NumVals} | gzip - > {output} ) &> {log}
         """
-
-

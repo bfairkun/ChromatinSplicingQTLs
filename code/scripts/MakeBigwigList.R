@@ -67,6 +67,7 @@ bind_rows(
             mutate(Strand = "+") %>%
             mutate(BigwigFilepath = str_glue("bigwigs/chRNA.Expression.Splicing_stranded/{IndID}.{RepNumber}.minus.bw"))) %>%
   mutate(Group_label = recode(Phenotype, !!!RecodePhenotypeNames)) %>%
+    dplyr::select(SampleID=IndID, BigwigFilepath, Group_label, Strand) %>%
     write_tsv("Metaplots/bwList.tsv")
 
 colors.xl <- readxl::read_excel("../data/ColorsForPhenotypes.xlsx", sheet=2)

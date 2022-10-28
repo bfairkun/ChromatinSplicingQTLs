@@ -31,6 +31,7 @@ include: "rules/DeNovoNonCodingRNA_plots.smk"
 include: "rules/QTL_SNP_Enrichment.smk"
 include: "rules/APA_DataPrep.smk"
 include: "rules/CalculatePi1.smk"
+include: "rules/CreateUnstandardizedPhenotypeMatrices.smk"
 
 
 wildcard_constraints:
@@ -40,6 +41,8 @@ wildcard_constraints:
     QTLsGenotypeSet="|".join(["", "HarmonizedSNPs"]),
     FeatureCoordinatesRedefinedFor="|".join(["", "ForColoc", "ForGWASColoc"]),
     Pass="|".join(["PermutationPass", "NominalPass"]),
+    StandardizedOrUnstandardized="|Unstandardized",
+    QTLTools_chunk_n = "|".join([str(i) for i in ChunkNumbers])
 
 
 localrules:

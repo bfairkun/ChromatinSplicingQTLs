@@ -22,7 +22,7 @@ rule CreateBigwigLists:
         "../envs/r_2.yml"
     shell:
         """
-        Rscript
+        Rscript scripts/MakeBigwigList.R
         """
 
 

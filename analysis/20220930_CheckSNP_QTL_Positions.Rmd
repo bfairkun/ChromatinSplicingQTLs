@@ -22,6 +22,24 @@ PermutationPass.dat <- Sys.glob("../code/QTLs/QTLTools/*/PermutationPass.FDR_Add
   setNames(str_replace(., "../code/QTLs/QTLTools/(.+?)/PermutationPass.FDR_Added.txt.gz", "\\1")) %>%
   lapply(read_delim, delim=' ') %>%
   bind_rows(.id="PhenotypeClass")
+
+
+```
+
+### Inspect in unstandardized QTLtools output
+
+```{r}
+unstandardized <- read_delim("../code/QTLs/QTLTools/chRNA.Expression.Splicing/NominalPass_Unstandardized.txt.gz", delim=' ', col_names=c(colnames(PermutationPass.dat)[c(2:12, 17:20)], "best_hit"))
+
+
+colnames(PermutationPass.dat)
+
+
+
+unstandardized
+
+# PermutationPass.dat
+
 ```
 
 First explore the data a bit... count QTLs for example...

@@ -17,6 +17,7 @@ library(edgeR)
 library(gplots)
 library(RColorBrewer)
 library(viridis)
+library(ggrepel)
 
 ConvertToColorVector <- function(Vector, PalletteString="Set1"){
   ConversionKey <- setNames(brewer.pal(length(unique(Vector)), PalletteString), unique(Vector))[1:length(unique(Vector))]
@@ -103,6 +104,43 @@ dat.intronic.expression.rpkm <- dat.intronic.expression %>%
   rpkm(prior.count=0.1, log=T, gene.length=dat.exonic.expression$Length)
 
 ```
+
+
+### Tangent for Pheonix/Yang about PLCL1:
+
+```{r}
+
+
+dat.to.plot <- dat.exonic.expression.rpkm %>%
+  as.data.frame() %>%
+  rownames_to_column("Geneid") %>%
+  dplyr::select(Geneid, contains("chRNA"), contains("polyA")) %>%
+  pivot_longer(-Geneid, names_sep=";", names_to=c("Sample", "Type")) %>%
+  group_by(Type, Geneid) %>%
+  summarise(MedianLogRPKM = median(value))  %>%
+  ungroup() %>%
+  pivot_wider(names_from="Type", values_from="MedianLogRPKM") %>%
+  mutate(PLCL1 = str_detect(Geneid, "ENSG00000115896")) %>%
+  mutate(alpha= if_else(PLCL1, 1, 0)) %>%
+  mutate(label = if_else(PLCL1, "PLCL1", NA_character_)) %>%
+  arrange(PLCL1) %>%
+  mutate(Diff = chRNA - polyA) %>%
+  mutate(rank = dense_rank(Diff) )
+
+ggplot(dat.to.plot, aes(x=chRNA, y=polyA, color=PLCL1)) +
+  geom_point(aes(alpha=alpha)) +
+  geom_label_repel(aes(label=label)) +
+  theme_bw() +
+  theme(legend.position="none")
+
+dat.to.plot %>%
+  filter(PLCL1)
+
+median(dat.to.plot$Diff)
+
+
+```
+
 
 Plot exonic expression correlation heatmap
 

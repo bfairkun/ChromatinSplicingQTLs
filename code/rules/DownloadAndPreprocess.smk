@@ -64,6 +64,19 @@ rule Gather1KGData:
     input:
         expand("Genotypes/1KG_GRCh38/{chrom}.vcf.gz", chrom=autosomes),
 
+rule CombineChromosomalVcfs:
+    input:
+        vcf = expand("Genotypes/1KG_GRCh38/{chrom}.vcf.gz", chrom=autosomes),
+        tbi = expand("Genotypes/1KG_GRCh38/{chrom}.vcf.gz.tbi", chrom=autosomes),
+    output:
+        vcf = "Genotypes/1KG_GRCh38/Autosomes.vcf.gz",
+        tbi = "Genotypes/1KG_GRCh38/Autosomes.vcf.gz.tbi"
+    shell:
+        """
+        bcftools concat -o {output.vcf} -O z {input.vcf}
+        tabix -p vcf {output.vcf}
+        """
+
 rule CopyFastqFromLocal:
     input:
         R1 = GetFastqLocalFuncs('R1_local'),
@@ -148,6 +161,7 @@ rule DownloadGWAS_SummaryStats:
         """
         (curl -f -o {output}  {params.ftp_link}/harmonised/$(curl -l {params.ftp_link}/harmonised/ | grep '.h.tsv.gz') ) &> {log}
         """
+
 
 
 rule fastp:

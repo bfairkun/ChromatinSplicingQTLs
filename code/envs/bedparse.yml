@@ -5,17 +5,19 @@ channels:
   - conda-forge
   - r
 dependencies:
-  - _libgcc_mutex=0.1=main
-  - _openmp_mutex=5.1=1_gnu
+  - _libgcc_mutex=0.1=conda_forge
+  - _openmp_mutex=4.5=2_gnu
   - bedparse=0.2.3=py_0
+  - bedtools=2.30.0=h468198e_3
   - bzip2=1.0.8=h7b6447c_0
   - ca-certificates=2022.07.19=h06a4308_0
   - ld_impl_linux-64=2.38=h1181459_1
   - libffi=3.3=he6710b0_2
-  - libgcc-ng=11.2.0=h1234567_1
-  - libgomp=11.2.0=h1234567_1
+  - libgcc-ng=12.1.0=h8d9b700_16
+  - libgomp=12.1.0=h8d9b700_16
   - libstdcxx-ng=11.2.0=h1234567_1
   - libuuid=1.0.3=h7f8727e_2
+  - libzlib=1.2.12=h166bdaf_3
   - ncurses=6.3=h5eee18b_3
   - openssl=1.1.1q=h7f8727e_0
   - python=3.10.6=haa1d7c7_0
