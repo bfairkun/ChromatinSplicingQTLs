@@ -194,7 +194,7 @@ Next I want to plot a lot of these examples, as sashimi plots and coverage plots
 
 AllFeats <- Sys.glob("../code/QTLs/QTLTools/*/OnlyFirstReps.sorted.qqnorm.bed.gz") %>%
   setNames(str_replace(., "../code/QTLs/QTLTools/(.+?)/OnlyFirstReps.sorted.qqnorm.bed.gz", "\\1")) %>%
-  lapply(fread, sep='\t', select=1:6) %>%
+  lapply(fread, sep='\t', select=c(1:4,6)) %>%
   bind_rows(.id="PC")
 
 sample_n_of <- function(data, size, ...) {
@@ -226,7 +226,7 @@ set.seed(0)
 ColocsToPlot.Subset <- ColocsToPlot.dat %>%
   distinct(Locus, snp, Group, iteration) %>%
   group_by(Group) %>%
-  sample_n(100) %>%
+  sample_n(30) %>%
   ungroup()
 ```
 

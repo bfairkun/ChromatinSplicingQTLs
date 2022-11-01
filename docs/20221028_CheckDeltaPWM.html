@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+
+
+<title>Check DeltaPWM</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/master/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">myproject</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Check DeltaPWM</h1>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2022-10-29
+</p>
+<p>
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 1
+</p>
+<p>
+<strong>Knit directory:</strong> <code>ChromatinSplicingQTLs/analysis/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
+</p>
+<p>
+This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
+  href="https://github.com/jdblischak/workflowr">workflowr</a> (version 1.6.2). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges"> <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted changes </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguncommittedchanges" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The R Markdown file has unstaged changes. To know which version of the R Markdown file created these results, you’ll want to first commit it to the Git repo. If you’re still working on the analysis, you can ignore this warning. When you’re finished, you can run <code>wflow_publish</code> to commit the R Markdown file and build the HTML.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20191126code"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Seed:</strong> <code>set.seed(20191126)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20191126code" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20191126)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Session information:</strong> recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be confident that you successfully produced the results during this run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstreefad2654cb2ac83f9386cce457e347948698997cbtargetblankfad2654a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/fad2654cb2ac83f9386cce457e347948698997cb" target="_blank">fad2654</a> </a>
+</p>
+</div>
+<div id="strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstreefad2654cb2ac83f9386cce457e347948698997cbtargetblankfad2654a" class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/fad2654cb2ac83f9386cce457e347948698997cb" target="_blank">fad2654</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    analysis/.Rhistory
+    Ignored:    analysis/figure/
+    Ignored:    code/.DS_Store
+    Ignored:    code/.RData
+    Ignored:    code/._.DS_Store
+    Ignored:    code/._README.md
+    Ignored:    code/._report.html
+    Ignored:    code/.ipynb_checkpoints/
+    Ignored:    code/.snakemake/
+    Ignored:    code/APA_Processing/
+    Ignored:    code/Alignments/
+    Ignored:    code/ChromHMM/
+    Ignored:    code/ENCODE/
+    Ignored:    code/ExpressionAnalysis/
+    Ignored:    code/FastqFastp/
+    Ignored:    code/FastqFastpSE/
+    Ignored:    code/Genotypes/
+    Ignored:    code/H3K36me3_CutAndTag.pdf
+    Ignored:    code/IntronSlopes/
+    Ignored:    code/Metaplots/
+    Ignored:    code/Misc/
+    Ignored:    code/MiscCountTables/
+    Ignored:    code/Multiqc/
+    Ignored:    code/Multiqc_chRNA/
+    Ignored:    code/NonCodingRNA/
+    Ignored:    code/NonCodingRNA_annotation/
+    Ignored:    code/PeakCalling/
+    Ignored:    code/Phenotypes/
+    Ignored:    code/PlotGruberQTLs/
+    Ignored:    code/PlotQTLs/
+    Ignored:    code/ProCapAnalysis/
+    Ignored:    code/QC/
+    Ignored:    code/QTL_SNP_Enrichment/
+    Ignored:    code/QTLs/
+    Ignored:    code/RPKM_tables/
+    Ignored:    code/ReferenceGenome/
+    Ignored:    code/Rplots.pdf
+    Ignored:    code/Session.vim
+    Ignored:    code/SplicingAnalysis/
+    Ignored:    code/TODO
+    Ignored:    code/Tehranchi/
+    Ignored:    code/bigwigs/
+    Ignored:    code/bigwigs_FromNonWASPFilteredReads/
+    Ignored:    code/config/.DS_Store
+    Ignored:    code/config/._.DS_Store
+    Ignored:    code/config/.ipynb_checkpoints/
+    Ignored:    code/dag.pdf
+    Ignored:    code/dag.png
+    Ignored:    code/dag.svg
+    Ignored:    code/debug.ipynb
+    Ignored:    code/debug_python.ipynb
+    Ignored:    code/deepTools/
+    Ignored:    code/featureCounts/
+    Ignored:    code/gwas_summary_stats/
+    Ignored:    code/hyprcoloc/
+    Ignored:    code/igv_session.xml
+    Ignored:    code/log
+    Ignored:    code/logs/
+    Ignored:    code/notebooks/.ipynb_checkpoints/
+    Ignored:    code/pi1/
+    Ignored:    code/rules/.ipynb_checkpoints/
+    Ignored:    code/rules/OldRules/
+    Ignored:    code/rules/notebooks/
+    Ignored:    code/scratch/
+    Ignored:    code/scripts/.Add_UnstandardizedBetaCol.py.swp
+    Ignored:    code/scripts/.ipynb_checkpoints/
+    Ignored:    code/scripts/GTFtools_0.8.0/
+    Ignored:    code/scripts/__pycache__/
+    Ignored:    code/scripts/liftOverBedpe/liftOverBedpe.py
+    Ignored:    code/snakemake.dryrun.log
+    Ignored:    code/snakemake.log
+    Ignored:    code/snakemake.sbatch.log
+    Ignored:    code/test.introns.bed
+    Ignored:    code/test.introns2.bed
+    Ignored:    data/.DS_Store
+    Ignored:    data/._.DS_Store
+    Ignored:    data/._20220414203249_JASPAR2022_combined_matrices_25818_jaspar.txt
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-10.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-11.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-2.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-3.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-4.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-5.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-6.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-7.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-8.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022.csv
+
+Untracked files:
+    Untracked:  code/snakemake_profiles/slurm/__pycache__/
+
+Unstaged changes:
+    Modified:   analysis/20221028_CheckDeltaPWM.Rmd
+    Modified:   code/scripts/GenometracksByGenotype
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+
+<p>
+These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/20221028_CheckDeltaPWM.Rmd</code>) and HTML (<code>docs/20221028_CheckDeltaPWM.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/fad2654cb2ac83f9386cce457e347948698997cb/analysis/20221028_CheckDeltaPWM.Rmd" target="_blank">fad2654</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-10-28
+</td>
+<td>
+added ss eQTL nb
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div id="intro" class="section level2">
+<h2>Intro</h2>
+<p>Here I want to investigate the effect of splice site SNPs on expression…</p>
+<p>Carlos already some of the brute work - and in fact did a similar analysis himself… He previously quantified 5’ss usage QTLs, and based on some intermediate files he made, I further processed those files to calculate 5’ss motif scores for ref and alt allele (something Carlos has also done, and confirmed a strong correlation b/n motif score change and splicing change). Here I want to check that I correctly calculated SpliceSiteScore changes (based on simple Position weight matrix), and that these splice site score changes correlate with splicing changes… eventually i will check the effect of the splice site SNPs on expression…</p>
+<pre class="r"><code>library(tidyverse)
+library(broom)
+
+dat.scratch &lt;- read_tsv(&quot;../code/scratch/SpliceSiteEffects.txt.gz&quot;)
+
+dat.scratch %&gt;%
+  distinct(phe_id, New, .keep_all=T) %&gt;%
+  # filter(nom_pval &lt; 0.05) %&gt;%
+  ggplot(aes(x=DeltaPWM, y=slope, color=phe_strd)) +
+  geom_point() +
+  facet_wrap(~New) +
+  theme_bw() +
+  labs(x=&quot;Delta 5&#39;ss score (PWM)&quot;, y=&quot;5&#39;ss usage, Standardized beta&quot;)</code></pre>
+<p><img src="figure/20221028_CheckDeltaPWM.Rmd/unnamed-chunk-1-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok that looks great… Note I feel confident I calculated the 5’ss motif scores properly, and for both + and - strands, since there is clear correlation as expected… Now let’s check the effects on expression…</p>
+<pre class="r"><code>dat.tidy &lt;- dat.scratch %&gt;%
+  pivot_longer(polyA_eQTL_P:chRNA_eQTL_beta, names_pattern=&quot;^(.+)_(.+)$&quot;, names_to=c(&quot;Dataset&quot;, &quot;stat&quot;)) %&gt;%
+  pivot_wider(names_from=&quot;stat&quot;, values_from=&quot;value&quot;)
+
+# dat.tidy %&gt;%
+#   filter(P &lt; 0.05) %&gt;%
+#   nest(-New, -Dataset) %&gt;%
+#   mutate(fit = map(data, ~lm(formula = beta ~ DeltaPWM, data = .))) %&gt;%
+#   mutate(summary = map(fit, glance))
+
+dat.tidy %&gt;% 
+    group_by(New, Dataset) %&gt;%
+    do(tidy(lm(data = ., formula = beta ~ DeltaPWM)))</code></pre>
+<pre><code># A tibble: 8 × 7
+# Groups:   New, Dataset [4]
+  New       Dataset    term         estimate std.error statistic      p.value
+  &lt;chr&gt;     &lt;chr&gt;      &lt;chr&gt;           &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;        &lt;dbl&gt;
+1 chRNA_5ss chRNA_eQTL (Intercept)  0.0232     0.00831    2.78   0.00541     
+2 chRNA_5ss chRNA_eQTL DeltaPWM     0.00936    0.00179    5.22   0.000000195 
+3 chRNA_5ss polyA_eQTL (Intercept) -0.000241   0.00864   -0.0279 0.978       
+4 chRNA_5ss polyA_eQTL DeltaPWM     0.000546   0.00185    0.295  0.768       
+5 polyA_5ss chRNA_eQTL (Intercept)  0.0232     0.00894    2.59   0.00957     
+6 polyA_5ss chRNA_eQTL DeltaPWM     0.0104     0.00192    5.42   0.0000000683
+7 polyA_5ss polyA_eQTL (Intercept) -0.00126    0.00911   -0.138  0.890       
+8 polyA_5ss polyA_eQTL DeltaPWM     0.00207    0.00195    1.06   0.289       </code></pre>
+<pre class="r"><code>dat.tidy %&gt;%
+  filter(P &lt; 0.05) %&gt;%
+  ggplot(aes(x=DeltaPWM, y=beta)) +
+  geom_point(alpha=0.1) +
+  geom_smooth(method = &#39;lm&#39;) +
+  geom_text(
+    data = . %&gt;%
+      group_by(New, Dataset) %&gt;%
+      do(tidy(lm(data = ., formula = beta ~ DeltaPWM))) %&gt;%
+      filter(term == &quot;DeltaPWM&quot;) %&gt;%
+      mutate(beta = signif(estimate, 3), P=format.pval(p.value, 3)) %&gt;%
+      mutate(label = str_glue(&quot;beta:{beta}\nP:{P}&quot;)),
+    aes(x=-Inf, y=Inf, label=label),
+    hjust=0, vjust=1
+  ) +
+  facet_wrap(New ~ Dataset) +
+  theme_bw() +
+  labs(x=&quot;Delta 5&#39;ss score (PWM)&quot;, y=&quot;expression, Standardized beta&quot;, caption=&quot;chRNA_5ss and polyA_5ss refer to 5&#39;ss tested in each dataset&quot;, title=&quot;Effect of splice site mutations on host gene&quot;)</code></pre>
+<p><img src="figure/20221028_CheckDeltaPWM.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Perhaps first we should look at QQ plots to start…</p>
+<pre class="r"><code>test.SNPs &lt;- paste0(&quot;../code/QTLs/QTLTools/&quot;, c(&quot;chRNA.Expression.Splicing&quot;, &quot;Expression.Splicing.Subset_YRI&quot;), &quot;/NominalPassForColoc.RandomSamplePvals.txt.gz&quot;) %&gt;%
+  setNames(c(&quot;chRNA_eQTL&quot;, &quot;polyA_eQTL&quot;)) %&gt;%
+  lapply(read_tsv, col_names=c(&quot;P&quot;)) %&gt;%
+  bind_rows(.id=&quot;Dataset&quot;) %&gt;%
+  mutate(SnpSet = &quot;TestSNPs&quot;) %&gt;%
+  group_by(Dataset) %&gt;%
+  sample_n(5000) %&gt;%
+  ungroup()
+
+dat.tidy %&gt;%
+  drop_na() %&gt;%
+  mutate(SnpSet = cut(DeltaPWM, 5)) %&gt;%
+  bind_rows(test.SNPs) %&gt;%
+  group_by(Dataset, SnpSet) %&gt;%
+  mutate(ExpectedP = percent_rank(P)) %&gt;%
+  ungroup() %&gt;%
+  ggplot(aes(x=-log10(ExpectedP), y=-log10(P), color=SnpSet)) +
+  geom_abline() +
+  geom_point() +
+  facet_wrap(~Dataset) +
+  theme_bw() +
+  labs(title=&quot;QQ plot of eQTL P-values&quot;, color=&quot;SpliceSiteSeverity\n(DeltaPWM)&quot;, y=&quot;-log10(P)&quot;)</code></pre>
+<p><img src="figure/20221028_CheckDeltaPWM.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok now let’s annotate the 5’ss as unannotated, NMD-inducing, etc…</p>
+<pre class="r"><code>NMD.transcript.introns &lt;- read_tsv(&quot;../code/SplicingAnalysis/Annotations/NMD/NMD_trancsript_introns.bed.gz&quot;, col_names=c(&quot;chrom&quot;, &quot;start&quot;, &quot;stop&quot;, &quot;name&quot;, &quot;score&quot;, &quot;strand&quot;)) %&gt;%
+  mutate(stop=stop+1) %&gt;%
+  mutate(Donor = case_when(
+  strand == &quot;+&quot; ~ paste(chrom, start, strand, sep=&quot;_&quot;),
+  strand == &quot;-&quot; ~ paste(chrom, stop, strand, sep=&quot;_&quot;)
+))
+
+Non.NMD.transcript.introns &lt;- read_tsv(&quot;../code/SplicingAnalysis/Annotations/NMD/NonNMD_trancsript_introns.bed.gz&quot;, col_names=c(&quot;chrom&quot;, &quot;start&quot;, &quot;stop&quot;, &quot;name&quot;, &quot;score&quot;, &quot;strand&quot;)) %&gt;%
+  mutate(stop=stop+1) %&gt;%
+  mutate(Donor = case_when(
+  strand == &quot;+&quot; ~ paste(chrom, start, strand, sep=&quot;_&quot;),
+  strand == &quot;-&quot; ~ paste(chrom, stop, strand, sep=&quot;_&quot;)
+))
+
+NMD.specific.Donors &lt;- setdiff(NMD.transcript.introns$Donor, Non.NMD.transcript.introns$Donor)
+
+Intron.Annotations.basic &lt;- read_tsv(&quot;../code/SplicingAnalysis/regtools_annotate_combined/basic.bed.gz&quot;) %&gt;%
+  filter(known_junction ==1) %&gt;%
+  mutate(Donor = case_when(
+    strand == &quot;+&quot; ~ paste(chrom, start, strand, sep=&quot;_&quot;),
+    strand == &quot;-&quot; ~ paste(chrom, end, strand, sep=&quot;_&quot;)
+  ))
+Introns.Annotations.comprehensive &lt;- read_tsv(&quot;../code/SplicingAnalysis/regtools_annotate_combined/comprehensive.bed.gz&quot;) %&gt;%
+  filter(known_junction ==1) %&gt;%
+  mutate(Donor = case_when(
+    strand == &quot;+&quot; ~ paste(chrom, start, strand, sep=&quot;_&quot;),
+    strand == &quot;-&quot; ~ paste(chrom, end, strand, sep=&quot;_&quot;)
+  ))
+
+All.donors &lt;- Introns.Annotations.all &lt;- read_tsv(&quot;../code/SplicingAnalysis/regtools_annotate_combined/comprehensive.bed.gz&quot;) %&gt;%
+  mutate(Donor = case_when(
+    strand == &quot;+&quot; ~ paste(chrom, start, strand, sep=&quot;_&quot;),
+    strand == &quot;-&quot; ~ paste(chrom, end, strand, sep=&quot;_&quot;)
+  ))
+
+All.donors.annotations &lt;- All.donors %&gt;%
+  dplyr::select(Donor) %&gt;%
+  distinct() %&gt;%
+  separate(Donor, into=c(&quot;chrom&quot;, &quot;pos&quot;, &quot;strand&quot;), convert=T, remove=F, sep=&quot;_&quot;) %&gt;%
+  mutate(DonorAnnotation = case_when(
+    Donor %in% NMD.specific.Donors ~ &quot;Annotated NMD&quot;,
+    Donor %in% Intron.Annotations.basic$Donor ~ &quot;Annotated basic&quot;,
+    Donor %in% Introns.Annotations.comprehensive$Donor ~ &quot;Annotated Not basic&quot;,
+    TRUE ~ &quot;Unannotated&quot;
+  ))
+
+All.donors.annotations %&gt;%
+  count(DonorAnnotation)</code></pre>
+<pre><code># A tibble: 4 × 2
+  DonorAnnotation           n
+  &lt;chr&gt;                 &lt;int&gt;
+1 Annotated NMD          6168
+2 Annotated Not basic   24431
+3 Annotated basic      206198
+4 Unannotated         1774748</code></pre>
+<p>Now redo plots by donor annotation</p>
+<pre class="r"><code>dat.tidy.annotated &lt;- dat.tidy %&gt;%
+  mutate(Donor = case_when(
+    phe_strd == &quot;-&quot; ~ paste(phe_chr, phe_from+6, phe_strd, sep=&quot;_&quot;),
+    phe_strd == &quot;+&quot; ~ paste(phe_chr, phe_from+2, phe_strd, sep=&quot;_&quot;)
+  )) %&gt;%
+  inner_join(
+    All.donors.annotations %&gt;% dplyr::select(Donor, DonorAnnotation))
+
+dat.tidy.annotated %&gt;%
+  filter(New == &quot;polyA_5ss&quot;) %&gt;%
+  filter(P &lt; 0.05) %&gt;%
+  ggplot(aes(x=DeltaPWM, y=beta, color=DonorAnnotation)) +
+  geom_point(alpha=0.1, color=&#39;black&#39;) +
+  geom_smooth(method = &#39;lm&#39;) +
+  geom_text(
+    data = . %&gt;%
+      group_by(DonorAnnotation, Dataset) %&gt;%
+      do(tidy(lm(data = ., formula = beta ~ DeltaPWM))) %&gt;%
+      filter(term == &quot;DeltaPWM&quot;) %&gt;%
+      mutate(beta = signif(estimate, 3), P=format.pval(p.value, 3)) %&gt;%
+      mutate(label = str_glue(&quot;beta:{beta}\nP:{P}&quot;)),
+    aes(x=-Inf, y=Inf, label=label),
+    hjust=0, vjust=1
+  ) +
+  facet_grid(DonorAnnotation~Dataset) +
+  theme_bw() +
+  labs(x=&quot;Delta 5&#39;ss score (PWM)&quot;, y=&quot;expression, Standardized beta&quot;, caption=&quot;Positive DeltaPWM corresponds to splicing increases at 5&#39;ss&quot;, title=&quot;Effect of splice site mutations on host gene&quot;)</code></pre>
+<p><img src="figure/20221028_CheckDeltaPWM.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.6.1 (2019-07-05)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: CentOS Linux 7 (Core)
+
+Matrix products: default
+BLAS/LAPACK: /software/openblas-0.2.19-el7-x86_64/lib/libopenblas_haswellp-r0.2.19.so
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8 LC_NUMERIC=C         LC_TIME=C           
+ [4] LC_COLLATE=C         LC_MONETARY=C        LC_MESSAGES=C       
+ [7] LC_PAPER=C           LC_NAME=C            LC_ADDRESS=C        
+[10] LC_TELEPHONE=C       LC_MEASUREMENT=C     LC_IDENTIFICATION=C 
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] broom_1.0.0     forcats_0.4.0   stringr_1.4.0   dplyr_1.0.9    
+ [5] purrr_0.3.4     readr_1.3.1     tidyr_1.2.0     tibble_3.1.7   
+ [9] ggplot2_3.3.6   tidyverse_1.3.0
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_1.0.5       lattice_0.20-38  lubridate_1.7.4  assertthat_0.2.1
+ [5] rprojroot_2.0.2  digest_0.6.20    utf8_1.1.4       R6_2.4.0        
+ [9] cellranger_1.1.0 backports_1.4.1  reprex_0.3.0     evaluate_0.15   
+[13] httr_1.4.4       highr_0.9        pillar_1.7.0     rlang_1.0.5     
+[17] readxl_1.3.1     rstudioapi_0.14  whisker_0.3-2    Matrix_1.2-18   
+[21] rmarkdown_1.13   splines_3.6.1    labeling_0.3     munsell_0.5.0   
+[25] compiler_3.6.1   httpuv_1.5.1     modelr_0.1.8     xfun_0.31       
+[29] pkgconfig_2.0.2  mgcv_1.8-40      htmltools_0.5.3  tidyselect_1.1.2
+[33] workflowr_1.6.2  fansi_0.4.0      crayon_1.3.4     dbplyr_1.4.2    
+[37] withr_2.5.0      later_0.8.0      grid_3.6.1       nlme_3.1-140    
+[41] jsonlite_1.6     gtable_0.3.0     lifecycle_1.0.1  DBI_1.1.0       
+[45] git2r_0.26.1     magrittr_1.5     scales_1.1.0     cli_3.3.0       
+[49] stringi_1.4.3    farver_2.1.0     fs_1.5.2         promises_1.0.1  
+[53] xml2_1.3.2       ellipsis_0.3.2   generics_0.1.3   vctrs_0.4.1     
+[57] tools_3.6.1      glue_1.6.2       hms_0.5.3        fastmap_1.1.0   
+[61] yaml_2.2.0       colorspace_1.4-1 rvest_0.3.5      knitr_1.39      
+[65] haven_2.3.1     </code></pre>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+http://docs.mathjax.org/en/latest/configuration.html.  This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

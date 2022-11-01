@@ -45,6 +45,7 @@ RNASeqPhenotypes_extended = RNASeqPhenotypes + RNASeqExpressionPhenotypes
 ChromatinProfilingSamples_df = Fastq_samples.loc[ (Fastq_samples['Assay'].isin(["ChIP-seq", "CutAndTag"])) , ['Phenotype', 'IndID', 'RepNumber'] ].drop_duplicates()
 RNASeqSamples_df = Fastq_samples.loc[ (Fastq_samples['Assay']=="RNA-seq") , ['Phenotype', 'IndID', 'RepNumber'] ].drop_duplicates()
 RNASeqSamplesNoProcap_df = Fastq_samples.loc[ (Fastq_samples['Assay']=="RNA-seq") & (Fastq_samples["Phenotype"] != "ProCap") , ['Phenotype', 'IndID', 'RepNumber']  ].drop_duplicates()
+ProCapSamples_df = Fastq_samples.loc[ (Fastq_samples['Phenotype']=="ProCap") , ['Phenotype', 'IndID', 'RepNumber'] ].drop_duplicates()
 
 #Other useful lists
 AllChromatinProfilingBams = expand("Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.wasp_filterd.markdup.sorted.bam", zip, Phenotype= ChromatinProfilingSamples_df['Phenotype'], IndID=ChromatinProfilingSamples_df['IndID'], Rep=ChromatinProfilingSamples_df['RepNumber'])
@@ -165,8 +166,10 @@ def GetUnfilteredBaiForBigwig(wildcards):
 
 
 def GetBigwigParams(wildcards):
-    if wildcards.Phenotype in RNASeqPhenotypes:
+    if wildcards.Phenotype in [i for i in RNASeqPhenotypes if i != "ProCap"]:
         return "-split"
+    elif wildcards.Phenotype == "ProCap":
+        return "-5"
     elif wildcards.Phenotype in ChromatinProfilingPhenotypes:
         return ""
     else:

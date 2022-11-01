@@ -1,0 +1,163 @@
+---
+title: "20221030_PlotForLabMeeting"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+## Intro
+
+Here I will plot a bunch of somewhat unrelated stuff to present for lab meeting
+
+### Repreoduce Carlos' "poly-A-specific eQTLs more likely to be sQTLs"
+
+```{r}
+library(tidyverse)
+library(data.table)
+library(RColorBrewer)
+
+
+GenewiseTests <- fread("../code/pi1/PairwisePi1Traits.P.all.txt.gz")
+
+PeaksToTSS <- Sys.glob("../code/Misc/PeaksClosestToTSS/*_assigned.tsv.gz") %>%
+  setNames(str_replace(., "../code/Misc/PeaksClosestToTSS/(.+?)_assigned.tsv.gz", "\\1")) %>%
+  lapply(read_tsv) %>%
+  bind_rows(.id="ChromatinMark") %>%
+  mutate(GenePeakPair = paste(gene, peak, sep = ";")) %>%
+  distinct(ChromatinMark, peak, gene, .keep_all=T)
+
+```
+
+Get eGenes that are not H3K27AC promoter QTLs, or chRNA eQTLs
+
+```{r}
+
+display.brewer.pal(n=6, name="Paired")
+brewer.pal(n=6, name="Paired")
+
+ColorKey <- c("chRNA.Expression.Splicing TRUE"="#1F78B4",
+                             "chRNA.Expression.Splicing FALSE"="#A6CEE3",
+                             "H3K36ME3 TRUE"="#33A02C",
+                             "H3K36ME3 FALSE"="#B2DF8A",
+                             "H3K27AC TRUE"="#E31A1C",
+                             "H3K27AC FALSE"="#FB9A99")
+LabelKey <- c("chRNA.Expression.Splicing"="chRNA",
+                             "H3K36ME3"="H3K36ME3",
+                             "H3K27AC"="H3K27AC@TSS")
+
+Dat.to.plot <- GenewiseTests %>%
+  filter(
+    PC1 == "Expression.Splicing.Subset_YRI" &
+      PC2 %in% c("H3K27AC", "chRNA.Expression.Splicing", "H3K36ME3")
+    ) %>%
+  filter(
+    PC2 %in% c("chRNA.Expression.Splicing", "H3K36ME3") |
+      paste(P1, P2, sep=";") %in% PeaksToTSS$GenePeakPair
+  ) %>%
+  group_by(GeneLocus, PC2) %>%
+  arrange(FDR.y) %>%
+  distinct(PC2, .keep_all=T) %>%
+  ungroup() %>%
+  # mutate(Is_xQTL = FDR.y<0.05) %>%
+  mutate(Is_xQTL = p_permutation.y<0.05) %>%
+  mutate(FacetLabel = recode(PC2, !!!LabelKey)) %>%
+  mutate(Group = paste(PC2, Is_xQTL)) %>%
+  add_count(Group, FacetLabel)
+Dat.to.plot %>%
+  ggplot(aes(x=-log10(p_permutation.x), y=-log10(p_permutation.y), color=Group)) +
+  geom_label(
+    data = . %>%
+      distinct(Group, FacetLabel, n) %>%
+      group_by(FacetLabel) %>%
+      mutate(rn = row_number()),
+    aes(label=paste0("n=", n), vjust=rn+1, color=Group),
+    x=-Inf, y=Inf, hjust=-0.5) +
+  geom_point(alpha=0.1) +
+  scale_color_manual(values=ColorKey) +
+  facet_wrap(~FacetLabel) +
+  theme_bw() +
+  theme(legend.position = "none") +
+  labs(caption="Number of eGenes that are xQTLs, 10% FDR",  x="-log10(q) (eQTL)", y="-log10(q) (xQTL)")
+
+test.SNPs <- paste0("../code/QTLs/QTLTools/", c("polyA.Splicing.Subset_YRI", "chRNA.Splicing"), "/NominalPassForColoc.RandomSamplePvals.txt.gz") %>%
+  setNames(str_replace(., "../code/QTLs/QTLTools/(.+?)/NominalPassForColoc.RandomSamplePvals.txt.gz", "\\1")) %>%
+  lapply(read_tsv, col_names=c("trait.x.p.in.y")) %>%
+  bind_rows(.id="PC2") %>%
+  mutate(Group = "TestSNPs") %>%
+  group_by(PC2) %>%
+  sample_n(5000) %>%
+  ungroup()
+
+test.SNPs %>%
+  ggplot(aes(x=trait.x.p.in.y)) +
+  geom_histogram() +
+  facet_wrap(~PC2)
+
+GenewiseTests %>%
+  filter(
+    PC1 == "Expression.Splicing.Subset_YRI" &
+      PC2 %in% c("polyA.Splicing.Subset_YRI", "chRNA.Splicing")
+    ) %>%
+  inner_join(
+    Dat.to.plot %>%
+      dplyr::select(Group,Is_xQTL,GeneLocus, FacetLabel)
+  ) %>%
+  bind_rows(
+    bind_rows(list("H3K27AC@TSS"=test.SNPs, "H3K36ME3"=test.SNPs, "chRNA"=test.SNPs), .id="FacetLabel")
+  ) %>%
+  # group_by(PC2, Group, GeneLocus, FacetLabel) %>%
+  # arrange(trait.x.p.in.y) %>%
+  # distinct(Group, GeneLocus, trait.x.p.in.y, FacetLabel ) %>%
+  # ungroup() %>%
+  group_by(PC2, Group, FacetLabel) %>%
+  mutate(ExpectedP = percent_rank(trait.x.p.in.y)) %>%
+  ungroup() %>%
+  ggplot(aes(x=-log10(ExpectedP), y=-log10(trait.x.p.in.y), color=Group)) +
+  geom_abline() +
+  geom_point() +
+  scale_color_manual(values=c(ColorKey, "TestSNPs"="gray")) +
+  facet_grid(PC2 ~ FacetLabel) +
+  theme_bw() +
+  theme(legend.position = "none") +
+  labs(title="QQ plot of sQTL P-values", color="xQTL SNP", y="Observed -log10(P)", x="Theoretical -log10(P)", caption=str_wrap("", 30))
+
+```
+The test SNPs are messed up for chRNA for reasons I understand... It's a bug in my code I will fix later. In any case, i still can't reproduce Carlos' observation that the polyA eQTLs that aren't chRNA eQTLs or chromatin QTLs are more likely to be sQTLs.
+
+### Tidy data
+
+In order to ease downstream plotting, I want to merge a few tables: The table with spearman correlation b/n pairwise traits, the table with pairwise P-values, and the table with tidy coloc results...
+
+Note this isn't ready.. some of the pipeline needs to be rerun
+
+```{r, eval=F}
+coloc.tidy <- fread("../code/hyprcoloc/Results/ForColoc/MolColocStandard/tidy_results_OnlyColocalized.txt.gz") %>%
+  separate(phenotype_full, into=c("PC", "P"), sep=";")
+
+coloc.tidy.pairwise <- left_join(
+  coloc.tidy,
+  coloc.tidy %>%
+    dplyr::select(-iteration, -ColocPr, -RegionalPr, -TopSNPFinemapPr),
+  by=c("Locus"),
+  suffix=c("1", "2")
+) %>%
+  filter(!(P1==P2 & PC1 == PC2)) %>%
+  filter(snp1 == snp2) %>%
+  dplyr::select(ColocalizedTopSNP = snp1, GeneLocus=Locus, everything(), -snp2)
+
+spearman.of.QTL.signals <- fread("../code/hyprcoloc/Results/ForColoc/MolColocStandard/pairwisecor.txt.gz") %>%
+  separate(Trait1, into=c("PC1", "P1"), sep=';') %>%
+  separate(Trait2, into=c("PC2", "P2"), sep=';') %>%
+  dplyr::select(-cor.z.pearson, -cor.logp.pearson, -cor.logp.pearson)
+
+Combined.table <- GenewiseTests %>%
+  left_join(spearman.of.QTL.signals) %>%
+  left_join(coloc.tidy.pairwise)
+
+
+```
+
+### Number QTLs
+

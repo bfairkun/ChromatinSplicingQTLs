@@ -29,10 +29,12 @@ dat %>%
 Ok , I have also calculated these correlation coefficients for Z score and logP value for all pairs of traits attempted colocalize. Let's compare that to colocalization results...
 
 ```{r}
-coloc.results <- fread("../code/hyprcoloc/Results/ForColoc/MolColocStandard/PairwiseColocStats.txt.gz")
+
+coloc.results <- fread("../code/hyprcoloc/Results/ForColoc/MolColocStandard/tidy_results_OnlyColocalized.txt.gz")
+
 pairwise.cor.results <- fread("../code/hyprcoloc/Results/ForColoc/MolColocStandard/pairwisecor.txt.gz", col.names = c("Trait1","Trait2", "cor.z.pearson", "cor.z.spearman", "cor.logp.pearson", "GeneLocus"))
 
-coloc.results
+# coloc.results
 
 ```
 

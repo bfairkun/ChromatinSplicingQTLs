@@ -187,10 +187,8 @@ def GetQTLtoolsWindowFlag(wildcards):
             return "--window 100000"
 
 def GetQTLtoolsOtherFlags(wildcards):
-    if wildcards.StandardizedOrUnstandardized == "Unstandardized":
-        return ""
-    elif wildcards.Phenotype in ["polyA.Splicing", "chRNA.Splicing", "polyA.Splicing.Subset_YRI", 
-    "MetabolicLabelled.30min.Splicing", "MetabolicLabelled.60min.Splicing", "chRNA.RNA.Editing", "chRNA.Splicing.Order"]:
+    if wildcards.Phenotype in ["polyA.Splicing", "chRNA.Splicing", "polyA.Splicing.Subset_YRI", 
+    "MetabolicLabelled.30min.Splicing", "MetabolicLabelled.60min.Splicing", "chRNA.RNA.Editing", "chRNA.Splicing.Order"] and wildcards.Pass == "PermutationPass":
         return "--grp-best"
     else:
         return ""
@@ -201,7 +199,7 @@ def GetQTLtoolsPassFlags(wildcards):
         return "--permute 1000"
     elif wildcards.Pass == "NominalPass":
         return "--nominal 1"
-        
+
 def GetExcludeFile(wildcards):
     if wildcards.Phenotype.split('.')[0] == 'chRNA':
         return '--exclude-samples config/chRNA.exc'
