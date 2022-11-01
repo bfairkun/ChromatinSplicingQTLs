@@ -1,5 +1,5 @@
 ---
-title: "20221030_PlotForLabMeeting"
+title: "Random plots"
 output: html_document
 ---
 
@@ -9,7 +9,7 @@ knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
 
 ## Intro
 
-Here I will plot a bunch of somewhat unrelated stuff to present for lab meeting
+Here I will plot a bunch of somewhat unrelated stuff that for lab meeting or that might just generally be interesting...
 
 ### Repreoduce Carlos' "poly-A-specific eQTLs more likely to be sQTLs"
 
@@ -107,6 +107,8 @@ GenewiseTests %>%
   bind_rows(
     bind_rows(list("H3K27AC@TSS"=test.SNPs, "H3K36ME3"=test.SNPs, "chRNA"=test.SNPs), .id="FacetLabel")
   ) %>%
+  #Becayse of a known bug for now don't even include test SNPs for chRNA
+  filter(!(PC2 == "chRNA.Splicing" & str_detect(Group, "TestSNPs"))) %>%
   # group_by(PC2, Group, GeneLocus, FacetLabel) %>%
   # arrange(trait.x.p.in.y) %>%
   # distinct(Group, GeneLocus, trait.x.p.in.y, FacetLabel ) %>%
@@ -125,6 +127,78 @@ GenewiseTests %>%
 
 ```
 The test SNPs are messed up for chRNA for reasons I understand... It's a bug in my code I will fix later. In any case, i still can't reproduce Carlos' observation that the polyA eQTLs that aren't chRNA eQTLs or chromatin QTLs are more likely to be sQTLs.
+
+Also, to verify there isn't some other bug, let's plot something similar...
+
+```{r}
+Dat.to.plot <- GenewiseTests %>%
+  filter(
+    PC1 == "Expression.Splicing.Subset_YRI" &
+      PC2 %in% c("chRNA.Expression.Splicing", "H3K36ME3")
+    ) %>%
+  group_by(GeneLocus, PC2) %>%
+  arrange(FDR.y) %>%
+  distinct(PC2, .keep_all=T) %>%
+  ungroup() %>%
+  # mutate(Is_xQTL = FDR.y<0.05) %>%
+  mutate(Is_xQTL = p_permutation.y<0.05) %>%
+  mutate(FacetLabel = recode(PC2, !!!LabelKey)) %>%
+  mutate(Group = paste(PC2, Is_xQTL)) %>%
+  add_count(Group, FacetLabel)
+
+Dat.to.plot %>%
+  ggplot(aes(x=-log10(p_permutation.x), y=-log10(p_permutation.y), color=Group)) +
+  geom_label(
+    data = . %>%
+      distinct(Group, FacetLabel, n) %>%
+      group_by(FacetLabel) %>%
+      mutate(rn = row_number()),
+    aes(label=paste0("n=", n), vjust=rn+1, color=Group),
+    x=-Inf, y=Inf, hjust=-0.5) +
+  geom_point(alpha=0.1) +
+  scale_color_manual(values=ColorKey) +
+  facet_wrap(~FacetLabel) +
+  theme_bw() +
+  theme(legend.position = "none") +
+  labs(caption="Number of eGenes that are xQTLs, 10% FDR",  x="-log10(q) (eQTL)", y="-log10(q) (xQTL)")
+
+GenewiseTests %>%
+  filter(
+    PC1 == "Expression.Splicing.Subset_YRI" &
+      PC2 %in% c("H3K27AC")
+    ) %>%
+  filter(
+    paste(P1, P2, sep=";") %in% PeaksToTSS$GenePeakPair
+  ) %>%
+  inner_join(
+    Dat.to.plot %>%
+      dplyr::select(Group,Is_xQTL,GeneLocus, FacetLabel)
+  ) %>%
+  # group_by(PC2, Group, GeneLocus, FacetLabel) %>%
+  # arrange(trait.x.p.in.y) %>%
+  # distinct(Group, GeneLocus, trait.x.p.in.y, FacetLabel ) %>%
+  # ungroup() %>%
+  group_by(PC2, Group, FacetLabel) %>%
+  mutate(ExpectedP = percent_rank(trait.x.p.in.y)) %>%
+  ungroup() %>%
+  ggplot(aes(x=-log10(ExpectedP), y=-log10(trait.x.p.in.y), color=Group)) +
+  geom_abline() +
+  geom_point() +
+  scale_color_manual(values=c(ColorKey, "TestSNPs"="gray")) +
+  facet_grid(PC2 ~ FacetLabel) +
+  theme_bw() +
+  theme(legend.position = "none") +
+  labs(title="QQ plot of H3K27AC promoter P-values", color="xQTL SNP", y="Observed -log10(P)", x="Theoretical -log10(P)", caption=str_wrap("All points are eQTLs SNPs in the YRI subset. Darker points are also a QTL for the facet title, lighter points are not", 60))
+```
+
+
+Ok, that makes sense. I now see what the problem was with the sQTL qqplot. I think Carlos might have been using a gene-level test for sQTLs (P value tests the null "Does this intron contain and sQTLs"), whereas I was plotting intron-level tests ("Is this eQTL SNP an sQTL") Let's remake the QQ plot with gene-level sQTL tests...
+
+```{r}
+gene.level.sQTL.tests <- fread("../code/QTLs/QTLTools/chRNA.Expression.Splicing/PermutationPassForColoc.txt.gz")
+```
+
+Wait, actually ok actually this isn't using the QTLtools `--group` flag like i hoped... and i'm generally confused now about what the file Carlos was using is...
 
 ### Tidy data
 
