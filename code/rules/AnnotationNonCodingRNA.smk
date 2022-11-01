@@ -673,7 +673,8 @@ rule ClassifyNcRNAs:
     output:
         'NonCodingRNA/annotation/NonCodingRNA.annotation.tab.gz',
         'NonCodingRNA/annotation/allGenes.annotation.tab.gz',
-        'NonCodingRNA/annotation/NonCodingRNA.bed.gz'
+        'NonCodingRNA/annotation/NonCodingRNA.bed.gz',
+        'NonCodingRNA/annotation/tmp/tss.saf'
     log:
         "logs/NonCodingRNA/classify_ncRNA.log"
     resources:
@@ -816,6 +817,49 @@ rule Prepare_ml60_ExpressionPhenotypes:
         Rscript scripts/prepare_ml60_ncRNA_Phenotypes.R &> {log}
         """
         
+#####################################################
+# Get ProCap counts at TSS for validation of diQTLs #
+# ###################################################
+
+rule MakeSAFAnnotationOfTSSForProCap:
+    input:
+        SAF='NonCodingRNA/annotation/tmp/tss.saf',
+    log:
+         'logs/NonCodingRNA/get_tss_saf.log'
+    output:
+        TSS = 'NonCodingRNA/annotation/uaRNA.TSS.saf'
+    shell:
+        """
+        #(cat {input.SAF} > {output.TSS}) &>> {log};
+        (head -n 1 {input.SAF} > {output.TSS}) &> {log};
+        (tail -n+2 {input.SAF} | awk '{{print $1, $2, $3-800, $4+800, $5}}' OFS='\\t' FS='\\t' - >> {output.TSS}) &>> {log};
+        (tail -n+2 {input.SAF} | awk '{{if ($5=="+") a="-"; else a="+"}} {{print $1"_reverse", $2, $3-800, $4+800, a}}' OFS='\\t' FS='\\t' - >> {output.TSS}) &>> {log};
+        """
+
+
+rule MakeProCapTSSQQNorm:
+    input:
+        "featureCounts/uaRNA_TSS/ProCap/Counts.txt"
+    output:
+        "QTLs/QTLTools/ProCap_uaRNA/OnlyFirstReps.qqnorm.bed.gz"
+    log:
+        "logs/NonCodingRNA/procap_tss_qqnorm.log"
+    resources:
+        mem_mb = 12000
+    conda:
+        "../envs/r_essentials.yml"
+    shell:
+        """
+        Rscript scripts/PreparePhenotypeTable_ProCap_uaRNA.R {input} {output} &> {log}
+        """
+
+
+
+
+
+
+
+
 
 
 
