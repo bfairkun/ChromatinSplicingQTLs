@@ -187,10 +187,8 @@ def GetQTLtoolsWindowFlag(wildcards):
             return "--window 100000"
 
 def GetQTLtoolsOtherFlags(wildcards):
-    if wildcards.StandardizedOrUnstandardized == "Unstandardized":
-        return ""
-    elif wildcards.Phenotype in ["polyA.Splicing", "chRNA.Splicing", "polyA.Splicing.Subset_YRI", 
-    "MetabolicLabelled.30min.Splicing", "MetabolicLabelled.60min.Splicing", "chRNA.RNA.Editing", "chRNA.Splicing.Order"]:
+    if wildcards.Phenotype in ["polyA.Splicing", "chRNA.Splicing", "polyA.Splicing.Subset_YRI", 
+    "MetabolicLabelled.30min.Splicing", "MetabolicLabelled.60min.Splicing", "chRNA.RNA.Editing", "chRNA.Splicing.Order"] and wildcards.Pass == "PermutationPass":
         return "--grp-best"
     else:
         return ""
@@ -201,7 +199,7 @@ def GetQTLtoolsPassFlags(wildcards):
         return "--permute 1000"
     elif wildcards.Pass == "NominalPass":
         return "--nominal 1"
-        
+
 def GetExcludeFile(wildcards):
     if wildcards.Phenotype.split('.')[0] == 'chRNA':
         return '--exclude-samples config/chRNA.exc'
@@ -301,7 +299,7 @@ rule MakePhenotypeTableToColocPeaksWithGenes:
 
 use rule MakePhenotypeTableToColocPeaksWithGenes as MakePhenotypeTableToColocIntronsWithGenes with:
     wildcard_constraints:
-        Phenotype = "MetabolicLabelled.30min.IRjunctions|MetabolicLabelled.60min.IRjunctions|polyA.IRjunctions|chRNA.IRjunctions|MetabolicLabelled.30min.IER|MetabolicLabelled.60min.IER|polyA.IER|chRNA.IER|MetabolicLabelled.30min.IR|MetabolicLabelled.30min.Splicing|MetabolicLabelled.60min.IR|MetabolicLabelled.60min.Splicing|chRNA.IR|chRNA.Splicing|polyA.Splicing|polyA.IR|polyA.Splicing.Subset_YRI|polyA.IER.Subset_YRI|polyA.IR.Subset_YRI|chRNA.Slopes|chRNA.Splicing.Order|chRNA.RNA.Editing"
+        Phenotype = "MetabolicLabelled.30min.IRjunctions|MetabolicLabelled.60min.IRjunctions|polyA.IRjunctions|chRNA.IRjunctions|MetabolicLabelled.30min.IER|MetabolicLabelled.60min.IER|polyA.IER|chRNA.IER|MetabolicLabelled.30min.IR|MetabolicLabelled.30min.Splicing|MetabolicLabelled.60min.IR|MetabolicLabelled.60min.Splicing|chRNA.IR|chRNA.Splicing|polyA.Splicing|polyA.IR|polyA.Splicing.Subset_YRI|polyA.IER.Subset_YRI|polyA.IR.Subset_YRI|chRNA.Slopes|chRNA.Splicing.Order|chRNA.RNA.Editing|APA_Nuclear|APA_Total"
     params:
         cis_window = 0,
         bedtools_intersect_params = "-s",

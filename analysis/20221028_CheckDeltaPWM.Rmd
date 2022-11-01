@@ -1,0 +1,209 @@
+---
+title: "Check DeltaPWM"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+## Intro
+
+
+Here I want to investigate the effect of splice site SNPs on expression...
+
+Carlos already some of the brute work - and in fact did a similar analysis himself... He previously quantified 5'ss usage QTLs, and based on some intermediate files he made, I further processed those files to calculate 5'ss motif scores for ref and alt allele (something Carlos has also done, and confirmed a strong correlation b/n motif score change and splicing change). Here I want to check that I correctly calculated SpliceSiteScore changes (based on simple Position weight matrix), and that these splice site score changes correlate with splicing changes... eventually i will check the effect of the splice site SNPs on expression...
+
+```{r}
+library(tidyverse)
+library(broom)
+
+dat.scratch <- read_tsv("../code/scratch/SpliceSiteEffects.txt.gz")
+
+dat.scratch %>%
+  distinct(phe_id, New, .keep_all=T) %>%
+  # filter(nom_pval < 0.05) %>%
+  ggplot(aes(x=DeltaPWM, y=slope, color=phe_strd)) +
+  geom_point() +
+  facet_wrap(~New) +
+  theme_bw() +
+  labs(x="Delta 5'ss score (PWM)", y="5'ss usage, Standardized beta")
+```
+
+Ok that looks great... Note I feel confident I calculated the 5'ss motif scores properly, and for both + and - strands, since there is clear correlation as expected... Now let's check the effects on expression...
+
+
+```{r}
+dat.tidy <- dat.scratch %>%
+  pivot_longer(polyA_eQTL_P:chRNA_eQTL_beta, names_pattern="^(.+)_(.+)$", names_to=c("Dataset", "stat")) %>%
+  pivot_wider(names_from="stat", values_from="value")
+
+# dat.tidy %>%
+#   filter(P < 0.05) %>%
+#   nest(-New, -Dataset) %>%
+#   mutate(fit = map(data, ~lm(formula = beta ~ DeltaPWM, data = .))) %>%
+#   mutate(summary = map(fit, glance))
+
+dat.tidy %>% 
+    group_by(New, Dataset) %>%
+    do(tidy(lm(data = ., formula = beta ~ DeltaPWM)))
+
+
+dat.tidy %>%
+  filter(P < 0.05) %>%
+  ggplot(aes(x=DeltaPWM, y=beta)) +
+  geom_point(alpha=0.1) +
+  geom_smooth(method = 'lm') +
+  geom_text(
+    data = . %>%
+      group_by(New, Dataset) %>%
+      do(tidy(lm(data = ., formula = beta ~ DeltaPWM))) %>%
+      filter(term == "DeltaPWM") %>%
+      mutate(beta = signif(estimate, 3), P=format.pval(p.value, 3)) %>%
+      mutate(label = str_glue("beta:{beta}\nP:{P}")),
+    aes(x=-Inf, y=Inf, label=label),
+    hjust=0, vjust=1
+  ) +
+  facet_wrap(New ~ Dataset) +
+  theme_bw() +
+  labs(x="Delta 5'ss score (PWM)", y="expression, Standardized beta", caption="chRNA_5ss and polyA_5ss refer to 5'ss tested in each dataset", title="Effect of splice site mutations on host gene")
+```
+
+Perhaps first we should look at QQ plots to start...
+
+```{r}
+test.SNPs <- paste0("../code/QTLs/QTLTools/", c("chRNA.Expression.Splicing", "Expression.Splicing.Subset_YRI"), "/NominalPassForColoc.RandomSamplePvals.txt.gz") %>%
+  setNames(c("chRNA_eQTL", "polyA_eQTL")) %>%
+  lapply(read_tsv, col_names=c("P")) %>%
+  bind_rows(.id="Dataset") %>%
+  mutate(SnpSet = "TestSNPs") %>%
+  group_by(Dataset) %>%
+  sample_n(5000) %>%
+  ungroup()
+
+dat.tidy %>%
+  drop_na() %>%
+  mutate(SnpSet = cut(DeltaPWM, 5)) %>%
+  bind_rows(test.SNPs) %>%
+  group_by(Dataset, SnpSet) %>%
+  mutate(ExpectedP = percent_rank(P)) %>%
+  ungroup() %>%
+  ggplot(aes(x=-log10(ExpectedP), y=-log10(P), color=SnpSet)) +
+  geom_abline() +
+  geom_point() +
+  facet_wrap(~Dataset) +
+  theme_bw() +
+  labs(title="QQ plot of eQTL P-values", color="SpliceSiteSeverity\n(DeltaPWM)", y="-log10(P)")
+  
+  
+
+```
+
+Ok now let's annotate the 5'ss as unannotated, NMD-inducing, etc...
+
+```{r}
+NMD.transcript.introns <- read_tsv("../code/SplicingAnalysis/Annotations/NMD/NMD_trancsript_introns.bed.gz", col_names=c("chrom", "start", "stop", "name", "score", "strand")) %>%
+  mutate(stop=stop+1) %>%
+  mutate(Donor = case_when(
+  strand == "+" ~ paste(chrom, start, strand, sep="_"),
+  strand == "-" ~ paste(chrom, stop, strand, sep="_")
+))
+
+Non.NMD.transcript.introns <- read_tsv("../code/SplicingAnalysis/Annotations/NMD/NonNMD_trancsript_introns.bed.gz", col_names=c("chrom", "start", "stop", "name", "score", "strand")) %>%
+  mutate(stop=stop+1) %>%
+  mutate(Donor = case_when(
+  strand == "+" ~ paste(chrom, start, strand, sep="_"),
+  strand == "-" ~ paste(chrom, stop, strand, sep="_")
+))
+
+NMD.specific.Donors <- setdiff(NMD.transcript.introns$Donor, Non.NMD.transcript.introns$Donor)
+
+Intron.Annotations.basic <- read_tsv("../code/SplicingAnalysis/regtools_annotate_combined/basic.bed.gz") %>%
+  filter(known_junction ==1) %>%
+  mutate(Donor = case_when(
+    strand == "+" ~ paste(chrom, start, strand, sep="_"),
+    strand == "-" ~ paste(chrom, end, strand, sep="_")
+  ))
+Introns.Annotations.comprehensive <- read_tsv("../code/SplicingAnalysis/regtools_annotate_combined/comprehensive.bed.gz") %>%
+  filter(known_junction ==1) %>%
+  mutate(Donor = case_when(
+    strand == "+" ~ paste(chrom, start, strand, sep="_"),
+    strand == "-" ~ paste(chrom, end, strand, sep="_")
+  ))
+
+All.donors <- Introns.Annotations.all <- read_tsv("../code/SplicingAnalysis/regtools_annotate_combined/comprehensive.bed.gz") %>%
+  mutate(Donor = case_when(
+    strand == "+" ~ paste(chrom, start, strand, sep="_"),
+    strand == "-" ~ paste(chrom, end, strand, sep="_")
+  ))
+
+All.donors.annotations <- All.donors %>%
+  dplyr::select(Donor) %>%
+  distinct() %>%
+  separate(Donor, into=c("chrom", "pos", "strand"), convert=T, remove=F, sep="_") %>%
+  mutate(DonorAnnotation = case_when(
+    Donor %in% NMD.specific.Donors ~ "Annotated NMD",
+    Donor %in% Intron.Annotations.basic$Donor ~ "Annotated basic",
+    Donor %in% Introns.Annotations.comprehensive$Donor ~ "Annotated Not basic",
+    TRUE ~ "Unannotated"
+  ))
+
+All.donors.annotations %>%
+  count(DonorAnnotation)
+```
+
+Now redo plots by donor annotation
+
+```{r}
+dat.tidy.annotated <- dat.tidy %>%
+  mutate(Donor = case_when(
+    phe_strd == "-" ~ paste(phe_chr, phe_from+6, phe_strd, sep="_"),
+    phe_strd == "+" ~ paste(phe_chr, phe_from+2, phe_strd, sep="_")
+  )) %>%
+  inner_join(
+    All.donors.annotations %>% dplyr::select(Donor, DonorAnnotation))
+
+dat.tidy.annotated %>%
+  filter(New == "polyA_5ss") %>%
+  filter(P < 0.05) %>%
+  ggplot(aes(x=DeltaPWM, y=beta, color=DonorAnnotation)) +
+  geom_point(alpha=0.1, color='black') +
+  geom_smooth(method = 'lm') +
+  geom_text(
+    data = . %>%
+      group_by(DonorAnnotation, Dataset) %>%
+      do(tidy(lm(data = ., formula = beta ~ DeltaPWM))) %>%
+      filter(term == "DeltaPWM") %>%
+      mutate(beta = signif(estimate, 3), P=format.pval(p.value, 3)) %>%
+      mutate(label = str_glue("beta:{beta}\nP:{P}")),
+    aes(x=-Inf, y=Inf, label=label),
+    hjust=0, vjust=1
+  ) +
+  facet_grid(DonorAnnotation~Dataset) +
+  theme_bw() +
+  labs(x="Delta 5'ss score (PWM)", y="expression, Standardized beta", caption="Positive DeltaPWM corresponds to splicing increases at 5'ss", title="Effect of splice site mutations on host gene")
+
+dat.tidy.annotated %>%
+  filter(New == "polyA_5ss" & Dataset == "chRNA_eQTL") %>%
+  # filter(P < 0.05) %>%
+  ggplot(aes(x=DeltaPWM, y=slope, color=DonorAnnotation)) +
+  geom_point(alpha=0.1, color='black') +
+  geom_smooth(method = 'lm') +
+  geom_text(
+    data = . %>%
+      group_by(DonorAnnotation) %>%
+      do(tidy(lm(data = ., formula = slope ~ DeltaPWM))) %>%
+      filter(term == "DeltaPWM") %>%
+      mutate(slope = signif(estimate, 3), P=format.pval(p.value, 3)) %>%
+      mutate(label = str_glue("beta:{slope}\nP:{P}")),
+    aes(x=-Inf, y=Inf, label=label),
+    hjust=0, vjust=1
+  ) +
+  coord_cartesian(ylim=c(-2.5, 2.5)) +
+  facet_wrap(~DonorAnnotation) +
+  theme_bw() +
+  labs(x="Delta 5'ss score (PWM)", y="5'ss usage, Standardized beta", caption="Positive DeltaPWM corresponds to splicing increases at 5'ss", title="Effect of splice site mutations on splicing")
+```
+
+
+

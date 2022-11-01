@@ -138,3 +138,17 @@ rule GatherAllBigwigs:
             IndID=chRNASeqSamples_df["IndID"],
             Rep=chRNASeqSamples_df["RepNumber"],
         ),
+        expand(
+            "bigwigs/{Phenotype}_stranded/{IndID}.{Rep}.plus.bw",
+            zip,
+            Phenotype=ProCapSamples_df["Phenotype"],
+            IndID=ProCapSamples_df["IndID"],
+            Rep=ProCapSamples_df["RepNumber"],
+        ),
+        expand(
+            "bigwigs/{Phenotype}_stranded/{IndID}.{Rep}.minus.bw",
+            zip,
+            Phenotype=ProCapSamples_df["Phenotype"],
+            IndID=ProCapSamples_df["IndID"],
+            Rep=ProCapSamples_df["RepNumber"],
+        ),

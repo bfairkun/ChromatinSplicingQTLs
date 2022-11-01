@@ -15,6 +15,7 @@ I previously showed that effect size directions for intron retention QTLs puzzin
 library(tidyverse)
 library(data.table)
 library(qvalue)
+library(broom)
 
 ```
 
@@ -128,7 +129,9 @@ P.i.dat <- Long.table %>%
   ungroup() %>%
   group_by(Sample, Dataset) %>%
   mutate(Percent = SumCounts / sum(SumCounts) * 100) %>%
-  ungroup()
+  ungroup() %>%
+  mutate(Dataset = recode(Dataset, !!!c("Expression.Splicing"="polyA RNA-seq", "chRNA.Expression.Splicing"="chRNA-seq", "MetabolicLabelled.30min"="30min 4sU-label RNA-seq", "MetabolicLabelled.60min"="60min 4sU-label RNA-seq"))) %>%
+  mutate(Dataset = factor(Dataset, levels=c("chRNA-seq", "30min 4sU-label RNA-seq", "60min 4sU-label RNA-seq", "polyA RNA-seq")))
 P.i <- ggplot(P.i.dat, aes(x=Dataset, y=Percent, color=IntronAnnotation)) +
   geom_jitter(alpha=0.2, size=0.5) +
   geom_boxplot(outlier.shape=NA, color='black', fill=NA) +
@@ -698,6 +701,211 @@ TopSNPEffects.ByPairs %>%
   labs(title="genetic effects of NMD introns and host gene expression", x="beta, sQTL", y="beta, eQTL", caption="Only FDR<10% sQTLs and eQTLs plotted. eQTL effects are relative to top sQTL SNP")
 ```
 
+Yang asked for a pretty version of the above plot for a slide deck... Let me plot just the bottom right facet for him in a prettier way...
+
+```{r}
+P.dat <- TopSNPEffects.ByPairs %>%
+  filter(
+      (PC1 %in% c("Expression.Splicing.Subset_YRI")) &
+      (PC2 %in% c("polyA.Splicing.Subset_YRI")) &
+      (FDR.x < 0.1) &
+      (FDR.y < 0.1)) %>%
+  mutate(source.eQTL = recode(PC1, !!!c("Expression.Splicing.Subset_YRI"="polyA.Expression.YRI", "chRNA.Expression.Splicing"="chRNA.Expression"))) %>%
+  rename(source.sQTL=PC2) %>%
+  mutate(intron = str_replace(P2, "^(.+):(.+?):(.+?):clu.+?_([+-])$", "chr\\1_\\2_\\3_\\4")) %>%
+  mutate(IntronAnnotation = case_when(
+    intron %in% NMD.specific.introns ~ "Annotated NMD",
+    intron %in% Intron.Annotations.basic$intron ~ "Annotated basic",
+    intron %in% Introns.Annotations.comprehensive$intron ~ "Annotated Not basic",
+    TRUE ~ "Unannotated"
+  )) %>%
+  group_by(IntronAnnotation, P1) %>%
+  slice_min(order_by = p_permutation.y, with_ties=F) %>%
+  ungroup()
+P <- ggplot(P.dat, aes(y=beta.x, x=trait.x.beta.in.y
+, color=IntronAnnotation)) +
+  geom_point(alpha=0.5) +
+  geom_vline(xintercept=0) +
+  geom_hline(yintercept=0) +
+  geom_smooth(method='lm') +
+  facet_wrap(~IntronAnnotation) +
+  theme_bw() +
+  labs(title="genetic effects of NMD introns and host gene expression", x="beta, sQTL", y="beta, eQTL", caption="Only FDR<10% sQTLs and eQTLs plotted. sQTL effects are relative to top eQTL SNP")
+P
+
+
+```
+
+
+
+```{r, eval=F}
+P+
+  theme(legend.position="bottom") +
+  guides(color=guide_legend(nrow=2,byrow=TRUE))
+ggsave("figure/orig/Standardized_eQTL_sQTL_betas.pdf", height=6, width=6)
+```
+
+## Compare to colocalized version
+
+```{r}
+#First a version of the above but without breaking into groups
+TopSNPEffects.ByPairs %>%
+  filter(
+      (PC1 %in% c("Expression.Splicing.Subset_YRI")) &
+      (PC2 %in% c("polyA.Splicing.Subset_YRI")) &
+      (FDR.x < 0.1) &
+      (FDR.y < 0.1)) %>%
+  mutate(source.eQTL = recode(PC1, !!!c("Expression.Splicing.Subset_YRI"="polyA.Expression.YRI", "chRNA.Expression.Splicing"="chRNA.Expression"))) %>%
+  rename(source.sQTL=PC2) %>%
+  mutate(intron = str_replace(P2, "^(.+):(.+?):(.+?):clu.+?_([+-])$", "chr\\1_\\2_\\3_\\4")) %>%
+  mutate(IntronAnnotation = case_when(
+    intron %in% NMD.specific.introns ~ "Annotated NMD",
+    intron %in% Intron.Annotations.basic$intron ~ "Annotated basic",
+    intron %in% Introns.Annotations.comprehensive$intron ~ "Annotated Not basic",
+    TRUE ~ "Unannotated"
+  )) %>%
+  group_by(IntronAnnotation, P1) %>%
+  slice_min(order_by = p_permutation.y, with_ties=F) %>%
+  ungroup() %>%
+  ggplot(aes(y=beta.x, x=trait.x.beta.in.y)) +
+  geom_point(alpha=0.5, color='black') +
+  geom_vline(xintercept=0) +
+  geom_hline(yintercept=0) +
+  geom_smooth(method='lm') +
+  theme_bw() +
+  labs(title="genetic effects of NMD introns and host gene expression", x="beta, sQTL", y="beta, eQTL", caption="Only FDR<10% sQTLs and eQTLs plotted. sQTL effects are relative to top eQTL SNP")
+```
+
+Now a version based on colocalized data...
+
+```{r}
+coloc.tidy <- fread("../output/hyprcoloc_results/ForColoc/MolColocStandard/hyprcoloc.results.OnlyColocalized.Stats.txt.gz") %>%
+  separate(phenotype_full, into=c("PC", "P"), sep=";")
+
+coloc.tidy.pairwise <- left_join(
+  coloc.tidy,
+  coloc.tidy %>%
+    dplyr::select(-iteration, -ColocPr, -RegionalPr, -TopSNPFinemapPr),
+  by=c("Locus"),
+  suffix=c("1", "2")
+) %>%
+  filter(!(P1==P2 & PC1 == PC2)) %>%
+  filter(snp1 == snp2) %>%
+  dplyr::select(ColocalizedTopSNP = snp1, GeneLocus=Locus, everything(), -snp2)
+
+
+coloc.tidy.pairwise %>%
+  filter(
+      (PC1 %in% c("Expression.Splicing.Subset_YRI")) &
+      (PC2 %in% c("polyA.Splicing.Subset_YRI"))
+  ) %>%
+  ggplot(aes(y=beta2, x=beta1)) +
+  geom_point(alpha=0.5, color='black') +
+  geom_vline(xintercept=0) +
+  geom_hline(yintercept=0) +
+  geom_smooth(method='lm') +
+  theme_bw() +
+  labs(title="All colocalized eQTLs and sQTLs", x="eQTL beta\n(standardized units)", y="sQTL beta\n(standardized units)")
+
+coloc.tidy.pairwise %>%
+  filter(PC1 %in% c("Expression.Splicing.Subset_YRI")) %>%
+  distinct(GeneLocus, PC1, PC2) %>%
+  count(PC2) %>%
+  filter(!PC2 == "Expression.Splicing") %>%
+  filter(!PC2 == "polyA.Splicing") %>%
+  filter(n>5) %>%
+  mutate(PC2 = recode(PC2, "chRNA.Expression.Splicing"="chRNA.Expression_ProteinCodingGene")) %>%
+  ggplot(aes(x=PC2, y=n)) +
+  geom_col() +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+  labs(title="Number of eGenes colocalizing with at least one xQTL")
+
+coloc.tidy.pairwise %>%
+  filter(PC1 == "Expression.Splicing.Subset_YRI" & PC2%in%c("chRNA.Expression.Splicing", "H3K27AC")) %>%
+  mutate(PC2 = recode(PC2, "chRNA.Expression.Splicing"="chRNA.Expression")) %>%
+  ggplot(aes(x=beta1, y=beta2)) +
+  geom_point(alpha=0.5) +
+  facet_wrap(~PC2) +
+  theme_bw() +
+  labs(x="polyA Expression QTL\n standardized beta", y="xQTL\nstandardized beta")
+
+```
+
+And same thing, but 
+
+```{r}
+
+P.dat.colocsOnly <- coloc.tidy.pairwise %>%
+  filter(
+      (PC1 %in% c("Expression.Splicing.Subset_YRI")) &
+      (PC2 %in% c("polyA.Splicing.Subset_YRI"))
+  ) %>%
+  mutate(intron = str_replace(P2, "^(.+):(.+?):(.+?):clu.+?_([+-])$", "chr\\1_\\2_\\3_\\4")) %>%
+  mutate(IntronAnnotation = case_when(
+    intron %in% NMD.specific.introns ~ "Annotated NMD",
+    intron %in% Intron.Annotations.basic$intron ~ "Annotated basic",
+    intron %in% Introns.Annotations.comprehensive$intron ~ "Annotated Not basic",
+    TRUE ~ "Unannotated"
+  ))
+ggplot(P.dat.colocsOnly, aes(y=beta2, x=beta1, color=IntronAnnotation)) +
+  geom_point(alpha=0.5) +
+  geom_vline(xintercept=0) +
+  geom_hline(yintercept=0) +
+  geom_smooth(method='lm') +
+  geom_text(
+  data = . %>%
+    group_by(IntronAnnotation) %>%
+    do(tidy(lm(data = ., formula = beta2 ~ beta1))) %>%
+    filter(term == "beta1") %>%
+    mutate(beta = signif(estimate, 3), P=format.pval(p.value, 3)) %>%
+    mutate(label = str_glue("beta:{beta}\nP:{P}")),
+  aes(x=-Inf, y=-Inf, label=label),
+  hjust=0, vjust=0
+  ) +
+  facet_wrap(~IntronAnnotation) +
+  theme_bw() +
+  labs(title="genetic effects of NMD introns and host gene expression", x="beta, sQTL", y="beta, eQTL", caption="Only colocalized sQTL/eQTLs plotted, relative to top co-finemapped SNP")
+
+P.dat.colocsOnly %>%
+  dplyr::select(beta1, beta2, P1, PC1, P2, PC2, IntronAnnotation) %>%
+  bind_rows()
+
+P.dat %>%
+  dplyr::select(beta2=trait.x.beta.in.y, beta1=beta.y, P1, PC1, P2, PC2=source.eQTL, IntronAnnotation) %>%
+  filter(
+    !(P1 %in% P.dat.colocsOnly$P1) &
+    !(P2 %in% P.dat.colocsOnly$P2)
+  ) %>%
+  mutate(Colocalized = "Not colocalized") %>%
+  bind_rows(
+    P.dat.colocsOnly %>%
+        dplyr::select(beta1, beta2, P1, PC1, P2, PC2, IntronAnnotation) %>%
+        mutate(Colocalized = "Colocalized")
+  ) %>%
+  ggplot(aes(y=beta2, x=beta1, color=IntronAnnotation)) +
+  geom_point(alpha=0.5) +
+  geom_vline(xintercept=0) +
+  geom_hline(yintercept=0) +
+  geom_smooth(method='lm') +
+  geom_text(
+  data = . %>%
+    group_by(IntronAnnotation, Colocalized) %>%
+    do(tidy(lm(data = ., formula = beta2 ~ beta1))) %>%
+    filter(term == "beta1") %>%
+    mutate(beta = signif(estimate, 3), P=format.pval(p.value, 3)) %>%
+    mutate(label = str_glue("beta:{beta}\nP:{P}")),
+  aes(x=-Inf, y=-Inf, label=label),
+  hjust=0, vjust=0
+  ) +
+  facet_grid(Colocalized ~ IntronAnnotation) +
+  theme_bw() +
+  labs(title="genetic effects of NMD introns and host gene expression", x="eQTL beta\n(standardized units)", y="sQTL beta\n(standardized units)", caption="Colocalized sQTL/eQTLs betas at top co-finemapped SNP\nUncolocalized betas relative to top eQTL SNP")
+
+
+```
+
+
 There's a few things I could do to improve this... one being that the effect sizes are standardized and therefore hard to interpret. Plotting eQTL effect sizes as logFC and splicing effect sizes as deltaPSI could be more interpretable. Also, Yang suggesting exploring these ideas by plotting things as QQ plots... let's do that now...
 
 For example, let's plot eQTL P-values for different groups of SNPs, including sQTLs, hQTLs, etc...
@@ -801,6 +1009,65 @@ ggplot(aes(x=-log10(ExpectedP)*Sign, y=-log10(trait.x.p.in.y)*Sign, color=SnpSet
   facet_wrap(~PC2) +
   theme_bw() +
   labs(title="QQ plot of eQTL P-values", color="xQTL SNP", y="Observed -log10(P)", x="Theoretical -log10(P)", caption=str_wrap("If eQTL and xQTL beta signs are same, right-side-up. If opposite, plot upside-down", 30))
+```
+### Check NMD intron abundance in chRNA
+I have previously established that the fraction of NMD juncs out of total juncs is about 2x higher in chRNA than polyA. It goes to reason that the leafcutter PSI should also be higher. Let's check that for the 
+
+```{r}
+
+PSI.chRNA <- read_tsv("../code/QTLs/QTLTools/chRNA.Splicing/OnlyFirstRepsUnstandardized.sorted.qqnorm.bed.gz") %>%
+  dplyr::select(-c(1,2,3, 5,6)) %>%
+  mutate(mean = rowMeans(across(where(is.numeric)), na.rm=T)) %>%
+  dplyr::select(pid, mean) %>%
+  mutate(Dataset= "PSI.chRNA")
+
+PSI.polyA <- read_tsv("../code/QTLs/QTLTools/polyA.Splicing.Subset_YRI/OnlyFirstRepsUnstandardized.sorted.qqnorm.bed.gz") %>%
+  dplyr::select(-c(1,2,3, 5,6)) %>%
+  mutate(mean = rowMeans(across(where(is.numeric)), na.rm=T)) %>%
+  dplyr::select(pid, mean) %>%
+  mutate(Dataset = "PSI.polyA")
+
+chRNA.polyRNA.deltaPSI <- bind_rows(PSI.chRNA, PSI.polyA) %>%
+  pivot_wider(names_from = "Dataset", values_from="mean") %>%
+  drop_na() %>%
+  mutate(DeltaPSI = PSI.chRNA-PSI.polyA)
+
+TopSNPEffects.ByPairs %>%
+  filter(
+      (PC1 %in% c("Expression.Splicing.Subset_YRI")) &
+      (PC2 %in% c("polyA.Splicing.Subset_YRI")) &
+      (FDR.x < 0.1) &
+      (FDR.y < 0.1)) %>%
+  mutate(source.eQTL = recode(PC1, !!!c("Expression.Splicing.Subset_YRI"="polyA.Expression.YRI", "chRNA.Expression.Splicing"="chRNA.Expression"))) %>%
+  rename(source.sQTL=PC2) %>%
+  mutate(intron = str_replace(P2, "^(.+):(.+?):(.+?):clu.+?_([+-])$", "chr\\1_\\2_\\3_\\4")) %>%
+  mutate(IntronAnnotation = case_when(
+    intron %in% NMD.specific.introns ~ "Annotated NMD",
+    intron %in% Intron.Annotations.basic$intron ~ "Annotated basic",
+    intron %in% Introns.Annotations.comprehensive$intron ~ "Annotated Not basic",
+    TRUE ~ "Unannotated"
+  )) %>%
+  mutate(Concordance = if_else(
+    sign(beta.x) == sign(trait.x.beta.in.y),
+    "Concordant", "Discordant"
+  )) %>%
+  filter(!is.na(Concordance)) %>%
+  inner_join(chRNA.polyRNA.deltaPSI, by=c("P2"="pid")) %>%
+  ggplot(aes(x=DeltaPSI, color=IntronAnnotation)) +
+  stat_ecdf() +
+  geom_label(data=
+               . %>%
+               group_by(Concordance, IntronAnnotation) %>%
+               summarise(n=n()) %>%
+               group_by(Concordance) %>%
+               mutate(rn = row_number()) %>%
+               ungroup(),
+             aes(label=paste("n=",n), color=IntronAnnotation, vjust=rn),
+             x=-Inf, y=Inf, hjust=-1) +
+  facet_wrap(~Concordance) +
+  coord_cartesian(xlim=c(-10,10)) +
+  theme_bw() +
+  labs(y="ecdf", x="leafcutter DeltaPSI\nmean(PSI_chRNA)-mean(PSI_polyA)")
 ```
 
 
@@ -968,6 +1235,5 @@ As a side thing, I wrote a script to make metaQTL plots. That is, I lump the hig
 
 
 ```
-
 
 
