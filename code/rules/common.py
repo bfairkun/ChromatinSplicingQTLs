@@ -196,6 +196,8 @@ def PairedEndParams(wildcards):
         return "-p"
 
 def GetFeatureCountsParams(wildcards):
+    if (wildcards.Phenotype=="ProCap"): #and  (wildcards.Region == 'AtTSS_all'):
+        return  "-s 1 -F SAF"
     if wildcards.Phenotype == "chRNA.Expression":
         if  wildcards.Region == "AtInternalExons":
             return "-s 2 -F SAF"
@@ -235,6 +237,8 @@ def GetAnnotationsForRegion(wildcards):
         return "ReferenceGenome/Annotations/TSSRegions.saf"
     if wildcards.Region == "AtInternalExons":
         return "SplicingAnalysis/Annotations/InternalExons.noOverlapping.saf"
+    if wildcards.Region == 'uaRNA_TSS':
+        return "NonCodingRNA/annotation/uaRNA.TSS.saf"
 
 def GetMolPhenotypesToColoc(wildcards):
     ProvidedMolPhenotypeList = colocs_df.loc[wildcards.ColocName]['MolPhenotypesToColoc']

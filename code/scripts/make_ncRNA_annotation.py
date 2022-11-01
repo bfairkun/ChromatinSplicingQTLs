@@ -99,7 +99,7 @@ def make_tss_dict(ua_pair_list):
     
 def get_closest(allTranscripts, gene, ncRNA_list):
     
-    gene_name = gene.split(':')[0]
+    gene_name = gene#.split(':')[0]###########################################################
     strand = allTranscripts.loc[gene_name, 'strand']
     
     closest = ncRNA_list[0]
@@ -138,11 +138,13 @@ if __name__ == '__main__':
     print(lncrnas.gene_name)
     incRNA = read_bed('NonCodingRNA/annotation/tmp/incRNA.bed.gz', '-wa')
 
-    bed = pd.concat([allGenes, ncRNA], axis=0)
+#    bed = pd.concat([allGenes, ncRNA], axis=0)##############################
     
     tss = read_bed('NonCodingRNA/annotation/allGenes.TSS_bp.bed.gz', '-wa')
     tss.index = tss.id
-    
+ 
+    bed = pd.concat([tss, ncRNA], axis=0)
+   
     rtRNA = read_bed('NonCodingRNA/annotation/tmp/rtRNA.bed.gz', '-wo')
     srtRNA = read_bed('NonCodingRNA/annotation/tmp/srtRNA.bed.gz', '-wo')
 
@@ -155,7 +157,8 @@ if __name__ == '__main__':
 
         if gene[:5] == 'ncRNA':
             score_1 = float(bed.loc[ua].id)
-            score_2 = float(bed.loc[gene.split(':')[0]].id)
+            score_2 = float(bed.loc[gene].id)
+            #score_2 = float(bed.loc[gene.split(':')[0]].id)###############################
 
             if score_1 > score_2:
                 continue
@@ -170,7 +173,7 @@ if __name__ == '__main__':
     
     ua_pair_filtered = dict({})
     for k in tss_dict.keys():
-        pc = k.split(':')[0]
+        pc = k#.split(':')[0]  ######################################
         if len(tss_dict[k])>=2:
             ua = get_closest(bed, k, tss_dict[k])
         else:
@@ -202,12 +205,31 @@ if __name__ == '__main__':
     uarna_list = []
     rtrna_list = []
     lncrna_list = []
+
+    tss_to_map = []
     
     for nc in annotation.index:
         if nc in ua_pair_filtered.keys():
             print('uaRNA')
-            ua = '|'.join(ua_pair_filtered[nc])
+            list_of_tss = sorted(ua_pair_filtered[nc])
+            
+            dir_of_genes = {}
+            
+            for t in list_of_tss:
+                tg = t.split(':')[0]
+                if tg in dir_of_genes.keys():
+                    dir_of_genes[tg].append(t)
+                else:
+                    dir_of_genes[tg] = [t]
+
+            list_of_closest = []
+            for tg in dir_of_genes.keys():
+                closest_tss = get_closest(bed, nc, dir_of_genes[tg])
+                list_of_closest.append(closest_tss)
+
+            ua = '|'.join(list_of_closest)#join(ua_pair_filtered[nc])
             uarna_list.append(ua)
+            tss_to_map.extend(list_of_closest)
         else:
             uarna_list.append('.')
             
@@ -228,6 +250,17 @@ if __name__ == '__main__':
     annotation['uaRNA'] = uarna_list
     annotation['rtRNA'] = rtrna_list
     annotation['lncRNA'] = lncrna_list
+
+    tss_to_map_filtered = sorted(set(tss_to_map))
+    tss_saf = bed.loc[tss_to_map, ['id', 'chrom', 'start', 'end', 'strand']]
+    tss_saf.columns = ['GeneID', 'Chr', 'Start', 'End', 'Strand']
+    
+    tss_saf_start = [int(x)-200 for x in list((tss_saf.End + tss_saf.Start)/2)]
+    tss_saf_end = [int(x)+200 for x in list((tss_saf.End + tss_saf.Start)/2)]
+    tss_saf['Start'] = tss_saf_start
+    tss_saf['End'] = tss_saf_end
+    
+    tss_saf.to_csv('NonCodingRNA/annotation/tmp/tss.saf', sep='\t', index=False, header=True)
     
     k4me1 = get_histone_annotation('NonCodingRNA/annotation/histone_marks/ncRNA.H3K4ME1.overlaps.bed.gz',
                                    3, annotation)

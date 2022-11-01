@@ -207,8 +207,9 @@ rule HMM_develop:
         "NonCodingRNA/annotation/tmp/lncRNA.ncRNA.bed.gz",
         "NonCodingRNA/annotation/tmp/srtRNA.bed.gz",
         'NonCodingRNA/annotation/NonCodingRNA.annotation.tab.gz',
-        'NonCodingRNA/annotation/allGenes.annotation.tab.gz'
-        
+        'NonCodingRNA/annotation/allGenes.annotation.tab.gz',
+        "featureCounts/uaRNA_TSS/ProCap/Counts.txt",
+                
         
 rule IntronCounts_develop:
     input:
