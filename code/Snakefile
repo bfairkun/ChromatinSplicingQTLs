@@ -40,7 +40,7 @@ wildcard_constraints:
     Rep="\d+",
     QTLsGenotypeSet="|".join(["", "HarmonizedSNPs"]),
     FeatureCoordinatesRedefinedFor="|".join(["", "ForColoc", "ForGWASColoc"]),
-    Pass="|".join(["PermutationPass", "NominalPass"]),
+    Pass="|".join(["PermutationPass", "NominalPass", "GroupedPermutationPass"]),
     StandardizedOrUnstandardized="|Unstandardized",
     QTLTools_chunk_n = "|".join([str(i) for i in ChunkNumbers])
 
@@ -192,6 +192,11 @@ rule QTLTools_caller:
                        "H3K36ME3_ncRNA", "MetabolicLabelled.30min.IER", "MetabolicLabelled.60min.IER"],
           Pass = ["PermutationPass.FDR_Added", "NominalPass"]
         ),
+
+rule QTLTools_GroupedPermutatioPass_caller:
+    input:
+        expand("QTLs/QTLTools/{Phenotype}/{Pass}.FDR_Added.txt.gz", Phenotype=["polyA.Splicing", "chRNA.Splicing", "polyA.Splicing.Subset_YRI", "MetabolicLabelled.30min.Splicing", "MetabolicLabelled.60min.Splicing", "chRNA.RNA.Editing", "chRNA.Splicing.Order", "APA_Nuclear", "APA_Total"], Pass="GroupedPermutationPass"),
+        expand("QTLs/QTLTools/{Phenotype}/{Pass}ForColoc.FDR_Added.txt.gz", Phenotype=["polyA.Splicing", "chRNA.Splicing", "polyA.Splicing.Subset_YRI", "MetabolicLabelled.30min.Splicing", "MetabolicLabelled.60min.Splicing"], Pass="GroupedPermutationPass"),
 
 
 rule HMM_develop:
