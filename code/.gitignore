@@ -9,6 +9,8 @@
 !scripts/*
 !scripts/common
 !scripts/common/*
+!scripts/NonCodingRNA
+!scripts/NonCodingRNA/*
 scripts/.snakemake*
 !Snakefile
 !config.yaml

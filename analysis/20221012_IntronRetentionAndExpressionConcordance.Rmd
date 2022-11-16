@@ -797,15 +797,15 @@ coloc.tidy.pairwise <- left_join(
 coloc.tidy.pairwise %>%
   filter(
       (PC1 %in% c("Expression.Splicing.Subset_YRI")) &
-      (PC2 %in% c("polyA.Splicing.Subset_YRI"))
+      (PC2 %in% c("polyA.Splicing"))
   ) %>%
-  ggplot(aes(y=beta2, x=beta1)) +
+  ggplot(aes(y=beta1, x=beta2)) +
   geom_point(alpha=0.5, color='black') +
   geom_vline(xintercept=0) +
   geom_hline(yintercept=0) +
   geom_smooth(method='lm') +
   theme_bw() +
-  labs(title="All colocalized eQTLs and sQTLs", x="eQTL beta\n(standardized units)", y="sQTL beta\n(standardized units)")
+  labs(title="All colocalized eQTLs and sQTLs", x="sQTL beta\n(standardized units)", y="eQTL beta\n(standardized units)")
 
 coloc.tidy.pairwise %>%
   filter(PC1 %in% c("Expression.Splicing.Subset_YRI")) %>%
@@ -903,6 +903,323 @@ P.dat %>%
   labs(title="genetic effects of NMD introns and host gene expression", x="eQTL beta\n(standardized units)", y="sQTL beta\n(standardized units)", caption="Colocalized sQTL/eQTLs betas at top co-finemapped SNP\nUncolocalized betas relative to top eQTL SNP")
 
 
+```
+
+Ok, that is interesting, but in the non-colocalized subset, I should actually plot the eQTL effect for the top sQTLs, rather than the sQTL effect for the top eQTLs, that way we allow inspection into non-primary eQTL signals...
+
+```{r}
+sQTL.eQTL.dat.ColocalizedAndUncolocalized <- TopSNPEffects.ByPairs %>%
+  filter(
+      (PC2 %in% c("Expression.Splicing.Subset_YRI")) &
+      (PC1 %in% c("polyA.Splicing.Subset_YRI")) &
+      # (FDR.x < 0.1) &
+      (FDR.y < 0.1)) %>%
+  mutate(intron = str_replace(P1, "^(.+):(.+?):(.+?):clu.+?_([+-])$", "chr\\1_\\2_\\3_\\4")) %>%
+  mutate(IntronAnnotation = case_when(
+    intron %in% NMD.specific.introns ~ "Annotated NMD",
+    intron %in% Intron.Annotations.basic$intron ~ "Annotated basic",
+    intron %in% Introns.Annotations.comprehensive$intron ~ "Annotated Not basic",
+    TRUE ~ "Unannotated"
+  )) %>%
+  # group_by(IntronAnnotation, P1) %>%
+  # slice_min(order_by = p_permutation.y, with_ties=F) %>%
+  # ungroup()
+  dplyr::select(beta1=trait.x.beta.in.y, beta2=beta.x, P2=P1, PC2=PC1, P1=P2, PC1=PC2, IntronAnnotation) %>%
+  filter(
+    !(P1 %in% P.dat.colocsOnly$P1) &
+    !(P2 %in% P.dat.colocsOnly$P2)
+  ) %>%
+  mutate(Colocalized = "Not colocalized") %>%
+  bind_rows(
+    P.dat.colocsOnly %>%
+        dplyr::select(beta1, beta2, P1, PC1, P2, PC2, IntronAnnotation) %>%
+        mutate(Colocalized = "Colocalized")
+  ) %>%
+  mutate(Is.Concordant = sign(beta1)==sign(beta2)) %>%
+  mutate(ConsistentWithNMD = case_when(
+    !IntronAnnotation == "Annotated basic" & Is.Concordant ~ "Inconsistent with NMD",
+    !IntronAnnotation == "Annotated basic" & !Is.Concordant ~ "Consistent with NMD",
+    IntronAnnotation == "Annotated basic" ~ NA_character_
+  ))
+
+ggplot(sQTL.eQTL.dat.ColocalizedAndUncolocalized, aes(y=beta2, x=beta1, color=IntronAnnotation)) +
+  geom_point(alpha=0.5) +
+  geom_vline(xintercept=0) +
+  geom_hline(yintercept=0) +
+  geom_smooth(method='lm') +
+  geom_text(
+  data = . %>%
+    group_by(IntronAnnotation, Colocalized) %>%
+    summarise(cor=cor.test(beta1,beta2)[["estimate"]], pval=cor.test(beta1,beta2)[["p.value"]]) %>%
+    mutate(R = signif(cor, 3), P=format.pval(pval, 3)) %>%
+    mutate(label = str_glue("R:{R}\nP:{P}")),
+  aes(x=-Inf, y=-Inf, label=label),
+  hjust=0, vjust=-0.1, color='black'
+  ) +
+  facet_grid(Colocalized ~ IntronAnnotation) +
+  theme_bw() +
+  labs(title="genetic effects of NMD introns and host gene expression", x="eQTL beta\n(standardized units)", y="sQTL beta\n(standardized units)", caption="Colocalized sQTL/eQTLs betas at top co-finemapped SNP\nUncolocalized betas relative to top sQTL SNP")
+```
+
+Ok let's make the same plot but inversered, so that the sQTL effects on are on the x-axis since I think that makes more intuitive sense since we imagine splicing effect to cause the expression effect so it should be on the x-axis. Note that the regression results will change... I guess technically speaking linear regression is the most proper tool since the dependent variable is measured with non-negligible precision.
+
+```{r}
+ggplot(sQTL.eQTL.dat.ColocalizedAndUncolocalized, aes(y=beta1, x=beta2, color=IntronAnnotation)) +
+  geom_point(alpha=0.5) +
+  geom_vline(xintercept=0) +
+  geom_hline(yintercept=0) +
+  geom_text(
+  data = . %>%
+    group_by(IntronAnnotation, Colocalized) %>%
+    summarise(cor=cor.test(beta1,beta2)[["estimate"]], pval=cor.test(beta1,beta2)[["p.value"]]) %>%
+    mutate(R = signif(cor, 3), P=format.pval(pval, 3)) %>%
+    mutate(label = str_glue("R:{R}\nP:{P}")),
+  aes(x=-Inf, y=-Inf, label=label),
+  hjust=0, vjust=-0.1, color='black'
+  ) +
+  facet_grid(Colocalized ~ IntronAnnotation) +
+  theme_bw() +
+  labs(title="genetic effects of NMD introns and host gene expression", x="sQTL beta\n(standardized units)", y="eQTL beta\n(standardized units)", caption="Colocalized sQTL/eQTLs betas at top co-finemapped SNP\nUncolocalized betas relative to top sQTL SNP")
+
+```
+
+Let's also count how many eGenes this can account for...
+
+
+```{r}
+CountsOfNMD.Consitent.eGene.sQTL.Effects <- sQTL.eQTL.dat.ColocalizedAndUncolocalized %>%
+  filter(Colocalized == "Colocalized") %>%
+  filter(!IntronAnnotation=="Annotated basic") %>%
+  distinct(P1, .keep_all=T) %>%
+  count(ConsistentWithNMD)
+  
+CountsOfNMD.Consitent.eGene.sQTL.Effects
+
+(CountsOfNMD.Consitent.eGene.sQTL.Effects$n[1] - CountsOfNMD.Consitent.eGene.sQTL.Effects$n[2])/3970
+```
+
+So 181 consistent, 41 inconcsistent, so maybe only 140 true consistent effects. So a lower bound is that about 3.5% of eGenes work through this mechanism... Let's see if that number increases at all if we also consider sQTLs from all of GEUVADIS RNAseq...
+
+```{r, width=10}
+P1Category <- "polyA.Splicing"
+
+
+chRNA.sQTL.eQTL.dat.ColocalizedAndUncolocalized <- TopSNPEffects.ByPairs %>%
+  filter(
+      (PC2 %in% c("Expression.Splicing.Subset_YRI")) &
+      (PC1 %in% c(P1Category)) &
+      # (FDR.x < 0.1) &
+      (FDR.y < 0.1)) %>%
+  mutate(intron = str_replace(P1, "^(.+):(.+?):(.+?):clu.+?_([+-])$", "chr\\1_\\2_\\3_\\4")) %>%
+  mutate(IntronAnnotation = case_when(
+    intron %in% NMD.specific.introns ~ "Annotated NMD",
+    intron %in% Intron.Annotations.basic$intron ~ "Annotated basic",
+    intron %in% Introns.Annotations.comprehensive$intron ~ "Annotated Not basic",
+    TRUE ~ "Unannotated"
+  )) %>%
+  dplyr::select(beta1=trait.x.beta.in.y, beta2=beta.x, P2=P1, PC2=PC1, P1=P2, PC1=PC2, IntronAnnotation) %>%
+  filter(
+    !(P1 %in% P.dat.colocsOnly$P1) &
+    !(P2 %in% P.dat.colocsOnly$P2)
+  ) %>%
+  mutate(Colocalized = "Not colocalized") %>%
+  bind_rows(
+    coloc.tidy.pairwise %>%
+      filter(
+          (PC1 %in% c("Expression.Splicing.Subset_YRI")) &
+          (PC2 %in% c(P1Category))
+      ) %>%
+      mutate(intron = str_replace(P2, "^(.+):(.+?):(.+?):clu.+?_([+-])$", "chr\\1_\\2_\\3_\\4")) %>%
+      mutate(IntronAnnotation = case_when(
+        intron %in% NMD.specific.introns ~ "Annotated NMD",
+        intron %in% Intron.Annotations.basic$intron ~ "Annotated basic",
+        intron %in% Introns.Annotations.comprehensive$intron ~ "Annotated Not basic",
+        TRUE ~ "Unannotated"
+      )) %>%
+      dplyr::select(beta1, beta2, P1, PC1, P2, PC2, IntronAnnotation) %>%
+      mutate(Colocalized = "Colocalized")
+  ) %>%
+  mutate(Is.Concordant = sign(beta1)==sign(beta2)) %>%
+  mutate(ConsistentWithNMD = case_when(
+    !IntronAnnotation == "Annotated basic" & Is.Concordant ~ "Inconsistent with NMD",
+    !IntronAnnotation == "Annotated basic" & !Is.Concordant ~ "Consistent with NMD",
+    IntronAnnotation == "Annotated basic" ~ NA_character_
+  ))
+
+ggplot(chRNA.sQTL.eQTL.dat.ColocalizedAndUncolocalized, aes(y=beta1, x=beta2, color=IntronAnnotation)) +
+  geom_point(alpha=0.1) +
+  geom_vline(xintercept=0) +
+  geom_hline(yintercept=0) +
+  # geom_smooth(method='lm') +
+  geom_text(
+  data = . %>%
+    group_by(IntronAnnotation, Colocalized) %>%
+    summarise(cor=cor.test(beta1,beta2)[["estimate"]], pval=cor.test(beta1,beta2)[["p.value"]]) %>%
+    mutate(R = signif(cor, 3), P=format.pval(pval, 3)) %>%
+    mutate(label = str_glue("R:{R}\nP:{P}")),
+  aes(x=-Inf, y=-Inf, label=label),
+  hjust=0, vjust=-0.1, color='black'
+  ) +
+  # geom_text(
+  # data = . %>%
+  #   distinct(P1, .keep_all=T) %>%
+  #   count(IntronAnnotation, ConsistentWithNMD, Colocalized) %>%
+  #   filter(ConsistentWithNMD=="Consistent with NMD"),
+  # aes(x=-Inf, y=Inf, label=n),
+  # hjust=0, vjust=1, color='red'
+  # ) +
+  # geom_text(
+  # data = . %>%
+  #   distinct(P1, .keep_all=T) %>%
+  #   count(IntronAnnotation, ConsistentWithNMD, Colocalized) %>%
+  #   filter(ConsistentWithNMD=="Inconsistent with NMD"),
+  # aes(x=Inf, y=Inf, label=n),
+  # hjust=1, vjust=1, color='green'
+  # ) +
+  facet_grid(Colocalized ~ IntronAnnotation) +
+  theme_bw() +
+  labs(title="genetic effects of NMD introns and host gene expression", x="chRNA sQTL beta\n(standardized units)", y="eQTL beta\n(standardized units)", caption="Colocalized sQTL/eQTLs betas at top co-finemapped SNP\nUncolocalized betas relative to top chRNA sQTL SNP")
+
+# ggsave("../code/scratch/sQTL_eQTL_betasByCategory.pdf", width=8, height=4.5)
+
+CountsOfNMD.Consitent.eGene.sQTL.Effects <- chRNA.sQTL.eQTL.dat.ColocalizedAndUncolocalized %>%
+  filter(Colocalized == "Colocalized") %>%
+  filter(!IntronAnnotation=="Annotated basic") %>%
+  distinct(P1, .keep_all=T) %>%
+  count(ConsistentWithNMD)
+  
+CountsOfNMD.Consitent.eGene.sQTL.Effects
+
+(CountsOfNMD.Consitent.eGene.sQTL.Effects$n[1] - CountsOfNMD.Consitent.eGene.sQTL.Effects$n[2])/3970
+
+```
+
+Wow! This looks great! So many more secondary splicing QTLs with the whole geuvadis... Now let's try chRNA.
+
+```{r}
+P1Category <- "chRNA.Splicing"
+
+chRNA.sQTL.eQTL.dat.ColocalizedAndUncolocalized <- TopSNPEffects.ByPairs %>%
+  filter(
+      (PC2 %in% c("Expression.Splicing.Subset_YRI")) &
+      (PC1 %in% c(P1Category)) &
+      # (FDR.x < 0.1) &
+      (FDR.y < 0.1)) %>%
+  mutate(intron = str_replace(P1, "^(.+):(.+?):(.+?):clu.+?_([+-])$", "chr\\1_\\2_\\3_\\4")) %>%
+  mutate(IntronAnnotation = case_when(
+    intron %in% NMD.specific.introns ~ "Annotated NMD",
+    intron %in% Intron.Annotations.basic$intron ~ "Annotated basic",
+    intron %in% Introns.Annotations.comprehensive$intron ~ "Annotated Not basic",
+    TRUE ~ "Unannotated"
+  )) %>%
+  dplyr::select(beta1=trait.x.beta.in.y, beta2=beta.x, P2=P1, PC2=PC1, P1=P2, PC1=PC2, IntronAnnotation) %>%
+  filter(
+    !(P1 %in% P.dat.colocsOnly$P1) &
+    !(P2 %in% P.dat.colocsOnly$P2)
+  ) %>%
+  mutate(Colocalized = "Not colocalized") %>%
+  bind_rows(
+    coloc.tidy.pairwise %>%
+      filter(
+          (PC1 %in% c("Expression.Splicing.Subset_YRI")) &
+          (PC2 %in% c(P1Category))
+      ) %>%
+      mutate(intron = str_replace(P2, "^(.+):(.+?):(.+?):clu.+?_([+-])$", "chr\\1_\\2_\\3_\\4")) %>%
+      mutate(IntronAnnotation = case_when(
+        intron %in% NMD.specific.introns ~ "Annotated NMD",
+        intron %in% Intron.Annotations.basic$intron ~ "Annotated basic",
+        intron %in% Introns.Annotations.comprehensive$intron ~ "Annotated Not basic",
+        TRUE ~ "Unannotated"
+      )) %>%
+      dplyr::select(beta1, beta2, P1, PC1, P2, PC2, IntronAnnotation) %>%
+      mutate(Colocalized = "Colocalized")
+  ) %>%
+  mutate(Is.Concordant = sign(beta1)==sign(beta2)) %>%
+  mutate(ConsistentWithNMD = case_when(
+    !IntronAnnotation == "Annotated basic" & Is.Concordant ~ "Inconsistent with NMD",
+    !IntronAnnotation == "Annotated basic" & !Is.Concordant ~ "Consistent with NMD",
+    IntronAnnotation == "Annotated basic" ~ NA_character_
+  ))
+
+ggplot(chRNA.sQTL.eQTL.dat.ColocalizedAndUncolocalized, aes(y=beta1, x=beta2, color=IntronAnnotation)) +
+  geom_point(alpha=0.1) +
+  geom_vline(xintercept=0) +
+  geom_hline(yintercept=0) +
+  # geom_smooth(method='lm') +
+  geom_text(
+  data = . %>%
+    group_by(IntronAnnotation, Colocalized) %>%
+    summarise(cor=cor.test(beta1,beta2)[["estimate"]], pval=cor.test(beta1,beta2)[["p.value"]]) %>%
+    mutate(R = signif(cor, 3), P=format.pval(pval, 3)) %>%
+    mutate(label = str_glue("R:{R}\nP:{P}")),
+  aes(x=-Inf, y=-Inf, label=label),
+  hjust=0, vjust=-0.1, color='black'
+  ) +
+  # geom_text(
+  # data = . %>%
+  #   distinct(P1, .keep_all=T) %>%
+  #   count(IntronAnnotation, ConsistentWithNMD, Colocalized) %>%
+  #   filter(ConsistentWithNMD=="Consistent with NMD"),
+  # aes(x=-Inf, y=Inf, label=n),
+  # hjust=0, vjust=1, color='red'
+  # ) +
+  # geom_text(
+  # data = . %>%
+  #   distinct(P1, .keep_all=T) %>%
+  #   count(IntronAnnotation, ConsistentWithNMD, Colocalized) %>%
+  #   filter(ConsistentWithNMD=="Inconsistent with NMD"),
+  # aes(x=Inf, y=Inf, label=n),
+  # hjust=1, vjust=1, color='green'
+  # ) +
+  facet_grid(Colocalized ~ IntronAnnotation) +
+  theme_bw() +
+  labs(title="genetic effects of NMD introns and host gene expression", x="chRNA sQTL beta\n(standardized units)", y="eQTL beta\n(standardized units)", caption="Colocalized sQTL/eQTLs betas at top co-finemapped SNP\nUncolocalized betas relative to top chRNA sQTL SNP")
+
+
+CountsOfNMD.Consitent.eGene.sQTL.Effects <- chRNA.sQTL.eQTL.dat.ColocalizedAndUncolocalized %>%
+  filter(Colocalized == "Colocalized") %>%
+  filter(!IntronAnnotation=="Annotated basic") %>%
+  distinct(P1, .keep_all=T) %>%
+  count(ConsistentWithNMD)
+  
+CountsOfNMD.Consitent.eGene.sQTL.Effects
+
+(CountsOfNMD.Consitent.eGene.sQTL.Effects$n[1] - CountsOfNMD.Consitent.eGene.sQTL.Effects$n[2])/3970
+
+
+
+```
+
+Let's jointly consider sQTLs from polyA subset YRI and chRNA to get a lower bound...
+
+```{r}
+CountsOfNMD.Consitent.eGene.sQTL.Effects <- bind_rows(
+  chRNA.sQTL.eQTL.dat.ColocalizedAndUncolocalized, sQTL.eQTL.dat.ColocalizedAndUncolocalized) %>%
+  filter(Colocalized == "Colocalized") %>%
+  filter(!IntronAnnotation=="Annotated basic") %>%
+  distinct(P1, .keep_all=T) %>%
+  count(ConsistentWithNMD)
+
+CountsOfNMD.Consitent.eGene.sQTL.Effects
+
+(CountsOfNMD.Consitent.eGene.sQTL.Effects$n[1] - CountsOfNMD.Consitent.eGene.sQTL.Effects$n[2])/3970
+
+```
+
+Let's make the analogous calculation for H3K27AC
+
+```{r}
+CountsOfEnhancerPromoter.Consitent.eGene.Effects <- coloc.tidy.pairwise %>%
+  filter(PC1 == "Expression.Splicing.Subset_YRI" & PC2%in%c("H3K27AC", "H3K4ME3", "H3K4ME1")) %>%
+  mutate(ConsistentWithChromatin = if_else(sign(beta1)==sign(beta2), "Consistent", "Inconsistent")) %>%
+  distinct(P1, .keep_all=T) %>%
+  count(ConsistentWithChromatin)
+
+CountsOfEnhancerPromoter.Consitent.eGene.Effects
+
+(CountsOfEnhancerPromoter.Consitent.eGene.Effects$n[1] - CountsOfEnhancerPromoter.Consitent.eGene.Effects$n[2])/3970
+
+  
 ```
 
 

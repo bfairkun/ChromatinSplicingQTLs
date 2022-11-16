@@ -188,14 +188,14 @@ def GetQTLtoolsWindowFlag(wildcards):
 
 def GetQTLtoolsOtherFlags(wildcards):
     if wildcards.Phenotype in ["polyA.Splicing", "chRNA.Splicing", "polyA.Splicing.Subset_YRI", 
-    "MetabolicLabelled.30min.Splicing", "MetabolicLabelled.60min.Splicing", "chRNA.RNA.Editing", "chRNA.Splicing.Order"] and wildcards.Pass == "PermutationPass":
+    "MetabolicLabelled.30min.Splicing", "MetabolicLabelled.60min.Splicing", "chRNA.RNA.Editing", "chRNA.Splicing.Order"] and wildcards.Pass == "GroupedPermutationPass":
         return "--grp-best"
     else:
         return ""
 
 
 def GetQTLtoolsPassFlags(wildcards):
-    if wildcards.Pass == "PermutationPass":
+    if wildcards.Pass in ["PermutationPass", "GroupedPermutationPass"]:
         return "--permute 1000"
     elif wildcards.Pass == "NominalPass":
         return "--nominal 1"
@@ -264,7 +264,7 @@ rule AddQValueToPermutationPass:
     priority:
         10
     wildcard_constraints:
-        Pass = "PermutationPass"
+        Pass = "PermutationPass|GroupedPermutationPass"
     shell:
         """
         Rscript scripts/AddQvalueToQTLtoolsOutput.R {input} {output.table} {wildcards.Pass} &> {log}

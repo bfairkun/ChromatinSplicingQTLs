@@ -6,7 +6,8 @@
 # @created     : Tuesday May 11, 2021 13:50:56 CDT
 #
 # @description : Permute QTLtools phenotype table, and calculate number of PCs
-# that explain more variance than unpermuted table
+# that explain more variance than unpermuted table. Input is a bed.gz file formatted as described in the QTLtools manual.
+# Output is a space delimited text file in the covariate file format described by the QTLtools manual
 ######################################################################
 
 #Use hard coded arguments in interactive R session, else use command line args
