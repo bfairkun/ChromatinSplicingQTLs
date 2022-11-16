@@ -867,9 +867,6 @@ ggplot(P.dat.colocsOnly, aes(y=beta2, x=beta1, color=IntronAnnotation)) +
   theme_bw() +
   labs(title="genetic effects of NMD introns and host gene expression", x="beta, sQTL", y="beta, eQTL", caption="Only colocalized sQTL/eQTLs plotted, relative to top co-finemapped SNP")
 
-P.dat.colocsOnly %>%
-  dplyr::select(beta1, beta2, P1, PC1, P2, PC2, IntronAnnotation) %>%
-  bind_rows()
 
 P.dat %>%
   dplyr::select(beta2=trait.x.beta.in.y, beta1=beta.y, P1, PC1, P2, PC2=source.eQTL, IntronAnnotation) %>%
@@ -921,9 +918,6 @@ sQTL.eQTL.dat.ColocalizedAndUncolocalized <- TopSNPEffects.ByPairs %>%
     intron %in% Introns.Annotations.comprehensive$intron ~ "Annotated Not basic",
     TRUE ~ "Unannotated"
   )) %>%
-  # group_by(IntronAnnotation, P1) %>%
-  # slice_min(order_by = p_permutation.y, with_ties=F) %>%
-  # ungroup()
   dplyr::select(beta1=trait.x.beta.in.y, beta2=beta.x, P2=P1, PC2=PC1, P1=P2, PC1=PC2, IntronAnnotation) %>%
   filter(
     !(P1 %in% P.dat.colocsOnly$P1) &

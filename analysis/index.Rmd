@@ -37,5 +37,14 @@ for(i in ipynbs){
 
 ```
 
+## Notebooks for figures
+```{r, results = 'asis'}
+library(tidyverse)
+rmds <- list.files(path = "../analysis/", pattern="^Figures.+")
+rmd_htmls <- str_replace(rmds, "Rmd$", "html")
 
+for(i in rmd_htmls){
+  cat("[", i, "](", i,")\n\n", sep="")
+}
+```
 

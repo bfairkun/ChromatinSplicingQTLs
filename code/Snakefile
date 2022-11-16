@@ -32,6 +32,7 @@ include: "rules/QTL_SNP_Enrichment.smk"
 include: "rules/APA_DataPrep.smk"
 include: "rules/CalculatePi1.smk"
 include: "rules/CreateUnstandardizedPhenotypeMatrices.smk"
+include: "rules/Metaplots.smk"
 include: "rules/CarlosDevelop.smk"
 
 

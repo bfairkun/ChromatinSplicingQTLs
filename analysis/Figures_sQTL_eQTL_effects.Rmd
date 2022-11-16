@@ -1,0 +1,53 @@
+---
+title: "202211107_Figures_sQTLeQTL_effects"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+
+## Intro
+
+Here I will plot some stuff related to prospective figure3 that links "unexplained" (read: "Non-enhancer/promoter" based) QTLs, largely to sQTL/NMD effects.
+
+### set theme
+
+```{r}
+library(tidyverse)
+library(RColorBrewer)
+library(data.table)
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family="Helvetica")))
+
+#test theme
+p <- ggplot(mtcars, aes(mpg, wt, color=as.factor(cyl))) +
+  geom_point() +
+  scale_colour_brewer(palette = "Set2", type="qual")
+p
+```
+
+## Figure1
+
+### highlight prevalence of NMD-targeting and unannotated introns in chRNA
+
+### Numbers of QTLs
+
+## Figure2
+
+### heatmap of effects between types of phenotypes highlighting the expected strong enrichment in enhancers/promoters
+
+### eQTLs colocalize with many different xQTLs, but chromatin effects are the strongest (something like the bar plot I showed in lab meeting with the number of eGenes that colocalize with an xQTL)
+
+## Figure3
+
+### Scatter plot of effect sizes for unannotated, basic, non-basic, and NMD-targeting introns. Estimate of number of primary (and maybe secondary) eQTLs explained by splicing mechanisms
+
+```{r}
+
+```
+
