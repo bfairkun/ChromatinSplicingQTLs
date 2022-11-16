@@ -1,5 +1,5 @@
 configfile: "config/config.yaml"
-
+configfile: "config/config.local.yaml"
 
 include: "rules/common.py"
 include: "rules/DownloadAndPreprocess.smk"

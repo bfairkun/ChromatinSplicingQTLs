@@ -1,6 +1,7 @@
 *
 !config/
 !config/**
+config/config.local.yaml
 !snakemake_profiles
 !snakemake_profiles/**
 !notebooks

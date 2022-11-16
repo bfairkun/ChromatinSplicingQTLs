@@ -4,7 +4,7 @@
 
 
 #Scratch dir for large temporary files
-scratch: "/scratch/midway2/bjf79/"
+#scratch: "/scratch/midway2/bjf79/"
 
 #Define fastq samples to process
 samples: samples.tsv
