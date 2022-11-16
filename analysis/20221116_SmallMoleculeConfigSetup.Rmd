@@ -1,0 +1,45 @@
+---
+title: "Make small molecule config"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+## Intro
+
+Making snakemake config file for samples with risdiplam treatment.
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+sample.list <- read_tsv("/project2/yangili1/bjf79/20211209_JingxinRNAseq/code/bigwigs/BigwigList.tsv",
+                        col_names = c("SampleName", "bigwig", "group", "strand")) %>%
+  filter(strand==".") %>%
+  dplyr::select(-strand) %>%
+  mutate(old.sample.name = str_replace(bigwig, "/project2/yangili1/bjf79/20211209_JingxinRNAseq/code/bigwigs/unstranded/(.+?).bw", "\\1")) %>%
+  separate(SampleName, into=c("treatment", "dose.nM", "cell.type", "libType", "rep"), convert=T, remove=F, sep="_") %>%
+  left_join(
+    read_tsv("/project2/yangili1/bjf79/20211209_JingxinRNAseq/code/bigwigs/BigwigList.groups.tsv", col_names = c("group", "color", "bed", "supergroup")),
+    by="group"
+  )
+
+
+FastqFiles <-
+  bind_rows(
+    read_tsv("/project2/yangili1/bjf79/20211209_JingxinRNAseq/code/config/samples.titrationseries.tsv"),
+    read_tsv("/project2/yangili1/bjf79/20211209_JingxinRNAseq/code/config/samples.chRNAPilotSequencing.tsv")) %>%
+  dplyr::select(old.sample.name=sample, R1, R2)
+
+sample.list %>%
+  inner_join(FastqFiles) %>%
+  filter(
+    treatment == "Risdiplam" | (treatment == "DMSO" & cell.type == "LCL")
+    ) %>%
+  dplyr::select(-bigwig, -bed) %>%
+  write_tsv("../code/config/SmallMoleculeRNASeq.Samples.tsv")
+```
+

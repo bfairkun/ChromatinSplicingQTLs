@@ -36,6 +36,9 @@ PhenotypesToColoc = MyPhenotypes #[p for p in MyPhenotypes if (p not in ["Expres
 ## All Fastq samples
 Fastq_samples = pd.read_csv("config/samples.tsv", sep='\t', comment='#')
 
+## Small Molecule treatment RNA seq samples
+SM_samples = pd.read_csv("config/SmallMoleculeRNASeq.Samples.tsv", sep='\t')
+
 # Define some df subsets from the samples df as useful global variables
 PhenotypeSet = Fastq_samples['Phenotype'].unique().tolist() + ["chRNA.IR",  "polyA.Splicing", "chRNA.Expression"]
 ChromatinProfilingPhenotypes = Fastq_samples.loc[ (Fastq_samples['Assay'].isin(["ChIP-seq", "CutAndTag"]))  ]['Phenotype'].unique().tolist()
