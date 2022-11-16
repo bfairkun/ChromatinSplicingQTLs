@@ -55,8 +55,7 @@ rule Prepare_chRNA_ExpressionPhenotypes:
     input:
         "featureCounts/chRNA.Expression/Counts.txt",
         "featureCounts/chRNA.Expression_ncRNA/Counts.txt",
-        "featureCounts/chRNA.Expression_lncRNA/Counts.txt",
-        "featureCounts/chRNA.Expression_snoRNA/Counts.txt",
+        "featureCounts/chRNA.Expression_annotated_ncRNA/Counts.txt",
         "ExpressionAnalysis/polyA/ExpressedGeneList.txt",
         "NonCodingRNA/annotation/NonCodingRNA.bed.gz",
         "NonCodingRNA/annotation/NonCodingRNA.annotation.tab.gz"
