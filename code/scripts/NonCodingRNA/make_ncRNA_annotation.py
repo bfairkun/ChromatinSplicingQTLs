@@ -252,7 +252,18 @@ if __name__ == '__main__':
     annotation['lncRNA'] = lncrna_list
 
     tss_to_map_filtered = sorted(set(tss_to_map))
-    tss_saf = bed.loc[tss_to_map, ['id', 'chrom', 'start', 'end', 'strand']]
+    tss_saf = bed.loc[tss_to_map, ['id', 'gene_name', 'chrom', 'start', 'end', 'strand']]
+    
+    GeneID = []
+    for idx, row in tss_saf.iterrows():
+        if 'ncRNA_' in str(row.gene_name):
+            GeneID.append(str(row.gene_name))
+        else:
+            GeneID.append(str(row.id))
+            
+    tss_saf['GeneID'] = GeneID
+    tss_saf = tss_saf[['GeneID', 'chrom', 'start', 'end', 'strand']]
+    
     tss_saf.columns = ['GeneID', 'Chr', 'Start', 'End', 'Strand']
     
     tss_saf_start = [int(x)-200 for x in list((tss_saf.End + tss_saf.Start)/2)]

@@ -5,8 +5,7 @@ library(RNOmni)
 
 GeneCounts_f_in <- "featureCounts/MetabolicLabelled.60min/Counts.txt"
 GeneCounts_ncRNA_in <- "featureCounts/MetabolicLabelled.60min_ncRNA/Counts.txt"
-GeneCounts_lncRNA_in <- "featureCounts/MetabolicLabelled.60min_lncRNA/Counts.txt"
-GeneCounts_snoRNA_in <- "featureCounts/MetabolicLabelled.60min_snoRNA/Counts.txt"
+GeneCounts_lncRNA_in <- "featureCounts/MetabolicLabelled.60min_annotated_ncRNA/Counts.txt"
 Genes_bed_f_in <- "ExpressionAnalysis/polyA/ExpressedGeneList.txt" 
 annotation_f_in <- "NonCodingRNA/annotation/NonCodingRNA.annotation.tab.gz"
 
@@ -35,10 +34,10 @@ dat.genes.lncRNA <- read_tsv(GeneCounts_lncRNA_in, comment = "#", n_max=Inf) %>%
     select(1:6, matches("\\.1$")) %>%
     rename_with(~str_remove(., '\\.1$')) 
 
-dat.genes.snoRNA <- read_tsv(GeneCounts_snoRNA_in, comment = "#", n_max=Inf) %>%
-    rename_with(get(ColumnRenamerFunction), starts_with("Alignments")) %>%
-    select(1:6, matches("\\.1$")) %>%
-    rename_with(~str_remove(., '\\.1$')) 
+# dat.genes.snoRNA <- read_tsv(GeneCounts_snoRNA_in, comment = "#", n_max=Inf) %>%
+#     rename_with(get(ColumnRenamerFunction), starts_with("Alignments")) %>%
+#     select(1:6, matches("\\.1$")) %>%
+#     rename_with(~str_remove(., '\\.1$')) 
 
 
 X <- rbind(dat.genes, dat.genes.ncRNA)
@@ -81,7 +80,7 @@ protein_coding = dat.cpm[rownames(dat.cpm) %in% gene.list$Geneid, ]
 
 
 print('selected protein coding')
-ncRNA_names <- c(dat.genes.lncRNA$Geneid, dat.genes.ncRNA$Geneid, dat.genes.snoRNA$Geneid)
+ncRNA_names <- c(dat.genes.lncRNA$Geneid, dat.genes.ncRNA$Geneid)#, dat.genes.snoRNA$Geneid)
 ncRNA.dat <- dat.cpm[rownames(dat.cpm) %in% ncRNA_names, ]
 ncRNA <- ncRNA.dat[apply(exp(ncRNA.dat), 1, quantile, probs=0.9) >= 1e-4,]
 print('ncRNA')
@@ -102,11 +101,11 @@ lncRNA_bed <- data.frame(Geneid = rownames(ncRNA.qqnormed)[(rownames(ncRNA.qqnor
     arrange(Chr, Start)
 
 
-snoRNA_bed <- data.frame(Geneid = rownames(ncRNA.qqnormed)[(rownames(ncRNA.qqnormed) %in% dat.genes.snoRNA$Geneid)]) %>%
-    inner_join(genes_bed, by="Geneid") %>%
-    mutate(Chr=paste0("chr", Chr), Score=".") %>%
-    select(Chr, Start, End, Geneid, Score, Strand) %>%
-    arrange(Chr, Start)
+# snoRNA_bed <- data.frame(Geneid = rownames(ncRNA.qqnormed)[(rownames(ncRNA.qqnormed) %in% dat.genes.snoRNA$Geneid)]) %>%
+#     inner_join(genes_bed, by="Geneid") %>%
+#     mutate(Chr=paste0("chr", Chr), Score=".") %>%
+#     select(Chr, Start, End, Geneid, Score, Strand) %>%
+#     arrange(Chr, Start)
 
 
 
@@ -127,7 +126,7 @@ protein_coding.Out <- gene.list %>%
     arrange(`#Chr`, start)
 
 
-bed <- rbind(lncRNA_bed, ncRNA_bed, snoRNA_bed)
+bed <- rbind(lncRNA_bed, ncRNA_bed)#, snoRNA_bed)
 
 
 ncRNA.Out <- bed %>%

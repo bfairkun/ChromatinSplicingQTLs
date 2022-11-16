@@ -201,7 +201,7 @@ def PairedEndParams(wildcards):
 
 def GetFeatureCountsParams(wildcards):
     if (wildcards.Phenotype=="ProCap"): #and  (wildcards.Region == 'AtTSS_all'):
-        return  "-s 1 -F SAF"
+        return  "-s 1 -F SAF --read2pos 5"
     if wildcards.Phenotype == "chRNA.Expression":
         if  wildcards.Region == "AtInternalExons":
             return "-s 2 -F SAF"
