@@ -32,6 +32,7 @@ include: "rules/QTL_SNP_Enrichment.smk"
 include: "rules/APA_DataPrep.smk"
 include: "rules/CalculatePi1.smk"
 include: "rules/CreateUnstandardizedPhenotypeMatrices.smk"
+include: "rules/Metaplots.smk"
 
 
 wildcard_constraints:
@@ -195,7 +196,7 @@ rule QTLTools_caller:
 
 rule QTLTools_GroupedPermutatioPass_caller:
     input:
-        expand("QTLs/QTLTools/{Phenotype}/{Pass}.FDR_Added.txt.gz", Phenotype=["polyA.Splicing", "chRNA.Splicing", "polyA.Splicing.Subset_YRI", "MetabolicLabelled.30min.Splicing", "MetabolicLabelled.60min.Splicing", "chRNA.RNA.Editing", "chRNA.Splicing.Order", "APA_Nuclear", "APA_Total"], Pass="GroupedPermutationPass"),
+        expand("QTLs/QTLTools/{Phenotype}/{Pass}.FDR_Added.txt.gz", Phenotype=["polyA.Splicing", "chRNA.Splicing", "polyA.Splicing.Subset_YRI", "MetabolicLabelled.30min.Splicing", "MetabolicLabelled.60min.Splicing", "chRNA.Splicing.Order", "APA_Nuclear", "APA_Total"], Pass="GroupedPermutationPass"),
         expand("QTLs/QTLTools/{Phenotype}/{Pass}ForColoc.FDR_Added.txt.gz", Phenotype=["polyA.Splicing", "chRNA.Splicing", "polyA.Splicing.Subset_YRI", "MetabolicLabelled.30min.Splicing", "MetabolicLabelled.60min.Splicing"], Pass="GroupedPermutationPass"),
 
 

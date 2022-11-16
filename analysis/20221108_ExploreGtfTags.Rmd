@@ -1,0 +1,319 @@
+---
+title: "20221108_ExporeGtfTags"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+
+## Intro
+
+To better interpret anntotated introns, it helps to look at the transcript level tags associated with transcript models in gtf file. There are so many possible tags though that i need to expore the file a bit to better interpret the tags...
+
+I downloaded the gencode comprehensive and gencode basic gtf files, and used `bedparse` to make the data more easy to parse in tabular format
+
+```{r}
+library(tidyverse)
+library(data.table)
+library(scales)
+
+
+hue_pal()(4)
+show_col(hue_pal()(4))
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family="Helvetica")))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+
+
+comprehensive <- fread("../code/scratch/gtf_tags.tsv.gz") %>%
+  mutate(gtfSource = "GencodeComprehensive")
+basic <- fread("../code/scratch/gtf_tags.basic.tsv.gz") %>%
+  mutate(gtfSource = "GencodeBasic")
+
+combined <- bind_rows(comprehensive,basic)
+
+colnames(combined) <- c("chrom", "start", "end", "transcript", "score", "strand", "thickStart", "thickEnd", "itemRgb", "blockCount", "blockSizes", "blockStarts", "tag_GeneID","tag_GeneName", "tag_TranscriptType", "tag_Tag", "gtfSource")
+
+combined <- combined %>%
+  mutate(TagSupergroup = case_when(
+  tag_Tag %in% c("basic", "CCDS") ~ tag_Tag,
+  TRUE ~ "Other"
+)) %>%
+  group_by(transcript) %>%
+  mutate(IsTranscriptInBasic = any(gtfSource=="GencodeBasic")) %>%
+  ungroup()
+
+  
+```
+
+Now let's explore the gtf.
+
+```{r}
+#Make sure I am just including normal chromosomal transcripts
+combined %>%
+  count(chrom, gtfSource)
+
+combined %>%
+  count(gtfSource)
+
+combined %>%
+  ggplot(aes(x=tag_Tag)) +
+  geom_bar() +
+  facet_wrap(~gtfSource) +
+  coord_flip() +
+  geom_text(
+    data = . %>%
+      count(gtfSource, tag_Tag),
+    aes(label=n, y=n), size=3) +
+  theme(axis.text.y = element_text(size=5))
+```
+
+Note that a single transcript can have multiple tags with the same key. But I think bedparse just outputs a single value for each key. So that is why not all tags with key "Tag" have the value "basic" in this plot... Some seem to have the value "CCCDS" (consensus coding sequence) which basically means the same thing.
+
+```{r}
+TranscriptTagCounts <- combined %>%
+  ggplot(aes(x=tag_TranscriptType)) +
+  geom_bar() +
+  facet_wrap(~gtfSource) +
+  coord_flip() +
+  geom_text(
+    data = . %>%
+      count(gtfSource, tag_TranscriptType),
+    aes(label=n, y=n), size=3) +
+  theme(axis.text.y = element_text(size=5))
+
+TranscriptTagCounts
+```
+
+
+```{r}
+combined %>%
+  mutate(TagSupergroup = case_when(
+    tag_Tag %in% c("basic", "CCDS") ~ tag_Tag,
+    TRUE ~ "Other"
+  )) %>%
+  ggplot(aes(x=tag_TranscriptType)) +
+  geom_bar() +
+  facet_wrap(~TagSupergroup) +
+  coord_flip() +
+  geom_text(
+    data = . %>%
+      count(TagSupergroup, tag_TranscriptType),
+    aes(label=n, y=n), size=3) +
+  theme(axis.text.y = element_text(size=5)) +
+  Rotate_x_labels
+
+combined %>%
+  filter(gtfSource == "GencodeComprehensive") %>%
+  group_by(tag_GeneID) %>%
+  filter(
+           any(tag_TranscriptType=="processed_transcript") &
+           any(tag_TranscriptType=="protein_coding")) %>%
+  ungroup() %>%
+  count(tag_GeneID) %>%
+  nrow()
+
+combined %>%
+  filter(gtfSource == "GencodeComprehensive") %>%
+  group_by(tag_GeneID) %>%
+  filter(
+           any(tag_TranscriptType=="nonsense_mediated_decay") &
+           any(tag_TranscriptType=="protein_coding")) %>%
+  ungroup() %>%
+  count(tag_GeneID) %>%
+  nrow()
+```
+
+It probably makes sense to look at these numbers in the context of the 14000 genes i'm looking at...
+
+```{r}
+genes <- read_tsv("../code/ExpressionAnalysis/polyA/ExpressedGeneList.bed.gz", col_names=c("chrom", "start", "stop", "name", "score", "strand"))
+
+
+TranscriptTagCounts <- combined %>%
+  mutate(IsInAnalyzedGenes = tag_GeneID %in% genes$name) %>%
+  count(gtfSource, tag_TranscriptType, IsInAnalyzedGenes) %>%
+  ggplot(aes(x=tag_TranscriptType, y=n)) +
+  geom_col() +
+  facet_grid(IsInAnalyzedGenes ~ gtfSource) +
+  coord_flip() +
+  geom_text(aes(label=n), size=3) +
+  theme(axis.text.y = element_text(size=5))
+
+TranscriptTagCounts
+```
+
+Ok so basically, since much of my analysis only considers introns that lie within gene boundaries of 140000 protein coding genes, what I have been calling 'non-basic' means 'processed transcript' or 'retained intron'... In theory retained intron transcripts shouldn't have any introns a non retained intron transcript has, so really i think it just means 'processed transcript', and there really aren't many other tags to use.
+
+The other discrepency to resolve are what are all the protein coding tagged transcripts that are in comprehensive but not basic... I suspect they are truncated proteins that wouldn't conform to the the 55nt NMD rule for being an NMD target. So they may not be functional proteins, but they wouldn't be subject to NMD. I'm actually not sure if that's what they are.
+
+First let's plot the above plot that corresponds to how I have been classifying introns so far...
+
+```{r}
+combined %>%
+  mutate(IsInAnalyzedGenes = if_else(tag_GeneID %in% genes$name, "14K genes", "Not analyzed genes")) %>%
+  count(gtfSource, tag_TranscriptType, IsInAnalyzedGenes, IsTranscriptInBasic) %>%
+  mutate(Color = case_when(
+    IsInAnalyzedGenes == "Not analyzed genes" ~ "gray",
+    tag_TranscriptType == "nonsense_mediated_decay" ~ "#F8766D",
+    IsTranscriptInBasic ~ "#00BFC4",
+    TRUE ~ "#7CAE00"
+  )) %>%
+  ggplot(aes(x=tag_TranscriptType, y=n, fill=Color)) +
+  geom_col(position='stack') +
+  facet_grid(IsInAnalyzedGenes ~ gtfSource) +
+  coord_flip() +
+  scale_fill_identity() +
+  # geom_text(aes(label=n), size=3) +
+  theme_bw() +
+  theme(axis.text.y = element_text(size=5)) +
+  Rotate_x_labels
+
+```
+
+```{r, eval=F}
+
+ggsave("../code/scratch/gtf_tags.pdf", height=16, width=6)
+```
+
+Now let's check if those 'non-basic' protein coding isoforms are typically shorter than the 'basic' protein coding isoforms for the same gene...
+
+```{r}
+combined %>%
+  filter(gtfSource == "GencodeComprehensive") %>%
+  filter(tag_GeneID %in% genes$name) %>%
+  filter(tag_TranscriptType == "protein_coding") %>%
+  distinct(tag_GeneID, IsTranscriptInBasic, .keep_all=T) %>%
+  add_count(tag_GeneID) %>%
+  filter(n==2) %>%
+  mutate(Len=end-start) %>%
+  dplyr::select(Len, IsTranscriptInBasic, tag_GeneID) %>%
+  pivot_wider(names_from = "IsTranscriptInBasic", values_from="Len") %>%
+  mutate(WhichTranscriptIsLonger = if_else(`TRUE` > `FALSE`, "Basic longer", "Nonbasic equal or longer")) %>%
+  count(WhichTranscriptIsLonger)
+  
+```
+
+Ok, yeah so in pretty much all those cases the non-basic isoform that is still tagged as 'protein coding' is shorter than the corresponding (randomly selected if more than one) 'basic' isoform.
+
+The last thing I still feel I need to understand better is what 'processed transcript' means... Gencode suggests it is just transcripts that lack a start codon... So are these usually from internal alt TSS? Let's check if those transcripts are always shorter... Then it will also be useful to look at some of the transcripts or introns from with this tag. Let's write out a bed12 file containing a 'processed transcript' tagged transcript and a 'protein-coding' transcript for the same gene. Then browse on IGV...
+
+```{r}
+combined %>%
+  filter(gtfSource == "GencodeComprehensive") %>%
+  filter(tag_GeneID %in% genes$name) %>%
+  filter(tag_TranscriptType %in% c("protein_coding", "processed_transcript")) %>%
+  distinct(tag_TranscriptType, tag_GeneID, .keep_all=T) %>%
+  add_count(tag_GeneID) %>%
+  filter(n==2) %>%
+  mutate(Len=end-start) %>%
+  dplyr::select(Len, tag_TranscriptType, tag_GeneID) %>%
+  pivot_wider(names_from = "tag_TranscriptType", values_from="Len") %>%
+  mutate(WhichTranscriptIsLonger = if_else(protein_coding > processed_transcript, "protein_coding longer", "processed_transcript equal or longer")) %>%
+  count(WhichTranscriptIsLonger)
+
+
+```
+
+Ok so processed transcripts are overwhelmingly longer. Do they usually share the same TSS and have different TES?
+
+
+```{r, eval=F}
+combined %>%
+  filter(gtfSource == "GencodeComprehensive") %>%
+  filter(tag_GeneID %in% genes$name) %>%
+  filter(tag_TranscriptType %in% c("protein_coding", "processed_transcript")) %>%
+  distinct(tag_TranscriptType, tag_GeneID, .keep_all=T) %>%
+  add_count(tag_GeneID) %>%
+  filter(n==2) %>%
+  dplyr::filter(chrom=="chr22") %>%
+  arrange(chrom, start) %>%
+  dplyr::select(1:12) %>%
+  write_tsv("../code/scratch/gtf.processed_vs_notProcessed.bed", col_names = F)
+```
+
+
+### Using leafcutter gtf parsing script.
+
+Leafcutter actually has a convenient gtf parsing script that outputs introns and the gtf tags associated with it. Let's read that in just to make sure it all makes sense with what i've been looking at...
+
+Also using these it will be easy to annotate these groups on an intron level for various tags and consider the relative expression (as a group) between chRNA/polyA to help interpret which of these tags might be NMD related since we know NMD-targets are degraded post-transcriptionally.
+
+```{r}
+leafviz_script.dat <- fread("../code/scratch/leafvistest_all_introns.bed.gz", col.names=c("chrom", "start", "stop", "gene", "gene_id","strand","transcript", "intron_num", "transcript_tag", "tag"))
+
+leafviz_script.dat %>%
+  distinct(transcript, .keep_all=T) %>%
+  head()
+
+leafviz_script.dat %>%
+  filter(gene_id %in% genes$name) %>%
+  count(transcript_tag)
+
+IntronAnnotations <- leafviz_script.dat %>%
+  filter(gene_id %in% genes$name) %>%
+  group_by(chrom, start, stop, strand, gene_id) %>%
+  summarise(Annotation = case_when(
+    all(transcript_tag=="nonsense_mediated_decay") ~ "Unique to nonsense_mediated_decay",
+    all(transcript_tag=="non_stop_decay") ~ "Unique to non_stop_decay",
+    all(transcript_tag=="processed_transcript") ~ "Unique to processed_transcript",
+    all(transcript_tag=="retained_intron") ~ "Unique to retained_intron",
+    any(transcript_tag=="protein_coding") ~ "In protein_coding",
+    TRUE ~ "Other"
+  )) %>%
+  ungroup()
+
+
+IntronAnnotations %>%
+  arrange(chrom, start, stop)
+
+```
+
+Now read in splice junction count table.
+
+```{r}
+
+SpliceJunctionCountTables <- Sys.glob("../code/SplicingAnalysis/leafcutter/NormalizedPsiTables/PSI.JunctionCounts.*.bed.gz") %>%
+  setNames(str_replace(., "../code/SplicingAnalysis/leafcutter/NormalizedPsiTables/PSI.JunctionCounts.(.+?).bed.gz", "\\1")) %>%
+  lapply(fread)
+
+
+
+SpliceJunctionCountTables$chRNA.Expression.Splicing %>%
+  inner_join(
+    IntronAnnotations %>%
+      dplyr::select(`#Chrom`=chrom, start, end=stop, strand, gene_id, Annotation),
+    by=c(""))
+
+Long.table <- lapply(SpliceJunctionCountTables, AddIntronAnnotations) %>%
+  lapply(pivot_longer,names_to="Sample", values_to="Count", -c(1:8)) %>%
+  bind_rows(.id="Dataset")
+
+P.i.dat <- Long.table %>%
+  group_by(Sample, Dataset, IntronAnnotation) %>%
+  summarise(SumCounts = sum(Count)) %>%
+  ungroup() %>%
+  group_by(Sample, Dataset) %>%
+  mutate(Percent = SumCounts / sum(SumCounts) * 100) %>%
+  ungroup() %>%
+  mutate(Dataset = recode(Dataset, !!!c("Expression.Splicing"="polyA RNA-seq", "chRNA.Expression.Splicing"="chRNA-seq", "MetabolicLabelled.30min"="30min 4sU-label RNA-seq", "MetabolicLabelled.60min"="60min 4sU-label RNA-seq"))) %>%
+  mutate(Dataset = factor(Dataset, levels=c("chRNA-seq", "30min 4sU-label RNA-seq", "60min 4sU-label RNA-seq", "polyA RNA-seq")))
+P.i <- ggplot(P.i.dat, aes(x=Dataset, y=Percent, color=IntronAnnotation)) +
+  geom_jitter(alpha=0.2, size=0.5) +
+  geom_boxplot(outlier.shape=NA, color='black', fill=NA) +
+  facet_wrap(~IntronAnnotation, scales="free_y") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+  labs(y="Percent of splice junction reads")
+P.i
+
+  
+```
+

@@ -1,0 +1,6 @@
+Group_label	Group_color	BedgzFile	Supergroup
+H3K27AC	#ff7f00	NA	H3K27AC
+chRNA	#e31a1c	SplicingAnalysis/leafcutter/NormalizedPsiTables/PSI.chRNA.Expression.Splicing.bed.gz	chRNA
+4sU.30min.RNA	#cab2d6	SplicingAnalysis/leafcutter/NormalizedPsiTables/PSI.MetabolicLabelled.30min.bed.gz	4sU.30min.RNA
+4sU.60min.RNA	#6a3d9a	SplicingAnalysis/leafcutter/NormalizedPsiTables/PSI.MetabolicLabelled.60min.bed.gz	4sU.60min.RNA
+polyA.RNA	#1f78b4	SplicingAnalysis/leafcutter/NormalizedPsiTables/PSI.Expression.Splicing.bed.gz	polyA.RNA

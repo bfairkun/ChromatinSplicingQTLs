@@ -1,0 +1,106 @@
+---
+title: "202211107_Figures_sQTLeQTL_effects"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+
+## Intro
+
+Here I will plot some stuff related to prospective figure3 that links "unexplained" (read: "Non-enhancer/promoter" based) QTLs, largely to sQTL/NMD effects.
+
+### set theme
+
+```{r}
+library(tidyverse)
+library(RColorBrewer)
+library(data.table)
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family="Helvetica")))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+
+#test theme
+p <- ggplot(mtcars, aes(mpg, wt, color=as.factor(cyl))) +
+  geom_point() +
+  scale_colour_brewer(palette = "Set2", type="qual")
+p +
+  Rotate_x_labels
+```
+
+## Figure1
+
+### highlight prevalence of NMD-targeting and unannotated introns in chRNA
+
+### Numbers of QTLs
+
+## Figure2
+
+### heatmap of effects between types of phenotypes highlighting the expected strong enrichment in enhancers/promoters
+
+### eQTLs colocalize with many different xQTLs, but chromatin effects are the strongest (something like the bar plot I showed in lab meeting with the number of eGenes that colocalize with an xQTL)
+
+## Figure3
+
+### Scatter plot of effect sizes for unannotated, basic, non-basic, and NMD-targeting introns. Estimate of number of primary (and maybe secondary) eQTLs explained by splicing mechanisms
+
+```{r}
+NMD.transcript.introns <- fread("../code/SplicingAnalysis/Annotations/NMD/NMD_trancsript_introns.bed.gz", col.names=c("chrom", "start", "stop", "name", "score", "strand")) %>%
+  mutate(stop=stop+1) %>%
+  unite(intron, chrom:stop, strand)
+
+Non.NMD.transcript.introns <- fread("../code/SplicingAnalysis/Annotations/NMD/NonNMD_trancsript_introns.bed.gz", col.names=c("chrom", "start", "stop", "name", "score", "strand")) %>%
+  mutate(stop=stop+1) %>%
+  unite(intron, chrom:stop, strand)
+
+
+NMD.specific.introns <- setdiff(NMD.transcript.introns$intron, Non.NMD.transcript.introns$intron)
+
+Intron.Annotations.basic <- fread("../code/SplicingAnalysis/regtools_annotate_combined/basic.bed.gz") %>%
+  filter(known_junction ==1) %>%
+  unite(intron, chrom, start, end, strand)
+Introns.Annotations.comprehensive <- fread("../code/SplicingAnalysis/regtools_annotate_combined/comprehensive.bed.gz") %>%
+  filter(known_junction ==1) %>%
+  unite(intron, chrom, start, end, strand)
+Introns.Annotations.all <- fread("../code/SplicingAnalysis/regtools_annotate_combined/comprehensive.bed.gz") %>%
+  unite(intron, chrom, start, end, strand)
+
+PhenotypeAliases <- read_tsv("../data/Phenotypes_recode_for_Plotting.txt")
+
+PC.ShortAliases <- PhenotypeAliases %>%
+  dplyr::select(PC, ShorterAlias) %>% deframe()
+
+PeaksToTSS <- Sys.glob("../code/Misc/PeaksClosestToTSS/*_assigned.tsv.gz") %>%
+  setNames(str_replace(., "../code/Misc/PeaksClosestToTSS/(.+?)_assigned.tsv.gz", "\\1")) %>%
+  lapply(read_tsv) %>%
+  bind_rows(.id="ChromatinMark") %>%
+  mutate(GenePeakPair = paste(gene, peak, sep = ";")) %>%
+  distinct(ChromatinMark, peak, gene, .keep_all=T)
+
+TopSNPEffects.ByPairs <- fread("../code/pi1/PairwisePi1Traits.P.all.txt.gz")
+
+
+coloc.tidy <- fread("../output/hyprcoloc_results/ForColoc/MolColocStandard/hyprcoloc.results.OnlyColocalized.Stats.txt.gz") %>%
+  separate(phenotype_full, into=c("PC", "P"), sep=";")
+
+coloc.tidy.pairwise <- left_join(
+  coloc.tidy,
+  coloc.tidy %>%
+    dplyr::select(-iteration, -ColocPr, -RegionalPr, -TopSNPFinemapPr),
+  by=c("Locus"),
+  suffix=c("1", "2")
+) %>%
+  filter(!(P1==P2 & PC1 == PC2)) %>%
+  filter(snp1 == snp2) %>%
+  dplyr::select(ColocalizedTopSNP = snp1, GeneLocus=Locus, everything(), -snp2) %>%
+  unite(TraitPair, P1, PC1, P2, PC2, remove=F)
+
+```
+

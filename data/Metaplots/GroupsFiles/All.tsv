@@ -1,0 +1,10 @@
+Group_label	Group_color	BedgzFile	Supergroup
+CTCF	#b15928		CTCF
+H3K4ME1	#ff7f00		H3K4ME1
+H3K27AC	#ff7f00		H3K27AC
+H3K4ME3	#fdbf6f		H3K4ME3
+H3K36ME3	#8dd3c7		H3K36ME3
+chRNA	#e31a1c	SplicingAnalysis/leafcutter/NormalizedPsiTables/PSI.chRNA.Expression.Splicing.bed.gz	chRNA
+4sU.30min.RNA	#cab2d6	SplicingAnalysis/leafcutter/NormalizedPsiTables/PSI.MetabolicLabelled.30min.bed.gz	4sU.30min.RNA
+4sU.60min.RNA	#6a3d9a	SplicingAnalysis/leafcutter/NormalizedPsiTables/PSI.MetabolicLabelled.60min.bed.gz	4sU.60min.RNA
+polyA.RNA	#1f78b4	SplicingAnalysis/leafcutter/NormalizedPsiTables/PSI.Expression.Splicing.bed.gz	polyA.RNA
