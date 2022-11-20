@@ -173,8 +173,10 @@ def filter_trailing_ncRNA(hmm, hmm_rev, ncRNA_RPKM, distance_thre, cor_thre, RPK
             remove_distance = 3000
             
         remove_distance = np.max([remove_distance, len_trail])
-        
-        remove_distance = np.min([remove_distance, 50000])
+        if corr >= 0.75:
+            remove_distance = np.min([remove_distance, 250000])
+        else:
+            remove_distance = np.min([remove_distance, 50000])
           
         low_reverse =  (ncRNA_rev_ratio < 0.1) and (current_trail_rev_ratio < 0.1)
         low_expression = (RPKM_current_ncRNA <= 0.5) and (RPKM_current_trail <= 0.5)
@@ -191,32 +193,31 @@ def filter_trailing_ncRNA(hmm, hmm_rev, ncRNA_RPKM, distance_thre, cor_thre, RPK
         
         corr_min = 0.2
         
-        if anchor_is_pc or (RPKM_current_ncRNA < 5):
-            RPKM_ratio_thre = 1
-        else:
-            RPKM_ratio_thre = 2
+#         if anchor_is_pc or (RPKM_current_ncRNA < 5):
+#             RPKM_ratio_thre = 1
+#         else:
+        RPKM_ratio_thre = 2
             
              
         if high_ratio or long_trail:
             merge_distance = 20000
+        elif low_reverse or low_expression:
+            merge_distance = 5000
+        else:
+            merge_distance = 1000
 #             remove_distance = 100000
 #             corr_min = 0
         
         if low_reverse or low_expression:
-            if long_trail or high_ratio:
-                merge_distance = 20000
-                corr_min = 0
-            else:
-                merge_distance = 5000
-                corr_min = 0.1
+
+            RPKM_ratio_thre = 1
             max_merge_ratio = 1e100
             min_merge_ratio = -1
             merge_corr_min = 0.1
         
         else:
             merge_corr_min = 0.1
-            merge_distance = 1000
-            max_merge_ratio = 1e100
+            max_merge_ratio = 1e2
             min_merge_ratio = 0.1
             
             

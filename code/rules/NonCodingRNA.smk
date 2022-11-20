@@ -32,12 +32,37 @@ rule GetAdditionalNonCodingRNAFromFeatureCounts:
 rule GetAllGenesForOverlap:
     input:
         "ReferenceGenome/Annotations/gencode.v34.chromasomal.annotation.gtf"
-        #"ReferenceGenome/Annotations/GTFTools/gencode.v34.chromasomal.genes.bed"
     output:
         "NonCodingRNA/annotation/allGenes.bed.gz"
     shell:
         """
-        awk -F'\\t' '$3=="gene" {{print $1"\\t"$4"\\t"$5"\\t"$7"\\t"$9}}' {input} | awk -F'"' '{{print $1"\\t"$6"\\t"$4}}' | awk -F'\\t' '{{print $1"\\t"$2"\\t"$3"\\t"$6"\\t"$7"\\t"$4}}' | bedtools sort -i - | gzip - > {output}
+        awk -F'\\t' '$3=="gene" {{print $1"\\t"$4"\\t"$5"\\t"$7"\\t"$9}}' {input} | awk -F'"' '{{print $1"\\t"$6"\\t"$4}}' - | awk -F'\\t' '{{print $1"\\t"$2"\\t"$3"\\t"$6"\\t"$7"\\t"$4}}' - | bedtools sort -i - | gzip - > {output}
+        """
+        
+rule DownloadRefSeqGTF:
+    output:
+        "ReferenceGenome/Annotations/Homo_sapiens.GRCh38.108.chr.gtf.gz"
+    log:
+        "logs/DownloadRefSeq.log"
+    shell:
+        """
+        (wget --directory-prefix=ReferenceGenome/Annotations/ https://ftp.ensembl.org/pub/release-108/gtf/homo_sapiens/Homo_sapiens.GRCh38.108.chr.gtf.gz) &> {log}
+        """
+        
+rule GetAllProteinCodingGenes:
+    input:
+        gencode = "NonCodingRNA/annotation/allGenes.bed.gz",
+        refseq = "ReferenceGenome/Annotations/Homo_sapiens.GRCh38.108.chr.gtf.gz"
+    output:
+        out_tmp = temp("NonCodingRNA/annotation/protein_coding.bed"),
+        out_gz = "NonCodingRNA/annotation/protein_coding.bed.gz"
+    log:
+        "logs/NonCodingRNA/GetAllProteinCoding.log"
+    shell:
+        """
+        (zcat {input.gencode} | grep protein_coding - > {output.out_tmp}) &> {log};
+        (zcat {input.refseq} | awk -F'\\t' '$3=="gene" {{print $1"\\t"$4"\\t"$5"\\t"$7"\\t"$9}}' - | grep protein_coding - | awk -F'"' '{{print $1"\\t"$6"\\t"$10}}' - | awk -F'\\t' '{{print "chr"$1"\\t"$2"\\t"$3"\\t"$6"\\t"$7"\\t"$4}}' - >> {output.out_tmp}) &>> {log};
+        (bedtools sort -i {output.out_tmp} | bedtools merge -s -i - -c 4,5,6 -o first,first,first | gzip - > {output.out_gz}) &>> {log}
         """
 
 rule MakeWindows:
@@ -209,6 +234,7 @@ rule GetTranscriptsFromHMM:
         low_expression = "NonCodingRNA/tables/{chrom}.{strand}.low_expression.bed.gz",
         expression = "NonCodingRNA/tables/{chrom}.{strand}.expression.bed.gz",
         genes = "NonCodingRNA/annotation/allGenes.bed.gz",
+        pc_genes = "NonCodingRNA/annotation/protein_coding.bed.gz",
         chrom_sizes = "../data/Chrome.sizes"
     output:
         sample_counts = "NonCodingRNA/tables/{chrom}.{strand}.sample.counts.bed.gz",
@@ -220,8 +246,6 @@ rule GetTranscriptsFromHMM:
         low_expression_filtered = temp("NonCodingRNA/tables/{chrom}.{strand}.low_expression.filtered.bed.gz"),
         filtered_all = temp("NonCodingRNA/tables/{chrom}.{strand}.filtered.bed"),
         overlap_counts = temp("NonCodingRNA/tables/{chrom}.{strand}.overlap_counts.bed.gz"),
-        #overlap_expression = temp("NonCodingRNA/tables/{chrom}.{strand}.overlap_expression.bed.gz"),
-        #overlap_low_expression = temp("NonCodingRNA/tables/{chrom}.{strand}.overlap_low_expression.bed.gz"),
         ncRNA_overlaps = temp("NonCodingRNA/tables/{chrom}.{strand}.ncRNA_overlaps.bed.gz"),
         ncRNA_candidates = temp("NonCodingRNA/tables/{chrom}.{strand}.ncRNA_candidates.bed.gz"),
         hmm_unsorted = temp("NonCodingRNA/tables/{chrom}.{strand}.hmm.bed"),
@@ -253,6 +277,7 @@ rule GetTranscriptsFromHMM:
         echo 'step 4' >> {log};
         #(bedtools intersect -s -a {output.sample_counts} -b {input.low_expression} -u | gzip - > {output.low_expression_all}) &>> {log};
         echo 'step 5' >> {log};
+        #(zcat {input.pc_genes} | awk '$1=="{wildcards.chrom}" && $6=="{params.strand}" {{print $0, {params.init_counts} }}' OFS='\\t' -  > {output.pc1}) &>> {log};
         (zcat {input.genes} | grep protein_coding | awk '$1=="{wildcards.chrom}" && $6=="{params.strand}" {{print $0, {params.init_counts} }}' OFS='\\t' -  > {output.pc1}) &>> {log};
         echo 'step 6' >> {log};
         (zcat {input.genes} | grep "snoRNA\\|snRNA" - | grep {wildcards.chrom} - | awk '$1=="{wildcards.chrom}" && $6=="{params.strand}" {{print $0, {params.init_counts} }}' OFS='\\t' - >> {output.pc1}) &>> {log};

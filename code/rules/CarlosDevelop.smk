@@ -65,6 +65,8 @@ rule QTLTools_caller:
 
 rule HMM_develop:
     input:
+        "NonCodingRNA/annotation/ncRNA.bed.gz",
+        "NonCodingRNA/annotation/NonCodingRNA.bed.gz",
         "NonCodingRNA/annotation/ncRNA.TSS.bed.gz",
         "NonCodingRNA/annotation/allGenes.TSS.bed.gz",
         "NonCodingRNA/annotation/ncRNA.3PrimeEnd.bed.gz",
@@ -77,7 +79,7 @@ rule HMM_develop:
         "NonCodingRNA/annotation/tmp/srtRNA.bed.gz",
         'NonCodingRNA/annotation/NonCodingRNA.annotation.tab.gz',
         'NonCodingRNA/annotation/allGenes.annotation.tab.gz',
-        "featureCounts/uaRNA_TSS/ProCap/Counts.txt",
+        
                 
         
 rule IntronCounts_develop:

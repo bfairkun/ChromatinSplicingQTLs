@@ -66,6 +66,7 @@ localrules:
     DownloadHg38Gencode_basic,
     DownloadKristjansdottirSupplementData2,
     DownloadChromHMM,
+    DownloadRefSeqGTF,
 
 
 ruleorder: CopyFastqFromLocal > DownloadFastqFromLink
