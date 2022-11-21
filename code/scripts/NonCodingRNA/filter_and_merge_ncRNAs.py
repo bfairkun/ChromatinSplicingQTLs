@@ -197,11 +197,13 @@ def filter_trailing_ncRNA(hmm, hmm_rev, ncRNA_RPKM, distance_thre, cor_thre, RPK
 #             RPKM_ratio_thre = 1
 #         else:
         RPKM_ratio_thre = 2
+    
+        high_corr_long_trail = high_corr and (len_trail > 10000)
             
              
         if high_ratio or long_trail:
             merge_distance = 20000
-        elif low_reverse or low_expression:
+        elif low_reverse or low_expression or high_corr_long_trail:
             merge_distance = 5000
         else:
             merge_distance = 1000
