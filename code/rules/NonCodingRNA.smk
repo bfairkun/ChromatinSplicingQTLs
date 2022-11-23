@@ -880,6 +880,7 @@ rule MakeUaRNAForAnnotatedLncRNAs:
         'RPKM_tables/chRNA.RPKM.bed.gz',
         'NonCodingRNA/annotation/NonCodingRNA.annotation.tab.gz',
         'QTLs/QTLTools/chRNA.Expression_ncRNA/OnlyFirstReps.qqnorm.bed.gz',
+        'QTLs/QTLTools/chRNA.Expression.Splicing/OnlyFirstReps.qqnorm.bed.gz',
         'NonCodingRNA/annotation/tmp/tss.saf',
     output:
         'NonCodingRNA/annotation/Gencode.uaRNA.annotation.tab.gz',
