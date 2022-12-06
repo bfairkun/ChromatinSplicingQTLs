@@ -34,6 +34,7 @@ include: "rules/CalculatePi1.smk"
 include: "rules/CreateUnstandardizedPhenotypeMatrices.smk"
 include: "rules/Metaplots.smk"
 include: "rules/CarlosDevelop.smk"
+include: "rules/ProcessSmallMoleculeData.smk"
 
 
 wildcard_constraints:
@@ -67,6 +68,7 @@ localrules:
     DownloadKristjansdottirSupplementData2,
     DownloadChromHMM,
     DownloadRefSeqGTF,
+    SM_CopyFastqFromLocal
 
 
 ruleorder: CopyFastqFromLocal > DownloadFastqFromLink

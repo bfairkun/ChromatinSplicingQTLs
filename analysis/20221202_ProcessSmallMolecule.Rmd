@@ -1,0 +1,167 @@
+---
+title: "SmallMoleculeProcessing"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+
+## Intro
+
+From my slack thread with Yang:
+
+> i going to think out loud here about how to pre-process the small molecule data to explore the splicing-induced NMD/expression effects, in case you have thoughts:
+So to recap, for risdiplam we have 3 polyA DMSO replicates, and one polyA replicate for 3.2, 10, 32, 100, 320, 1000, 3200, and 10000nM doses. Then we have 3 replicates of chRNA for DMSO, 3 replicates for 100nM, and 3 replicates for 3200nM.
+I'm thinking the 100nM dose and the 3200nM dose will be most useful, since we have polyA and chRNA at those doses as well. But I don't want to just throw away the other doses in polyA, especially since splicing quantification tends to be noisy, and also because presenting full dose-response curves could be nice. So I will of course start by just mapping and counting junctions and doing the standard leafcutter clustering with all those samples. Then I will focus on GA-GT junctions, and in the polyA data I will fit a dose-response curve to the intronic PSI, and the host gene log(CPM). When I want to compare with chRNA, I will use the delta-PSI from the fit curve at 100nM and 3200nM doses (estimates of error can also be extracted from the fit), and compare to the deltaPSI (or logCPM expression) estimated from 3 chRNA replicates at that dose and the 3 chRNA DMSO replicates (using standard tools like leafcutter, or edgeR, or even just calculating manually). From those processed numbers I will explore the splicing/expression effects
+
+So here I will process the conut table and splice count tables.
+
+```{r}
+library(tidyverse)
+library(edgeR)
+library(data.table)
+library(drc)
+
+sample_n_of <- function(data, size, ...) {
+  dots <- quos(...)
+  
+  group_ids <- data %>% 
+    group_by(!!! dots) %>% 
+    group_indices()
+  
+  sampled_groups <- sample(unique(group_ids), size)
+  
+  data %>% 
+    filter(group_ids %in% sampled_groups)
+}
+
+
+```
+
+Read in count tables
+
+```{r}
+Samples <- read_tsv("../code/config/SmallMoleculeRNASeq.Samples.tsv")
+
+GeneCounts <- read_tsv("../code/SmallMolecule/featureCounts/Counts.txt", comment="#") %>%
+  rename_at(vars(-c(1:6)), ~str_replace(.x, "SmallMolecule/AlignmentsPass2/(.+?)/Aligned.sortedByCoord.out.bam", "\\1"))
+
+Genes <- read_tsv("../code/ExpressionAnalysis/polyA/ExpressedGeneList.txt", col_names=c("chrom", "start", "stop", "name", "score", "strand"))
+```
+
+One thing I will have to consider is how to best normalize libraries. Since I suspect a genomewide effect at high concentrations, it might make sense to normalize to intronless genes or some set of genes which I don't think will be generally effected by small molecule. For now I will normalize the standard way (by total libray size, or rather by the default method of `calcNormFactors` function), and consider other ways to normalize later.
+
+```{r}
+#For now, use the same list of 14000 genes used in QTL analysis
+GeneCounts.filtered <- GeneCounts %>%
+  filter(Geneid %in% Genes$name)
+
+Count.table.StandardNormFactors <- GeneCounts.filtered %>%
+  dplyr::select(-c(2:6)) %>%
+  column_to_rownames("Geneid") %>%
+  DGEList() %>%
+  calcNormFactors()
+
+
+CPM.StandardNormFactors <- Count.table.StandardNormFactors %>%
+  cpm(prior.count=0.1, log=T) 
+
+CPM.StandardNormFactors %>%
+  apply(1, mean) %>% hist()
+
+```
+
+```{r}
+gene_names <- read_tsv("/project2/yangili1/bjf79/20211209_JingxinRNAseq/data/Genes.list.txt")
+
+gene_names %>%
+  filter(hgnc_symbol %in% c("HSPB3", "IFNA1"))
+
+CPM.StandardNormFactors.tidy <- CPM.StandardNormFactors %>%
+  as.data.frame() %>%
+  rownames_to_column("Geneid") %>%
+  gather("Sample", "CPM", -Geneid) %>%
+  separate(Sample, into=c("treatment", "dose.nM", "Cell.type", "LibraryType", "rep"), sep="_", convert=T) %>%
+  replace_na(list(dose.nM=0)) %>%
+  mutate(ensembl_gene_id = str_replace(Geneid, "^(.+?)\\..+$", "\\1")) %>%
+  left_join(gene_names)
+
+
+CPM.StandardNormFactors.tidy %>%
+  filter(hgnc_symbol %in% c("HTT", "STAT1", "HSPB3", "H2AC20", "IFNA1")) %>%
+  filter(LibraryType == "polyA") %>%
+  ggplot(aes(x=dose.nM, y=CPM)) +
+  geom_line() +
+  geom_point() + 
+  scale_x_continuous(trans="log1p", limits=c(0, 10000), breaks=c(10000, 3160, 1000, 316, 100, 31.6, 10, 3.16, 1, 0.316, 0), labels=c(10000, 3160, 1000, 316, 100, 31.6, 10, 3.16, 1, 0.316, 0)) +
+  facet_wrap(~hgnc_symbol, scales = "free_y") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, size=5))
+
+set.seed(0)
+CPM.StandardNormFactors.tidy %>%
+  filter(LibraryType == "polyA") %>%
+  sample_n_of(10, hgnc_symbol) %>% 
+  ggplot(aes(x=dose.nM, y=CPM)) +
+  geom_line() +
+  geom_point() + 
+  scale_x_continuous(trans="log1p", limits=c(0, 10000), breaks=c(10000, 3160, 1000, 316, 100, 31.6, 10, 3.16, 1, 0.316, 0), labels=c(10000, 3160, 1000, 316, 100, 31.6, 10, 3.16, 1, 0.316, 0)) +
+  facet_wrap(~hgnc_symbol, scales = "free_y") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, size=5))
+
+```
+
+## Splicing data
+
+```{r}
+leafcutter.counts <- read.table("../code/SmallMolecule/leafcutter/clustering/autosomes/leafcutter_perind_numers.counts.gz", header=T, sep=' ') %>% as.matrix()
+
+ClusterMax.mat <- leafcutter.counts %>%
+    as.data.frame() %>%
+    rownames_to_column("junc") %>%
+    mutate(cluster=str_replace(junc, "^(.+?):.+?:.+?:(.+)$", "\\1_\\2")) %>%
+    group_by(cluster) %>%
+    mutate(across(where(is.numeric), sum)) %>%
+    ungroup() %>%
+    dplyr::select(junc, everything(), -cluster) %>%
+    column_to_rownames("junc") %>%
+    as.matrix()
+
+
+PSI.df <- (leafcutter.counts / as.numeric(ClusterMax.mat) * 100) %>%
+  signif() %>%
+  as.data.frame() %>%
+  rownames_to_column("Leafcutter.ID") %>%
+  mutate(Intron = str_replace(Leafcutter.ID, "(.+?):(.+?):(.+?):clu_.+?_([+-])$", "\\1:\\2:\\3:\\4"))
+
+
+Intron.Donors <- fread("../code/SmallMolecule/leafcutter/JuncfilesMerged.annotated.basic.bed.5ss.tab.gz", col.names = c("Intron", "DonorSeq", "DonorScore")) %>%
+  mutate(Intron = str_replace(Intron, "(.+?)_(.+?)_(.+?)_(.+?)::.+?$", "\\1:\\2:\\3:\\4"))
+
+PSI.tidy <- PSI.df %>%
+  left_join(Intron.Donors) %>%
+  gather("Sample", "PSI",contains("_")) %>%
+  separate(Sample, into=c("treatment", "dose.nM", "Cell.type", "LibraryType", "rep"), sep="_", convert=T) %>%
+  replace_na(list(dose.nM=0))
+
+PSI.tidy %>%
+  filter(LibraryType == "polyA") %>%
+  mutate(Is.GA.GT = str_detect(DonorSeq, "^\\w{2}GAGT")) %>%
+  group_by(dose.nM, Is.GA.GT) %>%
+  summarise(PSI.summary = median(PSI, na.rm=T)) %>%
+  ggplot(aes(x=dose.nM, y=PSI.summary)) +
+  geom_line() +
+  geom_point() + 
+  scale_x_continuous(trans="log1p", limits=c(0, 10000), breaks=c(10000, 3160, 1000, 316, 100, 31.6, 10, 3.16, 1, 0.316, 0), labels=c(10000, 3160, 1000, 316, 100, 31.6, 10, 3.16, 1, 0.316, 0)) +
+  facet_wrap(~Is.GA.GT, scales = "free_y") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, size=5))
+
+
+```
+
+Hmm. next lets count the splice junctions per coverage of the basic isoform feature counts data.

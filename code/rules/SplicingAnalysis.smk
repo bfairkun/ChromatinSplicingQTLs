@@ -48,13 +48,15 @@ rule leafcutter_cluster:
         "SplicingAnalysis/leafcutter/clustering/autosomes/leafcutter_perind.counts.gz",
         "SplicingAnalysis/leafcutter/clustering/autosomes/leafcutter_perind_numers.counts.gz"
     shadow: "shallow"
+    params:
+        rundir = "-r SplicingAnalysis/leafcutter/clustering/autosomes/"
     resources:
         mem_mb = 16000
     log:
         "logs/leafcutter_cluster/autosomes.log"
     shell:
         """
-        python scripts/davidaknowles_leafcutter/scripts/leafcutter_cluster_regtools_py3.py -j {input.juncfile_list} -r SplicingAnalysis/leafcutter/clustering/autosomes/ &> {log}
+        python scripts/davidaknowles_leafcutter/scripts/leafcutter_cluster_regtools_py3.py -j {input.juncfile_list} {params.rundir} &> {log}
         """
 
 def GetAnnotationTypeGtf(wildcards):

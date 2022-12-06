@@ -23,7 +23,7 @@ library(data.table)
 library(MASS)
 library(RColorBrewer)
 library(scales)
-
+library(viridis)
 
 NMD.transcript.introns <- fread("../code/SplicingAnalysis/Annotations/NMD/NMD_trancsript_introns.bed.gz", col.names=c("chrom", "start", "stop", "name", "score", "strand")) %>%
   mutate(stop=stop+1) %>%
@@ -848,6 +848,154 @@ P.sQTL.effects.Across.eQTL.datasets
 
 ```{r, eval=F}
 ggsave("/project2/yangili1/carlos_and_ben_shared/sQTL.to.eQTL.Effects.GroupedBy.sQTL.H3K36ME3.Concordance.png", P.sQTL.effects.Across.eQTL.datasets, height=6, width=8)
+
+```
+
+> one thing I'd still like to see is whether you see the correlation pattern when you start will all top K36me3 QTLs or H3K27ac QTL at promotor
+
+```{r}
+P1Category <- c("H3K36ME3", "H3K27AC", "chRNA.Expression.Splicing","MetabolicLabelled.30min","MetabolicLabelled.60min", "Expression.Splicing.Subset_YRI")
+P2Category <- "polyA.Splicing"
+
+
+Compare_sQTL_eQTL_effects_across_datasets <- TopSNPEffects.ByPairs %>%
+  filter(
+      (PC1 %in% c(P1Category)) &
+      (PC2 %in% c(P2Category)) &
+      (FDR.x < 0.01)) %>%
+  filter(
+    (paste(GeneLocus, P1, sep=';') %in% PeaksToTSS$GenePeakPair) | (!PC1 == "H3K27AC")
+  ) %>%
+  mutate(intron = str_replace(P2, "^(.+):(.+?):(.+?):clu.+?_([+-])$", "chr\\1_\\2_\\3_\\4")) %>%
+  mutate(IntronAnnotation = case_when(
+    intron %in% NMD.specific.introns ~ "Annotated NMD",
+    intron %in% Intron.Annotations.basic$intron ~ "Annotated basic",
+    intron %in% Introns.Annotations.comprehensive$intron ~ "Annotated Not basic",
+    TRUE ~ "Unannotated"
+  )) %>%
+  # group_by(P1, PC1, PC2) %>%
+  # filter(trait.x.p.in.y == min(trait.x.p.in.y)) %>%
+  # ungroup() %>%
+  unite(TraitPair, P1, PC1, P2, PC2, remove=F) %>%
+  dplyr::select(TraitPair, beta1=beta.x, beta2=trait.x.beta.in.y, P1, PC1, P2, PC2, IntronAnnotation, sQTL.P = trait.x.p.in.y) %>%
+  mutate(Is.Concordant = sign(beta1)==sign(beta2)) %>%
+  mutate(ConsistentWithNMD = case_when(
+    !IntronAnnotation == "Annotated basic" & Is.Concordant ~ "Inconsistent with NMD",
+    !IntronAnnotation == "Annotated basic" & !Is.Concordant ~ "Consistent with NMD",
+    # IntronAnnotation == "Annotated basic" ~ NA_character_,
+    IntronAnnotation == "Annotated basic" & Is.Concordant ~ "Inconsistent with NMD",
+    IntronAnnotation == "Annotated basic" & !Is.Concordant ~ "Consistent with NMD"
+  )) %>%
+  distinct(PC1, P1, IntronAnnotation, .keep_all=T) %>%
+  group_by(P1) %>%
+  mutate(Is.sQTL = 
+           any(PC2 == "polyA.Splicing" & sQTL.P < 0.01)) %>%
+  ungroup() %>%
+  filter(!is.na(Is.sQTL)) %>%
+  mutate(PC1 = recode(PC1, !!!c("H3K27AC"="H3K27AC@TSS","chRNA.Expression.Splicing"="chRNA","MetabolicLabelled.30min"="30min 4sU","MetabolicLabelled.60min"="60min 4sU", "Expression.Splicing.Subset_YRI"="polyA RNA"))) %>%
+  mutate(PC1 = factor(PC1, levels=c("H3K27AC@TSS","H3K36ME3","chRNA", "30min 4sU", "60min 4sU", "polyA RNA")))
+
+Compare_sQTL_eQTL_effects_across_datasets.CorStats <- Compare_sQTL_eQTL_effects_across_datasets %>%
+  group_by(IntronAnnotation, PC1, Is.sQTL) %>%
+  summarise(cor=cor.test(beta1,beta2)[["estimate"]], pval=cor.test(beta1,beta2, method='s')[["p.value"]], n=n()) %>%
+  mutate(R = signif(cor, 3), P=format.pval(pval, 3)) %>%
+  mutate(label = str_glue("rho:{R};P:{P};n:{n}")) %>%
+  group_by(IntronAnnotation, PC1) %>%
+  mutate(rn = row_number())
+
+P.sQTL.effects.Across.eQTL.datasets <- Compare_sQTL_eQTL_effects_across_datasets %>%
+  ggplot(aes(x=beta1, y=beta2, color=Is.sQTL)) +
+  geom_point(alpha=0.1) +
+  geom_vline(xintercept=0) +
+  geom_hline(yintercept=0) +
+  geom_text(
+    data = Compare_sQTL_eQTL_effects_across_datasets.CorStats,
+    aes(x=-Inf, y=-Inf, label=label, color=Is.sQTL, vjust=-rn),
+    hjust=-.1, size=2
+  ) +
+  geom_abline(
+    data = Compare_sQTL_eQTL_effects_across_datasets.CorStats,
+    aes(slope=cor, intercept=0, color=Is.sQTL)) +
+  facet_grid(PC1 ~ IntronAnnotation) +
+  theme_classic() +
+  coord_fixed() +
+  labs(title="genetic effects of NMD introns and host gene expression", x="eQTL beta\n(standardized units)", y="sQTL beta\n(standardized units)", caption=str_wrap("sQTL betas relative to eQTL beta at top eQTL SNP. sQTLs defined by nominal P<0.01", 30), color=str_wrap("Is sQTL")) +
+  guides(colour = guide_legend(override.aes = list(alpha = 1)))
+P.sQTL.effects.Across.eQTL.datasets
+
+PositionsOfFeatures <- paste0("../code/QTLs/QTLTools/", c(P1Category, P2Category), "/OnlyFirstReps.sorted.qqnorm.bed.gz") %>%
+  setNames(c(P1Category, P2Category)) %>%
+  lapply(fread, select=1:6, sep='\t') %>%
+  bind_rows(.id="PC") %>%
+  unite(PCP, PC, pid, sep=';')
+```
+
+```{r, eval=F}
+ggsave("/project2/yangili1/carlos_and_ben_shared/eQTL.to.sQTL.Effects.AllRNA.png",P.sQTL.effects.Across.eQTL.datasets, height=8, width=8)
+
+Max <- 0.25
+
+ColMap <- col_numeric(palette = cividis(18), domain=c(-Max,Max))
+
+show_col(palette = cividis(18))
+
+TopSNPEffects.ByPairs %>%
+  filter(
+      (PC1 %in% c(P1Category)) &
+      (PC2 %in% c(P2Category)) &
+      (FDR.x < 0.01)) %>%
+  filter(
+    (paste(GeneLocus, P1, sep=';') %in% PeaksToTSS$GenePeakPair) | (!PC1 == "H3K27AC")
+  ) %>%
+  mutate(intron = str_replace(P2, "^(.+):(.+?):(.+?):clu.+?_([+-])$", "chr\\1_\\2_\\3_\\4")) %>%
+  mutate(IntronAnnotation = case_when(
+    intron %in% NMD.specific.introns ~ "Annotated NMD",
+    intron %in% Intron.Annotations.basic$intron ~ "Annotated basic",
+    intron %in% Introns.Annotations.comprehensive$intron ~ "Annotated Not basic",
+    TRUE ~ "Unannotated"
+  )) %>%
+  # group_by(P1, PC1, PC2) %>%
+  # filter(trait.x.p.in.y == min(trait.x.p.in.y)) %>%
+  # ungroup() %>%
+  unite(TraitPair, P1, PC1, P2, PC2, remove=F) %>%
+  dplyr::select(TraitPair, beta1=beta.x, beta2=trait.x.beta.in.y, P1, PC1, P2, PC2, IntronAnnotation, sQTL.P = trait.x.p.in.y) %>%
+  mutate(Is.Concordant = sign(beta1)==sign(beta2)) %>%
+  mutate(ConsistentWithNMD = case_when(
+    !IntronAnnotation == "Annotated basic" & Is.Concordant ~ "Inconsistent with NMD",
+    !IntronAnnotation == "Annotated basic" & !Is.Concordant ~ "Consistent with NMD",
+    # IntronAnnotation == "Annotated basic" ~ NA_character_,
+    IntronAnnotation == "Annotated basic" & Is.Concordant ~ "Inconsistent with NMD",
+    IntronAnnotation == "Annotated basic" & !Is.Concordant ~ "Consistent with NMD"
+  )) %>%
+  distinct(PC1, P1, IntronAnnotation, .keep_all=T) %>%
+  group_by(P1) %>%
+  mutate(Is.sQTL = 
+           any(PC2 == "polyA.Splicing" & sQTL.P < 0.01)) %>%
+  ungroup() %>%
+  filter(!is.na(Is.sQTL)) %>%
+  filter(IntronAnnotation == 'Unannotated') %>%
+  mutate(score = case_when(
+    beta1*beta2 > Max ~ Max,
+    beta1*beta2 < -Max ~ -Max,
+    TRUE ~ beta1*beta2)) %>%
+  pull(score) %>% hist()
+  mutate(RgbCol = apply(col2rgb(ColMap(score)), 2, paste, collapse=',')) %>%
+  dplyr::select(TraitPair, score, RgbCol, P1, PC1, P2, PC2) %>%
+  unite(PCP1, PC1, P1, sep=';') %>%
+  unite(PCP2, PC2, P2, sep=';') %>%
+  gather("Trait1_Or_Trait2", "PCP", PCP1, PCP2) %>%
+  inner_join(PositionsOfFeatures) %>%
+  mutate(thickStart = start, thickEnd=end) %>%
+  unite(name, gid, TraitPair) %>%
+  dplyr::select(`#Chr`, start, end, name, score, strand, thickStart, thickEnd, RgbCol) %>%
+  arrange(`#Chr`, start, end) %>%
+  write_tsv("../code/scratch/CheckSlopeFeats.bed")
+
+
+#Write out bed files for browsing positions of things
+Compare_sQTL_eQTL_effects_across_datasets %>%
+
+
 
 ```
 
