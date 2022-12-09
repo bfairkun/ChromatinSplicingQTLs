@@ -13,7 +13,7 @@
 if(interactive()){
     # args <- scan(text=
     #              "scratch/TestHyprcolocPlots.tsv scratch/ColocPlotTest_", what='character')
-    args <- scan(text="scratch/test_hyprcoloc.txt.gz scratch/ColocExamples/Group_MetabolicAfterClumpingSnps.Plot. png", what='character')
+    args <- scan(text="scratch/PlotExampleColocs/List.tsv scratch/PlotExampleColocs/Plot pdf", what='character')
     # args <- scan(text="scratch/ForPoster/PotentialColocExamples.tsv scratch/ForPoster/Coloc_ png", what='character')
 } else{
     args <- commandArgs(trailingOnly=TRUE)
@@ -66,7 +66,13 @@ ExpressedGenes <- fread("QTLs/QTLTools/Expression.Splicing/PermutationPassForCol
 
 # dat %>% mutate(Color = recode(TopCandidateSNP, !!!(unique(dat$TopCandidateSNP) %>% setNames( color_pal_fun(length(.)), . )), .default="gray"))
 
-AllPhenotypesTrueLocation <- Sys.glob("QTLs/QTLTools/*/OnlyFirstReps.sorted.qqnorm.bed.gz") %>%
+dat.all.orig <- fread(hyprcoloc_output_f_in) %>%
+    inner_join(ExpressedGenes, by=c("GeneLocus"="phe_id")) %>%
+    separate(Trait, into = c("phe_class","phe_id"), sep=";")
+
+phe_classes <- dat.all.orig %>% pull(phe_class) %>% unique()
+
+AllPhenotypesTrueLocation <- paste0("QTLs/QTLTools/", phe_classes,"/OnlyFirstReps.sorted.qqnorm.bed.gz") %>%
     setNames(str_replace(., "QTLs/QTLTools/(.+?)/OnlyFirstReps.sorted.qqnorm.bed.gz", "\\1")) %>%
     lapply(fread, select=1:6) %>%
     bind_rows(.id = "phe_class") %>%
@@ -80,13 +86,12 @@ AllPhenotypesTrueLocation <- Sys.glob("QTLs/QTLTools/*/OnlyFirstReps.sorted.qqno
                             TRUE ~ end
                             ))
 
-dat.all <- fread(hyprcoloc_output_f_in) %>%
-    inner_join(ExpressedGenes, by=c("GeneLocus"="phe_id")) %>%
-    separate(Trait, into = c("phe_class","phe_id"), sep=";") %>%
+dat.all <- dat.all.orig %>%
     base::split(.$GeneLocus)
 
 
 for (dat in dat.all){
+    # dat <- dat.all[[1]]
     ColorsMap <- dat %>% pull(TopCandidateSNP) %>% unique() %>%
         na.omit() %>% sort() %>%
         setNames(color_pal_fun(length(.)), .)

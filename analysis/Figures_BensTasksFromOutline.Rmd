@@ -3,21 +3,13 @@ title: "202211107_Figures_sQTLeQTL_effects"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include=T}
 knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
-```
 
-
-## Intro
-
-Here I will plot some stuff related to prospective figure3 that links "unexplained" (read: "Non-enhancer/promoter" based) QTLs, largely to sQTL/NMD effects.
-
-### set theme
-
-```{r}
 library(tidyverse)
 library(RColorBrewer)
 library(data.table)
+library(qvalue)
 
 # Set theme
 theme_set(
@@ -26,7 +18,15 @@ theme_set(
 
 # I use layer a lot, to rotate long x-axis labels
 Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+```
 
+## Intro
+
+Here I will plot some figures that will likely be used in publication. I will write each code block to be self-contained, so you could in theory re-make a figure object just by running the set up-code block at the top of this Rmd, then running the code-block corresponding to the figure described in the section title. and to save the figure object, you would often also need to run the following code block with a call to the `ggsave` function - since Rmarkdown is buggy when I call `ggsave` I have been putting `ggsave` calls in seperate code blocks with `eval=F` for Rmarkdown rendering). I wrote all the relative filepaths assuming this code would be run from the `analysis` directory.
+
+### test theme
+
+```{r}
 #test theme
 p <- ggplot(mtcars, aes(mpg, wt, color=as.factor(cyl))) +
   geom_point() +
@@ -39,13 +39,397 @@ p +
 
 ### highlight prevalence of NMD-targeting and unannotated introns in chRNA
 
+```{r}
+genes <- read_tsv("../code/ExpressionAnalysis/polyA/ExpressedGeneList.txt", col_names = c("chrom", "start", "stop", "name", "score", "strand"))
+
+leafviz_script.dat <- fread("../code/ReferenceGenome/Annotations/gencode.v34.primary_assembly.annotation.gtf_all_introns.bed.gz", col.names=c("chrom", "start", "stop", "gene", "gene_id","strand","transcript", "intron_num", "transcript_tag", "tag"))
+
+IntronAnnotations <- leafviz_script.dat %>%
+  group_by(chrom, start, stop, strand, gene_id) %>%
+  summarise(Annotation = case_when(
+    all(transcript_tag=="nonsense_mediated_decay") ~ "Unique to nonsense_mediated_decay",
+    all(transcript_tag=="non_stop_decay") ~ "Unique to non_stop_decay",
+    all(transcript_tag=="processed_transcript") ~ "Unique to processed_transcript",
+    all(transcript_tag=="retained_intron") ~ "Unique to retained_intron",
+    any(transcript_tag=="protein_coding") ~ "In protein_coding",
+    TRUE ~ "Other"
+  )) %>%
+  ungroup()
+
+
+
+SpliceJunctionCountTables <- Sys.glob("../code/SplicingAnalysis/leafcutter/NormalizedPsiTables/PSI.JunctionCounts.*.bed.gz") %>%
+  setNames(str_replace(., "../code/SplicingAnalysis/leafcutter/NormalizedPsiTables/PSI.JunctionCounts.(.+?).bed.gz", "\\1")) %>%
+  lapply(fread)
+
+
+
+AddIntronAnnotations <- function(df){
+  df %>%
+  left_join(
+    IntronAnnotations %>%
+      dplyr::select(`#Chrom`=chrom, start, end=stop, strand, gene_id, Annotation),
+    by=c("#Chrom", "start", "end", "strand")) %>%
+    dplyr::select(1:6, gene_id, Annotation, everything()) %>%
+    replace_na(list(Annotation="Unannotated"))
+}
+
+Long.table <- lapply(SpliceJunctionCountTables, AddIntronAnnotations) %>%
+  lapply(pivot_longer,names_to="Sample", values_to="Count", -c(1:8)) %>%
+  bind_rows(.id="Dataset")
+
+P.i.dat <- Long.table %>%
+  group_by(Sample, Dataset, Annotation) %>%
+  summarise(SumCounts = sum(Count, na.rm=T)) %>%
+  ungroup() %>%
+  group_by(Sample, Dataset) %>%
+  mutate(Percent = SumCounts / sum(SumCounts) * 100) %>%
+  ungroup() %>%
+  mutate(Dataset = recode(Dataset, !!!c("Expression.Splicing"="polyA RNA", "chRNA.Expression.Splicing"="chRNA", "MetabolicLabelled.30min"="30min 4sU RNA", "MetabolicLabelled.60min"="60min 4sU RNA"))) %>%
+  mutate(Dataset = factor(Dataset, levels=c("chRNA", "30min 4sU RNA", "60min 4sU RNA", "polyA RNA")))
+
+P.i <-
+  P.i.dat %>%
+  filter(Annotation %in% c("In protein_coding", "Unique to nonsense_mediated_decay", "Unannotated")) %>%
+  mutate(Annotation = recode(Annotation, !!!c("In protein_coding"="Annotated in functional isoform", "Unique to nonsense_mediated_decay"="Annotated in NMD-targeted isoform"))) %>%
+  mutate(Annotation=factor(Annotation, levels=c("Annotated in functional isoform", "Annotated in NMD-targeted isoform", "Unannotated"))) %>%
+  ggplot(aes(x=Dataset, y=Percent, color=Annotation)) +
+  geom_jitter(alpha=0.2, size=0.5) +
+  geom_boxplot(outlier.shape=NA, color='black', fill=NA) +
+  facet_wrap(~Annotation, scales="free_y", labeller = label_wrap_gen(width=14)) +
+  scale_colour_brewer(type="qual", palette="Dark2") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1), legend.position = "none") +
+  labs(y=str_wrap("Percent of splice junction reads", 20), x=NULL) +
+  guides(colour = guide_legend(override.aes = list(alpha = 1))) +
+  theme(strip.text.x = element_text(size = 12))
+P.i
+
+
+```
+
+```{r, eval=F}
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/RoughDraftFig_1C_FractionSpliceJunctionsByCategory.pdf", P.i, height=3, width=5.5)
+
+IntronAnnotations %>%
+  write_tsv("../code/SplicingAnalysis/IntronTypeAnnotations.txt.gz")
+
+```
+
+```{r, eval=F}
+## Figure out NMD discrepency in earlier version of NMD prevalence
+## Previous NMD intron list
+NMD.transcript.introns <- read_tsv("../code/SplicingAnalysis/Annotations/NMD/NMD_trancsript_introns.bed.gz", col_names=c("chrom", "start", "stop", "name", "score", "strand")) %>%
+  mutate(stop=stop+1) %>%
+  unite(intron, chrom:stop, strand)
+
+Non.NMD.transcript.introns <- read_tsv("../code/SplicingAnalysis/Annotations/NMD/NonNMD_trancsript_introns.bed.gz", col_names=c("chrom", "start", "stop", "name", "score", "strand")) %>%
+  mutate(stop=stop+1) %>%
+  unite(intron, chrom:stop, strand)
+
+
+Old.NMD.specific.introns <- setdiff(NMD.transcript.introns$intron, Non.NMD.transcript.introns$intron)
+
+Old.NMD.specific.introns %>% unique() %>% length()
+
+New.NMD.specific.introns <- IntronAnnotations %>%
+  filter(Annotation == "Unique to nonsense_mediated_decay") %>%
+  unite(intron, chrom:stop, strand) %>% pull(intron) %>% unique()
+
+setdiff(Old.NMD.specific.introns, New.NMD.specific.introns) %>% length()
+
+SpecificToNew <- setdiff(New.NMD.specific.introns, Old.NMD.specific.introns)
+
+Non.NMD.transcript.introns %>%
+  mutate(IsSpecificToNew = intron %in% SpecificToNew) %>%
+  count(IsSpecificToNew)
+
+NMD.transcript.introns %>%
+  mutate(IsSpecificToNew = intron %in% SpecificToNew) %>%
+  count(IsSpecificToNew)
+```
+
+I think the discrepency arises from how I parse gtf files with `grep` and `bedparse` versus using leafcutter's gtf2leafcutter script.
+
 ### Numbers of QTLs
+
+```{r}
+PeaksToTSS <- Sys.glob("../code/Misc/PeaksClosestToTSS/*_assigned.tsv.gz") %>%
+  setNames(str_replace(., "../code/Misc/PeaksClosestToTSS/(.+?)_assigned.tsv.gz", "\\1")) %>%
+  lapply(read_tsv) %>%
+  bind_rows(.id="ChromatinMark") %>%
+  mutate(GenePeakPair = paste(gene, peak, sep = ";")) %>%
+  distinct(ChromatinMark, peak, gene, .keep_all=T)
+
+PhenotypeAliases <- read_tsv("../data/Phenotypes_recode_for_Plotting.txt")
+
+PhenotypeColors <- readxl::read_excel("../data/ColorsForPhenotypes.xlsx")
+PhenotypeColors <- readxl::read_excel("../data/ColorsForPhenotypes.xlsx")
+
+
+dat.coloc.tidy <- read_tsv("../code/hyprcoloc/Results/ForColoc/MolColocNonRedundantFullSplicing/tidy_results_OnlyColocalized.txt.gz") %>%
+  separate(phenotype_full, into=c("PC", "P"), sep=";", remove=F)
+
+PhenotypeList <- dat.coloc.tidy %>% pull(PC) %>% unique() %>% union(c("polyA.Splicing.Subset_YRI", "polyA.IER.Subset_YRI"))
+
+GroupedPermutationPassPhenotypes <- c("polyA.Splicing", "MetabolicLabelled.30min.Splicing", "MetabolicLabelled.60min.Splicing", "APA_Nuclear", "APA_Total", "polyA.Splicing.Subset_YRI")
+UngroupedPermutationPassPhenotypes <- setdiff(PhenotypeList, GroupedPermutationPassPhenotypes)
+
+UngroupedQTLs <- paste0("../code/QTLs/QTLTools/", UngroupedPermutationPassPhenotypes,"/PermutationPass.FDR_Added.txt.gz") %>%
+  setNames(str_replace(., "../code/QTLs/QTLTools/(.+?)/PermutationPass.FDR_Added.txt.gz", "\\1")) %>%
+  lapply(fread, sep=' ') %>%
+  bind_rows(.id="PC")
+
+#TEMP UNTIL FINISHED SNAKEMAKE
+GroupedPermutationPassPhenotypes <- setdiff(GroupedPermutationPassPhenotypes, c("APA_Nuclear", "APA_Total"))
+
+GroupedQTLs <- paste0("../code/QTLs/QTLTools/", GroupedPermutationPassPhenotypes,"/GroupedPermutationPass.FDR_Added.txt.gz") %>%
+  setNames(str_replace(., "../code/QTLs/QTLTools/(.+?)/GroupedPermutationPass.FDR_Added.txt.gz", "\\1")) %>%
+  lapply(fread, sep=' ') %>%
+  bind_rows(.id="PC")
+
+
+AllQTLs <- bind_rows(GroupedQTLs, UngroupedQTLs) %>%
+  group_by(PC) %>%
+  summarise(
+    TestFeats = n(),
+    NumQTLs = sum(q<0.1, na.rm=T)
+  ) %>%
+  filter(!PC %in% c("MetabolicLabelled.30min.IER", "MetabolicLabelled.30min.Splicing", "MetabolicLabelled.60min.IER", "MetabolicLabelled.60min.Splicing"))
+  
+#TODO
+# AllQTLs %>%
+#   ggplot(aes(x=PC, color=)) +
+#   geom_col()
+
+```
+
 
 ## Figure2
 
+### Colocalization framework
+
+```{r}
+PhenotypeAliases <- read_tsv("../data/Phenotypes_recode_for_Plotting.txt")
+
+dat.coloc.tidy <- read_tsv("../code/hyprcoloc/Results/ForColoc/MolColocNonRedundantFullSplicing/tidy_results_OnlyColocalized.txt.gz") %>%
+  separate(phenotype_full, into=c("PC", "P"), sep=";", remove=F)
+
+dat.coloc <- read_tsv("../code/hyprcoloc/Results/ForColoc/MolColocNonRedundantFullSplicing/results.txt.gz") 
+
+# Find nice example with eQTL+hQTL effect and seperate sQTL effect
+dat.to.plot <- dat.coloc.tidy %>%
+  left_join(PhenotypeAliases) %>%
+  filter(PC %in% c("polyA.Splicing", "H3K27AC", "Expression.Splicing.Subset_YRI")) %>%
+  group_by(Locus, iteration) %>%
+  mutate(
+    SplicingCluster = all(PC == "polyA.Splicing"),
+    ChromatinExpressionCluster = all(PC %in% c("H3K27AC", "Expression.Splicing.Subset_YRI")) & any(PC == "Expression.Splicing.Subset_YRI") ) %>%
+  filter(n() > 1) %>%
+  ungroup() %>%
+  group_by(Locus) %>%
+  filter(any(SplicingCluster) & any(ChromatinExpressionCluster)) %>%
+  ungroup() %>%
+  group_by(PC, Locus, iteration) %>%
+  slice_head(n=2) %>%
+  ungroup()
+```
+
+```{r, eval=F}
+dir.create("../code/scratch/PlotExampleColocs")
+
+dat.coloc %>%
+  inner_join(
+    dat.to.plot %>%
+      dplyr::select(GeneLocus=Locus, Trait=phenotype_full)
+  ) %>%
+  group_by(GeneLocus) %>%
+  filter(n()>2) %>%
+  ungroup()
+  write_tsv("../code/scratch/PlotExampleColocs/List.tsv")
+  
+```
+
+```{bash, eval=F}
+cd /project2/yangili1/bjf79/ChromatinSplicingQTLs/code
+conda activate r_essentials
+Rscript scripts/PlotColocFromHyprcolocResults.R scratch/PlotExampleColocs/List.tsv scratch/PlotExampleColocs/Plot pdf
+
+```
+
+
 ### heatmap of effects between types of phenotypes highlighting the expected strong enrichment in enhancers/promoters
 
+I've about many different ways of making a heatmap. See [this notebook](https://bfairkun.github.io/ChromatinSplicingQTLs/20220713_PlotHeatmapManyWays.html). They all show something slightly different. We might consider including a couple of these different heatmaps, but for the main figures we probably only have space to show one. I suggest showing the heatmap of effect size correlations among colocalized phenotypes. My reasons are as follows:
+
+- This type of heatmap doesn't even attempt to try to explain "what fraction of eQTLs are explained my x mechanism", but I think that is ok because that question is a bit redudnant with the next plot.
+- I think this plot of correlation effect sizes is a nice segway to understanding some subsequent analyses (Carlos' amplitude versus directional transcription QTL effects are based on concordance of effect sizes), and also later analsis of sQTL vs eQTL effect sizes
+- I think this plot is perhaps the most convincing version of the plot to say something along the lines of "most ncRNAs are pleiotropic transcription effects, since their directions are by in large consistent with eQTLs which I would not expect if the lncRNAs were effecting target genes through complex mechanisms that involve lncRNA-mediated recruitment of trans-factors"
+
+I can quantify the strength of these correlations a few different ways. For example, spearman correlation coef, pearson coef, fraction same sign effects, etc. I think fraction same sign effects might be the most intuitive and also will have higher numbers which might just look nicer from a glance - so let's start there.  Also, for sake of space, I am going to make a few versions of this plot but I'm just going to save the version that has a smaller subset of interesting phenotypes worth focusing on in the main text.
+
+```{r}
+PhenotypeAliases <- read_tsv("../data/Phenotypes_recode_for_Plotting.txt")
+
+
+dat.coloc.tidy <- read_tsv("../code/hyprcoloc/Results/ForColoc/MolColocNonRedundantFullSplicing/tidy_results_OnlyColocalized.txt.gz") %>%
+  separate(phenotype_full, into=c("PC", "P"), sep=";", remove=F)
+
+dat.coloc.tidy$PC %>% unique()
+
+P <- dat.coloc.tidy %>%
+  filter(PC %in% c("CTCF","ProCap","APA_Total","chRNA.Expression_ncRNA","Expression.Splicing.Subset_YRI","H3K27AC", "H3K4ME1", "H3K4ME3", "polyA.Splicing", "chRNA.Splicing", "MetabolicLabelled.30min", "MetabolicLabelled.60min", "H3K36ME3", "chRNA.Expression.Splicing")) %>%
+  left_join(
+    PhenotypeAliases %>% dplyr::select(PC, ShorterAlias)
+  ) %>%
+  dplyr::select(-PC) %>%
+  dplyr::select(PC = ShorterAlias, everything()) %>%
+  # pull(PC) %>% unique()
+  mutate(PC = factor(PC, levels=c("CTCF", "H3K4ME1", "H3K27AC", "H3K4ME3", "ProCap", "ncRNA_chRNA", "H3K36ME3", "Expression_chRNA", "Expression_Metabolic.30min", "Expression_Metabolic.60min", "Expression_polyA","Splicing_chRNA", "Splicing_polyA", "APA_Total"))) %>%
+  left_join(., ., by=c("Locus", "snp")) %>%
+  filter(!((P.x == P.y) & (PC.x == PC.y))) %>%
+  group_by(PC.x, PC.y) %>%
+  # summarise(cor = cor(beta.x, beta.y, method="spearman")) %>%
+  summarise(
+    NumSameSign = sum(sign(beta.x)==sign(beta.y)),
+    n = n(),
+    cor = sum(sign(beta.x)==sign(beta.y))/n()) %>%
+  ungroup() %>%
+  complete(PC.x, PC.y) %>%
+  mutate(label = paste0("frac(",NumSameSign, ",", n, ")")) %>%
+  ggplot(aes(x=PC.x, y=PC.y, fill=cor)) +
+  geom_raster() +
+  geom_text(aes(label = label),parse = TRUE, color="black", size=1) +
+  scale_fill_gradient2(midpoint=0.5, limits=c(0,1)) +
+  scale_x_discrete(expand=c(0,0)) +
+  scale_y_discrete(expand=c(0,0), limits=rev) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+  labs(x="TraitA Phenotype class", y="TraitB Phenotype class", fill=str_wrap("Fraction same sign effects", 10),
+       caption = "Number and relative sign of colocalized trait pairs")
+P
+
+```
+
+
+```{r,eval=F}
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/RoughDraftFig_2B_EffectSizeCorrelationsHeatmap.pdf", P, height=5, width=7)
+
+```
+
+
 ### eQTLs colocalize with many different xQTLs, but chromatin effects are the strongest (something like the bar plot I showed in lab meeting with the number of eGenes that colocalize with an xQTL)
+
+```{r}
+TotalNum.eQTLs <- read_delim("../code/QTLs/QTLTools/Expression.Splicing.Subset_YRI/PermutationPassForColoc.txt.gz", delim=' ') %>%
+  mutate(q = qvalue(adj_beta_pval)$qvalues)
+
+Num_eQTLs_attemptedColoc <- TotalNum.eQTLs %>%
+  filter(adj_beta_pval < 0.01) %>%
+  nrow()
+Num_eQTLs_attemptedColoc
+
+TotalNum.eQTLs %>%
+  filter(q < 0.01) %>%
+  nrow()
+
+TotalNum.eQTLs %>%
+  filter(adj_beta_pval < 0.01) %>%
+  pull(q) %>% max()
+  
+  
+
+
+
+PhenotypeAliases <- read_tsv("../data/Phenotypes_recode_for_Plotting.txt")
+
+PeaksToTSS <- Sys.glob("../code/Misc/PeaksClosestToTSS/*_assigned.tsv.gz") %>%
+  setNames(str_replace(., "../code/Misc/PeaksClosestToTSS/(.+?)_assigned.tsv.gz", "\\1")) %>%
+  lapply(read_tsv) %>%
+  bind_rows(.id="ChromatinMark") %>%
+  mutate(GenePeakPair = paste(gene, peak, sep = ";")) %>%
+  distinct(ChromatinMark, peak, gene, .keep_all=T)
+
+dat.coloc.tidy <- read_tsv("../code/hyprcoloc/Results/ForColoc/MolColocNonRedundantFullSplicing/tidy_results_OnlyColocalized.txt.gz") %>%
+  separate(phenotype_full, into=c("PC", "P"), sep=";")
+
+dat.coloc.tidy %>%
+  left_join(PhenotypeAliases) %>%
+  group_by(Locus) %>%
+  filter(any(PC=="Expression.Splicing.Subset_YRI")) %>%
+  dplyr::rename(Grouping.PC.ID = ShorterAlias2) %>%
+  count(Grouping.PC.ID) %>%
+  ungroup() %>%
+  count(Grouping.PC.ID, name="Num_eQTLs_coloc") %>%
+  filter(!Grouping.PC.ID=="Expression_polyA") %>%
+  ggplot(aes(x=Grouping.PC.ID, y=Num_eQTLs_coloc/Num_eQTLs_attemptedColoc*100)) +
+  geom_col() +
+  geom_text(aes(label=Num_eQTLs_coloc), angle=90, hjust=0, size=3) +
+  scale_y_continuous(limits = c(0,100)) +
+  Rotate_x_labels +
+  labs(caption=str_wrap("Number eQTLs colocalized with an xQTL, out of 2227 eQTLs (FDR ~2.8%)", 30), y=str_wrap("Percent eQTLs colocalizing with an xQTL", 15), x="QTL category")
+
+dat.coloc.tidy %>%
+  left_join(PhenotypeAliases) %>%
+  mutate(GenePeakPair = paste(Locus, P, sep=';')) %>%
+  mutate(Grouping.PC.ID = case_when(
+    (PC %in% c("H3K4ME3", "H3K4ME1", "H3K27AC")) & (GenePeakPair %in% PeaksToTSS$GenePeakPair) ~ "Activating chromatin mark (TSS)",
+    (PC %in% c("H3K4ME3", "H3K4ME1", "H3K27AC")) ~ "Activating chromatin mark (Distal)",
+    TRUE ~ ShorterAlias2
+  )) %>%
+  group_by(Locus) %>%
+  filter(any(PC=="Expression.Splicing.Subset_YRI")) %>%
+  count(Grouping.PC.ID) %>%
+  ungroup() %>%
+  count(Grouping.PC.ID, name="Num_eQTLs_coloc") %>%
+  filter(!Grouping.PC.ID=="Expression_polyA") %>%
+  ggplot(aes(x=Grouping.PC.ID, y=Num_eQTLs_coloc/Num_eQTLs_attemptedColoc*100)) +
+  geom_col() +
+  geom_text(aes(label=Num_eQTLs_coloc), angle=90, hjust=0, size=3) +
+  scale_y_continuous(limits = c(0,100)) +
+  # scale_x_discrete(labels = function(x) str_wrap(x, width = 20)) +
+  Rotate_x_labels +
+  labs(caption=str_wrap("Number eQTLs colocalized with an xQTL, out of 2227 eQTLs (FDR ~2.8%).\nActivating chromatin mark=H3K27AC|H3K4ME3|H3K4ME1", 70), y=str_wrap("Percent eQTLs colocalizing with an xQTL", 15), x="QTL category")
+
+P <- bind_rows(
+  dat.coloc.tidy %>%
+    left_join(PhenotypeAliases) %>%
+    mutate(GenePeakPair = paste(Locus, P, sep=';')) %>%
+    mutate(Grouping.PC.ID = case_when(
+      (PC %in% c("H3K4ME3", "H3K4ME1", "H3K27AC")) & (GenePeakPair %in% PeaksToTSS$GenePeakPair) ~ "Activating chromatin mark (TSS)",
+      (PC %in% c("H3K4ME3", "H3K4ME1", "H3K27AC")) ~ "Activating chromatin mark (Distal)",
+      TRUE ~ ShorterAlias2
+    )),
+  dat.coloc.tidy %>%
+    left_join(PhenotypeAliases) %>%
+    mutate(Grouping.PC.ID = case_when(
+      (PC %in% c("H3K4ME3", "H3K4ME1", "H3K27AC")) ~ "Any activating chromatin mark (Distal|TSS)",
+      TRUE ~ ShorterAlias2
+    )) %>%
+    filter(Grouping.PC.ID == "Any activating chromatin mark (Distal|TSS)")
+) %>%
+  group_by(Locus) %>%
+  filter(any(PC=="Expression.Splicing.Subset_YRI")) %>%
+  count(Grouping.PC.ID) %>%
+  ungroup() %>%
+  count(Grouping.PC.ID, name="Num_eQTLs_coloc") %>%
+  filter(!Grouping.PC.ID=="Expression_polyA") %>%
+  filter(Grouping.PC.ID %in% c("APA", "Activating chromatin mark (Distal)", "Activating chromatin mark (TSS)", "Any activating chromatin mark (Distal|TSS)", "CTCF", "Splicing_polyA", "ncRNA_chRNA")) %>%
+  mutate(Grouping.PC.ID = factor(Grouping.PC.ID, levels=c("CTCF", "Activating chromatin mark (Distal)", "Activating chromatin mark (TSS)", "Any activating chromatin mark (Distal|TSS)", "ncRNA_chRNA", "Splicing_polyA", "APA"))) %>%
+  ggplot(aes(x=Grouping.PC.ID, y=Num_eQTLs_coloc/Num_eQTLs_attemptedColoc*100)) +
+  geom_col() +
+  geom_text(aes(label=Num_eQTLs_coloc), angle=90, hjust=0, size=6) +
+  scale_y_continuous(limits = c(0,60)) +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 20)) +
+  Rotate_x_labels +
+  labs(caption=str_wrap("Number eQTLs colocalized with an xQTL, out of 2227 eQTLs (FDR ~2.8%).\nActivating chromatin mark=H3K27AC|H3K4ME3|H3K4ME1", 70), y=str_wrap("Percent eQTLs colocalizing with an xQTL", 15), x="QTL category")
+P
+
+```
+
+```{r, eval=F}
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/RoughDraftFig_2C_NumEQTLsThatColocWithXQTL.pdf", P, height=5, width=7)
+```
+
 
 ## Figure3
 

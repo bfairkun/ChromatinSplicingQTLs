@@ -67,9 +67,10 @@ Count.table.StandardNormFactors <- GeneCounts.filtered %>%
 
 
 CPM.StandardNormFactors <- Count.table.StandardNormFactors %>%
-  cpm(prior.count=0.1, log=T) 
+  cpm(prior.count=0.1, log=F) 
 
 CPM.StandardNormFactors %>%
+  log2() %>%
   apply(1, mean) %>% hist()
 
 ```
@@ -104,7 +105,7 @@ CPM.StandardNormFactors.tidy %>%
 set.seed(0)
 CPM.StandardNormFactors.tidy %>%
   filter(LibraryType == "polyA") %>%
-  sample_n_of(10, hgnc_symbol) %>% 
+  sample_n_of(20, hgnc_symbol) %>% 
   ggplot(aes(x=dose.nM, y=CPM)) +
   geom_line() +
   geom_point() + 

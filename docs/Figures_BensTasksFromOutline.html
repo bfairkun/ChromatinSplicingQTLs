@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+
+
+<title>202211107_Figures_sQTLeQTL_effects</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/master/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">myproject</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">202211107_Figures_sQTLeQTL_effects</h1>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2022-12-09
+</p>
+<p>
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 1
+</p>
+<p>
+<strong>Knit directory:</strong> <code>ChromatinSplicingQTLs/analysis/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
+</p>
+<p>
+This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
+  href="https://github.com/jdblischak/workflowr">workflowr</a> (version 1.6.2). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges"> <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted changes </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguncommittedchanges" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The R Markdown file has unstaged changes. To know which version of the R Markdown file created these results, you’ll want to first commit it to the Git repo. If you’re still working on the analysis, you can ignore this warning. When you’re finished, you can run <code>wflow_publish</code> to commit the R Markdown file and build the HTML.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20191126code"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Seed:</strong> <code>set.seed(20191126)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20191126code" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20191126)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Session information:</strong> recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be confident that you successfully produced the results during this run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstree43323413dd523bf85939ae004e4c8a7667f00a96targetblank4332341a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/43323413dd523bf85939ae004e4c8a7667f00a96" target="_blank">4332341</a> </a>
+</p>
+</div>
+<div id="strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstree43323413dd523bf85939ae004e4c8a7667f00a96targetblank4332341a" class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/43323413dd523bf85939ae004e4c8a7667f00a96" target="_blank">4332341</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    analysis/.Rhistory
+    Ignored:    analysis/figure/
+    Ignored:    code/.DS_Store
+    Ignored:    code/.RData
+    Ignored:    code/._.DS_Store
+    Ignored:    code/._README.md
+    Ignored:    code/._report.html
+    Ignored:    code/.ipynb_checkpoints/
+    Ignored:    code/.snakemake/
+    Ignored:    code/APA_Processing/
+    Ignored:    code/Alignments/
+    Ignored:    code/ChromHMM/
+    Ignored:    code/ENCODE/
+    Ignored:    code/ExpressionAnalysis/
+    Ignored:    code/FastqFastp/
+    Ignored:    code/FastqFastpSE/
+    Ignored:    code/Genotypes/
+    Ignored:    code/H3K36me3_CutAndTag.pdf
+    Ignored:    code/IntronSlopes/
+    Ignored:    code/Metaplots/
+    Ignored:    code/Misc/
+    Ignored:    code/MiscCountTables/
+    Ignored:    code/Multiqc/
+    Ignored:    code/Multiqc_chRNA/
+    Ignored:    code/NonCodingRNA/
+    Ignored:    code/NonCodingRNA_annotation/
+    Ignored:    code/PeakCalling/
+    Ignored:    code/Phenotypes/
+    Ignored:    code/PlotGruberQTLs/
+    Ignored:    code/PlotQTLs/
+    Ignored:    code/ProCapAnalysis/
+    Ignored:    code/QC/
+    Ignored:    code/QTL_SNP_Enrichment/
+    Ignored:    code/QTLs/
+    Ignored:    code/RPKM_tables/
+    Ignored:    code/ReferenceGenome/
+    Ignored:    code/Rplots.pdf
+    Ignored:    code/Session.vim
+    Ignored:    code/SmallMolecule/
+    Ignored:    code/SplicingAnalysis/
+    Ignored:    code/TODO
+    Ignored:    code/Tehranchi/
+    Ignored:    code/bigwigs/
+    Ignored:    code/bigwigs_FromNonWASPFilteredReads/
+    Ignored:    code/config/.DS_Store
+    Ignored:    code/config/._.DS_Store
+    Ignored:    code/config/.ipynb_checkpoints/
+    Ignored:    code/config/config.local.yaml
+    Ignored:    code/dag.pdf
+    Ignored:    code/dag.png
+    Ignored:    code/dag.svg
+    Ignored:    code/debug.ipynb
+    Ignored:    code/debug_python.ipynb
+    Ignored:    code/deepTools/
+    Ignored:    code/featureCounts/
+    Ignored:    code/gwas_summary_stats/
+    Ignored:    code/hyprcoloc/
+    Ignored:    code/igv_session.xml
+    Ignored:    code/log
+    Ignored:    code/logs/
+    Ignored:    code/notebooks/.ipynb_checkpoints/
+    Ignored:    code/pi1/
+    Ignored:    code/rules/.SplicingAnalysis.smk.swp
+    Ignored:    code/rules/.ipynb_checkpoints/
+    Ignored:    code/rules/OldRules/
+    Ignored:    code/rules/notebooks/
+    Ignored:    code/scratch/
+    Ignored:    code/scripts/.ipynb_checkpoints/
+    Ignored:    code/scripts/GTFtools_0.8.0/
+    Ignored:    code/scripts/__pycache__/
+    Ignored:    code/scripts/liftOverBedpe/liftOverBedpe.py
+    Ignored:    code/snakemake.dryrun.log
+    Ignored:    code/snakemake.log
+    Ignored:    code/snakemake.sbatch.log
+    Ignored:    code/test.introns.bed
+    Ignored:    code/test.introns2.bed
+    Ignored:    data/.DS_Store
+    Ignored:    data/._.DS_Store
+    Ignored:    data/._20220414203249_JASPAR2022_combined_matrices_25818_jaspar.txt
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-10.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-11.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-2.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-3.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-4.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-5.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-6.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-7.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-8.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022.csv
+    Ignored:    data/Metaplots/.DS_Store
+
+Untracked files:
+    Untracked:  code/snakemake_profiles/slurm/__pycache__/
+
+Unstaged changes:
+    Modified:   analysis/20221202_ProcessSmallMolecule.Rmd
+    Modified:   analysis/Figures_BensTasksFromOutline.Rmd
+    Modified:   code/rules/QTLTools.smk
+    Modified:   code/scripts/GenometracksByGenotype
+    Modified:   code/scripts/PlotColocFromHyprcolocResults.R
+    Modified:   code/scripts/hyprcoloc_gwas2.R
+    Modified:   data/Phenotypes_recode_for_Plotting.txt
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+
+<p>
+These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/Figures_BensTasksFromOutline.Rmd</code>) and HTML (<code>docs/Figures_BensTasksFromOutline.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/cad3bd6912c55814bfc120da736f4f55b3fbc1f6/analysis/Figures_BensTasksFromOutline.Rmd" target="_blank">cad3bd6</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2022-11-16
+</td>
+<td>
+misc updates
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<pre class="r"><code>knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+
+library(tidyverse)</code></pre>
+<pre><code>── Attaching packages ─────────────────────────────────────── tidyverse 1.3.0 ──</code></pre>
+<pre><code>✔ ggplot2 3.3.6     ✔ purrr   0.3.4
+✔ tibble  3.1.7     ✔ dplyr   1.0.9
+✔ tidyr   1.2.0     ✔ stringr 1.4.0
+✔ readr   1.3.1     ✔ forcats 0.4.0</code></pre>
+<pre><code>── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>library(RColorBrewer)
+library(data.table)</code></pre>
+<pre><code>
+Attaching package: &#39;data.table&#39;</code></pre>
+<pre><code>The following objects are masked from &#39;package:dplyr&#39;:
+
+    between, first, last</code></pre>
+<pre><code>The following object is masked from &#39;package:purrr&#39;:
+
+    transpose</code></pre>
+<pre class="r"><code>library(qvalue)
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family=&quot;Helvetica&quot;)))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels &lt;- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))</code></pre>
+<div id="intro" class="section level2">
+<h2>Intro</h2>
+<p>Here I will plot some figures that will likely be used in publication. I will write each code block to be self-contained, so you could in theory re-make a figure object just by running the set up-code block at the top of this Rmd, then running the code-block corresponding to the figure described in the section title. and to save the figure object, you would often also need to run the following code block with a call to the <code>ggsave</code> function - since Rmarkdown is buggy when I call <code>ggsave</code> I have been putting <code>ggsave</code> calls in seperate code blocks with <code>eval=F</code> for Rmarkdown rendering). I wrote all the relative filepaths assuming this code would be run from the <code>analysis</code> directory.</p>
+<div id="test-theme" class="section level3">
+<h3>test theme</h3>
+<pre class="r"><code>#test theme
+p &lt;- ggplot(mtcars, aes(mpg, wt, color=as.factor(cyl))) +
+  geom_point() +
+  scale_colour_brewer(palette = &quot;Set2&quot;, type=&quot;qual&quot;)
+p +
+  Rotate_x_labels</code></pre>
+<p><img src="figure/Figures_BensTasksFromOutline.Rmd/unnamed-chunk-1-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="figure1" class="section level2">
+<h2>Figure1</h2>
+<div id="highlight-prevalence-of-nmd-targeting-and-unannotated-introns-in-chrna" class="section level3">
+<h3>highlight prevalence of NMD-targeting and unannotated introns in chRNA</h3>
+<pre class="r"><code>genes &lt;- read_tsv(&quot;../code/ExpressionAnalysis/polyA/ExpressedGeneList.txt&quot;, col_names = c(&quot;chrom&quot;, &quot;start&quot;, &quot;stop&quot;, &quot;name&quot;, &quot;score&quot;, &quot;strand&quot;))
+
+leafviz_script.dat &lt;- fread(&quot;../code/ReferenceGenome/Annotations/gencode.v34.primary_assembly.annotation.gtf_all_introns.bed.gz&quot;, col.names=c(&quot;chrom&quot;, &quot;start&quot;, &quot;stop&quot;, &quot;gene&quot;, &quot;gene_id&quot;,&quot;strand&quot;,&quot;transcript&quot;, &quot;intron_num&quot;, &quot;transcript_tag&quot;, &quot;tag&quot;))
+
+IntronAnnotations &lt;- leafviz_script.dat %&gt;%
+  group_by(chrom, start, stop, strand, gene_id) %&gt;%
+  summarise(Annotation = case_when(
+    all(transcript_tag==&quot;nonsense_mediated_decay&quot;) ~ &quot;Unique to nonsense_mediated_decay&quot;,
+    all(transcript_tag==&quot;non_stop_decay&quot;) ~ &quot;Unique to non_stop_decay&quot;,
+    all(transcript_tag==&quot;processed_transcript&quot;) ~ &quot;Unique to processed_transcript&quot;,
+    all(transcript_tag==&quot;retained_intron&quot;) ~ &quot;Unique to retained_intron&quot;,
+    any(transcript_tag==&quot;protein_coding&quot;) ~ &quot;In protein_coding&quot;,
+    TRUE ~ &quot;Other&quot;
+  )) %&gt;%
+  ungroup()
+
+
+
+SpliceJunctionCountTables &lt;- Sys.glob(&quot;../code/SplicingAnalysis/leafcutter/NormalizedPsiTables/PSI.JunctionCounts.*.bed.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/SplicingAnalysis/leafcutter/NormalizedPsiTables/PSI.JunctionCounts.(.+?).bed.gz&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(fread)
+
+
+
+AddIntronAnnotations &lt;- function(df){
+  df %&gt;%
+  left_join(
+    IntronAnnotations %&gt;%
+      dplyr::select(`#Chrom`=chrom, start, end=stop, strand, gene_id, Annotation),
+    by=c(&quot;#Chrom&quot;, &quot;start&quot;, &quot;end&quot;, &quot;strand&quot;)) %&gt;%
+    dplyr::select(1:6, gene_id, Annotation, everything()) %&gt;%
+    replace_na(list(Annotation=&quot;Unannotated&quot;))
+}
+
+Long.table &lt;- lapply(SpliceJunctionCountTables, AddIntronAnnotations) %&gt;%
+  lapply(pivot_longer,names_to=&quot;Sample&quot;, values_to=&quot;Count&quot;, -c(1:8)) %&gt;%
+  bind_rows(.id=&quot;Dataset&quot;)
+
+P.i.dat &lt;- Long.table %&gt;%
+  group_by(Sample, Dataset, Annotation) %&gt;%
+  summarise(SumCounts = sum(Count, na.rm=T)) %&gt;%
+  ungroup() %&gt;%
+  group_by(Sample, Dataset) %&gt;%
+  mutate(Percent = SumCounts / sum(SumCounts) * 100) %&gt;%
+  ungroup() %&gt;%
+  mutate(Dataset = recode(Dataset, !!!c(&quot;Expression.Splicing&quot;=&quot;polyA RNA&quot;, &quot;chRNA.Expression.Splicing&quot;=&quot;chRNA&quot;, &quot;MetabolicLabelled.30min&quot;=&quot;30min 4sU RNA&quot;, &quot;MetabolicLabelled.60min&quot;=&quot;60min 4sU RNA&quot;))) %&gt;%
+  mutate(Dataset = factor(Dataset, levels=c(&quot;chRNA&quot;, &quot;30min 4sU RNA&quot;, &quot;60min 4sU RNA&quot;, &quot;polyA RNA&quot;)))
+
+P.i &lt;-
+  P.i.dat %&gt;%
+  filter(Annotation %in% c(&quot;In protein_coding&quot;, &quot;Unique to nonsense_mediated_decay&quot;, &quot;Unannotated&quot;)) %&gt;%
+  mutate(Annotation = recode(Annotation, !!!c(&quot;In protein_coding&quot;=&quot;Annotated in functional isoform&quot;, &quot;Unique to nonsense_mediated_decay&quot;=&quot;Annotated in NMD-targeted isoform&quot;))) %&gt;%
+  mutate(Annotation=factor(Annotation, levels=c(&quot;Annotated in functional isoform&quot;, &quot;Annotated in NMD-targeted isoform&quot;, &quot;Unannotated&quot;))) %&gt;%
+  ggplot(aes(x=Dataset, y=Percent, color=Annotation)) +
+  geom_jitter(alpha=0.2, size=0.5) +
+  geom_boxplot(outlier.shape=NA, color=&#39;black&#39;, fill=NA) +
+  facet_wrap(~Annotation, scales=&quot;free_y&quot;, labeller = label_wrap_gen(width=14)) +
+  scale_colour_brewer(type=&quot;qual&quot;, palette=&quot;Dark2&quot;) +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1), legend.position = &quot;none&quot;) +
+  labs(y=str_wrap(&quot;Percent of splice junction reads&quot;, 20), x=NULL) +
+  guides(colour = guide_legend(override.aes = list(alpha = 1))) +
+  theme(strip.text.x = element_text(size = 12))
+P.i</code></pre>
+<p><img src="figure/Figures_BensTasksFromOutline.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/RoughDraftFig_1C_FractionSpliceJunctionsByCategory.pdf&quot;, P.i, height=3, width=5.5)
+
+IntronAnnotations %&gt;%
+  write_tsv(&quot;../code/SplicingAnalysis/IntronTypeAnnotations.txt.gz&quot;)</code></pre>
+<pre class="r"><code>## Figure out NMD discrepency in earlier version of NMD prevalence
+## Previous NMD intron list
+NMD.transcript.introns &lt;- read_tsv(&quot;../code/SplicingAnalysis/Annotations/NMD/NMD_trancsript_introns.bed.gz&quot;, col_names=c(&quot;chrom&quot;, &quot;start&quot;, &quot;stop&quot;, &quot;name&quot;, &quot;score&quot;, &quot;strand&quot;)) %&gt;%
+  mutate(stop=stop+1) %&gt;%
+  unite(intron, chrom:stop, strand)
+
+Non.NMD.transcript.introns &lt;- read_tsv(&quot;../code/SplicingAnalysis/Annotations/NMD/NonNMD_trancsript_introns.bed.gz&quot;, col_names=c(&quot;chrom&quot;, &quot;start&quot;, &quot;stop&quot;, &quot;name&quot;, &quot;score&quot;, &quot;strand&quot;)) %&gt;%
+  mutate(stop=stop+1) %&gt;%
+  unite(intron, chrom:stop, strand)
+
+
+Old.NMD.specific.introns &lt;- setdiff(NMD.transcript.introns$intron, Non.NMD.transcript.introns$intron)
+
+Old.NMD.specific.introns %&gt;% unique() %&gt;% length()
+
+New.NMD.specific.introns &lt;- IntronAnnotations %&gt;%
+  filter(Annotation == &quot;Unique to nonsense_mediated_decay&quot;) %&gt;%
+  unite(intron, chrom:stop, strand) %&gt;% pull(intron) %&gt;% unique()
+
+setdiff(Old.NMD.specific.introns, New.NMD.specific.introns) %&gt;% length()
+
+SpecificToNew &lt;- setdiff(New.NMD.specific.introns, Old.NMD.specific.introns)
+
+Non.NMD.transcript.introns %&gt;%
+  mutate(IsSpecificToNew = intron %in% SpecificToNew) %&gt;%
+  count(IsSpecificToNew)
+
+NMD.transcript.introns %&gt;%
+  mutate(IsSpecificToNew = intron %in% SpecificToNew) %&gt;%
+  count(IsSpecificToNew)</code></pre>
+<p>I think the discrepency arises from how I parse gtf files with <code>grep</code> and <code>bedparse</code> versus using leafcutter’s gtf2leafcutter script.</p>
+</div>
+<div id="numbers-of-qtls" class="section level3">
+<h3>Numbers of QTLs</h3>
+<pre class="r"><code>PeaksToTSS &lt;- Sys.glob(&quot;../code/Misc/PeaksClosestToTSS/*_assigned.tsv.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/Misc/PeaksClosestToTSS/(.+?)_assigned.tsv.gz&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(read_tsv) %&gt;%
+  bind_rows(.id=&quot;ChromatinMark&quot;) %&gt;%
+  mutate(GenePeakPair = paste(gene, peak, sep = &quot;;&quot;)) %&gt;%
+  distinct(ChromatinMark, peak, gene, .keep_all=T)
+
+PhenotypeAliases &lt;- read_tsv(&quot;../data/Phenotypes_recode_for_Plotting.txt&quot;)
+
+PhenotypeColors &lt;- readxl::read_excel(&quot;../data/ColorsForPhenotypes.xlsx&quot;)
+PhenotypeColors &lt;- readxl::read_excel(&quot;../data/ColorsForPhenotypes.xlsx&quot;)
+
+
+dat.coloc.tidy &lt;- read_tsv(&quot;../code/hyprcoloc/Results/ForColoc/MolColocNonRedundantFullSplicing/tidy_results_OnlyColocalized.txt.gz&quot;) %&gt;%
+  separate(phenotype_full, into=c(&quot;PC&quot;, &quot;P&quot;), sep=&quot;;&quot;, remove=F)
+
+PhenotypeList &lt;- dat.coloc.tidy %&gt;% pull(PC) %&gt;% unique() %&gt;% union(c(&quot;polyA.Splicing.Subset_YRI&quot;, &quot;polyA.IER.Subset_YRI&quot;))
+
+GroupedPermutationPassPhenotypes &lt;- c(&quot;polyA.Splicing&quot;, &quot;MetabolicLabelled.30min.Splicing&quot;, &quot;MetabolicLabelled.60min.Splicing&quot;, &quot;APA_Nuclear&quot;, &quot;APA_Total&quot;, &quot;polyA.Splicing.Subset_YRI&quot;)
+UngroupedPermutationPassPhenotypes &lt;- setdiff(PhenotypeList, GroupedPermutationPassPhenotypes)
+
+UngroupedQTLs &lt;- paste0(&quot;../code/QTLs/QTLTools/&quot;, UngroupedPermutationPassPhenotypes,&quot;/PermutationPass.FDR_Added.txt.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/QTLs/QTLTools/(.+?)/PermutationPass.FDR_Added.txt.gz&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(fread, sep=&#39; &#39;) %&gt;%
+  bind_rows(.id=&quot;PC&quot;)
+
+#TEMP UNTIL FINISHED SNAKEMAKE
+GroupedPermutationPassPhenotypes &lt;- setdiff(GroupedPermutationPassPhenotypes, c(&quot;APA_Nuclear&quot;, &quot;APA_Total&quot;))
+
+GroupedQTLs &lt;- paste0(&quot;../code/QTLs/QTLTools/&quot;, GroupedPermutationPassPhenotypes,&quot;/GroupedPermutationPass.FDR_Added.txt.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/QTLs/QTLTools/(.+?)/GroupedPermutationPass.FDR_Added.txt.gz&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(fread, sep=&#39; &#39;) %&gt;%
+  bind_rows(.id=&quot;PC&quot;)
+
+
+AllQTLs &lt;- bind_rows(GroupedQTLs, UngroupedQTLs) %&gt;%
+  group_by(PC) %&gt;%
+  summarise(
+    TestFeats = n(),
+    NumQTLs = sum(q&lt;0.1, na.rm=T)
+  ) %&gt;%
+  filter(!PC %in% c(&quot;MetabolicLabelled.30min.IER&quot;, &quot;MetabolicLabelled.30min.Splicing&quot;, &quot;MetabolicLabelled.60min.IER&quot;, &quot;MetabolicLabelled.60min.Splicing&quot;))
+  
+#TODO
+# AllQTLs %&gt;%
+#   ggplot(aes(x=PC, color=)) +
+#   geom_col()</code></pre>
+</div>
+</div>
+<div id="figure2" class="section level2">
+<h2>Figure2</h2>
+<div id="colocalization-framework" class="section level3">
+<h3>Colocalization framework</h3>
+<pre class="r"><code>PhenotypeAliases &lt;- read_tsv(&quot;../data/Phenotypes_recode_for_Plotting.txt&quot;)
+
+dat.coloc.tidy &lt;- read_tsv(&quot;../code/hyprcoloc/Results/ForColoc/MolColocNonRedundantFullSplicing/tidy_results_OnlyColocalized.txt.gz&quot;) %&gt;%
+  separate(phenotype_full, into=c(&quot;PC&quot;, &quot;P&quot;), sep=&quot;;&quot;, remove=F)
+
+dat.coloc &lt;- read_tsv(&quot;../code/hyprcoloc/Results/ForColoc/MolColocNonRedundantFullSplicing/results.txt.gz&quot;) 
+
+# Find nice example with eQTL+hQTL effect and seperate sQTL effect
+dat.to.plot &lt;- dat.coloc.tidy %&gt;%
+  left_join(PhenotypeAliases) %&gt;%
+  filter(PC %in% c(&quot;polyA.Splicing&quot;, &quot;H3K27AC&quot;, &quot;Expression.Splicing.Subset_YRI&quot;)) %&gt;%
+  group_by(Locus, iteration) %&gt;%
+  mutate(
+    SplicingCluster = all(PC == &quot;polyA.Splicing&quot;),
+    ChromatinExpressionCluster = all(PC %in% c(&quot;H3K27AC&quot;, &quot;Expression.Splicing.Subset_YRI&quot;)) &amp; any(PC == &quot;Expression.Splicing.Subset_YRI&quot;) ) %&gt;%
+  filter(n() &gt; 1) %&gt;%
+  ungroup() %&gt;%
+  group_by(Locus) %&gt;%
+  filter(any(SplicingCluster) &amp; any(ChromatinExpressionCluster)) %&gt;%
+  ungroup() %&gt;%
+  group_by(PC, Locus, iteration) %&gt;%
+  slice_head(n=2) %&gt;%
+  ungroup()</code></pre>
+<pre class="r"><code>dir.create(&quot;../code/scratch/PlotExampleColocs&quot;)
+
+dat.coloc %&gt;%
+  inner_join(
+    dat.to.plot %&gt;%
+      dplyr::select(GeneLocus=Locus, Trait=phenotype_full)
+  ) %&gt;%
+  group_by(GeneLocus) %&gt;%
+  filter(n()&gt;2) %&gt;%
+  ungroup()
+  write_tsv(&quot;../code/scratch/PlotExampleColocs/List.tsv&quot;)</code></pre>
+<pre class="bash"><code>cd /project2/yangili1/bjf79/ChromatinSplicingQTLs/code
+conda activate r_essentials
+Rscript scripts/PlotColocFromHyprcolocResults.R scratch/PlotExampleColocs/List.tsv scratch/PlotExampleColocs/Plot pdf
+</code></pre>
+</div>
+<div id="heatmap-of-effects-between-types-of-phenotypes-highlighting-the-expected-strong-enrichment-in-enhancerspromoters" class="section level3">
+<h3>heatmap of effects between types of phenotypes highlighting the expected strong enrichment in enhancers/promoters</h3>
+<p>I’ve about many different ways of making a heatmap. See <a href="https://bfairkun.github.io/ChromatinSplicingQTLs/20220713_PlotHeatmapManyWays.html">this notebook</a>. They all show something slightly different. We might consider including a couple of these different heatmaps, but for the main figures we probably only have space to show one. I suggest showing the heatmap of effect size correlations among colocalized phenotypes. My reasons are as follows:</p>
+<ul>
+<li>This type of heatmap doesn’t even attempt to try to explain “what fraction of eQTLs are explained my x mechanism”, but I think that is ok because that question is a bit redudnant with the next plot.</li>
+<li>I think this plot of correlation effect sizes is a nice segway to understanding some subsequent analyses (Carlos’ amplitude versus directional transcription QTL effects are based on concordance of effect sizes), and also later analsis of sQTL vs eQTL effect sizes</li>
+<li>I think this plot is perhaps the most convincing version of the plot to say something along the lines of “most ncRNAs are pleiotropic transcription effects, since their directions are by in large consistent with eQTLs which I would not expect if the lncRNAs were effecting target genes through complex mechanisms that involve lncRNA-mediated recruitment of trans-factors”</li>
+</ul>
+<p>I can quantify the strength of these correlations a few different ways. For example, spearman correlation coef, pearson coef, fraction same sign effects, etc. I think fraction same sign effects might be the most intuitive and also will have higher numbers which might just look nicer from a glance - so let’s start there. Also, for sake of space, I am going to make a few versions of this plot but I’m just going to save the version that has a smaller subset of interesting phenotypes worth focusing on in the main text.</p>
+<pre class="r"><code>PhenotypeAliases &lt;- read_tsv(&quot;../data/Phenotypes_recode_for_Plotting.txt&quot;)
+
+
+dat.coloc.tidy &lt;- read_tsv(&quot;../code/hyprcoloc/Results/ForColoc/MolColocNonRedundantFullSplicing/tidy_results_OnlyColocalized.txt.gz&quot;) %&gt;%
+  separate(phenotype_full, into=c(&quot;PC&quot;, &quot;P&quot;), sep=&quot;;&quot;, remove=F)
+
+dat.coloc.tidy$PC %&gt;% unique()</code></pre>
+<pre><code> [1] &quot;polyA.Splicing&quot;                   &quot;MetabolicLabelled.30min&quot;         
+ [3] &quot;MetabolicLabelled.60min&quot;          &quot;H3K27AC&quot;                         
+ [5] &quot;H3K4ME3&quot;                          &quot;H3K4ME1&quot;                         
+ [7] &quot;chRNA.IER&quot;                        &quot;ProCap&quot;                          
+ [9] &quot;CTCF&quot;                             &quot;chRNA.Expression_ncRNA&quot;          
+[11] &quot;Expression.Splicing.Subset_YRI&quot;   &quot;chRNA.Splicing&quot;                  
+[13] &quot;MetabolicLabelled.30min.Splicing&quot; &quot;MetabolicLabelled.60min.Splicing&quot;
+[15] &quot;chRNA.Expression.Splicing&quot;        &quot;H3K36ME3&quot;                        
+[17] &quot;APA_Nuclear&quot;                      &quot;APA_Total&quot;                       
+[19] &quot;polyA.IER&quot;                        &quot;MetabolicLabelled.30min.IER&quot;     
+[21] &quot;MetabolicLabelled.60min.IER&quot;     </code></pre>
+<pre class="r"><code>P &lt;- dat.coloc.tidy %&gt;%
+  filter(PC %in% c(&quot;CTCF&quot;,&quot;ProCap&quot;,&quot;APA_Total&quot;,&quot;chRNA.Expression_ncRNA&quot;,&quot;Expression.Splicing.Subset_YRI&quot;,&quot;H3K27AC&quot;, &quot;H3K4ME1&quot;, &quot;H3K4ME3&quot;, &quot;polyA.Splicing&quot;, &quot;chRNA.Splicing&quot;, &quot;MetabolicLabelled.30min&quot;, &quot;MetabolicLabelled.60min&quot;, &quot;H3K36ME3&quot;, &quot;chRNA.Expression.Splicing&quot;)) %&gt;%
+  left_join(
+    PhenotypeAliases %&gt;% dplyr::select(PC, ShorterAlias)
+  ) %&gt;%
+  dplyr::select(-PC) %&gt;%
+  dplyr::select(PC = ShorterAlias, everything()) %&gt;%
+  # pull(PC) %&gt;% unique()
+  mutate(PC = factor(PC, levels=c(&quot;CTCF&quot;, &quot;H3K4ME1&quot;, &quot;H3K27AC&quot;, &quot;H3K4ME3&quot;, &quot;ProCap&quot;, &quot;ncRNA_chRNA&quot;, &quot;H3K36ME3&quot;, &quot;Expression_chRNA&quot;, &quot;Expression_Metabolic.30min&quot;, &quot;Expression_Metabolic.60min&quot;, &quot;Expression_polyA&quot;,&quot;Splicing_chRNA&quot;, &quot;Splicing_polyA&quot;, &quot;APA_Total&quot;))) %&gt;%
+  left_join(., ., by=c(&quot;Locus&quot;, &quot;snp&quot;)) %&gt;%
+  filter(!((P.x == P.y) &amp; (PC.x == PC.y))) %&gt;%
+  group_by(PC.x, PC.y) %&gt;%
+  # summarise(cor = cor(beta.x, beta.y, method=&quot;spearman&quot;)) %&gt;%
+  summarise(
+    NumSameSign = sum(sign(beta.x)==sign(beta.y)),
+    n = n(),
+    cor = sum(sign(beta.x)==sign(beta.y))/n()) %&gt;%
+  ungroup() %&gt;%
+  complete(PC.x, PC.y) %&gt;%
+  mutate(label = paste0(&quot;frac(&quot;,NumSameSign, &quot;,&quot;, n, &quot;)&quot;)) %&gt;%
+  ggplot(aes(x=PC.x, y=PC.y, fill=cor)) +
+  geom_raster() +
+  geom_text(aes(label = label),parse = TRUE, color=&quot;black&quot;, size=1) +
+  scale_fill_gradient2(midpoint=0.5, limits=c(0,1)) +
+  scale_x_discrete(expand=c(0,0)) +
+  scale_y_discrete(expand=c(0,0), limits=rev) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+  labs(x=&quot;TraitA Phenotype class&quot;, y=&quot;TraitB Phenotype class&quot;, fill=str_wrap(&quot;Fraction same sign effects&quot;, 10),
+       caption = &quot;Number and relative sign of colocalized trait pairs&quot;)
+P</code></pre>
+<p><img src="figure/Figures_BensTasksFromOutline.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/RoughDraftFig_2B_EffectSizeCorrelationsHeatmap.pdf&quot;, P, height=5, width=7)</code></pre>
+</div>
+<div id="eqtls-colocalize-with-many-different-xqtls-but-chromatin-effects-are-the-strongest-something-like-the-bar-plot-i-showed-in-lab-meeting-with-the-number-of-egenes-that-colocalize-with-an-xqtl" class="section level3">
+<h3>eQTLs colocalize with many different xQTLs, but chromatin effects are the strongest (something like the bar plot I showed in lab meeting with the number of eGenes that colocalize with an xQTL)</h3>
+<pre class="r"><code>TotalNum.eQTLs &lt;- read_delim(&quot;../code/QTLs/QTLTools/Expression.Splicing.Subset_YRI/PermutationPassForColoc.txt.gz&quot;, delim=&#39; &#39;) %&gt;%
+  mutate(q = qvalue(adj_beta_pval)$qvalues)
+
+Num_eQTLs_attemptedColoc &lt;- TotalNum.eQTLs %&gt;%
+  filter(adj_beta_pval &lt; 0.01) %&gt;%
+  nrow()
+Num_eQTLs_attemptedColoc</code></pre>
+<pre><code>[1] 2227</code></pre>
+<pre class="r"><code>TotalNum.eQTLs %&gt;%
+  filter(q &lt; 0.01) %&gt;%
+  nrow()</code></pre>
+<pre><code>[1] 1577</code></pre>
+<pre class="r"><code>TotalNum.eQTLs %&gt;%
+  filter(adj_beta_pval &lt; 0.01) %&gt;%
+  pull(q) %&gt;% max()</code></pre>
+<pre><code>[1] 0.027759</code></pre>
+<pre class="r"><code>PhenotypeAliases &lt;- read_tsv(&quot;../data/Phenotypes_recode_for_Plotting.txt&quot;)
+
+PeaksToTSS &lt;- Sys.glob(&quot;../code/Misc/PeaksClosestToTSS/*_assigned.tsv.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/Misc/PeaksClosestToTSS/(.+?)_assigned.tsv.gz&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(read_tsv) %&gt;%
+  bind_rows(.id=&quot;ChromatinMark&quot;) %&gt;%
+  mutate(GenePeakPair = paste(gene, peak, sep = &quot;;&quot;)) %&gt;%
+  distinct(ChromatinMark, peak, gene, .keep_all=T)
+
+dat.coloc.tidy &lt;- read_tsv(&quot;../code/hyprcoloc/Results/ForColoc/MolColocNonRedundantFullSplicing/tidy_results_OnlyColocalized.txt.gz&quot;) %&gt;%
+  separate(phenotype_full, into=c(&quot;PC&quot;, &quot;P&quot;), sep=&quot;;&quot;)
+
+dat.coloc.tidy %&gt;%
+  left_join(PhenotypeAliases) %&gt;%
+  group_by(Locus) %&gt;%
+  filter(any(PC==&quot;Expression.Splicing.Subset_YRI&quot;)) %&gt;%
+  dplyr::rename(Grouping.PC.ID = ShorterAlias2) %&gt;%
+  count(Grouping.PC.ID) %&gt;%
+  ungroup() %&gt;%
+  count(Grouping.PC.ID, name=&quot;Num_eQTLs_coloc&quot;) %&gt;%
+  filter(!Grouping.PC.ID==&quot;Expression_polyA&quot;) %&gt;%
+  ggplot(aes(x=Grouping.PC.ID, y=Num_eQTLs_coloc/Num_eQTLs_attemptedColoc*100)) +
+  geom_col() +
+  geom_text(aes(label=Num_eQTLs_coloc), angle=90, hjust=0, size=3) +
+  scale_y_continuous(limits = c(0,100)) +
+  Rotate_x_labels +
+  labs(caption=str_wrap(&quot;Number eQTLs colocalized with an xQTL, out of 2227 eQTLs (FDR ~2.8%)&quot;, 30), y=str_wrap(&quot;Percent eQTLs colocalizing with an xQTL&quot;, 15), x=&quot;QTL category&quot;)</code></pre>
+<p><img src="figure/Figures_BensTasksFromOutline.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>dat.coloc.tidy %&gt;%
+  left_join(PhenotypeAliases) %&gt;%
+  mutate(GenePeakPair = paste(Locus, P, sep=&#39;;&#39;)) %&gt;%
+  mutate(Grouping.PC.ID = case_when(
+    (PC %in% c(&quot;H3K4ME3&quot;, &quot;H3K4ME1&quot;, &quot;H3K27AC&quot;)) &amp; (GenePeakPair %in% PeaksToTSS$GenePeakPair) ~ &quot;Activating chromatin mark (TSS)&quot;,
+    (PC %in% c(&quot;H3K4ME3&quot;, &quot;H3K4ME1&quot;, &quot;H3K27AC&quot;)) ~ &quot;Activating chromatin mark (Distal)&quot;,
+    TRUE ~ ShorterAlias2
+  )) %&gt;%
+  group_by(Locus) %&gt;%
+  filter(any(PC==&quot;Expression.Splicing.Subset_YRI&quot;)) %&gt;%
+  count(Grouping.PC.ID) %&gt;%
+  ungroup() %&gt;%
+  count(Grouping.PC.ID, name=&quot;Num_eQTLs_coloc&quot;) %&gt;%
+  filter(!Grouping.PC.ID==&quot;Expression_polyA&quot;) %&gt;%
+  ggplot(aes(x=Grouping.PC.ID, y=Num_eQTLs_coloc/Num_eQTLs_attemptedColoc*100)) +
+  geom_col() +
+  geom_text(aes(label=Num_eQTLs_coloc), angle=90, hjust=0, size=3) +
+  scale_y_continuous(limits = c(0,100)) +
+  # scale_x_discrete(labels = function(x) str_wrap(x, width = 20)) +
+  Rotate_x_labels +
+  labs(caption=str_wrap(&quot;Number eQTLs colocalized with an xQTL, out of 2227 eQTLs (FDR ~2.8%).\nActivating chromatin mark=H3K27AC|H3K4ME3|H3K4ME1&quot;, 70), y=str_wrap(&quot;Percent eQTLs colocalizing with an xQTL&quot;, 15), x=&quot;QTL category&quot;)</code></pre>
+<p><img src="figure/Figures_BensTasksFromOutline.Rmd/unnamed-chunk-11-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>P &lt;- bind_rows(
+  dat.coloc.tidy %&gt;%
+    left_join(PhenotypeAliases) %&gt;%
+    mutate(GenePeakPair = paste(Locus, P, sep=&#39;;&#39;)) %&gt;%
+    mutate(Grouping.PC.ID = case_when(
+      (PC %in% c(&quot;H3K4ME3&quot;, &quot;H3K4ME1&quot;, &quot;H3K27AC&quot;)) &amp; (GenePeakPair %in% PeaksToTSS$GenePeakPair) ~ &quot;Activating chromatin mark (TSS)&quot;,
+      (PC %in% c(&quot;H3K4ME3&quot;, &quot;H3K4ME1&quot;, &quot;H3K27AC&quot;)) ~ &quot;Activating chromatin mark (Distal)&quot;,
+      TRUE ~ ShorterAlias2
+    )),
+  dat.coloc.tidy %&gt;%
+    left_join(PhenotypeAliases) %&gt;%
+    mutate(Grouping.PC.ID = case_when(
+      (PC %in% c(&quot;H3K4ME3&quot;, &quot;H3K4ME1&quot;, &quot;H3K27AC&quot;)) ~ &quot;Any activating chromatin mark (Distal|TSS)&quot;,
+      TRUE ~ ShorterAlias2
+    )) %&gt;%
+    filter(Grouping.PC.ID == &quot;Any activating chromatin mark (Distal|TSS)&quot;)
+) %&gt;%
+  group_by(Locus) %&gt;%
+  filter(any(PC==&quot;Expression.Splicing.Subset_YRI&quot;)) %&gt;%
+  count(Grouping.PC.ID) %&gt;%
+  ungroup() %&gt;%
+  count(Grouping.PC.ID, name=&quot;Num_eQTLs_coloc&quot;) %&gt;%
+  filter(!Grouping.PC.ID==&quot;Expression_polyA&quot;) %&gt;%
+  filter(Grouping.PC.ID %in% c(&quot;APA&quot;, &quot;Activating chromatin mark (Distal)&quot;, &quot;Activating chromatin mark (TSS)&quot;, &quot;Any activating chromatin mark (Distal|TSS)&quot;, &quot;CTCF&quot;, &quot;Splicing_polyA&quot;, &quot;ncRNA_chRNA&quot;)) %&gt;%
+  mutate(Grouping.PC.ID = factor(Grouping.PC.ID, levels=c(&quot;CTCF&quot;, &quot;Activating chromatin mark (Distal)&quot;, &quot;Activating chromatin mark (TSS)&quot;, &quot;Any activating chromatin mark (Distal|TSS)&quot;, &quot;ncRNA_chRNA&quot;, &quot;Splicing_polyA&quot;, &quot;APA&quot;))) %&gt;%
+  ggplot(aes(x=Grouping.PC.ID, y=Num_eQTLs_coloc/Num_eQTLs_attemptedColoc*100)) +
+  geom_col() +
+  geom_text(aes(label=Num_eQTLs_coloc), angle=90, hjust=0, size=6) +
+  scale_y_continuous(limits = c(0,60)) +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 20)) +
+  Rotate_x_labels +
+  labs(caption=str_wrap(&quot;Number eQTLs colocalized with an xQTL, out of 2227 eQTLs (FDR ~2.8%).\nActivating chromatin mark=H3K27AC|H3K4ME3|H3K4ME1&quot;, 70), y=str_wrap(&quot;Percent eQTLs colocalizing with an xQTL&quot;, 15), x=&quot;QTL category&quot;)
+P</code></pre>
+<p><img src="figure/Figures_BensTasksFromOutline.Rmd/unnamed-chunk-11-3.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/RoughDraftFig_2C_NumEQTLsThatColocWithXQTL.pdf&quot;, P, height=5, width=7)</code></pre>
+</div>
+</div>
+<div id="figure3" class="section level2">
+<h2>Figure3</h2>
+<div id="scatter-plot-of-effect-sizes-for-unannotated-basic-non-basic-and-nmd-targeting-introns.-estimate-of-number-of-primary-and-maybe-secondary-eqtls-explained-by-splicing-mechanisms" class="section level3">
+<h3>Scatter plot of effect sizes for unannotated, basic, non-basic, and NMD-targeting introns. Estimate of number of primary (and maybe secondary) eQTLs explained by splicing mechanisms</h3>
+<pre class="r"><code>NMD.transcript.introns &lt;- fread(&quot;../code/SplicingAnalysis/Annotations/NMD/NMD_trancsript_introns.bed.gz&quot;, col.names=c(&quot;chrom&quot;, &quot;start&quot;, &quot;stop&quot;, &quot;name&quot;, &quot;score&quot;, &quot;strand&quot;)) %&gt;%
+  mutate(stop=stop+1) %&gt;%
+  unite(intron, chrom:stop, strand)
+
+Non.NMD.transcript.introns &lt;- fread(&quot;../code/SplicingAnalysis/Annotations/NMD/NonNMD_trancsript_introns.bed.gz&quot;, col.names=c(&quot;chrom&quot;, &quot;start&quot;, &quot;stop&quot;, &quot;name&quot;, &quot;score&quot;, &quot;strand&quot;)) %&gt;%
+  mutate(stop=stop+1) %&gt;%
+  unite(intron, chrom:stop, strand)
+
+
+NMD.specific.introns &lt;- setdiff(NMD.transcript.introns$intron, Non.NMD.transcript.introns$intron)
+
+Intron.Annotations.basic &lt;- fread(&quot;../code/SplicingAnalysis/regtools_annotate_combined/basic.bed.gz&quot;) %&gt;%
+  filter(known_junction ==1) %&gt;%
+  unite(intron, chrom, start, end, strand)
+Introns.Annotations.comprehensive &lt;- fread(&quot;../code/SplicingAnalysis/regtools_annotate_combined/comprehensive.bed.gz&quot;) %&gt;%
+  filter(known_junction ==1) %&gt;%
+  unite(intron, chrom, start, end, strand)
+Introns.Annotations.all &lt;- fread(&quot;../code/SplicingAnalysis/regtools_annotate_combined/comprehensive.bed.gz&quot;) %&gt;%
+  unite(intron, chrom, start, end, strand)
+
+PhenotypeAliases &lt;- read_tsv(&quot;../data/Phenotypes_recode_for_Plotting.txt&quot;)
+
+PC.ShortAliases &lt;- PhenotypeAliases %&gt;%
+  dplyr::select(PC, ShorterAlias) %&gt;% deframe()
+
+PeaksToTSS &lt;- Sys.glob(&quot;../code/Misc/PeaksClosestToTSS/*_assigned.tsv.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/Misc/PeaksClosestToTSS/(.+?)_assigned.tsv.gz&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(read_tsv) %&gt;%
+  bind_rows(.id=&quot;ChromatinMark&quot;) %&gt;%
+  mutate(GenePeakPair = paste(gene, peak, sep = &quot;;&quot;)) %&gt;%
+  distinct(ChromatinMark, peak, gene, .keep_all=T)
+
+TopSNPEffects.ByPairs &lt;- fread(&quot;../code/pi1/PairwisePi1Traits.P.all.txt.gz&quot;)
+
+
+coloc.tidy &lt;- fread(&quot;../output/hyprcoloc_results/ForColoc/MolColocStandard/hyprcoloc.results.OnlyColocalized.Stats.txt.gz&quot;) %&gt;%
+  separate(phenotype_full, into=c(&quot;PC&quot;, &quot;P&quot;), sep=&quot;;&quot;)
+
+coloc.tidy.pairwise &lt;- left_join(
+  coloc.tidy,
+  coloc.tidy %&gt;%
+    dplyr::select(-iteration, -ColocPr, -RegionalPr, -TopSNPFinemapPr),
+  by=c(&quot;Locus&quot;),
+  suffix=c(&quot;1&quot;, &quot;2&quot;)
+) %&gt;%
+  filter(!(P1==P2 &amp; PC1 == PC2)) %&gt;%
+  filter(snp1 == snp2) %&gt;%
+  dplyr::select(ColocalizedTopSNP = snp1, GeneLocus=Locus, everything(), -snp2) %&gt;%
+  unite(TraitPair, P1, PC1, P2, PC2, remove=F)</code></pre>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.6.1 (2019-07-05)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: CentOS Linux 7 (Core)
+
+Matrix products: default
+BLAS/LAPACK: /software/openblas-0.2.19-el7-x86_64/lib/libopenblas_haswellp-r0.2.19.so
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8 LC_NUMERIC=C         LC_TIME=C           
+ [4] LC_COLLATE=C         LC_MONETARY=C        LC_MESSAGES=C       
+ [7] LC_PAPER=C           LC_NAME=C            LC_ADDRESS=C        
+[10] LC_TELEPHONE=C       LC_MEASUREMENT=C     LC_IDENTIFICATION=C 
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] qvalue_2.16.0      data.table_1.14.2  RColorBrewer_1.1-2 forcats_0.4.0     
+ [5] stringr_1.4.0      dplyr_1.0.9        purrr_0.3.4        readr_1.3.1       
+ [9] tidyr_1.2.0        tibble_3.1.7       ggplot2_3.3.6      tidyverse_1.3.0   
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_1.0.5        lubridate_1.7.4   assertthat_0.2.1  rprojroot_2.0.2  
+ [5] digest_0.6.20     utf8_1.1.4        plyr_1.8.4        R6_2.4.0         
+ [9] cellranger_1.1.0  backports_1.4.1   reprex_0.3.0      evaluate_0.15    
+[13] highr_0.9         httr_1.4.4        pillar_1.7.0      rlang_1.0.5      
+[17] readxl_1.3.1      rstudioapi_0.14   whisker_0.3-2     R.oo_1.22.0      
+[21] R.utils_2.9.0     rmarkdown_1.13    labeling_0.3      splines_3.6.1    
+[25] munsell_0.5.0     broom_1.0.0       compiler_3.6.1    httpuv_1.5.1     
+[29] modelr_0.1.8      xfun_0.31         pkgconfig_2.0.2   htmltools_0.5.3  
+[33] tidyselect_1.1.2  workflowr_1.6.2   fansi_0.4.0       crayon_1.3.4     
+[37] dbplyr_1.4.2      withr_2.5.0       later_0.8.0       R.methodsS3_1.7.1
+[41] grid_3.6.1        jsonlite_1.6      gtable_0.3.0      lifecycle_1.0.1  
+[45] DBI_1.1.0         git2r_0.26.1      magrittr_1.5      scales_1.1.0     
+[49] cli_3.3.0         stringi_1.4.3     farver_2.1.0      reshape2_1.4.3   
+[53] fs_1.5.2          promises_1.0.1    xml2_1.3.2        ellipsis_0.3.2   
+[57] generics_0.1.3    vctrs_0.4.1       tools_3.6.1       glue_1.6.2       
+[61] hms_0.5.3         fastmap_1.1.0     yaml_2.2.0        colorspace_1.4-1 
+[65] rvest_0.3.5       knitr_1.39        haven_2.3.1      </code></pre>
+</div>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+http://docs.mathjax.org/en/latest/configuration.html.  This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
