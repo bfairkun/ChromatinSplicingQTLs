@@ -56,7 +56,15 @@ IntronAnnotations <- leafviz_script.dat %>%
   )) %>%
   ungroup()
 
-
+transcript.tags <- leafviz_script.dat %>%
+  count(transcript_tag) %>%
+  ggplot(aes(x=transcript_tag, y=n)) +
+  geom_col() +
+  geom_text(aes(label=n)) +
+  coord_flip()
+  
+IntronAnnotations %>%
+  count(Annotation)
 
 SpliceJunctionCountTables <- Sys.glob("../code/SplicingAnalysis/leafcutter/NormalizedPsiTables/PSI.JunctionCounts.*.bed.gz") %>%
   setNames(str_replace(., "../code/SplicingAnalysis/leafcutter/NormalizedPsiTables/PSI.JunctionCounts.(.+?).bed.gz", "\\1")) %>%
@@ -110,8 +118,21 @@ P.i
 ```{r, eval=F}
 ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/RoughDraftFig_1C_FractionSpliceJunctionsByCategory.pdf", P.i, height=3, width=5.5)
 
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/Random_TrancriptTags.pdf", transcript.tags, height=12)
+
 IntronAnnotations %>%
   write_tsv("../code/SplicingAnalysis/IntronTypeAnnotations.txt.gz")
+
+SpliceJunctionCountTables$Expression.Splicing %>%
+  dplyr::select(1:6) %>%
+  full_join(
+    IntronAnnotations %>%
+      dplyr::select(`#Chrom`=chrom, start, end=stop, strand, gene_id, Annotation),
+    by=c("#Chrom", "start", "end", "strand")) %>%
+    dplyr::select(1:6, gene_id, Annotation, everything()) %>%
+    replace_na(list(Annotation="Unannotated")) %>%
+  write_tsv("../code/SplicingAnalysis/IntronTypeAnnotations.JoinedWithLeafcutterJuncList.txt.gz")
+  
 
 ```
 

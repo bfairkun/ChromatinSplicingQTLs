@@ -1,0 +1,188 @@
+---
+title: "20221214_CheckYangsUnannotatedAnnotations"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+## Intro
+
+Yang annotated some of the "unannotated" introns by translating the flanking exonic sequences. I don't know the details. But let's look for some of the same correlations as before between sQTL and eQTL effects in polyA and chRNA for these intron annotations, and also the relative abundance of these juncs in polyA versus chRNA
+
+```{r}
+library(tidyverse)
+library(data.table)
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family="Helvetica")))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+```
+
+Read in annotations
+
+```{r}
+IntronAnnotations <- read_tsv("/project2/yangili1/yangili/chRNA/annotations_yang.txt", col_names = c("chrom", "start", "stop", "strand", "Annotation", "Score")) %>%
+  mutate(Original.New.Annotation = str_replace(Annotation, "^([A-Z_][a-z_ ]+?)_([A-Z_]+)$", "\\1.\\2")) %>%
+  separate(Original.New.Annotation, into=c("OriginalAnnotation", "StabilityAnnotation"), sep="\\.") %>%
+  unite(intron, chrom, start, stop, strand, remove=F)
+
+IntronAnnotations %>% count(OriginalAnnotation, StabilityAnnotation) %>%
+  group_by(OriginalAnnotation) %>%
+  mutate(Total = sum(n)) %>%
+  ungroup() %>%
+  ggplot(aes(x=OriginalAnnotation, y=n, fill=StabilityAnnotation)) +
+  geom_col(position="fill") +
+  geom_text(aes(label=Total), y=1) +
+  Rotate_x_labels +
+  labs(y="Fraction")
+```
+
+Count juncs in each dataset
+
+```{r, fig.width=10, fig.height=12}
+SpliceJunctionCountTables <- Sys.glob("../code/SplicingAnalysis/leafcutter/NormalizedPsiTables/PSI.JunctionCounts.*.bed.gz") %>%
+  setNames(str_replace(., "../code/SplicingAnalysis/leafcutter/NormalizedPsiTables/PSI.JunctionCounts.(.+?).bed.gz", "\\1")) %>%
+  lapply(fread)
+
+SpliceJunctionCountTables$MetabolicLabelled.60min %>% left_join(
+    IntronAnnotations %>%
+      dplyr::select(`#Chrom`=chrom, start, end=stop, strand, OriginalAnnotation, StabilityAnnotation),
+      by=c("#Chrom", "start", "end", "strand")) %>%
+      dplyr::select(1:6, OriginalAnnotation, StabilityAnnotation, everything()) %>%
+      replace_na(list(OriginalAnnotation="MissingFromYangsFile", StabilityAnnotation="MissingFromYangsFile")) %>%
+  count(OriginalAnnotation, StabilityAnnotation)
+
+AddIntronAnnotations <- function(df){
+  df %>%
+  left_join(
+    IntronAnnotations %>%
+      dplyr::select(`#Chrom`=chrom, start, end=stop, strand, OriginalAnnotation, StabilityAnnotation),
+      by=c("#Chrom", "start", "end", "strand")) %>%
+      dplyr::select(1:6, OriginalAnnotation, StabilityAnnotation, everything()) %>%
+      replace_na(list(OriginalAnnotation="MissingFromYangsFile", StabilityAnnotation="MissingFromYangsFile"))
+}
+
+Long.table <- lapply(SpliceJunctionCountTables, AddIntronAnnotations) %>%
+  lapply(pivot_longer,names_to="Sample", values_to="Count", -c(1:8)) %>%
+  bind_rows(.id="Dataset")
+
+P.i.dat <- Long.table %>%
+  group_by(Sample, Dataset, OriginalAnnotation, StabilityAnnotation) %>%
+  summarise(SumCounts = sum(Count, na.rm=T)) %>%
+  ungroup() %>%
+  group_by(Sample, Dataset) %>%
+  mutate(Percent = SumCounts / sum(SumCounts) * 100) %>%
+  ungroup() %>%
+  mutate(Dataset = recode(Dataset, !!!c("Expression.Splicing"="polyA RNA", "chRNA.Expression.Splicing"="chRNA", "MetabolicLabelled.30min"="30min 4sU RNA", "MetabolicLabelled.60min"="60min 4sU RNA"))) %>%
+  mutate(Dataset = factor(Dataset, levels=c("chRNA", "30min 4sU RNA", "60min 4sU RNA", "polyA RNA")))
+
+P.i <-
+  P.i.dat %>%
+  # filter(Annotation %in% c("In protein_coding", "Unique to nonsense_mediated_decay", "Unannotated")) %>%
+  # mutate(Annotation = recode(Annotation, !!!c("In protein_coding"="Annotated in functional isoform", "Unique to nonsense_mediated_decay"="Annotated in NMD-targeted isoform"))) %>%
+  # mutate(Annotation=factor(Annotation, levels=c("Annotated in functional isoform", "Annotated in NMD-targeted isoform", "Unannotated"))) %>%
+  ggplot(aes(x=Dataset, y=Percent, color=OriginalAnnotation)) +
+  geom_jitter(alpha=0.2, size=0.5) +
+  geom_boxplot(outlier.shape=NA, color='black', fill=NA) +
+  facet_wrap(StabilityAnnotation ~ OriginalAnnotation, scales="free", labeller = label_wrap_gen(width=14)) +
+  scale_colour_brewer(type="qual", palette="Dark2") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1), legend.position = "none") +
+  labs(y=str_wrap("Percent of splice junction reads", 20), x=NULL) +
+  guides(colour = guide_legend(override.aes = list(alpha = 1))) +
+  theme(strip.text.x = element_text(size = 12))
+P.i
+
+```
+
+```{r,eval=F}
+ggsave("../code/scratch/FractionJuncs.YangsAddedStabilityAnnottions.pdf", P.i, height=12, width=10)
+```
+
+Now let's check the sQTL effects by category
+
+```{r}
+PhenotypeAliases <- read_tsv("../data/Phenotypes_recode_for_Plotting.txt")
+
+PC.ShortAliases <- PhenotypeAliases %>%
+  dplyr::select(PC, ShorterAlias) %>% deframe()
+
+PeaksToTSS <- Sys.glob("../code/Misc/PeaksClosestToTSS/*_assigned.tsv.gz") %>%
+  setNames(str_replace(., "../code/Misc/PeaksClosestToTSS/(.+?)_assigned.tsv.gz", "\\1")) %>%
+  lapply(read_tsv) %>%
+  bind_rows(.id="ChromatinMark") %>%
+  mutate(GenePeakPair = paste(gene, peak, sep = ";")) %>%
+  distinct(ChromatinMark, peak, gene, .keep_all=T)
+
+TopSNPEffects.ByPairs <- fread("../code/pi1/PairwisePi1Traits.P.all.txt.gz")
+
+P1Category <- "polyA.Splicing"
+P2Category <- c("chRNA.Expression.Splicing","MetabolicLabelled.30min","MetabolicLabelled.60min", "Expression.Splicing.Subset_YRI", "H3K36ME3", "H3K27AC")
+
+TopSNPEffects.ByPairs$PC1 %>% unique()
+
+IntronAnnotations$OriginalAnnotation %>% unique()
+
+Compare_sQTL_eQTL_effects_across_datasets <- TopSNPEffects.ByPairs %>%
+  filter(
+      (PC1 %in% c(P1Category)) &
+      (PC2 %in% c(P2Category)) &
+      (FDR.x < 0.01)) %>%
+  filter((paste(GeneLocus, P2, sep=';') %in% PeaksToTSS$GenePeakPair) | !PC2=="H3K27AC") %>%
+  group_by(PC1, P1) %>%
+  filter(
+    !any((paste(GeneLocus, P2, sep=';') %in% PeaksToTSS$GenePeakPair) & trait.x.p.in.y < 0.01
+  )) %>%
+  ungroup() %>%
+  mutate(intron = str_replace(P1, "^(.+):(.+?):(.+?):clu.+?_([+-])$", "chr\\1_\\2_\\3_\\4")) %>%
+  inner_join(
+    IntronAnnotations %>%
+      dplyr::select(intron, OriginalAnnotation, StabilityAnnotation)
+    ) %>%
+  unite(TraitPair, P1, PC1, P2, PC2, remove=F) %>%
+  dplyr::select(TraitPair, beta1=beta.x, beta2=trait.x.beta.in.y, P1, PC1, P2, PC2, OriginalAnnotation, StabilityAnnotation, eQTL.P = trait.x.p.in.y) %>%
+  mutate(PC2 = recode(PC2, !!!c("H3K27AC"="H3K27AC@TSS","chRNA.Expression.Splicing"="chRNA","MetabolicLabelled.30min"="30min 4sU","MetabolicLabelled.60min"="60min 4sU", "Expression.Splicing.Subset_YRI"="polyA RNA"))) %>%
+  mutate(PC2 = factor(PC2, levels=c("H3K27AC@TSS","H3K36ME3","chRNA", "30min 4sU", "60min 4sU", "polyA RNA"))) %>%
+  filter(OriginalAnnotation %in% c("Unique to nonsense_mediated_decay", "In protein_coding", "Unannotated")) %>%
+  distinct(PC2, P2, OriginalAnnotation, StabilityAnnotation, .keep_all=T)
+
+
+Compare_sQTL_eQTL_effects_across_datasets.CorStats <- Compare_sQTL_eQTL_effects_across_datasets %>%
+  group_by(OriginalAnnotation, StabilityAnnotation, PC2) %>%
+  summarise(cor=cor.test(beta1,beta2)[["estimate"]], pval=cor.test(beta1,beta2, method='s')[["p.value"]], n=n()) %>%
+  mutate(R = signif(cor, 3), P=format.pval(pval, 3)) %>%
+  mutate(label = str_glue("rho:{R}; P:{P}; n:{n}")) %>%
+  group_by(OriginalAnnotation, PC2) %>%
+  mutate(rn = row_number())
+
+
+
+P.sQTL.effects.Across.eQTL.datasets <- ggplot(Compare_sQTL_eQTL_effects_across_datasets, aes(x=beta1, y=beta2, color=StabilityAnnotation)) +
+  geom_point(alpha=0.1) +
+  geom_vline(xintercept=0) +
+  geom_hline(yintercept=0) +
+  geom_abline(
+    data = Compare_sQTL_eQTL_effects_across_datasets.CorStats,
+    aes(slope=cor, intercept=0, color=StabilityAnnotation)
+    ) +
+  geom_text(
+  data = Compare_sQTL_eQTL_effects_across_datasets.CorStats,
+  aes(x=-Inf, y=-Inf, label=label, vjust=rn*-1, color=StabilityAnnotation),
+  hjust=-.1, size=3
+  ) +
+  facet_grid(PC2 ~ OriginalAnnotation) +
+  theme_bw() +
+  labs(title="genetic effects of NMD introns and host gene expression", x="polyA RNA sQTL beta\n(standardized units)", y="eQTL beta\n(standardized units)", caption="eQTL betas relative to sQTL beta at top sQTL SNP\nsQTLs that are QTL H3K27AC@TSS are removed") +
+  guides(colour = guide_legend(override.aes = list(alpha = 1)))
+P.sQTL.effects.Across.eQTL.datasets
+```
+
+```{r}
+ggsave("../code/scratch/sQTL_eQTL_Effects.YangsStabilityAnnotations.png", P.sQTL.effects.Across.eQTL.datasets, height=10, width=10)
+```
+
