@@ -172,6 +172,8 @@ def GetQTLtoolsWindowFlag(wildcards):
     if wildcards.FeatureCoordinatesRedefinedFor in ["ForColoc", "ForGWASColoc" ]:
         # using --window 0 sometimes results in errors (exit code 139). No idea why
         return "--window 1"
+    elif wildcards.Pass in ["PermutationPass500kb", "NominalPass500kb"]:
+        return "--window 500000"
     else:
         if wildcards.Phenotype in ["polyA.Splicing", "chRNA.Splicing", "polyA.Splicing.Subset_YRI", 
         "MetabolicLabelled.30min.Splicing", "MetabolicLabelled.60min.Splicing", "chRNA.RNA.Editing", "chRNA.Splicing.Order"]:
@@ -195,9 +197,9 @@ def GetQTLtoolsOtherFlags(wildcards):
 
 
 def GetQTLtoolsPassFlags(wildcards):
-    if wildcards.Pass in ["PermutationPass", "GroupedPermutationPass"]:
+    if wildcards.Pass in ["PermutationPass", "GroupedPermutationPass", "PermutationPass500kb"]:
         return "--permute 1000"
-    elif wildcards.Pass == "NominalPass":
+    elif wildcards.Pass in ["NominalPass", "NominalPass500kb"]:
         return "--nominal 1"
 
 def GetExcludeFile(wildcards):
@@ -228,7 +230,8 @@ rule QTLtools_generalized:
         PassFlags = GetQTLtoolsPassFlags,
         ExcFlag = GetExcludeFile,
     wildcard_constraints:
-        n = "|".join(str(i) for i in ChunkNumbers)
+        n = "|".join(str(i) for i in ChunkNumbers),
+        Pass = "PermutationPass|GroupedPermutationPass|PermutationPass500kb|NominalPass|NominalPass500kb"
     shell:
         """
         {config[QTLtools]} cis --std-err --chunk {wildcards.QTLTools_chunk_n} {N_PermutationChunks} --vcf {input.vcf} --bed {input.bed} --cov {input.cov} --out {output} {params.OtherFlags} {params.WindowFlag} {params.PassFlags} {params.ExcFlag} &> {log}
@@ -246,6 +249,8 @@ rule Gather_QTLtools_cis_pass:
         "QTLs/QTLTools/{Phenotype}/{Pass}{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}{StandardizedOrUnstandardized}.txt.gz"
     log:
         "logs/Gather_QTLtools_cis_pass/{Phenotype}.{Pass}.{QTLsGenotypeSet}.{FeatureCoordinatesRedefinedFor}.{StandardizedOrUnstandardized}.log"
+    wildcard_constraints:
+        Pass = "PermutationPass|GroupedPermutationPass|PermutationPass500kb|NominalPass|NominalPass500kb"
     shell:
         """
         (cat {input} | gzip - > {output}) &> {log}
@@ -264,7 +269,7 @@ rule AddQValueToPermutationPass:
     priority:
         10
     wildcard_constraints:
-        Pass = "PermutationPass|GroupedPermutationPass"
+        Pass = "PermutationPass|GroupedPermutationPass|PermutationPass500kb"
     shell:
         """
         Rscript scripts/AddQvalueToQTLtoolsOutput.R {input} {output.table} {wildcards.Pass} &> {log}

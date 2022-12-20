@@ -105,3 +105,24 @@ rule GatherProCapBigWigs:
             IndID=ProCapSamples_df["IndID"],
             Rep=ProCapSamples_df["RepNumber"],
         ),
+
+
+rule MatrixForMetaplots:
+    input:
+        expand('NonCodingRNA/QTLs/metaplots/mat/{QTLs}.{var}.{phe}.mat.gz',
+            QTLs = ['diQTLs', 'apQTLs'],
+            var = ['ncQTL', 'eQTL'],
+            phe = ['uaRNA', 'uaGene']),
+        expand('NonCodingRNA/QTLs/metaplots/mat/{QTLs}.{var}.{phe}_metagene.mat.gz',
+            QTLs = ['diQTLs', 'apQTLs'],
+            var = ['ncQTL', 'eQTL'],
+            phe = ['uaGene'])
+            
+            
+rule QTLTools_500kb:
+    input:
+        expand(
+          "QTLs/QTLTools/{Phenotype}/{Pass}.txt.gz",
+          Phenotype = ["H3K36ME3", "H3K4ME3", "H3K4ME1","H3K27AC"],
+          Pass = ["PermutationPass500kb.FDR_Added", "NominalPass500kb"]
+        ),
