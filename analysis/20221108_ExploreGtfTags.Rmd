@@ -286,18 +286,22 @@ SpliceJunctionCountTables <- Sys.glob("../code/SplicingAnalysis/leafcutter/Norma
 
 
 
-SpliceJunctionCountTables$chRNA.Expression.Splicing %>%
-  inner_join(
+AddIntronAnnotations <- function(df){
+  df %>%
+  left_join(
     IntronAnnotations %>%
       dplyr::select(`#Chrom`=chrom, start, end=stop, strand, gene_id, Annotation),
-    by=c(""))
+    by=c("#Chrom", "start", "end", "strand")) %>%
+    dplyr::select(1:6, gene_id, Annotation, everything()) %>%
+    replace_na(list(Annotation="Unannotated"))
+}
 
 Long.table <- lapply(SpliceJunctionCountTables, AddIntronAnnotations) %>%
   lapply(pivot_longer,names_to="Sample", values_to="Count", -c(1:8)) %>%
   bind_rows(.id="Dataset")
 
 P.i.dat <- Long.table %>%
-  group_by(Sample, Dataset, IntronAnnotation) %>%
+  group_by(Sample, Dataset, Annotation) %>%
   summarise(SumCounts = sum(Count)) %>%
   ungroup() %>%
   group_by(Sample, Dataset) %>%
@@ -305,15 +309,18 @@ P.i.dat <- Long.table %>%
   ungroup() %>%
   mutate(Dataset = recode(Dataset, !!!c("Expression.Splicing"="polyA RNA-seq", "chRNA.Expression.Splicing"="chRNA-seq", "MetabolicLabelled.30min"="30min 4sU-label RNA-seq", "MetabolicLabelled.60min"="60min 4sU-label RNA-seq"))) %>%
   mutate(Dataset = factor(Dataset, levels=c("chRNA-seq", "30min 4sU-label RNA-seq", "60min 4sU-label RNA-seq", "polyA RNA-seq")))
-P.i <- ggplot(P.i.dat, aes(x=Dataset, y=Percent, color=IntronAnnotation)) +
+P.i <- ggplot(P.i.dat, aes(x=Dataset, y=Percent, color=Annotation)) +
   geom_jitter(alpha=0.2, size=0.5) +
   geom_boxplot(outlier.shape=NA, color='black', fill=NA) +
-  facet_wrap(~IntronAnnotation, scales="free_y") +
+  facet_wrap(~Annotation, scales="free_y") +
   theme_bw() +
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
-  labs(y="Percent of splice junction reads")
+  labs(y="Percent of splice junction reads") +
+  guides(colour = guide_legend(override.aes = list(alpha = 1)))
 P.i
 
   
 ```
+
+
 

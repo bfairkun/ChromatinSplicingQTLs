@@ -10,6 +10,18 @@
 #         Rscript
 #         """
 
+rule bgzip_gtf:
+    input:
+        gtf = "ReferenceGenome/Annotations/gencode.v34.chromasomal.basic.annotation.gtf"
+    output:
+        gtf = "ReferenceGenome/Annotations/gencode.v34.chromasomal.basic.annotation.gtf.gz",
+        tbi = "ReferenceGenome/Annotations/gencode.v34.chromasomal.basic.annotation.gtf.gz.tbi"
+    shell:
+        """
+        (grep ^"#" {input.gtf}; grep -v ^"#" {input.gtf} | sort -k1,1 -k4,4n) | bgzip  > {output.gtf}
+        tabix -p gff {output.gtf}
+        """
+
 rule CreateBigwigLists:
     input:
         colors = "../data/ColorsForPhenotypes.xlsx",

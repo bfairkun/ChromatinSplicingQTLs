@@ -13,6 +13,7 @@ Making snakemake config file for samples with risdiplam treatment.
 
 ```{r}
 library(tidyverse)
+library(data.table)
 ```
 
 ```{r}
@@ -41,5 +42,36 @@ sample.list %>%
     ) %>%
   dplyr::select(-bigwig, -bed) %>%
   write_tsv("../code/config/SmallMoleculeRNASeq.Samples.tsv")
+```
+
+#Check size distr of exon
+
+```{r}
+exons <- fread("../code/ReferenceGenome/Annotations/GTFTools_BasicAnnotations/gencode.v34.chromasomal.exons.bed")
+
+exons %>%
+  add_count(V5) %>%
+  filter(n > 1) %>%
+  distinct(V1, V2, V3) %>%
+  mutate(len = V3-V2) %>%
+  count(len, name="Freq") %>%
+  ggplot(aes(x=len, y=Freq)) +
+  geom_col() +
+  coord_cartesian(xlim=c(180, 220))
+
+exons %>%
+  add_count(V5) %>%
+  filter(n > 1) %>%
+  distinct(V1, V2, V3) %>%
+  mutate(len = (V3-V2)%%3) %>%
+  count(len, name="Freq") %>%
+  ggplot(aes(x=len, y=Freq)) +
+  geom_col()
+```
+
+One useful way to break up 'unannotated' introns are into those that are new splice site combinations that preserve frame (using basic annotation exons) versus those that don't (and those that can't easily be determined from short read data).
+
+```{r}
+UTRs <- fread("../code/ReferenceGenome/Annotations/GTFTools_BasicAnnotations/gencode.v34.chromasomal.utr.bed", col.names = c("chrom", "start", "stop", ))
 ```
 

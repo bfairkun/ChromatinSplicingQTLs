@@ -190,7 +190,7 @@ def GetQTLtoolsWindowFlag(wildcards):
 
 def GetQTLtoolsOtherFlags(wildcards):
     if wildcards.Phenotype in ["polyA.Splicing", "chRNA.Splicing", "polyA.Splicing.Subset_YRI", 
-    "MetabolicLabelled.30min.Splicing", "MetabolicLabelled.60min.Splicing", "chRNA.RNA.Editing", "chRNA.Splicing.Order"] and wildcards.Pass == "GroupedPermutationPass":
+    "MetabolicLabelled.30min.Splicing", "MetabolicLabelled.60min.Splicing", "chRNA.RNA.Editing", "chRNA.Splicing.Order", "APA_Nuclear", "APA_Total"] and wildcards.Pass == "GroupedPermutationPass":
         return "--grp-best"
     else:
         return ""

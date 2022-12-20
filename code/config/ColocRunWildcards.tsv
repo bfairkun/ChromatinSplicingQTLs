@@ -22,4 +22,5 @@ MolColocStandard		ForColoc	0.01
 MolColocTestOnlyExpression		ForColoc	0.01	MetabolicLabelled.30min MetabolicLabelled.60min Expression.Splicing.Subset_YRI chRNA.Expression.Splicing
 GWASColocStandard		ForGWASColoc	0.01	
 GWASColoc_AllRNASeq		ForGWASColoc	0.01	chRNA.IER chRNA.Expression.Splicing H3K27AC CTCF H3K4ME3 chRNA.Splicing MetabolicLabelled.30min MetabolicLabelled.60min Expression.Splicing.Subset_YRI polyA.Splicing.Subset polyA.IER.Subset_YRI chRNA.Expression_ncRNA
-
+MolColocNonRedundantFullSplicing		ForColoc	0.01	Expression.Splicing.Subset_YRI chRNA.Expression.Splicing MetabolicLabelled.30min MetabolicLabelled.60min CTCF H3K27AC H3K4ME3 H3K4ME1 H3K36ME3 H3K36ME3_ncRNA ProCap polyA.Splicing chRNA.Splicing MetabolicLabelled.30min.Splicing MetabolicLabelled.60min.Splicing chRNA.Expression_ncRNA polyA.IER chRNA.IER MetabolicLabelled.30min.IER MetabolicLabelled.60min.IER APA_Nuclear APA_Total
+MolColocNonRedundantYRISplicing		ForColoc	0.01	Expression.Splicing.Subset_YRI chRNA.Expression.Splicing MetabolicLabelled.30min MetabolicLabelled.60min CTCF H3K27AC H3K4ME3 H3K4ME1 H3K36ME3 H3K36ME3_ncRNA ProCap polyA.Splicing.Subset_YRI chRNA.Splicing MetabolicLabelled.30min.Splicing MetabolicLabelled.60min.Splicing chRNA.Expression_ncRNA polyA.IER.Subset_YRI chRNA.IER MetabolicLabelled.30min.IER MetabolicLabelled.60min.IER APA_Nuclear APA_Total

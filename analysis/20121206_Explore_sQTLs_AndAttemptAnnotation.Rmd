@@ -1,0 +1,29 @@
+---
+title: "20221206_Explore_sQTL_AndAttemptAnnotation"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+## Intro
+```{r}
+library(tidyverse)
+library(data.table)
+library(qvalue)
+```
+
+Read in sQTLs
+
+```{r}
+
+sQTLs <- fread("cat ../code/QTLs/QTLTools/polyA.Splicing/PermutationPassChunks/0.txt ../code/QTLs/QTLTools/polyA.Splicing/PermutationPassChunks/1.txt")
+
+
+sQTLs %>%
+  mutate(q = qvalue(adj_beta_pval)$qvalues) %>%
+  filter(q < 0.1)
+
+```
+

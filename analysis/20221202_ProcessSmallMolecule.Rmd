@@ -1,0 +1,767 @@
+---
+title: "SmallMoleculeProcessing"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F, error=F)
+
+library(tidyverse)
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family="Helvetica")))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+```
+
+
+## Intro
+
+From my slack thread with Yang:
+
+> i going to think out loud here about how to pre-process the small molecule data to explore the splicing-induced NMD/expression effects, in case you have thoughts:
+So to recap, for risdiplam we have 3 polyA DMSO replicates, and one polyA replicate for 3.2, 10, 32, 100, 320, 1000, 3200, and 10000nM doses. Then we have 3 replicates of chRNA for DMSO, 3 replicates for 100nM, and 3 replicates for 3200nM.
+I'm thinking the 100nM dose and the 3200nM dose will be most useful, since we have polyA and chRNA at those doses as well. But I don't want to just throw away the other doses in polyA, especially since splicing quantification tends to be noisy, and also because presenting full dose-response curves could be nice. So I will of course start by just mapping and counting junctions and doing the standard leafcutter clustering with all those samples. Then I will focus on GA-GT junctions, and in the polyA data I will fit a dose-response curve to the intronic PSI, and the host gene log(CPM). When I want to compare with chRNA, I will use the delta-PSI from the fit curve at 100nM and 3200nM doses (estimates of error can also be extracted from the fit), and compare to the deltaPSI (or logCPM expression) estimated from 3 chRNA replicates at that dose and the 3 chRNA DMSO replicates (using standard tools like leafcutter, or edgeR, or even just calculating manually). From those processed numbers I will explore the splicing/expression effects
+
+## Data tidying and exploration
+
+So here I will process the conut table and splice count tables.
+
+```{r}
+library(tidyverse)
+library(edgeR)
+library(data.table)
+library(drc)
+library(broom)
+library(qvalue)
+
+sample_n_of <- function(data, size, ...) {
+  dots <- quos(...)
+  
+  group_ids <- data %>% 
+    group_by(!!! dots) %>% 
+    group_indices()
+  
+  sampled_groups <- sample(unique(group_ids), size)
+  
+  data %>% 
+    filter(group_ids %in% sampled_groups)
+}
+
+
+```
+
+Read in count tables
+
+```{r}
+Samples <- read_tsv("../code/config/SmallMoleculeRNASeq.Samples.tsv")
+
+GeneCounts <- read_tsv("../code/SmallMolecule/featureCounts/Counts.txt", comment="#") %>%
+  rename_at(vars(-c(1:6)), ~str_replace(.x, "SmallMolecule/AlignmentsPass2/(.+?)/Aligned.sortedByCoord.out.bam", "\\1"))
+
+Genes <- read_tsv("../code/ExpressionAnalysis/polyA/ExpressedGeneList.txt", col_names=c("chrom", "start", "stop", "name", "score", "strand"))
+```
+
+One thing I will have to consider is how to best normalize libraries. Since I suspect a genomewide effect at high concentrations, it might make sense to normalize to intronless genes or some set of genes which I don't think will be generally effected by small molecule. For now I will normalize the standard way (by total libray size, or rather by the default method of `calcNormFactors` function), and consider other ways to normalize later.
+
+```{r}
+#For now, use the same list of 14000 genes used in QTL analysis
+GeneCounts.filtered <- GeneCounts %>%
+  filter(Geneid %in% Genes$name)
+
+Count.table.StandardNormFactors <- GeneCounts.filtered %>%
+  dplyr::select(-c(2:6)) %>%
+  column_to_rownames("Geneid") %>%
+  DGEList() %>%
+  calcNormFactors()
+
+
+CPM.StandardNormFactors <- Count.table.StandardNormFactors %>%
+  cpm(prior.count=0.1, log=F) 
+
+CPM.StandardNormFactors %>%
+  log2() %>%
+  apply(1, mean) %>% hist()
+
+```
+
+```{r}
+gene_names <- read_tsv("/project2/yangili1/bjf79/20211209_JingxinRNAseq/data/Genes.list.txt")
+
+gene_names %>%
+  filter(hgnc_symbol %in% c("HSPB3", "IFNA1"))
+
+CPM.StandardNormFactors.tidy <- CPM.StandardNormFactors %>%
+  as.data.frame() %>%
+  rownames_to_column("Geneid") %>%
+  gather("Sample", "CPM", -Geneid) %>%
+  separate(Sample, into=c("treatment", "dose.nM", "Cell.type", "LibraryType", "rep"), sep="_", convert=T) %>%
+  replace_na(list(dose.nM=0)) %>%
+  mutate(ensembl_gene_id = str_replace(Geneid, "^(.+?)\\..+$", "\\1")) %>%
+  left_join(gene_names)
+
+
+CPM.StandardNormFactors.tidy %>%
+  filter(hgnc_symbol %in% c("HTT", "STAT1", "HSPB3", "H2AC20", "IFNA1")) %>%
+  filter(LibraryType == "polyA") %>%
+  ggplot(aes(x=dose.nM, y=CPM)) +
+  geom_line() +
+  geom_point() + 
+  scale_x_continuous(trans="log1p", limits=c(0, 10000), breaks=c(10000, 3160, 1000, 316, 100, 31.6, 10, 3.16, 1, 0.316, 0), labels=c(10000, 3160, 1000, 316, 100, 31.6, 10, 3.16, 1, 0.316, 0)) +
+  facet_wrap(~hgnc_symbol, scales = "free_y") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, size=5))
+
+set.seed(0)
+CPM.StandardNormFactors.tidy %>%
+  filter(LibraryType == "polyA") %>%
+  sample_n_of(20, hgnc_symbol) %>% 
+  ggplot(aes(x=dose.nM, y=CPM)) +
+  geom_line() +
+  geom_point() + 
+  scale_x_continuous(trans="log1p", limits=c(0, 10000), breaks=c(10000, 3160, 1000, 316, 100, 31.6, 10, 3.16, 1, 0.316, 0), labels=c(10000, 3160, 1000, 316, 100, 31.6, 10, 3.16, 1, 0.316, 0)) +
+  facet_wrap(~hgnc_symbol, scales = "free_y") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, size=5))
+
+```
+
+## Splicing data
+
+```{r}
+leafcutter.counts <- read.table("../code/SmallMolecule/leafcutter/clustering/autosomes/leafcutter_perind_numers.counts.gz", header=T, sep=' ') %>% as.matrix()
+
+ClusterMax.mat <- leafcutter.counts %>%
+    as.data.frame() %>%
+    rownames_to_column("junc") %>%
+    mutate(cluster=str_replace(junc, "^(.+?):.+?:.+?:(.+)$", "\\1_\\2")) %>%
+    group_by(cluster) %>%
+    mutate(across(where(is.numeric), sum)) %>%
+    ungroup() %>%
+    dplyr::select(junc, everything(), -cluster) %>%
+    column_to_rownames("junc") %>%
+    as.matrix()
+
+
+PSI.df <- (leafcutter.counts / as.numeric(ClusterMax.mat) * 100) %>%
+  signif() %>%
+  as.data.frame() %>%
+  rownames_to_column("Leafcutter.ID") %>%
+  mutate(Intron = str_replace(Leafcutter.ID, "(.+?):(.+?):(.+?):clu_.+?_([+-])$", "\\1:\\2:\\3:\\4"))
+
+Intron.Donors <- fread("../code/SmallMolecule/leafcutter/JuncfilesMerged.annotated.basic.bed.5ss.tab.gz", col.names = c("Intron", "DonorSeq", "DonorScore")) %>%
+  mutate(Intron = str_replace(Intron, "(.+?)_(.+?)_(.+?)_(.+?)::.+?$", "\\1:\\2:\\3:\\4"))
+
+PSI.tidy <- PSI.df %>%
+  left_join(Intron.Donors) %>%
+  gather("Sample", "PSI",contains("_")) %>%
+  inner_join(
+    leafcutter.counts %>%
+      as.data.frame() %>%
+      rownames_to_column("Leafcutter.ID") %>%
+      mutate(Intron = str_replace(Leafcutter.ID, "(.+?):(.+?):(.+?):clu_.+?_([+-])$", "\\1:\\2:\\3:\\4")) %>%
+      gather("Sample", "Counts",contains("_"))
+  ) %>%
+  separate(Sample, into=c("treatment", "dose.nM", "Cell.type", "LibraryType", "rep"), sep="_", convert=T) %>%
+  replace_na(list(dose.nM=0))
+
+PSI.tidy %>%
+  filter(LibraryType == "polyA") %>%
+  # mutate(Is.GA.GT = str_detect(DonorSeq, "^\\w{2}GAGT")) %>%
+  # filter(!is.na(Is.GA.GT)) %>%
+  mutate(Is.GA.GT = substr(DonorSeq, 3,4)) %>%
+  group_by(dose.nM, Is.GA.GT) %>%
+  summarise(PSI.summary = sum(Counts, na.rm=T)) %>%
+  ungroup() %>%
+  drop_na() %>%
+  mutate(Sum = sum(PSI.summary)) %>%
+  mutate(FractionJuncs = PSI.summary/Sum) %>%
+  ggplot(aes(x=dose.nM, y=FractionJuncs)) +
+  geom_line() +
+  geom_point() + 
+  scale_x_continuous(trans="log1p", limits=c(0, 10000), breaks=c(10000, 3160, 1000, 316, 100, 31.6, 10, 3.16, 1, 0.316, 0), labels=c(10000, 3160, 1000, 316, 100, 31.6, 10, 3.16, 1, 0.316, 0)) +
+  facet_wrap(~Is.GA.GT, scales = "free_y") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, size=5)) +
+  labs(title="Fraction of total juncs")
+```
+
+Not sure why that doesn't look right. let's try looking at mean deltaPSI
+
+```{r}
+PSI.ByDonor.Summary <- PSI.tidy %>%
+  filter(LibraryType == "polyA") %>%
+  # mutate(Is.GA.GT = str_detect(DonorSeq, "^\\w{2}GAGT")) %>%
+  # filter(!is.na(Is.GA.GT)) %>%
+  mutate(Is.GA.GT = substr(DonorSeq, 3,4)) %>%
+  group_by(dose.nM, Is.GA.GT) %>%
+  summarise(PSI.summary = mean(PSI, na.rm=T)) %>%
+  ungroup() %>%
+  drop_na()
+
+left_join(
+  PSI.ByDonor.Summary,
+  PSI.ByDonor.Summary %>% filter(dose.nM == 0) %>%
+    dplyr::select(Is.GA.GT, PSI.summary),
+  by=c("Is.GA.GT")
+) %>%
+  mutate(MeanPSIFoldChange=(PSI.summary.x-PSI.summary.y)) %>%
+  ggplot(aes(x=dose.nM, y=MeanPSIFoldChange, group=Is.GA.GT, color=Is.GA.GT=="GA")) +
+  geom_line() +
+  geom_point() + 
+  scale_x_continuous(trans="log1p", limits=c(0, 10000), breaks=c(10000, 3160, 1000, 316, 100, 31.6, 10, 3.16, 0), labels=c(10000, 3160, 1000, 316, 100, 31.6, 10, 3.16, 0)) +
+  # facet_wrap(~Is.GA.GT, scales = "free_y") +
+  # scale_y_continuous(trans="log1p") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1)) +
+  labs(y="Mean deltaPSI",caption=str_wrap("Average PSI across all introns, then calculate difference", 30))
+
+
+Mean.PSI <- PSI.tidy %>%
+  filter(LibraryType == "polyA") %>%
+  group_by(Intron, dose.nM, DonorSeq) %>%
+  summarise(PSI=mean(PSI, na.rm=T)) %>%
+  ungroup()
+
+inner_join(
+  Mean.PSI,
+  Mean.PSI %>%
+    filter(dose.nM==0) %>%
+    dplyr::select(Intron, DonorSeq, PSI),
+  by=c("Intron", "DonorSeq")
+) %>%
+  mutate(Is.GA.GT = substr(DonorSeq, 3,4)) %>%
+  mutate(DeltaPSI=(PSI.x-PSI.y)) %>%
+  group_by(dose.nM, Is.GA.GT) %>%
+  summarise(PSI.summary = mean(DeltaPSI, na.rm=T)) %>%
+  ungroup() %>%
+  drop_na() %>%
+  ggplot(aes(x=dose.nM, y=PSI.summary, group=Is.GA.GT, color=Is.GA.GT=="GA")) +
+  geom_line() +
+  geom_point() + 
+  scale_x_continuous(trans="log1p", limits=c(0, 10000), breaks=c(10000, 3160, 1000, 316, 100, 31.6, 10, 3.16, 0), labels=c(10000, 3160, 1000, 316, 100, 31.6, 10, 3.16, 0)) +
+  # facet_wrap(~Is.GA.GT, scales = "free_y") +
+  # scale_y_continuous(trans="log1p") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1)) +
+  labs(y="Mean deltaPSI", caption=str_wrap("Average DeltaPSI across all introns", 30))
+
+
+
+```
+
+### Consider intronless gene normalization
+
+let's look intron annotations and to help find intronless genes to check out as a seperate group.
+
+```{r}
+IntronAnnotations <- read_tsv("../code/SmallMolecule/FullSpliceSiteAnnotations/JuncfilesMerged.annotated.basic.bed.gz")
+
+JuncCountsPerGene <- IntronAnnotations %>%
+  filter(!is.na(gene_ids)) %>%
+  separate_rows(gene_ids, sep=',') %>%
+  filter(gene_ids %in% rownames(CPM.StandardNormFactors)) %>%
+  group_by(gene_ids) %>%
+  summarise(NumUniqueJuncs = n(),
+            NumTotalJuncs = sum(score)) %>%
+  right_join(
+    data.frame(gene_ids = CPM.StandardNormFactors %>% rownames())
+  ) %>%
+  replace_na(list(NumUniqueJuncs=0, NumTotalJuncs=0)) %>%
+  left_join(
+    data.frame(
+      logCPM = CPM.StandardNormFactors %>%
+      log2() %>%
+      apply(1, mean)) %>%
+      rownames_to_column("gene_ids")
+  ) %>%
+  mutate(FractionJuncs = log2(NumTotalJuncs+0.1) - logCPM) %>%
+  mutate(PercentileSplicing = percent_rank(FractionJuncs))
+
+JuncCountsPerGene %>%
+  ggplot(aes(x=NumUniqueJuncs + 0.1, y=NumTotalJuncs + 0.1)) +
+  geom_point(alpha=0.05) +
+  scale_x_continuous(trans='log10') +
+  scale_y_continuous(trans='log10')
+
+
+JuncCountsPerGene %>%
+  gather(key="Metric", value="value", FractionJuncs, logCPM) %>%
+  ggplot(aes(x=value, fill=PercentileSplicing<0.05)) +
+  geom_histogram() +
+    facet_wrap(~Metric, scales="free_x") +
+  labs(title="Expression distribution of lowly spliced genes", caption=str_wrap("FractionJuncs is approximately RatioOfJuncReadsToTotalReads across all samples", 30))
+
+
+
+```
+
+```{r}
+RarelySplicedGenes <- JuncCountsPerGene %>%
+  filter(PercentileSplicing < 0.05) %>%
+  pull(gene_ids)
+
+set.seed(0)
+CPM.StandardNormFactors.tidy %>%
+  filter(LibraryType == "polyA") %>%
+  filter(Geneid %in% RarelySplicedGenes) %>%
+  sample_n_of(20, hgnc_symbol) %>% 
+  ggplot(aes(x=dose.nM, y=CPM)) +
+  geom_line() +
+  geom_point() + 
+  scale_x_continuous(trans="log1p", limits=c(0, 10000), breaks=c(10000, 3160, 1000, 316, 100, 31.6, 10, 3.16, 1, 0.316, 0), labels=c(10000, 3160, 1000, 316, 100, 31.6, 10, 3.16, 1, 0.316, 0)) +
+  facet_wrap(~hgnc_symbol, scales = "free_y") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, size=5))
+
+Spearman.cors.CPM <- CPM.StandardNormFactors.tidy %>%
+  mutate(IsRarelySplicedGene = Geneid %in% RarelySplicedGenes) %>%
+  nest(-Geneid) %>% 
+  mutate(cor=map(data,~cor.test(.x$dose.nM, .x$CPM, method = "sp"))) %>%
+  mutate(tidied = map(cor, tidy)) %>%
+  unnest(tidied, .drop = T)
+
+Spearman.cors.CPM %>%
+  unnest(data) %>%
+  distinct(Geneid, .keep_all=T) %>%
+  ggplot(aes(x=estimate, color=IsRarelySplicedGene)) +
+  stat_ecdf() +
+  labs(title="Rarely spliced genes don't have systematically diff dose response cor coef", x="dose:CPM Spearman coef", y="ecdf")
+  
+```
+
+Ok I think it's not worth the time to do something fancy with library normalization to alleviate concerns of transcriptome wide changes obscuring normalization. I'll just continue with the standard library size normalized data.
+
+## Model fitting
+
+As I have done before, I'm going to use `drc` package to fit 4 parameter log-logistic function to the PSI values for GA|GT introns, and the host gene logCPM values.
+
+### Filtering introns
+
+As before, in addition to GA|GT filter, I think a reasonable pre-filter for introns worth modelling is to filter for introns with a strong positive dose:response spearman correlation coefficient.
+
+Let's start by looking at the distribution of spearman correlation coefficients for a sample of introns
+
+```{r}
+PSI.tidy %>%
+  filter(LibraryType == "polyA") %>%
+  drop_na() %>%
+  add_count(Intron) %>%
+  filter(n==11) %>%
+  distinct(Intron, DonorSeq) %>%
+  mutate(Is.GA.GT = substr(DonorSeq, 3,4)) %>%
+  count(Is.GA.GT) %>%
+  ggplot(aes(x=Is.GA.GT, y=n)) +
+  geom_col() +
+  geom_text(aes(label=n), color="red") +
+  labs(title="Total number introns with complete data")
+
+set.seed(0)
+PSI.tidy.SampleWithCor <- PSI.tidy %>%
+  filter(LibraryType == "polyA") %>%
+  drop_na() %>%
+  add_count(Intron) %>%
+  filter(n==11) %>%
+  sample_n_of(10000, Intron) %>% 
+  nest(-Intron) %>%
+  mutate(cor=map(data,~cor.test(.x$dose.nM, .x$PSI, method = "sp", alternative="greater"))) %>%
+  mutate(tidied = map(cor, tidy)) %>% 
+  unnest(tidied, .drop = T) %>%
+  dplyr::select(Intron:data, spearman=estimate, spearman.p = p.value) %>%
+  unnest(data)
+
+PSI.tidy.SampleWithCor.summarised <- PSI.tidy.SampleWithCor %>%
+  distinct(Intron, .keep_all=T) %>%
+  mutate(Is.GA.GT = substr(DonorSeq, 3,4)) %>%
+  group_by(Is.GA.GT) %>%
+  mutate(q = qvalue(spearman.p)$qvalues) %>%
+  ungroup()
+
+PSI.tidy.SampleWithCor.summarised %>%
+  ggplot(aes(x=spearman, group=Is.GA.GT, color=Is.GA.GT=="GA")) +
+  stat_ecdf() +
+  labs(y="ecdf", x="dose:response Spearman coef")
+```
+
+Ok, so while GA|GT introns are as a group clearly different, there are still quite a lot of introns that don't have a positive relationship that probably aren't even worth modelling, even if just for sake of saving computational time in this notebook. As I have done before, I will just consider GA.GT introns with high spearman correlation coef. But what threshold should I use. I could consider looking at the spearman test P values as a critera.
+
+
+```{r}
+
+PSI.tidy.SampleWithCor.summarised %>%
+  ggplot(aes(x=spearman.p)) +
+  geom_histogram() +
+  facet_wrap(~Is.GA.GT, scales="free") +
+  labs(y="freq", x="dose:response Spearman coef P")
+
+PSI.tidy.SampleWithCor.summarised %>%
+  ggplot(aes(x=q, group=Is.GA.GT, color=Is.GA.GT=="GA")) +
+  stat_ecdf() +
+  scale_x_continuous(trans="log10") +
+  labs(y="ecdf", x="dose:response Spearman coef FDR")
+
+PSI.tidy.SampleWithCor.summarised %>%
+  filter(Is.GA.GT == "GA" & q<0.01) %>%
+  pull(spearman) %>% min()
+
+```
+
+Ok so maybe one reasonable thing is to just select all GA|GT introns with spearman test FDR < 0.01 which corresponds roughly to a spearman correlation coef of 0.8... This in practice is similar to what I did previously which is just model introns with spearman coef > 0.9. During model fitting, we can get estimates of parameter standard errors, and if the model fit is really back the fitting process tends to throw errors (does not converge or something like that), we can always filter out bad models after attempting to fit them. So really this pre-filtering is more just to save computational time more than anything else... Ok let's fit some models now...
+
+### Fit model to splicing
+
+```{r}
+chRNADoses <- c(0, 100, 3160)
+
+
+model.dat.df.AllGAGT <- PSI.tidy %>%
+  filter(LibraryType == "polyA") %>%
+  drop_na() %>%
+  add_count(Intron) %>%
+  filter(n==11) %>%
+  mutate(Is.GA.GT = substr(DonorSeq, 3,4)) %>%
+  filter(Is.GA.GT == "GA") %>%
+  nest(-Intron) %>%
+  mutate(cor=map(data,~cor.test(.x$dose.nM, .x$PSI, method = "sp", alternative="greater"))) %>%
+  mutate(tidied = map(cor, tidy)) %>% 
+  unnest(tidied, .drop = T) %>%
+  dplyr::select(Intron:data, spearman=estimate, spearman.p = p.value) %>%
+  mutate(q = qvalue(spearman.p)$qvalues)
+
+model.dat.df.AllGAGT %>%
+  filter(q<0.01) %>%
+  pull(spearman) %>% min()
+
+model.dat.df.FilteredGAGT <- model.dat.df.AllGAGT %>%
+  filter(q<0.01) %>%
+  dplyr::select(junc=Intron, everything())
+
+#Plot some model fits
+set.seed(0)
+model.dat.df.FilteredGAGT %>%
+  sample_n_of(30, junc) %>% 
+  unnest(data) %>%
+  ggplot(aes(x=dose.nM, y=PSI)) +
+  geom_point() +
+  geom_smooth(method = drm, method.args = list(
+    fct = L.4(names=c("Steepness", "LowerLimit", "UpperLimit", "ED50")),
+    lowerl=c(NA,0,NA,NA),
+    upperl=c(NA,NA,100,NA),
+    robust = "median"), se = FALSE) +
+  scale_x_continuous(trans="log1p", limits=c(0, 10000), breaks=c(10000, 3160, 1000, 316, 100, 31.6, 10, 3.16, 0)) +
+  facet_wrap(~junc, scales="free_y") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+```
+
+Going into this, I was thinking one potentially useful way to express splicing effects would be to consider the difference in the lowerLimit and upperLimit parameters of the fit model. However, I now appreciate how noisy the UpperLimit estimate is since we don't actually approach saturation of effect in our tested doses. In later analysis I might consider other ways to quantify effect size. In any case, now let's fit models using that actual `drc` functions where I can save the coefficients and standard errors to an data frame
+
+```{r, error=F}
+Results <- list()
+for(i in 1:nrow(model.dat.df.FilteredGAGT)) {
+# for(i in 1:10) {
+  tryCatch(
+    expr = {
+      junc <- model.dat.df.FilteredGAGT$junc[i]
+      data <- model.dat.df.FilteredGAGT$data[i] %>% as.data.frame()
+      fit <- drm(formula = PSI ~ dose.nM,
+                  data = data,
+                  fct = LL.4(names=c("Steepness", "LowerLimit", "UpperLimit", "ED50")),
+                  lowerl=c(NA,0,NA,NA),
+                  upperl=c(NA,NA,100,NA),
+                  robust = "mean"
+                  )
+      df.out <- 
+        bind_rows(
+          coef(summary(fit)) %>%
+            as.data.frame() %>%
+            rownames_to_column("param") %>%
+            dplyr::select(param, Estimate, SE=`Std. Error`),
+          predict(fit, data.frame(dose.nM=chRNADoses), se.fit = T) %>%
+            as.data.frame() %>%
+            dplyr::rename("Estimate"="Prediction") %>%
+            mutate(param=paste("Pred",chRNADoses, sep="_"))
+        )
+      Results[[junc]] <- df.out
+      message("Successfully fitted model.")
+    },
+    error=function(e){
+      if (i < 100){
+        cat("ERROR :",conditionMessage(e), junc, "\n")
+      }
+      })
+}
+
+ModelFits.Coefficients.GAGTIntrons <- bind_rows(Results, .id="junc")
+
+
+ModelFits.Coefficients.GAGTIntrons %>% head(10)
+
+
+
+```
+
+### Fit model to expression
+
+Now let's fit models to the logCPM. To speed this up for sake of this notebook, I will just look at the host genes of the modelled GA|GT introns, and an equally sized random set of other genes.
+
+```{r}
+ModelFits.Coefficients.GAGTIntrons.MappedToGenes <- ModelFits.Coefficients.GAGTIntrons %>%
+  dplyr::select(-SE) %>%
+  pivot_wider(names_from=c("param"), values_from="Estimate") %>%
+  dplyr::rename("LowerLimit" =`LowerLimit:(Intercept)`, "UpperLimit" =`UpperLimit:(Intercept)`, "Steepness" =`Steepness:(Intercept)`, "ED50" =`ED50:(Intercept)`) %>%
+  inner_join(
+    IntronAnnotations %>%
+    filter(!is.na(gene_ids)) %>%
+    separate_rows(gene_ids, sep=',') %>%
+    unite(junc, chrom, start, end, strand, sep=":")
+  )
+
+GA.GT.Modelled.HostGenes <- ModelFits.Coefficients.GAGTIntrons.MappedToGenes$gene_ids
+
+set.seed(0)
+ControlHostGenes <- CPM.StandardNormFactors.tidy %>%
+  distinct(Geneid) %>%
+  filter(!Geneid %in% GA.GT.Modelled.HostGenes) %>%
+  sample_n(size=length(GA.GT.Modelled.HostGenes)) %>%
+  pull(Geneid)
+
+model.dat.df.CPM.StandardNormFactors <- CPM.StandardNormFactors.tidy %>%
+  filter(LibraryType == "polyA") %>%
+  filter(Geneid %in% c(GA.GT.Modelled.HostGenes, ControlHostGenes)) %>%
+  mutate(Is.Affected.GAGT.HostGene = if_else(Geneid %in% GA.GT.Modelled.HostGenes, "GAGT", "!GAGT")) %>%
+  mutate(Log2CPM = log2(CPM)) %>%
+  nest(data=-Geneid)
+
+set.seed(0)
+model.dat.df.CPM.StandardNormFactors %>%
+  sample_n_of(30, Geneid) %>% 
+  unnest(data) %>%
+  ggplot(aes(x=dose.nM, y=Log2CPM, color=Is.Affected.GAGT.HostGene)) +
+  geom_point() +
+  geom_smooth(method = drm, method.args = list(
+    fct = L.4(names=c("Steepness", "LowerLimit", "UpperLimit", "ED50")),
+    robust = "mean"), se = FALSE) +
+  scale_x_continuous(trans="log1p", limits=c(0, 10000), breaks=c(10000, 3160, 1000, 316, 100, 31.6, 10, 3.16, 0)) +
+  facet_wrap(~Geneid, scales="free_y") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+
+Results <- list()
+for(i in 1:nrow(model.dat.df.CPM.StandardNormFactors)) {
+# for(i in 1:100) {
+  tryCatch(
+    expr = {
+      Geneid <- model.dat.df.CPM.StandardNormFactors$Geneid[i]
+      data <- model.dat.df.CPM.StandardNormFactors$data[i] %>% as.data.frame()
+      fit <- drm(formula = Log2CPM ~ dose.nM,
+                  data = data,
+                  fct = LL.4(names=c("Steepness", "LowerLimit", "UpperLimit", "ED50")),
+                  robust = "mean"
+                  )
+      df.out <- 
+        bind_rows(
+          coef(summary(fit)) %>%
+            as.data.frame() %>%
+            rownames_to_column("param") %>%
+            dplyr::select(param, Estimate, SE=`Std. Error`),
+          predict(fit, data.frame(dose.nM=chRNADoses), se.fit = T) %>%
+            as.data.frame() %>%
+            dplyr::rename("Estimate"="Prediction") %>%
+            mutate(param=paste("Pred",chRNADoses, sep="_"))
+        )
+      Results[[Geneid]] <- df.out
+      message("Successfully fitted model.")
+    },
+    error=function(e){
+      if (i < 100){
+        cat("ERROR :",conditionMessage(e), Geneid, "\n")
+      }
+      })
+}
+
+
+ModelFits.Coefficients.Genes <- bind_rows(Results, .id="Geneid")
+
+  
+```
+
+Now let's merge the gene expression fit coefficients table with the splicing table
+
+```{r}
+IntronTypeAnnotations <- read_tsv("../code/SplicingAnalysis/IntronTypeAnnotations.txt.gz") %>%
+  unite(junc, chrom, start, stop, strand, sep=":") %>%
+  dplyr::select(junc, Geneid=gene_id, Annotation)
+
+
+MergedTable <- ModelFits.Coefficients.GAGTIntrons.MappedToGenes %>%
+  dplyr::select(junc:Pred_3160, Geneid=gene_ids) %>%
+  left_join(IntronTypeAnnotations) %>%
+  replace_na(list(Annotation="Unannotated")) %>%
+  full_join(
+    ModelFits.Coefficients.Genes %>%
+      dplyr::select(-SE) %>%
+      pivot_wider(names_from=c("param"), values_from="Estimate") %>%
+  dplyr::rename("LowerLimit" =`LowerLimit:(Intercept)`, "UpperLimit" =`UpperLimit:(Intercept)`, "Steepness" =`Steepness:(Intercept)`, "ED50" =`ED50:(Intercept)`),
+    by="Geneid", suffix=c(".Splicing", ".Expression")) %>%
+  mutate(LimitDiff.Splicing = (LowerLimit.Splicing - UpperLimit.Splicing) * sign(Steepness.Splicing)) %>%
+  mutate(LimitDiff.Expression = (LowerLimit.Expression - UpperLimit.Expression) * sign(Steepness.Expression))
+
+MergedTable %>%
+  mutate(Geneset = case_when(
+    !is.na(Annotation) ~ Annotation,
+    TRUE ~ "Not Diff GA.GT Host"
+  )) %>%
+  count(Geneset) %>%
+  ggplot(aes(x=Geneset, y=n)) +
+  geom_col() +
+  geom_label(aes(label=n), color='red') +
+  coord_flip() +
+  labs(x="category", caption=str_wrap("Number of host genes with model fits by intron type", 30))
+
+
+MergedTable %>%
+  mutate(Geneset = case_when(
+    !is.na(Annotation) ~ Annotation,
+    TRUE ~ "Not Diff GA.GT Host"
+  )) %>%
+  ggplot(aes(x=LimitDiff.Expression, color=Geneset)) +
+  geom_vline(xintercept=0) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(-5,5)) +
+  labs(x="Effect size at fit limits, Log2FC", y="ecdf")
+```
+
+Ok as expected, the crpyic unannotated introns are generally associated with down-regulation of host gene.
+
+Eventually I want to compare this to chRNA.. Maybe a more interpretable thing to do will be to express effect size in terms of the logFC at the same doses used in chRNA (extracted from the model fit), so I can then compare to differential expression analysis that I do in chRNA.
+
+
+```{r}
+
+MergedTable %>%
+  mutate(Geneset = case_when(
+    !is.na(Annotation) ~ Annotation,
+    TRUE ~ "Not Diff GA.GT Host"
+  )) %>%
+  mutate(EffectSize = Pred_3160.Expression - Pred_0.Expression) %>%
+  ggplot(aes(x=EffectSize, color=Geneset)) +
+  geom_vline(xintercept=0) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(-2,2)) +
+  labs(x="Effect size from model fit at 3160nM\n(Log2FC)", y="ecdf")
+
+MergedTable %>%
+  mutate(Geneset = case_when(
+    !is.na(Annotation) ~ Annotation,
+    TRUE ~ "Not Diff GA.GT Host"
+  )) %>%
+  mutate(ExpressionEffectSize = Pred_3160.Expression - Pred_0.Expression) %>%
+  mutate(SplicingEffectSize = Pred_3160.Splicing - Pred_0.Splicing) %>%
+  ggplot(aes(x=SplicingEffectSize, y=ExpressionEffectSize, color=Geneset)) +
+  geom_hline(yintercept=0) +
+  geom_vline(xintercept=0) +
+  geom_point() +
+  geom_smooth(method='lm') +
+  facet_wrap(~Geneset)
+  labs(x="Effect size from model fit at 3160nM\n(Log2FC)", y="ecdf")
+
+```
+
+Write out a file for Yang to try to reannotate some of the unannotated ones
+
+```{r, eval=F}
+IntronAnnotations.sQTL <- read_tsv("../code/SplicingAnalysis/IntronTypeAnnotations.JoinedWithLeafcutterJuncList.txt.gz")
+
+
+PSI.df %>%
+  dplyr::select(Leafcutter.ID) %>%
+  separate(Leafcutter.ID, into=c("#Chrom", "start", "end", "clust"),remove=F, convert=T, sep=":") %>%
+  mutate(strand = str_extract(clust, "[+-]")) %>%
+  mutate(gid_SM=paste(`#Chrom`, "_SmallMolecule", clust, sep="")) %>%
+  dplyr::select(-Leafcutter.ID) %>%
+  full_join(IntronAnnotations.sQTL) %>%
+  dplyr::select(1:3, gid, strand, gene_id, Annotation, gid_SM) %>%
+  replace_na(list(Annotation="Unannotated")) %>%
+  write_tsv("../code/SplicingAnalysis/IntronTypeAnnotations.JoinedWithLeafcutterJuncList.RisdiJuncsAdded.txt.gz")
+
+```
+
+## Differential expression in chRNA
+```{r}
+Count.table.StandardNormFactors$samples
+
+Count.table.StandardNormFactors.chRNA <- Count.table.StandardNormFactors[, c(T,T,T, F,F,F, T,T,T, F,F,F,F,F, F,F,F,F,F,F)]
+
+Count.table.StandardNormFactors.chRNA$samples$group <- factor(c("Treat","Treat","Treat","Control","Control","Control"), levels=c("Control", "Treat"))
+
+Count.table.StandardNormFactors.chRNA$samples
+
+DiffExpression <- Count.table.StandardNormFactors.chRNA %>%
+  estimateDisp() %>%
+  exactTest()
+
+DiffExpression.df <- DiffExpression$table %>%
+   as.data.frame() %>%
+   rownames_to_column("Geneid") %>%
+   mutate(q = qvalue(PValue)$qvalues)
+
+DiffExpression.df %>% pull(PValue) %>% hist()
+
+DiffExpression.df %>%
+  mutate(FDR_10 = q < 0.1,
+         FDR_05 = q < 0.05,
+         FDR_01 = q< 0.01) %>%
+  dplyr::select(Geneid, FDR_10:FDR_01) %>%
+  gather(key="Threshold", value="IsSig", FDR_10:FDR_01) %>%
+  count(Threshold, IsSig)
+
+Count.table.StandardNormFactors.chRNA["ENSG00000186891.14",]$counts %>%
+  t() %>%
+  as.data.frame()
+ 
+```
+
+Now integrate diff exrpession (dose=3160nM) results in polyA titration series and chRNA..
+
+```{r}
+DiffExpression.df %>%
+  inner_join(MergedTable) %>%
+  mutate(Geneset = case_when(
+    !is.na(Annotation) ~ Annotation,
+    TRUE ~ "Not Diff GA.GT Host"
+  )) %>%
+  mutate(PolyAEffectSize = Pred_3160.Expression - Pred_0.Expression) %>%
+  gather(key="Metric", value="value", PolyAEffectSize, logFC) %>%
+  filter(Geneset %in% c("Not Diff GA.GT Host", "Unannotated", "Unique to nonsense_mediated_decay", "Unique to processed_transcript")) %>%
+  mutate(Metric = recode(Metric, !!!c("PolyAEffectSize"="polyA", "logFC"="chRNA"))) %>%
+  mutate(Geneset = recode(Geneset, !!!c("Not Diff GA.GT Host"="Control genes", "Unannotated"="Unannotated intron", "Unique to nonsense_mediated_decay"="annotated NMD intron", "Unique to processed_transcript"="processed_transript intron"))) %>%
+  ggplot(aes(x=value, color=Geneset)) +
+  geom_vline(xintercept=0) +
+  stat_ecdf(aes(linetype=Metric)) +
+  coord_cartesian(xlim=c(-2,2)) +
+  labs(x="Host gene effect size at 3160nM, log2FC", y="ecdf", linetype="Dataset", caption="Host genes of GA-GT induced introns") +
+  theme_bw()
+  
+DiffExpression.df %>%
+  inner_join(MergedTable) %>%
+  mutate(Geneset = case_when(
+    !is.na(Annotation) ~ Annotation,
+    TRUE ~ "Not Diff GA.GT Host"
+  )) %>%
+  mutate(PolyAEffectSize = Pred_3160.Expression - Pred_0.Expression) %>%
+  filter(Geneset %in% c("Not Diff GA.GT Host", "Unannotated", "Unique to nonsense_mediated_decay", "Unique to processed_transcript")) %>%
+  mutate(Geneset = recode(Geneset, !!!c("Not Diff GA.GT Host"="Control genes", "Unannotated"="Unannotated intron", "Unique to nonsense_mediated_decay"="annotated NMD intron", "Unique to processed_transcript"="processed_transript intron"))) %>%
+  ggplot(aes(x=PolyAEffectSize, y=logFC, color=Geneset)) +
+  geom_hline(yintercept=0) +
+  geom_vline(xintercept=0) +
+  geom_point(alpha=0.5) +
+  geom_smooth(method='lm') +
+  facet_wrap(~Geneset) +
+  labs(x="polyA Effect size", y="chRNA Effect size", caption="Host genes of GA-GT induced introns.\nSplicing effects on expression are polyA-specific")
+
+
+```
+

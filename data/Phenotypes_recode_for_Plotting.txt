@@ -1,36 +1,38 @@
-PC	Alias	ShorterAlias	Include
-chRNA.Expression_ncRNA	Expression_chRNA.ncRNA	ncRNA_chRNA	T
-chRNA.Expression_cheRNA	Expression_chRNA.ncRNA	ncRNA_chRNA	F
-chRNA.Expression_eRNA	chRNA_ncRNA	ncRNA_chRNA	F
-chRNA.Expression_lncRNA	chRNA_ncRNA	ncRNA_chRNA	F
-chRNA.Expression_snoRNA		ncRNA_chRNA	F
-chRNA.Expression.Splicing	ncRNA.Expression_chRNA	Expression_chRNA	T
-chRNA.IER		Splicing.IR_chRNA	T
-chRNA.IR	chRNA_IR	Splicing.IR_chRNA	F
-chRNA.IRjunctions		Splicing.IR_chRNA	F
-chRNA.Slopes		slope_chRNA	F
-chRNA.Splicing	chRNA_Splicing	Splicing_chRNA	T
-CTCF		CTCF	F
-Expression.Splicing	Expression_polyA	Expression_polyA	F
-Expression.Splicing.Subset_YRI		Expression_polyA	T
-H3K27AC	H3K27AC	H3K27AC	T
-H3K36ME3		H3K36ME3	T
-H3K4ME1	H3K4ME1	H3K4ME1	T
-H3K4ME3	H3K4ME3	H3K4ME3	T
-MetabolicLabelled.30min	Expression_Metabolic.30min	Expression_Metabolic.30min	T
-MetabolicLabelled.30min.IER		Splicing_metabolic30	F
-MetabolicLabelled.30min.IR		Splicing_metabolic30	F
-MetabolicLabelled.30min.IRjunctions		Splicing_metabolic30	F
-MetabolicLabelled.30min.Splicing	Splicing.Metabolic30min	Splicing_metabolic30	F
-MetabolicLabelled.60min		Expression_Metabolic.60min	T
-MetabolicLabelled.60min.IER		Splicing_metabolic60	F
-MetabolicLabelled.60min.IR		Splicing_metabolic60	F
-MetabolicLabelled.60min.IRjunctions		Splicing_metabolic60	F
-MetabolicLabelled.60min.Splicing	Splicing.Metabolic60min	Splicing_metabolic60	F
-polyA.IER		Splicing.IR_polyA	T
-polyA.IR	Splicing_polyA.IR	Splicing.IR_polyA	F
-polyA.IR.Subset_YRI	Splicing_IR_polyA	Splicing.IR_polyA	F
-polyA.IRjunctions		Splicing.IR_polyA	F
-polyA.Splicing	Splicing_polyA.AllGeauvadis	Splicing_polyA	F
-polyA.Splicing.Subset_YRI	Splicing	Splicing_polyA	T
-ProCap	ProCap	ProCap	T
+PC	Alias	ShorterAlias	ShorterAlias2	Include
+APA_Nuclear	APA_Nuclear	APA_Nuclear	APA	T
+APA_Total	APA_Total	APA_Total	APA	T
+chRNA.Expression_ncRNA	Expression_chRNA.ncRNA	ncRNA_chRNA	ncRNA_chRNA	T
+chRNA.Expression_cheRNA	Expression_chRNA.ncRNA	ncRNA_chRNA	ncRNA_chRNA	F
+chRNA.Expression_eRNA	chRNA_ncRNA	ncRNA_chRNA	ncRNA_chRNA	F
+chRNA.Expression_lncRNA	chRNA_ncRNA	ncRNA_chRNA	ncRNA_chRNA	F
+chRNA.Expression_snoRNA		ncRNA_chRNA	ncRNA_chRNA	F
+chRNA.Expression.Splicing	ncRNA.Expression_chRNA	Expression_chRNA	Expression_chRNA	T
+chRNA.IER		Splicing.IR_chRNA	Splicing.IR_chRNA	T
+chRNA.IR	chRNA_IR	Splicing.IR_chRNA	Splicing.IR_chRNA	F
+chRNA.IRjunctions		Splicing.IR_chRNA	Splicing.IR_chRNA	F
+chRNA.Slopes		slope_chRNA	slope_chRNA	F
+chRNA.Splicing	chRNA_Splicing	Splicing_chRNA	Splicing_chRNA	T
+CTCF		CTCF	CTCF	F
+Expression.Splicing	Expression_polyA	Expression_polyA	Expression_polyA	F
+Expression.Splicing.Subset_YRI		Expression_polyA	Expression_polyA	T
+H3K27AC	H3K27AC	H3K27AC	H3K27AC|H3K4ME1|H3K4ME3	T
+H3K36ME3		H3K36ME3	H3K36ME3	T
+H3K4ME1	H3K4ME1	H3K4ME1	H3K27AC|H3K4ME1|H3K4ME3	T
+H3K4ME3	H3K4ME3	H3K4ME3	H3K27AC|H3K4ME1|H3K4ME3	T
+MetabolicLabelled.30min	Expression_Metabolic.30min	Expression_Metabolic.30min	Expression_Metabolic.30min	T
+MetabolicLabelled.30min.IER		Splicing_metabolic30	Splicing_metabolic30	F
+MetabolicLabelled.30min.IR		Splicing_metabolic30	Splicing_metabolic30	F
+MetabolicLabelled.30min.IRjunctions		Splicing_metabolic30	Splicing_metabolic30	F
+MetabolicLabelled.30min.Splicing	Splicing.Metabolic30min	Splicing_metabolic30	Splicing_metabolic30	F
+MetabolicLabelled.60min		Expression_Metabolic.60min	Expression_Metabolic.60min	T
+MetabolicLabelled.60min.IER		Splicing_metabolic60	Splicing_metabolic60	F
+MetabolicLabelled.60min.IR		Splicing_metabolic60	Splicing_metabolic60	F
+MetabolicLabelled.60min.IRjunctions		Splicing_metabolic60	Splicing_metabolic60	F
+MetabolicLabelled.60min.Splicing	Splicing.Metabolic60min	Splicing_metabolic60	Splicing_metabolic60	F
+polyA.IER		Splicing.IR_polyA	Splicing.IR_polyA	T
+polyA.IR	Splicing_polyA.IR	Splicing.IR_polyA	Splicing.IR_polyA	F
+polyA.IR.Subset_YRI	Splicing_IR_polyA	Splicing.IR_polyA	Splicing.IR_polyA	F
+polyA.IRjunctions		Splicing.IR_polyA	Splicing.IR_polyA	F
+polyA.Splicing	Splicing_polyA.AllGeauvadis	Splicing_polyA	Splicing_polyA	F
+polyA.Splicing.Subset_YRI	Splicing	Splicing_polyA	Splicing_polyA	T
+ProCap	ProCap	ProCap	ProCap	T

@@ -1,0 +1,7 @@
+name: biopython
+channels:
+  - bioconda
+  - defaults
+  - conda-forge
+  - r
+prefix: /project2/gilad/bjf79_project1/envs/biopython

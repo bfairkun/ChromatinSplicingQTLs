@@ -178,7 +178,8 @@ rule fastp:
         json = "FastqFastp/{Phenotype}/{IndID}/{Rep}.fastp.json"
     params:
         I = "-I",
-        O = "-O"
+        O = "-O",
+        extra = ""
     resources:
         mem_mb = 8000
     log:
@@ -187,7 +188,7 @@ rule fastp:
         "../envs/fastp.yml"
     shell:
         """
-        fastp -i {input.R1} {params.I} {input.R2} -o {output.R1} {params.O} {output.R2} --html {output.html} --json {output.json} &> {log}
+        fastp -i {input.R1} {params.I} {input.R2} -o {output.R1} {params.O} {output.R2} --html {output.html} --json {output.json} {params.extra} &> {log}
         """
 
 use rule fastp as fastp_SE with:
@@ -203,4 +204,5 @@ use rule fastp as fastp_SE with:
         "logs/fastpSE/{Phenotype}.{IndID}.{Rep}.log"
     params:
         I = "",
-        O = ""
+        O = "",
+        extra = ""

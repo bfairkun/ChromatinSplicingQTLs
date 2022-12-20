@@ -11,7 +11,7 @@
 #Use hard coded arguments in interactive R session, else use command line args
 if(interactive()){
     args <- scan(text=
-                 'scratch/test.txt.gz gwas_summary_stats/StatsForColoc/GCST004603.standardized.txt.gz scratch/test.txt.gz ', what='character')
+                 'hyprcoloc/LociWiseSummaryStatsInput/ForGWASColoc/GCST004603.txt.gz gwas_summary_stats/StatsForColoc/GCST004603.standardized.txt.gz scratch/test.out.txt.gz ', what='character')
 } else{
     args <- commandArgs(trailingOnly=TRUE)
 }
@@ -31,7 +31,7 @@ if (args[4] == '' | is.na(args[4])){
         unlist(strsplit(args[4], ' '))
 }
 
-SummaryStats <- fread(FileIn, nrows=10000) %>%
+SummaryStats <- fread(FileIn, nrows=Inf) %>%
     separate(snp, into=c("chrom", "pos", "A1_mol", "A2_mol"), sep=":", convert=T, remove=F) %>%
     mutate(chrom = paste0("chr", chrom)) %>%
     mutate(gwas_locus = str_replace(gwas_locus, "(.+?)_(.+?)_.+_(.+?)$", "chr\\1_\\2_\\3"))
@@ -47,7 +47,7 @@ HyprcolocResults.list <- vector("list", length(Loci))
 
 for (i in seq_along(Loci)){
 
-    TestLocus <- Loci[1]
+    # TestLocus <- Loci[1]
     TestLocus <- Loci[i]
     print(paste0("running loci", i, " : ", TestLocus))
 
