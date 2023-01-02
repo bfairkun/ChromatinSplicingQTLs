@@ -25,27 +25,27 @@ def get_closest_gene(ua, sp_gene_list, ncRNA_bed, pcQTLs_permutation, ncQTLs_per
         
         if strand == '+':
             ncRNA_start = int(ncRNA_bed.loc[ua].start)
-            if gene in pcQTLs_permutation.index:
-                gene_start = int(pcQTLs_permutation.loc[gene].phe_to)
-            elif gene in ncQTLs_permutation.index:
-                gene_start = int(ncQTLs_permutation.loc[gene].phe_to)
-#             if sp in tss.index:
-#                 gene_start = int(tss.loc[sp].end)
-#             elif sp in ncRNA_match_bed.index:
-#                 gene_start = int(ncRNA_match_bed.loc[sp].end)
+#             if gene in pcQTLs_permutation.index:
+#                 gene_start = int(pcQTLs_permutation.loc[gene].phe_to)
+#             elif gene in ncQTLs_permutation.index:
+#                 gene_start = int(ncQTLs_permutation.loc[gene].phe_to)
+            if sp in tss.index:
+                gene_start = int(tss.loc[sp].end)
+            elif sp in ncRNA_match_bed.index:
+                gene_start = int(ncRNA_match_bed.loc[sp].end)
             else:
                 raise Exception(sp)
 
         else:
             ncRNA_start = int(ncRNA_bed.loc[ua].end)
-            if gene in pcQTLs_permutation.index:
-                gene_start = int(pcQTLs_permutation.loc[gene].phe_from)
-            elif gene in ncQTLs_permutation.index:
-                gene_start = int(ncQTLs_permutation.loc[gene].phe_from)
-#             if sp in tss.index:
-#                 gene_start = int(tss.loc[sp].start)
-#             elif sp in ncRNA_match_bed.index:
-#                 gene_start = int(ncRNA_match_bed.loc[sp].start)
+#             if gene in pcQTLs_permutation.index:
+#                 gene_start = int(pcQTLs_permutation.loc[gene].phe_from)
+#             elif gene in ncQTLs_permutation.index:
+#                 gene_start = int(ncQTLs_permutation.loc[gene].phe_from)
+            if sp in tss.index:
+                gene_start = int(tss.loc[sp].start)
+            elif sp in ncRNA_match_bed.index:
+                gene_start = int(ncRNA_match_bed.loc[sp].start)
             else:
                 raise Exception(sp)
             
@@ -152,17 +152,26 @@ def get_gene_and_nc_lists(annotation_, ncQTLs_permutation, pcQTLs_permutation, b
                 ua, sp_gene_list, bed, pcQTLs_permutation, 
                                         ncQTLs_permutation, ncRNA_match_bed, tss_bed)
             
-            gene_tss = pcQTLs_permutation.loc[gene_ids].phe_from
-            ncRNA_tss = ncQTLs_permutation.loc[ua].phe_from
-            gene_tts = pcQTLs_permutation.loc[gene_ids].phe_to
-            ncRNA_tts = ncQTLs_permutation.loc[ua].phe_to
+#             gene_tss = pcQTLs_permutation.loc[gene_ids].phe_from
+#             ncRNA_tss = ncQTLs_permutation.loc[ua].phe_from
+#             gene_tts = pcQTLs_permutation.loc[gene_ids].phe_to
+#             ncRNA_tts = ncQTLs_permutation.loc[ua].phe_to
     
-#             if uaGene_strand == '+':
-#                 gene_tts = pcQTLs_permutation.loc[gene_ids].phe_to
-#                 ncRNA_tts = ncQTLs_permutation.loc[ua].phe_from
-#             else:
-#                 gene_tts = pcQTLs_permutation.loc[gene_ids].phe_from
-#                 ncRNA_tts = ncQTLs_permutation.loc[ua].phe_to
+            ncRNA_tss = ncQTLs_permutation.loc[ua].phe_from
+            ncRNA_tts = ncQTLs_permutation.loc[ua].phe_to
+            if uaGene_strand == '+':
+                gene_tts = pcQTLs_permutation.loc[gene_ids].phe_to
+                
+            else:
+                gene_tts = gene_tss
+                gene_tss = pcQTLs_permutation.loc[gene_ids].phe_from
+                
+            if int(gene_tts) < int(gene_tss):
+                print('Gene TTS < TSS. This should be rare')
+                gene_tss = pcQTLs_permutation.loc[gene_ids].phe_from
+                gene_tts = pcQTLs_permutation.loc[gene_ids].phe_to
+                
+                
             nc_ids = '.'
             
         elif len(nc_id_list) >= 1:
@@ -170,13 +179,24 @@ def get_gene_and_nc_lists(annotation_, ncQTLs_permutation, pcQTLs_permutation, b
                 ua, sp_nc_list, bed, ncQTLs_permutation, 
                                       ncQTLs_permutation, ncRNA_match_bed, tss_bed)
             gene_ids = '.'  
+            if uaGene_strand == '+':
+                gene_tts = ncQTLs_permutation.loc[nc_ids].phe_to
+                
+            else:
+                gene_tts = gene_tss
+                gene_tss = ncQTLs_permutation.loc[nc_ids].phe_from
+                
+            if int(gene_tts) < int(gene_tss):
+                print('ncRNA TTS < TSS. This should be rare')
+                gene_tss = ncQTLs_permutation.loc[nc_ids].phe_from
+                gene_tts = ncQTLs_permutation.loc[nc_ids].phe_to
 #             if uaGene_strand == '+':
 #                 gene_tts = ncQTLs_permutation.loc[nc_ids].phe_to
 #                 ncRNA_tts = ncQTLs_permutation.loc[ua].phe_from
 #             else:
-            gene_tss = ncQTLs_permutation.loc[nc_ids].phe_from
+#             gene_tss = ncQTLs_permutation.loc[nc_ids].phe_from
             ncRNA_tss = ncQTLs_permutation.loc[ua].phe_from
-            gene_tts = ncQTLs_permutation.loc[nc_ids].phe_to
+#             gene_tts = ncQTLs_permutation.loc[nc_ids].phe_to
             ncRNA_tts = ncQTLs_permutation.loc[ua].phe_to
         else:
             nc_ids = '.'
