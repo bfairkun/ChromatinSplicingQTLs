@@ -194,11 +194,11 @@ Not sure why that doesn't look right. let's try looking at mean deltaPSI
 
 ```{r}
 PSI.ByDonor.Summary <- PSI.tidy %>%
-  filter(LibraryType == "polyA") %>%
+  # filter(LibraryType == "polyA") %>%
   # mutate(Is.GA.GT = str_detect(DonorSeq, "^\\w{2}GAGT")) %>%
   # filter(!is.na(Is.GA.GT)) %>%
   mutate(Is.GA.GT = substr(DonorSeq, 3,4)) %>%
-  group_by(dose.nM, Is.GA.GT) %>%
+  group_by(dose.nM, Is.GA.GT, LibraryType) %>%
   summarise(PSI.summary = mean(PSI, na.rm=T)) %>%
   ungroup() %>%
   drop_na()
@@ -206,12 +206,12 @@ PSI.ByDonor.Summary <- PSI.tidy %>%
 left_join(
   PSI.ByDonor.Summary,
   PSI.ByDonor.Summary %>% filter(dose.nM == 0) %>%
-    dplyr::select(Is.GA.GT, PSI.summary),
-  by=c("Is.GA.GT")
+    dplyr::select(Is.GA.GT, PSI.summary, LibraryType),
+  by=c("Is.GA.GT", "LibraryType")
 ) %>%
   mutate(MeanPSIFoldChange=(PSI.summary.x-PSI.summary.y)) %>%
-  ggplot(aes(x=dose.nM, y=MeanPSIFoldChange, group=Is.GA.GT, color=Is.GA.GT=="GA")) +
-  geom_line() +
+  ggplot(aes(x=dose.nM, y=MeanPSIFoldChange, color=Is.GA.GT=="GA",  group=interaction(Is.GA.GT, LibraryType))) +
+  geom_line(aes(linetype=LibraryType)) +
   geom_point() + 
   scale_x_continuous(trans="log1p", limits=c(0, 10000), breaks=c(10000, 3160, 1000, 316, 100, 31.6, 10, 3.16, 0), labels=c(10000, 3160, 1000, 316, 100, 31.6, 10, 3.16, 0)) +
   # facet_wrap(~Is.GA.GT, scales = "free_y") +
@@ -221,8 +221,7 @@ left_join(
 
 
 Mean.PSI <- PSI.tidy %>%
-  filter(LibraryType == "polyA") %>%
-  group_by(Intron, dose.nM, DonorSeq) %>%
+  group_by(Intron, dose.nM, DonorSeq, LibraryType) %>%
   summarise(PSI=mean(PSI, na.rm=T)) %>%
   ungroup()
 
@@ -230,17 +229,17 @@ inner_join(
   Mean.PSI,
   Mean.PSI %>%
     filter(dose.nM==0) %>%
-    dplyr::select(Intron, DonorSeq, PSI),
-  by=c("Intron", "DonorSeq")
+    dplyr::select(Intron, DonorSeq, PSI, LibraryType),
+  by=c("Intron", "DonorSeq", "LibraryType")
 ) %>%
   mutate(Is.GA.GT = substr(DonorSeq, 3,4)) %>%
   mutate(DeltaPSI=(PSI.x-PSI.y)) %>%
-  group_by(dose.nM, Is.GA.GT) %>%
+  group_by(dose.nM, Is.GA.GT, LibraryType) %>%
   summarise(PSI.summary = mean(DeltaPSI, na.rm=T)) %>%
   ungroup() %>%
   drop_na() %>%
-  ggplot(aes(x=dose.nM, y=PSI.summary, group=Is.GA.GT, color=Is.GA.GT=="GA")) +
-  geom_line() +
+  ggplot(aes(x=dose.nM, y=PSI.summary, color=Is.GA.GT=="GA",  group=interaction(Is.GA.GT, LibraryType))) +
+  geom_line(aes(linetype=LibraryType)) +
   geom_point() + 
   scale_x_continuous(trans="log1p", limits=c(0, 10000), breaks=c(10000, 3160, 1000, 316, 100, 31.6, 10, 3.16, 0), labels=c(10000, 3160, 1000, 316, 100, 31.6, 10, 3.16, 0)) +
   # facet_wrap(~Is.GA.GT, scales = "free_y") +
@@ -251,6 +250,60 @@ inner_join(
 
 
 ```
+
+Now make a nicer version of this figure. Yang's suggestions to make it nicer included grouping all 16 diculeotides into three groups for simplicity: GA|GT, AG|GT, and everything else. Then also make some confidence interval, perhaps by bootstrapping.
+
+```{r}
+dat.to.plot.GAGT.enrichment <- inner_join(
+  Mean.PSI,
+  Mean.PSI %>%
+    filter(dose.nM==0) %>%
+    dplyr::select(Intron, DonorSeq, PSI, LibraryType),
+  by=c("Intron", "DonorSeq", "LibraryType")
+) %>%
+  mutate(Is.GA.GT = substr(DonorSeq, 3,4)) %>%
+  mutate(DinculeotideCategory = case_when(
+    Is.GA.GT == "AG" ~ "AG|GU",
+    Is.GA.GT == "GA" ~ "GA|GU",
+    TRUE ~ "not (AG or GA)|GU"
+  )) %>%
+  mutate(DeltaPSI=(PSI.x-PSI.y))
+
+
+# Bootstrap resamples for confidence intervals
+NumIterations <- 200
+ResampleResults <- list()
+for (i in 1:NumIterations){
+  df <- dat.to.plot.GAGT.enrichment %>%
+    group_by(dose.nM, DinculeotideCategory, LibraryType) %>%
+    sample_frac(replace=T) %>%
+    ungroup() %>%
+    group_by(dose.nM, DinculeotideCategory, LibraryType) %>%
+    summarise(PSI.summary = mean(DeltaPSI, na.rm=T)) %>%
+    ungroup() %>%
+    drop_na()
+  ResampleResults[[i]] <- df
+}
+
+bind_rows(ResampleResults, .id="iteration") %>%
+  group_by(dose.nM, DinculeotideCategory, LibraryType) %>%
+  summarise(enframe(quantile(PSI.summary, c(0.025, 0.5, 0.975)), "ResampledQuantile", "MeanDeltaPSI")) %>%
+  pivot_wider(names_from="ResampledQuantile", values_from="MeanDeltaPSI") %>%
+  ggplot(aes(x=dose.nM, y=`50%`, color=DinculeotideCategory,linetype=LibraryType, group=interaction(DinculeotideCategory, LibraryType))) +
+  geom_ribbon(aes(ymin=`2.5%`, ymax=`97.5%`, fill=DinculeotideCategory), alpha=0.1, size=0.5) +
+  geom_line(size=1) +
+  geom_point() + 
+  scale_x_continuous(trans="log1p", limits=c(0, 10000), breaks=c(10000, 3160, 1000, 316, 100, 31.6, 10, 3.16, 0), labels=c(10000, 3160, 1000, 316, 100, 31.6, 10, 3.16, 0)) +
+  scale_colour_brewer(type="qual", palette = "Dark2") +
+  scale_fill_brewer(type="qual", palette = "Dark2") +
+  # facet_wrap(~Is.GA.GT, scales = "free_y") +
+  # scale_y_continuous(trans="log1p") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1)) +
+  labs(y="Mean deltaPSI", x="dose (nM)", caption=str_wrap("Average DeltaPSI across all introns", 30))
+
+
+```
+
 
 ### Consider intronless gene normalization
 
