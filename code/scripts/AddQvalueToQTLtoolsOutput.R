@@ -23,9 +23,9 @@ Pass <- args[3]
 library(tidyverse)
 library(qvalue)
 
-dat.in <- read_delim(FileIn, delim=' ')
+dat.in <- read_delim(FileIn, delim=' ') %>% na.omit()
 
-if (Pass %in% c('PermutationPass', 'GroupedPermutationPass')){
+if (Pass %in% c('PermutationPass', 'GroupedPermutationPass', 'PermutationPass500kb')){
 dat.in$q <- signif(qvalue(dat.in$adj_beta_pval)$qvalues, 5)
 } else {
 dat.in$q <- signif(qvalue(dat.in$nom_pval)$qvalues, 5)

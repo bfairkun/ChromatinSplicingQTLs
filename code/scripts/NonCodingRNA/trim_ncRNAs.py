@@ -28,6 +28,32 @@ def trim_expression(expression_list, strict):
                 break
     return trim_length
 
+def get_largest_string_non_zero(x):
+    cum_sum = []
+    suma= 0
+    for i in x:
+        if (i > 1.1):
+            suma+= 1
+        else:
+            suma = 0
+        cum_sum.append(suma)
+    
+    max_cum_sum = np.max(cum_sum)
+    largest_string_non_zero = max_cum_sum/len(x)
+    return largest_string_non_zero
+
+def is_fractured(transcripto):
+    x = [int(x) for x in transcripto.split(',')]
+    if np.max(x) >= 3.9:
+        return False
+    largest_string_non_zero = get_largest_string_non_zero(x)
+    mean_non_zero = np.mean(np.array(x)>1)
+    
+    if (mean_non_zero > 0.4) and (largest_string_non_zero < 0.2):
+        return True
+    else:
+        return False
+
 def trim_and_split(hmm, ncRNA, split_len = 50, min_len=200, min_portion = 0.2, strict=True,
                   strand = 'plus'):
     
@@ -45,14 +71,33 @@ def trim_and_split(hmm, ncRNA, split_len = 50, min_len=200, min_portion = 0.2, s
     if strict:
         transcripto_split = transcripto.split(',')
         counts = [int(x) for x in transcripto_split]
+        
+        
+        largest_non_zero = get_largest_string_non_zero(counts)
+        percent_zero = np.mean(np.array(counts) == 1)
+        
+        
+#         if is_fractured(counts):#np.mean(counts) > 1.5:
+#             split_len = 1e100
+        
         #if (np.max(counts)==4):
-        if (np.max(counts)==4) or (np.quantile(counts, 0.5)>=3):
-            if np.quantile(counts, 0.75) <= 3:
+        if (np.max(counts)==4) or (np.quantile(counts, 0.5)>=2.9):
+            if np.quantile(counts, 0.75) <= 3.1:
                 transcripto = transcripto.replace('2,'*100, '3,'*100)
                 transcripto_split = transcripto.split(',')
             transcripto_split = ['1' if x == '2' else x for x in transcripto_split]
+            if np.quantile(counts, 0.75) >= 3.9:
+                print('enormous!')
+                transcripto_split = ['1' if x == '3' else x for x in transcripto_split]
+        elif (largest_non_zero > 0.25) and (percent_zero > 0.5):
+            split_len = 5
+            
         transcripto = ','.join(transcripto_split)
         
+    if is_fractured(transcripto):#np.mean(counts) > 1.5:
+        print('fractured!')
+        end = len(transcripto.split(','))*50
+        return [0], [end]
     split_transcripts = transcripto.split(','.join(['1']*split_len))
     
     longest = max([len(x) for x in split_transcripts])
@@ -292,7 +337,7 @@ if __name__ == '__main__':
         if (RPKM.loc[n].median() >= 1) or (ln > 100):
 #             if (ln < 750):
             if (ln < 650):
-                srt, end = trim_and_split(hmm, n, min_len=50, strict=True, split_len=50, strand=strand)
+                srt, end = trim_and_split(hmm, n, min_len=50, strict=True, split_len=10, strand=strand)
 #             elif (ln >= 750):
             else:
                 srt, end = trim_and_split(hmm, n, min_len=50, strict=True, split_len=100, strand=strand)

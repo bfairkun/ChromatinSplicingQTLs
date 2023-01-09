@@ -171,8 +171,8 @@ def GetUnfilteredBaiForBigwig(wildcards):
 def GetBigwigParams(wildcards):
     if wildcards.Phenotype in [i for i in RNASeqPhenotypes if i != "ProCap"]:
         return "-split"
-    elif wildcards.Phenotype == "ProCap":
-        return "-5"
+#     elif wildcards.Phenotype == "ProCap":
+#         return "-5"
     elif wildcards.Phenotype in ChromatinProfilingPhenotypes:
         return ""
     else:

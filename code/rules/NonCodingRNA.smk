@@ -280,7 +280,7 @@ rule GetTranscriptsFromHMM:
         #(zcat {input.pc_genes} | awk '$1=="{wildcards.chrom}" && $6=="{params.strand}" {{print $0, {params.init_counts} }}' OFS='\\t' -  > {output.pc1}) &>> {log};
         (zcat {input.genes} | grep protein_coding | awk '$1=="{wildcards.chrom}" && $6=="{params.strand}" {{print $0, {params.init_counts} }}' OFS='\\t' -  > {output.pc1}) &>> {log};
         echo 'step 6' >> {log};
-        (zcat {input.genes} | grep "snoRNA\\|snRNA" - | grep {wildcards.chrom} - | awk '$1=="{wildcards.chrom}" && $6=="{params.strand}" {{print $0, {params.init_counts} }}' OFS='\\t' - >> {output.pc1}) &>> {log};
+        (zcat {input.genes} | grep "snoRNA" - | grep {wildcards.chrom} - | awk '$1=="{wildcards.chrom}" && $6=="{params.strand}" {{print $0, {params.init_counts} }}' OFS='\\t' - >> {output.pc1}) &>> {log};
         echo 'step 7' >> {log};
         ########
         (bedtools slop -i {output.pc1} -b 2000 -g {input.chrom_sizes} | bedtools intersect -s -a {output.sample_counts} -b - -u | bedtools merge -i - -s -c {params.merge_c} -o first,first,first,{params.merge_o} | bedtools sort -i - | gzip - > {output.overlap_counts}) &>> {log};
@@ -327,7 +327,7 @@ rule trim_ncRNAs:
         "logs/NonCodingRNA/TrimHMM.{chrom}.{strand}.log"
     shell:
         """
-        python scripts/NonCodingRNA/trim_ncRNAs.py --chrom {wildcards.chrom} --strand {wildcards.strand} &> {log}
+        python scripts/NonCodingRNA/trim_ncRNAs2.py --chrom {wildcards.chrom} --strand {wildcards.strand} &> {log}
         """
         
         

@@ -34,6 +34,9 @@ include: "rules/CalculatePi1.smk"
 include: "rules/CreateUnstandardizedPhenotypeMatrices.smk"
 include: "rules/Metaplots.smk"
 include: "rules/CarlosDevelop.smk"
+include: "rules/ncQTLs_plots.smk"
+
+
 include: "rules/ProcessSmallMoleculeData.smk"
 
 
