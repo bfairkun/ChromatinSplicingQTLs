@@ -73,6 +73,41 @@ One thing I will have to consider is how to best normalize libraries. Since I su
 GeneCounts.filtered <- GeneCounts %>%
   filter(Geneid %in% Genes$name)
 
+# Or alternatively, use protein coding genes with mean CPM>1 in polyA DMSO samples 
+
+# function to help parse gtf file to identify protein coding genes
+extract_attributes <- function(gtf_attributes, att_of_interest){
+  att <- unlist(strsplit(gtf_attributes, " "))
+  if(att_of_interest %in% att){
+    return(gsub("\"|;","", att[which(att %in% att_of_interest)+1]))
+  }else{
+    return(NA)}
+}
+
+#Get protein coding features, using same gtf as used in featureCounts so that gene_ids perfectly match
+gtf <- read_tsv("../code/ReferenceGenome/Annotations/gencode.v34.chromasomal.basic.annotation.gtf", comment="#", n_max=Inf, col_names=c("seqname", "source", "feature", "start", "end", "score", "strand", "frame", "attribute" )) %>%
+    filter(feature=="gene") %>%
+    dplyr::select(attribute)
+gtf$gene_id <- unlist(lapply(gtf$attribute, extract_attributes, "gene_id"))
+gtf$gene_type <- unlist(lapply(gtf$attribute, extract_attributes, "gene_type"))
+ProteinCodingGenes <- filter(gtf, gene_type=="protein_coding") %>% pull(gene_id)
+
+GenesToInclude <- GeneCounts %>%
+  dplyr::select(Geneid, contains("DMSO_NA_LCL_polyA")) %>%
+  filter(Geneid %in% ProteinCodingGenes) %>%
+  column_to_rownames("Geneid") %>%
+  DGEList() %>%
+  calcNormFactors() %>%
+  cpm(prior.count=0.1, log=F) %>%
+  log2() %>%
+  apply(1, mean) %>%
+  as.data.frame() %>%
+  filter(`.` > 1) %>%
+  rownames_to_column("Geneid")
+
+GeneCounts.filtered <- GeneCounts %>%
+  filter(Geneid %in% GenesToInclude$Geneid)
+
 Count.table.StandardNormFactors <- GeneCounts.filtered %>%
   dplyr::select(-c(2:6)) %>%
   column_to_rownames("Geneid") %>%
@@ -649,6 +684,7 @@ IntronTypeAnnotations <- read_tsv("../code/SplicingAnalysis/IntronTypeAnnotation
   dplyr::select(junc, Geneid=gene_id, Annotation)
 
 
+
 MergedTable <- ModelFits.Coefficients.GAGTIntrons.MappedToGenes %>%
   dplyr::select(junc:Pred_3160, Geneid=gene_ids) %>%
   left_join(IntronTypeAnnotations) %>%
@@ -786,11 +822,12 @@ DiffExpression.df %>%
     !is.na(Annotation) ~ Annotation,
     TRUE ~ "Not Diff GA.GT Host"
   )) %>%
+  # pull(Geneset) %>% unique()
   mutate(PolyAEffectSize = Pred_3160.Expression - Pred_0.Expression) %>%
   gather(key="Metric", value="value", PolyAEffectSize, logFC) %>%
-  filter(Geneset %in% c("Not Diff GA.GT Host", "Unannotated", "Unique to nonsense_mediated_decay", "Unique to processed_transcript")) %>%
+  filter(Geneset %in% c("Not Diff GA.GT Host", "Unannotated", "Unique to nonsense_mediated_decay", "In protein_coding")) %>%
   mutate(Metric = recode(Metric, !!!c("PolyAEffectSize"="polyA", "logFC"="chRNA"))) %>%
-  mutate(Geneset = recode(Geneset, !!!c("Not Diff GA.GT Host"="Control genes", "Unannotated"="Unannotated intron", "Unique to nonsense_mediated_decay"="annotated NMD intron", "Unique to processed_transcript"="processed_transript intron"))) %>%
+  mutate(Geneset = recode(Geneset, !!!c("Not Diff GA.GT Host"="Control genes", "Unannotated"="Unannotated intron", "Unique to nonsense_mediated_decay"="annotated NMD intron", "In protein_coding"="Annotated canonical intron"))) %>%
   ggplot(aes(x=value, color=Geneset)) +
   geom_vline(xintercept=0) +
   stat_ecdf(aes(linetype=Metric)) +
@@ -805,8 +842,9 @@ DiffExpression.df %>%
     TRUE ~ "Not Diff GA.GT Host"
   )) %>%
   mutate(PolyAEffectSize = Pred_3160.Expression - Pred_0.Expression) %>%
-  filter(Geneset %in% c("Not Diff GA.GT Host", "Unannotated", "Unique to nonsense_mediated_decay", "Unique to processed_transcript")) %>%
-  mutate(Geneset = recode(Geneset, !!!c("Not Diff GA.GT Host"="Control genes", "Unannotated"="Unannotated intron", "Unique to nonsense_mediated_decay"="annotated NMD intron", "Unique to processed_transcript"="processed_transript intron"))) %>%
+  filter(Geneset %in% c("Not Diff GA.GT Host", "Unannotated", "Unique to nonsense_mediated_decay", "In protein_coding")) %>%
+  mutate(Geneset = recode(Geneset, !!!c("Not Diff GA.GT Host"="Control genes", "Unannotated"="Unannotated intron", "Unique to nonsense_mediated_decay"="annotated NMD intron", "In protein_coding"="Annotated canonical intron"))) %>%
+  # ggplot(aes(x=value, color=Geneset)) +
   ggplot(aes(x=PolyAEffectSize, y=logFC, color=Geneset)) +
   geom_hline(yintercept=0) +
   geom_vline(xintercept=0) +
