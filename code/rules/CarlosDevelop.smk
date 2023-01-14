@@ -47,9 +47,9 @@ rule QTLTools_caller:
           "QTLs/QTLTools/chRNA.Expression{RNA_type}/OnlyFirstReps.qqnorm.bed.gz",
           RNA_type = [".Splicing", "_ncRNA"],
         ),
-        expand("RPKM_tables/{Phenotype}.RPKM.bed.gz",
-               Phenotype = ["chRNA", "polyA", "MetabolicLabelled.30min", "MetabolicLabelled.60min"]
-        ),
+        #expand("RPKM_tables/{Phenotype}.RPKM.bed.gz",
+        #       Phenotype = ["chRNA", "polyA", "MetabolicLabelled.30min", "MetabolicLabelled.60min"]
+        #),
         expand(
           "QTLs/QTLTools/{Phenotype}/{Pass}.txt.gz",
           Phenotype = ["chRNA.Splicing", "chRNA.Expression.Splicing", "chRNA.Expression_ncRNA",
@@ -58,10 +58,23 @@ rule QTLTools_caller:
                        "MetabolicLabelled.30min_ncRNA", "MetabolicLabelled.60min_ncRNA",
                        "chRNA.Splicing.Order", "chRNA.IER", "polyA.IER", 
                        "polyA.IER.Subset_YRI", "chRNA.Slopes", "H3K36ME3", "H3K4ME3", "H3K4ME1","H3K27AC",
-                       "H3K36ME3_ncRNA", "MetabolicLabelled.30min.IER", "MetabolicLabelled.60min.IER",                                "ProCap_uaRNA"],
+                       "H3K36ME3_ncRNA", "MetabolicLabelled.30min.IER", "MetabolicLabelled.60min.IER",                                "ProCap_uaRNA", "DNaseISensitivity"],
           Pass = ["PermutationPass.FDR_Added", "NominalPass"]
         ),
 
+
+rule GatherCPM:
+    input:
+        expand(
+          "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsUnstandardized.qqnorm.bed.gz",
+          Phenotype = ["chRNA.Expression.Splicing", "Expression.Splicing", 
+                       "Expression.Splicing.Subset_YRI",  "MetabolicLabelled.30min", 
+                       "MetabolicLabelled.60min"],
+        ),
+        expand(
+        "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsUnstandardized_AtTSS.qqnorm.bed.gz",
+        Phenotype = ["H3K27AC", "H3K4ME1", "H3K4ME3"]
+        ),
 
 rule HMM_develop:
     input:
@@ -89,6 +102,14 @@ rule IntronCounts_develop:
         "SplicingAnalysis/GeneIntronCounts/MetabolicLabelled.30min.GeneIntronCounts.bed.gz",
         "SplicingAnalysis/GeneIntronCounts/MetabolicLabelled.60min.GeneIntronCounts.bed.gz",
         
+
+rule GatherDNaseBigWigs:
+    input:
+        expand(
+            "bigwigs/DNaseISensitivity/{IndID}.merged.bw",
+            zip,
+            IndID=DNaseSamples_df["IndID"],
+        ),
 
 
 rule GatherProCapBigWigs:
@@ -125,4 +146,12 @@ rule QTLTools_500kb:
           "QTLs/QTLTools/{Phenotype}/{Pass}.txt.gz",
           Phenotype = ["H3K36ME3", "H3K4ME3", "H3K4ME1","H3K27AC"],
           Pass = ["PermutationPass500kb.FDR_Added", "NominalPass500kb"]
+        ),
+        
+rule QTLTools_250kb:
+    input:
+        expand(
+          "QTLs/QTLTools/{Phenotype}/{Pass}.txt.gz",
+          Phenotype = ["H3K36ME3", "H3K4ME3", "H3K4ME1","H3K27AC"],
+          Pass = ["PermutationPass250kb.FDR_Added"]
         ),

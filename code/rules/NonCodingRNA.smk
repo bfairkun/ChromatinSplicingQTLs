@@ -566,7 +566,7 @@ use rule uaRNA as uaRNA_annotated with:
         ncRNA_tss = "NonCodingRNA/annotation/allGenes.TSS.bed.gz",
     output:
         tmp = temp("NonCodingRNA/annotation/tmp/uaRNA.annotated.bed"),
-        uaRNA = "NonCodingRNA/annotation/tmp/uaRNA.annotated.bed.gz",
+        uaRNA = temp("NonCodingRNA/annotation/tmp/uaRNA.annotated.bed.gz"),
 
 rule incRNA:
     input:
@@ -791,8 +791,6 @@ rule Prepare_polyA_ExpressionPhenotypes:
         "NonCodingRNA/annotation/NonCodingRNA.annotation.tab.gz"
     output:
         "QTLs/QTLTools/polyA.Expression_ncRNA/OnlyFirstReps.qqnorm.bed.gz",
-        "QTLs/QTLTools/polyA.Expression_ncRNA/OnlyFirstReps.CPM.bed.gz",
-        "RPKM_tables/polyA.RPKM.bed.gz"
     log:
         "logs/NonCodingRNA/Prepare_polyA_Expression_Phenotypes.log"
     conda:
@@ -807,7 +805,7 @@ rule Prepare_polyA_ExpressionPhenotypes:
         
 rule Prepare_polyA_Subset_YRI_ExpressionPhenotypes:
     input:
-        "QTLs/QTLTools/polyA.Expression_ncRNA/OnlyFirstReps.CPM.bed.gz",
+        "QTLs/QTLTools/polyA.Expression_ncRNA/OnlyFirstReps.qqnorm.bed.gz",
         "QTLs/QTLTools/Expression.Splicing.Subset_YRI/OnlyFirstReps.qqnorm.bed.gz",
     output:
         "QTLs/QTLTools/polyA.Expression_ncRNA.Subset_YRI/OnlyFirstReps.qqnorm.bed.gz",
@@ -833,7 +831,6 @@ rule Prepare_ml30_ExpressionPhenotypes:
         "NonCodingRNA/annotation/NonCodingRNA.annotation.tab.gz"
     output:
         "QTLs/QTLTools/MetabolicLabelled.30min_ncRNA/OnlyFirstReps.qqnorm.bed.gz",
-        "RPKM_tables/MetabolicLabelled.30min.RPKM.bed.gz",
     log:
         "logs/NonCodingRNA/Prepare_ml30_Expression_Phenotypes.log"
     conda:
@@ -857,7 +854,6 @@ rule Prepare_ml60_ExpressionPhenotypes:
         "NonCodingRNA/annotation/NonCodingRNA.annotation.tab.gz"
     output:
         "QTLs/QTLTools/MetabolicLabelled.60min_ncRNA/OnlyFirstReps.qqnorm.bed.gz",
-        "RPKM_tables/MetabolicLabelled.60min.RPKM.bed.gz",
     log:
         "logs/NonCodingRNA/Prepare_ml60_Expression_Phenotypes.log"
     resources:
@@ -869,6 +865,30 @@ rule Prepare_ml60_ExpressionPhenotypes:
         mkdir -p RPKM_tables/;
         Rscript scripts/NonCodingRNA/prepare_ml60_ncRNA_Phenotypes.R &> {log}
         """
+        
+
+rule Prepare_chRNA_ExpressionPhenotypes:
+    input:
+        "featureCounts/chRNA.Expression/Counts.txt",
+        "featureCounts/chRNA.Expression_ncRNA/Counts.txt",
+        "featureCounts/chRNA.Expression_annotated_ncRNA/Counts.txt",
+        "ExpressionAnalysis/polyA/ExpressedGeneList.txt",
+        "NonCodingRNA/annotation/NonCodingRNA.bed.gz",
+        "NonCodingRNA/annotation/NonCodingRNA.annotation.tab.gz"
+    output:
+        "QTLs/QTLTools/chRNA.Expression_ncRNA/OnlyFirstReps.qqnorm.bed.gz",
+    log:
+        "logs/Prepare_chRNA_Expression_Phenotypes.log"
+    conda:
+        "../envs/r_essentials.yml"
+    resources:
+        mem = 48000,
+    shell:
+        """
+        mkdir -p RPKM_tables/;
+        Rscript scripts/NonCodingRNA/Prepare_chRNA_Phenotypes.R &> {log}
+        """
+        
         
 #####################################################
 # Get ProCap counts at TSS for validation of diQTLs #

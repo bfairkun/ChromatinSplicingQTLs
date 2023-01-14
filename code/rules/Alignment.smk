@@ -178,7 +178,9 @@ rule Hisat2_Align:
     conda:
         "../envs/hisat2.yml"
     params:
-        MaxPE_InsertLen = 1000
+        MaxPE_InsertLen = 1000,
+    wildcard_constraints:
+        Phenotype = "H3K4ME3|H3K4ME1|H3K27AC"
     log:
         "logs/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.log"
     resources:
@@ -187,6 +189,52 @@ rule Hisat2_Align:
     shell:
         """
         (hisat2 -1 {input.R1} -2 {input.R2} -x ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa -p {threads} --no-spliced-alignment --no-discordant --maxins {params.MaxPE_InsertLen} | samtools view -bh -F256 | samtools sort > {output.bam} ) &> {log}
+        samtools index {output.bam}
+        """
+        
+def GetDNaseIReplicates(wildcards):
+    replicates = [str(x) for x in list(
+    DNaseSamples_df.loc[DNaseSamples_df.IndID == wildcards.IndID].RepNumber
+    )]
+    return expand("FastqFastpSE/DNaseISensitivity/{{IndID}}/{Rep}.SE.fastq.gz", Rep=replicates)
+    
+    
+rule MergeRemapFastqForDNaseISensitivity:
+    input:
+        GetDNaseIReplicates
+    output:
+        temp("FastqFastpSE/DNaseISensitivity/{IndID}/merged.SE_.fastq.gz")
+    log:
+        "logs/MergeHornetFastq/{IndID}/log"
+    shell:
+        """
+        (zcat FastqFastpSE/DNaseISensitivity/{wildcards.IndID}/*.SE.fastq.gz | gzip - > {output}) &> {log}
+        """
+
+rule Hisat2_Align_SE:
+    input:
+        Ref = "ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa",
+        ht1 = "ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa.1.ht2",
+        R1 = "FastqFastpSE/{Phenotype}/{IndID}/{Rep}.SE_.fastq.gz",
+    output:
+        bam = temp("Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.bam"),
+        bai = temp("Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.bam.bai")
+    wildcard_constraints:
+        Phenotype = "DNaseISensitivity",
+        Rep='merged'
+    threads: 8
+    conda:
+        "../envs/hisat2.yml"
+    params:
+        MaxPE_InsertLen = 1000,
+    log:
+        "logs/Hisat2_Align_SE/{Phenotype}/{IndID}.{Rep}.log"
+    resources:
+        mem = 58000,
+        cpus_per_node = 9
+    shell:
+        """
+        (hisat2 -U {input.R1} -x ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa -p {threads} --no-spliced-alignment --no-discordant --maxins {params.MaxPE_InsertLen} | samtools view -bh -F256 | samtools sort > {output.bam} ) &> {log}
         samtools index {output.bam}
         """
 
@@ -238,9 +286,34 @@ rule Hornet_find_intersecting_snps:
         "logs/Hornet_find_intersecting_snps/{Phenotype}/{IndID}.{Rep}.log"
     resources:
         mem = 12000
+    wildcard_constraints:
+        Phenotype = "H3K4ME3|H3K4ME1|H3K27AC"
     shell:
         """
         python scripts/Hornet/mapping/find_intersecting_snps.py -p {input.bam} ReferenceGenome/HornetSnpLists/{wildcards.Phenotype} &> {log}
+        """
+        
+rule Hornet_find_intersecting_snps_SE:
+    input:
+        bam = "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.bam",
+        bai = "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.bam.bai",
+        snp_lists = expand("ReferenceGenome/HornetSnpLists/{{Phenotype}}/chr{chrom}.snps.txt.gz", chrom=autosomes)
+    output:
+        R1 = temp("Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.remap.fq.gz"),
+        keep = temp("Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.keep.bam"),
+        remap = temp("Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.to.remap.bam"),
+    wildcard_constraints:
+        Phenotype = "DNaseISensitivity",
+        Rep='merged'
+    log:
+        "logs/Hornet_find_intersecting_snps_SE/{Phenotype}/{IndID}.{Rep}.log"
+    conda:
+        "../envs/py_tools.yml"
+    resources:
+        mem = 12000
+    shell:
+        """
+        python scripts/Hornet/mapping/find_intersecting_snps.py {input.bam} ReferenceGenome/HornetSnpLists/{wildcards.Phenotype} &> {log}
         """
 
 use rule Hisat2_Align as Hornet_Hisat2_Align with:
@@ -252,8 +325,27 @@ use rule Hisat2_Align as Hornet_Hisat2_Align with:
     output:
         bam = temp("Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.hornet.remapped.bam"),
         bai = temp("Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.hornet.remapped.bam.bai")
+    wildcard_constraints:
+        Phenotype = "H3K4ME3|H3K4ME1|H3K27AC"
     log:
-        "logs/Horney_Hisat2_Align/{Phenotype}/{IndID}.{Rep}.log"
+        "logs/Hornet_Hisat2_Align/{Phenotype}/{IndID}.{Rep}.log"
+        
+        
+
+        
+use rule Hisat2_Align_SE as Hornet_Hisat2_Align_SE with:
+    input:
+        Ref = "ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa",
+        ht1 = "ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa.1.ht2",
+        R1 = "Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.remap.fq.gz",
+    wildcard_constraints:
+        Phenotype = "DNaseISensitivity",
+        Rep="merged"
+    log:
+        "logs/Hornet_Hisat2_Align_SE/{Phenotype}/{IndID}.{Rep}.log"
+    output:
+        bam = temp("Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.hornet.remapped.bam"),
+        bai = temp("Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.hornet.remapped.bam.bai")
 
 rule Hornet_filter_remapped:
     """
@@ -276,6 +368,8 @@ rule Hornet_filter_remapped:
         "logs/Hornet_filter_remapped/{Phenotype}/{IndID}.{Rep}.log"
     resources:
         mem = 16000
+    conda:
+        "../envs/py_tools.yml"
     shell:
         """
         (samtools sort -n {input.remap_bam} > {output.remap_bam_name_sorted}) &> {log}
@@ -285,6 +379,11 @@ rule Hornet_filter_remapped:
         samtools merge {output.merged_bam} {output.kept_bam_sorted} {output.keep_bam_sorted} &>> {log}
         samtools index {output.merged_bam} &>> {log}
         """
+
+use rule Hornet_filter_remapped as Hornet_filter_remapped_DNase with:
+    wildcard_constraints:
+        Rep="merged",
+        Phenotype = "DNaseISensitivity"
 
 rule MarkDups:
     input:
@@ -300,5 +399,10 @@ rule MarkDups:
         (samtools sort -n {input.bam} | samtools fixmate -m - - |  samtools sort | samtools markdup - -  > {output.bam} ) &> {log}
         samtools index {output.bam}
         """
+        
+use rule MarkDups as MarkDupsDNase with:
+    wildcard_constraints:
+        Rep="merged",
+        Phenotype = "DNaseISensitivity"
 
 

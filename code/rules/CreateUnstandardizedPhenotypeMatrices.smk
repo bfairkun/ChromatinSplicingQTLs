@@ -58,6 +58,25 @@ rule Unstandardized_CPM_Tables:
         """
         Rscript scripts/PrepareLogCPM_PhenotypeTables.R {input.Counts} {input.standardized} {output} &> {log}
         """
+        
+rule Unstandardized_CPM_Tables_AtTSS:
+    """
+    """
+    input:
+        featureCounts = "featureCounts/AtTSS/{Phenotype}/Counts.txt",
+        GeneList = "ExpressionAnalysis/polyA/ExpressedGeneList.txt",
+    output:
+        "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsUnstandardized_AtTSS.qqnorm.bed.gz"
+    wildcard_constraints:
+        Phenotype = "H3K27AC|H3K4ME3|H3K4ME1"
+    log:
+        "logs/Unstandardized_RPKM_Tables_AtTSS/{Phenotype}.log"
+    conda:
+        "../envs/r_2.yaml"
+    shell:
+        """
+        Rscript scripts/PrepareLogCPM_PhenotypeTables_AtTSS.R {input.featureCounts} {input.GeneList} {output} &> {log}
+        """
 
 rule Unstandardized_H3K36ME3_CPM_Table:
     input:
