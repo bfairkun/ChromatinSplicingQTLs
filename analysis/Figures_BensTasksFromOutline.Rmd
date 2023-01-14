@@ -338,7 +338,9 @@ ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/Rou
 ```
 
 
-### eQTLs colocalize with many different xQTLs, but chromatin effects are the strongest (something like the bar plot I showed in lab meeting with the number of eGenes that colocalize with an xQTL)
+### eQTLs colocalize with many different xQTLs, but chromatin effects are the strongest
+
+- something like the bar plot I showed in lab meeting with the number of eGenes that colocalize with an xQTL)
 
 ```{r}
 TotalNum.eQTLs <- read_delim("../code/QTLs/QTLTools/Expression.Splicing.Subset_YRI/PermutationPassForColoc.txt.gz", delim=' ') %>%
@@ -451,6 +453,168 @@ P
 ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/RoughDraftFig_2C_NumEQTLsThatColocWithXQTL.pdf", P, height=5, width=7)
 ```
 
+### eQTLs colocalize with many different xQTLs, but chromatin effects are the strongest. pi1 style
+
+- something like the bar plot I showed in lab meeting with the number of eGenes that colocalize with an xQTL. but now using pi1 instead of fraction colocs
+
+```{r, fig.height=10, fig.width=10}
+
+CalculatePi1 <- function (dat.in, ...) {
+  return(tryCatch(1-pi0est(dat.in$Pvals.For.Pi1, ...)$pi0, error=function(e) 1))
+}
+
+
+## Simulate null for one to many phenotype problem for calculating pi1
+MaxSampleSizeToCreateANull <- 100
+NSamplesToEstimateDistribution <- 10000
+NullSimulatedTestStats <- matrix(nrow=MaxSampleSizeToCreateANull, ncol=NSamplesToEstimateDistribution)
+rownames(NullSimulatedTestStats) <- paste0("runif_samplesize", 1:MaxSampleSizeToCreateANull)
+colnames(NullSimulatedTestStats) <- paste0("Sample_", 1:NSamplesToEstimateDistribution)
+
+
+for (i in 1:MaxSampleSizeToCreateANull){
+  SampleSizeFromUniform <- i
+  SampledDat <- matrix(runif(SampleSizeFromUniform*NSamplesToEstimateDistribution), nrow=NSamplesToEstimateDistribution)
+  SampleDatNullTestStatistics <- -log10(apply(SampledDat, 1, min))
+  NullSimulatedTestStats[i,] <- SampleDatNullTestStatistics
+}
+
+ecdf.functions <- apply(NullSimulatedTestStats, 1, ecdf)
+
+
+PhenotypeAliases <- read_tsv("../data/Phenotypes_recode_for_Plotting.txt")
+
+PeaksToTSS <- Sys.glob("../code/Misc/PeaksClosestToTSS/*_assigned.tsv.gz") %>%
+  setNames(str_replace(., "../code/Misc/PeaksClosestToTSS/(.+?)_assigned.tsv.gz", "\\1")) %>%
+  lapply(read_tsv) %>%
+  bind_rows(.id="ChromatinMark") %>%
+  mutate(GenePeakPair = paste(gene, peak, sep = ";")) %>%
+  distinct(ChromatinMark, peak, gene, .keep_all=T)
+
+dat.pvals <- fread("../code/pi1/PairwisePi1Traits.P.all.txt.gz")
+
+dat.pvals$PC2 %>% unique()
+
+
+Get_eQTL_PiStats <- function(dat.pvals.df, FDR.threshold=0.1){
+  Pvals.df <- dat.pvals.df %>%
+    filter(PC1 == "Expression.Splicing.Subset_YRI") %>%
+    filter(FDR.x < FDR.threshold) %>%
+    left_join(PhenotypeAliases,
+              by=c("PC2"="PC")) %>%
+    mutate(GenePeakPair = paste(GeneLocus, P2, sep=';')) %>%
+    mutate(Grouping.PC.ID = case_when(
+      (PC2 %in% c("H3K4ME3", "H3K4ME1", "H3K27AC")) & (GenePeakPair %in% PeaksToTSS$GenePeakPair) ~ "Activating chromatin mark (TSS)",
+      (PC2 %in% c("H3K4ME3", "H3K4ME1", "H3K27AC")) ~ "Activating chromatin mark (Distal)",
+      PC2 == "polyA.Splicing.Subset_YRI" ~ "Splicing_polyA_YRI.Only",
+      TRUE ~ ShorterAlias2
+    )) %>%
+    dplyr::select(-PC2) %>%
+    dplyr::select(everything(), PC2=Grouping.PC.ID) %>%
+    filter(!is.na(trait.x.p.in.y)) %>%
+    add_count(PC1, P1, PC2) %>%
+    filter(n<=100) %>%
+    group_by(PC1, P1, PC2) %>%
+    mutate(test.stat.obs = -log10(min(trait.x.p.in.y))) %>%
+    ungroup() %>%
+    distinct(PC1, P1, PC2, .keep_all=T) %>%
+    group_by(PC1, PC2) %>%
+    rowwise() %>%
+    mutate(Pvals.For.Pi1 = 1-ecdf.functions[[n]](test.stat.obs)) %>%
+    ungroup()
+  pi.df <- Pvals.df %>%
+    split(paste(.$PC1, .$PC2, sep = ";")) %>%
+    lapply(CalculatePi1, method='smoother', smooth.log.pi0=T) %>%
+    unlist() %>%
+    data.frame(pi1=.) %>%
+    rownames_to_column("PC1_PC2") %>%
+    separate(PC1_PC2, into=c("PC1", "PC2"), sep=';')
+  return(list(Pvals=Pvals.df, pi1=pi.df))
+}
+
+
+FDR_10 = Get_eQTL_PiStats(dat.pvals, 0.1)
+FDR_05 = Get_eQTL_PiStats(dat.pvals, 0.05)
+FDR_01 = Get_eQTL_PiStats(dat.pvals, 0.01)
+
+A <- pi0est(FDR_10$Pvals$Pvals.For.Pi1, method='bootstrap')
+A
+
+pi.dat <- bind_rows(
+  FDR_10 = FDR_10$pi1,
+  FDR_05 = FDR_05$pi1,
+  FDR_01 = FDR_01$pi1,
+  .id = "Threshold"
+)
+
+pvals.dat <- bind_rows(
+  FDR_10 = FDR_10$Pvals,
+  FDR_05 = FDR_05$Pvals,
+  FDR_01 = FDR_01$Pvals,
+  .id = "Threshold"
+)
+
+pvals.dat %>%
+  filter(PC2 %in% c("Splicing_polyA", "Splicing_polyA_YRI.Only")) %>%
+  group_by(PC2, Threshold) %>%
+  mutate(Pvals.For.Pi1=Pvals.For.Pi1+0.000005) %>%
+  mutate(ExpectedP = percent_rank(Pvals.For.Pi1)) %>%
+  ungroup() %>%
+  ggplot(aes(x=-log10(ExpectedP), y=-log10(Pvals.For.Pi1))) +
+  geom_abline(slope=1, intercept=0) +
+  geom_point() +
+  geom_label(
+    data = pi.dat %>%
+      filter(PC2 %in% c("Splicing_polyA", "Splicing_polyA_YRI.Only")),
+    aes(y=Inf, x=Inf, label=signif(pi1, 4),
+        vjust=1, hjust=1)
+    ) +
+  facet_grid(PC2~Threshold, scales="free_y")
+
+pvals.dat %>%
+  filter(PC2 %in% c("Splicing_polyA", "Splicing_polyA_YRI.Only")) %>%
+  ggplot(aes(x=Pvals.For.Pi1)) +
+  geom_abline(slope=1, intercept=0) +
+  geom_histogram() +
+  geom_label(
+    data = pi.dat %>%
+      filter(PC2 %in% c("Splicing_polyA", "Splicing_polyA_YRI.Only")),
+    aes(y=Inf, x=Inf, label=signif(pi1, 4),
+        vjust=1, hjust=1)
+    ) +
+  facet_grid(PC2~Threshold, scales="free_y")
+
+pi.dat %>%
+  filter(!PC2 %in% c("NA", "Splicing_metabolic30", "Splicing_metabolic60", "Expression_polyA", "slope_chRNA")) %>%
+  ggplot(aes(x=PC2, y=pi1, fill=Threshold)) +
+  geom_col(position="dodge") +
+  scale_x_discrete(limits=rev) +
+  coord_flip() +
+  theme_bw() +
+  labs(fill="eQTL FDR threshold", x="xQTL category", caption=str_wrap("When an eQTL is ascertained against n>1 features in a category, P value is obstained by comparing minimum xQTL Pvalue and comparing to simulated null obtained by calculating minimum of n draws from uniform",60))
+
+
+ggsave("../code/scratch/pi1_eQTL_vs_xQTL.pdf", height=12, width=12)
+
+```
+
+```{r, eval=F}
+# Simulate sequencing depth from 100 libraries at 1M read total depth with multinomial
+rlnormprobs <- 2**rnorm(100)
+probs <- rlnormprobs / sum(rlnormprobs)
+
+hist(probs)
+
+dat <- stats::rmultinom(100, 1E6, probs)
+
+plot(dat[,1], dat[,4])
+
+dat[,1]
+```
+
+```{r, eval=F}
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/RoughDraftFig_2C_NumEQTLsThatColocWithXQTL.pdf", P, height=5, width=7)
+```
 
 ## Figure3
 

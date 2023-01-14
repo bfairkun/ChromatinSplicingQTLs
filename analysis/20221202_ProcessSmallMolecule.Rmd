@@ -73,6 +73,41 @@ One thing I will have to consider is how to best normalize libraries. Since I su
 GeneCounts.filtered <- GeneCounts %>%
   filter(Geneid %in% Genes$name)
 
+# Or alternatively, use protein coding genes with mean CPM>1 in polyA DMSO samples 
+
+# function to help parse gtf file to identify protein coding genes
+extract_attributes <- function(gtf_attributes, att_of_interest){
+  att <- unlist(strsplit(gtf_attributes, " "))
+  if(att_of_interest %in% att){
+    return(gsub("\"|;","", att[which(att %in% att_of_interest)+1]))
+  }else{
+    return(NA)}
+}
+
+#Get protein coding features, using same gtf as used in featureCounts so that gene_ids perfectly match
+gtf <- read_tsv("../code/ReferenceGenome/Annotations/gencode.v34.chromasomal.basic.annotation.gtf", comment="#", n_max=Inf, col_names=c("seqname", "source", "feature", "start", "end", "score", "strand", "frame", "attribute" )) %>%
+    filter(feature=="gene") %>%
+    dplyr::select(attribute)
+gtf$gene_id <- unlist(lapply(gtf$attribute, extract_attributes, "gene_id"))
+gtf$gene_type <- unlist(lapply(gtf$attribute, extract_attributes, "gene_type"))
+ProteinCodingGenes <- filter(gtf, gene_type=="protein_coding") %>% pull(gene_id)
+
+GenesToInclude <- GeneCounts %>%
+  dplyr::select(Geneid, contains("DMSO_NA_LCL_polyA")) %>%
+  filter(Geneid %in% ProteinCodingGenes) %>%
+  column_to_rownames("Geneid") %>%
+  DGEList() %>%
+  calcNormFactors() %>%
+  cpm(prior.count=0.1, log=F) %>%
+  log2() %>%
+  apply(1, mean) %>%
+  as.data.frame() %>%
+  filter(`.` > 1) %>%
+  rownames_to_column("Geneid")
+
+GeneCounts.filtered <- GeneCounts %>%
+  filter(Geneid %in% GenesToInclude$Geneid)
+
 Count.table.StandardNormFactors <- GeneCounts.filtered %>%
   dplyr::select(-c(2:6)) %>%
   column_to_rownames("Geneid") %>%
@@ -194,11 +229,11 @@ Not sure why that doesn't look right. let's try looking at mean deltaPSI
 
 ```{r}
 PSI.ByDonor.Summary <- PSI.tidy %>%
-  filter(LibraryType == "polyA") %>%
+  # filter(LibraryType == "polyA") %>%
   # mutate(Is.GA.GT = str_detect(DonorSeq, "^\\w{2}GAGT")) %>%
   # filter(!is.na(Is.GA.GT)) %>%
   mutate(Is.GA.GT = substr(DonorSeq, 3,4)) %>%
-  group_by(dose.nM, Is.GA.GT) %>%
+  group_by(dose.nM, Is.GA.GT, LibraryType) %>%
   summarise(PSI.summary = mean(PSI, na.rm=T)) %>%
   ungroup() %>%
   drop_na()
@@ -206,12 +241,12 @@ PSI.ByDonor.Summary <- PSI.tidy %>%
 left_join(
   PSI.ByDonor.Summary,
   PSI.ByDonor.Summary %>% filter(dose.nM == 0) %>%
-    dplyr::select(Is.GA.GT, PSI.summary),
-  by=c("Is.GA.GT")
+    dplyr::select(Is.GA.GT, PSI.summary, LibraryType),
+  by=c("Is.GA.GT", "LibraryType")
 ) %>%
   mutate(MeanPSIFoldChange=(PSI.summary.x-PSI.summary.y)) %>%
-  ggplot(aes(x=dose.nM, y=MeanPSIFoldChange, group=Is.GA.GT, color=Is.GA.GT=="GA")) +
-  geom_line() +
+  ggplot(aes(x=dose.nM, y=MeanPSIFoldChange, color=Is.GA.GT=="GA",  group=interaction(Is.GA.GT, LibraryType))) +
+  geom_line(aes(linetype=LibraryType)) +
   geom_point() + 
   scale_x_continuous(trans="log1p", limits=c(0, 10000), breaks=c(10000, 3160, 1000, 316, 100, 31.6, 10, 3.16, 0), labels=c(10000, 3160, 1000, 316, 100, 31.6, 10, 3.16, 0)) +
   # facet_wrap(~Is.GA.GT, scales = "free_y") +
@@ -221,8 +256,7 @@ left_join(
 
 
 Mean.PSI <- PSI.tidy %>%
-  filter(LibraryType == "polyA") %>%
-  group_by(Intron, dose.nM, DonorSeq) %>%
+  group_by(Intron, dose.nM, DonorSeq, LibraryType) %>%
   summarise(PSI=mean(PSI, na.rm=T)) %>%
   ungroup()
 
@@ -230,17 +264,17 @@ inner_join(
   Mean.PSI,
   Mean.PSI %>%
     filter(dose.nM==0) %>%
-    dplyr::select(Intron, DonorSeq, PSI),
-  by=c("Intron", "DonorSeq")
+    dplyr::select(Intron, DonorSeq, PSI, LibraryType),
+  by=c("Intron", "DonorSeq", "LibraryType")
 ) %>%
   mutate(Is.GA.GT = substr(DonorSeq, 3,4)) %>%
   mutate(DeltaPSI=(PSI.x-PSI.y)) %>%
-  group_by(dose.nM, Is.GA.GT) %>%
+  group_by(dose.nM, Is.GA.GT, LibraryType) %>%
   summarise(PSI.summary = mean(DeltaPSI, na.rm=T)) %>%
   ungroup() %>%
   drop_na() %>%
-  ggplot(aes(x=dose.nM, y=PSI.summary, group=Is.GA.GT, color=Is.GA.GT=="GA")) +
-  geom_line() +
+  ggplot(aes(x=dose.nM, y=PSI.summary, color=Is.GA.GT=="GA",  group=interaction(Is.GA.GT, LibraryType))) +
+  geom_line(aes(linetype=LibraryType)) +
   geom_point() + 
   scale_x_continuous(trans="log1p", limits=c(0, 10000), breaks=c(10000, 3160, 1000, 316, 100, 31.6, 10, 3.16, 0), labels=c(10000, 3160, 1000, 316, 100, 31.6, 10, 3.16, 0)) +
   # facet_wrap(~Is.GA.GT, scales = "free_y") +
@@ -251,6 +285,60 @@ inner_join(
 
 
 ```
+
+Now make a nicer version of this figure. Yang's suggestions to make it nicer included grouping all 16 diculeotides into three groups for simplicity: GA|GT, AG|GT, and everything else. Then also make some confidence interval, perhaps by bootstrapping.
+
+```{r}
+dat.to.plot.GAGT.enrichment <- inner_join(
+  Mean.PSI,
+  Mean.PSI %>%
+    filter(dose.nM==0) %>%
+    dplyr::select(Intron, DonorSeq, PSI, LibraryType),
+  by=c("Intron", "DonorSeq", "LibraryType")
+) %>%
+  mutate(Is.GA.GT = substr(DonorSeq, 3,4)) %>%
+  mutate(DinculeotideCategory = case_when(
+    Is.GA.GT == "AG" ~ "AG|GU",
+    Is.GA.GT == "GA" ~ "GA|GU",
+    TRUE ~ "not (AG or GA)|GU"
+  )) %>%
+  mutate(DeltaPSI=(PSI.x-PSI.y))
+
+
+# Bootstrap resamples for confidence intervals
+NumIterations <- 200
+ResampleResults <- list()
+for (i in 1:NumIterations){
+  df <- dat.to.plot.GAGT.enrichment %>%
+    group_by(dose.nM, DinculeotideCategory, LibraryType) %>%
+    sample_frac(replace=T) %>%
+    ungroup() %>%
+    group_by(dose.nM, DinculeotideCategory, LibraryType) %>%
+    summarise(PSI.summary = mean(DeltaPSI, na.rm=T)) %>%
+    ungroup() %>%
+    drop_na()
+  ResampleResults[[i]] <- df
+}
+
+bind_rows(ResampleResults, .id="iteration") %>%
+  group_by(dose.nM, DinculeotideCategory, LibraryType) %>%
+  summarise(enframe(quantile(PSI.summary, c(0.025, 0.5, 0.975)), "ResampledQuantile", "MeanDeltaPSI")) %>%
+  pivot_wider(names_from="ResampledQuantile", values_from="MeanDeltaPSI") %>%
+  ggplot(aes(x=dose.nM, y=`50%`, color=DinculeotideCategory,linetype=LibraryType, group=interaction(DinculeotideCategory, LibraryType))) +
+  geom_ribbon(aes(ymin=`2.5%`, ymax=`97.5%`, fill=DinculeotideCategory), alpha=0.1, size=0.5) +
+  geom_line(size=1) +
+  geom_point() + 
+  scale_x_continuous(trans="log1p", limits=c(0, 10000), breaks=c(10000, 3160, 1000, 316, 100, 31.6, 10, 3.16, 0), labels=c(10000, 3160, 1000, 316, 100, 31.6, 10, 3.16, 0)) +
+  scale_colour_brewer(type="qual", palette = "Dark2") +
+  scale_fill_brewer(type="qual", palette = "Dark2") +
+  # facet_wrap(~Is.GA.GT, scales = "free_y") +
+  # scale_y_continuous(trans="log1p") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1)) +
+  labs(y="Mean deltaPSI", x="dose (nM)", caption=str_wrap("Average DeltaPSI across all introns", 30))
+
+
+```
+
 
 ### Consider intronless gene normalization
 
@@ -596,6 +684,7 @@ IntronTypeAnnotations <- read_tsv("../code/SplicingAnalysis/IntronTypeAnnotation
   dplyr::select(junc, Geneid=gene_id, Annotation)
 
 
+
 MergedTable <- ModelFits.Coefficients.GAGTIntrons.MappedToGenes %>%
   dplyr::select(junc:Pred_3160, Geneid=gene_ids) %>%
   left_join(IntronTypeAnnotations) %>%
@@ -733,11 +822,12 @@ DiffExpression.df %>%
     !is.na(Annotation) ~ Annotation,
     TRUE ~ "Not Diff GA.GT Host"
   )) %>%
+  # pull(Geneset) %>% unique()
   mutate(PolyAEffectSize = Pred_3160.Expression - Pred_0.Expression) %>%
   gather(key="Metric", value="value", PolyAEffectSize, logFC) %>%
-  filter(Geneset %in% c("Not Diff GA.GT Host", "Unannotated", "Unique to nonsense_mediated_decay", "Unique to processed_transcript")) %>%
+  filter(Geneset %in% c("Not Diff GA.GT Host", "Unannotated", "Unique to nonsense_mediated_decay", "In protein_coding")) %>%
   mutate(Metric = recode(Metric, !!!c("PolyAEffectSize"="polyA", "logFC"="chRNA"))) %>%
-  mutate(Geneset = recode(Geneset, !!!c("Not Diff GA.GT Host"="Control genes", "Unannotated"="Unannotated intron", "Unique to nonsense_mediated_decay"="annotated NMD intron", "Unique to processed_transcript"="processed_transript intron"))) %>%
+  mutate(Geneset = recode(Geneset, !!!c("Not Diff GA.GT Host"="Control genes", "Unannotated"="Unannotated intron", "Unique to nonsense_mediated_decay"="annotated NMD intron", "In protein_coding"="Annotated canonical intron"))) %>%
   ggplot(aes(x=value, color=Geneset)) +
   geom_vline(xintercept=0) +
   stat_ecdf(aes(linetype=Metric)) +
@@ -752,8 +842,9 @@ DiffExpression.df %>%
     TRUE ~ "Not Diff GA.GT Host"
   )) %>%
   mutate(PolyAEffectSize = Pred_3160.Expression - Pred_0.Expression) %>%
-  filter(Geneset %in% c("Not Diff GA.GT Host", "Unannotated", "Unique to nonsense_mediated_decay", "Unique to processed_transcript")) %>%
-  mutate(Geneset = recode(Geneset, !!!c("Not Diff GA.GT Host"="Control genes", "Unannotated"="Unannotated intron", "Unique to nonsense_mediated_decay"="annotated NMD intron", "Unique to processed_transcript"="processed_transript intron"))) %>%
+  filter(Geneset %in% c("Not Diff GA.GT Host", "Unannotated", "Unique to nonsense_mediated_decay", "In protein_coding")) %>%
+  mutate(Geneset = recode(Geneset, !!!c("Not Diff GA.GT Host"="Control genes", "Unannotated"="Unannotated intron", "Unique to nonsense_mediated_decay"="annotated NMD intron", "In protein_coding"="Annotated canonical intron"))) %>%
+  # ggplot(aes(x=value, color=Geneset)) +
   ggplot(aes(x=PolyAEffectSize, y=logFC, color=Geneset)) +
   geom_hline(yintercept=0) +
   geom_vline(xintercept=0) +
