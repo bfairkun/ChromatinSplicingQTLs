@@ -36,9 +36,9 @@ rule Prepare_RNA_seq_ExpressionPhenotypeTable_ForGenesInList:
         GeneList = "ExpressionAnalysis/polyA/ExpressedGeneList.txt",
         YRI_List = Get1KGMetadataFile
     output:
-        FirstReps = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.qqnorm.bed.gz"
+        FirstReps = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.qqnorm.bed.gz",
     wildcard_constraints:
-        Phenotype = "|".join([x for x in RNASeqPhenotypes_extended if x != 'chRNA.Expression.Splicing'])
+        Phenotype = "|".join(RNASeqPhenotypes_extended)
     log:
         "logs/Prepare_chrRNA_RNA_seq_ExpressionPhenotypeTable/{Phenotype}.log"
     conda:
@@ -49,32 +49,6 @@ rule Prepare_RNA_seq_ExpressionPhenotypeTable_ForGenesInList:
         """
 
 
-
-
-rule Prepare_chRNA_ExpressionPhenotypes:
-    input:
-        "featureCounts/chRNA.Expression/Counts.txt",
-        "featureCounts/chRNA.Expression_ncRNA/Counts.txt",
-        "featureCounts/chRNA.Expression_annotated_ncRNA/Counts.txt",
-        "ExpressionAnalysis/polyA/ExpressedGeneList.txt",
-        "NonCodingRNA/annotation/NonCodingRNA.bed.gz",
-        "NonCodingRNA/annotation/NonCodingRNA.annotation.tab.gz"
-    output:
-        "QTLs/QTLTools/chRNA.Expression.Splicing/OnlyFirstReps.qqnorm.bed.gz",
-        "QTLs/QTLTools/chRNA.Expression_ncRNA/OnlyFirstReps.qqnorm.bed.gz",
-        "RPKM_tables/chRNA.RPKM.bed.gz",
-    log:
-        "logs/Prepare_chRNA_Expression_Phenotypes.log"
-    conda:
-        "../envs/r_essentials.yml"
-    resources:
-        mem = 48000,
-    shell:
-        """
-        mkdir -p RPKM_tables/;
-        Rscript scripts/Prepare_chRNA_Phenotypes.R &> {log}
-        """
-        
 rule tabix_genes_bed:
     input:
         "ExpressionAnalysis/polyA/ExpressedGeneList.txt",

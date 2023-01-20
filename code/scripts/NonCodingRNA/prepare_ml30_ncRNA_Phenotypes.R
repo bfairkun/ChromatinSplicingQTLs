@@ -149,5 +149,5 @@ RPKM.Out <- cbind(GeneID = rownames(dat.rpkm), dat.rpkm) %>% as.data.frame()
 rownames(RPKM.Out) <- 1:nrow(RPKM.Out) 
 
 
-write_tsv(RPKM.Out, "RPKM_tables/MetabolicLabelled.30min.RPKM.bed.gz", )
+#write_tsv(RPKM.Out, "RPKM_tables/MetabolicLabelled.30min.RPKM.bed.gz", )
 

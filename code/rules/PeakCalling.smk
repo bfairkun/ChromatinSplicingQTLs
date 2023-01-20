@@ -1,3 +1,9 @@
+def GetMacs2PEParams(wildcards):
+    if wildcards.Phenotype == 'DNaseISensitivity':
+        return 'BAM --nomodel --extsize 200'
+    else:
+        return 'BAMPE'
+
 rule Macs2PeakCalling_narrow:
     input:
         bams = GetBamForPhenotype
@@ -9,10 +15,11 @@ rule Macs2PeakCalling_narrow:
     resources:
         mem = 58000
     params:
-        "--tempdir /scratch/midway2/cnajar/ --outdir PeakCalling/ --name {Phenotype}"
+        other_params = "--tempdir /scratch/midway2/cnajar/ --outdir PeakCalling/ --name {Phenotype}",
+        PEParams = GetMacs2PEParams
     shell:
         """
-        macs2 callpeak {params} -f BAMPE --name {wildcards.Phenotype} -t {input.bams} &> {log}
+        macs2 callpeak {params.other_params} -f {params.PEParams} --name {wildcards.Phenotype} -t {input.bams} &> {log}
         awk -F'\\t' -v OFS='\\t' 'BEGIN {{ print "GeneID", "Chr", "Start", "End", "Strand" }} {{ print $4, $1, $2, $3, $6 }}' {output.peaks} > {output.saf}
         """
 

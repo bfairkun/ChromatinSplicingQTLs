@@ -73,5 +73,3 @@ Out <- gene.list %>%
 
 # Write all samples out
 write_tsv(Out, f_out)
-
-

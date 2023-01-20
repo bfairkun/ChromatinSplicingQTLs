@@ -101,8 +101,9 @@ dat.cpm <- dat.matrix.renamed %>% # dat.matrix.expressed %>%
     cpm(log=T, prior.count=0.1)
 
 
-print('prepared cpm')          
-
+print('prepared cpm')  
+           
+####################################
 
 protein_coding = dat.cpm[rownames(dat.cpm) %in% gene.list$Geneid, ]
 
@@ -111,7 +112,6 @@ print('prot coding')
 
 ncRNA_names <- c(dat.genes.lncRNA$Geneid, dat.genes.ncRNA$Geneid)#, dat.genes.snoRNA$Geneid)
 
-# eRNA_ <- dat.cpm[rownames(dat.cpm) %in% dat.genes.eRNA$Geneid, ]
 
 ncRNA.dat <- dat.cpm[rownames(dat.cpm) %in% ncRNA_names, ]
 ncRNA <- ncRNA.dat[apply(exp(ncRNA.dat), 1, quantile, probs=0.9) >= 1e-4,]
@@ -276,7 +276,7 @@ ncRNA.Out <- bed %>%
     arrange(`#Chr`, start)  %>% as.data.frame()
 
 
-write_tsv(protein_coding.Out, "QTLs/QTLTools/chRNA.Expression.Splicing/OnlyFirstReps.qqnorm.bed.gz")
+# write_tsv(protein_coding.Out, "QTLs/QTLTools/chRNA.Expression.Splicing/OnlyFirstReps.qqnorm.bed.gz")
 # write_tsv(snoRNA.Out, "QTLs/QTLTools/chRNA.Expression_snoRNA/OnlyFirstReps.qqnorm.bed.gz")
 # write_tsv(lncRNA.Out, "QTLs/QTLTools/chRNA.Expression_lncRNA/OnlyFirstReps.qqnorm.bed.gz")
 write_tsv(ncRNA.Out, "QTLs/QTLTools/chRNA.Expression_ncRNA/OnlyFirstReps.qqnorm.bed.gz")
@@ -289,4 +289,4 @@ dat.rpkm <- rpkm(dat.matrix.renamed, gene.length=gene.length$Length, prior.count
 RPKM.Out <- cbind(GeneID = rownames(dat.rpkm), dat.rpkm) %>% as.data.frame()
 rownames(RPKM.Out) <- 1:nrow(RPKM.Out) 
 
-write_tsv(RPKM.Out, "RPKM_tables/chRNA.RPKM.bed.gz")
+#write_tsv(RPKM.Out, "RPKM_tables/chRNA.RPKM.bed.gz")

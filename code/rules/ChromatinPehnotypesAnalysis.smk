@@ -20,7 +20,7 @@ rule PrepareQTLToolsPhenotypeTable_FromFeatureCountsPeaks:
         "logs/PrepareQTLToolsPhenotypeTable_FromFeatureCountsPeaks/{Phenotype}.log"
     shell:
         """
-        Rscript scripts/PreparePhenotypeTablesFromFeatureCounts_ChromatinProfilingPeaks.R {input} {params.max_features} {output.AllSamples} {output.FirstReps} &> {log}
+        Rscript scripts/PreparePhenotypeTablesFromFeatureCounts_ChromatinProfilingPeaks.R {input} {params.max_features} {output.AllSamples} {output.FirstReps} {wildcards.Phenotype} &> {log}
         """
 
 
@@ -114,3 +114,4 @@ rule AssignPeaksToTSS:
 rule GatherPeaksClosestToTSS:
     input:
         expand("Misc/PeaksClosestToTSS/{Phenotype}_assigned.tsv.gz", Phenotype=["H3K4ME3", "H3K27AC", "H3K4ME1"])
+

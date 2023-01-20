@@ -96,6 +96,9 @@ rule RunAggregateForMetaplot:
         'NonCodingRNA/QTLs/metaplots/{QTLs}.{var}.{phe}/Summarised-CTCF-.-High.bw',
         'NonCodingRNA/QTLs/metaplots/{QTLs}.{var}.{phe}/Summarised-CTCF-.-Mid.bw',
         'NonCodingRNA/QTLs/metaplots/{QTLs}.{var}.{phe}/Summarised-CTCF-.-Low.bw',
+        'NonCodingRNA/QTLs/metaplots/{QTLs}.{var}.{phe}/Summarised-DNaseISensitivity-.-High.bw',
+        'NonCodingRNA/QTLs/metaplots/{QTLs}.{var}.{phe}/Summarised-DNaseISensitivity-.-Mid.bw',
+        'NonCodingRNA/QTLs/metaplots/{QTLs}.{var}.{phe}/Summarised-DNaseISensitivity-.-Low.bw',
     wildcard_constraints:
         QTLs = 'apQTLs|diQTLs',
         var = 'ncQTL|eQTL',
@@ -127,7 +130,7 @@ def GetBwListForCommand(wildcards):
                                      phe=wildcards.phe, strand = strand, Size = Size)
             bw_list.append(file_bw)
             
-    for Phenotype in ['polyA.RNA', 'H3K27AC', 'H3K4ME3', 'H3K36ME3', 'ProCap', 'CTCF']:
+    for Phenotype in ['polyA.RNA', 'H3K27AC', 'H3K4ME3', 'H3K36ME3', 'ProCap', 'CTCF', 'DNaseISensitivity']:
         for Size in ['High', 'Mid', 'Low']:
             file_bw = 'NonCodingRNA/QTLs/metaplots/{QTLs}.{var}.{phe}/Summarised-{Phenotype}-.-{Size}.bw'
             file_bw = file_bw.format(QTLs = wildcards.QTLs, var = wildcards.var, 
@@ -145,7 +148,7 @@ rule ComputeMatrixForMetaplot:
         rbed = GetMetaplotBed,
         bw_list = expand(
             'NonCodingRNA/QTLs/metaplots/{{QTLs}}.{{var}}.{{phe}}/Summarised-{Phenotype}-.-{Size}.bw', 
-            Phenotype = ['polyA.RNA', 'H3K27AC', 'H3K4ME3', 'H3K36ME3', 'ProCap', 'CTCF'], 
+            Phenotype = ['polyA.RNA', 'H3K27AC', 'H3K4ME3', 'H3K36ME3', 'ProCap', 'CTCF', 'DNaseISensitivity'], 
             Size = ['High', 'Mid', 'Low']
         ),
     output:
@@ -174,7 +177,7 @@ rule ComputeMatrixForMetaplotMetagene:
         rbed = GetMetaplotBed,
         bw_list = expand(
             'NonCodingRNA/QTLs/metaplots/{{QTLs}}.{{var}}.{{phe}}/Summarised-{Phenotype}-.-{Size}.bw', 
-            Phenotype = ['polyA.RNA', 'H3K27AC', 'H3K4ME3', 'H3K36ME3', 'ProCap', 'CTCF'], 
+            Phenotype = ['polyA.RNA', 'H3K27AC', 'H3K4ME3', 'H3K36ME3', 'ProCap', 'CTCF', 'DNaseISensitivity'], 
             Size = ['High', 'Mid', 'Low']
         ),
     output:

@@ -25,7 +25,7 @@ library(qvalue)
 
 dat.in <- read_delim(FileIn, delim=' ') %>% na.omit()
 
-if (Pass %in% c('PermutationPass', 'GroupedPermutationPass', 'PermutationPass500kb')){
+if (Pass %in% c('PermutationPass', 'GroupedPermutationPass', 'PermutationPass500kb', 'PermutationPass250kb')){
 dat.in$q <- signif(qvalue(dat.in$adj_beta_pval)$qvalues, 5)
 } else {
 dat.in$q <- signif(qvalue(dat.in$nom_pval)$qvalues, 5)

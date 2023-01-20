@@ -27,13 +27,23 @@ featureCounts_FileIn <- args[1]
 MaxFeatures <- as.numeric(args[2])
 f_out_all <- args[3]
 f_out_only_first_rep <- args[4]
+phenotype <- args[5]
 
 
 ### helper "ColumnRenamer" functions to rename the filename column names from featureCounts to the sampleIDs as used in the vcf for qtl calling
+
+if (phenotype == 'DNaseISensitivity') {
+    rename_hisat2_alignment_samples <- function(MyString){
+    return(
+           str_replace(MyString,"Alignments/Hisat2_Align/.+?/(.+?)\\.merged\\.wasp_filterd\\.markdup\\.sorted\\.bam", "\\1")
+        )
+}
+    } else {
 rename_hisat2_alignment_samples <- function(MyString){
     return(
            str_replace(MyString,"Alignments/Hisat2_Align/.+?/(.+?)\\.(\\d+)\\.wasp_filterd\\.markdup\\.sorted\\.bam", "\\1.\\2")
     )
+}
 }
 
 ColumnRenamerFunction <- "rename_hisat2_alignment_samples"
@@ -78,7 +88,13 @@ Out <- dat %>%
 # Write all samples out
 write_tsv(Out, f_out_all)
 
-Out %>%
+if (phenotype == 'DNaseISensitivity'){
+    Out %>%
+    select(1:6, 8:77) %>%
+    write_tsv(f_out_only_first_rep)
+    } else {
+    Out %>%
     select(1:6, matches("\\.1$")) %>%
     rename_with(~str_remove(., '\\.1$')) %>%
     write_tsv(f_out_only_first_rep)
+}

@@ -4,7 +4,7 @@ library(edgeR)
 library(RNOmni)
 
 subset_YRI_in <- "QTLs/QTLTools/Expression.Splicing.Subset_YRI/OnlyFirstReps.qqnorm.bed.gz"
-ncRNA_CPM_in <- "QTLs/QTLTools/polyA.Expression_ncRNA/OnlyFirstReps.CPM.bed.gz"
+ncRNA_CPM_in <- "QTLs/QTLTools/polyA.Expression_ncRNA/OnlyFirstReps.qqnorm.bed.gz"
 Genes_bed_f_in <- "ExpressionAnalysis/polyA/ExpressedGeneList.txt" 
 
 subset_YRI <- read_tsv(subset_YRI_in, n_max=Inf) %>%

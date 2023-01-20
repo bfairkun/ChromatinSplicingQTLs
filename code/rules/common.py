@@ -19,8 +19,9 @@ MyPhenotypes = ["Expression.Splicing", "Expression.Splicing.Subset_YRI", "chRNA.
                 "chRNA.Expression_ncRNA", 
                 #'MetabolicLabelled.30min_ncRNA', 'MetabolicLabelled.60min_ncRNA',
                 'APA_Nuclear', 'APA_Total',
-                'polyA.IER', 'polyA.IER.Subset_YRI', 'chRNA.IER','MetabolicLabelled.30min.IER', 'MetabolicLabelled.60min.IER',
-                "chRNA.Slopes", 'chRNA.Splicing.Order']
+                'polyA.IER', 'polyA.IER.Subset_YRI', 'chRNA.IER',
+                'MetabolicLabelled.30min.IER', 'MetabolicLabelled.60min.IER',
+                "chRNA.Slopes", 'chRNA.Splicing.Order', "DNaseISensitivity"]
 
 #, 'chRNA.RNA.Editing']
 # "polyA.Expression.AllRNA.Subset_YRI", "MetabolicLabelled.30min.AllRNA.Subset_YRI", 
@@ -41,14 +42,16 @@ SM_samples = pd.read_csv("config/SmallMoleculeRNASeq.Samples.tsv", sep='\t')
 
 # Define some df subsets from the samples df as useful global variables
 PhenotypeSet = Fastq_samples['Phenotype'].unique().tolist() + ["chRNA.IR",  "polyA.Splicing", "chRNA.Expression"]
-ChromatinProfilingPhenotypes = Fastq_samples.loc[ (Fastq_samples['Assay'].isin(["ChIP-seq", "CutAndTag"]))  ]['Phenotype'].unique().tolist()
+ChromatinProfilingPhenotypes = Fastq_samples.loc[ (Fastq_samples['Assay'].isin(["ChIP-seq", "CutAndTag", "DNase-seq"]))  ]['Phenotype'].unique().tolist()
 RNASeqPhenotypes = Fastq_samples.loc[ (Fastq_samples['Assay']=="RNA-seq")  ]['Phenotype'].unique().tolist()
 RNASeqExpressionPhenotypes = ['polyA.Expression', 'chRNA.Expression', 'Expression.Splicing.Subset_YRI']
 RNASeqPhenotypes_extended = RNASeqPhenotypes + RNASeqExpressionPhenotypes
-ChromatinProfilingSamples_df = Fastq_samples.loc[ (Fastq_samples['Assay'].isin(["ChIP-seq", "CutAndTag"])) , ['Phenotype', 'IndID', 'RepNumber'] ].drop_duplicates()
+ChromatinProfilingSamples_df = Fastq_samples.loc[ (Fastq_samples['Assay'].isin(["ChIP-seq", "CutAndTag", "DNase-seq"])) , ['Phenotype', 'IndID', 'RepNumber'] ].drop_duplicates()
 RNASeqSamples_df = Fastq_samples.loc[ (Fastq_samples['Assay']=="RNA-seq") , ['Phenotype', 'IndID', 'RepNumber'] ].drop_duplicates()
 RNASeqSamplesNoProcap_df = Fastq_samples.loc[ (Fastq_samples['Assay']=="RNA-seq") & (Fastq_samples["Phenotype"] != "ProCap") , ['Phenotype', 'IndID', 'RepNumber']  ].drop_duplicates()
 ProCapSamples_df = Fastq_samples.loc[ (Fastq_samples['Phenotype']=="ProCap") , ['Phenotype', 'IndID', 'RepNumber'] ].drop_duplicates()
+
+DNaseSamples_df = Fastq_samples.loc[ (Fastq_samples['Phenotype']=="DNaseISensitivity") , ['Phenotype', 'IndID', 'RepNumber'] ].drop_duplicates()
 
 #Other useful lists
 AllChromatinProfilingBams = expand("Alignments/Hisat2_Align/{Phenotype}/{IndID}.{Rep}.wasp_filterd.markdup.sorted.bam", zip, Phenotype= ChromatinProfilingSamples_df['Phenotype'], IndID=ChromatinProfilingSamples_df['IndID'], Rep=ChromatinProfilingSamples_df['RepNumber'])
@@ -191,19 +194,20 @@ def GetQualimapLibtype(wildcards):
 def GetAnnotationsForPhenotype(wildcards):
     if wildcards.Phenotype in RNASeqPhenotypes_extended:
         return "ReferenceGenome/Annotations/gencode.v34.primary_assembly.annotation.gtf"
-    elif wildcards.Phenotype in ["H3K27AC", "H3K4ME1", "CTCF"]:
+    elif wildcards.Phenotype in ["H3K27AC", "H3K4ME1", "CTCF", "DNaseISensitivity"]:
         return "PeakCalling/{Phenotype}_peaks.narrowPeak.saf"
     elif wildcards.Phenotype in ["H3K4ME3", "H3K36ME3", "POL2S2", "POL2S5", "H3K9ME3", "H3K79ME2"]:
         return "PeakCalling/{Phenotype}_peaks.broadPeak.saf"
 
 def PairedEndParams(wildcards):
-    if wildcards.Phenotype in ["MetabolicLabelled.30min", "MetabolicLabelled.60min", "ProCap"]:
+    if wildcards.Phenotype in ["MetabolicLabelled.30min", "MetabolicLabelled.60min", 
+                               "ProCap", "DNaseISensitivity"]:
         return ""
     else:
         return "-p"
 
 def GetFeatureCountsParams(wildcards):
-    if (wildcards.Phenotype=="ProCap"): #and  (wildcards.Region == 'AtTSS_all'):
+    if (wildcards.Phenotype=="ProCap"): 
         return  "-s 1 -F SAF --read2pos 5"
     if wildcards.Phenotype == "chRNA.Expression":
         if  wildcards.Region == "AtInternalExons":
@@ -243,7 +247,10 @@ def GetBamForPhenotype(wildcards):
                     (Fastq_samples['Phenotype'] == "chRNA.Expression.Splicing")]
         return expand("Alignments/STAR_Align/chRNA.Expression.Splicing/{IndID}/{Rep}/Filtered.bam", zip, IndID=df_subset['IndID'], Rep=df_subset['RepNumber'])
     elif wildcards.Phenotype in ChromatinProfilingPhenotypes:
-        return expand("Alignments/Hisat2_Align/{{Phenotype}}/{IndID}.{Rep}.wasp_filterd.markdup.sorted.bam", zip, IndID=df_subset['IndID'], Rep=df_subset['RepNumber'])
+        if wildcards.Phenotype == 'DNaseISensitivity':
+            return expand("Alignments/Hisat2_Align/DNaseISensitivity/{IndID}.merged.wasp_filterd.markdup.sorted.bam", zip, IndID=df_subset['IndID'].unique())
+        else:
+            return expand("Alignments/Hisat2_Align/{{Phenotype}}/{IndID}.{Rep}.wasp_filterd.markdup.sorted.bam", zip, IndID=df_subset['IndID'], Rep=df_subset['RepNumber'])
 
 def GetAnnotationsForRegion(wildcards):
     if wildcards.Region == "AtTSS":
