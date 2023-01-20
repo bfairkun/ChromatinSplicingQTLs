@@ -3,7 +3,8 @@ rule GatherSMFastq:
         # expand("SmallMolecule/AlignmentsPass2/{Sample}/Aligned.sortedByCoord.out.bam.bai", Sample=SM_samples['SampleName'].unique()),
         "SmallMolecule/leafcutter/clustering/autosomes/leafcutter_perind.counts.gz",
         "SmallMolecule/leafcutter/JuncfilesMerged.annotated.basic.bed.5ss.tab.gz",
-        "SmallMolecule/featureCounts/Counts.txt"
+        "SmallMolecule/featureCounts/Counts.txt",
+        "SmallMolecule/FitModels/polyA_genes.tsv.gz"
 
 use rule CopyFastqFromLocal as SM_CopyFastqFromLocal with:
     input:
@@ -208,3 +209,22 @@ rule SM_featurecounts:
         """
         featureCounts {params.extra} -T {threads} --ignoreDup --primary -a {input.basic_gtf} -o {output} {input.bam} &> {log}
         """
+
+rule FitDoseResponseLogLogisticModel:
+    input:
+        GeneCounts = "SmallMolecule/featureCounts/Counts.txt",
+        gtf = "ReferenceGenome/Annotations/gencode.v34.chromasomal.basic.annotation.gtf",
+        SplicingCounts = "SmallMolecule/leafcutter/clustering/autosomes/leafcutter_perind_numers.counts.gz",
+        SpliceDonorSeqs = "SmallMolecule/leafcutter/JuncfilesMerged.annotated.basic.bed.5ss.tab.gz",
+    output:
+        GeneModelParams = "SmallMolecule/FitModels/polyA_genes.tsv.gz",
+        IntronModelParams = "SmallMolecule/FitModels/polyA_GAGTIntrons.tsv.gz",
+    log:
+        "logs/FitDoseResponseLogLogisticModel.log"
+    conda:
+        "../envs/r_2.yaml"
+    shell:
+        """
+        Rscript scripts/FitSmallMoleculeModels.R &> {log}
+        """
+

@@ -1,0 +1,115 @@
+---
+title: "20230110_eQTL_sQTL_hQTL_Colocalization"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+## Intro
+
+That stacked bar graph of the number of eQTLs that coloc with an hQTL vs sQTL vs neither vs both...
+
+## Analysis
+```{r}
+library(tidyverse)
+library(data.table)
+
+PhenotypeAliases <- read_tsv("../data/Phenotypes_recode_for_Plotting.txt")
+
+PC.ShortAliases <- PhenotypeAliases %>%
+  dplyr::select(PC, ShorterAlias) %>% deframe()
+
+coloc.results <- read_tsv("../code/hyprcoloc/Results/ForColoc/MolColocStandard/results.txt.gz")
+
+coloc.results.tidycolocalized <- read_tsv("../code/hyprcoloc/Results/ForColoc/MolColocStandard/tidy_results_OnlyColocalized.txt.gz") %>%
+  separate(phenotype_full, into=c("PC", "P"), sep=";")
+
+# Get all the phenotype classes
+coloc.results.tidycolocalized$PC %>% unique()
+
+eQTLs <- read_delim("../code/QTLs/QTLTools/Expression.Splicing.Subset_YRI/PermutationPassForColoc.txt.gz", delim=' ') %>%
+  separate(phe_id, into=c("phe_id", "Locus"), sep=":") %>%
+  filter(adj_beta_pval < 0.01)
+
+bind_rows(
+  coloc.results.tidycolocalized %>%
+    group_by(Locus, snp) %>%
+    filter(any(PC=="Expression.Splicing.Subset_YRI")) %>%
+    summarise(
+      ContainsChromatinEqtl = any(PC %in% c("H3K27AC", "H3K4ME1", "H3K4ME3")),
+      ContainsSqtl = any(PC %in% c("polyA.Splicing_Subset.YRI", "chRNA.Splicing"))
+      ) %>%
+    right_join(eQTLs) %>%
+    replace_na(list(ContainsChromatinEqtl=F, ContainsSqtl=F)) %>%
+    mutate(SplicingDataset = "YRI Only"),
+  coloc.results.tidycolocalized %>%
+    group_by(Locus, snp) %>%
+    filter(any(PC=="Expression.Splicing.Subset_YRI")) %>%
+    summarise(
+      ContainsChromatinEqtl = any(PC %in% c("H3K27AC", "H3K4ME1", "H3K4ME3")),
+      ContainsSqtl = any(PC %in% c("polyA.Splicing", "chRNA.Splicing"))
+      ) %>%
+    right_join(eQTLs) %>%
+    replace_na(list(ContainsChromatinEqtl=F, ContainsSqtl=F)) %>%
+    mutate(SplicingDataset = "All geuvadis")
+) %>%
+  mutate(fill=paste(ContainsChromatinEqtl, ContainsSqtl)) %>%
+  mutate(fill=recode(fill, !!!c("FALSE FALSE"="Neither", "FALSE TRUE"="sQTL only", "TRUE FALSE"="chromatinQTL only", "TRUE TRUE"="sQTL + chromatinQTL"))) %>%
+  mutate(SplicingDataset = factor(SplicingDataset, levels=c("YRI Only","All geuvadis"))) %>%
+  mutate(fill = factor(fill, levels=rev(c("sQTL + chromatinQTL","chromatinQTL only", "sQTL only", "Neither")))) %>%
+  ggplot(aes(x=SplicingDataset, fill=fill)) +
+  geom_bar() +
+  scale_x_discrete(labels=c("YRI only\nn=85", "All geauvadis\nn=450")) +
+  scale_fill_brewer(type="qual", palette="Set2") +
+  labs(title="More chromatin localization with eQTLs than splicing", y="Number of colocalizing eQTLs", x="sQTL source dataset", fill=NULL) +
+  theme_classic()
+```
+
+```{r, eval=F}
+ggsave("../../../carlos_and_ben_shared/rough_figs/OriginalSubplots/NumberOfColocalizing_eQTLs_sQTLs_hQTLs.pdf", height=4, width=4)
+
+```
+
+same plot but now consider all eQTLs from all geuvadis. but still the two axis groups as sQTLs as called from either YRI only or all geuvadis
+
+```{r}
+eQTLs <- read_delim("../code/QTLs/QTLTools/Expression.Splicing/PermutationPassForColoc.txt.gz", delim=' ') %>%
+  separate(phe_id, into=c("phe_id", "Locus"), sep=":") %>%
+  filter(adj_beta_pval < 0.01)
+
+bind_rows(
+  coloc.results.tidycolocalized %>%
+    group_by(Locus, snp) %>%
+    filter(any(PC=="Expression.Splicing")) %>%
+    summarise(
+      ContainsChromatinEqtl = any(PC %in% c("H3K27AC", "H3K4ME1", "H3K4ME3")),
+      ContainsSqtl = any(PC %in% c("polyA.Splicing_Subset.YRI", "chRNA.Splicing"))
+      ) %>%
+    right_join(eQTLs) %>%
+    replace_na(list(ContainsChromatinEqtl=F, ContainsSqtl=F)) %>%
+    mutate(SplicingDataset = "YRI Only"),
+  coloc.results.tidycolocalized %>%
+    group_by(Locus, snp) %>%
+    filter(any(PC=="Expression.Splicing")) %>%
+    summarise(
+      ContainsChromatinEqtl = any(PC %in% c("H3K27AC", "H3K4ME1", "H3K4ME3")),
+      ContainsSqtl = any(PC %in% c("polyA.Splicing", "chRNA.Splicing"))
+      ) %>%
+    right_join(eQTLs) %>%
+    replace_na(list(ContainsChromatinEqtl=F, ContainsSqtl=F)) %>%
+    mutate(SplicingDataset = "All geuvadis")
+) %>%
+  mutate(fill=paste(ContainsChromatinEqtl, ContainsSqtl)) %>%
+  mutate(fill=recode(fill, !!!c("FALSE FALSE"="Neither", "FALSE TRUE"="sQTL only", "TRUE FALSE"="chromatinQTL only", "TRUE TRUE"="sQTL + chromatinQTL"))) %>%
+  mutate(SplicingDataset = factor(SplicingDataset, levels=c("YRI Only","All geuvadis"))) %>%
+  mutate(fill = factor(fill, levels=rev(c("sQTL + chromatinQTL","chromatinQTL only", "sQTL only", "Neither")))) %>%
+  ggplot(aes(x=SplicingDataset, fill=fill)) +
+  geom_bar() +
+  scale_x_discrete(labels=c("YRI only\nn=85", "All geauvadis\nn=450")) +
+  scale_fill_brewer(type="qual", palette="Set2") +
+  labs(title="More chromatin localization with eQTLs than splicing", y="Number of colocalizing eQTLs", x="sQTL source dataset", fill=NULL) +
+  theme_classic()
+```
+

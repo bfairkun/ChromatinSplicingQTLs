@@ -136,5 +136,5 @@ rule CollectColocResultsToOutputDir:
 
 rule CollectDownloadGWAS_SummaryStats:
     input:
-        expand("gwas_summary_stats/full_data/{accession}.tsv.gz", accession=gwas_df.index)
-
+        # expand("gwas_summary_stats/full_data/{accession}.tsv.gz", accession=gwas_df.index)
+        expand("hyprcoloc/Results/ForGWASColoc/{ColocName}/results.txt.gz", ColocName = colocs_gwas.index )

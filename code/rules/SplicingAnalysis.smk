@@ -384,6 +384,24 @@ rule GatherBgzipedTabixPsiTables:
         expand("SplicingAnalysis/leafcutter/NormalizedPsiTables/PSI.JunctionCounts.{Phenotype}.bed.gz", Phenotype = ["Expression.Splicing", "MetabolicLabelled.30min", "MetabolicLabelled.60min", "chRNA.Expression.Splicing"]),
         expand("SplicingAnalysis/leafcutter/NormalizedPsiTables/PSI.{Phenotype}.bed.gz", Phenotype = ["Expression.Splicing", "MetabolicLabelled.30min", "MetabolicLabelled.60min", "chRNA.Expression.Splicing"])
 
+rule SumJuncCountsAcrossYRISamples:
+    input:
+        junc_tables = expand("SplicingAnalysis/leafcutter/NormalizedPsiTables/PSI.JunctionCounts.{Phenotype}.bed.gz", Phenotype = ["Expression.Splicing", "MetabolicLabelled.30min", "MetabolicLabelled.60min", "chRNA.Expression.Splicing"]),
+        juncs_list = "SplicingAnalysis/regtools_annotate_combined/comprehensive.bed.gz"
+    output:
+        Summarised = "SplicingAnalysis/regtools_annotate_combined/Comprehensive.YRI.Sample.Sum.Counts.tsv.gz",
+        LongTable = "SplicingAnalysis/regtools_annotate_combined/Comprehensive.YRI.Sample.LongTable.Counts.tsv.gz"
+    log:
+        "logs/SumJuncCountsAcrossYRISamples.log"
+    conda:
+        "../envs/r_2.yaml"
+    shell:
+        """
+        Rscript scripts/SumJuncCountsAcrossYRISamples.R {output.Summarised} {output.LongTable} {input.juncs_list} {input.junc_tables} &> {log}
+        """
+
+
+
 
 
 ###########################################
@@ -426,7 +444,6 @@ rule QQnormRNAEditing:
         """
         python scripts/PrepareRNAEditingQQnorm.py --input_file {input} --output {output} --min_obs {params.min_obs} &> {log}
         """
-    
 
 
 

@@ -1,0 +1,262 @@
+---
+title: "20230112_AreGenesWithMoreUnannotatedLessInPolyA"
+output: html_document
+---
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+
+library(tidyverse)
+library(RColorBrewer)
+library(data.table)
+library(edgeR)
+
+```
+
+## Intro
+```{r}
+
+genes <- read_tsv("../code/ExpressionAnalysis/polyA/ExpressedGeneList.txt", col_names = c("chrom", "start", "stop", "name", "score", "strand"))
+
+introns.regtools <- fread("../code/SplicingAnalysis/regtools_annotate_combined/basic.bed.gz") %>%
+  dplyr::select(chrom, start, stop=end, strand, gene_id) %>%
+  separate_rows(gene_id, sep=",") %>%
+  filter(!is.na(gene_id))
+
+leafviz_script.dat <- fread("../code/ReferenceGenome/Annotations/gencode.v34.primary_assembly.annotation.gtf_all_introns.bed.gz", col.names=c("chrom", "start", "stop", "gene", "gene_id","strand","transcript", "intron_num", "transcript_tag", "tag"))
+
+IntronAnnotations <- leafviz_script.dat %>%
+  group_by(chrom, start, stop, strand, gene_id) %>%
+  summarise(Annotation = case_when(
+    all(transcript_tag=="nonsense_mediated_decay") ~ "Unique to nonsense_mediated_decay",
+    all(transcript_tag=="non_stop_decay") ~ "Unique to non_stop_decay",
+    all(transcript_tag=="processed_transcript") ~ "Unique to processed_transcript",
+    all(transcript_tag=="retained_intron") ~ "Unique to retained_intron",
+    any(transcript_tag=="protein_coding") ~ "In protein_coding",
+    TRUE ~ "Other"
+  )) %>%
+  ungroup()
+
+
+transcript.tags <- leafviz_script.dat %>%
+  count(transcript_tag) %>%
+  ggplot(aes(x=transcript_tag, y=n)) +
+  geom_col() +
+  geom_text(aes(label=n)) +
+  coord_flip()
+  
+IntronAnnotations %>%
+  count(Annotation)
+
+SpliceJunctionCountTables <- Sys.glob("../code/SplicingAnalysis/leafcutter/NormalizedPsiTables/PSI.JunctionCounts.*.bed.gz") %>%
+  setNames(str_replace(., "../code/SplicingAnalysis/leafcutter/NormalizedPsiTables/PSI.JunctionCounts.(.+?).bed.gz", "\\1")) %>%
+  lapply(fread)
+
+
+
+AddIntronAnnotations <- function(df){
+  df %>%
+  full_join(
+    IntronAnnotations %>%
+      dplyr::select(`#Chrom`=chrom, start, end=stop, strand, Annotation),
+    by=c("#Chrom", "start", "end", "strand")) %>%
+    dplyr::select(1:6, Annotation, everything()) %>%
+    inner_join(introns.regtools, by=c("#Chrom"="chrom", "start", "end"="stop", "strand")) %>%
+    dplyr::select(1:6, Annotation, gene_id, everything()) %>%
+    replace_na(list(Annotation="Unannotated"))
+}
+
+SpliceJunctionCountTables$chRNA.Expression.Splicing %>% AddIntronAnnotations() %>% head()
+
+Long.table <- lapply(SpliceJunctionCountTables, AddIntronAnnotations) %>%
+  lapply(pivot_longer,names_to="Sample", values_to="Count", -c(1:8)) %>%
+  bind_rows(.id="Dataset")
+
+Long.table$Annotation %>% unique() 
+
+GetSamples <- function(df){
+  df %>%
+    dplyr::select(-c(1:6)) %>%
+    colnames() %>%
+    as.data.frame()
+}
+
+SamplesInAllDatasets <- lapply(SpliceJunctionCountTables, GetSamples) %>%
+  bind_rows(.id = "Dataset") %>%
+  dplyr::select(Dataset, Sample=".") %>%
+  add_count(Sample) %>%
+  filter(n==4)
+
+P.ii.dat <- Long.table %>%
+  filter(Sample %in% SamplesInAllDatasets$Sample) %>%
+  filter(gene_id %in% genes$name) %>%
+  group_by(gene_id, Dataset, Annotation) %>%
+  summarise(SumCounts = sum(Count, na.rm=T)) %>%
+  ungroup() %>%
+  group_by(gene_id, Dataset) %>%
+  mutate(Percent = SumCounts / sum(SumCounts) * 100) %>%
+  ungroup()
+
+P.ii.dat$Annotation %>% unique() 
+
+P.ii.dat %>%
+  ggplot(aes(x=Percent, color=Dataset)) +
+  stat_ecdf() +
+  facet_wrap(~Annotation)
+```
+
+
+Ok let's remake the boxplot, with or without filtering for protein coding genes...
+
+#### plot with filtering for 14000 expressed protein coding genes
+
+```{r}
+protein_coding_genes <- read_tsv("../code/ExpressionAnalysis/AllProteinCodingGenes.txt", col_names = c("Genes"))
+
+P.i.dat <- Long.table %>%
+  filter(gene_id %in% protein_coding_genes$Genes) %>%
+  group_by(Sample, Dataset, Annotation) %>%
+  summarise(SumCounts = sum(Count, na.rm=T)) %>%
+  ungroup() %>%
+  group_by(Sample, Dataset) %>%
+  mutate(Percent = SumCounts / sum(SumCounts) * 100) %>%
+  ungroup() %>%
+  mutate(Dataset = recode(Dataset, !!!c("Expression.Splicing"="polyA RNA", "chRNA.Expression.Splicing"="chRNA", "MetabolicLabelled.30min"="30min 4sU RNA", "MetabolicLabelled.60min"="60min 4sU RNA"))) %>%
+  mutate(Dataset = factor(Dataset, levels=c("chRNA", "30min 4sU RNA", "60min 4sU RNA", "polyA RNA")))
+
+P.i <-
+  P.i.dat %>%
+  filter(Annotation %in% c("In protein_coding", "Unique to nonsense_mediated_decay", "Unannotated")) %>%
+  mutate(Annotation = recode(Annotation, !!!c("In protein_coding"="Annotated in functional isoform", "Unique to nonsense_mediated_decay"="Annotated in NMD-targeted isoform"))) %>%
+  mutate(Annotation=factor(Annotation, levels=c("Annotated in functional isoform", "Annotated in NMD-targeted isoform", "Unannotated"))) %>%
+  ggplot(aes(x=Dataset, y=Percent, color=Annotation)) +
+  geom_jitter(alpha=0.2, size=0.5) +
+  geom_boxplot(outlier.shape=NA, color='black', fill=NA) +
+  facet_wrap(~Annotation, scales="free_y", labeller = label_wrap_gen(width=14)) +
+  scale_colour_brewer(type="qual", palette="Dark2") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1), legend.position = "none") +
+  labs(y=str_wrap("Percent of splice junction reads", 20), x=NULL) +
+  guides(colour = guide_legend(override.aes = list(alpha = 1))) +
+  theme(strip.text.x = element_text(size = 12))
+P.i
+
+
+```
+
+#### plot without filtering for 14000 expressed protein coding genes
+
+```{r}
+
+P.i.dat <- Long.table %>%
+  group_by(Sample, Dataset, Annotation) %>%
+  summarise(SumCounts = sum(Count, na.rm=T)) %>%
+  ungroup() %>%
+  group_by(Sample, Dataset) %>%
+  mutate(Percent = SumCounts / sum(SumCounts) * 100) %>%
+  ungroup() %>%
+  mutate(Dataset = recode(Dataset, !!!c("Expression.Splicing"="polyA RNA", "chRNA.Expression.Splicing"="chRNA", "MetabolicLabelled.30min"="30min 4sU RNA", "MetabolicLabelled.60min"="60min 4sU RNA"))) %>%
+  mutate(Dataset = factor(Dataset, levels=c("chRNA", "30min 4sU RNA", "60min 4sU RNA", "polyA RNA")))
+
+P.i <-
+  P.i.dat %>%
+  filter(Annotation %in% c("In protein_coding", "Unique to nonsense_mediated_decay", "Unannotated")) %>%
+  mutate(Annotation = recode(Annotation, !!!c("In protein_coding"="Annotated in functional isoform", "Unique to nonsense_mediated_decay"="Annotated in NMD-targeted isoform"))) %>%
+  mutate(Annotation=factor(Annotation, levels=c("Annotated in functional isoform", "Annotated in NMD-targeted isoform", "Unannotated"))) %>%
+  ggplot(aes(x=Dataset, y=Percent, color=Annotation)) +
+  geom_jitter(alpha=0.2, size=0.5) +
+  geom_boxplot(outlier.shape=NA, color='black', fill=NA) +
+  facet_wrap(~Annotation, scales="free_y", labeller = label_wrap_gen(width=14)) +
+  scale_colour_brewer(type="qual", palette="Dark2") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1), legend.position = "none") +
+  labs(y=str_wrap("Percent of splice junction reads", 20), x=NULL) +
+  guides(colour = guide_legend(override.aes = list(alpha = 1))) +
+  theme(strip.text.x = element_text(size = 12))
+P.i
+
+
+```
+
+Ok now let's get the expression difference in chRNA vs polyA...
+
+```{r}
+expression.dat.polyA <- fread("../code/featureCountsBasicGtf/Expression.Splicing/Counts.txt", skip=1, sep='\t') %>%
+  filter(Geneid %in% genes$name) %>%
+  dplyr::select(Geneid, contains("Alignments")) %>%
+  rename_at(vars(contains("Alignments")), ~str_replace(.x, "Alignments/STAR_Align/(.+?)/(.+?)/(.+?)/Filtered.bam", "\\2.\\3")) %>%
+  column_to_rownames("Geneid") %>%
+  DGEList() %>%
+  calcNormFactors() %>%
+  cpm(log=T, prior.count=0.01)
+
+
+expression.dat.chRNA <- fread("../code/featureCountsBasicGtf/chRNA.Expression.Splicing/Counts.txt", skip=1, sep='\t')  %>%
+  filter(Geneid %in% genes$name) %>%
+  dplyr::select(Geneid, contains("Alignments")) %>%
+  rename_at(vars(contains("Alignments")), ~str_replace(.x, "Alignments/STAR_Align/(.+?)/(.+?)/(.+?)/Filtered.bam", "\\2.\\3")) %>%
+  column_to_rownames("Geneid") %>%
+  DGEList() %>%
+  calcNormFactors() %>%
+  cpm(log=T, prior.count=0.01)
+
+Combined.dat <- bind_rows(
+  expression.dat.chRNA %>%
+    as.data.frame() %>%
+    rownames_to_column("Geneid") %>%
+    mutate(assay = "chRNA"),
+  expression.dat.polyA %>%
+    as.data.frame() %>%
+    rownames_to_column("Geneid") %>%
+    mutate(assay = "polyA")
+) %>%
+  select_if(~ !any(is.na(.))) %>%
+  unite(Geneid_assay, Geneid, assay) %>%
+  column_to_rownames("Geneid_assay") %>%
+  apply(1,mean) %>%
+  as.data.frame() %>%
+  rownames_to_column("Geneid_assay") %>%
+  dplyr::select(Geneid_assay, "CPM"=".") %>%
+  separate(Geneid_assay, into=c("Geneid", "assay"), sep="_") %>%
+  pivot_wider(names_from="assay", values_from="CPM") %>%
+  mutate(Diff = polyA - chRNA)
+
+Combined.dat %>%
+  ggplot(aes(x=polyA, y=chRNA)) +
+  geom_point(alpha=0.2)
+
+
+P.ii.dat %>%
+  filter(Dataset %in% c("chRNA.Expression.Splicing", "Expression.Splicing")) %>%
+  inner_join(Combined.dat, by=c("gene_id"="Geneid")) %>%
+  ggplot(aes(x=Diff, y=Percent)) +
+  geom_point(alpha=0.1) +
+  facet_grid(Annotation ~ Dataset)
+
+P.FC.Vs.NtileSplicedInGroup.dat <- P.ii.dat %>%
+  filter(Dataset %in% c("chRNA.Expression.Splicing", "Expression.Splicing")) %>%
+  inner_join(Combined.dat, by=c("gene_id"="Geneid")) %>%
+  group_by(Annotation, Dataset) %>%
+  mutate(quintile = ntile(Percent, 5)) %>%
+  ungroup() %>%
+  drop_na() %>%
+  mutate(Dataset = factor(recode(Dataset, "chRNA.Expression.Splicing"="chRNA", "Expression.Splicing"="polyA")))
+
+
+  
+
+ggplot(P.FC.Vs.NtileSplicedInGroup.dat) +
+  stat_ecdf(aes(x=Diff, color=factor(quintile))) +
+  coord_cartesian(xlim=c(-4,4)) +
+  scale_color_brewer() +
+  geom_text(
+    data = P.FC.Vs.NtileSplicedInGroup.dat %>%
+      group_by(Annotation, Dataset) %>%
+      summarise(P = cor.test(Percent, Diff,method='s')$p.value),
+    aes(label = paste("P:", format.pval(P, 2))),
+    x = Inf, y=-Inf, hjust=1, vjust=0
+  ) +
+  facet_grid(Annotation~Dataset, scales="free", labeller = label_wrap_gen()) +
+  theme_bw() +
+  labs(x="log2(polyA/chRNA)", y="ecdf", color="Quintile %juncs in category;\n5=highest")
+
+```
+
