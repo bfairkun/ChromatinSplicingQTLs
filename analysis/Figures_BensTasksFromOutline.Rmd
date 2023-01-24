@@ -10,6 +10,7 @@ library(tidyverse)
 library(RColorBrewer)
 library(data.table)
 library(qvalue)
+library(viridis)
 
 # Set theme
 theme_set(
@@ -39,8 +40,17 @@ p +
 
 ### highlight prevalence of NMD-targeting and unannotated introns in chRNA
 
+- note for these versions of the plots i did not filter for protein coding genes. i should update that.
+
 ```{r}
+library(edgeR)
+
 genes <- read_tsv("../code/ExpressionAnalysis/polyA/ExpressedGeneList.txt", col_names = c("chrom", "start", "stop", "name", "score", "strand"))
+
+introns.regtools <- fread("../code/SplicingAnalysis/regtools_annotate_combined/basic.bed.gz") %>%
+  dplyr::select(chrom, start, stop=end, strand, gene_id) %>%
+  separate_rows(gene_id, sep=",") %>%
+  filter(!is.na(gene_id))
 
 leafviz_script.dat <- fread("../code/ReferenceGenome/Annotations/gencode.v34.primary_assembly.annotation.gtf_all_introns.bed.gz", col.names=c("chrom", "start", "stop", "gene", "gene_id","strand","transcript", "intron_num", "transcript_tag", "tag"))
 
@@ -55,6 +65,7 @@ IntronAnnotations <- leafviz_script.dat %>%
     TRUE ~ "Other"
   )) %>%
   ungroup()
+
 
 transcript.tags <- leafviz_script.dat %>%
   count(transcript_tag) %>%
@@ -74,11 +85,13 @@ SpliceJunctionCountTables <- Sys.glob("../code/SplicingAnalysis/leafcutter/Norma
 
 AddIntronAnnotations <- function(df){
   df %>%
-  left_join(
+  full_join(
     IntronAnnotations %>%
-      dplyr::select(`#Chrom`=chrom, start, end=stop, strand, gene_id, Annotation),
+      dplyr::select(`#Chrom`=chrom, start, end=stop, strand, Annotation),
     by=c("#Chrom", "start", "end", "strand")) %>%
-    dplyr::select(1:6, gene_id, Annotation, everything()) %>%
+    dplyr::select(1:6, Annotation, everything()) %>%
+    inner_join(introns.regtools, by=c("#Chrom"="chrom", "start", "end"="stop", "strand")) %>%
+    dplyr::select(1:6, Annotation, gene_id, everything()) %>%
     replace_na(list(Annotation="Unannotated"))
 }
 
@@ -111,6 +124,40 @@ P.i <-
   guides(colour = guide_legend(override.aes = list(alpha = 1))) +
   theme(strip.text.x = element_text(size = 12))
 P.i
+
+
+GetSamples <- function(df){
+  df %>%
+    dplyr::select(-c(1:6)) %>%
+    colnames() %>%
+    as.data.frame()
+}
+
+genes <- read_tsv("../code/ExpressionAnalysis/polyA/ExpressedGeneList.txt")
+
+SamplesInAllDatasets <- lapply(SpliceJunctionCountTables, GetSamples) %>%
+  bind_rows(.id = "Dataset") %>%
+  dplyr::select(Dataset, Sample=".") %>%
+  add_count(Sample) %>%
+  filter(n==4)
+
+P.ii.dat <- Long.table %>%
+  filter(Sample %in% SamplesInAllDatasets$Sample) %>%
+  group_by(gene_id, Dataset, Annotation) %>%
+  summarise(SumCounts = sum(Count, na.rm=T)) %>%
+  ungroup() %>%
+  group_by(gene_id, Dataset) %>%
+  mutate(Percent = SumCounts / sum(SumCounts) * 100) %>%
+  ungroup()
+
+P.ii.dat %>%
+  ggplot(aes(x=Percent, color=Dataset)) +
+  stat_ecdf() +
+  facet_wrap(~Annotation)
+
+Counts <- read_tsv("../code/QTLs/QTLTools/Expression.Splicing.Subset_YRI/OnlyFirstRepsUnstandardized.sorted.qqnorm.bed.gz")
+Counts.chRNA <- read_tsv("../code/QTLs/QTLTools/chRNA.Expression.Splicing/OnlyFirstRepsUnstandardized.sorted.qqnorm.bed.gz")
+Counts.chRNA$NA18853 %>% hist()
 
 
 ```
@@ -316,10 +363,11 @@ P <- dat.coloc.tidy %>%
     cor = sum(sign(beta.x)==sign(beta.y))/n()) %>%
   ungroup() %>%
   complete(PC.x, PC.y) %>%
-  mutate(label = paste0("frac(",NumSameSign, ",", n, ")")) %>%
+  # mutate(label = paste0("frac(",NumSameSign, ",", n, ")")) %>%
+  mutate(label = n) %>%
   ggplot(aes(x=PC.x, y=PC.y, fill=cor)) +
   geom_raster() +
-  geom_text(aes(label = label),parse = TRUE, color="black", size=1) +
+  geom_text(aes(label = label),parse = TRUE, color="black", size=2.5) +
   scale_fill_gradient2(midpoint=0.5, limits=c(0,1)) +
   scale_x_discrete(expand=c(0,0)) +
   scale_y_discrete(expand=c(0,0), limits=rev) +
@@ -329,11 +377,36 @@ P <- dat.coloc.tidy %>%
        caption = "Number and relative sign of colocalized trait pairs")
 P
 
+P.subset.H3K27AC.Gene.dat <- 
+  dat.coloc.tidy %>%
+  filter(PC %in% c("Expression.Splicing.Subset_YRI","H3K27AC")) %>%
+  left_join(
+    PhenotypeAliases %>% dplyr::select(PC, ShorterAlias)
+  ) %>%
+  dplyr::select(-PC) %>%
+  dplyr::select(PC = ShorterAlias, everything()) %>%
+  # pull(PC) %>% unique()
+  left_join(., ., by=c("Locus", "snp")) %>%
+  filter(!((P.x == P.y) & (PC.x == PC.y))) %>%
+  filter(PC.x == "Expression_polyA" & PC.y == "H3K27AC")
+
+P.subset.H3K27AC.Gene.dat %>%
+  mutate(Concordance = sign(beta.x)==sign(beta.y)) %>%
+  count(Concordance)
+
+P.subset.H3K27AC.Gene <- ggplot(P.subset.H3K27AC.Gene.dat, aes(x=beta.x, y=beta.y)) +
+  geom_point(alpha=0.5) +
+  labs(x="eQTL beta", y="H3K27AC QTL beta", caption="Only colocalized traits included")
+P.subset.H3K27AC.Gene
 ```
 
 
 ```{r,eval=F}
 ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/RoughDraftFig_2B_EffectSizeCorrelationsHeatmap.pdf", P, height=5, width=7)
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/RoughDraftFig_2B_EffectSizeCorrelationsHeatmap.png", P, height=5, width=7)
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/Random_Colocalized_H3K37AC_eGenes_BetaVsBeta.pdf", P.subset.H3K27AC.Gene, height=3, width=3)
+
 
 ```
 
@@ -597,6 +670,79 @@ pi.dat %>%
 ggsave("../code/scratch/pi1_eQTL_vs_xQTL.pdf", height=12, width=12)
 
 ```
+
+### pi1 heatmap
+
+```{r}
+CalculatePi1 <- function (dat.in, ...) {
+  return(tryCatch(1-pi0est(dat.in$Pvals.For.Pi1, ...)$pi0, error=function(e) 1))
+}
+
+
+## Simulate null for one to many phenotype problem for calculating pi1
+MaxSampleSizeToCreateANull <- 100
+NSamplesToEstimateDistribution <- 10000
+NullSimulatedTestStats <- matrix(nrow=MaxSampleSizeToCreateANull, ncol=NSamplesToEstimateDistribution)
+rownames(NullSimulatedTestStats) <- paste0("runif_samplesize", 1:MaxSampleSizeToCreateANull)
+colnames(NullSimulatedTestStats) <- paste0("Sample_", 1:NSamplesToEstimateDistribution)
+
+
+for (i in 1:MaxSampleSizeToCreateANull){
+  SampleSizeFromUniform <- i
+  SampledDat <- matrix(runif(SampleSizeFromUniform*NSamplesToEstimateDistribution), nrow=NSamplesToEstimateDistribution)
+  SampleDatNullTestStatistics <- -log10(apply(SampledDat, 1, min))
+  NullSimulatedTestStats[i,] <- SampleDatNullTestStatistics
+}
+
+ecdf.functions <- apply(NullSimulatedTestStats, 1, ecdf)
+
+
+PhenotypeAliases <- read_tsv("../data/Phenotypes_recode_for_Plotting.txt")
+
+dat.pvals <- fread("../code/pi1/PairwisePi1Traits.P.all.txt.gz")
+
+dat.pvals.subset <- dat.pvals %>%
+  filter(FDR.x < 0.05) %>%
+  filter(PC1 %in% c("CTCF","ProCap","APA_Total","chRNA.Expression_ncRNA","Expression.Splicing.Subset_YRI","H3K27AC", "H3K4ME1", "H3K4ME3", "polyA.Splicing", "chRNA.Splicing", "MetabolicLabelled.30min", "MetabolicLabelled.60min", "H3K36ME3", "chRNA.Expression.Splicing")) %>%
+  filter(PC2 %in% c("CTCF","ProCap","APA_Total","chRNA.Expression_ncRNA","Expression.Splicing.Subset_YRI","H3K27AC", "H3K4ME1", "H3K4ME3", "polyA.Splicing", "chRNA.Splicing", "MetabolicLabelled.30min", "MetabolicLabelled.60min", "H3K36ME3", "chRNA.Expression.Splicing")) %>%
+  filter(!PC1 %in%  c("H3K4ME1", "ProCap")) %>%
+  filter(!PC2 %in%  c("H3K4ME1", "ProCap")) %>%
+  group_by(PC1, P1, PC2) %>%
+  mutate(test.stat.obs = -log10(min(trait.x.p.in.y))) %>%
+  ungroup() %>%
+  add_count(PC1, P1, PC2) %>%
+  filter(n<=100) %>%
+  group_by(PC1, PC2) %>%
+  rowwise() %>%
+  mutate(Pvals.For.Pi1 = 1-ecdf.functions[[n]](test.stat.obs)) %>%
+  ungroup() %>%
+  select(PC1, PC2, Pvals.For.Pi1)
+
+pi.df <- dat.pvals.subset %>%
+  split(paste(.$PC1, .$PC2, sep = ";")) %>%
+  lapply(CalculatePi1, method='bootstrap', smooth.log.pi0=T) %>%
+  unlist() %>%
+  data.frame(pi1=.) %>%
+  rownames_to_column("PC1_PC2") %>%
+  separate(PC1_PC2, into=c("PC1", "PC2"), sep=';')
+
+pi.df %>%
+  # mutate(PC1 = factor(PC1, levels=c("CTCF", "H3K4ME1", "H3K27AC", "H3K4ME3", "ProCap", "ncRNA_chRNA", "H3K36ME3", "Expression_chRNA", "Expression_Metabolic.30min", "Expression_Metabolic.60min", "Expression_polyA","Splicing_chRNA", "Splicing_polyA", "APA_Total"))) %>%
+  # mutate(PC2 = factor(PC2, levels=c("CTCF", "H3K4ME1", "H3K27AC", "H3K4ME3", "ProCap", "ncRNA_chRNA", "H3K36ME3", "Expression_chRNA", "Expression_Metabolic.30min", "Expression_Metabolic.60min", "Expression_polyA","Splicing_chRNA", "Splicing_polyA", "APA_Total"))) %>%
+ggplot(aes(x=PC1, y=PC2, fill=pi1)) +
+  geom_raster() +
+  geom_text(aes(label=signif(pi1*100, 2)), color="blue") +
+  scale_fill_viridis(option="A", direction = -1, limits=c(0,1)) +
+  coord_flip() +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(x="Discovery QTL phenotype", y="Phenotype assessed for overlap")
+
+dat.pvals.subset %>%
+  mutate(PC = factor(PC, levels=c("CTCF", "H3K4ME1", "H3K27AC", "H3K4ME3", "ProCap", "ncRNA_chRNA", "H3K36ME3", "Expression_chRNA", "Expression_Metabolic.30min", "Expression_Metabolic.60min", "Expression_polyA","Splicing_chRNA", "Splicing_polyA", "APA_Total"))) %>%
+
+```
+
 
 ```{r, eval=F}
 # Simulate sequencing depth from 100 libraries at 1M read total depth with multinomial

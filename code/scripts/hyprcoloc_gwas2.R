@@ -11,7 +11,9 @@
 #Use hard coded arguments in interactive R session, else use command line args
 if(interactive()){
     args <- scan(text=
-                 'hyprcoloc/LociWiseSummaryStatsInput/ForGWASColoc/GCST004603.txt.gz gwas_summary_stats/StatsForColoc/GCST004603.standardized.txt.gz scratch/test.out.txt.gz ', what='character')
+                 # 'hyprcoloc/LociWiseSummaryStatsInput/ForGWASColoc/GCST004603.txt.gz gwas_summary_stats/StatsForColoc/GCST004603.standardized.txt.gz scratch/test.out.txt.gz ',
+'hyprcoloc/LociWiseSummaryStatsInput/ForGWASColoc/GCST007800.txt.gz gwas_summary_stats/StatsForColoc/GCST007800.standardized.txt.gz hyprcoloc/Results/ForGWASColoc/GWASColocStandard/Chunks/2.txt.gz "Expression.Splicing Expression.Splicing.Subset_YRI chRNA.Expression.Splicing MetabolicLabelled.30min MetabolicLabelled.60min CTCF H3K27AC H3K4ME3 H3K4ME1 H3K36ME3 H3K36ME3_ncRNA ProCap polyA.Splicing polyA.Splicing.Subset_YRI chRNA.Splicing MetabolicLabelled.30min.Splicing MetabolicLabelled.60min.Splicing chRNA.Expression_ncRNA APA_Nuclear APA_Total polyA.IER polyA.IER.Subset_YRI chRNA.IER MetabolicLabelled.30min.IER MetabolicLabelled.60min.IER chRNA.Slopes chRNA.Splicing.Order"',
+             what='character')
 } else{
     args <- commandArgs(trailingOnly=TRUE)
 }
@@ -34,7 +36,7 @@ if (args[4] == '' | is.na(args[4])){
 SummaryStats <- fread(FileIn, nrows=Inf) %>%
     separate(snp, into=c("chrom", "pos", "A1_mol", "A2_mol"), sep=":", convert=T, remove=F) %>%
     mutate(chrom = paste0("chr", chrom)) %>%
-    mutate(gwas_locus = str_replace(gwas_locus, "(.+?)_(.+?)_.+_(.+?)$", "chr\\1_\\2_\\3"))
+    mutate(gwas_locus = str_replace(gwas_locus, "(.+?)_(.+?)_.+_(.+?)$", "\\1_\\2_\\3"))
 
 Gwas_SummaryStats <- fread(FileIn_GWAS) %>%
     mutate(phenotype = str_replace(loci, "(.+?)_(.+?)_N_N_(.+)$", "\\1_\\2_\\3")) %>%
@@ -47,8 +49,8 @@ HyprcolocResults.list <- vector("list", length(Loci))
 
 for (i in seq_along(Loci)){
 
-    # TestLocus <- Loci[1]
-    TestLocus <- Loci[i]
+    TestLocus <- Loci[1]
+    # TestLocus <- Loci[i]
     print(paste0("running loci", i, " : ", TestLocus))
 
     SummaryStats.filtered <- SummaryStats %>%
@@ -80,6 +82,7 @@ for (i in seq_along(Loci)){
         ungroup() %>%
         select(-chrom, -pos, -A1, -A2, -A1_mol, -A2_mol) %>%
         drop_na() %>%
+        distinct(snp, .keep_all=T) %>%
         column_to_rownames("snp") %>%
         as.matrix()
 
@@ -119,6 +122,7 @@ for (i in seq_along(Loci)){
         ungroup() %>%
         select(-chrom, -pos, -A1, -A2, -A1_mol, -A2_mol) %>%
         drop_na() %>%
+        distinct(snp, .keep_all=T) %>%
         column_to_rownames("snp") %>%
         as.matrix()
 

@@ -32,6 +32,24 @@ use rule featureCounts as featureCountsAtRegion with:
     wildcard_constraints:
         Phenotype = "chRNA.Expression|polyA.Expression|H3K27AC|H3K4ME3|H3K4ME1|ProCap"
 
+use rule featureCounts as featureCountsBasicGtf with:
+    input:
+        bam = GetBamForPhenotype,
+        annotations = "ReferenceGenome/Annotations/gencode.v34.chromasomal.basic.annotation.gtf",
+    params:
+        extraParams = GetFeatureCountsParams2,
+        paired = PairedEndParams
+    wildcard_constraints:
+        Phenotype = "|".join(["chRNA.Expression.Splicing","Expression.Splicing","MetabolicLabelled.60min", "MetabolicLabelled.30min"])
+    output:
+        "featureCountsBasicGtf/{Phenotype}/Counts.txt"
+    log:
+        "logs/featureCountsBasicGtf/{Phenotype}.log"
+
+rule CollectBasicRNAQuantifications:
+    input:
+        expand("featureCountsBasicGtf/{Phenotype}/Counts.txt", Phenotype=["chRNA.Expression.Splicing","Expression.Splicing","MetabolicLabelled.60min", "MetabolicLabelled.30min"])
+
 rule Get2kbTSSRegions:
     """
     The GTFTools TSS bed file output from basic annotations GTF still has multiple TSS for some genes, presumably because sometimes more than one transript in the GTF is annotated as basic, and sometimes they have different TSS. To get just one TSS per gene (for simplicity of downstream analysis/interpretation) I will choose the TSS that is used in the most annotated transcripts, picking at random in case of ties

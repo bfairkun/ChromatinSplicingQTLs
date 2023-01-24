@@ -147,7 +147,7 @@ rule gwas_coloc_chunk:
     output:
         "hyprcoloc/Results/{FeatureCoordinatesRedefinedFor}/{ColocName}/Chunks/{n}.txt.gz"
     resources:
-        mem_mb = lambda wildcards, attempt: 32000 if int(attempt) == 1 else 42000
+        mem_mb = lambda wildcards, attempt: 32000 if int(attempt) == 1 else 48000
     log:
         "logs/gwas_coloc_chunk/{FeatureCoordinatesRedefinedFor}/{ColocName}/{n}.log"
     conda:

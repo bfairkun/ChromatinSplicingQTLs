@@ -61,3 +61,12 @@ rule tabix_genes_bed:
         tabix -p bed {output.bed}
         """
 
+rule GetAllAnnotatedProteinCodingGenes:
+    input:
+        gtf = "ReferenceGenome/Annotations/gencode.v34.primary_assembly.annotation.gtf"
+    output:
+        "ExpressionAnalysis/AllProteinCodingGenes.txt"
+    shell:
+        """
+        cat {input.gtf} | grep 'gene_type "protein_coding"' | perl -lne '$_ =~ m/^.+?gene_id "(.+?)";.+/; print "$1"' | sort | uniq > {output}
+        """

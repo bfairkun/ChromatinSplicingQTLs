@@ -221,6 +221,12 @@ def GetFeatureCountsParams(wildcards):
     else:
         return ""
 
+def GetFeatureCountsParams2(wildcards):
+    if wildcards.Phenotype == "chRNA.Expression":
+        return "-s 2"
+    else:
+        return ""
+
 def GetSTARJunctionScoreParams(wildcards):
     if wildcards.Phenotype == "ProCap":
         return "--scoreGap -1000000"

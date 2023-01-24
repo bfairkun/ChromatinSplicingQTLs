@@ -18,13 +18,14 @@ dependencies:
   - bioconductor-complexheatmap=2.2.0=r36_0
   - bioconductor-edger=3.28.0=r36hc6cf775_1
   - bioconductor-limma=3.42.0=r36h516909a_0
+  - bioconductor-qvalue=2.18.0=r36_1
   - bleach=3.3.0=pyhd3eb1b0_0
   - bwidget=1.9.14=0
   - bzip2=1.0.8=h7b6447c_0
   - c-ares=1.17.1=h27cfd23_0
-  - ca-certificates=2021.10.8=ha878542_0
+  - ca-certificates=2022.12.7=ha878542_0
   - cairo=1.16.0=hf32fb01_1
-  - certifi=2021.10.8=py39hf3d152e_1
+  - certifi=2022.12.7=py39h06a4308_0
   - cffi=1.14.5=py39h261ae71_0
   - curl=7.76.0=h979ede3_0
   - cyrus-sasl=2.1.27=h3274739_1
@@ -66,9 +67,9 @@ dependencies:
   - jinja2=2.11.3=pyhd3eb1b0_0
   - jpeg=9d=h516909a_0
   - jsonschema=3.2.0=py_2
-  # - jupyter_client=7.0.6=pyhd3eb1b0_0
-  # - jupyter_core=4.9.1=py39h06a4308_0
-  # - jupyterlab_pygments=0.1.2=py_0
+  - jupyter_client=7.0.6=pyhd3eb1b0_0
+  - jupyter_core=4.9.1=py39h06a4308_0
+  - jupyterlab_pygments=0.1.2=py_0
   - kernel-headers_linux-64=2.6.32=h77966d4_13
   - krb5=1.17.2=h926e7f8_0
   - lcms2=2.12=h3be6417_0
@@ -79,11 +80,11 @@ dependencies:
   - libev=4.33=h7b6447c_0
   - libffi=3.3=he6710b0_2
   - libgcc-devel_linux-64=7.5.0=hda03d7c_19
-  - libgcc-ng=11.2.0=h1d223b6_11
+  - libgcc-ng=12.2.0=h65d4601_19
   - libgfortran-ng=7.5.0=h14aa051_19
   - libgfortran4=7.5.0=h14aa051_19
   - libglib=2.68.1=h3e27bee_0
-  - libgomp=11.2.0=h1d223b6_11
+  - libgomp=12.2.0=h65d4601_19
   - libiconv=1.16=h516909a_0
   - liblapack=3.8.0=17_openblas
   - libnghttp2=1.43.0=h812cca2_0
@@ -110,7 +111,7 @@ dependencies:
   - nest-asyncio=1.5.1=pyhd3eb1b0_0
   - notebook=6.3.0=py39h06a4308_0
   - openjdk=11.0.9.1=h5cc2fde_1
-  - openssl=1.1.1l=h7f98852_0
+  - openssl=1.1.1s=h7f8727e_0
   - packaging=20.9=pyhd3eb1b0_0
   - pandoc=2.12=h06a4308_0
   - pandocfilters=1.4.3=py39h06a4308_1
@@ -149,6 +150,8 @@ dependencies:
   - r-bslib=0.2.4=r36hc72bb7e_0
   - r-cachem=1.0.4=r36hcfec24a_0
   - r-callr=3.6.0=r36hc72bb7e_0
+  - r-car=3.0_10=r36h6115d3f_0
+  - r-cardata=3.0_4=r36h6115d3f_0
   - r-caret=6.0_86=r36hcdcec82_2
   - r-catools=1.18.2=r36h03ef668_0
   - r-cellranger=1.1.0=r36h6115d3f_0
@@ -162,6 +165,7 @@ dependencies:
   - r-colorspace=2.0_0=r36h9e2df91_0
   - r-commonmark=1.7=r36h96ca727_0
   - r-config=0.3.1=r36hc72bb7e_0
+  - r-conquer=1.0.2=r36h6dc32e9_1
   - r-cowplot=1.1.1=r36hc72bb7e_0
   - r-cpp11=0.2.7=r36hc72bb7e_0
   - r-crayon=1.4.1=r36hc72bb7e_0
@@ -173,6 +177,7 @@ dependencies:
   - r-diffobj=0.3.3=r36hcfec24a_0
   - r-digest=0.6.27=r36h1b71b39_0
   - r-dplyr=1.0.5=r36h03ef668_0
+  - r-drc=3.0_1=r36_1003
   - r-ellipsis=0.3.1=r36hcdcec82_0
   - r-essentials=3.6.0=r36_0
   - r-evaluate=0.14=r36h6115d3f_2
@@ -222,31 +227,42 @@ dependencies:
   - r-lattice=0.20_41=r36hcfec24a_3
   - r-lava=1.6.9=r36hc72bb7e_0
   - r-lifecycle=1.0.0=r36hc72bb7e_0
+  - r-lme4=1.1_27=r36h03ef668_0
   - r-locfit=1.5_9.4=r36hcdcec82_1
   - r-lubridate=1.7.10=r36h03ef668_0
   - r-magrittr=2.0.1=r36hcfec24a_1
   - r-maps=3.3.0=r36h96ca727_0
+  - r-maptools=1.1_1=r36hcfec24a_0
   - r-markdown=1.1=r36hcfec24a_1
   - r-mass=7.3_53.1=r36hcfec24a_0
   - r-matrix=1.3_2=r36he454529_0
+  - r-matrixmodels=0.5_0=r36hc72bb7e_0
+  - r-matrixstats=0.58.0=r36hcfec24a_0
   - r-mgcv=1.8_34=r36he454529_0
   - r-mime=0.10=r36hcfec24a_0
   - r-miniui=0.1.1.1=r36h6115d3f_0
+  - r-minqa=1.2.4=r36h43222d4_1006
   - r-modelmetrics=1.2.2.2=r36h0357c0b_1
   - r-modelr=0.1.8=r36h6115d3f_0
   - r-mongolite=2.3.0=r36hcfec24a_0
+  - r-multcomp=1.4_17=r36hc72bb7e_0
   - r-munsell=0.5.0=r36h6115d3f_0
+  - r-mvtnorm=1.1_1=r36h31ca83e_1
   - r-nlme=3.1_150=r36h31ca83e_0
+  - r-nloptr=1.2.2.2=r36h0357c0b_0
   - r-nnet=7.3_15=r36hcfec24a_0
   - r-numderiv=2016.8_1.1=r36h6115d3f_3
   - r-odbc=1.3.2=r36h03ef668_0
   - r-openssl=1.4.3=r36he5c4762_0
+  - r-openxlsx=4.2.3=r36h1b71b39_0
   - r-packrat=0.6.0=r36hc72bb7e_0
   - r-pbdzmq=0.3_5=r36h42bf92c_1
+  - r-pbkrtest=0.5.1=r36hc72bb7e_0
   - r-pillar=1.5.1=r36hc72bb7e_0
   - r-pkgconfig=2.0.3=r36h6115d3f_1
   - r-pkgload=1.2.1=r36h03ef668_0
   - r-pki=0.1_8=r36hcfec24a_0
+  - r-plotrix=3.8_1=r36hc72bb7e_0
   - r-plyr=1.8.6=r36h0357c0b_1
   - r-png=0.1_7=r36h96ca727_0
   - r-praise=1.0.0=r36h6115d3f_4
@@ -260,6 +276,7 @@ dependencies:
   - r-ps=1.6.0=r36hcfec24a_0
   - r-purrr=0.3.4=r36hcdcec82_1
   - r-quantmod=0.4.18=r36hc72bb7e_0
+  - r-quantreg=5.75=r36hc3f0d1c_0
   - r-r.methodss3=1.8.1=r36h6115d3f_0
   - r-r.oo=1.24.0=r36h6115d3f_0
   - r-r.utils=2.10.1=r36h6115d3f_0
@@ -270,6 +287,7 @@ dependencies:
   - r-rbokeh=0.6.3=r36_0
   - r-rcolorbrewer=1.1_2=r36h6115d3f_0
   - r-rcpp=1.0.6=r36h03ef668_0
+  - r-rcpparmadillo=0.10.4.0.0=r36h306847c_0
   - r-rcppeigen=0.3.3.5.0=r36h29659fb_0
   - r-rcurl=1.98_1.3=r36hcfec24a_0
   - r-readr=1.4.0=r36h1b71b39_0
@@ -281,6 +299,7 @@ dependencies:
   - r-repr=1.1.3=r36h785f33e_0
   - r-reprex=1.0.0=r36hc72bb7e_0
   - r-reshape2=1.4.4=r36h0357c0b_1
+  - r-rio=0.5.26=r36hc72bb7e_0
   - r-rjava=0.9_13=r36hcfec24a_5
   - r-rjdbc=0.2_8=r36h6115d3f_1
   - r-rjson=0.2.20=r36h29659fb_0
@@ -293,20 +312,25 @@ dependencies:
   - r-rsconnect=0.8.17=r36hc72bb7e_0
   - r-rstudioapi=0.13=r36hc72bb7e_0
   - r-rvest=1.0.0=r36hc72bb7e_0
+  - r-sandwich=3.0_1=r36hc72bb7e_0
   - r-sass=0.3.1=r36h03ef668_0
   - r-scales=1.1.1=r36h6115d3f_0
   - r-selectr=0.4_2=r36h6115d3f_1
   - r-shape=1.4.5=r36_0
   - r-shiny=1.6.0=r36hc72bb7e_0
   - r-sourcetools=0.1.7=r36h29659fb_0
+  - r-sp=1.4_5=r36hcfec24a_0
   - r-sparklyr=1.6.2=r36hc72bb7e_0
+  - r-sparsem=1.78=r36h31ca83e_2
   - r-spatial=7.3_13=r36hcfec24a_0
   - r-squarem=2021.1=r36hc72bb7e_0
+  - r-statmod=1.4.35=r36h6e990d7_1
   - r-stringi=1.4.3=r36h29659fb_0
   - r-stringr=1.4.0=r36h6115d3f_0
   - r-survival=3.2_10=r36hcfec24a_0
   - r-sys=3.4=r36hcdcec82_0
   - r-testthat=3.0.2=r36h03ef668_0
+  - r-th.data=1.0_10=r36h6115d3f_2
   - r-tibble=3.1.0=r36hcfec24a_1
   - r-tidyr=1.1.3=r36h03ef668_0
   - r-tidyselect=1.1.0=r36h6115d3f_0
@@ -329,6 +353,7 @@ dependencies:
   - r-xts=0.12.1=r36hcdcec82_0
   - r-yaml=2.2.1=r36hcfec24a_1
   - r-zeallot=0.1.0=r36h6115d3f_0
+  - r-zip=2.1.1=r36hcfec24a_0
   - r-zoo=1.8_9=r36hcfec24a_0
   - readline=8.1=h27cfd23_0
   - rstudio=1.1.456=h6bb024c_1

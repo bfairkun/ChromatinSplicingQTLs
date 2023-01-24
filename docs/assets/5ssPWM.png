@@ -172,12 +172,12 @@
                                 
                                     <!--open div for format options-->
                                     <select name="format">
-                                        <option selected value="png">PNG (low res.)</option>
-                                        <option  value="png_print">PNG (high res.)</option>
-                                        <option  value="jpeg">JPEG (low res.)</option>
-                                        <option  value="eps">EPS (vector)</option>
-                                        <option  value="pdf">PDF (vector)</option>
-                                        <option  value="svg">SVG (vector)</option>
+                                        <option disabled="disabled" value="png">PNG (low res.)</option>
+                                        <option disabled="disabled" value="png_print">PNG (high res.)</option>
+                                        <option disabled="disabled" value="jpeg">JPEG (low res.)</option>
+                                        <option selected="selected" value="eps">EPS (vector)</option>
+                                        <option disabled="disabled" value="pdf">PDF (vector)</option>
+                                        <option disabled="disabled" value="svg">SVG (vector)</option>
                                         <option  value="logodata">Data (plain text)</option> 
                                     </select> 
                                 
