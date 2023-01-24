@@ -69,7 +69,7 @@ rule GatherCPM:
           "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsUnstandardized.qqnorm.bed.gz",
           Phenotype = ["chRNA.Expression.Splicing", "Expression.Splicing", 
                        "Expression.Splicing.Subset_YRI",  "MetabolicLabelled.30min", 
-                       "MetabolicLabelled.60min"],
+                       "MetabolicLabelled.60min", 'H3K36ME3'],
         ),
         expand(
         "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsUnstandardized_AtTSS.qqnorm.bed.gz",
@@ -155,3 +155,23 @@ rule QTLTools_250kb:
           Phenotype = ["H3K36ME3", "H3K4ME3", "H3K4ME1","H3K27AC"],
           Pass = ["PermutationPass250kb.FDR_Added"]
         ),
+
+rule GatherLongReads:
+    input:
+        expand(
+          "LongReads/Junctions/{sample}.junc.filtered.bed.gz",
+          sample = long_read_samples
+        ),
+          
+          
+rule GatherONTFastq:
+    input:
+        expand("Fastq/ONT/{Phenotype}/{IndID}/R1.fastq.gz", zip, Phenotype=long_read_samples_df['Phenotype'], IndID=long_read_samples_df['IndID'])
+        
+rule GatherLongReadJunc:
+    input:
+        expand("LongReads/Junctions/{sample}.annotated.junc.gz", sample = long_read_samples)
+        
+        
+          
+          
