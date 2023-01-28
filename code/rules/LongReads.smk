@@ -1,6 +1,7 @@
 rule Bam2JuncPerRead:
     input:
         bam = "/project2/yangili1/cfbuenabadn/iso-seq/demux.5p--YG_{sample}_3p.bam.fastq.hg38.sort.bam",
+        bai = "/project2/yangili1/cfbuenabadn/iso-seq/demux.5p--YG_{sample}_3p.bam.fastq.hg38.sort.bam.bai",
     output:
         junc = "LongReads/Junctions/{sample}.junc.gz",
     log:
@@ -8,22 +9,29 @@ rule Bam2JuncPerRead:
     conda:
         "../envs/py_tools.yml"
     wildcard_constraints:
-        sample = '|'.join(long_read_samples)
+        sample = '|'.join(long_read_samples) 
     shell:
         """
         python scripts/Bam2JuncPerRead.py --input {input.bam} --output {output.junc} &> {log};
         """
         
+use rule Bam2JuncPerRead as Bam2JuncPerRead_ONT with:
+    input:
+        bam = "Alignments/minimap2_Alignment/{sample}.sort.bam",
+        bai = "Alignments/minimap2_Alignment/{sample}.sort.bam.bai",
+    wildcard_constraints:
+        sample = '|'.join(long_read_samples_ONT) 
+        
 rule GetSpliceJunctionAnnotation:
     input:
-        "/project2/yangili1/yangili/chRNA/annotation_leaf_JAN19.txt.gz",
+        "/project2/yangili1/yangili/chRNA/annotation_leaf_JAN27.txt.gz",
     output:
         "LongReads/Annotations/Annotation.bed.gz"
     log:
         "logs/LongReads/Annotations/Annotation.log"
     shell:
         """
-        (cat {input} | awk '{{print $1, $2, $3, $6, $6, $4}}' FS='\\t' OFS='\\t' - | sort -u - | bedtools sort -i - | gzip - > {output}) &> {log}
+        (cat {input} | awk '{{print $1, $2, $3, $6, $7, $4}}' FS='\\t' OFS='\\t' - | sort -u - | bedtools sort -i - | gzip - > {output}) &> {log}
         """
         
 rule AnnotateJuncFiles:
@@ -32,11 +40,13 @@ rule AnnotateJuncFiles:
         annot = "LongReads/Annotations/Annotation.bed.gz"
     output:
         "LongReads/Junctions/{sample}.annotated.junc.gz"
+    wildcard_constraints:
+        sample = '|'.join(all_long_reads) 
     log:
         "logs/LongReads/Junctions/Annotate.{sample}.log"
     shell:
         """
-        (bedtools intersect -r -f 1 -a {input.junc} -b {input.annot} -wb | awk '{{print $1, $2, $3, $1":"$2"-"$3":"$6, $5, $6, $10}}' FS='\\t' OFS='\\t' - | gzip - > {output}) &> {log}
+        (bedtools intersect -r -f 1 -a {input.junc} -b {input.annot} -wb | awk '{{print $1, $2, $3, $1":"$2"-"$3":"$6, $5, $6, $10, $11}}' FS='\\t' OFS='\\t' - | gzip - > {output}) &> {log}
         """
         
 def GetDownloadLinkFuncsONT(LinkType):
@@ -87,11 +97,70 @@ rule DownloadONTFastqFromLink:
         fi
         """
         
-#cat /project2/yangili1/yangili/chRNA/annotation_leaf_JAN19.txt.gz | awk '{print $1, $2, $3, $6, $6, $4}' #FS='\t' OFS='\t' - | sort -u | bedtools sort -i - | gzip - > YangAnnotation.bed.gz        
+rule CreateMinimapIndex:
+    input:
+        "ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa"
+    output:
+        "ReferenceGenome/minimap2_index/minimap2.mmi"
+    log:
+        "logs/minimap2/minimap2.index.log"
+    resources:
+        mem_mb = 36000
+    shell:
+        """
+        (minimap2 -d {output} {input}) &> {log}
+        """
+
+rule RunMinimap2:
+    input:
+        #index = "ReferenceGenome/minimap2_index/minimap2.mmi",
+        ref = "ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa",
+        fastq = "Fastq/ONT/{Phenotype}/{IndID}/R1.fastq.gz"
+    output:
+        sam = temp("Alignments/minimap2_Alignment/{Phenotype}.{IndID}.sam"),
+        bam = temp("Alignments/minimap2_Alignment/{Phenotype}.{IndID}.bam"),
+    log:
+        "logs/minimap2/minimap2.alignment.{Phenotype}.{IndID}.log"
+    wildcard_constraints:
+        Phenotype = '|'.join(list(long_read_samples_df.Phenotype)),
+        IndID = '|'.join(list(long_read_samples_df.IndID))
+    resources:
+        mem_mb = 36000
+    shell:
+        """
+        (minimap2 -ax splice {input.ref} {input.fastq} > {output.sam}) &> {log};
+        (samtools view -S -b {output.sam} > {output.bam}) &>> {log}
+        """
+
+rule minimap2SortAndIndexBam:
+    input:
+        "Alignments/minimap2_Alignment/{sample}.bam",
+    output:
+        bam = "Alignments/minimap2_Alignment/{sample}.sort.bam",
+        bai = "Alignments/minimap2_Alignment/{sample}.sort.bam.bai"
+    log:
+        "logs/minimap2/{sample}.index.log"
+    wildcard_constraints:
+        sample = "|".join(long_read_samples_ONT)
+    shell:
+        """
+        samtools sort -o {output.bam} {input};
+        samtools index {output.bam} &> {log}
+        """
         
-#                annot = "SplicingAnalysis/IntronTypeAnnotations.JoinedWithLeafcutterJuncList.txt.gz"
-#                junc_filtered = "LongReads/Junctions/{sample}.junc.filtered.bed.gz",
-#        """
-#        (bedtools intersect -s -r -f 1 -a {output.junc} -b {input.annot} -wb | gzip - > {output.junc_filtered}) &>> {log}
-#        """
+rule GetSampledAvgs:
+    input:
+        expand("LongReads/Junctions/{sample}.annotated.junc.gz", sample = long_read_samples)
+    output:
+        'LongReads/Analysis/nmd_reads.tab.gz',
+        'LongReads/Analysis/stable_reads.tab.gz'
+    log:
+        'logs/LongReads/analysis.log'
+    conda:
+        "../envs/py_tools.yml"
+    shell:
+        """
+        python scripts/sample_long_read_NMD_junctions.py &> {log}
+        """
+    
         

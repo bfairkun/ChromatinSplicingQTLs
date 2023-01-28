@@ -170,7 +170,10 @@ rule GatherONTFastq:
         
 rule GatherLongReadJunc:
     input:
-        expand("LongReads/Junctions/{sample}.annotated.junc.gz", sample = long_read_samples)
+        expand("LongReads/Junctions/{sample}.annotated.junc.gz", sample = all_long_reads),
+        'LongReads/Analysis/nmd_reads.tab.gz',
+        'LongReads/Analysis/stable_reads.tab.gz'
+        
         
         
           

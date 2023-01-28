@@ -299,4 +299,10 @@ long_read_samples_df = pd.read_csv("config/samples.longreads.tsv", sep='\t', com
 
 long_read_samples_to_download = list(long_read_samples_df.loc[ (long_read_samples_df['Assay']=="ONT") , ['Phenotype', 'IndID'] ].drop_duplicates().index)
 
+long_read_samples_ONT = [row.Phenotype + '.' + row.IndID for idx, row in long_read_samples_df.iterrows()]
+
+all_long_reads = long_read_samples + long_read_samples_ONT
+
+#expand("{Phenotype}.{IndID}", zip, Phenotype=long_read_samples_df['Phenotype'], IndID=long_read_samples_df['IndID'])
+
 # long_read_samples += long_read_samples_from_df
