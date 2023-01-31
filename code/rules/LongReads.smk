@@ -24,14 +24,14 @@ use rule Bam2JuncPerRead as Bam2JuncPerRead_ONT with:
         
 rule GetSpliceJunctionAnnotation:
     input:
-        "/project2/yangili1/yangili/chRNA/annotation_leaf_JAN27.txt.gz",
+        "/project2/yangili1/yangili/chRNA/annotation_leaf_JAN28.txt.gz",
     output:
         "LongReads/Annotations/Annotation.bed.gz"
     log:
         "logs/LongReads/Annotations/Annotation.log"
     shell:
         """
-        (cat {input} | awk '{{print $1, $2, $3, $6, $7, $4}}' FS='\\t' OFS='\\t' - | sort -u - | bedtools sort -i - | gzip - > {output}) &> {log}
+        (cat {input} | awk '{{print $1, $2, $3, $6, $7, $4, $8}}' FS='\\t' OFS='\\t' - | sort -u - | bedtools sort -i - | gzip - > {output}) &> {log}
         """
         
 rule AnnotateJuncFiles:
@@ -46,7 +46,7 @@ rule AnnotateJuncFiles:
         "logs/LongReads/Junctions/Annotate.{sample}.log"
     shell:
         """
-        (bedtools intersect -r -f 1 -a {input.junc} -b {input.annot} -wb | awk '{{print $1, $2, $3, $1":"$2"-"$3":"$6, $5, $6, $10, $11}}' FS='\\t' OFS='\\t' - | gzip - > {output}) &> {log}
+        (bedtools intersect -r -f 1 -a {input.junc} -b {input.annot} -wb | awk '{{print $1, $2, $3, $1":"$2"-"$3":"$6, $5, $6, $10, $11, $13}}' FS='\\t' OFS='\\t' - | gzip - > {output}) &> {log}
         """
         
 def GetDownloadLinkFuncsONT(LinkType):
@@ -148,12 +148,22 @@ rule minimap2SortAndIndexBam:
         samtools index {output.bam} &> {log}
         """
         
-rule GetSampledAvgs:
+rule GetNMDPerJunctionsAndSampledAvgs:
     input:
         expand("LongReads/Junctions/{sample}.annotated.junc.gz", sample = long_read_samples)
     output:
-        'LongReads/Analysis/nmd_reads.tab.gz',
-        'LongReads/Analysis/stable_reads.tab.gz'
+        'LongReads/Analysis/IsoSeq.nmd.tab.gz',
+        'LongReads/Analysis/IsoSeq.stable.tab.gz',
+        'LongReads/Analysis/IsoSeq.nmd_avg.tab.gz',
+        'LongReads/Analysis/IsoSeq.stable_avg.tab.gz',
+        'LongReads/Analysis/NMD_KD.nmd.tab.gz',
+        'LongReads/Analysis/NMD_KD.stable.tab.gz',
+        'LongReads/Analysis/NMD_KD.nmd_avg.tab.gz',
+        'LongReads/Analysis/NMD_KD.stable_avg.tab.gz',
+        'LongReads/Analysis/Churchman.nmd.tab.gz',
+        'LongReads/Analysis/Churchman.stable.tab.gz',
+        'LongReads/Analysis/Churchman.nmd_avg.tab.gz',
+        'LongReads/Analysis/Churchman.stable_avg.tab.gz',
     log:
         'logs/LongReads/analysis.log'
     conda:
