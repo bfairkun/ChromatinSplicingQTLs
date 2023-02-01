@@ -183,8 +183,15 @@ rule GatherLongReadJunc:
         'LongReads/Analysis/Churchman.stable.tab.gz',
         'LongReads/Analysis/Churchman.nmd_avg.tab.gz',
         'LongReads/Analysis/Churchman.stable_avg.tab.gz',
+        'LongReads/Analysis/IsoSeq.ByQuartile.tab.gz',
+        'LongReads/Analysis/NMD_KD.ByQuartile.tab.gz',
+        'LongReads/Analysis/Churchman.ByQuartile.tab.gz'
         
         
+rule MakeEURPhenotypes:
+    input:
+        expand("QTLs/QTLTools/{Phenotype}.Subset_EUR/OnlyFirstReps.qqnorm.bed.gz",
+        Phenotype = ["Expression.Splicing", "polyA.Splicing"])
         
           
           

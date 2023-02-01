@@ -349,6 +349,21 @@ rule Subset_YRI_phenotype_table:
         """
         python scripts/subsample.Splicing_YRI.py --input {input.input_file} --output {output} &> {log}
         """
+        
+rule Subset_EUR_phenotype_table:
+    input:
+        input_file = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.qqnorm.bed.gz",
+        igsr = '../data/igsr_samples.tsv.gz'
+    output:
+        "QTLs/QTLTools/{Phenotype}.Subset_EUR/OnlyFirstReps.qqnorm.bed.gz"
+    wildcard_constraints:
+        Phenotype = "|".join(["polyA.Splicing", "polyA.IR", "polyA.IER", "polyA.Splicing.5PrimeSS", "polyA.Splicing.3PrimeSS"])
+    log:
+        "logs/Subsample_YRI.{Phenotype}.log"
+    shell:
+        """
+        python scripts/subsample.Splicing_EUR.py --input {input.input_file} --output {output} &> {log}
+        """
 
 rule MakeNormalizedPsiTables:
     input:

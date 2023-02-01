@@ -239,12 +239,12 @@ def make_dataset_df(sample_list, juncs_to_remove, output_prefix):
     
 if __name__ == '__main__':
     
+    print('At least this should run')
+    
     juncs_to_remove_isoseq = ['chr17:81510329-81510479:-']
     iso_seq_samples = ['GM' + str(i) for i in range(1, 11)]
     print("Processing Iso-seq samples")
     make_dataset_df(iso_seq_samples, juncs_to_remove_isoseq, 'IsoSeq')
-    
-    
     
     juncs_to_remove_NMD_KD = ['chr17:81510329-81510479:-',
                               'chr5:181241639-181242170:+', 

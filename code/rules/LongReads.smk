@@ -165,12 +165,28 @@ rule GetNMDPerJunctionsAndSampledAvgs:
         'LongReads/Analysis/Churchman.nmd_avg.tab.gz',
         'LongReads/Analysis/Churchman.stable_avg.tab.gz',
     log:
-        'logs/LongReads/analysis.log'
+        'logs/LongReads/subsample.log'
     conda:
         "../envs/py_tools.yml"
     shell:
         """
-        python scripts/sample_long_read_NMD_junctions.py &> {log}
+        (python scripts/sample_long_read_NMD_junctions.py) &> {log}
         """
     
+rule GetNMDPerJunctionByQuartile:
+    input:
+        expand("LongReads/Junctions/{sample}.annotated.junc.gz", sample = long_read_samples),
+        'QTLs/QTLTools/Expression.Splicing.Subset_YRI/OnlyFirstRepsUnstandardized.qqnorm.bed.gz',
+    output:
+        'LongReads/Analysis/IsoSeq.ByQuartile.tab.gz',
+        'LongReads/Analysis/NMD_KD.ByQuartile.tab.gz',
+        'LongReads/Analysis/Churchman.ByQuartile.tab.gz'
+    log:
+        'logs/LongReads/analysis_by_quartile.log'
+    conda:
+        "../envs/py_tools.yml"
+    shell:
+        """
+        (python scripts/sample_long_read_by_expression_quartiles.py) &> {log}
+        """
         
