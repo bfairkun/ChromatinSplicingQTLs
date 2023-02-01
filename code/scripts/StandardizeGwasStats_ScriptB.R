@@ -23,17 +23,8 @@ f_out <- args[2]
 
 dat <- read_tsv(f_in)
 
-# dat %>%
-#     sample_n(10000) %>%
-#     dplyr::select(p_value, odds_ratio, standard_error) %>%
-#     mutate(lor = abs(log(odds_ratio))) %>%
-#     mutate(z = lor/standard_error) %>%
-#     mutate(p = (1-pnorm(z))*2)
-
-
-dat %>%
-    mutate(beta = log(hm_odds_ratio)) %>%
-    select(loci, chrom=hm_chrom, start=hm_pos, beta, SE=standard_error, A1=hm_effect_allele, A2=hm_other_allele) %>%
+dat %>% head() %>%
+    select(loci, chrom=hm_chrom, start=hm_pos, beta=hm_beta, SE=standard_error, A1=hm_effect_allele, A2=hm_other_allele) %>%
     mutate(chrom=paste0("chr", chrom)) %>%
     write_tsv(f_out)
 

@@ -11,6 +11,9 @@ library(RColorBrewer)
 library(data.table)
 library(edgeR)
 
+library("fgsea")
+library("org.Hs.eg.db")
+
 ```
 
 ## Intro
@@ -259,4 +262,28 @@ ggplot(P.FC.Vs.NtileSplicedInGroup.dat) +
   labs(x="log2(polyA/chRNA)", y="ecdf", color="Quintile %juncs in category;\n5=highest")
 
 ```
+
+## Gene ontology
+
+next im wondering what categories of genes have the most unrproductive splicing. For example, SR proteins have been documented to be self regulated through unproductive splicing and can have a high fraction of unproductive transripts. are there other gene categories like this... Is this a general/broad phenomena that effects more or less all types of genes?
+
+```{r}
+Dat.For.fgsea <- P.FC.Vs.NtileSplicedInGroup.dat %>%
+  filter(Annotation %in% c("In protein_coding", "Unannotated", "Unique to nonsense_mediated_decay")) %>%
+  mutate(Annotation = recode(Annotation, "Unannotated"="NMD", "Unique to nonsense_mediated_decay"="NMD")) %>%
+  filter(Dataset == "chRNA") %>%
+  group_by(Annotation, gene_id) %>%
+  summarise(AggregatedPercent = sum(Percent)) %>%
+  ungroup() %>%
+  pivot_wider(names_from = "Annotation", values_from = "AggregatedPercent") %>%
+  mutate(Diff = `In protein_coding` - NMD,
+         Ratio = `In protein_coding` / NMD)
+
+data(examplePathways)
+
+data(exampleRanks)
+
+  
+```
+
 

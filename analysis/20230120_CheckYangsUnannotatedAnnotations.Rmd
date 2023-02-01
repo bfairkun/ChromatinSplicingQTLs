@@ -27,8 +27,15 @@ Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust
 Read in annotations
 
 ```{r}
+
 f_in <- "/project2/yangili1/yangili/chRNA/annotation_leaf.txt.gz"
 annotations <- read_tsv(f_in, col_names = c("chrom", "start", "stop", "strand", "OriginalAnnotation", "NewAnnotation"))
+
+# f_in <- "/project2/yangili1/yangili/chRNA/annotations_yang.txt"
+# annotations <- read_tsv(f_in, col_names = c("chrom", "start", "stop", "strand", "Annotation", "Score")) %>%
+#   mutate(Original.New.Annotation = str_replace(Annotation, "^([A-Z_][a-z_ ]+?)_([A-Z_]+)$", "\\1.\\2")) %>%
+#   separate(Original.New.Annotation, into=c("OriginalAnnotation", "NewAnnotation"), sep="\\.") %>%
+#   dplyr::select(c("chrom", "start", "stop", "strand", "OriginalAnnotation", "NewAnnotation"))
 
 ```
 
@@ -48,7 +55,12 @@ SpliceJunctionCountsSummarised <- SpliceJunctionCounts.LongTable %>%
   mutate(Percent = Sum/SampleSum*100) %>%
   ungroup()
 
-  P <- SpliceJunctionCountsSummarised %>%
+Shared.YRI <- SpliceJunctionCountsSummarised %>% distinct(Dataset, Sample) %>%
+  add_count(Sample) %>%
+  filter(n==4) %>% pull(Sample) %>% unique()
+
+P <- SpliceJunctionCountsSummarised %>%
+    filter(Sample %in% Shared.YRI) %>%
     filter(OriginalAnnotation == "Unannotated") %>%
     mutate(Dataset = recode(Dataset, !!!c("Expression.Splicing"="polyA RNA", "chRNA.Expression.Splicing"="chRNA", "MetabolicLabelled.30min"="30min 4sU RNA", "MetabolicLabelled.60min"="60min 4sU RNA"))) %>%
     mutate(Dataset = factor(Dataset, levels=c("chRNA", "30min 4sU RNA", "60min 4sU RNA", "polyA RNA"))) %>%
@@ -60,7 +72,7 @@ SpliceJunctionCountsSummarised <- SpliceJunctionCounts.LongTable %>%
     labs(y=str_wrap("Percent of splice junction reads", 20), x=NULL) +
     guides(colour = guide_legend(override.aes = list(alpha = 1))) +
     theme(strip.text.x = element_text(size = 12))
-  P
+P
   
 P.AllStable <- SpliceJunctionCountsSummarised %>%
     mutate(NewAnnotation2 = case_when(
@@ -87,6 +99,158 @@ P.AllStable
 ```{r,eval=F}
 ggsave("../code/scratch/P2.Unnanotated.pdf", P, height=20, width=30)
 ```
+
+
+Let's remake that scatter plot of chRNA vs polyA, each point is a unique junction
+
+```{r}
+Dat.For.Scatter <- SpliceJunctionCounts.LongTable %>%
+  filter(Sample %in% Shared.YRI) %>%
+  filter(Dataset %in% c("Expression.Splicing", "chRNA.Expression.Splicing")) %>%
+  dplyr::select(chrom="#Chrom", start, stop=end, strand, everything()) %>%
+  inner_join(annotations) %>%
+  unite(junc, chrom, start, stop, strand) %>%
+  group_by(junc, Dataset, NewAnnotation, OriginalAnnotation) %>%
+  summarise(Sum = sum(Count)) %>%
+  ungroup() %>%
+  group_by(Dataset) %>%
+  mutate(SampleSum = sum(Sum)) %>%
+  mutate(Percent = Sum/SampleSum*100) %>%
+  ungroup()
+
+Dat.For.Scatter$OriginalAnnotation %>% unique()
+
+Dat.For.Scatter %>%
+  dplyr::select(junc, Dataset, NewAnnotation, OriginalAnnotation, Percent) %>%
+  pivot_wider(names_from = "Dataset", values_from = "Percent") %>%
+  filter(OriginalAnnotation == "In protein_coding") %>%
+  ggplot(aes(x=chRNA.Expression.Splicing, y=Expression.Splicing)) +
+  geom_abline(color='red', slope=1, intercept=0) +
+  geom_point(alpha=0.2) +
+  scale_fill_continuous(trans="log10") +
+  scale_x_continuous(trans="log10") +
+  scale_y_continuous(trans="log10") +
+  facet_wrap(~NewAnnotation, labeller = label_wrap_gen(width=14)) +
+  facet_wrap(~NewAnnotation) +
+  theme_bw()
+```
+
+
+## 1/23/23
+Now let check yang's new stable/unstable annotations
+
+```{r}
+stable.unstable <- paste0("/project2/yangili1/yangili/chRNA/annotations_", c("stable", "unstable"),".txt") %>%
+  setNames(str_replace(., "/project2/yangili1/yangili/chRNA/annotations_(.+?).txt", "\\1")) %>%
+  lapply(read_tsv, col_names = c("chrom", "start", "stop", "strand", "OriginalAnnotation", "NewAnnotation")) %>%
+  bind_rows(.id="fileSource")
+
+TotalCounts <- SpliceJunctionCounts.LongTable %>%
+  filter(Sample %in% Shared.YRI) %>%
+  filter(Dataset %in% c("Expression.Splicing", "chRNA.Expression.Splicing")) %>%
+  dplyr::select(chrom="#Chrom", start, stop=end, strand, everything()) %>%
+  group_by(Dataset) %>%
+  summarise(SumAllJuncs = sum(Count))
+
+TotalCounts.PerSample <- SpliceJunctionCounts.LongTable %>%
+  filter(Sample %in% Shared.YRI) %>%
+  mutate(Dataset = recode(Dataset, !!!c("Expression.Splicing"="polyA RNA", "chRNA.Expression.Splicing"="chRNA", "MetabolicLabelled.30min"="30min 4sU RNA", "MetabolicLabelled.60min"="60min 4sU RNA"))) %>%
+  mutate(Dataset = factor(Dataset, levels=c("chRNA", "30min 4sU RNA", "60min 4sU RNA", "polyA RNA"))) %>%
+  group_by(Dataset, Sample) %>%
+  summarise(SumAllJuncs = sum(Count))
+
+ToPlot <- SpliceJunctionCounts.LongTable %>%
+  filter(Sample %in% Shared.YRI) %>%
+  filter(Dataset %in% c("Expression.Splicing", "chRNA.Expression.Splicing")) %>%
+  dplyr::select(chrom="#Chrom", start, stop=end, strand, everything()) %>%
+  inner_join(stable.unstable) %>%
+  unite(junc, chrom, start, stop, strand) %>%
+  group_by(junc, Dataset, NewAnnotation, OriginalAnnotation, fileSource) %>%
+  summarise(Sum = sum(Count)) %>%
+  ungroup() %>%
+  inner_join(TotalCounts) %>%
+  mutate(Percent = Sum/SumAllJuncs*100)
+  
+ToPlot %>%
+  dplyr::select(junc, NewAnnotation, fileSource, Dataset, Percent) %>%
+  distinct(junc, NewAnnotation, fileSource, Dataset, .keep_all=T) %>%
+  pivot_wider(names_from="Dataset", values_from="Percent" ) %>%
+ggplot(aes(x=chRNA.Expression.Splicing, y=Expression.Splicing)) +
+  geom_abline(color='red', slope=1, intercept=0) +
+  geom_point(alpha=0.2) +
+  scale_fill_continuous(trans="log10") +
+  scale_x_continuous(trans="log10") +
+  scale_y_continuous(trans="log10") +
+  facet_wrap(NewAnnotation~fileSource, labeller = label_wrap_gen(width=14)) +
+  theme_bw()
+
+ggsave("../code/scratch/Stable.Unstable.Scatter.pdf", height=15, width=15)
+
+SpliceJunctionCounts.LongTable %>%
+  filter(Sample %in% Shared.YRI)%>%
+  mutate(Dataset = recode(Dataset, !!!c("Expression.Splicing"="polyA RNA", "chRNA.Expression.Splicing"="chRNA", "MetabolicLabelled.30min"="30min 4sU RNA", "MetabolicLabelled.60min"="60min 4sU RNA"))) %>%
+  mutate(Dataset = factor(Dataset, levels=c("chRNA", "30min 4sU RNA", "60min 4sU RNA", "polyA RNA"))) %>%
+  dplyr::select(chrom="#Chrom", start, stop=end, strand, everything()) %>%
+  inner_join(stable.unstable) %>%
+  group_by(fileSource, Dataset, Sample, NewAnnotation) %>%
+  summarise(TotalInAnnotation = sum(Count)) %>%
+  inner_join(TotalCounts.PerSample) %>%
+  mutate(Percent = TotalInAnnotation/SumAllJuncs*100) %>%
+  ggplot(aes(x=Dataset, y=Percent)) +
+    geom_jitter(alpha=0.2, size=0.5) +
+    geom_boxplot(outlier.shape=NA, color='black', fill=NA) +
+    facet_wrap(NewAnnotation~fileSource, scales="free", labeller = label_wrap_gen(width=14)) +
+    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1), legend.position = "none") +
+    labs(y=str_wrap("Percent of splice junction reads", 20), x=NULL) +
+    guides(colour = guide_legend(override.aes = list(alpha = 1))) +
+    theme(strip.text.x = element_text(size = 12))
+
+ggsave("../code/scratch/Stable.Unstable.BoxJitter.pdf", height=15, width=15)
+
+
+
+```
+
+yang wants to see the scatter plot with the old annotations...
+
+```{r}
+
+f_in <- "/project2/yangili1/yangili/chRNA/annotations_yang.txt"
+annotations <- read_tsv(f_in, col_names = c("chrom", "start", "stop", "strand", "Annotation", "Score")) %>%
+  mutate(Original.New.Annotation = str_replace(Annotation, "^([A-Z_][a-z_ ]+?)_([A-Z_]+)$", "\\1.\\2")) %>%
+  separate(Original.New.Annotation, into=c("OriginalAnnotation", "NewAnnotation"), sep="\\.") %>%
+  dplyr::select(c("chrom", "start", "stop", "strand", "OriginalAnnotation", "NewAnnotation"))
+
+ToPlot <- SpliceJunctionCounts.LongTable %>%
+  filter(Sample %in% Shared.YRI) %>%
+  filter(Dataset %in% c("Expression.Splicing", "chRNA.Expression.Splicing")) %>%
+  dplyr::select(chrom="#Chrom", start, stop=end, strand, everything()) %>%
+  inner_join(annotations) %>%
+  unite(junc, chrom, start, stop, strand) %>%
+  group_by(junc, Dataset, NewAnnotation, OriginalAnnotation) %>%
+  summarise(Sum = sum(Count)) %>%
+  ungroup() %>%
+  inner_join(TotalCounts) %>%
+  mutate(Percent = Sum/SumAllJuncs*100)
+  
+ToPlot %>%
+  dplyr::select(junc, NewAnnotation, OriginalAnnotation, Dataset, Percent) %>%
+  distinct(junc, NewAnnotation, OriginalAnnotation, Dataset, .keep_all=T) %>%
+  pivot_wider(names_from="Dataset", values_from="Percent" ) %>%
+ggplot(aes(x=chRNA.Expression.Splicing, y=Expression.Splicing)) +
+  geom_abline(color='red', slope=1, intercept=0) +
+  geom_point(alpha=0.2) +
+  scale_fill_continuous(trans="log10") +
+  scale_x_continuous(trans="log10") +
+  scale_y_continuous(trans="log10") +
+  facet_wrap(NewAnnotation~OriginalAnnotation, labeller = label_wrap_gen(width=14)) +
+  theme_bw()
+
+ggsave("../code/scratch/OldAnnotations.scatter.pdf", height=15, width=15)
+
+```
+
+
 
 Now let's check the sQTL effects by category
 

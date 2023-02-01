@@ -207,18 +207,21 @@ def PairedEndParams(wildcards):
         return "-p"
 
 def GetFeatureCountsParams(wildcards):
-    if (wildcards.Phenotype=="ProCap"): 
-        return  "-s 1 -F SAF --read2pos 5"
-    if wildcards.Phenotype == "chRNA.Expression":
-        if  wildcards.Region == "AtInternalExons":
-            return "-s 2 -F SAF"
+    try:
+        if (wildcards.Phenotype=="ProCap"): 
+            return  "-s 1 -F SAF --read2pos 5"
+        if wildcards.Phenotype == "chRNA.Expression":
+            if  wildcards.Region == "AtInternalExons":
+                return "-s 2 -F SAF"
+            else:
+                return "-s 2"
+        elif (wildcards.Phenotype in ChromatinProfilingPhenotypes) or (wildcards.Region == 'AtTSS'):
+            return "-F SAF"
+        elif wildcards.Phenotype == "polyA.Expression" and wildcards.Region == "AtInternalExons":
+            return "-F SAF"
         else:
-            return "-s 2"
-    elif (wildcards.Phenotype in ChromatinProfilingPhenotypes) or (wildcards.Region == 'AtTSS'):
-        return "-F SAF"
-    elif wildcards.Phenotype == "polyA.Expression" and wildcards.Region == "AtInternalExons":
-        return "-F SAF"
-    else:
+            return ""
+    except AttributeError:
         return ""
 
 def GetFeatureCountsParams2(wildcards):
