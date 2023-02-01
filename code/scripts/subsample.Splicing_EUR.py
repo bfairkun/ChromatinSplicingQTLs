@@ -13,7 +13,7 @@ if __name__ == '__main__':
     
     qqnorm_df = pd.read_csv(input_file, sep='\t')
     samples = pd.read_csv('../data/igsr_samples.tsv.gz', sep='\t', index_col=0)
-    YRI_samples = qqnorm_df.columns.intersection(samples.loc[samples['Population code'] == 'YRI'].index)
+    YRI_samples = qqnorm_df.columns.intersection(samples.loc[samples['Superpopulation code'] == 'EUR'].index)
     YRI_columns = list(qqnorm_df.columns[:6]) + list(YRI_samples)
     qqnorm_df[YRI_columns].to_csv(output_file, sep='\t', index=False, header=True)
 

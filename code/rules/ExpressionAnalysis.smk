@@ -21,6 +21,8 @@ def GetFeatureCountsForRNASeqExpressionPhenotype(wildcards):
         return "featureCounts/chRNA.Expression/Counts.txt"
     elif wildcards.Phenotype == "Expression.Splicing.Subset_YRI":
         return "featureCounts/Expression.Splicing/Counts.txt"
+    elif wildcards.Phenotype == "Expression.Splicing.Subset_EUR":
+        return "featureCounts/Expression.Splicing/Counts.txt"
     else:
         return "featureCounts/{Phenotype}/Counts.txt"
 
@@ -47,6 +49,26 @@ rule Prepare_RNA_seq_ExpressionPhenotypeTable_ForGenesInList:
         """
         Rscript scripts/PreparePhenotypeTableFromFeatureCounts_SubsetGeneList.R {input.featureCounts} {input.GeneList} {output.FirstReps} {input.YRI_List} &> {log}
         """
+
+
+rule Prepare_RNA_seq_ExpressionPhenotypeTable_ForGenesInList_EUR:
+    input:
+        featureCounts = GetFeatureCountsForRNASeqExpressionPhenotype,
+        GeneList = "ExpressionAnalysis/polyA/ExpressedGeneList.txt",
+        EUR_List = "../data/igsr_samples.tsv.gz"
+    output:
+        FirstReps = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.qqnorm.bed.gz",
+    wildcard_constraints:
+        Phenotype = "Expression.Splicing.Subset_EUR|polyA.Splicing.Subset_EUR"
+    log:
+        "logs/Prepare_chrRNA_RNA_seq_ExpressionPhenotypeTable/{Phenotype}.log"
+    conda:
+        "../envs/r_essentials.yml"
+    shell:
+        """
+        Rscript scripts/PreparePhenotypeTableFromFeatureCounts_SubsetEUR.R {input.featureCounts} {input.GeneList} {output.FirstReps} {input.EUR_List} &> {log}
+        """
+
 
 
 rule tabix_genes_bed:

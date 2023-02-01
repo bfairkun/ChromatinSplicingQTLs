@@ -36,6 +36,7 @@ include: "rules/Metaplots.smk"
 include: "rules/CarlosDevelop.smk"
 include: "rules/ncQTLs_plots.smk"
 include: "rules/TranslateLongReads.smk"
+include: "rules/LongReads.smk"
 
 
 include: "rules/ProcessSmallMoleculeData.smk"
@@ -72,7 +73,8 @@ localrules:
     DownloadKristjansdottirSupplementData2,
     DownloadChromHMM,
     DownloadRefSeqGTF,
-    SM_CopyFastqFromLocal
+    SM_CopyFastqFromLocal,
+    DownloadONTFastqFromLink
 
 
 ruleorder: CopyFastqFromLocal > DownloadFastqFromLink
