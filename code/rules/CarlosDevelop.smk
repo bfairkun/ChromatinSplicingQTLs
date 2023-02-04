@@ -187,7 +187,26 @@ rule GatherLongReadJunc:
         'LongReads/Analysis/NMD_KD.ByQuartile.tab.gz',
         'LongReads/Analysis/Churchman.ByQuartile.tab.gz'
         
-        
+
+
+rule NMDJunctions_test:
+    input:
+        expand(
+            "SplicingAnalysis/NMDJunctions/Annotation/{Junction}.{ext}",
+            Junction = ["FivePrime", "ThreePrime", "ThreePrime.ForMaxEntScan"], 
+            ext = ['tab', 'fa']
+        ),
+        expand(
+            "SplicingAnalysis/NMDJunctions/tables/leafcutter_perind.counts_only.{Phenotype}.bed.gz",
+            Phenotype = ["Expression.Splicing", "chRNA.Expression.Splicing", "MetabolicLabelled.30min",
+        "MetabolicLabelled.60min"]),
+        expand("SplicingAnalysis/NMDJunctions/Annotation/{Junction}.scored.tab.gz",
+        Junction = ["FivePrime", "ThreePrime"]),
+        expand("SplicingAnalysis/NMDJunctions/Plots/{Junction}.PWM.png",
+        Junction = ["FivePrime", "ThreePrime"]),
+        expand("SplicingAnalysis/NMDJunctions/Annotation/{Junction}.MaxEntScan_score.tab.gz",
+        Junction = ["FivePrime", "ThreePrime.ForMaxEntScan"])
+     
 rule MakeEURPhenotypes:
     input:
         expand("QTLs/QTLTools/{Phenotype}.Subset_EUR/OnlyFirstReps.qqnorm.bed.gz",

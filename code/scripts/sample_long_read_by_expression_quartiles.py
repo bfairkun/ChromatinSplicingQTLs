@@ -74,7 +74,6 @@ def get_junc_file_subsample(junc_file, nmd_list, RPKM, juncs_to_remove):
     gm = clean_junc_file(gm, juncs_to_remove)
     genes_Q25, genes_Q50, genes_Q75, genes_Q100 = get_expression_quartiles(gm, RPKM)
     
-    
     n_list_Q25 = get_quartile_dict(gm, genes_Q25, n_samples=20)
     n_list_Q50 = get_quartile_dict(gm, genes_Q50, n_samples=20)
     n_list_Q75 = get_quartile_dict(gm, genes_Q75, n_samples=20)
@@ -85,7 +84,7 @@ def get_junc_file_subsample(junc_file, nmd_list, RPKM, juncs_to_remove):
 
 def make_df_from_samples(Q_samples, name, Q):
     Q_ = pd.DataFrame(Q_samples).T
-    junc_list = ['junc_' + str(i) for i in range(2, 21)]
+    junc_list = ['junc_' + str(i+2) for i in range(len(Q_.columns))]
     Q_.columns = junc_list
     Q_['quartile'] = [Q] * 20
     Q_['name'] = [name] * 20
@@ -143,7 +142,7 @@ if __name__ == '__main__':
     juncs_to_remove = ['chr17:81510329-81510479:-']
     GM_samples = ['GM' + str(i) for i in range(1, 11)]
     GM_df = make_dataset_df(GM_samples, nmd_list, juncs_to_remove, RPKM)
-    print('Done. Savign.')
+    print('Done. Saving.')
     GM_df.to_csv('LongReads/Analysis/IsoSeq.ByQuartile.tab.gz', sep='\t', index=False, header=True)
     
     juncs_to_remove = ['chr17:81510329-81510479:-',

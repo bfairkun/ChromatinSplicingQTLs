@@ -36,6 +36,7 @@ include: "rules/Metaplots.smk"
 include: "rules/CarlosDevelop.smk"
 include: "rules/ncQTLs_plots.smk"
 include: "rules/LongReads.smk"
+include: "rules/NMDSpliceSiteAnalysis.smk"
 
 
 include: "rules/ProcessSmallMoleculeData.smk"
@@ -73,7 +74,8 @@ localrules:
     DownloadChromHMM,
     DownloadRefSeqGTF,
     SM_CopyFastqFromLocal,
-    DownloadONTFastqFromLink
+    DownloadONTFastqFromLink,
+    ScorePWMSpliceSite
 
 
 ruleorder: CopyFastqFromLocal > DownloadFastqFromLink

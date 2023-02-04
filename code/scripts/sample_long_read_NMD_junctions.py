@@ -55,7 +55,7 @@ def get_counts_and_NMD_reads(junc, juncs_to_remove, max_junc):
     
     return junc, NMD_reads, junctions_per_read, pc_reads_out
 
-def wrap_junc(junc_file, nmd_list, juncs_to_remove = ['chr17:81510329-81510479:-'], max_junc = 16):
+def wrap_junc(junc_file, nmd_list, juncs_to_remove = ['chr17:81510329-81510479:-'], max_junc = 21):
     junc = read_junc(junc_file, nmd_list)
     junc, NMD_reads, x, y = get_counts_and_NMD_reads(junc, juncs_to_remove, max_junc)
     return junc, NMD_reads
@@ -80,7 +80,7 @@ def select_reads_by_number_of_junctions(GM, GM_junctions_per_read, GM_pc_reads, 
     
     GM_junctions_per_read = GM_junctions_per_read.loc[GM_pc_reads]
     GM_subsample = GM.loc[GM.read.isin(GM_junctions_per_read.loc[
-        (GM_junctions_per_read >= n) & (GM_junctions_per_read <= 15)].index)]
+        (GM_junctions_per_read >= n) & (GM_junctions_per_read <= 20)].index)]
     
     is_nmd = []
     
@@ -137,8 +137,8 @@ def subsample_juncs(junc_file, nmd_list, juncs_to_remove):
     junc = read_junc(junc_file, nmd_list)
     
     gm_nmd_avg = []
-    for i in range(1, 16):
-        y = get_NMD_avg(junc, juncs_to_remove, 16, i)
+    for i in range(1, 21):
+        y = get_NMD_avg(junc, juncs_to_remove, 21, i)
         gm_nmd_avg.append(y)
     return gm_nmd_avg
 

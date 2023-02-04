@@ -168,6 +168,8 @@ rule GetNMDPerJunctionsAndSampledAvgs:
         'logs/LongReads/subsample.log'
     conda:
         "../envs/py_tools.yml"
+    resources:
+        mem_mb = 36000
     shell:
         """
         (python scripts/sample_long_read_NMD_junctions.py) &> {log}
@@ -183,6 +185,8 @@ rule GetNMDPerJunctionByQuartile:
         'LongReads/Analysis/Churchman.ByQuartile.tab.gz'
     log:
         'logs/LongReads/analysis_by_quartile.log'
+    resources:
+        mem_mb = 36000
     conda:
         "../envs/py_tools.yml"
     shell:
