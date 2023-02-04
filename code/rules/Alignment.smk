@@ -128,7 +128,8 @@ rule STAR_Align_WASP:
         readMapNumber = -1,
         ENCODE_params = "--outFilterType BySJout --outFilterMultimapNmax 20  --alignSJoverhangMin 8 --alignSJDBoverhangMin 1 --outFilterMismatchNmax 999 --outFilterMismatchNoverReadLmax 0.04 --alignIntronMin 20 --alignIntronMax 1000000 --alignMatesGapMax 1000000",
         WASP_params = "--waspOutputMode SAMtag --outSAMattributes NH HI AS nM XS vW --varVCFfile",
-        JunctionScore = GetSTARJunctionScoreParams
+        JunctionScore = GetSTARJunctionScoreParams,
+        PrefixPrefix =  "Alignments/STAR_Align/"
     resources:
         cpus_per_node = 9,
         mem = 58000,
@@ -136,8 +137,8 @@ rule STAR_Align_WASP:
         Phenotype = "Expression.Splicing|chRNA.Expression.Splicing"
     shell:
         """
-        module load STAR/2.7.7a
-        STAR --readMapNumber {params.readMapNumber} {params.JunctionScore} --outFileNamePrefix Alignments/STAR_Align/{wildcards.Phenotype}/{wildcards.IndID}/{wildcards.Rep}/ --genomeDir ReferenceGenome/STARIndex/ --readFilesIn {input.R1} {input.R2} --outSAMtype BAM SortedByCoordinate --readFilesCommand zcat --runThreadN {threads} --outSAMmultNmax 1 {params.WASP_params} {input.vcf} --limitBAMsortRAM 16000000000 {params.ENCODE_params} --outSAMstrandField intronMotif  &> {log}
+        # module load STAR/2.7.7a
+        STAR --readMapNumber {params.readMapNumber} {params.JunctionScore} --outFileNamePrefix {params.PrefixPrefix}{wildcards.Phenotype}/{wildcards.IndID}/{wildcards.Rep}/ --genomeDir ReferenceGenome/STARIndex/ --readFilesIn {input.R1} {input.R2} --outSAMtype BAM SortedByCoordinate --readFilesCommand zcat --runThreadN {threads} --outSAMmultNmax 1 {params.WASP_params} {input.vcf} --limitBAMsortRAM 16000000000 {params.ENCODE_params} --outSAMstrandField intronMotif  &> {log}
         """
 
 use rule STAR_Align_WASP as STAR_Align_WASP_SE with:
@@ -149,6 +150,7 @@ use rule STAR_Align_WASP as STAR_Align_WASP_SE with:
     wildcard_constraints:
         Phenotype = "MetabolicLabelled.30min|MetabolicLabelled.60min|ProCap"
 
+
 rule FilterBAM_WaspTags:
     input:
         bam = "Alignments/STAR_Align/{Phenotype}/{IndID}/{Rep}/Aligned.sortedByCoord.out.bam"
@@ -158,12 +160,114 @@ rule FilterBAM_WaspTags:
     log:
         "logs/FilterBAM_WaspTags/{Phenotype}/{IndID}.{Rep}.log"
     resources:
-        mem = 8000
+        # mem = 8000
+        mem = much_more_mem_after_first_attempt
     shell:
         """
         (cat <(samtools view -H {input.bam}) <(samtools view {input.bam} | grep -v "vW:i:[2-7]") | samtools view -bh > {output.bam}) &> {log}
         samtools index {output.bam} &>> {log}
         """
+
+# rule sjdb_ForMultiSampleTwoPass:
+#     """
+#     because of temporary files, something kind of weird is happening with the DAG and unnecessarily realigning some things... to avoid this, just comment this out after the file is made with all juncs across all RNAseq experiments, but before calling rules with ReadLengthMapExperiment* in rule name.
+#     """
+#     input:
+#         "SplicingAnalysis/regtools_annotate_combined/basic.bed.gz"
+#     output:
+#         "SplicingAnalysis/STAR_Multisample_sjdb.tab"
+#     shell:
+#         """
+#         zcat {input} | awk -F'\\t' -v OFS='\\t' 'NR>1 {{print $1, $2+1, $3}}' | bedtools sort -i - | uniq > {output}
+#         """
+
+use rule fastp as ReadLengthMapExperiment_fastp with:
+    input:
+        R1 = "Fastq/{Phenotype}/{IndID}/{Rep}.R1.fastq.gz",
+        R2 = "Fastq/{Phenotype}/{IndID}/{Rep}.R2.fastq.gz"
+    output:
+        R1 = temp("ReadLengthMapExperiment/FastqFastp/{Phenotype}/{IndID}/{Rep}.R1.fastq.gz"),
+        R2 = temp("ReadLengthMapExperiment/FastqFastp/{Phenotype}/{IndID}/{Rep}.R2.fastq.gz"),
+        html = "ReadLengthMapExperiment/FastqFastp/{Phenotype}/{IndID}/{Rep}.fastp.html",
+        json = "ReadLengthMapExperiment/FastqFastp/{Phenotype}/{IndID}/{Rep}.fastp.json"
+    wildcard_constraints:
+        Phenotype = "Expression.Splicing|chRNA.Expression.Splicing"
+    params:
+        I = "-I",
+        O = "-O",
+        extra = "-b 50 -B 50"
+    log:
+        "logs/ReadLengthMapExperiment_fastp/{Phenotype}.{IndID}.{Rep}.log"
+
+use rule fastp as ReadLengthMapExperiment_fastp_SE with:
+    input:
+        R1 = "FastqSE/{Phenotype}/{IndID}/{Rep}.SE.fastq.gz",
+        R2 = []
+    wildcard_constraints:
+        Phenotype = "MetabolicLabelled.30min|MetabolicLabelled.60min|ProCap"
+    output:
+        R1 = temp("ReadLengthMapExperiment/FastqFastpSE/{Phenotype}/{IndID}/{Rep}.SE.fastq.gz"),
+        R2 = [],
+        html = "ReadLengthMapExperiment/FastqFastpSE/{Phenotype}/{IndID}/{Rep}.fastp.html",
+        json = "ReadLengthMapExperiment/FastqFastpSE/{Phenotype}/{IndID}/{Rep}.fastp.json"
+    log:
+        "logs/ReadLengthMapExperiment_fastp_SE/{Phenotype}.{IndID}.{Rep}.log"
+    params:
+        I = "",
+        O = "",
+        extra = "-b 50"
+
+use rule STAR_Align_WASP as ReadLengthMapExperiment_STAR_Align_WASP with:
+    input:
+        index = "ReferenceGenome/STARIndex/chrLength.txt",
+        R1 = "ReadLengthMapExperiment/FastqFastp/{Phenotype}/{IndID}/{Rep}.R1.fastq.gz",
+        R2 = [],
+        vcf = "ReferenceGenome/STAR_WASP_Vcfs/{Phenotype}/WholeGenome.vcf",
+        sjdb = "SplicingAnalysis/STAR_Multisample_sjdb.tab"
+    output:
+        bam = "ReadLengthMapExperiment/{Phenotype}/{IndID}/{Rep}/Aligned.sortedByCoord.out.bam",
+        align_log = "ReadLengthMapExperiment/{Phenotype}/{IndID}/{Rep}/Log.final.out"
+    log:
+        "logs/ReadLengthMapExperiment_STAR_Align_WASP/{Phenotype}/{IndID}.{Rep}.log"
+    wildcard_constraints:
+        Phenotype = "Expression.Splicing|chRNA.Expression.Splicing"
+    params:
+        readMapNumber = -1,
+        ENCODE_params = "--outFilterType BySJout --outFilterMultimapNmax 20  --alignSJoverhangMin 8 --alignSJDBoverhangMin 1 --outFilterMismatchNmax 999 --outFilterMismatchNoverReadLmax 0.04 --alignIntronMin 20 --alignIntronMax 1000000 --alignMatesGapMax 1000000 --sjdbFileChrStartEnd SplicingAnalysis/STAR_Multisample_sjdb.tab --limitSjdbInsertNsj 3845004",
+        WASP_params = "--waspOutputMode SAMtag --outSAMattributes NH HI AS nM XS vW --varVCFfile",
+        JunctionScore = GetSTARJunctionScoreParams,
+        PrefixPrefix =  "ReadLengthMapExperiment/"
+
+use rule ReadLengthMapExperiment_STAR_Align_WASP as ReadLengthMapExperiment_STAR_Align_WASP_SE with:
+    input:
+        index = "ReferenceGenome/STARIndex/chrLength.txt",
+        R1 = "ReadLengthMapExperiment/FastqFastpSE/{Phenotype}/{IndID}/{Rep}.SE.fastq.gz",
+        R2 = [],
+        vcf = "ReferenceGenome/STAR_WASP_Vcfs/{Phenotype}/WholeGenome.vcf",
+        sjdb = "SplicingAnalysis/STAR_Multisample_sjdb.tab"
+    wildcard_constraints:
+        Phenotype = "MetabolicLabelled.30min|MetabolicLabelled.60min|ProCap"
+
+use rule FilterBAM_WaspTags as ReadLengthMapExperiment_FilterBAM_WaspTags with:
+    input:
+        bam = "ReadLengthMapExperiment/{Phenotype}/{IndID}/{Rep}/Aligned.sortedByCoord.out.bam"
+    output:
+        bam = "ReadLengthMapExperiment/{Phenotype}/{IndID}/{Rep}/Filtered.bam",
+        bai = "ReadLengthMapExperiment/{Phenotype}/{IndID}/{Rep}/Filtered.bam.bai",
+    log:
+        "logs/ReadLengthMapExperiment_FilterBAM_WaspTags/{Phenotype}/{IndID}.{Rep}.log"
+
+
+ReadLengthMapExperiment_samples = pd.read_csv("config/RNASeqReadLengthMapExperiment.samples.tsv", sep='\t', comment='#')
+rule ReadLengthMapExperiment_CollectBams:
+    input:
+        expand(
+            "ReadLengthMapExperiment/{Phenotype}/{IndID}/{Rep}/Filtered.bam",
+            zip,
+            Phenotype=ReadLengthMapExperiment_samples["Phenotype"],
+            IndID=ReadLengthMapExperiment_samples["IndID"],
+            Rep=ReadLengthMapExperiment_samples["RepNumber"],
+        ),
 
 rule Hisat2_Align:
     input:

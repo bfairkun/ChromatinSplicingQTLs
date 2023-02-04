@@ -48,8 +48,10 @@ rule CreateBedForNonGwasCatalogStats:
         """
 
 def GetPvalColumnAwk(wildcards):
-    if wildcards.accession in ["GCST007800", "GCST007799"]:
+    if wildcards.accession in ["GCST007800", "GCST007799", "GCST004988"]:
         return "$21"
+    elif wildcards.accession in ["GCST004131", "GCST004132", "GCST004133"] :
+        return "$17"
     else:
         return "$23"
 
@@ -82,7 +84,8 @@ rule GetGWAS_LeadSnpWindows:
     """
     output bed of 1MB window surrounding lead genome-wide signficant autosomal
     snps for each gwas. Exclude blacklistregions (ie MHC). This rule only works
-    for summary stats in bed format with Pvalue in column4g
+    for summary stats in bed format with Pvalue in column4. Exit status 1 if
+    output is empty
     """
     input:
         summarystats = "gwas_summary_stats/sorted_index_summarystat_hg38beds/{accession}.bed.gz",
@@ -102,6 +105,7 @@ rule GetGWAS_LeadSnpWindows:
     shell:
         """
         (python scripts/GetGWASLeadVariantWindowsFromBed.py {input.summarystats} /dev/stdout {params.PvalThreshold} | awk -F'\\t' -v OFS='\\t' '$1~/chr[0-9]+/ {{print $1, $2, $2, $1"_"$2"_N_N_{wildcards.accession}" }}' | bedtools slop -i - -g {input.chromsizes} -b 500000 | bedtools sort -i - | bedtools intersect -a - -b {input.blacklistregions} -wa -sorted -v > {output} ) &> {log}
+        [[ -s {output.signif_loci} ]]
         """
 
 rule ConcatGwasLeadSnpWindows:
@@ -120,11 +124,15 @@ rule ConcatGwasLeadSnpWindows:
 
 def GetScriptToOutputStandardizedStats(wildcards):
     if gwas_df.loc[wildcards.accession]['ProcessingMethod'] == 'Custom':
+        #processing script A
         if wildcards.accession == "IMSGC2019":
             return "scripts/StandardizeGwasStats_MS.R"
+        elif wildcards.accession in ["GCST004988"]:
+            return ""
     elif gwas_df.loc[wildcards.accession]['ProcessingMethod'] == 'GWAS_catalog_harmonised_from_beta_se':
         return "scripts/StandardizeGwasStats_FromGwasCatalog.R"
-    elif gwas_df.loc[wildcards.accession]['ProcessingMethod'] == 'GWAS_catalog_harmonised_from_OR_p':
+    elif gwas_df.loc[wildcards.accession]['ProcessingMethod'] == 'GWAS_catalog_harmonised_from_OR_se':
+        # ["GCST007799", "GCST007800"]
         return "scripts/StandardizeGwasStats_FromGwasCatalogOR.R"
 
 rule GwasBedStatsAtWindows:
@@ -179,7 +187,8 @@ rule GwasBedStatsToStandardizedFormat:
 
 rule GatherGwasStandardizedStats:
     input:
-        expand("gwas_summary_stats/StatsForColoc/{accession}.standardized.txt.gz", accession = gwas_df.index)
+        expand("gwas_summary_stats/StatsForColoc/{accession}.standardized.txt.gz", accession = gwas_df.index),
+        "gwas_summary_stats/LeadSnpWindows.bed"
 
 # rule GetGWASSummaryStatsAtLeadSNPWindows:
 #     """

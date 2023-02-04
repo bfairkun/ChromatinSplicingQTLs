@@ -35,6 +35,7 @@ include: "rules/CreateUnstandardizedPhenotypeMatrices.smk"
 include: "rules/Metaplots.smk"
 include: "rules/CarlosDevelop.smk"
 include: "rules/ncQTLs_plots.smk"
+include: "rules/TranslateLongReads.smk"
 include: "rules/LongReads.smk"
 include: "rules/NMDSpliceSiteAnalysis.smk"
 
@@ -79,6 +80,7 @@ localrules:
 
 
 ruleorder: CopyFastqFromLocal > DownloadFastqFromLink
+ruleorder: CopyFastqFromLocal > DownloadFastqFromLink_SE
 
 
 rule all:
@@ -128,7 +130,7 @@ rule CollectColocResultsToCodeDir:
     """
     input:
         expand("hyprcoloc/Results/ForColoc/{ColocName}/tidy_results_OnlyColocalized.txt.gz", ColocName = colocs_genewise.index),
-        #expand("hyprcoloc/Results/ForGWASColoc/{ColocName}/results.txt.gz", ColocName = colocs_gwas.index )
+        expand("hyprcoloc/Results/ForGWASColoc/{ColocName}/results.txt.gz", ColocName = colocs_gwas.index )
 
 rule CollectColocResultsToOutputDir:
     """
