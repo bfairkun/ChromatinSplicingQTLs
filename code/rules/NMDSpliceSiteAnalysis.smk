@@ -134,6 +134,8 @@ rule ScoreMaxEntScan:
         Junction = "FivePrime|ThreePrime.ForMaxEntScan",
     conda:
         "../envs/maxentpy.yml"
+    resources:
+        mem_mb = 24000
     shell:
         """
         python scripts/ScoreMaxEntScan.py {input} {output} &> {log}
