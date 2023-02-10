@@ -1,0 +1,348 @@
+---
+title: "20230203_PlotForLabMeeting"
+output: html_document
+date: '2023-02-03'
+---
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+
+library(tidyverse)
+library(RColorBrewer)
+library(data.table)
+library(edgeR)
+```
+
+## Intro
+
+Here I will plot stuff for lab meeting
+
+...starting with looking at how many long reads start/end at TSS/TES
+
+```{r}
+
+dat <- Sys.glob("../code/LongReads/ClosestAnnotatedTermini/*/*.bed.gz") %>%
+    setNames(str_replace(., "../code/LongReads/ClosestAnnotatedTermini/(.+)_(.+?)/(.+?).bed.gz", "\\1.\\2.\\3")) %>%
+    lapply(fread, col.names=c("chrom", "start", "stop", "read", "score", "strand", "closestChrom","closestStart", "closestStop", "closestGene", "closestScore", "closestStrand", "dist")) %>%
+    bind_rows(.id="Sample") %>%
+    separate(Sample, into=c("Annotation", "Terminus", "Sample"), sep='\\.')
+
+
+P<- dat %>%
+    # head() %>%
+    mutate(SampleNum = as.numeric(str_extract(Sample, "\\d+$"))) %>%
+    mutate(EvenOrOdd = SampleNum %% 2) %>%
+    mutate(EvenOrOdd = recode(EvenOrOdd, `0`="Total", `1`="Nuclear")) %>%
+    filter(Annotation == "GTFTools_BasicAnnotations") %>%
+    ggplot(aes(x=dist, color=EvenOrOdd, group=Sample)) +
+    stat_ecdf() +
+    facet_grid(Terminus ~ Annotation) +
+    coord_cartesian(xlim=c(-2000, 2000)) +
+    theme_bw() +
+    labs(y="ecdf", x="Distance from 5/3 end to closest TSS/TES")
+
+ggsave("../code/scratch/DistFromTSS.ecdf.png")
+
+```
+
+## Reannotation of juncs
+```{r}
+
+
+Old.annotations <- read_tsv("SplicingAnalysis/IntronTypeAnnotations.JoinedWithLeafcutterJuncList.txt.gz") %>% dplyr::select(chrom="#Chrom", everything())
+
+SummarisedByJuncAndDataset <- fread("../code/ReadLengthMapExperimentResults/JuncCountsTidy/SummarisedByJuncAndDataset.txt.gz") %>%
+    # filter(gene %in% genes$gene) %>%
+    mutate(RecodedAnnotation = 
+           case_when(
+                     NewAnnotation == "protein_coding.gencode" ~ "Annotated\nproductive",
+                     NewAnnotation == "processed_transcript.gencode" ~ "Annotated\nNonproductive\nno ORF",
+                     NewAnnotation == "nonsense_mediated_decay.gencode" ~ "Annotated\nNonproductive\nNMD target",
+                     str_detect(NewAnnotation, "gencode") ~ "Annotated\nOther",
+                     NewAnnotation == "stable.YY" ~ "Unannotated\npredicted productive",
+                     str_detect(NewAnnotation, "nonsense") ~ "Unannotated\n Nonproductive\nNMD target",
+                     str_detect(NewAnnotation, "lncRNA") | str_detect(NewAnnotation, "pseudo") ~ "Overlaps lncRNA or pseudogene",
+                     TRUE ~ "Unannotated\nNo prediction"
+                     )) %>%
+    inner_join(Old.annotations)
+
+
+SumByAnnotations <- SummarisedByJuncAndDataset %>%
+    group_by(Dataset, Annotation, RecodedAnnotation) %>%
+    summarise(SumCount = sum(Count)) %>% ungroup() %>%
+    filter(!Annotation %in% c("Unique to retained_intron", "Unique to non_stop_decay", "Other")) %>%
+    mutate(Dataset = recode(Dataset, "chRNA.Expression.Splicing"="chRNA", "Expression.Splicing"="polyA", "MetabolicLabelled.30min"="30min", "MetabolicLabelled.60min"="60min")) %>%
+    mutate(Dataset = factor(Dataset, levels=c("chRNA","30min", "60min", "polyA")))
+
+Colors <- SumByAnnotations %>%
+    pull(RecodedAnnotation) %>% unique() %>%
+    setNames(RColorBrewer::brewer.pal(8, "Dark2")) %>%
+    setNames(names(.), .)
+
+P <- ggplot(SumByAnnotations, aes(x=Annotation, y=SumCount)) +
+    geom_col(position="fill", aes(fill=RecodedAnnotation)) +
+    # geom_text(
+    #     data = SumByAnnotations %>%
+    #       group_by(Dataset) %>%
+    #       mutate(TotalByDataset = sum(SumCount)) %>%
+    #       ungroup() %>%
+    #       group_by(Annotation, Dataset) %>%
+    #       summarise(SumTotal = sum(SumCount)/TotalByDataset*100) %>%
+    #       ungroup(),
+    #       # distinct(),
+    #     aes(x = Annotation, label=signif(SumTotal, digits=3)),
+    #     y=1) +
+    facet_wrap(~Dataset) +
+    scale_fill_manual(values=Colors) +
+    theme_classic() +
+    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+    labs(y="Fraction juncs recategorized as", x="Old annotation", fill="New annotation")
+ggsave("scratch/20230205_WIP.ReannotateJuncs.png", P, height=4, width=6)
+
+
+```
+
+## fraction unannotate plots
+Old Annotations
+
+```{r}
+
+Long.table <- fread("../code/ReadLengthMapExperimentResults/JuncCountsTidy/LongTable.txt.gz") %>%
+    inner_join(Old.annotations)
+
+SummarisedBySampleAndAnnotation.filtered <- 
+    Long.table %>% group_by(Dataset, IndID, Annotation) %>%
+    summarise(Sum = sum(score))
+
+P<- inner_join(
+           SummarisedBySampleAndAnnotation.filtered,
+           SummarisedBySampleAndAnnotation.filtered %>%
+               group_by(IndID, Dataset) %>%
+               summarise(TotalCounts = sum(Sum))
+) %>%
+mutate(Percent = Sum/TotalCounts*100) %>%
+    mutate(Dataset = recode(Dataset, "chRNA.Expression.Splicing"="chRNA", "Expression.Splicing"="polyA", "MetabolicLabelled.30min"="30min", "MetabolicLabelled.60min"="60min")) %>%
+    mutate(Dataset = factor(Dataset, levels=c("chRNA","30min", "60min", "polyA"))) %>%
+    # filter(Annotation %in% c("In protein_coding", "Unique to nonsense_mediated_decay", "Unannotated", "Unique to processed_transcript")) %>%
+    ggplot(aes(x=Dataset, y=Percent, color=Annotation)) +
+      geom_jitter(alpha=0.2, size=0.5) +
+      geom_boxplot(outlier.shape=NA, fill=NA) +
+      facet_wrap(~Annotation, nrow=2, scales="free_y", labeller = label_wrap_gen(width=14)) +
+      theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1), legend.position = "none") +
+      labs(y=str_wrap("Percent of splice junction reads", 20), x=NULL) +
+      guides(colour = guide_legend(override.aes4= list(alpha = 1))) +
+      theme_classic() +
+      theme(strip.text.x = element_text(size = 7)) +
+      theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+ggsave("scratch/20230205_WIP.boxplots.old.png", P, height=4, width=8)
+
+```
+
+
+New Annotations
+
+
+```{r}
+
+SummarisedBySampleAndAnnotation <- fread("../code/ReadLengthMapExperimentResults/JuncCountsTidy/SummarisedBySampleAndAnnotation.txt.gz")
+
+SummarisedBySampleAndAnnotation %>%
+    group_by(NewAnnotation) %>%
+    summarise(Sum = sum(Count)) %>%
+    arrange(desc(Sum)) %>% print(n=Inf)
+    # ggplot(aes(x=NewAnnotation, y=Sum)) +
+    # geom_col()
+
+SummarisedBySampleAndAnnotation.filtered <- 
+SummarisedBySampleAndAnnotation %>%
+    filter(
+           (!str_detect(NewAnnotation, "_gene")),
+           (!str_detect(NewAnnotation, "TEC"))
+    ) %>%
+    # pull(NewAnnotation) %>% unique()
+    mutate(RecodedAnnotation = 
+           case_when(
+                     NewAnnotation == "protein_coding.gencode" ~ "Annotated\nproductive",
+                     NewAnnotation == "processed_transcript.gencode" ~ "Annotated\nNonproductive\nno ORF",
+                     NewAnnotation == "nonsense_mediated_decay.gencode" ~ "Annotated\nNonproductive\nNMD target",
+                     str_detect(NewAnnotation, "gencode") ~ "Annotated\nOther",
+                     NewAnnotation == "stable.YY" ~ "Unannotated\npredicted productive",
+                     str_detect(NewAnnotation, "nonsense") ~ "Unannotated\n Nonproductive\nNMD target",
+                     str_detect(NewAnnotation, "lncRNA") | str_detect(NewAnnotation, "pseudo") ~ "Overlaps lncRNA or pseudogene",
+                     TRUE ~ "Unannotated\nNo prediction"
+                     )) %>%
+    group_by(Dataset, IndID, RecodedAnnotation) %>%
+    summarise(Sum = sum(Count)) %>%
+    ungroup()
+
+P<- inner_join(
+           SummarisedBySampleAndAnnotation.filtered,
+           SummarisedBySampleAndAnnotation.filtered %>%
+               group_by(IndID, Dataset) %>%
+               summarise(TotalCounts = sum(Sum))
+) %>%
+mutate(Percent = Sum/TotalCounts*100) %>%
+    mutate(Dataset = recode(Dataset, "chRNA.Expression.Splicing"="chRNA", "Expression.Splicing"="polyA", "MetabolicLabelled.30min"="30min", "MetabolicLabelled.60min"="60min")) %>%
+    mutate(Dataset = factor(Dataset, levels=c("chRNA","30min", "60min", "polyA"))) %>%
+    ggplot(aes(x=Dataset, y=Percent)) +
+      # geom_rect(
+      #           data = data.frame(RecodedAnnotation = names(Colors)),
+      #           aes(color=RecodedAnnotation),
+      #           xmin=-Inf, xmax=Inf, ymix=-Inf, ymax=Inf, alpha=0)
+      # scale_color_manual(values=Colors) +
+      geom_jitter(alpha=0.2, size=0.5) +
+      geom_boxplot(outlier.shape=NA, color='black', fill=NA) +
+      facet_wrap(~RecodedAnnotation, nrow=2, scales="free_y", labeller = label_wrap_gen(width=14)) +
+      theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1), legend.position = "none") +
+      labs(y=str_wrap("Percent of splice junction reads", 20), x=NULL) +
+      guides(colour = guide_legend(override.aes4= list(alpha = 1))) +
+      theme_classic() +
+      theme(strip.text.x = element_text(size = 7)) +
+      theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+ggsave("scratch/20230205_WIP.boxplots.png", P, height=4, width=5)
+
+
+```
+
+## Plot scatter of polyA splicing vs chRNA splicing
+
+```{r}
+
+# Long.table <- fread("ReadLengthMapExperimentResults/JuncCountsTidy/LongTable.txt.gz")
+genes <- read_tsv("../code/ExpressionAnalysis/AllProteinCodingGenes.txt", col_names="gene")
+
+
+
+SummarisedByJuncAndDataset <- fread("../code/ReadLengthMapExperimentResults/JuncCountsTidy/SummarisedByJuncAndDataset.txt.gz") %>%
+    # filter(gene %in% genes$gene) %>%
+    # count(NewAnnotation) %>% arrange(desc(n)) %>% dplyr::select(NewAnnotation, n) %>% print(n=Inf)
+    mutate(RecodedAnnotation = 
+           case_when(
+                     NewAnnotation == "protein_coding.gencode" ~ "Annotated\nproductive",
+                     NewAnnotation == "processed_transcript.gencode" ~ "Annotated\nNonproductive\nno ORF",
+                     NewAnnotation == "nonsense_mediated_decay.gencode" ~ "Annotated\nNonproductive\nNMD target",
+                     str_detect(NewAnnotation, "gencode") ~ "Annotated\nOther",
+                     NewAnnotation == "stable.YY" ~ "Unannotated\npredicted productive",
+                     str_detect(NewAnnotation, "nonsense") ~ "Unannotated\n Nonproductive\nNMD target",
+                     str_detect(NewAnnotation, "lncRNA") | str_detect(NewAnnotation, "pseudo") ~ "Overlaps lncRNA or pseudogene",
+                     TRUE ~ "Unannotated\nNo prediction"
+                     ))
+
+
+
+P<- inner_join(
+           SummarisedByJuncAndDataset,
+           SummarisedByJuncAndDataset %>%
+               group_by(Dataset) %>%
+               summarise(TotalCounts = sum(Count))
+) %>%
+mutate(Percent = Count/TotalCounts*1E6) %>%
+    mutate(Dataset = recode(Dataset, "chRNA.Expression.Splicing"="chRNA", "Expression.Splicing"="polyA", "MetabolicLabelled.30min"="30min", "MetabolicLabelled.60min"="60min")) %>%
+    mutate(Dataset = factor(Dataset, levels=c("chRNA","30min", "60min", "polyA"))) %>%
+    filter(Dataset %in% c("chRNA", "polyA")) %>%
+    dplyr::select(Percent, RecodedAnnotation, Dataset, chrom, start, end, strand) %>%
+    pivot_wider(names_from = "Dataset", values_from = "Percent") %>%
+    # count(RecodedAnnotation)
+    group_by(RecodedAnnotation) %>%
+    sample_n(2422) %>%
+    ungroup() %>%
+    ggplot(aes(x=chRNA, y=polyA)) +
+    geom_point(alpha=0.2) +
+    scale_x_continuous(trans='log10') +
+    scale_y_continuous(trans='log10') +
+    geom_abline(color='red') +
+    # geom_smooth(method='lm') +
+    facet_wrap(~RecodedAnnotation, nrow=2) +
+    coord_fixed() +
+    theme_classic() +
+    labs(x="RPM across junctions, chRNA", y="RPM across junctions, polyA")
+ggsave("scratch/20230205_WIP.scatter.png", P, height=8, width=8)
+
+Old.annotations <- read_tsv("SplicingAnalysis/IntronTypeAnnotations.JoinedWithLeafcutterJuncList.txt.gz")
+
+```
+
+
+
+## plot of ecdf of chRNA vs polyA and fraction unproductive
+```{r}
+
+expression.dat <- fread("../code/ReadLengthMapExperimentResults/featureCounts/Counts.txt", skip=1, sep='\t')  %>%
+  filter(Geneid %in% genes$gene) %>%
+  dplyr::select(Geneid, contains("ReadLengthMapExperiment")) %>%
+  dplyr::select(Geneid, !contains("Metabolic")) %>%
+  rename_at(vars(contains("ReadLengthMapExperiment")), ~str_replace(.x, "ReadLengthMapExperiment/(.+?)/(.+?)/1/Filtered.bam", "\\1_\\2")) %>%
+  column_to_rownames("Geneid") %>%
+  DGEList() %>%
+  calcNormFactors() %>%
+  cpm(log=T, prior.count=0.01)
+
+Top14K.genes <- read_tsv("../code/ExpressionAnalysis/polyA/ExpressedGeneList.bed.gz", col_names=as.character(1:6)) %>% pull(`4`)
+
+
+Combined.expression.dat <- data.frame(
+           chRNA = expression.dat %>%
+               as_tibble() %>%
+               dplyr::select(contains("chRNA")) %>%
+               apply(1, mean),
+           polyA = expression.dat %>%
+               as_tibble() %>%
+               dplyr::select(!contains("chRNA")) %>%
+               apply(1, mean),
+           genes = rownames(expression.dat))
+
+P<-Combined.expression.dat %>%
+    # filter( (chRNA >=1 ) | (polyA >=1) ) %>%
+  ggplot(aes(x=polyA, y=chRNA)) +
+  geom_point(alpha=0.1) +
+  geom_abline(color='red') +
+  theme_classic() +
+  labs(x="log2CPM, polyA", y="log2CPM, chRNA")
+ggsave("scratch/20230205_WIP.scatterGene.png", P, height=4, width=4)
+
+
+P.FC.Vs.NtileSplicedInGroup.dat <- SummarisedByJuncAndDataset %>%
+  filter(Dataset %in% c("chRNA.Expression.Splicing", "Expression.Splicing")) %>%
+    filter(gene %in% Top14K.genes) %>%
+    inner_join(Old.annotations) %>%
+    group_by(Dataset, gene) %>%
+    mutate(SumJuncsInGene = sum(Count)) %>%
+    ungroup() %>%
+    group_by(Dataset, Annotation, gene) %>%
+    summarise(Percent = sum(Count)/SumJuncsInGene) %>%
+    ungroup() %>%
+    complete(Dataset, gene, Annotation) %>%
+    replace_na(list(Percent=0)) %>%
+    distinct(Dataset, gene, Annotation, .keep_all=T) %>%
+    group_by(Dataset, Annotation ) %>%
+    mutate(quintile = ntile(Percent, 5)) %>%
+    ungroup() %>%
+    inner_join(Combined.expression.dat, by=c("gene"="genes")) %>%
+    mutate(Diff = chRNA - polyA) %>%
+    filter(Dataset == "chRNA.Expression.Splicing") %>%
+    filter(!Annotation %in% c("Unique to non_stop_decay"))
+    # print(width=Inf)
+
+P.FC.Vs.NtileSplicedInGroup.dat %>% pull(quintile) %>% unique()
+
+P <- ggplot(P.FC.Vs.NtileSplicedInGroup.dat) +
+  stat_ecdf(aes(x=Diff, color=factor(quintile))) +
+  coord_cartesian(xlim=c(-4,4)) +
+  scale_color_brewer() +
+  geom_text(
+    data = P.FC.Vs.NtileSplicedInGroup.dat %>%
+      group_by(Annotation) %>%
+      summarise(P = cor.test(Percent, Diff,method='s')$p.value,
+                rho = signif(cor(Percent,Diff, method='s'), 2),
+                n=n()),
+    aes(label = paste("rho:",rho,'\n',"P:", format.pval(P, 2))),
+    x = Inf, y=-Inf, hjust=1, vjust=0
+  ) +
+  facet_wrap(~Annotation, scales="free", labeller = label_wrap_gen()) +
+  theme_bw() +
+  labs(x="log2(chRNA/polyA)", y="ecdf", color="Quintile %juncs in category;\n5=highest")
+ggsave("scratch/20230205_WIP.ecdf_chRNA_vs_polyA.png", P, height=8, width=8)
+
+
+```
+

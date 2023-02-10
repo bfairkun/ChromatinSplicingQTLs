@@ -13,13 +13,13 @@ rule SplitAndCombineSummaryStatsPerLocus:
         zip( expand(
             "QTLs/QTLTools/{Phenotype}/{Pass}{{QTLsGenotypeSet}}{{FeatureCoordinatesRedefinedFor}}.txt.gz",
             Pass="PermutationPass",
-            Phenotype=MyPhenotypes,
+            Phenotype=PhenotypesToColoc,
         ),
         expand(
             "QTLs/QTLTools/{Phenotype}/{Pass}{{QTLsGenotypeSet}}{{FeatureCoordinatesRedefinedFor}}Chunks/{{n}}.txt",
             Pass="NominalPass",
-            Phenotype=MyPhenotypes,
-        ))
+            Phenotype=PhenotypesToColoc,
+        )) 
     output:
         directory("hyprcoloc/LociWiseSummaryStatsInput/Chunks/{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}/{n}")
     log:

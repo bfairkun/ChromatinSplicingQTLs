@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<Session genome="hg38" locus="chr2:202963432-203162107" version="8">
+    <Resources>
+        <Resource path="code/QTLs/QTLTools/ProCap/OnlyFirstReps.sorted.qqnorm.bed.gz" type="bed"/>
+        <Resource path="code/QTLs/QTLTools/APA_Total/OnlyFirstReps.sorted.qqnorm.bed.gz" type="bed"/>
+        <Resource path="code/ChromHMM/hg38.wgEncodeBroadHmmGm12878HMM.bed.gz" type="bed"/>
+        <Resource path="code/QTLs/QTLTools/APA_Nuclear/OnlyFirstReps.sorted.qqnorm.bed.gz" type="bed"/>
+        <Resource path="code/QTLs/QTLTools/H3K27AC/OnlyFirstReps.sorted.qqnorm.bed.gz" type="bed"/>
+    </Resources>
+    <Panel height="1425" name="DataPanel" width="1349">
+        <Track attributeKey="Reference sequence" clazz="org.broad.igv.track.SequenceTrack" fontSize="10" height="50" id="Reference sequence" name="Reference sequence" sequenceTranslationStrandValue="POSITIVE" shouldShowTranslation="false" visible="true"/>
+        <Track attributeKey="hg38.wgEncodeBroadHmmGm12878HMM.bed.gz" clazz="org.broad.igv.track.FeatureTrack" featureVisibilityWindow="18930271" fontSize="10" groupByStrand="false" id="/Volumes/project2/yangili1/bjf79/ChromatinSplicingQTLs/code/ChromHMM/hg38.wgEncodeBroadHmmGm12878HMM.bed.gz" name="hg38.wgEncodeBroadHmmGm12878HMM.bed.gz" visible="true"/>
+        <Track attributeKey="Refseq Genes" clazz="org.broad.igv.track.FeatureTrack" displayMode="SQUISHED" fontSize="10" groupByStrand="false" height="150" id="https://s3.amazonaws.com/igv.org.genomes/hg38/ncbiRefSeq.txt.gz" name="Refseq Genes" visible="true"/>
+    </Panel>
+    <Panel height="192" name="FeaturePanel" width="1349">
+        <Track attributeKey="OnlyFirstReps.sorted.qqnorm.bed.gz" clazz="org.broad.igv.track.FeatureTrack" featureVisibilityWindow="2147483647" fontSize="10" groupByStrand="false" height="50" id="/Volumes/project2/yangili1/bjf79/ChromatinSplicingQTLs/code/QTLs/QTLTools/ProCap/OnlyFirstReps.sorted.qqnorm.bed.gz" name="ProCap TSS" visible="true"/>
+        <Track attributeKey="OnlyFirstReps.sorted.qqnorm.bed.gz" clazz="org.broad.igv.track.FeatureTrack" featureVisibilityWindow="45602081" fontSize="10" groupByStrand="false" height="50" id="/Volumes/project2/yangili1/bjf79/ChromatinSplicingQTLs/code/QTLs/QTLTools/H3K27AC/OnlyFirstReps.sorted.qqnorm.bed.gz" name="H3K27AC" visible="true"/>
+        <Track attributeKey="OnlyFirstReps.sorted.qqnorm.bed.gz" clazz="org.broad.igv.track.FeatureTrack" featureVisibilityWindow="148263158" fontSize="10" groupByStrand="false" id="/Volumes/project2/yangili1/bjf79/ChromatinSplicingQTLs/code/QTLs/QTLTools/APA_Nuclear/OnlyFirstReps.sorted.qqnorm.bed.gz" name="APA Nuc" visible="true"/>
+        <Track attributeKey="OnlyFirstReps.sorted.qqnorm.bed.gz" clazz="org.broad.igv.track.FeatureTrack" featureVisibilityWindow="245968754" fontSize="10" groupByStrand="false" id="/Volumes/project2/yangili1/bjf79/ChromatinSplicingQTLs/code/QTLs/QTLTools/APA_Total/OnlyFirstReps.sorted.qqnorm.bed.gz" name="APA Tot" visible="true"/>
+    </Panel>
+    <PanelLayout dividerFractions="0.6247619047619047"/>
+    <HiddenAttributes>
+        <Attribute name="DATA FILE"/>
+        <Attribute name="DATA TYPE"/>
+        <Attribute name="NAME"/>
+    </HiddenAttributes>
+</Session>

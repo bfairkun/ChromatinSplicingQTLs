@@ -1,0 +1,98 @@
+---
+title: "20230202_PickUnannotatedsQTLsToPlot"
+output: html_document
+date: '2023-02-02'
+---
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+
+library(tidyverse)
+library(RColorBrewer)
+library(data.table)
+library(edgeR)
+```
+
+## Intro
+
+Puzzlingly, a lot of unannotated intron sQTL/eQTLs also have effects in H3K36me3. What could be going on? Alt TSS? Alt TES? Let's just plot a bunch systematically...
+
+
+First just read in coloc data. I will just focus on the ones where sQTL and eQTL coloc. that makes things a bit simpler to interpret i think.
+
+First let's remake those slope plots.
+
+
+```{r}
+PhenotypeAliases <- read_tsv("../data/Phenotypes_recode_for_Plotting.txt")
+PC.ShortAliases <- PhenotypeAliases %>%
+  dplyr::select(PC, ShorterAlias) %>% deframe()
+coloc.results <- read_tsv("../code/hyprcoloc/Results/ForColoc/MolColocStandard/results.txt.gz")
+coloc.results.tidycolocalized <- read_tsv("../code/hyprcoloc/Results/ForColoc/MolColocStandard/tidy_results_OnlyColocalized.txt.gz") %>%
+  separate(phenotype_full, into=c("PC", "P"), sep=";")
+# Get all the phenotype classes
+coloc.results.tidycolocalized$PC %>% unique() %>% sort()
+
+
+intron_annotation = read_tsv("../code/SplicingAnalysis/IntronTypeAnnotations.JoinedWithLeafcutterJuncList.txt.gz") %>%
+  mutate(intron = str_replace(junc, "^chr(.+)$", "\\1"))
+
+AnnotationColors <- intron_annotation$Annotation %>% unique() %>%
+  setNames(brewer.pal(length(.), "Dark2"), .)
+
+intron_annotation <- intron_annotation %>%
+  mutate(Color = recode(Annotation, !!!AnnotationColors)) %>%
+  mutate(RgbCol = apply(col2rgb(Color), 2, paste, collapse=','))
+```
+
+```{r}
+
+PC1 = "polyA.Splicing"
+
+# PC2 = c("Expression.Splicing", "polyA.Splicing", "chRNA.Expression.Splicing", "H3K36ME3")
+PC2 = c("Expression.Splicing", "polyA.Splicing", "chRNA.Expression.Splicing")
+# PC2 = c("Expression.Splicing", "polyA.Splicing")
+
+subset <- coloc.results.tidycolocalized %>%
+  filter(PC %in% PC2) %>%
+  group_by(Locus, iteration) %>%
+  filter(all(PC2 %in% PC)) %>%
+  ungroup()
+
+left_join(subset, subset,
+          by=c("Locus", "iteration")) %>%
+  filter(!((PC.x == PC.y) & (P.x == P.y))) %>%
+  filter(PC.x == PC1) %>%
+  filter(!PC.y == PC1) %>%
+  inner_join(intron_annotation, by=c("P.x"="intron")) %>%
+  mutate(PC.y = recode(PC.y, "chRNA.Expression.Splicing"="chRNA", "Expression.Splicing"="polyA RNA")) %>%
+  mutate(PC.y = factor(PC.y, levels=c("H3K36ME3", "chRNA", "polyA RNA"))) %>%
+  # distinct(Locus, Annotation, PC.y, .keep_all=T) %>%
+  ggplot(aes(x=beta.x, y=beta.y, color=Color)) +
+  geom_point(alpha=0.5) +
+  geom_smooth(method='lm') +
+  scale_color_identity() +
+  facet_grid(PC.y ~ Annotation) +
+  theme_bw() +
+  labs(x="sQTL beta", y="facet_QTL beta", caption="Only colocalized signals considered")
+
+```
+
+
+```{r, eval=F}
+left_join(subset, subset,
+          by=c("Locus", "iteration")) %>%
+  filter(!((PC.x == PC.y) & (P.x == P.y))) %>%
+  filter(PC.x == PC1) %>%
+  inner_join(intron_annotation, by=c("P.x"="intron")) %>%
+  filter(PC.y == "chRNA.Expression.Splicing") %>%
+  mutate(sign = sign(beta.x)==sign(beta.y)) %>%
+  dplyr::select(Locus, Annotation, chrom=`#Chrom`, start, end, gid, sign, strand, RgbCol) %>%
+  unite(Name, gid, Locus, Annotation, sign, sep='_') %>%
+  mutate(thickStart = start, thickEnd = end, score=0) %>%
+  dplyr::select(chrom, start, end, Name, score, strand, thickStart, thickEnd, RgbCol) %>%
+  arrange(chrom, start, end) %>%
+  write_tsv("../code/scratch/Unannotated_sQTLs_chRNAeQTL_polyAeQTL.bed", col_names = F)
+  
+```
+
