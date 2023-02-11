@@ -205,7 +205,10 @@ rule NMDJunctions_test:
         expand("SplicingAnalysis/NMDJunctions/Plots/{Junction}.PWM.png",
         Junction = ["FivePrime", "ThreePrime"]),
         expand("SplicingAnalysis/NMDJunctions/Annotation/{Junction}.MaxEntScan_score.tab.gz",
-        Junction = ["FivePrime", "ThreePrime.ForMaxEntScan"])
+        Junction = ["FivePrime", "ThreePrime.ForMaxEntScan"]),
+        "SplicingAnalysis/NMDJunctions/Annotation/annotation_leaf_JAN28.scored.bed.gz",
+        "SplicingAnalysis/NMDJunctions/Annotation/annotation_junctions.bed.gz",
+        "SplicingAnalysis/NMDJunctions/Annotation/annotation_clusters.bed.gz",
      
 rule MakeEURPhenotypes:
     input:

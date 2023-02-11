@@ -24,6 +24,6 @@ if __name__ == '__main__':
     for sample in samples:
         df[[sample, sample+'_total']] = df[sample].str.split('/', 1, expand=True)
 
-    out = df[['chrom', 'start', 'end', 'junction_id', 'cluster_id', 'strand'] + samples]
+    out = df[['chrom', 'start', 'end', 'junction_id', 'cluster', 'strand'] + samples]
     out.columns = ['#Chr', 'start', 'end', 'junction_id', 'cluster_id', 'strand'] + samples
     out.to_csv(output, sep='\t', index=False, header=True)
