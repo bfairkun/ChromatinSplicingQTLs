@@ -32,7 +32,8 @@ MyPhenotypes = ["Expression.Splicing", "Expression.Splicing.Subset_YRI", "chRNA.
 
 #PhenotypesToColoc = [p for p in MyPhenotypes if ((p not in ["Expression.Splicing", "polyA.Splicing", "polyA.IR"]) and (p not in ncRNA_Phenotypes))]
 
-PhenotypesToColoc = MyPhenotypes #[p for p in MyPhenotypes if (p not in ["Expression.Splicing", "polyA.Splicing", "polyA.IR"])]
+# PhenotypesToColoc = MyPhenotypes #[p for p in MyPhenotypes if (p not in ["Expression.Splicing", "polyA.Splicing", "polyA.IR"])]
+PhenotypesToColoc = ["Expression.Splicing", "Expression.Splicing.Subset_YRI", "chRNA.Expression.Splicing", "MetabolicLabelled.30min", "MetabolicLabelled.60min", "H3K27AC", "H3K4ME3", "H3K4ME1", "H3K36ME3",'APA_Nuclear', 'APA_Total', "polyA.Splicing", "polyA.Splicing.Subset_YRI", "chRNA.Splicing", "ProCap"]
 
 ## All Fastq samples
 Fastq_samples = pd.read_csv("config/samples.tsv", sep='\t', comment='#')
@@ -294,6 +295,7 @@ def GetBigwigForDeeptToolscheRNA(wildcards):
         strand = 'plus'
     bw = template.format(IndID = wildcards.IndID, strand = strand)
     return bw
+
 
 long_read_samples = ['GM' + str(i) for i in range(1, 11)]
 #long_read_samples += ['SRR1163655', 'SRR1163657', 'SRR1163658']
