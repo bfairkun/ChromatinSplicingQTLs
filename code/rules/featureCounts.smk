@@ -65,3 +65,5 @@ rule Get2kbTSSRegions:
         awk '{{print $1, $2,$3,$4, $6}}' {input.bed} | sort | uniq -c | shuf | sort -k6,6 -k1,1nr | sort -u -k6,6 | awk -v OFS='\\t' '{{print "chr"$2, $3, $4, $6, $5}}' | bedtools slop -b 999 -i - -g {input.faidx} | bedtools sort -i - > {output.bed}
         awk -v OFS='\\t' 'BEGIN {{ print "GeneID", "Chr", "Start", "End", "Strand" }} {{ print $4, $1,$2,$3,$6 }}' {output.bed} > {output.saf}
         """
+
+

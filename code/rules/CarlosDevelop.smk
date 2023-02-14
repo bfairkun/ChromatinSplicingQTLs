@@ -215,5 +215,8 @@ rule MakeEURPhenotypes:
         expand("QTLs/QTLTools/{Phenotype}.Subset_EUR/OnlyFirstReps.qqnorm.bed.gz",
         Phenotype = ["Expression.Splicing", "polyA.Splicing"])
         
-          
+rule CollectBasicMapping:
+    input:
+        expand("featureCountsBasicGtf/{Phenotype}/Counts.txt", 
+        Phenotype=["chRNA.Expression.Splicing","Expression.Splicing","MetabolicLabelled.60min", "MetabolicLabelled.30min"])
           
