@@ -1,0 +1,239 @@
+---
+title: "CheckOldNMDIntrons"
+output: html_document
+date: "2023-02-10"
+---
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+
+library(tidyverse)
+library(RColorBrewer)
+library(data.table)
+
+```
+
+
+## Intro
+
+Yang reannotated a bunch of introns from my annotations, using a different Gencode version. Most of the NMD introns are now protein coding. Are these introns stable?
+
+>i was going through your intron annotations, considering whether to unite the old NMD intron set with the new NMD intron set... and i just want to clarify a small detail. in my original file that I gave you as input for your classification script, each row (annotation) can be identified by a unique set of [chrom, start, stop, strand, and gene]. Some introns overlap multiple genes and may have different annotations, which is why the gene is also needs to be included to identify an annotation. Sorry I didn't clarify that earlier. But it looks like in your new set of annotations might have something weird with respect to this. Like the my old gene labels might have got overwritten. Would it be easy to re-generate your annotation file in a way that takes into account the that an intron might have two different 
+
+```{r}
+Annotations <- read_tsv("/project2/yangili1/yangili/chRNA/annotation_leaf_JAN28.txt.gz", col_names=c("chrom", "start","end", "strand","OldAnnotation", "NewAnnotation", "gene", "symbol"))
+
+Old.annotations <- read_tsv("../code/SplicingAnalysis/IntronTypeAnnotations.JoinedWithLeafcutterJuncList.txt.gz") %>% dplyr::select(chrom="#Chrom", everything())
+
+inner_join(Annotations, Old.annotations) %>%
+  mutate(DoesOldAnnotationMatch = OldAnnotation==Annotation) %>%
+  filter(!DoesOldAnnotationMatch)
+
+Old.annotations %>%
+  distinct(chrom, start, end, strand, gene_id)
+
+Annotations %>%
+  add_count(chrom, start, end, strand, gene, NewAnnotation) %>%
+  filter(n>1)
+
+Old.annotations %>%
+  filter(chrom=="chr1" & start==1702999 & end==1703080)
+
+Annotations %>%
+  add_count(chrom, start, end, strand) %>%
+  ggplot(aes(x=n)) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(0,5)) +
+  facet_wrap(~OldAnnotation)
+
+Old.annotations %>%
+  add_count(chrom, start, end, strand) %>%
+  ggplot(aes(x=n)) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(0,5)) +
+  facet_wrap(~Annotation)
+
+
+SummarisedByJuncAndDataset <- fread("../code/ReadLengthMapExperimentResults/JuncCountsTidy/SummarisedByJuncAndDataset.txt.gz") %>%
+    # filter(gene %in% genes$gene) %>%
+    mutate(RecodedAnnotation = 
+           case_when(
+                     NewAnnotation == "protein_coding.gencode" ~ "Annotated\nproductive",
+                     NewAnnotation == "processed_transcript.gencode" ~ "Annotated\nNonproductive\nno ORF",
+                     NewAnnotation == "nonsense_mediated_decay.gencode" ~ "Annotated\nNonproductive\nNMD target",
+                     str_detect(NewAnnotation, "gencode") ~ "Annotated\nOther",
+                     NewAnnotation == "stable.YY" ~ "Unannotated\npredicted productive",
+                     str_detect(NewAnnotation, "nonsense") ~ "Unannotated\n Nonproductive\nNMD target",
+                     str_detect(NewAnnotation, "lncRNA") | str_detect(NewAnnotation, "pseudo") ~ "Overlaps lncRNA or pseudogene",
+                     TRUE ~ "Unannotated\nNo prediction"
+                     )) %>%
+    inner_join(Old.annotations)
+
+```
+
+
+Reannotation of junc not weighted by prevalence
+
+```{r}
+SumByAnnotations <- SummarisedByJuncAndDataset %>%
+    group_by(Dataset, Annotation, RecodedAnnotation) %>%
+    summarise(SumCount = n()) %>% ungroup() %>%
+    filter(!Annotation %in% c("Unique to retained_intron", "Unique to non_stop_decay", "Other")) %>%
+    mutate(Dataset = recode(Dataset, "chRNA.Expression.Splicing"="chRNA", "Expression.Splicing"="polyA", "MetabolicLabelled.30min"="30min", "MetabolicLabelled.60min"="60min")) %>%
+    mutate(Dataset = factor(Dataset, levels=c("chRNA","30min", "60min", "polyA")))
+
+Colors <- SumByAnnotations %>%
+    pull(RecodedAnnotation) %>% unique() %>%
+    setNames(RColorBrewer::brewer.pal(8, "Dark2")) %>%
+    setNames(names(.), .)
+
+Q <- ggplot(SumByAnnotations, aes(x=Annotation, y=SumCount)) +
+    geom_col(position="fill", aes(fill=RecodedAnnotation)) +
+    # geom_text(
+    #     data = SumByAnnotations %>%
+    #       group_by(Dataset) %>%
+    #       mutate(TotalByDataset = sum(SumCount)) %>%
+    #       ungroup() %>%
+    #       group_by(Annotation, Dataset) %>%
+    #       summarise(SumTotal = sum(SumCount)/TotalByDataset*100) %>%
+    #       ungroup(),
+    #       # distinct(),
+    #     aes(x = Annotation, label=signif(SumTotal, digits=3)),
+    #     y=1) +
+    facet_wrap(~Dataset) +
+    scale_fill_manual(values=Colors) +
+    theme_classic() +
+    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+    labs(y="Fraction juncs recategorized as", x="Old annotation", fill="New annotation")
+Q
+
+``` 
+
+
+Reannotation of juncs, weighted by prevalence in each dataset
+
+```{r}
+SumByAnnotations <- SummarisedByJuncAndDataset %>%
+    group_by(Dataset, Annotation, RecodedAnnotation) %>%
+    summarise(SumCount = sum(Count)) %>% ungroup() %>%
+    filter(!Annotation %in% c("Unique to retained_intron", "Unique to non_stop_decay", "Other")) %>%
+    mutate(Dataset = recode(Dataset, "chRNA.Expression.Splicing"="chRNA", "Expression.Splicing"="polyA", "MetabolicLabelled.30min"="30min", "MetabolicLabelled.60min"="60min")) %>%
+    mutate(Dataset = factor(Dataset, levels=c("chRNA","30min", "60min", "polyA")))
+
+data("iris")
+P <- ggplot(iris, aes(x=Sepal.Length, y=Sepal.Width)) +
+  geom_point()
+ggsave("../code/scratch/test.png", P)
+
+Q <- ggplot(SumByAnnotations, aes(x=Annotation, y=SumCount)) +
+    geom_col(position="fill", aes(fill=RecodedAnnotation)) +
+    # geom_text(
+    #     data = SumByAnnotations %>%
+    #       group_by(Dataset) %>%
+    #       mutate(TotalByDataset = sum(SumCount)) %>%
+    #       ungroup() %>%
+    #       group_by(Annotation, Dataset) %>%
+    #       summarise(SumTotal = sum(SumCount)/TotalByDataset*100) %>%
+    #       ungroup(),
+    #       # distinct(),
+    #     aes(x = Annotation, label=signif(SumTotal, digits=3)),
+    #     y=1) +
+    facet_wrap(~Dataset) +
+    scale_fill_manual(values=Colors) +
+    theme_classic() +
+    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+    labs(y="Fraction juncs recategorized as", x="Old annotation", fill="New annotation")
+Q
+```
+
+ok so to clarify something i now realize... remember at lab meeting i said ~90% of the junctions I annotated as NMD, Yang annotated as protein coding... Well that was true only because I was weighting each junction by its prevalence in number of reads. If don't do that, most junctions that I annotated as NMD, Yang does too. The ones that he re-annotated as protein-coding are just much higher expressed. Which makes sense.
+
+Let's make another plot to make that more clear...
+
+```{r}
+P<- inner_join(
+           SummarisedByJuncAndDataset %>%
+             filter(Annotation=="Unique to nonsense_mediated_decay"),
+           SummarisedByJuncAndDataset %>%
+               group_by(Dataset) %>%
+               summarise(TotalCounts = sum(Count))
+) %>%
+mutate(Percent = Count/TotalCounts*1E6) %>%
+    mutate(Dataset = recode(Dataset, "chRNA.Expression.Splicing"="chRNA", "Expression.Splicing"="polyA", "MetabolicLabelled.30min"="30min", "MetabolicLabelled.60min"="60min")) %>%
+    mutate(Dataset = factor(Dataset, levels=c("chRNA","30min", "60min", "polyA"))) %>%
+    filter(Dataset %in% c("chRNA", "polyA")) %>%
+    dplyr::select(Percent, RecodedAnnotation, Dataset, chrom, start, end, strand) %>%
+    pivot_wider(names_from = "Dataset", values_from = "Percent") %>%
+    unnest() %>%
+    filter(RecodedAnnotation %in% c("Annotated\nNonproductive\nNMD target", "Annotated\nproductive")) %>%
+    # count(RecodedAnnotation)
+    group_by(RecodedAnnotation) %>%
+      sample_n(2377) %>%
+    ungroup() %>%
+    ggplot(aes(x=chRNA, y=polyA)) +
+    geom_point(alpha=0.2) +
+    scale_x_continuous(trans='log10') +
+    scale_y_continuous(trans='log10') +
+    geom_abline(color='red') +
+    # geom_smooth(method='lm') +
+    facet_wrap(~RecodedAnnotation, nrow=2) +
+    coord_fixed() +
+    theme_classic() +
+    labs(x="RPM across junctions, chRNA", y="RPM across junctions, polyA")
+P
+```
+
+Ok, so I rather like just keeping Yang's annotations. For publication I think I will just lump them into 4 or 5 categories:
+
+- Annotated non-functional
+- Annotated processed transcript
+- Annotated functional
+- Unannotated predicted function
+- Unannotated predicted non-functional
+
+Let's better examine the cases where Yang reannotated my NMD as protein coding...
+
+```{r}
+Annotations %>%
+  inner_join(Old.annotations) %>%
+  group_by(chrom, start, end, strand) %>%
+  filter(any(OldAnnotation == "Unique to nonsense_mediated_decay") & any(NewAnnotation=="protein_coding.gencode"))
+
+Old.annotations %>%
+  filter(chrom=="chr1", start==6159515, end==6168150)
+Annotations %>%
+  filter(chrom=="chr1", start==6159515, end==6168150)
+```
+
+Let's manually inspect the old annotation introns with >=1 annotations on IGV...
+
+```{r}
+
+  
+AnnotationColors <- Old.annotations$Annotation %>% unique() %>%
+  setNames(brewer.pal(length(.), "Dark2"), .)
+
+IntronsToWrite <- Old.annotations %>%
+  add_count(chrom, start, end, strand) %>%
+  filter(n>1) %>%
+  mutate(Color = recode(Annotation, !!!AnnotationColors)) %>%
+  mutate(RgbCol = apply(col2rgb(Color), 2, paste, collapse=',')) %>%
+  mutate(name = paste(Annotation, gene_id, sep='_')) %>%
+  mutate(thickStart = start, thickEnd = end) %>%
+  dplyr::select(chrom, start, end, name, gid, strand, thickStart, thickEnd, RgbCol)
+  
+
+write_tsv(IntronsToWrite, "../code/scratch/IntronsWithMultipleAnnotations.bed", col_names = F)
+
+IntronsToWrite %>%
+  filter(str_detect(name, "nonsense")) %>%
+  write_tsv( "../code/scratch/IntronsWithMultipleAnnotations.NMD.bed", col_names = F)
+
+Annotations %>%
+  dplyr::select(-OldAnnotation) %>%
+  distinct() %>%
+  add_count(chrom, start, end, strand) %>%
+  filter(n>1)
+
+```
+
