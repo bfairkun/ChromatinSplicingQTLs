@@ -205,12 +205,18 @@ rule NMDJunctions_test:
         expand("SplicingAnalysis/NMDJunctions/Plots/{Junction}.PWM.png",
         Junction = ["FivePrime", "ThreePrime"]),
         expand("SplicingAnalysis/NMDJunctions/Annotation/{Junction}.MaxEntScan_score.tab.gz",
-        Junction = ["FivePrime", "ThreePrime.ForMaxEntScan"])
+        Junction = ["FivePrime", "ThreePrime.ForMaxEntScan"]),
+        "SplicingAnalysis/NMDJunctions/Annotation/annotation_leaf_JAN28.scored.bed.gz",
+        "SplicingAnalysis/NMDJunctions/Annotation/annotation_junctions.bed.gz",
+        "SplicingAnalysis/NMDJunctions/Annotation/annotation_clusters.bed.gz",
      
 rule MakeEURPhenotypes:
     input:
         expand("QTLs/QTLTools/{Phenotype}.Subset_EUR/OnlyFirstReps.qqnorm.bed.gz",
         Phenotype = ["Expression.Splicing", "polyA.Splicing"])
         
-          
+rule CollectBasicMapping:
+    input:
+        expand("featureCountsBasicGtf/{Phenotype}/Counts.txt", 
+        Phenotype=["chRNA.Expression.Splicing","Expression.Splicing","MetabolicLabelled.60min", "MetabolicLabelled.30min"])
           

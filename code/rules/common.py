@@ -240,7 +240,9 @@ def GetSTARJunctionScoreParams(wildcards):
 def GetBamForPhenotype(wildcards):
     df_subset = Fastq_samples.loc[
                 (Fastq_samples['Phenotype'] == wildcards.Phenotype)]
-    if wildcards.Phenotype in RNASeqPhenotypes:
+    if "MetabolicLabelled" in wildcards.Phenotype:
+        return expand("Alignments/STAR_Align/{{Phenotype}}/{IndID}/1/Filtered.bam", IndID=df_subset['IndID'].unique())
+    elif wildcards.Phenotype in RNASeqPhenotypes:
         return expand("Alignments/STAR_Align/{{Phenotype}}/{IndID}/{Rep}/Filtered.bam", zip, IndID=df_subset['IndID'], Rep=df_subset['RepNumber'])
     elif wildcards.Phenotype == "polyA.Expression":
         df_subset = Fastq_samples.loc[
