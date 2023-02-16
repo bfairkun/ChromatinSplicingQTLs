@@ -1,0 +1,248 @@
+---
+title: "RemakePlotsWithNewAnnotations"
+output: html_document
+date: "2023-02-14"
+---
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+
+library(tidyverse)
+library(RColorBrewer)
+library(data.table)
+library(edgeR)
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family="Helvetica")))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+
+#test plot
+ggplot(mtcars, aes(x=mpg, y=cyl)) +
+  geom_point()
+
+```
+
+## Intro
+
+Here I will plot some figures that will likely be used in publication. I will write each code block to be self-contained, so you could in theory re-make a figure object just by running the set up-code block at the top of this Rmd, then running the code-block corresponding to the figure described in the section title. and to save the figure object, you would often also need to run the following code block with a call to the ggsave function - since Rmarkdown is buggy when I call ggsave I have been putting ggsave calls in seperate code blocks with eval=F for Rmarkdown rendering). I wrote all the relative filepaths assuming this code would be run from the analysis directory.
+
+#### Plots for Fig1
+
+```{r}
+protein_coding_genes <- read_tsv("../code/ExpressionAnalysis/AllProteinCodingGenes.txt", col_names=c("gene"))
+
+expression_table <- read_tsv("../code/ReadLengthMapExperimentResults/featureCounts/Counts.txt", comment="#") %>%
+  filter(Geneid %in% protein_coding_genes$gene) %>%
+  distinct(Geneid, .keep_all=T) %>%
+  dplyr::select(Geneid, Length, contains("/Expression.Splicing/"))
+
+rpkm <- expression_table %>%
+  dplyr::select(-Length) %>%
+  column_to_rownames("Geneid") %>%
+  DGEList() %>%
+  calcNormFactors() %>%
+  rpkm(gene.length=expression_table$Length, prior.count=0.1, log=T)
+
+log.rkm.mean <- data.frame(
+  rpkm = apply(rpkm, 1, mean)) %>%
+  rownames_to_column("Geneid") %>%
+  mutate(rank = dense_rank(desc(rpkm))) %>%
+  filter(rank <= 14000) %>%
+  mutate(ntile = ntile(rpkm, 5))
+
+genes <- read_tsv("../code/ExpressionAnalysis/polyA/ExpressedGeneList.txt", col_names = c("chrom", "start", "stop", "name", "score", "strand"))
+
+Annotations <- read_tsv("/project2/yangili1/yangili/chRNA/annotation_leaf_JAN28.txt.gz", col_names=c("chrom", "start","end", "strand","OldAnnotation", "NewAnnotation", "gene", "symbol"))
+
+SummarisedByJuncAndDataset <- fread("../code/ReadLengthMapExperimentResults/JuncCountsTidy/SummarisedByJuncAndDataset.txt.gz") %>%
+    filter(gene %in% genes$name)
+
+CheckStability.dat <- SummarisedByJuncAndDataset %>%
+  filter(str_detect(NewAnnotation, "stable") | NewAnnotation %in%  c("protein_coding.gencode" , "nonsense_mediated_decay.gencode", "retained_intron.gencode"))
+inner_join(
+           CheckStability.dat,
+           CheckStability.dat %>%
+               group_by(Dataset) %>%
+               summarise(TotalCounts = sum(Count))
+) %>%
+mutate(Percent = Count/TotalCounts*1E6) %>%
+    mutate(Dataset = recode(Dataset, "chRNA.Expression.Splicing"="chRNA", "Expression.Splicing"="polyA", "MetabolicLabelled.30min"="30min", "MetabolicLabelled.60min"="60min")) %>%
+    mutate(Dataset = factor(Dataset, levels=c("chRNA","30min", "60min", "polyA"))) %>%
+    filter(Dataset %in% c("chRNA", "polyA")) %>%
+    dplyr::select(Percent, NewAnnotation, Dataset, chrom, start, end, strand) %>%
+    pivot_wider(names_from = "Dataset", values_from = "Percent") %>%
+    filter(!NewAnnotation=="stable.NY") %>%
+    # count(NewAnnotation)
+    group_by(NewAnnotation) %>%
+    # sample_n(2324) %>%
+    ungroup() %>%
+    ggplot(aes(x=chRNA, y=polyA)) +
+    # geom_point(alpha=0.1) +
+    geom_density_2d_filled(alpha = 1, n=200) +
+    scale_x_continuous(trans='log10') +
+    scale_y_continuous(trans='log10') +
+    geom_abline(color='red') +
+    # geom_smooth(method='lm') +
+    facet_wrap(~NewAnnotation, nrow=2) +
+    coord_fixed() +
+    theme_classic() +
+    labs(x="RPM across junctions, chRNA", y="RPM across junctions, polyA")
+
+
+Long.table <- fread("../code/ReadLengthMapExperimentResults/JuncCountsTidy/LongTable.txt.gz") %>%
+  dplyr::select(-OldAnnotation) %>% distinct() %>%
+  filter(gene %in% genes$name) %>%
+  mutate(RecodedAnnotation = 
+           case_when(
+                     NewAnnotation == "protein_coding.gencode" ~ "Annotated\nproductive",
+                     NewAnnotation == "processed_transcript.gencode" ~ "Annotated\nNonproductive\nno ORF",
+                     NewAnnotation == "nonsense_mediated_decay.gencode" ~ "Annotated\nNonproductive\nNMD target",
+                     NewAnnotation == "retained_intron.gencode" ~ "Annotated\nNonproductive\nretain intron",
+
+                     NewAnnotation == "stable.UTR_junction" ~ "Unannotated\n Nonproductive\nNMD target",
+                     str_detect(NewAnnotation, "lncRNA") | str_detect(NewAnnotation, "pseudo") ~ "Overlaps lncRNA or pseudogene",
+                     str_detect(NewAnnotation, "gencode") ~ "Annotated\nOther",
+                     NewAnnotation == "stable.YY" ~ "Unannotated\npredicted productive",
+                     str_detect(NewAnnotation, "nonsense") ~ "Unannotated\n Nonproductive\nNMD target",
+                     TRUE ~ "Other"
+                     ))
+
+Long.table %>%
+  filter(RecodedAnnotation == "Other") %>%
+  count(NewAnnotation)
+
+Long.table %>%
+  filter(RecodedAnnotation == "Unannotated\nNo prediction") %>%
+  count(NewAnnotation)
+
+Long.table.summarised <- Long.table %>%
+  inner_join(
+    log.rkm.mean,
+    by=c("gene"="Geneid")
+  ) %>%
+  # mutate(ntile = 1) %>%
+  filter(!RecodedAnnotation %in% c("Overlaps lncRNA or pseudogene", "Unannotated\nNo prediction", "Other")) %>%
+  group_by(RecodedAnnotation, Dataset, IndID, ntile) %>%
+  summarise(Sum=sum(score))
+
+
+
+P.dat <- inner_join(
+           Long.table.summarised,
+           Long.table.summarised %>%
+               group_by(IndID, Dataset, ntile) %>%
+               summarise(TotalCounts = sum(Sum))
+) %>%
+mutate(Percent = Sum/TotalCounts*100) %>%
+    mutate(Dataset = recode(Dataset, "chRNA.Expression.Splicing"="chRNA", "Expression.Splicing"="polyA", "MetabolicLabelled.30min"="30min", "MetabolicLabelled.60min"="60min")) %>%
+    mutate(Dataset = factor(Dataset, levels=c("chRNA","30min", "60min", "polyA"))) %>%
+    # filter(Annotation %in% c("In protein_coding", "Unique to nonsense_mediated_decay", "Unannotated", "Unique to processed_transcript")) %>%
+  filter(!RecodedAnnotation == "Annotated\nproductive" )
+dummy <- P.dat %>%
+  mutate(Percent = 0)
+
+ggplot(P.dat, aes(x=Dataset, y=Percent, color=RecodedAnnotation)) +
+      geom_jitter(alpha=0.2, size=0.5) +
+      geom_boxplot(outlier.shape=NA, fill=NA) +
+      geom_blank(data=dummy) +
+      facet_grid(RecodedAnnotation ~ ntile, scales="free_y",labeller = label_wrap_gen(width=14)) +
+      # facet_wrap(~RecodedAnnotation, nrow=2, scales="free_y",labeller = label_wrap_gen(width=14)) +
+
+      theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1), legend.position = "none") +
+      labs(y=str_wrap("Percent of splice junction reads", 20), x=NULL, caption=str_wrap("Only well-expressed protein coding genes considered. junctions overlapping lncRNAs excluded", 30)) +
+      guides(colour = guide_legend(override.aes4= list(alpha = 1))) +
+      theme_classic() +
+      theme(strip.text.x = element_text(size = 7)) +
+      theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+# ggsave("../code/scratch/Quintiles_ExpressedGenes.pdf")
+
+```
+
+Ok, now make more final looking plots... I think I will make two versions for the plot in Fig1:
+- 4 groups (unannotated stable, annotated stable, unannotated unstable, unannotated stable)
+- 2 groups (stable, unstable)
+
+In addition I will have to exclude some junctions that are anonnated or unannotated in noncoding genes (ie lncRNAs, pseudogenes, etc)
+
+I think before I do that, maybe I should consolidate Yang's junction annotations into supergroups and write to file... these will be the supergroups:
+
+- "AnnotatedJunc_NoncodingGene"
+- "UnannotatedJunc_NoncodingGene",
+- "AnnotatedJunc_ProductiveCodingGene",
+- "UnannotatedJunc_ProductiveCodingGene",
+- "AnnotatedJunc_UnproductiveCodingGene"
+- "UnannotatedJunc_UnproductiveCodingGene"
+
+
+```{r}
+AnnotationToSupergroupTranslationKey <- c(
+"IG_C_gene.gencode" = "AnnotatedJunc_NoncodingGene",                               
+"IG_C_gene.novel_junctions" = "UnannotatedJunc_NoncodingGene",                       
+"IG_C_pseudogene.gencode" = "AnnotatedJunc_NoncodingGene",                        
+"IG_V_gene.gencode" = "AnnotatedJunc_NoncodingGene",                          
+"IG_V_gene.novel_junctions" = "UnannotatedJunc_NoncodingGene",                         
+"IG_V_pseudogene.gencode" = "AnnotatedJunc_NoncodingGene",                           
+"IG_V_pseudogene.novel_junctions" = "UnannotatedJunc_NoncodingGene",                   
+"lncRNA.gencode" = "AnnotatedJunc_NoncodingGene",                                    
+"lncRNA.novel_junctions" = "UnannotatedJunc_NoncodingGene",                            
+"non_stop_decay.gencode" = "AnnotatedJunc_UnproductiveCodingGene",                            
+"nonsense_mediated_decay.far3p" = "UnannotatedJunc_UnproductiveCodingGene",                     
+"nonsense_mediated_decay.far5p" = "UnannotatedJunc_UnproductiveCodingGene",                     
+"nonsense_mediated_decay.gencode" = "AnnotatedJunc_UnproductiveCodingGene",                   
+"nonsense_mediated_decay.NN" = "UnannotatedJunc_UnproductiveCodingGene",                        
+"nonsense_mediated_decay.novel_junctions" = "UnannotatedJunc_UnproductiveCodingGene",           
+"nonsense_mediated_decay.pstopcodon" = "UnannotatedJunc_UnproductiveCodingGene",                
+"nonsense_mediated_decay.reason1" = "UnannotatedJunc_UnproductiveCodingGene",                   
+"nonsense_mediated_decay.reason2" = "UnannotatedJunc_UnproductiveCodingGene",                   
+"nonsense_mediated_decay.YN" = "UnannotatedJunc_UnproductiveCodingGene",                        
+"polymorphic_pseudogene.gencode" = "AnnotatedJunc_NoncodingGene",                    
+"processed_pseudogene.gencode" = "AnnotatedJunc_NoncodingGene",                      
+"processed_pseudogene.novel_junctions" = "UnannotatedJunc_NoncodingGene",              
+"processed_transcript.gencode" = "AnnotatedJunc_UnproductiveCodingGene",                      
+"processed_transcript.novel_junctions" = "UnannotatedJunc_UnproductiveCodingGene",              
+"protein_coding.gencode" = "AnnotatedJunc_ProductiveCodingGene",                            
+"pseudogene.gencode" = "AnnotatedJunc_NoncodingGene",                                
+"retained_intron.gencode" = "AnnotatedJunc_UnproductiveCodingGene",                           
+"retained_intron.novel_junctions" = "UnannotatedJunc_UnproductiveCodingGene",                   
+"stable.NY" = "UnannotatedJunc_UnproductiveCodingGene",                                         
+"stable.UTR_junction" = "UnannotatedJunc_UnproductiveCodingGene",                               
+"stable.YY" = "UnannotatedJunc_ProductiveCodingGene",                                         
+"TEC.gencode" = "AnnotatedJunc_NoncodingGene",                                       
+"TR_C_gene.gencode" = "AnnotatedJunc_NoncodingGene",                                 
+"TR_C_gene.novel_junctions" = "UnannotatedJunc_NoncodingGene",                         
+"TR_V_gene.gencode" = "AnnotatedJunc_NoncodingGene",                                 
+"TR_V_gene.novel_junctions" = "UnannotatedJunc_NoncodingGene",                         
+"TR_V_pseudogene.gencode" = "AnnotatedJunc_NoncodingGene",                           
+"TR_V_pseudogene.novel_junctions" = "UnannotatedJunc_NoncodingGene",                   
+"transcribed_processed_pseudogene.gencode" = "AnnotatedJunc_NoncodingGene",          
+"transcribed_processed_pseudogene.novel_junctions" = "UnannotatedJunc_NoncodingGene",  
+"transcribed_unitary_pseudogene.gencode" = "AnnotatedJunc_NoncodingGene",            
+"transcribed_unitary_pseudogene.novel_junctions" = "UnannotatedJunc_NoncodingGene",    
+"transcribed_unprocessed_pseudogene.gencode" = "AnnotatedJunc_NoncodingGene",       
+"transcribed_unprocessed_pseudogene.novel_junctions" = "UnannotatedJunc_NoncodingGene",
+"translated_unprocessed_pseudogene.gencode" = "AnnotatedJunc_NoncodingGene",        
+"translated_unprocessed_pseudogene.novel_junctions" = "UnannotatedJunc_NoncodingGene",
+"unitary_pseudogene.gencode" = "AnnotatedJunc_NoncodingGene",                       
+"unitary_pseudogene.novel_junctions" = "UnannotatedJunc_NoncodingGene",               
+"unprocessed_pseudogene.gencode" = "AnnotatedJunc_NoncodingGene",                   
+"unprocessed_pseudogene.novel_junctions" = "UnannotatedJunc_NoncodingGene"
+)
+
+
+Annotations %>%
+  dplyr::select(-OldAnnotation) %>%
+  distinct() %>%
+  # pull(NewAnnotation) %>% unique() %>% sort()
+  mutate(SuperAnnotation = recode(NewAnnotation, !!!AnnotationToSupergroupTranslationKey)) %>%
+  write_tsv("../data/IntronAnnotationsFromYang.tsv.gz")
+  
+
+Annotations <- read_tsv("../data/IntronAnnotationsFromYang.tsv.gz")
+
+
+```
+
