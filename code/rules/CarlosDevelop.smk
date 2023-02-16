@@ -218,5 +218,7 @@ rule MakeEURPhenotypes:
 rule CollectBasicMapping:
     input:
         expand("featureCountsBasicGtf/{Phenotype}/Counts.txt", 
-        Phenotype=["chRNA.Expression.Splicing","Expression.Splicing","MetabolicLabelled.60min", "MetabolicLabelled.30min"])
+        Phenotype=["chRNA.Expression.Splicing","Expression.Splicing","MetabolicLabelled.60min", "MetabolicLabelled.30min"]),
+        expand("QTLs/QTLTools/{Phenotype}/OnlyFirstRepsRemappedUnstandardized.qqnorm.bed.gz",
+        Phenotype=["chRNA.Expression.Splicing","Expression.Splicing","MetabolicLabelled.60min", "MetabolicLabelled.30min"]),
           

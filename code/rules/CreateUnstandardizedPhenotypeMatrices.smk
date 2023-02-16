@@ -122,6 +122,27 @@ rule Unstandardized_RPKM_Tables:
         """
         Rscript scripts/PrepareLogRPKM_PhenotypeTables.R {input.Counts} {input.standardized} {output} &> {log}
         """
+        
+rule Unstandardized_RPKM_Tables_For_BasicGtf:
+    """
+    LogRPKM.
+    """
+    input:
+        Counts = "featureCountsBasicGtf/{Phenotype}/Counts.txt",
+        standardized = "QTLs/QTLTools/Expression.Splicing/OnlyFirstReps.sorted.qqnorm.bed.gz"
+    output:
+        "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsRemappedUnstandardized.qqnorm.bed.gz"
+    wildcard_constraints:
+        Phenotype = "|".join([i for i in RNASeqPhenotypes if i != "ProCap"])
+    log:
+        "logs/Unstandardized_BasicGtf_RPKM_Tables/{Phenotype}.log"
+    conda:
+        "../envs/r_2.yaml"
+    shell:
+        """
+        Rscript scripts/NormalizeBasicGtfCounts_to_logRPKM.R {input.Counts} {output} &> {log}
+        """
+
 
 rule CollectUnstandardizedTables:
     input:
