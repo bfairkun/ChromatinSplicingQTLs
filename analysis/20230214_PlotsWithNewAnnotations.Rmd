@@ -28,11 +28,11 @@ ggplot(mtcars, aes(x=mpg, y=cyl)) +
 
 ## Intro
 
-Here I will plot some figures that will likely be used in publication. I will write each code block to be self-contained, so you could in theory re-make a figure object just by running the set up-code block at the top of this Rmd, then running the code-block corresponding to the figure described in the section title. and to save the figure object, you would often also need to run the following code block with a call to the ggsave function - since Rmarkdown is buggy when I call ggsave I have been putting ggsave calls in seperate code blocks with eval=F for Rmarkdown rendering). I wrote all the relative filepaths assuming this code would be run from the analysis directory.
+Here I will plot some figures that will likely be used in publication. I will write each subheader section to be self-contained, so you could in theory re-make a figure object just by running the set up-code block at the top of this Rmd, then running the code-block(s) corresponding to the figure(s) described in the section title. and to save the figure object, you would often also need to run the code block with a call to the ggsave function at the end of each section - since Rmarkdown is buggy when I call ggsave I have been putting ggsave calls in seperate code blocks with eval=F for Rmarkdown rendering). I wrote all the relative filepaths assuming this code would be run from the analysis directory.
 
 #### Plots for Fig1
 
-```{r}
+```{r, eval=F}
 protein_coding_genes <- read_tsv("../code/ExpressionAnalysis/AllProteinCodingGenes.txt", col_names=c("gene"))
 
 expression_table <- read_tsv("../code/ReadLengthMapExperimentResults/featureCounts/Counts.txt", comment="#") %>%
@@ -179,6 +179,9 @@ I think before I do that, maybe I should consolidate Yang's junction annotations
 
 
 ```{r}
+
+
+
 AnnotationToSupergroupTranslationKey <- c(
 "IG_C_gene.gencode" = "AnnotatedJunc_NoncodingGene",                               
 "IG_C_gene.novel_junctions" = "UnannotatedJunc_NoncodingGene",                       
@@ -232,17 +235,231 @@ AnnotationToSupergroupTranslationKey <- c(
 "unprocessed_pseudogene.novel_junctions" = "UnannotatedJunc_NoncodingGene"
 )
 
+AnnotationToSemiSupergroupTranslationKey <- c(
+"IG_C_gene.gencode" = "hypervariable genes tag",                               
+"IG_C_gene.novel_junctions" = "overlaps hypervariable gene",                       
+"IG_C_pseudogene.gencode" = "hypervariable genes tag",                        
+"IG_V_gene.gencode" = "hypervariable genes tag",                          
+"IG_V_gene.novel_junctions" = "overlaps hypervariable gene",                         
+"IG_V_pseudogene.gencode" = "hypervariable genes tag",                           
+"IG_V_pseudogene.novel_junctions" = "overlaps hypervariable gene",                   
+"lncRNA.gencode" = "uniquely lncRNA tag",                                    
+"lncRNA.novel_junctions" = "overlaps lncRNA",                            
+"non_stop_decay.gencode" = "uniquely non_stop_decay tag",                            
+"nonsense_mediated_decay.far3p" = "predicted_NMD far3p",                     
+"nonsense_mediated_decay.far5p" = "predicted_NMD far5p",                     
+"nonsense_mediated_decay.gencode" = "uniquely nonsense_mediated_decay tag",                   
+"nonsense_mediated_decay.NN" = "predicted_NMD NN",                        
+"nonsense_mediated_decay.novel_junctions" = "overlaps nonsense_mediated_decay intron",           
+"nonsense_mediated_decay.pstopcodon" = "predicted_NMD pstopcodon",                
+"nonsense_mediated_decay.reason1" = "predicted_NMD reason1",                   
+"nonsense_mediated_decay.reason2" = "predicted_NMD reason2",                   
+"nonsense_mediated_decay.YN" = "predicted_NMD YN",                        
+"polymorphic_pseudogene.gencode" = "uniquely psueodgene tag",                    
+"processed_pseudogene.gencode" = "uniquely psueodgene tag",                      
+"processed_pseudogene.novel_junctions" = "overlaps pseudogene",              
+"processed_transcript.gencode" = "uniquely processed_transcript tag",                      
+"processed_transcript.novel_junctions" = "overlaps processed transcript intron",              
+"protein_coding.gencode" = "basic tag",                            
+"pseudogene.gencode" = "uniquely psueodgene tag",                                
+"retained_intron.gencode" = "uniquely retained_intron tag",                           
+"retained_intron.novel_junctions" = "overlaps retained_intron tag",                   
+"stable.NY" = "stable.NY",                                         
+"stable.UTR_junction" = "predicted_NMD UTRjunction",                               
+"stable.YY" = "frame preserving skipped exon",                                         
+"TEC.gencode" = "TEC tag",                                       
+"TR_C_gene.gencode" = "hypervariable genes tag",                                 
+"TR_C_gene.novel_junctions" = "overlaps hypervariable gene",                         
+"TR_V_gene.gencode" = "hypervariable genes tag",                                 
+"TR_V_gene.novel_junctions" = "overlaps hypervariable gene",                         
+"TR_V_pseudogene.gencode" = "uniquely psueodgene tag",                           
+"TR_V_pseudogene.novel_junctions" = "overlaps pseudogene",                   
+"transcribed_processed_pseudogene.gencode" = "uniquely psueodgene tag",          
+"transcribed_processed_pseudogene.novel_junctions" = "overlaps pseudogene",  
+"transcribed_unitary_pseudogene.gencode" = "uniquely psueodgene tag",            
+"transcribed_unitary_pseudogene.novel_junctions" = "overlaps pseudogene",    
+"transcribed_unprocessed_pseudogene.gencode" = "uniquely psueodgene tag",       
+"transcribed_unprocessed_pseudogene.novel_junctions" = "overlaps pseudogene",
+"translated_unprocessed_pseudogene.gencode" = "uniquely psueodgene tag",        
+"translated_unprocessed_pseudogene.novel_junctions" = "overlaps pseudogene",
+"unitary_pseudogene.gencode" = "uniquely psueodgene tag",                       
+"unitary_pseudogene.novel_junctions" = "overlaps pseudogene",               
+"unprocessed_pseudogene.gencode" = "uniquely psueodgene tag",                   
+"unprocessed_pseudogene.novel_junctions" = "overlaps pseudogene"
+)
 
-Annotations %>%
+
+```
+
+```{r, eval=F}
+
+read_tsv("/project2/yangili1/yangili/chRNA/annotation_leaf_JAN28.txt.gz", col_names=c("chrom", "start","end", "strand","OldAnnotation", "NewAnnotation", "gene", "symbol")) %>%
   dplyr::select(-OldAnnotation) %>%
   distinct() %>%
   # pull(NewAnnotation) %>% unique() %>% sort()
   mutate(SuperAnnotation = recode(NewAnnotation, !!!AnnotationToSupergroupTranslationKey)) %>%
+  mutate(SemiSupergroupAnnotations = recode(NewAnnotation, !!!AnnotationToSemiSupergroupTranslationKey)) %>%
   write_tsv("../data/IntronAnnotationsFromYang.tsv.gz")
-  
+```
+
+```{r}
 
 Annotations <- read_tsv("../data/IntronAnnotationsFromYang.tsv.gz")
 
+
+Long.table <- fread("../code/ReadLengthMapExperimentResults/JuncCountsTidy/LongTable.txt.gz") %>%
+  dplyr::select(-OldAnnotation) %>% distinct()
+
+Long.table.summarised <- Long.table %>%
+  dplyr::select(Dataset:strand) %>%
+  inner_join(Annotations) %>%
+  filter(!SuperAnnotation %in% c("AnnotatedJunc_NoncodingGene", "UnannotatedJunc_NoncodingGene")) %>%
+  group_by(SuperAnnotation, Dataset, IndID) %>%
+  summarise(Sum=sum(score))
+
+P.dat <- inner_join(
+           Long.table.summarised,
+           Long.table.summarised %>%
+               group_by(IndID, Dataset) %>%
+               summarise(TotalCounts = sum(Sum))
+) %>%
+  ungroup() %>%
+mutate(Percent = Sum/TotalCounts*100) %>%
+    mutate(Dataset = recode(Dataset, "chRNA.Expression.Splicing"="chRNA", "Expression.Splicing"="polyA", "MetabolicLabelled.30min"="30min", "MetabolicLabelled.60min"="60min")) %>%
+    mutate(Dataset = factor(Dataset, levels=c("chRNA","30min", "60min", "polyA")))
+
+
+ColorKey <- c(
+  "AnnotatedJunc_ProductiveCodingGene" = "#1f78b4",
+  "UnannotatedJunc_ProductiveCodingGene" = "#a6cee3",
+  "AnnotatedJunc_UnproductiveCodingGene" = "#e31a1c",
+  "UnannotatedJunc_UnproductiveCodingGene" = "#fb9a99",
+  "AnnotatedJunc_NoncodingGene" = "#6a3d9a",
+  "UnannotatedJunc_NoncodingGene" = "#cab2d6")
+LabelKey <- c(
+  "AnnotatedJunc_ProductiveCodingGene" = "Annotated\nproductive",
+  "UnannotatedJunc_ProductiveCodingGene" = "Unannotated\nproductive",
+  "AnnotatedJunc_UnproductiveCodingGene" = "Annotated\nunproductive",
+  "UnannotatedJunc_UnproductiveCodingGene" = "Unannotated\nunproductive",
+  "AnnotatedJunc_NoncodingGene" = "Annotated\nNoncoding or hypervariable gene",
+  "UnannotatedJunc_NoncodingGene" = "Unannotated\nNoncoding or hypervariable gene")
+```
+
+I want the y-axis lower limit set to 0 for all categories except Annotated_productive, for easier visual interpretation across facets. I can do this with ggplot by adding dummy data at y=0.
+
+
+```{r}
+dummy <- P.dat %>%
+  distinct(SuperAnnotation, Dataset) %>%
+  filter(!SuperAnnotation == "AnnotatedJunc_ProductiveCodingGene") %>%
+  mutate(Percent = 0)
+
+
+P.1.boxplots <- ggplot(P.dat, aes(x=Dataset, y=Percent, color=SuperAnnotation)) +
+      geom_jitter(alpha=0.2, size=0.5) +
+      geom_boxplot(outlier.shape=NA, fill=NA) +
+      geom_blank(data=dummy) +
+      scale_color_manual(values = ColorKey) +
+      facet_wrap(~SuperAnnotation, nrow=2, scales="free_y",labeller = as_labeller(LabelKey)) +
+
+      theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1), legend.position = "none") +
+      labs(y=str_wrap("Percent of splice junction reads", 32), x=NULL) +
+      guides(colour = guide_legend(override.aes4= list(alpha = 1))) +
+      # theme(strip.text.x = element_text(size = 7)) +
+      theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+      theme(legend.position = "none")
+P.1.boxplots
+
+```
+
+Here is a second version of the same plot with the unannotated juncs merged into the annotated
+
+```{r}
+
+P.1.boxplots_smaller <- P.dat %>%
+  mutate(SuperAnnotation = recode(SuperAnnotation, !!!c("UnannotatedJunc_ProductiveCodingGene"="AnnotatedJunc_ProductiveCodingGene", "UnannotatedJunc_UnproductiveCodingGene"="AnnotatedJunc_UnproductiveCodingGene"))) %>%
+  group_by(SuperAnnotation, IndID, Dataset) %>%
+  summarise(Percent = sum(Percent)) %>%
+  ungroup() %>%
+ggplot(aes(x=Dataset, y=Percent, color=SuperAnnotation)) +
+      geom_jitter(alpha=0.2, size=0.5) +
+      geom_boxplot(outlier.shape=NA, fill=NA) +
+      geom_blank(data=dummy %>%
+                   filter(!str_detect(SuperAnnotation, "Unannotated"))) +
+      scale_color_manual(values = ColorKey) +
+      facet_wrap(~SuperAnnotation, nrow=1, scales="free_y",labeller = as_labeller(LabelKey)) +
+
+      theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1), legend.position = "none") +
+      labs(y=str_wrap("Percent of splice junction reads", 20), x=NULL) +
+      guides(colour = guide_legend(override.aes4= list(alpha = 1))) +
+      # theme(strip.text.x = element_text(size = 7)) +
+      theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+      theme(legend.position = "none")
+P.1.boxplots_smaller
+```
+
+Ok, now onto making that supplemental plot that further breaks down the categories into the sub-categories Yang annotated. Rather than show all his subcaetgories, I will lump them again to be more interpretable
+
+```{r}
+Annotations <- Annotations %>%
+  mutate(SuperAnnotation = factor(SuperAnnotation, levels=names(LabelKey)))
+
+SemiAnnotationFactorLevels <- Annotations %>%
+  distinct(SuperAnnotation,SemiSupergroupAnnotations) %>%
+  arrange(SuperAnnotation) %>% pull(SemiSupergroupAnnotations)
+
+SummarisedByJuncAndDataset <- fread("../code/ReadLengthMapExperimentResults/JuncCountsTidy/SummarisedByJuncAndDataset.txt.gz") %>%
+  filter(Dataset %in% c("chRNA.Expression.Splicing", "Expression.Splicing")) %>%
+  inner_join(Annotations) %>%
+  mutate(Dataset = recode(Dataset, "chRNA.Expression.Splicing"="chRNA", "Expression.Splicing"="polyA", "MetabolicLabelled.30min"="30min", "MetabolicLabelled.60min"="60min"))
+
+
+
+Scatter.P.dat <- SummarisedByJuncAndDataset %>%
+  group_by(Dataset) %>%
+  mutate(TotalCounts = sum(Count)) %>%
+  ungroup() %>%
+  mutate(Percent = Count/TotalCounts*1E6) %>%
+  mutate(Dataset = factor(Dataset, levels=c("chRNA","30min", "60min", "polyA"))) %>%
+  dplyr::select(Percent, SemiSupergroupAnnotations, SuperAnnotation, Dataset, chrom, start, end, strand) %>%
+    # pivot_wider(names_from = "Dataset", values_from = "Percent") %>%
+    pivot_wider(names_from = "Dataset", values_from = "Percent", values_fill=0) %>%
+  # count(SemiSupergroupAnnotations)
+  add_count(SemiSupergroupAnnotations) %>%
+  filter(n>100) %>%
+  # group_by(SemiSupergroupAnnotations) %>%
+  # sample_n(1000, replace=T) %>%
+  # ungroup() %>%
+  mutate(SemiSupergroupAnnotations = factor(SemiSupergroupAnnotations, levels=SemiAnnotationFactorLevels))
+
+Scatter.P.dat.summary <- Scatter.P.dat %>%
+  mutate(Ratio = chRNA/polyA) %>%
+  group_by(SemiSupergroupAnnotations, SuperAnnotation) %>%
+  summarise( n = n(),median=round(median(Ratio, na.rm=T), digits=2)) %>%
+  mutate(label = str_glue("n:{n}\nmedian:{median}"))
+
+Scatter.P <- ggplot(Scatter.P.dat, aes(x=chRNA, y=polyA)) +
+    geom_point(color="black", alpha=0.1) +
+    geom_abline(color='red') +
+    geom_density_2d(aes(color=SuperAnnotation)) +
+    geom_text(data = Scatter.P.dat.summary, aes(label=label, color=SuperAnnotation),x=-Inf, y=Inf, size=3, hjust=0, vjust=1.1) +
+    scale_color_manual(values = ColorKey, labels=LabelKey) +
+    scale_x_continuous(trans='log10') +
+    scale_y_continuous(trans='log10') +
+    facet_wrap(~SemiSupergroupAnnotations, labeller = label_wrap_gen(width=14)) +
+    coord_fixed() +
+    theme_classic() +
+    theme(strip.text.x = element_text(size = 7), legend.position="bottom") +
+    guides(colour = guide_legend(nrow = 2)) +
+    labs(x="RPM across junctions, chRNA", y="RPM across junctions, polyA", title="Reasons for intron classifications", color="Intron classification")
+Scatter.P
+```
+
+
+```{r, eval=F}
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/BoxPlotPercentSpliceJunctions.pdf", P.1.boxplots, height=4, width=4)
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/BoxPlotPercentSpliceJunctions_smaller.pdf", P.1.boxplots_smaller, height=2, width=4)
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/ReasonsForJunctionAnnotations.Scatter.png", Scatter.P, height=12, width=10)
 
 ```
 
