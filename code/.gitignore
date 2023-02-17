@@ -11,6 +11,7 @@ config/config.local.yaml
 !scripts/common
 !scripts/common/*
 !scripts/NonCodingRNA
+!scripts/useful_modules
 !scripts/NonCodingRNA/*
 scripts/.snakemake*
 !Snakefile
