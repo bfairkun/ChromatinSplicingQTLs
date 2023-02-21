@@ -262,6 +262,22 @@ rule AddIDToScoredAnnotation:
         python scripts/add_additional_annotation_to_junctions.py {input.annot_junc} {input.clusters} &> {log}
         """
         
+rule GetH3K4ME3_peaks_close_to_gene:
+    input:
+        counts = "featureCounts/H3K4ME3/Counts.txt",
+        tss = "ReferenceGenome/Annotations/GTFTools_BasicAnnotations/gencode.v34.chromasomal.tss.bed"
+    output:
+        temp_counts = temp('QTLs/QTLTools/H3K4ME3/featureCounts.bed'),
+        peaks_tss = 'QTLs/QTLTools/H3K4ME3/CountsPeaksAtTSS.bed.gz'
+    log:
+        "logs/GetH3K4ME3_peaks_close_to_gene.log"
+    resources:
+        mem_mb = 62000
+    shell:
+        """
+        (tail -n+3 featureCounts/H3K4ME3/Counts.txt | awk -v n=7 '{{print $2, $3, $4, $1, $6, $5, $0}}' FS='\\t' OFS='\\t' - | cut -f 7,8,9,10,11,12 --complement - > {output.temp_counts}) &> {log};
+        (sed -e 's/^/chr/' ReferenceGenome/Annotations/GTFTools_BasicAnnotations/gencode.v34.chromasomal.tss.bed | awk '{{print $1, $2, $3, $5, $6, $4, $7}}' OFS='\\t' FS='\\t' - | bedtools sort -i - | bedtools closest -b {output.temp_counts} -a - -d | awk '$92>=0 && $92<=2000' OFS='\\t' FS='\\t' - | gzip - > {output.peaks_tss}) &>> {log}
+        """
         
     
     

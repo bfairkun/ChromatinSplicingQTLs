@@ -187,3 +187,21 @@ rule ReadLengthMapExperiment_CollectBams:
         ),
         "ReadLengthMapExperimentResults/featureCounts/Counts.txt",
         "ReadLengthMapExperimentResults/JuncCountsTidy/SummarisedByJuncAndDataset.txt.gz" 
+
+rule Normalize_ReadLengthMapExperimentResults_Counts:
+    input:
+        "ReadLengthMapExperimentResults/featureCounts/Counts.txt",
+        "QTLs/QTLTools/Expression.Splicing/OnlyFirstReps.sorted.qqnorm.bed.gz"
+    output:
+        "ReadLengthMapExperimentResults/tables/AllRNASeq.Normalized.RPKM.bed.gz"
+    conda:
+        "../envs/r_2.yaml"
+    log:
+        "logs/Normalize_ReadLengthMapExperimentResults_Counts.log"
+    shell:
+        """
+        Rscript scripts/Normalize_ReadLengthMapExperimentResults_Counts.R &> {log}
+        """
+
+
+

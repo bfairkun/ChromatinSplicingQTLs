@@ -221,4 +221,11 @@ rule CollectBasicMapping:
         Phenotype=["chRNA.Expression.Splicing","Expression.Splicing","MetabolicLabelled.60min", "MetabolicLabelled.30min"]),
         expand("QTLs/QTLTools/{Phenotype}/OnlyFirstRepsRemappedUnstandardized.qqnorm.bed.gz",
         Phenotype=["chRNA.Expression.Splicing","Expression.Splicing","MetabolicLabelled.60min", "MetabolicLabelled.30min"]),
+        "ReadLengthMapExperimentResults/tables/AllRNASeq.Normalized.RPKM.bed.gz",
+        "QTLs/QTLTools/H3K4ME3/CountsPeaksAtTSS.bed.gz"
+        
+rule CollectFinemapping:
+    input:
+        expand("FineMapping/Genotypes/1KG_GRCh38/{chrom}.txt.gz",
+        chrom = [str(x) for x in range(1, 23)])
           
