@@ -51,6 +51,27 @@ rule PrepareH3K36ME3PhenotypeTable:
         (bedtools multicov -bed {input.bed} -bams {input.bams} >> {output}) 2> {log}
         """
         
+rule PrepareGenesLast3K:
+    input:
+        "ExpressionAnalysis/polyA/ExpressedGeneList.txt"
+    output:
+        "ExpressionAnalysis/polyA/ExpressedGeneList.Last3K.txt"
+    log:
+        "logs/PrepareLast3K.log"
+    shell:
+        """
+        (awk '(($3-$2) >= 3000) && $6=="+" {{print $1, $3-3000, $3, $4, $5, $6}}' FS='\\t' OFS='\\t' {input} > {output}) &> {log};
+        (awk '(($3-$2) >= 3000) && $6=="-" {{print $1, $2, $2+3000, $4, $5, $6}}' FS='\\t' OFS='\\t' {input} >> {output}) &>> {log};
+        """
+        
+use rule PrepareH3K36ME3PhenotypeTable as PrepareH3K36ME3PhenotypeTable_Last3K with:
+    input:
+        bams = expand("Alignments/Hisat2_Align/H3K36ME3/{IndID}.1.wasp_filterd.markdup.sorted.bam", IndID = H3K36ME3_IndIDs),
+        bais = expand("Alignments/Hisat2_Align/H3K36ME3/{IndID}.1.wasp_filterd.markdup.sorted.bam.bai", IndID = H3K36ME3_IndIDs),
+        bed = "ExpressionAnalysis/polyA/ExpressedGeneList.Last3K.txt"
+    output:
+        "MiscCountTables/H3K36ME3.Last3K.bed"
+        
 use rule PrepareH3K36ME3PhenotypeTable as PrepareH3K36ME3NonCodingPhenotypeTable with:
     input:
         bams = expand("Alignments/Hisat2_Align/H3K36ME3/{IndID}.1.wasp_filterd.markdup.sorted.bam", IndID = H3K36ME3_IndIDs),
@@ -114,4 +135,5 @@ rule AssignPeaksToTSS:
 rule GatherPeaksClosestToTSS:
     input:
         expand("Misc/PeaksClosestToTSS/{Phenotype}_assigned.tsv.gz", Phenotype=["H3K4ME3", "H3K27AC", "H3K4ME1"])
+
 

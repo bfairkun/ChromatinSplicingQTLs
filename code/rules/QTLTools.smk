@@ -134,8 +134,12 @@ def GetQTLtoolsVcf(wildcards):
             return "QTLs/QTLTools/Expression.Splicing/Genotypes/WholeGenome.vcf.gz"
         elif wildcards.Phenotype == "polyA.Splicing.Subset_YRI":
             return "Genotypes/1KG_GRCh38_SubsetYRI/WholeGenome.vcf.gz"
+        elif wildcards.Phenotype == "polyA.Splicing.Subset_EUR":
+            return "Genotypes/1KG_GRCh38_SubsetEUR/WholeGenome.vcf.gz"
         else:
             return "QTLs/QTLTools/{Phenotype}/Genotypes/WholeGenome.vcf.gz"
+    elif wildcards.QTLsGenotypeSet == "EUR":
+        return "Genotypes/1KG_GRCh38_SubsetEUR/WholeGenome.vcf.gz"
     else:
         return "Genotypes/1KG_GRCh38_SubsetYRI/WholeGenome.vcf.gz"
 
@@ -146,8 +150,12 @@ def GetQTLtoolsVcfTbi(wildcards):
             return "QTLs/QTLTools/Expression.Splicing/Genotypes/WholeGenome.vcf.gz.tbi"
         elif wildcards.Phenotype == "polyA.Splicing.Subset_YRI":
             return "Genotypes/1KG_GRCh38_SubsetYRI/WholeGenome.vcf.gz.tbi"
+        elif wildcards.Phenotype == "polyA.Splicing.Subset_EUR":
+            return "Genotypes/1KG_GRCh38_SubsetEUR/WholeGenome.vcf.gz.tbi"
         else:
             return "QTLs/QTLTools/{Phenotype}/Genotypes/WholeGenome.vcf.gz.tbi"
+    elif wildcards.QTLsGenotypeSet == "EUR":
+        return "Genotypes/1KG_GRCh38_SubsetEUR/WholeGenome.vcf.gz.tbi"
     else:
         return "Genotypes/1KG_GRCh38_SubsetYRI/WholeGenome.vcf.gz.tbi"
 
@@ -177,7 +185,7 @@ def GetQTLtoolsWindowFlag(wildcards):
     elif wildcards.Pass == "PermutationPass250kb":
         return "--window 250000"
     else:
-        if wildcards.Phenotype in ["polyA.Splicing", "chRNA.Splicing", "polyA.Splicing.Subset_YRI", 
+        if wildcards.Phenotype in ["polyA.Splicing", "chRNA.Splicing", "polyA.Splicing.Subset_YRI", "polyA.Splicing.Subset_EUR", 
         "MetabolicLabelled.30min.Splicing", "MetabolicLabelled.60min.Splicing", "chRNA.RNA.Editing", "chRNA.Splicing.Order"]:
             return "--window 10000"
         elif wildcards.Phenotype.split('.')[-1] in ['5PrimeSS', '3PrimeSS']:
@@ -191,7 +199,7 @@ def GetQTLtoolsWindowFlag(wildcards):
             return "--window 100000"
 
 def GetQTLtoolsOtherFlags(wildcards):
-    if wildcards.Phenotype in ["polyA.Splicing", "chRNA.Splicing", "polyA.Splicing.Subset_YRI", 
+    if wildcards.Phenotype in ["polyA.Splicing", "chRNA.Splicing", "polyA.Splicing.Subset_YRI", "polyA.Splicing.Subset_EUR", 
     "MetabolicLabelled.30min.Splicing", "MetabolicLabelled.60min.Splicing", "chRNA.RNA.Editing", "chRNA.Splicing.Order", "APA_Nuclear", "APA_Total"] and wildcards.Pass == "GroupedPermutationPass":
         return "--grp-best"
     else:

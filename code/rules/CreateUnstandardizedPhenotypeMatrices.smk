@@ -94,6 +94,13 @@ rule Unstandardized_H3K36ME3_CPM_Table:
         """
         Rscript scripts/PrepareLogRPKM_H3K36ME3_PhenotypeTables.R {input.Counts} {input.standardized} {output} &> {log}
         """
+        
+use rule Unstandardized_H3K36ME3_CPM_Table as Unstandardized_H3K36ME3_CPM_Table_Last3K with:
+    input:
+        Counts = "MiscCountTables/H3K36ME3.Last3K.bed",
+        standardized = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.gz"
+    output:
+        "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsUnstandardized.Last3K.qqnorm.bed.gz"
 
 def GetCountTable(wildcards):
     if wildcards.Phenotype == "polyA.Expression.Splicing":
@@ -131,7 +138,7 @@ rule Unstandardized_RPKM_Tables_For_BasicGtf:
         Counts = "featureCountsBasicGtf/{Phenotype}/Counts.txt",
         standardized = "QTLs/QTLTools/Expression.Splicing/OnlyFirstReps.sorted.qqnorm.bed.gz"
     output:
-        "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsRemappedUnstandardized.qqnorm.bed.gz"
+        "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsBasicUnstandardized.qqnorm.bed.gz"
     wildcard_constraints:
         Phenotype = "|".join([i for i in RNASeqPhenotypes if i != "ProCap"])
     log:

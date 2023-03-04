@@ -41,6 +41,8 @@ include: "rules/NMDSpliceSiteAnalysis.smk"
 include: "rules/ReadLengthMapExperiment.smk"
 include: "rules/BenDevelop.smk"
 include: "rules/FineMapping.smk"
+include: "rules/MetaplotsAssays.smk"
+
 
 
 include: "rules/ProcessSmallMoleculeData.smk"

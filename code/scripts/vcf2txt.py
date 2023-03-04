@@ -10,7 +10,7 @@ def process_vcf_line(line):
         line_header = '\t'.join(line_split[:4] + line_split[8:])
         return line_header
     else:
-        line = line.replace('0|0', '0').replace('1|1', '2').replace('0|1', '1').replace('1|0', '0')
+        line = line[3:].replace('0|0', '0').replace('1|1', '2').replace('0|1', '1').replace('1|0', '0')
         line_split = line.split('\t')
         line_out = '\t'.join(line_split[:4] + line_split[8:])
         return line_out

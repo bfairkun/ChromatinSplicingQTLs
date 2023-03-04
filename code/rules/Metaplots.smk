@@ -82,3 +82,4 @@ rule CreateMetaQTL_Bigwigs:
 rule GatherMetaQTL_Bigwigs:
     input:
         expand("Metaplots/IntermediateBigwigs/{Region}.{GroupsFile}", Region=["sQTL.eQTL.Annotated_basic", "sQTL.eQTL.Annotated_NMD", "sQTL.eQTL.Annotated_Not_basic", "sQTL.eQTL.Unannotated"], GroupsFile="H3K27AC_AndAllRNA")
+

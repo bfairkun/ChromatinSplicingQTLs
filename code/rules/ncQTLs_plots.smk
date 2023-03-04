@@ -166,8 +166,8 @@ rule ComputeMatrixForMetaplot:
     conda:
         "../envs/deeptools.yml"
     shell:
-        """
-        computeMatrix reference-point --regionBodyLength 5000 -a 10000 -b 10000 -R {input.rbed} -S {params.bwList_input} -o {output} &> {log}
+        """ # before it was reference-point
+        computeMatrix scale-regions --regionBodyLength 5000 -a 10000 -b 10000 -R {input.rbed} -S {params.bwList_input} -o {output} &> {log}
         """
         
 rule ComputeMatrixForMetaplotMetagene:

@@ -39,6 +39,8 @@ rpkm <- counts %>%
   as.data.frame() %>%
   rownames_to_column("pid")
 
+standardized <- standardized[standardized$pid %in% rpkm$pid,]
+
 standardized %>%
   dplyr::select(1:6) %>%
   inner_join(

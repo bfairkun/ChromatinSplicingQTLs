@@ -213,19 +213,47 @@ rule NMDJunctions_test:
 rule MakeEURPhenotypes:
     input:
         expand("QTLs/QTLTools/{Phenotype}.Subset_EUR/OnlyFirstReps.qqnorm.bed.gz",
-        Phenotype = ["Expression.Splicing", "polyA.Splicing"])
+            Phenotype = ["Expression.Splicing", "polyA.Splicing"]),
+        expand("QTLs/QTLTools/{Phenotype}.Subset_EUR/{Pass}.txt.gz",
+            Phenotype = ["Expression.Splicing", "polyA.Splicing"],
+            Pass = ["NominalPass", "PermutationPass.FDR_Added"]),
         
 rule CollectBasicMapping:
     input:
         expand("featureCountsBasicGtf/{Phenotype}/Counts.txt", 
         Phenotype=["chRNA.Expression.Splicing","Expression.Splicing","MetabolicLabelled.60min", "MetabolicLabelled.30min"]),
-        expand("QTLs/QTLTools/{Phenotype}/OnlyFirstRepsRemappedUnstandardized.qqnorm.bed.gz",
+        expand("QTLs/QTLTools/{Phenotype}/OnlyFirstRepsBasicUnstandardized.qqnorm.bed.gz",
         Phenotype=["chRNA.Expression.Splicing","Expression.Splicing","MetabolicLabelled.60min", "MetabolicLabelled.30min"]),
         "ReadLengthMapExperimentResults/tables/AllRNASeq.Normalized.RPKM.bed.gz",
-        "QTLs/QTLTools/H3K4ME3/CountsPeaksAtTSS.bed.gz"
+        "QTLs/QTLTools/H3K4ME3/CountsPeaksAtTSS.bed.gz",
+        "QTLs/QTLTools/H3K27AC/CountsPeaksAtTSS.bed.gz",
+        
         
 rule CollectFinemapping:
     input:
-        expand("FineMapping/Genotypes/1KG_GRCh38/{chrom}.txt.gz",
-        chrom = [str(x) for x in range(1, 23)])
+        "FineMapping/Genotypes/1KG_GRCh38/EUR.txt.bgz.tbi",
+        "FineMapping/susie_runs/susie_output.tab"
           
+rule collect_metaplot:
+    input:
+        expand("Metaplots/AssayProfiles/Plots/{Phenotype}.{IndID}.{metaplot}.png",
+            Phenotype = ["Expression.Splicing", "MetabolicLabelled.30min",
+            "MetabolicLabelled.60min", "H3K36ME3"], IndID = ['NA19137', 'NA19152', 'NA19153'],
+            metaplot=["CDS", "gene"]),
+        expand("Metaplots/AssayProfiles/Plots/{Phenotype}.{IndID}.{quartiles}.png",
+            Phenotype = ["Expression.Splicing", "MetabolicLabelled.30min",
+            "MetabolicLabelled.60min", "H3K36ME3"], IndID = ['NA19137', 'NA19152', 'NA19153'], 
+            quartiles = ["CDS_length", "gene_length"]),
+        expand("Metaplots/AssayProfiles/Plots/chRNA.Expression.Splicing.{IndID}.{metaplot}.{strand}.png",
+            IndID = ['NA18486', 'NA19137', 'NA19152', 'NA19153'],
+            metaplot=["CDS", "gene"], strand = ["plus", "minus"]),
+        expand("Metaplots/AssayProfiles/Plots/chRNA.Expression.Splicing.{IndID}.{quartiles}.{strand}.png",
+            IndID = ['NA18486', 'NA19137', 'NA19152', 'NA19153'], 
+            quartiles = ["CDS_length", "gene_length"], strand = ["plus", "minus"]),
+        "QTLs/QTLTools/H3K36ME3/OnlyFirstRepsUnstandardized.Last3K.qqnorm.bed.gz",
+        expand("Metaplots/AssayProfiles/Plots/{Phenotype}.{IndID}.{quartiles}.png",
+            Phenotype = ["H3K36ME3"], IndID = ['NA18486'], 
+            quartiles = ["CDS_length", "gene_length"]),
+        expand("Metaplots/AssayProfiles/Plots/{Phenotype}.{IndID}.{metaplot}.png",
+            Phenotype = ["H3K36ME3"], IndID = ['NA18486'],
+            metaplot=["CDS", "gene"]),
