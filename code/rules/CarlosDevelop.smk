@@ -251,6 +251,7 @@ rule collect_metaplot:
             IndID = ['NA18486', 'NA19137', 'NA19152', 'NA19153'], 
             quartiles = ["CDS_length", "gene_length"], strand = ["plus", "minus"]),
         "QTLs/QTLTools/H3K36ME3/OnlyFirstRepsUnstandardized.Last3K.qqnorm.bed.gz",
+        "QTLs/QTLTools/H3K36ME3/OnlyFirstRepsUnstandardized.Encode.qqnorm.bed.gz",
         expand("Metaplots/AssayProfiles/Plots/{Phenotype}.{IndID}.{quartiles}.png",
             Phenotype = ["H3K36ME3"], IndID = ['NA18486'], 
             quartiles = ["CDS_length", "gene_length"]),

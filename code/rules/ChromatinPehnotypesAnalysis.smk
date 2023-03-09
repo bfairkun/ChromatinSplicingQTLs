@@ -137,3 +137,19 @@ rule GatherPeaksClosestToTSS:
         expand("Misc/PeaksClosestToTSS/{Phenotype}_assigned.tsv.gz", Phenotype=["H3K4ME3", "H3K27AC", "H3K4ME1"])
 
 
+H3K36ME3_IndIDs_encode = ["GM12878.1", "GM12878_2.1", "GM06990.1",
+                          "GM12878.2", "GM12878_2.2", "GM06990.2"]
+use rule PrepareH3K36ME3PhenotypeTable as PrepareH3K36ME3PhenotypeTable_Encode with:
+    input:
+        bams = expand("../../encode_h3k36me3/bams/{IndID}.bam",
+        IndID = H3K36ME3_IndIDs_encode),
+        bais = expand("../../encode_h3k36me3/bams/{IndID}.bam.bai",
+        IndID = H3K36ME3_IndIDs_encode),
+        bed = "ExpressionAnalysis/polyA/ExpressedGeneList.txt"
+    output:
+        "MiscCountTables/H3K36ME3.Encode.bed"
+    log:
+        "logs/PrepareH3K36ME3PhenotypeTable.Encode.log"
+    params:
+        header = '\t'.join(["#Chr", "start", "end", "pid", "gid", "strand"] + H3K36ME3_IndIDs_encode) + '\n'
+

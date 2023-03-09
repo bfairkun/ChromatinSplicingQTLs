@@ -101,6 +101,13 @@ use rule Unstandardized_H3K36ME3_CPM_Table as Unstandardized_H3K36ME3_CPM_Table_
         standardized = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.gz"
     output:
         "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsUnstandardized.Last3K.qqnorm.bed.gz"
+        
+use rule Unstandardized_H3K36ME3_CPM_Table as Unstandardized_H3K36ME3_CPM_Table_Encode with:
+    input:
+        Counts = "MiscCountTables/H3K36ME3.Encode.bed",
+        standardized = "QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.gz"
+    output:
+        "QTLs/QTLTools/{Phenotype}/OnlyFirstRepsUnstandardized.Encode.qqnorm.bed.gz"
 
 def GetCountTable(wildcards):
     if wildcards.Phenotype == "polyA.Expression.Splicing":

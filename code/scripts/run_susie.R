@@ -2,7 +2,7 @@ library(dplyr)
 library(tidyverse)
 library(data.table)
 library(susieR)
-
+set.seed(0)
 args = commandArgs(trailingOnly=TRUE)
 nominal = args[1]
 perm = args[2]
@@ -59,6 +59,9 @@ cs_names <- c()
 cs_vars <- c()
 cs_gene <- c()
 cs_pip <- c()
+cs_beta <- c()
+cs_beta_se <- c()
+cs_z <- c()
 
 for (gene in genes) {
 
@@ -82,11 +85,23 @@ for (gene in genes) {
         cs_vars <- c(cs_vars, vars)
         cs_gene <- c(cs_gene, rep(gene, length(cs_idx)))
         cs_pip <- c(cs_pip, susie_out$pip[cs_idx])
+        
+        beta <- nominal.gene[cs_idx,] %>% select('slope') 
+        beta <- beta[[1]] %>% as.vector()
+        
+        beta_se <- nominal.gene[cs_idx,] %>% select('slope_se') 
+        beta_se <- beta_se[[1]] %>% as.vector()
+        
+        z <- beta/beta_se
+        
+        cs_beta <- c(cs_beta, beta)
+        cs_beta_se <- c(cs_beta_se, beta_se)
+        cs_z <- c(cs_z, z)
     }
 
 }
 
 print('Finished running SuSiE. Creating output table...')
-out_df <- data.frame(cs_gene, cs_vars, cs_names, cs_pip)
+out_df <- data.frame(cs_gene, cs_vars, cs_names, cs_pip, cs_beta, cs_beta_se, cs_z)
 print("If this message doesn't show up, the error is creating the matrix")
 out_df %>% write_delim(output, delim='\t')
