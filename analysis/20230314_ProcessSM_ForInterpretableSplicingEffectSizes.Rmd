@@ -1,0 +1,175 @@
+---
+title: "ProcessSM_ForInterpretableEffectSizes"
+output: html_document
+date: '2023-03-14'
+---
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+
+library(tidyverse)
+library(RColorBrewer)
+library(data.table)
+library(edgeR)
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family="Helvetica")))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+
+#test plot
+ggplot(mtcars, aes(x=mpg, y=cyl)) +
+  geom_point()
+
+```
+
+
+## Intro
+
+I have previously used leafcutter intron excision ratios to fit dose response model to GA-GT introns and try to relate that to expression. For publication, I would rather have a more easily interpretable metric to relate splicing to expression, like the PSI more commonly used in the literature. I'm using this notebook to explore some ideas.
+
+## Analysis
+
+how many introns per host cluster for modelled gagt introns?
+
+
+```{r}
+gagt.fits <- read_tsv("../code/SmallMolecule/FitModels/polyA_GAGTIntrons.tsv.gz") %>%
+  pivot_wider(names_from = "param", values_from = c("Estimate", "SE"))
+
+
+leafcutter_numers <- read.table("../code/SmallMolecule/leafcutter/clustering/autosomes/leafcutter_perind_numers.counts.gz") %>%
+  rownames_to_column("leafcutter_junc") %>%
+  mutate(junc_clu = str_replace(leafcutter_junc, "^(.+?:)(clu.+?)_([+-])$", "\\1\\3.\\2")) %>%
+  separate(junc_clu, into=c("junc", "clu"), sep="\\.")
+
+# leafcutter_numers %>%
+#   dplyr::select(junc, clu, leafcutter_junc) %>%
+#   mutate(strand = str_extract(junc, "[+-]")) %>%
+#   count(strand, clu) %>%
+#   count(clu) %>%
+#   count(n)
+
+
+ClustersOfInterest <- leafcutter_numers %>%
+  filter(junc %in% gagt.fits$junc) %>% pull(clu)
+  
+leafcutter_numers %>%
+  dplyr::select(junc, clu) %>%
+  filter(clu %in% ClustersOfInterest) %>%
+  count(clu) %>%
+  ggplot(aes(x=n)) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(0,10)) +
+  labs(x="Num introns in cluster", y="ecdf", title="Many introns per cluster")
+```
+
+Manually inspecting the modelled introns in IGV, it is clear that most (but not all) can be described as cassette exons. I could consider finding the cassette exon of interest and quantifying that as PSI. To see if this will work easily, let's first write out a bed file of all those introns in those clusters, then manually inspect in IGV...
+
+```{r}
+leafcutter_numers %>%
+  dplyr::select(junc, clu) %>%
+  filter(clu %in% ClustersOfInterest) %>%
+  separate(junc, into=c("chrom", "start", "end", "strand"), sep=":", convert=T, remove = F) %>%
+  group_by(clu) %>%
+  mutate(color_num = sample(c("255,0,0", "0,255,0", "0,0,255", "255,255,0", "0,255,255", "255,0,255"), 1)) %>%
+  ungroup() %>%
+  mutate(thickStart = start, thickEnd = end) %>%
+  dplyr::select(chrom, start, end, junc, clu, strand, thickStart, thickEnd, color_num) %>%
+  arrange(chrom, start) %>%
+  write_tsv("../code/scratch/SmallMoleculeGAGT_clusters.bed", col_names = F)
+```
+
+
+Manually inspecting the modelled introns and other introns in the cluster revealed that most of the events can probably be easily quantified as cassette exon and we can usually accurately grab the coordinates simply by looking for the nearest upstream splice acceptor within the cluster within 500bp... In cases where there are multiple upstream introns with the same nearest upstream splice acceptor, keep the one that is used the most across all samples. Then, also get the junc corresponding to exon-skipping.
+
+```{r}
+
+
+ClusterIntronsOfInterest <- leafcutter_numers %>%
+  filter(clu %in% ClustersOfInterest) %>%
+  rowwise() %>% 
+  mutate(sumnumeric = sum(c_across(where(is.numeric)), na.rm = T)) %>%
+  ungroup() %>%
+  dplyr::select(junc, clu, sumnumeric) %>%
+  separate(junc, into=c("chrom", "start", "end", "strand"), sep=":", convert=T, remove = F) %>%
+  mutate(SpliceDonor = if_else(strand == "+", start, end),
+         SpliceAcceptor = if_else(strand == "+", end, start)) %>%
+  mutate(IsModelledGAGT = junc %in% gagt.fits$junc)
+
+CassetteExonsOfInterest <-
+ClusterIntronsOfInterest %>%
+  filter(IsModelledGAGT) %>%
+  dplyr::select(junc, clu, SpliceDonor.GAGT=SpliceDonor, strand, sumnumeric) %>%
+  left_join(
+    ClusterIntronsOfInterest %>%
+      dplyr::select(junc, clu, SpliceAcceptor, sumnumeric),
+    by="clu",
+    suffix = c(".GAGT", ".UpstreamIntron")
+  ) %>%
+  mutate(DistanceToGAGTDonor = if_else(
+    strand == "+",
+    SpliceDonor.GAGT - SpliceAcceptor,
+    SpliceAcceptor - SpliceDonor.GAGT
+  )) %>%
+  filter(DistanceToGAGTDonor > 0) %>%
+  filter(DistanceToGAGTDonor < 500) %>%
+  group_by(junc.GAGT) %>%
+  filter(DistanceToGAGTDonor == min(DistanceToGAGTDonor)) %>%
+  filter(sumnumeric.UpstreamIntron == max(sumnumeric.UpstreamIntron)) %>%
+  ungroup() %>%
+  mutate(UpstreamJunc_DownstreamJunc = paste(junc.UpstreamIntron, junc.GAGT, sep="_")) %>%
+  mutate(junc.skipping = if_else(
+    strand == "+",
+    str_replace(UpstreamJunc_DownstreamJunc, "^(chr.+?):(.+?):(.+?):([+-])_chr.+?:(.+?):(.+?):[+-]$", "\\1:\\2:\\6:\\4"),
+    str_replace(UpstreamJunc_DownstreamJunc, "^(chr.+?):(.+?):(.+?):([+-])_chr.+?:(.+?):(.+?):[+-]$", "\\1:\\5:\\3:\\4")
+  )) %>%
+  inner_join(
+    leafcutter_numers %>%
+      filter(clu %in% ClustersOfInterest) %>%
+      rowwise() %>% 
+      mutate(sumnumeric.Skipping = sum(c_across(where(is.numeric)), na.rm = T)) %>%
+      ungroup() %>%
+      dplyr::select(junc.skipping=junc, sumnumeric.Skipping)
+  )
+
+
+```
+
+Write out these junction trios, and manually check them in IGV...
+
+```{r, eval=F}
+CassetteExonsOfInterest %>%
+  mutate(GAGTIntron = junc.GAGT) %>%
+  dplyr::select(clu, GAGTIntron, junc.GAGT, junc.UpstreamIntron, junc.skipping, sumnumeric.Skipping) %>%
+  gather("Type","junc",contains("junc")) %>%
+  mutate(name = paste(Type, clu, GAGTIntron, sep="_")) %>%
+  separate(junc, into=c("chrom", "start", "stop", "strand"), sep=":", convert=T) %>%
+  mutate(thickStart = start, thickEnd=stop,
+         color = if_else(is.na(sumnumeric.Skipping), "255,0,0", "0,255,0")) %>%
+  dplyr::select(chrom, start, stop, name, sumnumeric.Skipping, strand, thickStart, thickEnd, color) %>%
+  arrange(chrom, start, stop) %>%
+  write_tsv("../output/SmallMoleculeGAGT_CassetteExonclusters.bed", col_names = F)
+    
+  
+```
+
+Ok, those largely make sense. Now perhaps the next step is to further filter these for ones where the flanking introns mark boundaries for "basic" tagged exons. Or do some kind of annotation on what I think the resulting trnascripts are stability-wise. I can also use these whole-exons for slightly less noisy quantification of PSI. I think I'll do this in python... It'll be easier to parse a gtf in python to find those flanking exons. So I'll write out these exons for reading in a seperate python script...
+
+
+
+
+... hours later, after doing some processing in python...
+
+## Splicing quantification by competing 3'ss
+
+Yang suggested rather than going through the trouble of definiing cassette exons and quantifying splicing as PSI, just get the within-cluster competing 3'ss to quantify splicing of the GAGT intron. Let's explore.
+
+```{r}
+leafcutter_numers
+
+```
+

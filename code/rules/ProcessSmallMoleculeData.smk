@@ -228,3 +228,36 @@ rule FitDoseResponseLogLogisticModel:
         Rscript scripts/FitSmallMoleculeModels.R &> {log}
         """
 
+
+rule Get_Fit_GAGTInts_bed:
+    input:
+        IntronModelParams = "SmallMolecule/FitModels/polyA_GAGTIntrons.tsv.gz",
+    output:
+        bed = "SmallMolecule/FitModels/polyA_GAGTIntrons.bed.gz",
+        tbi = "SmallMolecule/FitModels/polyA_GAGTIntrons.bed.gz.tbi",
+    shell:
+        """
+        zcat {input.IntronModelParams} | awk -F'\\t' 'NR>1 {{print $1}}' | sort | uniq |  awk -F'\\t' -v OFS='\\t' '{{split($1, a, ":"); print a[1], a[2], a[3], $1, ".", a[4]}}' | bedtools sort -i - | bgzip /dev/stdin -c > {output.bed}
+        tabix -p bed {output.bed}
+        """
+
+rule IndexCassetteExons:
+    """
+    input bed file from ../analysis/20230314_ProcessSM_ForInterpretableSplicingEffectSizes.Rmd
+    """
+    input:
+        bed = "../output/SmallMoleculeGAGT_CassetteExonclusters.bed",
+        fai = "ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa.fai"
+    output:
+        FlankingBases = "SmallMolecule/CassetteExons/FlankingBases.tsv"
+    shell:
+        """
+        paste -d'\\t' <(grep 'junc.skipping' {input.bed} | awk -F'\\t' -v OFS='\\t' '{{$3=$3-1; print $0}}' | bedtools flank -s -l 1 -r 0 -i - -g {input.fai}) <(grep 'junc.skipping' {input.bed} | awk -F'\\t' -v OFS='\\t' '{{$3=$3-1; print $0}}' | bedtools flank -s -l 0 -r 1 -i - -g {input.fai}) | awk -F'\\t' -v OFS='\\t' 'BEGIN {{print "SkipJuncName", "Chrom", "strand", "UpstreamFlankBaseStart", "UpstreamFlankBaseEnd", "DownstreamFlankBaseStart", "DownstreamFlankBaseEnd"}} $4==$13 {{print $4, $1, $6, $2, $3, $11, $12}}' > {output}
+        """
+
+
+# rule featureCountInducedCassetteExons:
+#     input:
+#     output:
+#         saf = "SmallMolecule/CassetteExons/CassetteExons.saf",
+#         counts = "SmallMolecule/CassetteExons/Counts.txt"

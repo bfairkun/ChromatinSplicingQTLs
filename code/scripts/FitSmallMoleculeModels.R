@@ -201,6 +201,113 @@ for(i in 1:nrow(model.dat.df.FilteredGAGT)) {
 ModelFits.Coefficients.GAGTIntrons <- bind_rows(Results, .id="junc")
 
 
+### TIDY SPLICING DATA JUST COMPETING 3ss
+leafcutter.counts <- read.table("../code/SmallMolecule/leafcutter/clustering/autosomes/leafcutter_perind_numers.counts.gz", header=T, sep=' ') %>% as.matrix()
+
+ClusterMax.mat <- leafcutter.counts %>%
+    as.data.frame() %>%
+    rownames_to_column("junc") %>%
+    mutate(cluster=str_replace(junc, "^(.+?):.+?:.+?:(.+)$", "\\1_\\2")) %>%
+    group_by(cluster) %>%
+    mutate(across(where(is.numeric), sum)) %>%
+    ungroup() %>%
+    dplyr::select(junc, everything(), -cluster) %>%
+    column_to_rownames("junc") %>%
+    as.matrix()
+
+PSI.df <- (leafcutter.counts / as.numeric(ClusterMax.mat) * 100) %>%
+  signif() %>%
+  as.data.frame() %>%
+  rownames_to_column("Leafcutter.ID") %>%
+  mutate(Intron = str_replace(Leafcutter.ID, "(.+?):(.+?):(.+?):clu_.+?_([+-])$", "\\1:\\2:\\3:\\4"))
+
+Intron.Donors <- fread("../code/SmallMolecule/leafcutter/JuncfilesMerged.annotated.basic.bed.5ss.tab.gz", col.names = c("Intron", "DonorSeq", "DonorScore")) %>%
+  mutate(Intron = str_replace(Intron, "(.+?)_(.+?)_(.+?)_(.+?)::.+?$", "\\1:\\2:\\3:\\4"))
+
+PSI.tidy <- PSI.df %>%
+  left_join(Intron.Donors) %>%
+  gather("Sample", "PSI",contains("_")) %>%
+  inner_join(
+    leafcutter.counts %>%
+      as.data.frame() %>%
+      rownames_to_column("Leafcutter.ID") %>%
+      mutate(Intron = str_replace(Leafcutter.ID, "(.+?):(.+?):(.+?):clu_.+?_([+-])$", "\\1:\\2:\\3:\\4")) %>%
+      gather("Sample", "Counts",contains("_"))
+  ) %>%
+  separate(Sample, into=c("treatment", "dose.nM", "Cell.type", "LibraryType", "rep"), sep="_", convert=T) %>%
+  replace_na(list(dose.nM=0))
+
+# Spearman correlation of dose and gene
+Spearman.cors.CPM <- CPM.StandardNormFactors.tidy %>%
+  nest(-Geneid) %>% 
+  mutate(cor=map(data,~cor.test(.x$dose.nM, .x$CPM, method = "sp"))) %>%
+  mutate(tidied = map(cor, tidy)) %>%
+  unnest(tidied, .drop = T)
+
+# Spearman of dose and PSI
+chRNADoses <- c(0, 100, 3160)
+
+
+model.dat.df.AllGAGT <- PSI.tidy %>%
+  filter(LibraryType == "polyA") %>%
+  drop_na() %>%
+  add_count(Intron) %>%
+  filter(n==11) %>%
+  mutate(Is.GA.GT = substr(DonorSeq, 3,4)) %>%
+  filter(Is.GA.GT == "GA") %>%
+  nest(-Intron) %>%
+  mutate(cor=map(data,~cor.test(.x$dose.nM, .x$PSI, method = "sp", alternative="greater"))) %>%
+  mutate(tidied = map(cor, tidy)) %>% 
+  unnest(tidied, .drop = T) %>%
+  dplyr::select(Intron:data, spearman=estimate, spearman.p = p.value) %>%
+  mutate(q = qvalue(spearman.p)$qvalues)
+
+
+#pre-filter data for model fitting. just do GAGT introns with positive dose response cor (q<0.01)
+model.dat.df.FilteredGAGT <- model.dat.df.AllGAGT %>%
+  filter(q<0.01) %>%
+  dplyr::select(junc=Intron, everything())
+
+# Fit model for splicing data
+Results <- list()
+for(i in 1:nrow(model.dat.df.FilteredGAGT)) {
+# for(i in 1:10) {
+  tryCatch(
+    expr = {
+      junc <- model.dat.df.FilteredGAGT$junc[i]
+      data <- model.dat.df.FilteredGAGT$data[i] %>% as.data.frame()
+      fit <- drm(formula = PSI ~ dose.nM,
+                  data = data,
+                  fct = LL.4(names=c("Steepness", "LowerLimit", "UpperLimit", "ED50")),
+                  lowerl=c(NA,0,NA,NA),
+                  upperl=c(NA,NA,100,NA),
+                  robust = "mean"
+                  )
+      df.out <- 
+        bind_rows(
+          coef(summary(fit)) %>%
+            as.data.frame() %>%
+            rownames_to_column("param") %>%
+            dplyr::select(param, Estimate, SE=`Std. Error`),
+          predict(fit, data.frame(dose.nM=chRNADoses), se.fit = T) %>%
+            as.data.frame() %>%
+            dplyr::rename("Estimate"="Prediction") %>%
+            mutate(param=paste("Pred",chRNADoses, sep="_"))
+        )
+      Results[[junc]] <- df.out
+      message("Successfully fitted model.")
+    },
+    error=function(e){
+      if (i < 100){
+        cat("ERROR :",conditionMessage(e), junc, "\n")
+      }
+      })
+}
+
+ModelFits.Coefficients.GAGTIntrons <- bind_rows(Results, .id="junc")
+
+
+
 #Model genes
 
 model.dat.df.CPM.StandardNormFactors <- CPM.StandardNormFactors.tidy %>%
