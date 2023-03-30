@@ -1,0 +1,32 @@
+---
+title: "test_md_format"
+output: html_document
+date: '2023-03-30'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+- <input type="checkbox" unchecked> Venus</input>
+- <input type="checkbox" checked> Mars</input>
+
+Figures to make:
+1. Placeholder, Nascent RNA reveals abundance of NMD-destined transcripts
+2.	sQTLs, eQTLs
+b.	Enrichment of annotations in transcriptional vs post-transcriptional eQTLs. Classify transcriptional vs post-transcriptional by comparing hQTL to eQTL significance (or effect size).
+c.	QQ-plot of eQTL signal, grouped by hQTLs, sQTLs that affect productive junctions, and sQTLs that affect unproductive junctions
+d.	polyA sQTL beta vs polyA eQTL beta scatter, faceted by stable vs unstable.
+e.	Beta vs beta spearman slope with different lines for chRNA, 4sU, polyA, faceted by stable vs unstable
+3.	Contribution of splicing-mediated decay to complex trait
+a.	A single GWAS trait (ie MS) QQ plot, colored by splicing-mediated eQTLs, transcription-mediated QTLs, productive-AS sQTLs
