@@ -231,8 +231,10 @@ rule CollectBasicMapping:
         
 rule CollectFinemapping:
     input:
-        "FineMapping/Genotypes/1KG_GRCh38/EUR.txt.bgz.tbi",
-        "FineMapping/susie_runs/susie_output.tab"
+        expand("FineMapping/susie_runs_{Subset}/susie_output.tab",
+               Subset = ["Geuvadis", "EUR", "YRI"])
+        #"FineMapping/Genotypes/1KG_GRCh38/EUR.txt.bgz.tbi",
+        #"FineMapping/susie_runs/susie_output.tab"
           
 rule collect_metaplot:
     input:
@@ -258,3 +260,9 @@ rule collect_metaplot:
         expand("Metaplots/AssayProfiles/Plots/{Phenotype}.{IndID}.{metaplot}.png",
             Phenotype = ["H3K36ME3"], IndID = ['NA18486'],
             metaplot=["CDS", "gene"]),
+            
+rule H3K36ME3_corr:
+    input:
+        "QTLs/QTLTools/H3K36ME3/OnlyFirstRepsUnstandardized.Encode.qqnorm.bed.gz",
+        "QTLs/QTLTools/H3K36ME3/OnlyFirstRepsUnstandardized.qqnorm.bed.gz",
+        "QTLs/QTLTools/H3K36ME3/OnlyFirstRepsUnstandardized.Last3K.qqnorm.bed.gz"

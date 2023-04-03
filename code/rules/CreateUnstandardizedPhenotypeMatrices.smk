@@ -190,3 +190,33 @@ rule CollectUnstandardizedTables:
             # )
 
 
+rule UnstandardizedRNASeqForAllGenes:
+    input:
+        "featureCounts/chRNA.Expression/Counts.txt",
+        "featureCounts/polyA.Expression/Counts.txt",
+        "featureCounts/MetabolicLabelled.30min/Counts.txt",
+        "featureCounts/MetabolicLabelled.60min/Counts.txt",
+        "QTLs/QTLTools/Expression.Splicing.Subset_YRI/OnlyFirstReps.qqnorm.bed.gz"
+    output:
+        "QTLs/QTLTools/chRNA.Expression.Splicing/OnlyFirstRepsUnstandardized.AllGenes.qqnorm.bed.gz",
+        "QTLs/QTLTools/Expression.Splicing/OnlyFirstRepsUnstandardized.AllGenes.qqnorm.bed.gz",
+        "QTLs/QTLTools/MetabolicLabelled.30min/OnlyFirstRepsUnstandardized.AllGenes.qqnorm.bed.gz",
+        "QTLs/QTLTools/MetabolicLabelled.60min/OnlyFirstRepsUnstandardized.AllGenes.qqnorm.bed.gz",
+    resources:
+        mem_mb = 62000
+    log:
+        "logs/Unstandardized.allgenes.log"
+    conda:
+        "../envs/r_2.yaml"
+    shell:
+        """
+        Rscript scripts/Normalize_RNASeq_allGenes.R &> {log}
+        """
+        
+rule collect_unstandardized_for_plot:
+    input:
+        "QTLs/QTLTools/chRNA.Expression.Splicing/OnlyFirstRepsUnstandardized.AllGenes.qqnorm.bed.gz",
+        "QTLs/QTLTools/Expression.Splicing/OnlyFirstRepsUnstandardized.AllGenes.qqnorm.bed.gz",
+        "QTLs/QTLTools/MetabolicLabelled.30min/OnlyFirstRepsUnstandardized.AllGenes.qqnorm.bed.gz",
+        "QTLs/QTLTools/MetabolicLabelled.60min/OnlyFirstRepsUnstandardized.AllGenes.qqnorm.bed.gz",
+        

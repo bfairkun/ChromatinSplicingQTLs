@@ -39,14 +39,28 @@ rule GatherWholeGenomeVcfEUR:
         tabix -p vcf {output.vcf}
         """
 
-rule EUR_VCF2Txt:
+def GetWholeGenomeVCFForSubset(wildcards):
+    if wildcards.Subset == "Geuvadis":
+        return "QTLs/QTLTools/Expression.Splicing/Genotypes/WholeGenome.vcf.gz"
+    else:
+        return  "QTLs/QTLTools/Expression.Splicing.Subset_{Subset}/Genotypes/WholeGenome.vcf.gz"
+
+def GetBGZOutput(wildcards):
+    if wildcards.Subset=="":
+        return "FineMapping/Genotypes/1KG_GRCh38/Geuvadis.txt.bgz"
+    else:
+        return "FineMapping/Genotypes/1KG_GRCh38/{Subset}.txt.bgz"
+
+rule VCF2Txt:
     input:
-        "QTLs/QTLTools/Expression.Splicing.Subset_EUR/Genotypes/WholeGenome.vcf.gz"
+        GetWholeGenomeVCFForSubset # "QTLs/QTLTools/Expression.Splicing.Subset_EUR/Genotypes/WholeGenome.vcf.gz"
     output:
-        gz = temp("FineMapping/Genotypes/1KG_GRCh38/EUR.txt.gz"),
-        bgz = "FineMapping/Genotypes/1KG_GRCh38/EUR.txt.bgz"
+        gz = temp("FineMapping/Genotypes/1KG_GRCh38/{Subset}.txt.gz"),
+        bgz = "FineMapping/Genotypes/1KG_GRCh38/{Subset}.txt.bgz"
     log:
-        "logs/FineMapping/vcf2txt.EUR.log"
+        "logs/FineMapping/vcf2txt.{Subset}.log"
+    wildcard_constraints:
+        Subset = "Geuvadis|YRI|EUR"
     conda:
         "../envs/py_tools.yml"
     resources:
@@ -59,11 +73,13 @@ rule EUR_VCF2Txt:
 
 rule TabixSNPTables:
     input:
-        "FineMapping/Genotypes/1KG_GRCh38/EUR.txt.bgz"
+        "FineMapping/Genotypes/1KG_GRCh38/{Subset}.txt.bgz"
     output:
-        "FineMapping/Genotypes/1KG_GRCh38/EUR.txt.bgz.tbi"
+        "FineMapping/Genotypes/1KG_GRCh38/{Subset}.txt.bgz.tbi"
     log:
-        "logs/FineMapping/vcftabix.EUR.log"
+        "logs/FineMapping/vcftabix.{Subset}.log"
+    wildcard_constraints:
+        Subset = "Geuvadis|YRI|EUR"
     resources:
         mem_mb = 12000
     shell:
@@ -71,20 +87,34 @@ rule TabixSNPTables:
         tabix -s 1 -b 2 -e 2 {input} &> {log}
         """
 
+def GetSusieInputNominal(wildcards):
+    if wildcards.Subset == "Geuvadis":
+        return "QTLs/QTLTools/Expression.Splicing/NominalPass.txt.gz"
+    else:
+        return "QTLs/QTLTools/Expression.Splicing.Subset_{Subset}/NominalPass.txt.gz"
+
+def GetSusieInputPermutation(wildcards):
+    if wildcards.Subset == "Geuvadis":
+        return "QTLs/QTLTools/Expression.Splicing/PermutationPass.FDR_Added.txt.gz"
+    else:
+        return "QTLs/QTLTools/Expression.Splicing.Subset_{Subset}/PermutationPass.FDR_Added.txt.gz"
+
+
 rule run_susie:
     input:
-        nominal = "QTLs/QTLTools/Expression.Splicing.Subset_EUR/NominalPass.txt.gz",
-        permutation = "QTLs/QTLTools/Expression.Splicing.Subset_EUR/PermutationPass.FDR_Added.txt.gz", 
-        genotype = "FineMapping/Genotypes/1KG_GRCh38/EUR.txt.bgz"
+        nominal = GetSusieInputNominal, # "QTLs/QTLTools/Expression.Splicing.Subset_{Subset}/NominalPass.txt.gz",
+        permutation = GetSusieInputPermutation, # "QTLs/QTLTools/Expression.Splicing.Subset_{Subset}/PermutationPass.FDR_Added.txt.gz", 
+        genotype = "FineMapping/Genotypes/1KG_GRCh38/{Subset}.txt.bgz",
+        tabix = "FineMapping/Genotypes/1KG_GRCh38/{Subset}.txt.bgz.tbi"
     output:
-        "FineMapping/susie_runs/susie_output.tab"
+        "FineMapping/susie_runs_{Subset}/susie_output.tab"
     log:
-        "logs/FineMapping/run_susie.log"
+        "logs/FineMapping/run_susie_{Subset}.log"
     resources:
         mem_mb = 32000
     shell:
         """
-        Rscript scripts/run_susie.R {input.nominal} {input.permutation} {input.genotype} {output} &> {log}
+        Rscript scripts/run_susie.R {input.nominal} {input.permutation} {input.genotype} {wildcards.Subset} {output} &> {log}
         """
         
         
