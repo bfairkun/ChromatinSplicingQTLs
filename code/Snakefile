@@ -81,7 +81,8 @@ localrules:
     DownloadRefSeqGTF,
     SM_CopyFastqFromLocal,
     DownloadONTFastqFromLink,
-    ScorePWMSpliceSite
+    ScorePWMSpliceSite,
+    CalculatePi1_GetTraitPairs_AllTraits
 
 
 ruleorder: CopyFastqFromLocal > DownloadFastqFromLink

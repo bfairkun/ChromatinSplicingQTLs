@@ -109,10 +109,25 @@ rule IntersectTopSNPsFromPermutationPassWithAnnotations:
         (zcat {input.PermutationPass} | awk -F' ' -v OFS='\\t' 'NR>1 {{print {params} }}' |  grep -v '^NA' | bedtools sort -i - | bedtools intersect -a - -b <(zcat {input.bed} | awk -F'\\t' -v OFS='\\t' '{{print $1,$2,$3,$4}}' ) -wao | gzip - > {output} ) &> {log}
         """
 
+rule IntersectTopSNPsFromPermutationPass_ColocWindow_WithAnnotations:
+    input:
+        bed = "QTL_SNP_Enrichment/Annotations.bed.gz",
+        PermutationPass = "QTLs/QTLTools/{Phenotype}/PermutationPassForColoc.txt.gz",
+    output:
+        "QTL_SNP_Enrichment/TopSNPIntersections_ForColocWindows/{Phenotype}.bed.gz"
+    log:
+        "logs/IntersectTopSNPsFromPermutationPass_ColocWindow_WithAnnotations/{Phenotype}.log"
+    params:
+        GetAwkCommandForParseQTLToolsPermutationPass = '$9, $10, $11, $8, ".", ".", $1";"$3";"$4";"$18";"$21";"$22'
+    shell:
+        """
+        (zcat {input.PermutationPass} | awk -F' ' -v OFS='\\t' 'NR>1 {{print {params} }}' |  grep -v '^NA' | bedtools sort -i - | bedtools intersect -a - -b <(zcat {input.bed} | awk -F'\\t' -v OFS='\\t' '{{print $1,$2,$3,$4}}' ) -wao | gzip - > {output} ) &> {log}
+        """
+
 rule GatherFinemapSNPAnnotationIntersections:
     input:
         expand("QTL_SNP_Enrichment/FinemapIntersections/{ColocRun}.bed.gz", ColocRun = colocs_genewise.index)
 
 rule GatherIntersectTopSNPsFromPermutationPassWithAnnotations:
     input:
-        expand("QTL_SNP_Enrichment/TopSNPIntersections/{Phenotype}.bed.gz", Phenotype = MyPhenotypes + ["chRNA.IR", "chRNA.IRjunctions"])
+        expand("QTL_SNP_Enrichment/TopSNPIntersections_ForColocWindows/{Phenotype}.bed.gz", Phenotype = PhenotypesToColoc)

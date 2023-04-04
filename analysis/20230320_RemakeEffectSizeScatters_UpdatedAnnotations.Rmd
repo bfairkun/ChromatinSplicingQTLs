@@ -1,0 +1,438 @@
+---
+title: "20230320_RemakeEffectSizeScatters_UpdatedAnnotations"
+output: html_document
+date: '2023-03-20'
+---
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+
+library(tidyverse)
+library(RColorBrewer)
+library(data.table)
+library(edgeR)
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family="Helvetica")))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+
+#test plot
+ggplot(mtcars, aes(x=mpg, y=cyl)) +
+  geom_point()
+
+# Annotation Colors
+ColorKey <- c(
+  "AnnotatedJunc_ProductiveCodingGene" = "#1f78b4",
+  "UnannotatedJunc_ProductiveCodingGene" = "#a6cee3",
+  "AnnotatedJunc_UnproductiveCodingGene" = "#e31a1c",
+  "UnannotatedJunc_UnproductiveCodingGene" = "#fb9a99",
+  "AnnotatedJunc_NoncodingGene" = "#6a3d9a",
+  "UnannotatedJunc_NoncodingGene" = "#cab2d6")
+
+```
+
+## Intro
+
+I previously made eQTL beta vs sQTL beta scatters, faceted by intron annotation to highlight the pervasiveness of eQTL predictable effects from sQTLs at non-productive junctions. Here I will remake such plots, similar to how I envision for publication, using Yang's new intron annotations.
+
+
+```{r, fig.height=7, fig.width=7}
+dat <- fread("../code/PairwisePi1Traits.P.all.txt.gz")
+
+dat$PC1 %>% unique()
+
+PC1.PossibleValues <- c("polyA.Splicing", "polyA.Splicing.Subset_YRI", "chRNA.Splicing")
+PC2.PossibleValues <-c("Expression.Splicing", "Expression.Splicing.Subset_YRI", "H3K4ME3", "H3K36ME3", "H3K27AC", "H3K4ME1", "MetabolicLabelled.30min", "MetabolicLabelled.60min", "chRNA.Expression.Splicing")
+
+Intron.Annotations <- read_tsv("../data/IntronAnnotationsFromYang.tsv.gz") %>%
+  mutate(IntronName = paste(chrom, start, end, strand, sep=":"))
+
+dat.sQTLs.eQTLs <- dat %>% filter(PC1 %in% PC1.PossibleValues  & PC2 %in% PC2.PossibleValues) %>%
+  mutate(IntronName = str_replace(P1, "^(.+?:)clu_.+?([+-])$", "chr\\1\\2")) %>%
+  mutate(ClusterName =  str_replace(P1, "^(.+?:).+?(clu_.+?[+-])$", "chr\\1\\2")) %>%
+  left_join(Intron.Annotations)
+
+
+PC1.filter = c("polyA.Splicing")
+PC2.filter = c("H3K36ME3", "chRNA.Expression.Splicing" , "MetabolicLabelled.30min", "MetabolicLabelled.60min", "Expression.Splicing", "Expression.Splicing.Subset_YRI")
+PC2.SignificanceFilter <- c("H3K4ME3", "H3K27AC", "H3K36ME3")
+
+
+dat.sQTLs.eQTLs$SuperAnnotation %>% unique()
+
+
+
+dat.sQTLs.eQTLs %>%
+  filter(PC1 %in% PC1.filter) %>%
+  group_by(P1) %>%
+  filter(!any((PC2 %in% PC2.SignificanceFilter) & (trait.x.p.in.y < 0.01))) %>%
+  ungroup() %>%
+  filter(PC2 %in% PC2.filter) %>%
+  filter(SuperAnnotation %in% c("UnannotatedJunc_UnproductiveCodingGene", "AnnotatedJunc_ProductiveCodingGene", "AnnotatedJunc_UnproductiveCodingGene", "UnannotatedJunc_ProductiveCodingGene")) %>%
+  mutate(SuperAnnotation = str_replace_all(SuperAnnotation, "_", " ")) %>%
+  filter(GeneLocus == gene) %>%
+  filter(FDR.x < 0.1) %>%
+  group_by(P2, PC2, SuperAnnotation) %>%
+  sample_n(1) %>%
+  ungroup() %>%
+  mutate(PC2 = factor(PC2, levels=PC2.filter)) %>%
+  # mutate(PC2 = recode(PC2, !!!c("chRNA.Expression.Splicing"="chRNA" , "MetabolicLabelled.30min"="30min 4sU", "MetabolicLabelled.60min"="60min 4sU", "Expression.Splicing"="polyA", "Expression.Splicing.Subset_YRI"="polyA YRI"))) %>%
+  # mutate(PC2 = factor(PC2, levels=c("H3K36ME3","chRNA", "30min 4sU", "60min 4sU", "polyA", "polyA YRI"))) %>%
+  ggplot(aes(x=beta.x, y=trait.x.beta.in.y)) +
+    geom_point(alpha=0.1) +
+    # geom_smooth(method = "tls", se = FALSE, color = "red", method='bootstrap') +
+    geom_smooth(method='lm') +
+    geom_vline(xintercept=0) +
+    geom_hline(yintercept=0) +
+    geom_text(
+    data = . %>%
+      group_by(SuperAnnotation, PC2) %>%
+      summarise(cor=cor.test(beta.x,trait.x.beta.in.y, method="s")[["estimate"]], pval=cor.test(beta.x,trait.x.beta.in.y, method="s")[["p.value"]]) %>%
+      mutate(R = signif(cor, 3), P=format.pval(pval, 3)) %>%
+      mutate(label = str_glue("rho:{R}\nP:{P}")),
+    aes(x=-Inf, y=-Inf, label=label),
+    hjust=-.1, vjust=-0.1, color='red', size=3
+    ) +
+    facet_grid(SuperAnnotation ~ PC2, labeller = label_wrap_gen(10)) +
+    theme_bw() +
+    theme(strip.text = element_text(size = 6)) +
+  labs(caption = "FDR<10% sQTLs. sQTLs with nominal P<0.01 for H3K36me3, H3K27Ac, or H3K4me3 removed", y="host gene eQTL", x="sQTL")
+
+
+```
+
+
+```{r, eval=F}
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/sQTL_eQTL_scatter_NewAnnotations_Temp.png")
+```
+
+Hmm. I wonder why the unannoated stable juncs still seem unstable. maybe they are connected to unstable junctions. Let's explore that.
+
+Let's plot the relative fraction of sQTL jucntion types within each cluster that is represented in each row.
+
+```{r}
+ColorKey.Spaces <- setNames(ColorKey, str_replace_all(names(ColorKey), "_", " "))
+
+sQTLs <- dat.sQTLs.eQTLs %>%
+  filter(PC1 %in% PC1.filter) %>%
+  group_by(P1) %>%
+  filter(!any((PC2 %in% PC2.SignificanceFilter) & (trait.x.p.in.y < 0.01))) %>%
+  ungroup() %>%
+  filter(PC2 %in% PC2.filter) %>%
+  filter(SuperAnnotation %in% c("UnannotatedJunc_UnproductiveCodingGene", "AnnotatedJunc_ProductiveCodingGene", "AnnotatedJunc_UnproductiveCodingGene", "UnannotatedJunc_ProductiveCodingGene")) %>%
+  mutate(SuperAnnotation = str_replace_all(SuperAnnotation, "_", " ")) %>%
+  mutate(SuperAnnotation = factor(SuperAnnotation, levels=names(ColorKey.Spaces))) %>%
+  distinct(IntronName, ClusterName, SuperAnnotation)
+
+sQTLs %>%
+  count(ClusterName) %>%
+  ggplot(aes(x=n)) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(0,5)) +
+  labs("Num sQTLs per sQTLs cluster")
+
+sQTLs %>%
+  count(SuperAnnotation) %>%
+  ggplot(aes(x=SuperAnnotation, y=n)) +
+  geom_col() +
+  labs("Num sQTLs in each category") +
+  coord_flip()
+
+left_join(sQTLs, sQTLs, by="ClusterName") %>%
+  filter(!IntronName.x == IntronName.y) %>%
+  count(SuperAnnotation.x, SuperAnnotation.y) %>%
+  ggplot(aes(x=SuperAnnotation.x, y=n, fill=SuperAnnotation.y)) +
+  geom_col(position="fill") +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) +
+  # scale_fill_manual(values = ColorKey.Spaces) +
+  Rotate_x_labels +
+  labs(title = "Unannotated productive sQTLs are linked to unannotated unproductive", fill="Intra cluster annotations", y="Fraction intra cluster sQTLs", x="sQTL group", caption="removed self introns from intra-cluster")
+
+left_join(sQTLs, sQTLs, by="ClusterName") %>%
+  count(SuperAnnotation.x, SuperAnnotation.y) %>%
+  ggplot(aes(x=SuperAnnotation.x, y=n, fill=SuperAnnotation.y)) +
+  geom_col(position="fill") +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) +
+  # scale_fill_manual(values = ColorKey.Spaces) +
+  Rotate_x_labels +
+  labs(title = "Unannotated productive sQTLs are linked to unannotated unproductive", fill="Intra cluster annotations", y="Fraction intra cluster sQTLs", x="sQTL group", caption="Included self introns in intra-cluster")
+
+left_join(sQTLs, sQTLs, by="ClusterName") %>%
+  count(SuperAnnotation.x, SuperAnnotation.y) %>%
+  filter(!SuperAnnotation.x == SuperAnnotation.y) %>%
+  ggplot(aes(x=SuperAnnotation.x, y=n, fill=SuperAnnotation.y)) +
+  geom_col(position="fill") +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) +
+  # scale_fill_manual(values = ColorKey.Spaces) +
+  Rotate_x_labels +
+  labs(title = "Unannotated productive sQTLs are linked to unannotated unproductive", fill="Intra cluster annotations", y="Fraction intra cluster sQTLs", x="sQTL group", caption="Included self type introns excluded")
+```
+
+Ok, so far it still seems plausible that the negative slope in unannotated productive juncs is just from linked unannotated unproductive juncs. Let's try filtering out all unannotated productive juncs with any intra cluster unproductive junc sQTL, and see if the slope levels out.
+
+```{r, fig.height=7, fig.width=7}
+dat.sQTLs.eQTLs %>%
+  filter(PC1 %in% PC1.filter) %>%
+  group_by(P1) %>%
+  filter(!any((PC2 %in% PC2.SignificanceFilter) & (trait.x.p.in.y < 0.01))) %>%
+  ungroup() %>%
+  filter(PC2 %in% PC2.filter) %>%
+  filter(SuperAnnotation %in% c("UnannotatedJunc_UnproductiveCodingGene", "AnnotatedJunc_ProductiveCodingGene", "AnnotatedJunc_UnproductiveCodingGene", "UnannotatedJunc_ProductiveCodingGene")) %>%
+  group_by(PC1, ClusterName) %>%
+  filter(!(SuperAnnotation == "UnannotatedJunc_ProductiveCodingGene" & any(SuperAnnotation %in% c("UnannotatedJunc_UnproductiveCodingGene", "AnnotatedJunc_UnproductiveCodingGene")))) %>%
+  ungroup() %>%
+  mutate(SuperAnnotation = str_replace_all(SuperAnnotation, "_", " ")) %>%
+  filter(GeneLocus == gene) %>%
+  filter(FDR.x < 0.1) %>%
+  group_by(P2, PC2, SuperAnnotation) %>%
+  sample_n(1) %>%
+  ungroup() %>%
+  mutate(PC2 = factor(PC2, levels=PC2.filter)) %>%
+  # mutate(PC2 = recode(PC2, !!!c("chRNA.Expression.Splicing"="chRNA" , "MetabolicLabelled.30min"="30min 4sU", "MetabolicLabelled.60min"="60min 4sU", "Expression.Splicing"="polyA", "Expression.Splicing.Subset_YRI"="polyA YRI"))) %>%
+  # mutate(PC2 = factor(PC2, levels=c("H3K36ME3","chRNA", "30min 4sU", "60min 4sU", "polyA", "polyA YRI"))) %>%
+  ggplot(aes(x=beta.x, y=trait.x.beta.in.y)) +
+    geom_point(alpha=0.1) +
+    # geom_smooth(method = "tls", se = FALSE, color = "red", method='bootstrap') +
+    geom_smooth(method='lm') +
+    geom_vline(xintercept=0) +
+    geom_hline(yintercept=0) +
+    geom_text(
+    data = . %>%
+      group_by(SuperAnnotation, PC2) %>%
+      summarise(cor=cor.test(beta.x,trait.x.beta.in.y, method="s")[["estimate"]], pval=cor.test(beta.x,trait.x.beta.in.y, method="s")[["p.value"]]) %>%
+      mutate(R = signif(cor, 3), P=format.pval(pval, 3)) %>%
+      mutate(label = str_glue("rho:{R}\nP:{P}")),
+    aes(x=-Inf, y=-Inf, label=label),
+    hjust=-.1, vjust=-0.1, color='red', size=3
+    ) +
+    facet_grid(SuperAnnotation ~ PC2, labeller = label_wrap_gen(10)) +
+    theme_bw() +
+    theme(strip.text = element_text(size = 6)) +
+  labs(caption = "FDR<10% sQTLs. sQTLs with nominal P<0.01 for H3K36me3, H3K27Ac, or H3K4me3 removed\nUnannotated productive with intra cluster unproductive sQTLs removed", y="host gene eQTL", x="sQTL")
+
+# ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/sQTL_eQTL_scatter_NewAnnotations_Temp_RemovedSomeIntraClusterEffects.png")
+
+
+```
+
+Hmm, i don't think that was all that an improvement in showing less effect in the unannotated productive compared to annotatied unproductive and unannotated unproductive. Just to verify and code the basically same thing a different way, let's filter for Unannotated productive sQTLs with only annotated productive clusters in the same cluster.
+
+```{r, fig.height=7, fig.width=7}
+
+dat.sQTLs.eQTLs %>%
+  filter(PC1 %in% PC1.filter) %>%
+  group_by(P1) %>%
+  filter(!any((PC2 %in% PC2.SignificanceFilter) & (trait.x.p.in.y < 0.01))) %>%
+  ungroup() %>%
+  filter(PC2 %in% PC2.filter) %>%
+  filter(SuperAnnotation %in% c("UnannotatedJunc_UnproductiveCodingGene", "AnnotatedJunc_ProductiveCodingGene", "AnnotatedJunc_UnproductiveCodingGene", "UnannotatedJunc_ProductiveCodingGene")) %>%
+  group_by(PC1, ClusterName) %>%
+  filter((!SuperAnnotation == "UnannotatedJunc_ProductiveCodingGene") | (SuperAnnotation == "UnannotatedJunc_ProductiveCodingGene" & all(SuperAnnotation %in% c("AnnotatedJunc_ProductiveCodingGene", "UnannotatedJunc_ProductiveCodingGene")))) %>%
+  ungroup() %>%
+  mutate(SuperAnnotation = str_replace_all(SuperAnnotation, "_", " ")) %>%
+  filter(GeneLocus == gene) %>%
+  filter(FDR.x < 0.1) %>%
+  group_by(P2, PC2, SuperAnnotation) %>%
+  sample_n(1) %>%
+  ungroup() %>%
+  mutate(PC2 = factor(PC2, levels=PC2.filter)) %>%
+  # mutate(PC2 = recode(PC2, !!!c("chRNA.Expression.Splicing"="chRNA" , "MetabolicLabelled.30min"="30min 4sU", "MetabolicLabelled.60min"="60min 4sU", "Expression.Splicing"="polyA", "Expression.Splicing.Subset_YRI"="polyA YRI"))) %>%
+  # mutate(PC2 = factor(PC2, levels=c("H3K36ME3","chRNA", "30min 4sU", "60min 4sU", "polyA", "polyA YRI"))) %>%
+  ggplot(aes(x=beta.x, y=trait.x.beta.in.y)) +
+    geom_point(alpha=0.1) +
+    # geom_smooth(method = "tls", se = FALSE, color = "red", method='bootstrap') +
+    geom_smooth(method='lm') +
+    geom_vline(xintercept=0) +
+    geom_hline(yintercept=0) +
+    geom_text(
+    data = . %>%
+      group_by(SuperAnnotation, PC2) %>%
+      summarise(cor=cor.test(beta.x,trait.x.beta.in.y, method="s")[["estimate"]], pval=cor.test(beta.x,trait.x.beta.in.y, method="s")[["p.value"]]) %>%
+      mutate(R = signif(cor, 3), P=format.pval(pval, 3)) %>%
+      mutate(label = str_glue("rho:{R}\nP:{P}")),
+    aes(x=-Inf, y=-Inf, label=label),
+    hjust=-.1, vjust=-0.1, color='red', size=3
+    ) +
+    facet_grid(SuperAnnotation ~ PC2, labeller = label_wrap_gen(10)) +
+    theme_bw() +
+    theme(strip.text = element_text(size = 6)) +
+  labs(caption = "FDR<10% sQTLs. sQTLs with nominal P<0.01 for H3K36me3, H3K27Ac, or H3K4me3 removed\nUnannotated productive with intra cluster unproductive sQTLs removed", y="host gene eQTL", x="sQTL")
+
+
+```
+
+Ok, I guess that may be the best it is going to get in short time.. If I had more time I would consider doing something more fancy, like plotting each cluster only once and coming up with a cluster-level sQTL effect score, eQTL score, and annotation. But, I think what I am doing now is satisfactory... The only thing I am still not satisfied with is the random sampling. I can select a seed for consistent results, but from playing around with this I know different seeds change results a bit... see below...
+
+```{r, fig.height=7, fig.width=7}
+
+set.seed(0)
+
+dat.sQTLs.eQTLs %>%
+  filter(PC1 %in% PC1.filter) %>%
+  group_by(P1) %>%
+  filter(!any((PC2 %in% PC2.SignificanceFilter) & (trait.x.p.in.y < 0.01))) %>%
+  ungroup() %>%
+  filter(PC2 %in% PC2.filter) %>%
+  filter(SuperAnnotation %in% c("UnannotatedJunc_UnproductiveCodingGene", "AnnotatedJunc_ProductiveCodingGene", "AnnotatedJunc_UnproductiveCodingGene", "UnannotatedJunc_ProductiveCodingGene")) %>%
+  group_by(PC1, ClusterName) %>%
+  filter((!SuperAnnotation == "UnannotatedJunc_ProductiveCodingGene") | (SuperAnnotation == "UnannotatedJunc_ProductiveCodingGene" & all(SuperAnnotation %in% c("AnnotatedJunc_ProductiveCodingGene", "UnannotatedJunc_ProductiveCodingGene")))) %>%
+  ungroup() %>%
+  mutate(SuperAnnotation = str_replace_all(SuperAnnotation, "_", " ")) %>%
+  filter(GeneLocus == gene) %>%
+  filter(FDR.x < 0.1) %>%
+  group_by(P2, PC2, SuperAnnotation) %>%
+  sample_n(1) %>%
+  ungroup() %>%
+  mutate(PC2 = factor(PC2, levels=PC2.filter)) %>%
+  # mutate(PC2 = recode(PC2, !!!c("chRNA.Expression.Splicing"="chRNA" , "MetabolicLabelled.30min"="30min 4sU", "MetabolicLabelled.60min"="60min 4sU", "Expression.Splicing"="polyA", "Expression.Splicing.Subset_YRI"="polyA YRI"))) %>%
+  # mutate(PC2 = factor(PC2, levels=c("H3K36ME3","chRNA", "30min 4sU", "60min 4sU", "polyA", "polyA YRI"))) %>%
+  ggplot(aes(x=beta.x, y=trait.x.beta.in.y)) +
+    geom_point(alpha=0.1) +
+    # geom_smooth(method = "tls", se = FALSE, color = "red", method='bootstrap') +
+    geom_smooth(method='lm') +
+    geom_vline(xintercept=0) +
+    geom_hline(yintercept=0) +
+    geom_text(
+    data = . %>%
+      group_by(SuperAnnotation, PC2) %>%
+      summarise(cor=cor.test(beta.x,trait.x.beta.in.y, method="s")[["estimate"]], pval=cor.test(beta.x,trait.x.beta.in.y, method="s")[["p.value"]]) %>%
+      mutate(R = signif(cor, 3), P=format.pval(pval, 3)) %>%
+      mutate(label = str_glue("rho:{R}\nP:{P}")),
+    aes(x=-Inf, y=-Inf, label=label),
+    hjust=-.1, vjust=-0.1, color='red', size=3
+    ) +
+    facet_grid(SuperAnnotation ~ PC2, labeller = label_wrap_gen(10)) +
+    theme_bw() +
+    theme(strip.text = element_text(size = 6)) +
+  labs(caption = "FDR<10% sQTLs. sQTLs with nominal P<0.01 for H3K36me3, H3K27Ac, or H3K4me3 removed\nUnannotated productive with intra cluster unproductive sQTLs removed", y="host gene eQTL", x="sQTL")
+
+set.seed(1)
+
+dat.sQTLs.eQTLs %>%
+  filter(PC1 %in% PC1.filter) %>%
+  group_by(P1) %>%
+  filter(!any((PC2 %in% PC2.SignificanceFilter) & (trait.x.p.in.y < 0.01))) %>%
+  ungroup() %>%
+  filter(PC2 %in% PC2.filter) %>%
+  filter(SuperAnnotation %in% c("UnannotatedJunc_UnproductiveCodingGene", "AnnotatedJunc_ProductiveCodingGene", "AnnotatedJunc_UnproductiveCodingGene", "UnannotatedJunc_ProductiveCodingGene")) %>%
+  group_by(PC1, ClusterName) %>%
+  filter((!SuperAnnotation == "UnannotatedJunc_ProductiveCodingGene") | (SuperAnnotation == "UnannotatedJunc_ProductiveCodingGene" & all(SuperAnnotation %in% c("AnnotatedJunc_ProductiveCodingGene", "UnannotatedJunc_ProductiveCodingGene")))) %>%
+  ungroup() %>%
+  mutate(SuperAnnotation = str_replace_all(SuperAnnotation, "_", " ")) %>%
+  filter(GeneLocus == gene) %>%
+  filter(FDR.x < 0.1) %>%
+  group_by(P2, PC2, SuperAnnotation) %>%
+  sample_n(1) %>%
+  ungroup() %>%
+  mutate(PC2 = factor(PC2, levels=PC2.filter)) %>%
+  # mutate(PC2 = recode(PC2, !!!c("chRNA.Expression.Splicing"="chRNA" , "MetabolicLabelled.30min"="30min 4sU", "MetabolicLabelled.60min"="60min 4sU", "Expression.Splicing"="polyA", "Expression.Splicing.Subset_YRI"="polyA YRI"))) %>%
+  # mutate(PC2 = factor(PC2, levels=c("H3K36ME3","chRNA", "30min 4sU", "60min 4sU", "polyA", "polyA YRI"))) %>%
+  ggplot(aes(x=beta.x, y=trait.x.beta.in.y)) +
+    geom_point(alpha=0.1) +
+    # geom_smooth(method = "tls", se = FALSE, color = "red", method='bootstrap') +
+    geom_smooth(method='lm') +
+    geom_vline(xintercept=0) +
+    geom_hline(yintercept=0) +
+    geom_text(
+    data = . %>%
+      group_by(SuperAnnotation, PC2) %>%
+      summarise(cor=cor.test(beta.x,trait.x.beta.in.y, method="s")[["estimate"]], pval=cor.test(beta.x,trait.x.beta.in.y, method="s")[["p.value"]]) %>%
+      mutate(R = signif(cor, 3), P=format.pval(pval, 3)) %>%
+      mutate(label = str_glue("rho:{R}\nP:{P}")),
+    aes(x=-Inf, y=-Inf, label=label),
+    hjust=-.1, vjust=-0.1, color='red', size=3
+    ) +
+    facet_grid(SuperAnnotation ~ PC2, labeller = label_wrap_gen(10)) +
+    theme_bw() +
+    theme(strip.text = element_text(size = 6)) +
+  labs(caption = "FDR<10% sQTLs. sQTLs with nominal P<0.01 for H3K36me3, H3K27Ac, or H3K4me3 removed\nUnannotated productive with intra cluster unproductive sQTLs removed", y="host gene eQTL", x="sQTL")
+
+```
+
+So maybe different solution is to just pick the strongest sQTL within each cluster.
+
+```{r}
+dat.sQTLs.eQTLs %>%
+  filter(PC1 %in% PC1.filter) %>%
+  group_by(P1) %>%
+  filter(!any((PC2 %in% PC2.SignificanceFilter) & (trait.x.p.in.y < 0.01))) %>%
+  ungroup() %>%
+  filter(PC2 %in% PC2.filter) %>%
+  filter(SuperAnnotation %in% c("UnannotatedJunc_UnproductiveCodingGene", "AnnotatedJunc_ProductiveCodingGene", "AnnotatedJunc_UnproductiveCodingGene", "UnannotatedJunc_ProductiveCodingGene")) %>%
+  group_by(PC1, ClusterName) %>%
+  filter((!SuperAnnotation == "UnannotatedJunc_ProductiveCodingGene") | (SuperAnnotation == "UnannotatedJunc_ProductiveCodingGene" & all(SuperAnnotation %in% c("AnnotatedJunc_ProductiveCodingGene", "UnannotatedJunc_ProductiveCodingGene")))) %>%
+  filter(abs(beta.x) == max(abs(beta.x))) %>%
+  ungroup() %>%
+  mutate(SuperAnnotation = str_replace_all(SuperAnnotation, "_", " ")) %>%
+  filter(GeneLocus == gene) %>%
+  filter(FDR.x < 0.1) %>%
+  group_by(P2, PC2, SuperAnnotation) %>%
+  sample_n(1) %>%
+  ungroup() %>%
+  mutate(PC2 = factor(PC2, levels=PC2.filter)) %>%
+  # mutate(PC2 = recode(PC2, !!!c("chRNA.Expression.Splicing"="chRNA" , "MetabolicLabelled.30min"="30min 4sU", "MetabolicLabelled.60min"="60min 4sU", "Expression.Splicing"="polyA", "Expression.Splicing.Subset_YRI"="polyA YRI"))) %>%
+  # mutate(PC2 = factor(PC2, levels=c("H3K36ME3","chRNA", "30min 4sU", "60min 4sU", "polyA", "polyA YRI"))) %>%
+  ggplot(aes(x=beta.x, y=trait.x.beta.in.y)) +
+    geom_point(alpha=0.1) +
+    # geom_smooth(method = "tls", se = FALSE, color = "red", method='bootstrap') +
+    geom_smooth(method='lm') +
+    geom_vline(xintercept=0) +
+    geom_hline(yintercept=0) +
+    geom_text(
+    data = . %>%
+      group_by(SuperAnnotation, PC2) %>%
+      summarise(cor=cor.test(beta.x,trait.x.beta.in.y, method="s")[["estimate"]], pval=cor.test(beta.x,trait.x.beta.in.y, method="s")[["p.value"]]) %>%
+      mutate(R = signif(cor, 3), P=format.pval(pval, 3)) %>%
+      mutate(label = str_glue("rho:{R}\nP:{P}")),
+    aes(x=-Inf, y=-Inf, label=label),
+    hjust=-.1, vjust=-0.1, color='red', size=3
+    ) +
+    facet_grid(SuperAnnotation ~ PC2, labeller = label_wrap_gen(10)) +
+    theme_bw() +
+    theme(strip.text = element_text(size = 6)) +
+  labs(caption = "FDR<10% sQTLs. sQTLs with nominal P<0.01 for H3K36me3, H3K27Ac, or H3K4me3 removed\nUnannotated productive with intra cluster unproductive sQTLs removed\nOnly top sQTL per cluster plotted", y="host gene eQTL", x="sQTL")
+
+dat.sQTLs.eQTLs %>%
+  filter(PC1 %in% PC1.filter) %>%
+  group_by(P1) %>%
+  filter(!any((PC2 %in% PC2.SignificanceFilter) & (trait.x.p.in.y < 0.01))) %>%
+  ungroup() %>%
+  filter(PC2 %in% PC2.filter) %>%
+  filter(SuperAnnotation %in% c("UnannotatedJunc_UnproductiveCodingGene", "AnnotatedJunc_ProductiveCodingGene", "AnnotatedJunc_UnproductiveCodingGene", "UnannotatedJunc_ProductiveCodingGene")) %>%
+  group_by(PC1, ClusterName) %>%
+  filter(abs(beta.x) == max(abs(beta.x))) %>%
+  ungroup() %>%
+  mutate(SuperAnnotation = str_replace_all(SuperAnnotation, "_", " ")) %>%
+  filter(GeneLocus == gene) %>%
+  filter(FDR.x < 0.1) %>%
+  group_by(P2, PC2, SuperAnnotation) %>%
+  sample_n(1) %>%
+  ungroup() %>%
+  mutate(PC2 = factor(PC2, levels=PC2.filter)) %>%
+  # mutate(PC2 = recode(PC2, !!!c("chRNA.Expression.Splicing"="chRNA" , "MetabolicLabelled.30min"="30min 4sU", "MetabolicLabelled.60min"="60min 4sU", "Expression.Splicing"="polyA", "Expression.Splicing.Subset_YRI"="polyA YRI"))) %>%
+  # mutate(PC2 = factor(PC2, levels=c("H3K36ME3","chRNA", "30min 4sU", "60min 4sU", "polyA", "polyA YRI"))) %>%
+  ggplot(aes(x=beta.x, y=trait.x.beta.in.y)) +
+    geom_point(alpha=0.1) +
+    # geom_smooth(method = "tls", se = FALSE, color = "red", method='bootstrap') +
+    geom_smooth(method='lm') +
+    geom_vline(xintercept=0) +
+    geom_hline(yintercept=0) +
+    geom_text(
+    data = . %>%
+      group_by(SuperAnnotation, PC2) %>%
+      summarise(cor=cor.test(beta.x,trait.x.beta.in.y, method="s")[["estimate"]], pval=cor.test(beta.x,trait.x.beta.in.y, method="s")[["p.value"]]) %>%
+      mutate(R = signif(cor, 3), P=format.pval(pval, 3)) %>%
+      mutate(label = str_glue("rho:{R}\nP:{P}")),
+    aes(x=-Inf, y=-Inf, label=label),
+    hjust=-.1, vjust=-0.1, color='red', size=3
+    ) +
+    facet_grid(SuperAnnotation ~ PC2, labeller = label_wrap_gen(10)) +
+    theme_bw() +
+    theme(strip.text = element_text(size = 6)) +
+  labs(caption = "FDR<10% sQTLs. sQTLs with nominal P<0.01 for H3K36me3, H3K27Ac, or H3K4me3 removed\nOnly top sQTL per cluster plotted", y="host gene eQTL", x="sQTL")
+```
+

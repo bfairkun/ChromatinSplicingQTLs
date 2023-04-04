@@ -1,0 +1,503 @@
+---
+title: "20230324_MakeFigs"
+output: html_document
+date: '2023-03-24'
+---
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+
+library(tidyverse)
+library(RColorBrewer)
+library(data.table)
+library(edgeR)
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family="Helvetica")))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+
+#test plot
+ggplot(mtcars, aes(x=mpg, y=cyl)) +
+  geom_point()
+
+```
+
+## Intro
+
+I notebook to make figure panels for publication...
+
+
+Figures to make:
+
+1.	Placeholder, Nascent RNA reveals abundance of NMD-destined transcripts
+
+2.	sQTLs, eQTLs
+
+<input type="checkbox" unchecked></input>a.	pi heatmap across promoter hQTLs, H3K36me3, chRNA, 4sU, polyA. Number of QTLs in margin
+
+<input type="checkbox" unchecked></input>b.	Enrichment of annotations in transcriptional vs post-transcriptional eQTLs. Classify transcriptional vs post-transcriptional by comparing hQTL to eQTL significance (or effect size).
+
+<input type="checkbox" unchecked></input>c.	QQ-plot of eQTL signal, grouped by hQTLs, sQTLs that affect productive junctions, and sQTLs that affect unproductive junctions
+
+<input type="checkbox" unchecked></input>d.	polyA sQTL beta vs polyA eQTL beta scatter, faceted by stable vs unstable.
+
+<input type="checkbox" unchecked></input>e.	Beta vs beta spearman slope with different lines for chRNA, 4sU, polyA, faceted by stable vs unstable
+
+
+
+3.	Contribution of splicing-mediated decay to complex trait
+
+<input type="checkbox" unchecked></input>a.	A single GWAS trait (ie MS) QQ plot, colored by splicing-mediated eQTLs, transcription-mediated QTLs, productive-AS sQTLs
+
+<input type="checkbox" unchecked></input>b.	Heatmap of similar enrichment in A, but across many traits
+
+<input type="checkbox" unchecked></input>c.	Example locus showing colocalization eQTL/sQTL/GWAS scatter, and IGV screenshot of the splicing and eQTL effect
+
+4.	The effect of splice-modifying drugs on gene expression
+
+<input type="checkbox" unchecked></input>a.	Cartoon showing inset with risdiplam bulge repair, along with dose:response trend showing the tested doses and the increasing response in GA|GT but not AG|GT splicing.
+
+<input type="checkbox" unchecked></input>b.	Scatter that shows splicing vs expression effect, faeted by productive unproductive. Or something like that
+
+<input type="checkbox" unchecked></input>c.	Something that shows the 4B effect is not in chRNA
+
+<input type="checkbox" unchecked></input>d.	An illustrative example effect in IGV.
+
+
+
+Supplemental Figures to make
+
+1.	Placeholder
+
+2.	sQTLs, eQTLs
+
+<input type="checkbox" unchecked></input>a.	Total number of QTLs in each type of type of trait. Bargraph, with multiple lines for different FDR levels
+
+<input type="checkbox" unchecked></input>b.	Correlation of effect sizes across promoter hQTLs, H3K36me3, chRNA, 4sU, polyA
+
+<input type="checkbox" unchecked></input>i.	Need to select set of eQTLs to plot… Previous versions of this plot I tend to just pick colocalized things. That would be easiest.
+
+<input type="checkbox" unchecked></input>c.	sQTL QQ plot, with different colors for post-transcriptional eQTLs to transcriptional eQTLs (like what Carlos has done in red and black)
+
+<input type="checkbox" unchecked></input>d.	eQTL QQ plot, with different colors for H3K27AC QTLs and sQTLs
+
+<input type="checkbox" unchecked></input>e.	lead gene-wise sQTLs are not strongly enriched for eQTLs compared to control SNPs. eQTL QQ-plot with top gene-wise sQTL SNP, compared to some controls. Or do this with a pi1, and can use various thresholds
+
+<input type="checkbox" unchecked></input>f.	enrichment of eQTL signals is explained by both primary and non-primary eQTL signals (FigX). More precisely, we used the SuSiE finemapping approach which does not assume a single causal SNP for each expression trait, and can thus be used to finemap multiple eQTL signals per gene. We find that approximately x% of primary signals could be overlapped with sQTLs, compared to y% of primary signals that we could overlap to hQTLs. Furthermore, x% and y% of non primary signals could be mapped sQTLs and hQTLs, respectively
+
+<input type="checkbox" unchecked></input>g.	More extensive version of 2d, so we can explain the nuances in filtering out transcriptional effects, and there are some lingering non-NMD effects that are degraded in cytoplasm
+
+3.	Contribution of splicing-mediated decay to complex trait
+
+<input type="checkbox" unchecked></input>a.	Colocalization framework cartoon
+
+<input type="checkbox" unchecked></input>b.	Version of 3b that uses colocalization. Shown as barplots similar to Phoenix’s paper
+
+4.	The effect of splice-modifying drugs on gene expression
+
+<input type="checkbox" unchecked></input>a.	In total, we observe x% of observed non-canonincal GA-GT splice sites are activated with x criteria… ecdf of spearman correlation coefficient, for different groups of 5’ss.
+
+
+## Figure2
+
+### A
+pi heatmap of gene-feature QTLs. Num QTLs in margin.
+
+Only include hQTLs at promoter, chRNA, 4sU, and polyA.
+
+```{r}
+library(qvalue)
+library(viridis)
+
+PeaksToTSS <- Sys.glob("../code/Misc/PeaksClosestToTSS/*_assigned.tsv.gz") %>%
+  setNames(str_replace(., "../code/Misc/PeaksClosestToTSS/(.+?)_assigned.tsv.gz", "\\1")) %>%
+  lapply(read_tsv) %>%
+  bind_rows(.id="ChromatinMark") %>%
+  mutate(GenePeakPair = paste(gene, peak, sep = ";")) %>%
+  distinct(ChromatinMark, peak, gene, .keep_all=T)
+
+PC1.filter <- c("Expression.Splicing", "MetabolicLabelled.30min", "MetabolicLabelled.60min", "H3K36ME3", "H3K27AC", "H3K4ME3", "H3K4ME1", "Expression.Splicing.Subset_YRI", "chRNA.Expression.Splicing")
+
+dat <- fread("../code/pi1/PairwisePi1Traits.P.all.txt.gz") %>%
+  filter((PC1 %in% PC1.filter) & (PC2 %in% PC1.filter))
+
+dat$PC1 %>% unique()
+
+PhenotypeAliases <- read_tsv("../data/Phenotypes_recode_for_Plotting.txt")
+
+
+```
+
+Many genes have multiple promoters that should all be accounted for as potential transcriptional effects. So calculating pi1 can be tricky. I want to ask the question, "What fraction of eQTLs have a promoter hQTL in at least one of the promoters?"... I have already solved this problem... For each gene, get lowest P value for across tests (ie all the promoters) and use that a a test statistic to come up with a new Pvalue, to calculate pi1. The test statistic distribution under the null can be approximate by drawing from uniform n times.
+
+First we need to approximate that null using `runif`...
+
+```{r}
+MaxSampleSizeToCreateANull <- 250
+NSamplesToEstimateDistribution <- 10000
+NullSimulatedTestStats <- matrix(nrow=MaxSampleSizeToCreateANull, ncol=NSamplesToEstimateDistribution)
+rownames(NullSimulatedTestStats) <- paste0("runif_samplesize", 1:MaxSampleSizeToCreateANull)
+colnames(NullSimulatedTestStats) <- paste0("Sample_", 1:NSamplesToEstimateDistribution)
+
+
+for (i in 1:MaxSampleSizeToCreateANull){
+  SampleSizeFromUniform <- i
+  SampledDat <- matrix(runif(SampleSizeFromUniform*NSamplesToEstimateDistribution), nrow=NSamplesToEstimateDistribution)
+  SampleDatNullTestStatistics <- -log10(apply(SampledDat, 1, min))
+  NullSimulatedTestStats[i,] <- SampleDatNullTestStatistics
+}
+
+
+NullSimulatedTestStats %>%
+  as.data.frame() %>%
+  rownames_to_column("runif_samplesize") %>%
+  slice(1:250) %>%
+  mutate(runif_samplesize = as.numeric(str_remove(runif_samplesize, "runif_samplesize"))) %>%
+  gather(key="Sample", value="value", -runif_samplesize) %>%
+  ggplot(aes(x=value, color=runif_samplesize, group=runif_samplesize)) +
+  geom_density() +
+  scale_color_viridis_c() +
+  theme_bw() +
+  labs(x="Test statistic under null\n-log10(MinP) across n draws from uniform", color="n")
+
+ecdf.functions <- apply(NullSimulatedTestStats, 1, ecdf)
+ecdf.functions[[1]](1)
+
+```
+
+Make a function to calculate pi1
+
+```{r}
+
+# pi0est function breaks sometimes. this wrapper function returns 1 when that happens
+CalculatePi1 <- function (dat.in, ...) {
+  return(tryCatch(1-pi0est(dat.in$Pvals.For.Pi1, ...)$pi0, error=function(e) 1))
+}
+
+```
+
+
+And now, recode peaks as promoters, and calculate test statistics.
+
+```{r}
+
+Recode.PCs = c("ActivatingMark_HostGenePromoter"="Promoter marks*", "H3K36ME3"="H3K36ME3", "chRNA.Expression.Splicing"="chRNA", "MetabolicLabelled.30min"="4sU 30min", "MetabolicLabelled.60min"="4sU 60min", "Expression.Splicing.Subset_YRI"="polyA YRI", "Expression.Splicing"="polyA")
+
+ActivatingMarksToConsider <- c("H3K27AC")
+
+ProcessPi1HeatmapDat <- function(FDR.cutoff=0.1){
+  dat.split <- dat %>%
+  filter(FDR.x < FDR.cutoff) %>%
+  mutate(PC1 = case_when(
+    paste(GeneLocus, P1, sep=";") %in% PeaksToTSS$GenePeakPair & PC1 %in% ActivatingMarksToConsider ~ "ActivatingMark_HostGenePromoter",
+    P1 %in% PeaksToTSS$peak ~ "ActivatingMark_OtherGenePromoter",
+    PC1 %in% c("H3K4ME1", "H3K4ME3", "H3K27AC") ~ "ActivatingMark_Enhancer",
+    TRUE ~ PC1
+  )) %>%
+  mutate(PC2 = case_when(
+    paste(GeneLocus, P2, sep=";") %in% PeaksToTSS$GenePeakPair & PC2 %in% ActivatingMarksToConsider ~ "ActivatingMark_HostGenePromoter",
+    P2 %in% PeaksToTSS$peak ~ "ActivatingMark_OtherGenePromoter",
+    PC2 %in% c("H3K4ME1", "H3K4ME3", "H3K27AC") ~ "ActivatingMark_Enhancer",
+    TRUE ~ PC2
+  )) %>%
+  group_by(PC1, P1, PC2) %>%
+  mutate(test.stat.obs = -log10(min(trait.x.p.in.y))) %>%
+  ungroup() %>%
+  add_count(PC1, P1, PC2) %>%
+  filter(n<=250) %>%
+  group_by(PC1, PC2) %>%
+  rowwise() %>%
+  mutate(Pvals.For.Pi1 = 1-ecdf.functions[[n]](test.stat.obs)) %>%
+  ungroup() %>%
+  select(PC1, PC2, Pvals.For.Pi1) %>%
+  filter(!PC1==PC2) %>%
+  split(paste(.$PC1, .$PC2, sep = ";"))
+dat.out <- lapply(dat.split, CalculatePi1, pi0.method="bootstrap") %>%
+  unlist() %>%
+  data.frame(pi1=.) %>%
+  rownames_to_column("PC1_PC2") %>%
+  separate(PC1_PC2, into=c("PC1", "PC2"), sep=';') %>%
+  filter((PC1%in% c(PC1.filter, "ActivatingMark_HostGenePromoter") & (PC2%in% c(PC1.filter, "ActivatingMark_HostGenePromoter") ))) %>%
+  mutate(TextColor = case_when(
+    pi1 >= 0.7 ~ "white",
+    TRUE ~ "black"
+  )) %>%
+mutate(PC1 = recode(PC1, !!!Recode.PCs)) %>%
+mutate(PC2 = recode(PC2, !!!Recode.PCs)) %>%
+mutate(PC1 = factor(PC1, levels=Recode.PCs)) %>%
+mutate(PC2 = factor(PC2, levels=Recode.PCs))
+P <- ggplot(dat.out, aes(x=PC1, y=PC2, fill=pi1, color=TextColor)) +
+  geom_raster() +
+  geom_text(aes(label=signif(pi1*100, 2))) +
+  scale_color_identity() +
+  scale_fill_viridis_c(option="A", direction = -1, limits=c(0,1)) +
+  coord_flip() +
+  scale_x_discrete(limits=rev) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(x="Discovery QTL phenotype", y="Phenotype assessed for overlap", caption=paste("*Promoter marks include", paste(ActivatingMarksToConsider, collapse=",")))
+return(list(dat=dat, P=P))
+}
+
+ProcessPi1HeatmapDat()$P
+```
+
+Redo, but also consider both H3K27AC and H3K4ME3 at promoter...
+
+```{r}
+ActivatingMarksToConsider <- c("H3K27AC", "H3K4ME3")
+
+ProcessPi1HeatmapDat()$P
+```
+
+Redo but consider H3K4ME3, H3K4ME1, and H3K27AC
+
+```{r}
+ActivatingMarksToConsider <- c("H3K27AC", "H3K4ME3", "H3K4ME1")
+
+ProcessPi1HeatmapDat()$P
+
+```
+In theory things should only go up as you include H3K4ME1, but that is not the case. This phenomena is something I've noticed before, and I think it's because adding non-overlapping phenotypes to promoter marks only modestly increases the lowest P-value, but more greatly can increase the n number of features used to determine the null.
+
+So, let's now include H3K4ME1. This is more thought of as an enhancer rather than promoter mark anyway.
+
+So now let's redo, but only include H3K27AC and H3K4ME3 but use lower FDR cutoffs.
+
+```{r}
+ActivatingMarksToConsider <- c("H3K27AC", "H3K4ME3")
+
+ProcessPi1HeatmapDat(FDR.cutoff = 0.05)$P
+
+
+ProcessPi1HeatmapDat(FDR.cutoff = 0.01)$P
+```
+
+Ok, cool. I mean slightly different versions. I'll leave it to Yang as to which version should be the main figure, and perhaps we can include alternate versions as supplements.  In every case though I notice that the top right corner is dark, suggesting histone effects can be picked up pretty well in downstream assays (ie polyA), but the bottom left corner is light, because of post-transcriptional mechanisms of gene regulation.
+
+- [ ] save final prettier versions, with axes flipped (yang likes discovery on x-axis)
+- [ ] save alternate versions for supplement, with different FDR thresholds
+
+### B
+
+Now I need a way to classify eQTLs as transcriptional or post-transcriptional. Carlos has previously used effect sizes in polyA vs chRNA. I may do something similar. First let's some scatter plots of effect sizes
+
+
+```{r}
+
+FDR.cutoff <- 0.1
+ActivatingMarksToConsider <- c("H3K27AC", "H3K4ME3")
+
+dat.recoded <- dat %>%
+  filter(FDR.x < FDR.cutoff) %>%
+  mutate(PC1 = case_when(
+    paste(GeneLocus, P1, sep=";") %in% PeaksToTSS$GenePeakPair & PC1 %in% ActivatingMarksToConsider ~ PC1,
+    P1 %in% PeaksToTSS$peak ~ "ActivatingMark_OtherGenePromoter",
+    PC1 %in% c("H3K4ME1", "H3K4ME3", "H3K27AC") ~ "ActivatingMark_Enhancer",
+    TRUE ~ PC1
+  )) %>%
+  mutate(PC2 = case_when(
+    paste(GeneLocus, P2, sep=";") %in% PeaksToTSS$GenePeakPair & PC2 %in% ActivatingMarksToConsider ~ PC2,
+    P1 %in% PeaksToTSS$peak ~ "ActivatingMark_OtherGenePromoter",
+    PC2 %in% c("H3K4ME1", "H3K4ME3", "H3K27AC") ~ "ActivatingMark_Enhancer",
+    TRUE ~ PC2
+  ))
+
+dat.recoded %>%
+  filter(PC1 == "Expression.Splicing") %>%
+  filter(!str_detect(PC2, "ActivatingMark_Enhancer")) %>%
+  filter(!str_detect(PC2, "ActivatingMark_OtherGenePromoter")) %>%
+  group_by(PC1, P1, PC2) %>%
+  slice(which.min(trait.x.p.in.y)) %>%
+  ungroup() %>%
+  ggplot(aes(x=beta.x, y=x.beta.in.y)) +
+  geom_point(alpha=0.1) +
+  facet_wrap(~PC2) +
+  labs(x="eQTL beta", y="facetQTL beta")
+
+
+```
+
+I think what I want to do is to first consider eQTLs in polyA, then perform one-sided test for significant differences in beta for corresponding feature in chRNA/promoterMarks. For simplicity, I think I can use Z-test, like [this](https://stats.stackexchange.com/questions/55501/test-a-significant-difference-between-two-slope-values), but first, to check that this approach is reasonable, I think I'm going to check that Z-scores from random trait pairs closely follow normal distribution as they should under null. Also, I note that winners curse will bias things since I am conditioning on significant QTLs for polyA, then assessing difference in betas between polyA vs chRNA/promoter. But since only the polyA beta is subject to winners curse bias, it will turn out being overly convervative for the SNP enrichments I'm trying to highlight (because some transcriptional QTLs might erronesouly be classified as non-trancriptional) so i think that's acceptable.
+
+```{r}
+PC1.filter = "Expression.Splicing"
+
+dat.ZsFromAllTraitPairs <- dat.recoded %>%
+  filter(PC1 == PC1.filter) %>%
+  filter(!str_detect(PC2, "ActivatingMark_Enhancer")) %>%
+  filter(!str_detect(PC2, "ActivatingMark_OtherGenePromoter")) %>%
+  group_by(PC1, P1, PC2) %>%
+  slice(which.min(trait.x.p.in.y)) %>%
+  ungroup() %>%
+  filter(!is.na(x.beta.in.y)) %>%
+  distinct(PC1, P1, PC2, .keep_all=T) %>%
+  mutate(Z = (abs(beta.x)-abs(x.beta.in.y)*sign(beta.x)*sign(x.beta.in.y))/sqrt(x.beta_se.in.y**2 + beta_se.x**2)) %>%
+  mutate(OneSidedZTest.P = pnorm(Z, lower.tail=F)) %>%
+  group_by(PC1, PC2) %>%
+  mutate(q = qvalue(OneSidedZTest.P)$qvalues) %>%
+  mutate(PolyASpecific = cut(q, breaks=c(0, 0.01, 0.05, 0.1, 1), include.lowest=T, ordered_result = T))
+
+
+dat.ZsFromAllTraitPairs %>%
+ggplot(aes(x=beta.x, y=x.beta.in.y, color=PolyASpecific)) +
+  geom_point(alpha=0.1) +
+  scale_color_manual(values = rev(brewer.pal(4, "Reds"))) +
+  facet_wrap(~PC2) +
+  guides(colour = guide_legend(override.aes = list(alpha = 1))) +
+  labs(color="PolyA-specific FDR")
+
+dat.ZsFromAllTraitPairs %>%
+ggplot(aes(x=beta.x, y=x.beta.in.y, color=PolyASpecific=="[0,0.01]")) +
+  geom_point(alpha=0.1) +
+  facet_wrap(~PC2) +
+  guides(colour = guide_legend(override.aes = list(alpha = 1))) +
+  labs(color="PolyA-specific FDR < 0.01")
+
+dat.ZsFromAllTraitPairs %>%
+  count(PC1, PC2, PolyASpecific) %>%
+  ggplot(aes(x=PC2, y=n, fill=fct_rev(PolyASpecific))) +
+  geom_col(position="stack") +
+  scale_fill_manual(values = brewer.pal(4, "Reds")) +
+  Rotate_x_labels
+
+dat.ZsFromAllTraitPairs %>%
+  count(PC1, PC2, PolyASpecific) %>%
+  ggplot(aes(x=PC2, y=n, fill=fct_rev(PolyASpecific))) +
+  geom_col(position="fill") +
+  scale_fill_manual(values = brewer.pal(4, "Reds")) +
+  Rotate_x_labels
+
+```
+
+Okay, keep in mind that there is both biology and power issues at play... Biologically, I would expect very few polyA-specific eQTLs when comparing to 4sU, yet there are basically the same amount of polyA-specific eQTLs in that comparison as when comparing to chRNA. One could chalk that up to the 4sU dataset being so underpowered, that a lot more eQTLs would be considered polyA specific. Similarly, that could explain why so many are polyA-specific when comparing to the relatively underpowered H3K36me3 dataset.
+
+Let's do the same but anchor on YRI eQTLs..
+
+```{r}
+PC1.filter = "Expression.Splicing.Subset_YRI"
+
+dat.ZsFromAllTraitPairs <- dat.recoded %>%
+  filter(PC1 == PC1.filter) %>%
+  filter(!str_detect(PC2, "ActivatingMark_Enhancer")) %>%
+  filter(!str_detect(PC2, "ActivatingMark_OtherGenePromoter")) %>%
+  group_by(PC1, P1, PC2) %>%
+  slice(which.min(trait.x.p.in.y)) %>%
+  ungroup() %>%
+  filter(!is.na(x.beta.in.y)) %>%
+  distinct(PC1, P1, PC2, .keep_all=T) %>%
+  mutate(Z = (abs(beta.x)-abs(x.beta.in.y)*sign(beta.x)*sign(x.beta.in.y))/sqrt(x.beta_se.in.y**2 + beta_se.x**2)) %>%
+  mutate(OneSidedZTest.P = pnorm(Z, lower.tail=F)) %>%
+  group_by(PC1, PC2) %>%
+  mutate(q = qvalue(OneSidedZTest.P)$qvalues)
+
+dat.ZsFromAllTraitPairs %>%
+  mutate(PolyASpecific = cut(q, breaks=c(0, 0.01, 0.05, 0.1, 1), include.lowest=T, ordered_result = T)) %>%
+ggplot(aes(x=beta.x, y=x.beta.in.y, color=PolyASpecific)) +
+  geom_point(alpha=0.1) +
+  scale_color_manual(values = rev(brewer.pal(4, "Reds"))) +
+  facet_wrap(~PC2) +
+  guides(colour = guide_legend(override.aes = list(alpha = 1))) +
+  labs(color="PolyA-specific FDR")
+
+dat.ZsFromAllTraitPairs %>%
+  mutate(PolyASpecific = cut(q, breaks=c(0, 0.01, 0.05, 0.1, 1), include.lowest=T, ordered_result = T)) %>%
+  # mutate(PolyASpecific = cut(OneSidedZTest.P, breaks=c(0, 0.01, 0.05, 0.1, 1), include.lowest=T, ordered_result = T)) %>%
+  count(PC1, PC2, PolyASpecific) %>%
+  ggplot(aes(x=PC2, y=n, fill=fct_rev(PolyASpecific))) +
+  geom_col(position="stack") +
+  scale_fill_manual(values = brewer.pal(4, "Reds")) +
+  Rotate_x_labels
+
+dat.ZsFromAllTraitPairs %>%
+  mutate(PolyASpecific = cut(q, breaks=c(0, 0.01, 0.05, 0.1, 1), include.lowest=T, ordered_result = T)) %>%
+  # mutate(PolyASpecific = cut(OneSidedZTest.P, breaks=c(0, 0.01, 0.05, 0.1, 1), include.lowest=T, ordered_result = T)) %>%
+  count(PC1, PC2, PolyASpecific) %>%
+  ggplot(aes(x=PC2, y=n, fill=fct_rev(PolyASpecific))) +
+  geom_col(position="fill") +
+  scale_fill_manual(values = brewer.pal(4, "Reds")) +
+  Rotate_x_labels
+```
+
+Let's explore Carlos' susie finemapping output
+
+```{r}
+susie.finemap <- fread("/project2/yangili1/cfbuenabadn/ChromatinSplicingQTLs/code/FineMapping/susie_runs_Geuvadis/susie_output.tab")
+ 
+susie.finemap %>%
+  distinct(cs_gene, cs_names) %>%
+  count(cs_gene) %>%
+  ggplot(aes(x=n)) +
+  geom_bar() +
+  labs(y="Num genes", x="Num eQTL signals")
+
+susie.finemap %>%
+  group_by(cs_gene, cs_names) %>%
+  summarise(PIP.sum = sum(cs_pip)) %>%
+  ungroup() %>%
+  ggplot(aes(x=PIP.sum)) +
+  stat_ecdf() +
+  labs(x="Sum PIP in CI", title="These are 95% CIs") +
+  coord_cartesian(xlim=c(0.9,1))
+
+susie.finemap %>%
+  count(cs_gene, cs_names) %>%
+  ggplot(aes(x=n)) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(0,20)) +
+  labs(x="Num SNPs in CI")
+
+```
+
+Ok great, next I will intersect the finemapped SNPs with annotations, and sum up the number of SNPs in each annotation (weighted by PIP), and compare transcriptional vs post-transcriptional eQTLs. I think I'll do some work in the snakemake to accomplish this and come back to it...
+
+## FigS2C
+
+sQTL QQ plot, with different colors for post-transcriptional eQTLs to transcriptional eQTLs (like what Carlos has done in red and black)
+
+```{r}
+transcriptional.PC2s <- c("chRNA.Expression.Splicing", "H3K27AC", "H3K4ME3")
+
+transcriptional.eQTLs <- dat.ZsFromAllTraitPairs %>%
+  filter(PC2 %in% transcriptional.PC2s) %>%
+  mutate(IsPolyASpecific = q < 0.01 & trait.x.p.in.y>0.01 )
+
+count(transcriptional.eQTLs, IsPolyASpecific, PC2)
+
+
+PC1.filter <- c("Expression.Splicing", "Expression.Splicing.Subset_YRI")
+
+PC1.sQTL.filter <- c("polyA.Splicing", "polyA.Splicing.Subset_YRI", "chRNA.Splicing")
+
+
+dat.forsQTLQQ <- fread("../code/pi1/PairwisePi1Traits.P.all.txt.gz") %>%
+  filter((PC1 %in% PC1.filter) & (PC2 %in% PC1.sQTL.filter))
+
+dat.forsQTLQQ %>%
+  inner_join(
+    transcriptional.eQTLs %>%
+    dplyr::select(ClassificationPC = PC2, IsPolyASpecific, P1, PC1)
+  ) %>%
+  group_by(PC1, PC2, IsPolyASpecific, ClassificationPC ) %>%
+  mutate(ExpectedP = percent_rank(trait.x.p.in.y)) %>%
+  ungroup() %>%
+  ggplot(aes(x=-log10(ExpectedP), y=-log10(trait.x.p.in.y), color=IsPolyASpecific)) +
+  # geom_abline(slope=1, intercept=1)
+  geom_point() +
+  geom_abline(slope=1) +
+  facet_grid(PC2~ClassificationPC, scales = "free") +
+  labs(x="Expected -log10P", y="Observed -log10P", title="sQTL QQ for top eQTL SNPs", caption="Column facets: criteria to determine polyA-specific eQTLs\nRow facets: sQTL dataset")
+
+```
+
+
+## Fig2c
+
+The eQTL QQplot of transcriptional
+
+
+

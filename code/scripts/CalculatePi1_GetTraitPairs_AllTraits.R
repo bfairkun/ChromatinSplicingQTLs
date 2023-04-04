@@ -16,7 +16,7 @@ if(interactive()){
     args <- commandArgs(trailingOnly=TRUE)
 }
 
-Num_f_out_chunks <- args[1]
+Num_f_out_chunks <- as.numeric(args[1])
 f_out_prefix <- args[2]
 permutation_f_in <- args[-c(1:2)]
 
@@ -29,7 +29,7 @@ PermutationPass.dat <- permutation_f_in %>%
   setNames(str_replace(., "QTLs/QTLTools/(.+?)/PermutationPassForColoc.txt.gz", "\\1")) %>%
   lapply(read_delim, delim=' ') %>%
   bind_rows(.id="Phenotype") %>%
-  select(PC=Phenotype, phe_id, p_permutation=adj_beta_pval, beta=slope, singletrait_topvar=var_id, singletrait_topvar_chr = var_chr, singletrait_topvar_pos=var_from) %>%
+  select(PC=Phenotype, phe_id, p_permutation=adj_beta_pval, beta=slope, beta_se=slope_se, singletrait_topvar=var_id, singletrait_topvar_chr = var_chr, singletrait_topvar_pos=var_from) %>%
   group_by(PC) %>%
   mutate(FDR = qvalue(p_permutation)$qvalues) %>%
   mutate(phe_id = str_replace(phe_id, "(.+):(.+)$", "\\1;\\2")) %>%
@@ -43,7 +43,7 @@ dat.pairs <- PermutationPass.dat %>%
   separate(Trait.x, into=c("PC1", "P1"), sep=";") %>%
   separate(Trait.y, into=c("PC2", "P2"), sep=";") %>%
   group_by(GeneLocus) %>%
-  mutate(Random = sample(10,1))
+  mutate(Random = sample(Num_f_out_chunks,1))
 
 dat.pairs %>%
   group_by(Random) %>%

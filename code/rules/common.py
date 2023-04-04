@@ -6,7 +6,7 @@ import glob
 autosomes = [str(i) for i in range(1,23)]
 
 N_PermutationChunks = 100
-NumPvalsForPi1Chunks = 10
+NumPvalsForPi1Chunks = 40
 
 ChunkNumbers = range(0, 1+N_PermutationChunks) 
 

@@ -27,7 +27,7 @@ rule GatherChunks:
 rule GetPvalsForPi1AllTraitPairs:
     input:
         TraitsToCompare = "pi1/PairwiseTraitsToCompare/{chunk}.txt.gz",
-        tabix_QTLsOut = expand("QTLs/QTLTools/{Phenotype}/NominalPassForColoc.txt.tabix.gz", Phenotype=MyPhenotypes)
+        tabix_QTLsOut = expand("QTLs/QTLTools/{Phenotype}/NominalPassForColoc.txt.tabix.gz", Phenotype=PhenotypesToColoc)
     output:
         "pi1/PairwiseTraitsToCompare/P.{chunk}.txt.gz"
     log:
