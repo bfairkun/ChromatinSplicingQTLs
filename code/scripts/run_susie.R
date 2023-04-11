@@ -7,7 +7,8 @@ args = commandArgs(trailingOnly=TRUE)
 nominal = args[1]
 perm = args[2]
 genotype = args[3]
-output = args[4]
+Subset = args[4]
+output = args[5]
 
 
 nominal <- read.table(nominal, sep=' ', header=TRUE)
@@ -41,7 +42,7 @@ run_susie <- function(nominal.gene, gene, header, genotype) {
     tryCatch({
         susie_out <- susie_rss(Z, XCor, L=3, n=n)
     } , error = function(e){
-        susie_out <- susie_rss(Z, GenCor, L=3, n=n, estimate_prior_variance = FALSE)
+        susie_out <- susie_rss(Z, XCor, L=3, n=n, estimate_prior_variance = FALSE)
     }
     )
     
@@ -71,7 +72,7 @@ for (gene in genes) {
     
     susie_out <- run_susie(nominal.gene, gene, header, genotype)
     
-    susie_rdata_file <- paste0('FineMapping/susie_runs/', gene, '.RData')
+    susie_rdata_file <- paste0('FineMapping/susie_runs_', Subset, '/', gene, '.RData')
     
     save(susie_out, file = susie_rdata_file)
     

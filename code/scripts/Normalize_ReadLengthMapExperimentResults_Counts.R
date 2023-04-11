@@ -44,9 +44,19 @@ rpkm <- counts %>%
   as.data.frame() %>%
   rownames_to_column("pid")
 
-standardized %>%
-  dplyr::select(1:6) %>%
+bed <- standardized %>%
+  dplyr::select(1:6)
+bed['Length'] <- counts$Length
+
+bed %>%
   inner_join(
     rpkm
   ) %>%
-  write_tsv(out.fn)
+write_tsv(out.fn)
+
+# standardized %>%
+#   dplyr::select(1:6) %>%
+#   inner_join(
+#     rpkm
+#   ) %>%
+#   write_tsv(out.fn)

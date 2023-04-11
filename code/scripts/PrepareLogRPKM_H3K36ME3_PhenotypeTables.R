@@ -32,7 +32,7 @@ counts <- read_tsv(counts.fn) %>%
 
 rpkm <- counts %>%
   column_to_rownames("pid") %>%
-  dplyr::select(-c(1:5)) %>%
+  dplyr::select(-c(1:5), -Length) %>%
   DGEList() %>%
   calcNormFactors() %>%
   rpkm(prior.count=0.1, log=T, gene.length=counts$Length) %>%
