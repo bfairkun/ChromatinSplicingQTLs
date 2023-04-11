@@ -255,6 +255,50 @@ rule IndexCassetteExons:
         paste -d'\\t' <(grep 'junc.skipping' {input.bed} | awk -F'\\t' -v OFS='\\t' '{{$3=$3-1; print $0}}' | bedtools flank -s -l 1 -r 0 -i - -g {input.fai}) <(grep 'junc.skipping' {input.bed} | awk -F'\\t' -v OFS='\\t' '{{$3=$3-1; print $0}}' | bedtools flank -s -l 0 -r 1 -i - -g {input.fai}) | awk -F'\\t' -v OFS='\\t' 'BEGIN {{print "SkipJuncName", "Chrom", "strand", "UpstreamFlankBaseStart", "UpstreamFlankBaseEnd", "DownstreamFlankBaseStart", "DownstreamFlankBaseEnd"}} $4==$13 {{print $4, $1, $6, $2, $3, $11, $12}}' > {output}
         """
 
+rule Make3ssWindows:
+    """
+    25 nt windows upstream and downstream of basic annotated introns to quantify splicing rate similar to Herzel et al.
+    """
+    input:
+        "SmallMolecule/FullSpliceSiteAnnotations/JuncfilesMerged.annotated.basic.bed.gz"
+    output:
+        Up = "SmallMolecule/3ssWindows/Upstream.bed.gz",
+        Down = "SmallMolecule/3ssWindows/Down.bed.gz"
+    params:
+        BufferWindowFromSpliceSiteDist = 1,
+        WindowSize = 25
+    shell:
+        """
+        zcat {input} | awk '$13==1' | awk -F'\\t' -v OFS='\\t' '$6=="+" {{ print $1, $3-{params.BufferWindowFromSpliceSiteDist}-{params.WindowSize}-1, $3-{params.BufferWindowFromSpliceSiteDist}-1, $1"_"$3, ".", $6  }} $6=="-" {{ print $1, $2+{params.BufferWindowFromSpliceSiteDist}, $2+{params.BufferWindowFromSpliceSiteDist}+{params.WindowSize}, $1"_"$2, ".", $6 }}' | sort | uniq | bedtools sort -i - | gzip - > {output.Up}
+        zcat {input} | awk '$13==1' | awk -F'\\t' -v OFS='\\t' '$6=="+" {{ print $1, $3+{params.BufferWindowFromSpliceSiteDist}-1, $3+{params.BufferWindowFromSpliceSiteDist}+{params.WindowSize}-1, $1"_"$3, ".", $6  }} $6=="-" {{ print $1, $2-{params.BufferWindowFromSpliceSiteDist}-{params.WindowSize}, $2-{params.BufferWindowFromSpliceSiteDist}, $1"_"$2, ".", $6 }}' | sort | uniq | bedtools sort -i - | gzip - > {output.Down}
+        """
+
+rule SmallMolecule_CountOver3ssWindows:
+    input:
+        bams = expand("SmallMolecule/AlignmentsPass2/{Sample}/Aligned.sortedByCoord.out.bam", Sample=SM_samples['SampleName'].unique()),
+        bais = expand("SmallMolecule/AlignmentsPass2/{Sample}/Aligned.sortedByCoord.out.bam.bai", Sample=SM_samples['SampleName'].unique()),
+        Bed  = "SmallMolecule/3ssWindows/{Window}.bed.gz",
+    wildcard_constraints:
+        Window = "Upstream|Down"
+    output:
+        counts = "SmallMolecule/3ssWindows/{Window}.counts.txt"
+    shell:
+        """
+        printf "chrom\\tstart\\tstop\\tname\\tscore\\tstrand" > {output.counts}
+        for fn in {input.bams}
+        do
+            printf "\\t$fn" >> {output.counts}
+        done
+        printf "\\n" >> {output.counts}
+        bedtools multicov -split -bed {input.Bed} -bams {input.bams} >> {output.counts}
+        """
+
+rule Collect_SmallMolecule_CountOver3ssWindows:
+    input:
+        expand("SmallMolecule/3ssWindows/{Window}.counts.txt", Window=["Upstream", "Down"])
+
+
+
 
 # rule featureCountInducedCassetteExons:
 #     input:

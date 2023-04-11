@@ -24,6 +24,15 @@ Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust
 ggplot(mtcars, aes(x=mpg, y=cyl)) +
   geom_point()
 
+
+ExpectedP <- function(vec){
+  L <- length(vec)
+  Interval = 1/(L+1)
+  return(seq(Interval, 1-Interval, Interval))
+}
+
+ExpectedP(c(0.1, 0.2, 0.3, 0.9))
+
 ```
 
 ## Intro
@@ -325,10 +334,10 @@ dat.recoded %>%
 I think what I want to do is to first consider eQTLs in polyA, then perform one-sided test for significant differences in beta for corresponding feature in chRNA/promoterMarks. For simplicity, I think I can use Z-test, like [this](https://stats.stackexchange.com/questions/55501/test-a-significant-difference-between-two-slope-values), but first, to check that this approach is reasonable, I think I'm going to check that Z-scores from random trait pairs closely follow normal distribution as they should under null. Also, I note that winners curse will bias things since I am conditioning on significant QTLs for polyA, then assessing difference in betas between polyA vs chRNA/promoter. But since only the polyA beta is subject to winners curse bias, it will turn out being overly convervative for the SNP enrichments I'm trying to highlight (because some transcriptional QTLs might erronesouly be classified as non-trancriptional) so i think that's acceptable.
 
 ```{r}
-PC1.filter = "Expression.Splicing"
+PC1.filter = c("Expression.Splicing", "Expression.Splicing.Subset_YRI")
 
 dat.ZsFromAllTraitPairs <- dat.recoded %>%
-  filter(PC1 == PC1.filter) %>%
+  filter(PC1 %in% PC1.filter) %>%
   filter(!str_detect(PC2, "ActivatingMark_Enhancer")) %>%
   filter(!str_detect(PC2, "ActivatingMark_OtherGenePromoter")) %>%
   group_by(PC1, P1, PC2) %>%
@@ -340,88 +349,47 @@ dat.ZsFromAllTraitPairs <- dat.recoded %>%
   mutate(OneSidedZTest.P = pnorm(Z, lower.tail=F)) %>%
   group_by(PC1, PC2) %>%
   mutate(q = qvalue(OneSidedZTest.P)$qvalues) %>%
-  mutate(PolyASpecific = cut(q, breaks=c(0, 0.01, 0.05, 0.1, 1), include.lowest=T, ordered_result = T))
+  mutate(PolyASpecific = cut(q, breaks=c(0, 0.001, 0.01, 0.1, 1), include.lowest=T, ordered_result = T))
 
 
 dat.ZsFromAllTraitPairs %>%
 ggplot(aes(x=beta.x, y=x.beta.in.y, color=PolyASpecific)) +
   geom_point(alpha=0.1) +
-  scale_color_manual(values = rev(brewer.pal(4, "Reds"))) +
-  facet_wrap(~PC2) +
+  scale_color_viridis_d(direction=-1) +
+  facet_grid(PC1~PC2) +
   guides(colour = guide_legend(override.aes = list(alpha = 1))) +
-  labs(color="PolyA-specific FDR")
+  labs(color="PolyA-specific FDR") +
+  theme(legend.position="bottom")
 
 dat.ZsFromAllTraitPairs %>%
-ggplot(aes(x=beta.x, y=x.beta.in.y, color=PolyASpecific=="[0,0.01]")) +
+ggplot(aes(x=beta.x, y=x.beta.in.y, color=PolyASpecific=="[0,0.001]")) +
   geom_point(alpha=0.1) +
-  facet_wrap(~PC2) +
+  facet_grid(PC1~PC2) +
   guides(colour = guide_legend(override.aes = list(alpha = 1))) +
-  labs(color="PolyA-specific FDR < 0.01")
+  labs(color="PolyA-specific FDR < 0.001") +
+  theme(legend.position="bottom")
+
 
 dat.ZsFromAllTraitPairs %>%
   count(PC1, PC2, PolyASpecific) %>%
   ggplot(aes(x=PC2, y=n, fill=fct_rev(PolyASpecific))) +
   geom_col(position="stack") +
-  scale_fill_manual(values = brewer.pal(4, "Reds")) +
+  facet_wrap(~PC1) +
+  scale_fill_viridis_d(direction=1) +
   Rotate_x_labels
 
 dat.ZsFromAllTraitPairs %>%
   count(PC1, PC2, PolyASpecific) %>%
   ggplot(aes(x=PC2, y=n, fill=fct_rev(PolyASpecific))) +
   geom_col(position="fill") +
-  scale_fill_manual(values = brewer.pal(4, "Reds")) +
+  facet_wrap(~PC1) +
+  scale_fill_viridis_d(direction=1) +
   Rotate_x_labels
 
 ```
 
 Okay, keep in mind that there is both biology and power issues at play... Biologically, I would expect very few polyA-specific eQTLs when comparing to 4sU, yet there are basically the same amount of polyA-specific eQTLs in that comparison as when comparing to chRNA. One could chalk that up to the 4sU dataset being so underpowered, that a lot more eQTLs would be considered polyA specific. Similarly, that could explain why so many are polyA-specific when comparing to the relatively underpowered H3K36me3 dataset.
 
-Let's do the same but anchor on YRI eQTLs..
-
-```{r}
-PC1.filter = "Expression.Splicing.Subset_YRI"
-
-dat.ZsFromAllTraitPairs <- dat.recoded %>%
-  filter(PC1 == PC1.filter) %>%
-  filter(!str_detect(PC2, "ActivatingMark_Enhancer")) %>%
-  filter(!str_detect(PC2, "ActivatingMark_OtherGenePromoter")) %>%
-  group_by(PC1, P1, PC2) %>%
-  slice(which.min(trait.x.p.in.y)) %>%
-  ungroup() %>%
-  filter(!is.na(x.beta.in.y)) %>%
-  distinct(PC1, P1, PC2, .keep_all=T) %>%
-  mutate(Z = (abs(beta.x)-abs(x.beta.in.y)*sign(beta.x)*sign(x.beta.in.y))/sqrt(x.beta_se.in.y**2 + beta_se.x**2)) %>%
-  mutate(OneSidedZTest.P = pnorm(Z, lower.tail=F)) %>%
-  group_by(PC1, PC2) %>%
-  mutate(q = qvalue(OneSidedZTest.P)$qvalues)
-
-dat.ZsFromAllTraitPairs %>%
-  mutate(PolyASpecific = cut(q, breaks=c(0, 0.01, 0.05, 0.1, 1), include.lowest=T, ordered_result = T)) %>%
-ggplot(aes(x=beta.x, y=x.beta.in.y, color=PolyASpecific)) +
-  geom_point(alpha=0.1) +
-  scale_color_manual(values = rev(brewer.pal(4, "Reds"))) +
-  facet_wrap(~PC2) +
-  guides(colour = guide_legend(override.aes = list(alpha = 1))) +
-  labs(color="PolyA-specific FDR")
-
-dat.ZsFromAllTraitPairs %>%
-  mutate(PolyASpecific = cut(q, breaks=c(0, 0.01, 0.05, 0.1, 1), include.lowest=T, ordered_result = T)) %>%
-  # mutate(PolyASpecific = cut(OneSidedZTest.P, breaks=c(0, 0.01, 0.05, 0.1, 1), include.lowest=T, ordered_result = T)) %>%
-  count(PC1, PC2, PolyASpecific) %>%
-  ggplot(aes(x=PC2, y=n, fill=fct_rev(PolyASpecific))) +
-  geom_col(position="stack") +
-  scale_fill_manual(values = brewer.pal(4, "Reds")) +
-  Rotate_x_labels
-
-dat.ZsFromAllTraitPairs %>%
-  mutate(PolyASpecific = cut(q, breaks=c(0, 0.01, 0.05, 0.1, 1), include.lowest=T, ordered_result = T)) %>%
-  # mutate(PolyASpecific = cut(OneSidedZTest.P, breaks=c(0, 0.01, 0.05, 0.1, 1), include.lowest=T, ordered_result = T)) %>%
-  count(PC1, PC2, PolyASpecific) %>%
-  ggplot(aes(x=PC2, y=n, fill=fct_rev(PolyASpecific))) +
-  geom_col(position="fill") +
-  scale_fill_manual(values = brewer.pal(4, "Reds")) +
-  Rotate_x_labels
-```
 
 Let's explore Carlos' susie finemapping output
 
@@ -453,7 +421,226 @@ susie.finemap %>%
 
 ```
 
-Ok great, next I will intersect the finemapped SNPs with annotations, and sum up the number of SNPs in each annotation (weighted by PIP), and compare transcriptional vs post-transcriptional eQTLs. I think I'll do some work in the snakemake to accomplish this and come back to it...
+Ok great, next I will intersect the finemapped SNPs with annotations, and sum up the number of SNPs in each annotation (weighted by PIP), and compare transcriptional vs post-transcriptional eQTLs. I did some work in the snakemake to intersect Carlos's finemap output with SNP annotations and now let's explore that output.
+
+```{r}
+finemappip.annotation.intersections <- fread("../code/QTL_SNP_Enrichment/FinemapIntersections_Susie/YRI.bed.gz", col.names=c("chrom", "start", "stop", "name", "pip","featChrom", "featStart", "featStop","Annotation", "Overlap")) %>%
+  separate(name, into=c("snp", "eGene", "Signal"), sep = "_") %>%
+  mutate(Annotation = str_replace_all(Annotation, "_0$", "_UnannotatedButObserved")) %>%
+  mutate(Annotation = str_replace_all(Annotation, "_1$", "_Annotated")) %>%
+  mutate(Annotation = str_replace_all(Annotation, "^\\d+?_", "ChromHMM:")) %>%
+  filter(!is.na(Annotation)) %>%
+  mutate(Annotation = if_else(Annotation==".", "No annotation", Annotation)) %>%
+  filter(!str_detect(Annotation, "^ncRNA")) %>%
+  filter(!Annotation=="No annotation")
+
+transcriptional.PC2s <- c("chRNA.Expression.Splicing", "H3K27AC", "H3K4ME3")
+
+transcriptional.eQTLs <- dat.ZsFromAllTraitPairs %>%
+  filter(PC2 %in% transcriptional.PC2s) %>%
+  mutate(IsPolyASpecific = if_else(q < 0.001, "PostTxn", "Txn"))
+
+count(transcriptional.eQTLs,PC1, PC2, IsPolyASpecific)
+
+
+finemappip.annotation.intersections %>%
+  filter(Signal == "L1") %>%
+  left_join(transcriptional.eQTLs, by=c("eGene"="P1")) %>%
+  filter(!is.na(IsPolyASpecific)) %>%
+  group_by(Annotation, IsPolyASpecific, PC1, PC2) %>%
+  summarise(SumInAnnotation = sum(pip, na.rm=T)) %>%
+  ungroup() %>%
+  group_by(IsPolyASpecific, PC1, PC2) %>%
+  mutate(TotalPIP = sum(SumInAnnotation, na.rm=T)) %>%
+  ungroup() %>%
+  mutate(FractionPIP_in_Annotation = SumInAnnotation/TotalPIP ) %>%
+  dplyr::select(FractionPIP_in_Annotation, PC1, PC2, IsPolyASpecific, Annotation) %>%
+  pivot_wider(names_from = "IsPolyASpecific", values_from = c("FractionPIP_in_Annotation")) %>%
+  mutate(Enrichment = log2(PostTxn/Txn)) %>%
+  ggplot(aes(x=Annotation, y=Enrichment)) +
+  geom_col() +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+  coord_flip() +
+  facet_grid(PC2~PC1) +
+  labs(x = "Annotation", y="Finemapping posterior mass fold enrichment\n(Txn <-- --> PostTxn)")
+
+set.seed(0)
+results <- list()
+for (i in 1:100){
+  print(paste("Bootstrap resample", i))
+  transcriptional.eQTLs.sample <- transcriptional.eQTLs %>%
+  group_by(PC1, PC2, IsPolyASpecific) %>%
+  sample_frac(replace=T)
+  results[[i]] <-
+  finemappip.annotation.intersections %>%
+  filter(Signal == "L1") %>%
+  left_join(transcriptional.eQTLs.sample, by=c("eGene"="P1")) %>%
+  filter(!is.na(IsPolyASpecific)) %>%
+  group_by(Annotation, IsPolyASpecific, PC1, PC2) %>%
+  summarise(SumInAnnotation = sum(pip, na.rm=T)) %>%
+  ungroup() %>%
+  group_by(IsPolyASpecific, PC1, PC2) %>%
+  mutate(TotalPIP = sum(SumInAnnotation, na.rm=T)) %>%
+  ungroup() %>%
+  mutate(FractionPIP_in_Annotation = SumInAnnotation/TotalPIP ) %>%
+  dplyr::select(FractionPIP_in_Annotation, PC1, PC2, IsPolyASpecific, Annotation) %>%
+  pivot_wider(names_from = "IsPolyASpecific", values_from = c("FractionPIP_in_Annotation")) %>%
+  mutate(Enrichment = log2(PostTxn/Txn)) %>%
+  mutate(i=i)
+}
+
+finemappip.annotation.intersections$Annotation %>% unique()
+
+bind_rows(results) %>%
+  # filter(PC1 == "Expression.Splicing" & PC2 == "H3K27AC" & Annotation == "ChromHMM:Active_Promoter")
+  group_by(Annotation, PC1, PC2) %>%
+  summarise(mean = mean(Enrichment, na.rm=T),
+            Percentile10 = quantile(Enrichment, probs = 0.05, na.rm=T),
+            Percentile90 = quantile(Enrichment, probs = 0.95, na.rm=T)) %>%
+  mutate(color = case_when(
+    str_detect(Annotation, "^Splic") ~ "Splice region",
+    str_detect(Annotation, "Enhancer") ~ "Enhancer",
+    str_detect(Annotation, "Promoter") ~ "Promoter",
+    str_detect(Annotation, "Txn") ~ "Transcribed",
+    str_detect(Annotation, "ChromHMM") ~ "Other ChromHMM",
+    TRUE ~ "Other"
+  )) %>%
+  ggplot(aes(x=Annotation, y=mean, color=color)) +
+    geom_hline(yintercept = 0) +
+    geom_point() +
+    geom_errorbar(aes(ymin=Percentile10, ymax=Percentile90)) +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+    coord_flip() +
+    facet_grid(PC2~PC1) +
+    labs(x = "Annotation", y="Finemapping posterior mass fold enrichment\n(ChromatinQTL|eQTL <-- --> sQTL)",
+         caption = "Bootsrapped 90% confidence interval")
+```
+
+
+Hmm, the results aren't quite what I was expecting, and they aren't so consistent across the different ways to classify eQTLs as post txn vs txn (H3K27AC, H3K4ME3, chRNA). I wonder how consistent the classifications are...
+
+```{r}
+transcriptional.eQTLs <- dat.ZsFromAllTraitPairs %>%
+  filter(PC2 %in% transcriptional.PC2s) %>%
+  mutate(IsPolyASpecific = if_else(q < 0.01, "PostTxn", "Txn"))
+
+transcriptional.eQTLs %>%
+  group_by(PC1) %>%
+  add_count(P1) %>%
+  filter(n==3) %>%
+  ungroup() %>%
+  mutate(IsPolyASpecific = IsPolyASpecific=="Txn") %>%
+  group_by(P1, PC1) %>%
+  summarise(TxnQTL_In_HowManyOf3 = sum(IsPolyASpecific)) %>%
+  ggplot(aes(x=TxnQTL_In_HowManyOf3)) +
+  geom_bar() +
+  facet_wrap(~PC1) +
+  labs("How many of the 3 methods is a gene classified as txn eQTL")
+
+transcriptional.eQTLs <- dat.ZsFromAllTraitPairs %>%
+  filter(PC2 %in% transcriptional.PC2s) %>%
+  mutate(IsPolyASpecific = if_else(q < 0.001, "PostTxn", "Txn"))
+
+transcriptional.eQTLs %>%
+  group_by(PC1) %>%
+  add_count(P1) %>%
+  filter(n==3) %>%
+  ungroup() %>%
+  mutate(IsPolyASpecific = IsPolyASpecific=="Txn") %>%
+  group_by(P1, PC1) %>%
+  summarise(TxnQTL_In_HowManyOf3 = sum(IsPolyASpecific)) %>%
+  ggplot(aes(x=TxnQTL_In_HowManyOf3)) +
+  geom_bar() +
+  facet_wrap(~PC1) +
+  labs("How many of the 3 methods is a gene classified as txn eQTL")
+
+transcriptional.eQTLs <- dat.ZsFromAllTraitPairs %>%
+  filter(PC2 %in% transcriptional.PC2s) %>%
+  mutate(IsPolyASpecific = if_else(q < 0.0001, "PostTxn", "Txn"))
+
+transcriptional.eQTLs %>%
+  group_by(PC1) %>%
+  add_count(P1) %>%
+  filter(n==3) %>%
+  ungroup() %>%
+  mutate(IsPolyASpecific = IsPolyASpecific=="Txn") %>%
+  group_by(P1, PC1) %>%
+  summarise(TxnQTL_In_HowManyOf3 = sum(IsPolyASpecific)) %>%
+  ggplot(aes(x=TxnQTL_In_HowManyOf3)) +
+  geom_bar() +
+  facet_wrap(~PC1) +
+  labs("How many of the 3 methods is a gene classified as txn eQTL")
+```
+
+
+Ok so playing with the thresholds still doesn't get a nice clean/consistent classification between the different methods... It's not like there are a lot of genes that are in txn class in all 3 and in non-txn class in all 3. There are a lot of in-betweens. Let's maybe just try reclassifying them as txn if they are significant any of the three...
+
+```{r}
+transcriptional.eQTLs <- dat.ZsFromAllTraitPairs %>%
+  filter(PC2 %in% transcriptional.PC2s) %>%
+  group_by(PC1) %>%
+  add_count(P1) %>%
+  filter(n==3) %>%
+  ungroup() %>%
+  group_by(P1, PC1) %>%
+  mutate(IsPolyASpecific = if_else(any(q < 0.001), "PostTxn", "Txn")) %>%
+  ungroup()
+
+count(transcriptional.eQTLs,PC1, PC2, IsPolyASpecific)
+
+set.seed(0)
+results <- list()
+for (i in 1:100){
+  print(paste("Bootstrap resample", i))
+  transcriptional.eQTLs.sample <- transcriptional.eQTLs %>%
+  group_by(PC1, PC2, IsPolyASpecific) %>%
+  sample_frac(replace=T)
+  results[[i]] <-
+  finemappip.annotation.intersections %>%
+  filter(Signal == "L1") %>%
+  inner_join(transcriptional.eQTLs.sample, by=c("eGene"="P1")) %>%
+  filter(!is.na(IsPolyASpecific)) %>%
+  group_by(Annotation, IsPolyASpecific, PC1, PC2) %>%
+  summarise(SumInAnnotation = sum(pip, na.rm=T)) %>%
+  ungroup() %>%
+  group_by(IsPolyASpecific, PC1, PC2) %>%
+  mutate(TotalPIP = sum(SumInAnnotation, na.rm=T)) %>%
+  ungroup() %>%
+  mutate(FractionPIP_in_Annotation = SumInAnnotation/TotalPIP ) %>%
+  dplyr::select(FractionPIP_in_Annotation, PC1, PC2, IsPolyASpecific, Annotation) %>%
+  pivot_wider(names_from = "IsPolyASpecific", values_from = c("FractionPIP_in_Annotation")) %>%
+  mutate(Enrichment = log2(PostTxn/Txn)) %>%
+  mutate(i=i)
+}
+
+bind_rows(results) %>%
+  # filter(PC1 == "Expression.Splicing" & PC2 == "H3K27AC" & Annotation == "ChromHMM:Active_Promoter")
+  group_by(Annotation, PC1, PC2) %>%
+  summarise(mean = mean(Enrichment, na.rm=T),
+            Percentile10 = quantile(Enrichment, probs = 0.05, na.rm=T),
+            Percentile90 = quantile(Enrichment, probs = 0.95, na.rm=T)) %>%
+  mutate(color = case_when(
+    str_detect(Annotation, "^Splic") ~ "Splice region",
+    str_detect(Annotation, "Enhancer") ~ "Enhancer",
+    str_detect(Annotation, "Promoter") ~ "Promoter",
+    str_detect(Annotation, "Txn") ~ "Transcribed",
+    str_detect(Annotation, "ChromHMM") ~ "Other ChromHMM",
+    TRUE ~ "Other"
+  )) %>%
+  ggplot(aes(x=Annotation, y=mean, color=color)) +
+    geom_hline(yintercept = 0) +
+    geom_point() +
+    geom_errorbar(aes(ymin=Percentile10, ymax=Percentile90)) +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+    coord_flip() +
+    facet_grid(PC2~PC1) +
+    labs(x = "Annotation", y="Finemapping posterior mass fold enrichment\n(ChromatinQTL|eQTL <-- --> sQTL)",
+         caption = "Bootsrapped 90% confidence interval")
+```
+
 
 ## FigS2C
 
@@ -497,7 +684,288 @@ dat.forsQTLQQ %>%
 
 ## Fig2c
 
-The eQTL QQplot of transcriptional
+The eQTL QQplot of stable sQTLs, unstable sQTLs, and H3K27AC QTLs
+
+```{r}
+PC2.filter <- c("Expression.Splicing", "Expression.Splicing.Subset_YRI")
+PC2.SignificanceFilter <- c("H3K27AC", "H3K4ME3", "H3K36ME3")
+PC1.filter <- c("polyA.Splicing", "H3K27AC", "H3K4ME1", "H3K4ME3")
+PC1.filter.Splicing <- PC1.filter[str_detect(PC1.filter, "Splicing")]
+PC1.filter.NonSplicing <- PC1.filter[!str_detect(PC1.filter, "Splicing")]
+
+dat.foreQTLQQ <- fread("../code/pi1/PairwisePi1Traits.P.all.txt.gz") %>%
+  filter((PC1 %in% PC1.filter))
+
+IntronAnnotatins <- read_tsv("../data/IntronAnnotationsFromYang.tsv.gz") %>%
+  mutate(chrom = str_remove_all(chrom, "chr")) %>%
+  mutate(Intron = paste(chrom, start, end, sep=":")) %>%
+  filter(!str_detect(SuperAnnotation, "NoncodingGene"))
+
+IntronAnnotatins$SuperAnnotation %>% unique()
 
 
+
+RandomTestSNPs <- paste0("../code/QTLs/QTLTools/", PC2.filter, "/NominalPassForColoc.RandomSamplePvals.txt.gz") %>%
+  setNames(PC2.filter) %>%
+  lapply(fread) %>%
+  bind_rows(.id="PC2") %>%
+  dplyr::select(trait.x.p.in.y=V1, PC2) %>%
+  mutate(SNP_group="Random test SNPs") %>%
+  group_by(PC2) %>%
+  sample_n(50000)
+
+
+dat.foreQTLQQ.sQTLs <- dat.foreQTLQQ %>%
+    filter(PC1 %in% PC1.filter.Splicing) %>%
+    group_by(PC1, P1) %>%
+    filter(!any((PC2 %in% PC2.SignificanceFilter) & (trait.x.p.in.y < 0.01))) %>%
+    ungroup() %>%
+    filter(PC2 %in% PC2.filter) %>%
+    separate(P1, into=c("Intron", "Cluster"), sep=":clu", remove=F) %>%
+    inner_join(
+      IntronAnnotatins %>%
+        dplyr::select(Intron, SuperAnnotation),
+      by="Intron") %>%
+    group_by(PC1, PC2, Cluster) %>%
+    mutate(SNP_group = case_when(
+      all(str_detect(SuperAnnotation, "Productive")) ~ "Productive sQTL cluster",
+      any(str_detect(SuperAnnotation, "Unproductive")) ~ "Unproductive sQTL cluster",
+      TRUE ~ "sQTL Other"
+    )) %>%
+    # sample_n(1) %>%
+    slice(which.min(p_permutation.x)) %>%
+    ungroup()
+
+bind_rows(
+  dat.foreQTLQQ.sQTLs,
+  dat.foreQTLQQ %>%
+    filter(PC2 %in% PC2.filter) %>%
+    filter(PC1 %in% PC1.filter.NonSplicing) %>%
+    mutate(SNP_group = PC1),
+  RandomTestSNPs
+) %>%
+  group_by(SNP_group, PC2) %>%
+  mutate(MyRank = rank(trait.x.p.in.y, ties.method='random')) %>%
+  mutate(ExpectedP = MyRank/(max(MyRank) + 1)) %>%
+  ungroup() %>%
+  ggplot(aes(x=-log10(ExpectedP), y=-log10(trait.x.p.in.y), color=SNP_group)) +
+  geom_abline(slope=1, intercept=0) +
+  geom_point() +
+  facet_wrap(~PC2, scales="free") +
+  labs(y="-log10(ObservedP)", caption="sQTL clusters containing any significant unproductive sQTL intron are grouped as Unproductive sQTL\nP value from only one significant sQTL intron from cluster selected at random from cluster\nsQTLs with nominal P<0.01 for H3K36me3, H3K27Ac, or H3K4me3 removed", title="eQTL QQ plot")
+
+
+dat.foreQTLQQ.sQTLs %>%
+  count(SNP_group, PC2)
+
+# pi0est function breaks sometimes. this wrapper function returns 1 when that happens
+CalculatePi1_2 <- function (dat.in, ...) {
+  return(tryCatch(1-pi0est(dat.in$trait.x.p.in.y, ...)$pi0, error=function(e) 1))
+}
+
+labels <- dat.foreQTLQQ.sQTLs %>%
+  split(paste(.$SNP_group, .$PC2, sep=";")) %>%
+  lapply(CalculatePi1_2, pi0.method="bootstrap") %>%
+  unlist() %>%
+  data.frame(pi1=.) %>%
+  rownames_to_column("sQTLGroup_eQTLDataset") %>%
+  separate(sQTLGroup_eQTLDataset, into=c("SNP_group", "PC2"), sep=";") %>%
+  mutate(label=paste0("pi=", signif(pi1, digits=3)))
+
+  
+dat.foreQTLQQ.sQTLs %>%
+  ggplot(aes(x=trait.x.p.in.y)) +
+  geom_histogram() +
+  geom_text(data = labels, aes(label=label), x=Inf, y=Inf, vjust=1, hjust=1) +
+  facet_grid(SNP_group ~ PC2) +
+  labs(x="P", title="eQTL P value historgram", caption="Vertical facets: eQTL dataset\nHorizontal facets: sQTL cluster type") +
+  theme(strip.text = element_text(size = 8))
+
+```
+
+
+## Fig3
+
+Fig3, exploring connection to complex traits using gwas. There's a few ways I did this. Firstly I took all molQTL top SNPs and got the corresponding gwas P-values, to compare to global gwas P-values and plot enrichment in QQplot form. I currently don't have any good control sets of SNPs. Later I can come up with a control, and also come up with a systematic way to quantify enrichment of molQTLs for GWAS SNPs (ie lambda inflation factor, compared to control SNPs, or something like that) and think of a way to present these results not just for one GWAS but for many... The second way I am considering this problem is with hyprcoloc... I attempt to colocalize all molQTLs (chromatinQTLs, expressionQTLs, sQTLs, APA QTLs, etc) within a 1MB window centered around top SNP at each GWAS loci.
+
+First let's try to make the QQ plot.
+
+```{r}
+gwas.trait.accession <- "IMSGC2019"
+
+molQTL.gwas.P <- fread(paste0("../code/gwas_summary_stats/MolQTLIntersections/", gwas.trait.accession, ".bed.gz"), col.names = c("chrom", "varPos", "GWAS.P", "molQTL.name", "molQTL.P", "strand", "molQTL.beta", "molQTL.se", "molQTL.q", "varID", "overlap")) %>%
+  separate(molQTL.name, into=c("PhenotypeClass", "MolPhenotypeName"), sep = ";")
+
+gwas.P <- fread(paste0("../code/gwas_summary_stats/sorted_index_summarystat_hg38beds/", gwas.trait.accession, ".bed.gz"), select = 4, col.names = "GWAS.P") %>%
+  mutate(PhenotypeClass = "All SNPs")
+
+molQTL.gwas.P$PhenotypeClass %>% unique()
+
+PhenotypeClass.filter <- c("Expression.Splicing.Subset_YRI", "Expression.Splicing", "polyA.Splicing", "H3K27AC")
+
+
+
+QQ.gwas <- bind_rows(
+  molQTL.gwas.P %>%
+    filter(PhenotypeClass %in% PhenotypeClass.filter) %>%
+    filter(molQTL.q < 0.1) %>%
+    dplyr::select(PhenotypeClass, GWAS.P),
+  gwas.P %>%
+    sample_n(1E5)
+) %>%
+dplyr::select(SNP_group = PhenotypeClass, GWAS.P) %>%
+group_by(SNP_group) %>%
+  mutate(MyRank = rank(GWAS.P, ties.method='random')) %>%
+  mutate(ExpectedP = MyRank/(max(MyRank) + 1)) %>%
+  ungroup() %>%
+  mutate(SNP_group = relevel(factor(SNP_group), "All SNPs")) %>%
+  arrange(SNP_group) %>%
+  ggplot(aes(x=-log10(ExpectedP), y=-log10(GWAS.P), color=SNP_group)) +
+  geom_abline(slope=1, intercept=0) +
+  geom_point() +
+  labs(y="-log10(ObservedP)", title="GWAS QQ plot", caption="GWAS SNPs sub-sampled to 100K for plotting speed")
+QQ.gwas
+
+QQ.gwas +
+  coord_cartesian(ylim=c(0,20))
+
+```
+
+Ok, it is nice to see some enrichment, though just plotting different axis limits can really visually change the story. I will need to be careful here. Let's distinguish the sQTLs now, between productive and non-productive...
+
+```{r}
+# sQTL.permutationPass.Classified <- read_delim("../code/QTLs/QTLTools/polyA.Splicing/PermutationPass.FDR_Added.txt.gz", delim=' ') %>%
+#   # head() %>%
+#   separate(phe_id, into=c("intron", "cluster"), sep=":clu", remove=F) %>%
+#   mutate(IntronName = str_replace(phe_id, "^(.+?:.+?:.+?:)clu_.+?_([+-])$", "chr\\1\\2")) %>%
+#   inner_join(Intron.Annotations, by="IntronName") %>%
+#   filter(q < 0.1) %>%
+#   group_by(cluster) %>%
+#   mutate(SNP_group = case_when(
+#       all(str_detect(SuperAnnotation, "Productive")) ~ "Productive sQTL cluster",
+#       any(str_detect(SuperAnnotation, "Unproductive")) ~ "Unproductive sQTL cluster",
+#       TRUE ~ "sQTL Other"
+#     )) %>%
+#     slice(which.min(nom_pval)) %>%
+#     ungroup()
+# 
+# sQTL.permutationPass.Classified %>%
+#   count(SNP_group)
+
+SplicingPhenotypeFilter <- PhenotypeClass.filter[str_detect(PhenotypeClass.filter, "Splicing") & !str_detect(PhenotypeClass.filter, "Expression")]
+
+ 
+
+QQ.gwas <- bind_rows(
+  molQTL.gwas.P %>%
+    filter((PhenotypeClass %in% PhenotypeClass.filter) & !(PhenotypeClass %in% SplicingPhenotypeFilter)) %>%
+    filter(molQTL.q < 0.1) %>%
+    dplyr::select(PhenotypeClass, GWAS.P),
+  molQTL.gwas.P %>%
+    filter(PhenotypeClass %in% SplicingPhenotypeFilter) %>%
+    filter(molQTL.q < 0.1) %>%
+    dplyr::select(GWAS.P, MolPhenotypeName) %>%
+    inner_join(
+      dat.foreQTLQQ.sQTLs %>%
+        dplyr::select(MolPhenotypeName=P1, PhenotypeClass=SNP_group) %>%
+        distinct(),
+      by=c("MolPhenotypeName")) %>%
+    filter(!PhenotypeClass=="sQTL Other"),
+  gwas.P %>%
+    sample_n(1E5)
+) %>%
+dplyr::select(SNP_group = PhenotypeClass, GWAS.P) %>%
+group_by(SNP_group) %>%
+  mutate(MyRank = rank(GWAS.P, ties.method='random')) %>%
+  mutate(ExpectedP = MyRank/(max(MyRank) + 1)) %>%
+  ungroup() %>%
+  mutate(SNP_group = relevel(factor(SNP_group), "All SNPs")) %>%
+  arrange(SNP_group) %>%
+  ggplot(aes(x=-log10(ExpectedP), y=-log10(GWAS.P), color=SNP_group)) +
+  geom_abline(slope=1, intercept=0) +
+  geom_point() +
+  labs(y="-log10(ObservedP)", title="GWAS QQ plot", caption="GWAS SNPs sub-sampled to 100K for plotting speed")
+QQ.gwas
+
+QQ.gwas +
+  coord_cartesian(ylim=c(0,20))
+
+```
+So from this the enrichment is similar whether looking at productive or unproductive sQTLs. Now let me go back and add some control SNPs. One easy control to include would be like what Yang did in his 2016 paper: Include molQTL test SNPs within peaks (or within introns) may work for sQTLs. Also, no need to include the YRI subset anymore. I was just including it in my exploratory analysis but it is unnecessary/distracting for a main figure. Let's also take that out...
+
+```{r}
+ControlSNPs <- fread(paste0("../code/gwas_summary_stats/MolQTLIntersections_ControlSNPs/", gwas.trait.accession, "/ALL.txt.gz"), col.names=c("GWAS.P", "PhenotypeClassControl"))
+
+ControlSNPs$PhenotypeClassControl %>% unique()
+
+QQ.gwas <- bind_rows(
+  molQTL.gwas.P %>%
+    filter((PhenotypeClass %in% PhenotypeClass.filter) & !(PhenotypeClass %in% SplicingPhenotypeFilter)) %>%
+    filter(!PhenotypeClass == "Expression.Splicing.Subset_YRI") %>%
+    filter(molQTL.q < 0.1) %>%
+    dplyr::select(PhenotypeClass, GWAS.P),
+  molQTL.gwas.P %>%
+    filter(PhenotypeClass %in% SplicingPhenotypeFilter) %>%
+    filter(molQTL.q < 0.1) %>%
+    dplyr::select(GWAS.P, MolPhenotypeName) %>%
+    inner_join(
+      dat.foreQTLQQ.sQTLs %>%
+        dplyr::select(MolPhenotypeName=P1, PhenotypeClass=SNP_group) %>%
+        distinct(),
+      by=c("MolPhenotypeName")) %>%
+    filter(!PhenotypeClass=="sQTL Other"),
+  ControlSNPs %>%
+    filter(PhenotypeClassControl %in% c("polyA.Splicing", "H3K27AC", "Expression.Splicing")) %>%
+    mutate(PhenotypeClass = recode(PhenotypeClassControl, "polyA.Splicing"="Intronic SNPS", "H3K27AC"="H3K27AC peak SNPs", "Expression.Splicing"="genic SNPs")) %>%
+    dplyr::select(-PhenotypeClassControl),
+  gwas.P %>%
+    sample_n(1E5)
+) %>%
+dplyr::select(SNP_group = PhenotypeClass, GWAS.P) %>%
+group_by(SNP_group) %>%
+  mutate(MyRank = rank(GWAS.P, ties.method='random')) %>%
+  mutate(ExpectedP = MyRank/(max(MyRank) + 1)) %>%
+  ungroup() %>%
+  mutate(SNP_group = relevel(factor(SNP_group), "All SNPs")) %>%
+  arrange(SNP_group) %>%
+  ggplot(aes(x=-log10(ExpectedP), y=-log10(GWAS.P), color=SNP_group)) +
+  geom_abline(slope=1, intercept=0) +
+  geom_point() +
+  labs(y="-log10(ObservedP)", title="GWAS QQ plot", caption="GWAS SNPs sub-sampled to 100K for plotting speed")
+QQ.gwas
+
+QQ.gwas +
+  coord_cartesian(ylim=c(0,20))
+
+```
+
+Hmm, ok there seems to be subtle shift compared to the control SNPs. These may not be the best controls. Will have to think about this more later.
+
+Now Let's expore the hypercoloc results.
+
+Note that I did the hyprcoloc a number of different ways, each with different sets of molQTLs attempted... Let's explore the most inclusive hyprcoloc iteration.
+
+```{r, eval=F}
+gwas.traits <- read_tsv("../code/config/gwas_table.tsv")
+
+
+hyprcoloc.results <- read_tsv("../code/hyprcoloc/Results/ForGWASColoc/GWASColoc_ChromatinAPAAndRNA/results.txt.gz") %>%
+  dplyr::rename(GWAS.Loci = GWASLeadSnpChrom_Pos_RefAllele_AltAllele_rsID_trait) %>%
+  separate(GWAS.Loci, into=c("GWAS.LeadSNP.Chrom", "GWAS.LeadSNP.Pos", "GWAS.accession"), sep="_", remove=F) %>%
+  separate_rows(ColocalizedTraits, sep = ",") %>%
+  mutate(IsColocalizedWithSomething = !ColocalizedTraits == "None") %>%
+  mutate(Trait = if_else(IsColocalizedWithSomething, ColocalizedTraits, DroppedTrait)) %>%
+  dplyr::select(-DroppedTrait, -ColocalizedTraits) %>%
+  mutate(Trait2 = if_else(Trait == GWAS.Loci, paste(across("GWAS",GWAS.Loci,sep = ";")),Trait)) %>%
+  separate(Trait, into=c("PhenotypeClass", "Phenotype"), sep=";")
+
+hyprcoloc.results %>%
+  separate(Trait, into=c("PhenotypeClass", "Phenotype"), sep=";")
+  
+
+# hyprcoloc.results %>%
+#   distinct(GWAS.Loci, .keep_all=T) %>%
+#   count(GWAS.accession)
+
+```
 

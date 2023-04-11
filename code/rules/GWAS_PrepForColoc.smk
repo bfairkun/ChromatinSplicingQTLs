@@ -190,6 +190,60 @@ rule GatherGwasStandardizedStats:
         expand("gwas_summary_stats/StatsForColoc/{accession}.standardized.txt.gz", accession = gwas_df.index),
         "gwas_summary_stats/LeadSnpWindows.bed"
 
+rule GatherAllTopSNPs:
+    input:
+        MolQTLs = expand("QTLs/QTLTools/{Phenotype}/PermutationPass.FDR_Added.txt.gz", Phenotype=MyPhenotypes)
+    output:
+        "QTL_SNP_Enrichment/AllTopSNPs.bed.gz"
+    conda:
+        "../envs/r_2.yaml"
+    shell:
+        """
+        Rscript scripts/CombinePermutationPassSNPsIntoBed.R {output} {input.MolQTLs}
+        """
+
+rule IntersectMolQTLsWithGWAS:
+    input:
+        bed = "gwas_summary_stats/sorted_index_summarystat_hg38beds/{accession}.bed.gz",
+        tbi = "gwas_summary_stats/sorted_index_summarystat_hg38beds/{accession}.bed.gz.tbi",
+        MolQTLs = "QTL_SNP_Enrichment/AllTopSNPs.bed.gz"
+    output:
+        "gwas_summary_stats/MolQTLIntersections/{accession}.bed.gz"
+    log:
+        "logs/IntersectMolQTLsWithGWAS/{accession}.log"
+    shell:
+        """
+        (zcat {input.bed} | awk -F'\\t' -v OFS='\\t' 'NR>1 {{print $1,$2,$3,$4}}' | bedtools intersect -wo -a - -b {input.MolQTLs} -f 1 -r -sorted | cut --complement -f 3,5,6,7 | gzip - > {output} ) &> {log}
+        """
+
+rule GatherIntersectMolQTLsWithGWAS:
+    input:
+        expand("gwas_summary_stats/MolQTLIntersections/{accession}.bed.gz", accession=gwas_df.index)
+
+rule IntersectTestSNPsWithGWAS_Sample:
+    input:
+        molQTLs = "QTLs/QTLTools/{Phenotype}/PermutationPass.FDR_Added.txt.gz",
+        gwas = "gwas_summary_stats/sorted_index_summarystat_hg38beds/{accession}.bed.gz"
+    output:
+        "gwas_summary_stats/MolQTLIntersections_ControlSNPs/{accession}/{Phenotype}.txt.gz"
+    wildcard_constraints:
+        Phenotype="|".join(MyPhenotypes)
+    params:
+        n = 100000
+    shell:
+        """
+        zcat {input.molQTLs} | awk -F' ' -v OFS='\\t' 'NR>1 {{print $2, $3, $4}}' | bedtools sort -i - | bedtools intersect -a {input.gwas} -sorted -b - -u | awk '{{print $4, "{wildcards.Phenotype}"}}' | shuf -n {params.n} | gzip - > {output}
+        """
+
+rule GatherGWAS_TestSNPs_AcrossMolQTLs:
+    input:
+        expand("gwas_summary_stats/MolQTLIntersections_ControlSNPs/{{accession}}/{Phenotype}.txt.gz", Phenotype=MyPhenotypes)
+    output:
+        "gwas_summary_stats/MolQTLIntersections_ControlSNPs/{accession}/ALL.txt.gz"
+    shell:
+        "cat {input} > {output}"
+
+
 # rule GetGWASSummaryStatsAtLeadSNPWindows:
 #     """
 #     a bedtools command to get the summary stats for snps over the lead snp

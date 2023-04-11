@@ -124,6 +124,39 @@ rule IntersectTopSNPsFromPermutationPass_ColocWindow_WithAnnotations:
         (zcat {input.PermutationPass} | awk -F' ' -v OFS='\\t' 'NR>1 {{print {params} }}' |  grep -v '^NA' | bedtools sort -i - | bedtools intersect -a - -b <(zcat {input.bed} | awk -F'\\t' -v OFS='\\t' '{{print $1,$2,$3,$4}}' ) -wao | gzip - > {output} ) &> {log}
         """
 
+# rule Classify_eQTLs_AsTranscriptionalOrPosttranscriptional:
+#     input:
+#         pi1 = "pi1/PairwisePi1Traits.P.all.txt.gz",
+#         TSS = expand("Misc/PeaksClosestToTSS/{Phenotype}_assigned.tsv.gz", Phenotype=["H3K27AC", "H3K4ME3"])
+#     output:
+#         "QTL_SNP_Enrichment/PostTranscriptionalVsTranscriptional_eQTLs/List.tsv.gz"
+#     conda:
+#         "../envs/r_2.yaml"
+#     shell:
+#         """
+#         Rscript scripts/ClassifyTxnVsPostTxnEqtls.R {input.pi1}
+#         """
+
+rule IntersectFinemapSNPsWithAnnotations_susie:
+    """
+    Bed should be a bed with all genomic region annotations, with the annotation type in column4. Optional feature name in column5. Finemap should be the hyprcoloc finemap output.
+    """
+    input:
+        bed = "QTL_SNP_Enrichment/Annotations.bed.gz",
+        Finemap = "FineMapping/susie_runs_{Pop}/susie_output.tab"
+    output:
+        "QTL_SNP_Enrichment/FinemapIntersections_Susie/{Pop}.bed.gz"
+    log:
+        "logs/IntersectFinemapSNPsWithAnnotations_Susie/{Pop}.log"
+    shell:
+        """
+        awk -v OFS='\\t' -F'\\t' 'NR>1 && $2!="NA" {{split($2,snp,":"); print "chr"snp[1], snp[2], snp[2]+1, $2"_"$1"_"$3, $4}}' {input.Finemap} | bedtools sort -i - | bedtools intersect -a - -b <(zcat {input.bed} | awk -F'\\t' -v OFS='\\t' '{{ print $1, $2, $3, $4 }}')  -wao | gzip - > {output}
+        """ 
+
+rule GatherFinemapSNPAnnotationIntersections_susie:
+    input:
+        expand("QTL_SNP_Enrichment/FinemapIntersections_Susie/{Pop}.bed.gz", Pop=["YRI", "Geuvadis"])
+
 rule GatherFinemapSNPAnnotationIntersections:
     input:
         expand("QTL_SNP_Enrichment/FinemapIntersections/{ColocRun}.bed.gz", ColocRun = colocs_genewise.index)

@@ -398,3 +398,7 @@ rule SampleRandomPvals:
         """
         (zcat {input.txt} | awk -F'\\t' 'NR>1 {{print $12}}' | shuf -n {params.NumVals} | gzip - > {output} ) &> {log}
         """
+
+rule GatherSampleRandomPvals:
+    input:
+        expand("QTLs/QTLTools/{Phenotype}/NominalPass{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.RandomSamplePvals.txt.gz", Phenotype=PhenotypesToColoc, QTLsGenotypeSet="", FeatureCoordinatesRedefinedFor="ForColoc")

@@ -383,7 +383,7 @@ aria-hidden="true"></span> </a>
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2023-03-30
+<strong>Last updated:</strong> 2023-04-06
 </p>
 <p>
 <strong>Checks:</strong> <span
@@ -518,15 +518,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstreeddbf2225e7f71ace4a67a2cdae69ece7e4026b66targetblankddbf222a">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstree3b44dfde49612d49977fafe369d3cbf25a8f5525targetblank3b44dfda">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/ddbf2225e7f71ace4a67a2cdae69ece7e4026b66" target="_blank">ddbf222</a>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/3b44dfde49612d49977fafe369d3cbf25a8f5525" target="_blank">3b44dfd</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstreeddbf2225e7f71ace4a67a2cdae69ece7e4026b66targetblankddbf222a"
+id="strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstree3b44dfde49612d49977fafe369d3cbf25a8f5525targetblank3b44dfda"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -536,7 +536,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/ddbf2225e7f71ace4a67a2cdae69ece7e4026b66" target="_blank">ddbf222</a>.
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/3b44dfde49612d49977fafe369d3cbf25a8f5525" target="_blank">3b44dfd</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -656,16 +656,16 @@ Ignored files:
     Ignored:    data/Metaplots/.DS_Store
 
 Untracked files:
-    Untracked:  analysis/test_rmd_format.Rmd
+    Untracked:  code/scripts/CombinePermutationPassSNPsIntoBed.R
 
 Unstaged changes:
     Modified:   analysis/20230324_MakeFigs.Rmd
-    Modified:   code/Snakefile
+    Modified:   code/config/ColocRunWildcards.tsv
+    Modified:   code/rules/GWAS_PrepForColoc.smk
+    Modified:   code/rules/QTLTools.smk
     Modified:   code/rules/QTL_SNP_Enrichment.smk
-    Modified:   code/rules/common.py
-    Modified:   code/scripts/CalculatePi1_GetAscertainmentP_AllPairs.py
-    Modified:   code/scripts/CalculatePi1_GetTraitPairs_AllTraits.R
     Modified:   code/scripts/GenometracksByGenotype
+    Modified:   code/scripts/hyprcoloc_gwas2.R
 
 </code></pre>
 <p>
@@ -711,6 +711,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/3b44dfde49612d49977fafe369d3cbf25a8f5525/analysis/20230324_MakeFigs.Rmd" target="_blank">3b44dfd</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2023-03-30
+</td>
+<td>
+add fig nb
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/3b44dfde49612d49977fafe369d3cbf25a8f5525/docs/20230324_MakeFigs.html" target="_blank">3b44dfd</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2023-03-30
+</td>
+<td>
+add fig nb
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -824,6 +858,14 @@ Benjmain Fair
 </table>
 </div>
 </div>
+<pre class="r"><code>ExpectedP &lt;- function(vec){
+  L &lt;- length(vec)
+  Interval = 1/(L+1)
+  return(seq(Interval, 1-Interval, Interval))
+}
+
+ExpectedP(c(0.1, 0.2, 0.3, 0.9))</code></pre>
+<pre><code>[1] 0.2 0.4 0.6 0.8</code></pre>
 <div id="intro" class="section level2">
 <h2>Intro</h2>
 <p>I notebook to make figure panels for publication…</p>
@@ -1118,6 +1160,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/3b44dfde49612d49977fafe369d3cbf25a8f5525/docs/figure/20230324_MakeFigs.Rmd/unnamed-chunk-4-1.png" target="_blank">3b44dfd</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2023-03-30
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/ddbf2225e7f71ace4a67a2cdae69ece7e4026b66/docs/figure/20230324_MakeFigs.Rmd/unnamed-chunk-4-1.png" target="_blank">ddbf222</a>
 </td>
 <td>
@@ -1160,6 +1213,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/3b44dfde49612d49977fafe369d3cbf25a8f5525/docs/figure/20230324_MakeFigs.Rmd/unnamed-chunk-5-1.png" target="_blank">3b44dfd</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2023-03-30
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/ddbf2225e7f71ace4a67a2cdae69ece7e4026b66/docs/figure/20230324_MakeFigs.Rmd/unnamed-chunk-5-1.png" target="_blank">ddbf222</a>
 </td>
 <td>
@@ -1200,6 +1264,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/3b44dfde49612d49977fafe369d3cbf25a8f5525/docs/figure/20230324_MakeFigs.Rmd/unnamed-chunk-6-1.png" target="_blank">3b44dfd</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2023-03-30
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/ddbf2225e7f71ace4a67a2cdae69ece7e4026b66/docs/figure/20230324_MakeFigs.Rmd/unnamed-chunk-6-1.png" target="_blank">ddbf222</a>
@@ -1252,6 +1327,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/3b44dfde49612d49977fafe369d3cbf25a8f5525/docs/figure/20230324_MakeFigs.Rmd/unnamed-chunk-7-1.png" target="_blank">3b44dfd</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2023-03-30
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/ddbf2225e7f71ace4a67a2cdae69ece7e4026b66/docs/figure/20230324_MakeFigs.Rmd/unnamed-chunk-7-1.png" target="_blank">ddbf222</a>
 </td>
 <td>
@@ -1289,6 +1375,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/3b44dfde49612d49977fafe369d3cbf25a8f5525/docs/figure/20230324_MakeFigs.Rmd/unnamed-chunk-7-2.png" target="_blank">3b44dfd</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2023-03-30
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/ddbf2225e7f71ace4a67a2cdae69ece7e4026b66/docs/figure/20230324_MakeFigs.Rmd/unnamed-chunk-7-2.png" target="_blank">ddbf222</a>
@@ -1354,6 +1451,43 @@ dat.recoded %&gt;%
   facet_wrap(~PC2) +
   labs(x=&quot;eQTL beta&quot;, y=&quot;facetQTL beta&quot;)</code></pre>
 <p><img src="figure/20230324_MakeFigs.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-8-1">
+Past versions of unnamed-chunk-8-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-8-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/3b44dfde49612d49977fafe369d3cbf25a8f5525/docs/figure/20230324_MakeFigs.Rmd/unnamed-chunk-8-1.png" target="_blank">3b44dfd</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2023-03-30
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>I think what I want to do is to first consider eQTLs in polyA, then
 perform one-sided test for significant differences in beta for
 corresponding feature in chRNA/promoterMarks. For simplicity, I think I
@@ -1368,10 +1502,10 @@ since only the polyA beta is subject to winners curse bias, it will turn
 out being overly convervative for the SNP enrichments I’m trying to
 highlight (because some transcriptional QTLs might erronesouly be
 classified as non-trancriptional) so i think that’s acceptable.</p>
-<pre class="r"><code>PC1.filter = &quot;Expression.Splicing&quot;
+<pre class="r"><code>PC1.filter = c(&quot;Expression.Splicing&quot;, &quot;Expression.Splicing.Subset_YRI&quot;)
 
 dat.ZsFromAllTraitPairs &lt;- dat.recoded %&gt;%
-  filter(PC1 == PC1.filter) %&gt;%
+  filter(PC1 %in% PC1.filter) %&gt;%
   filter(!str_detect(PC2, &quot;ActivatingMark_Enhancer&quot;)) %&gt;%
   filter(!str_detect(PC2, &quot;ActivatingMark_OtherGenePromoter&quot;)) %&gt;%
   group_by(PC1, P1, PC2) %&gt;%
@@ -1383,38 +1517,190 @@ dat.ZsFromAllTraitPairs &lt;- dat.recoded %&gt;%
   mutate(OneSidedZTest.P = pnorm(Z, lower.tail=F)) %&gt;%
   group_by(PC1, PC2) %&gt;%
   mutate(q = qvalue(OneSidedZTest.P)$qvalues) %&gt;%
-  mutate(PolyASpecific = cut(q, breaks=c(0, 0.01, 0.05, 0.1, 1), include.lowest=T, ordered_result = T))
+  mutate(PolyASpecific = cut(q, breaks=c(0, 0.001, 0.01, 0.1, 1), include.lowest=T, ordered_result = T))
 
 
 dat.ZsFromAllTraitPairs %&gt;%
 ggplot(aes(x=beta.x, y=x.beta.in.y, color=PolyASpecific)) +
   geom_point(alpha=0.1) +
-  scale_color_manual(values = rev(brewer.pal(4, &quot;Reds&quot;))) +
-  facet_wrap(~PC2) +
+  scale_color_viridis_d(direction=-1) +
+  facet_grid(PC1~PC2) +
   guides(colour = guide_legend(override.aes = list(alpha = 1))) +
-  labs(color=&quot;PolyA-specific FDR&quot;)</code></pre>
+  labs(color=&quot;PolyA-specific FDR&quot;) +
+  theme(legend.position=&quot;bottom&quot;)</code></pre>
 <p><img src="figure/20230324_MakeFigs.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-1">
+Past versions of unnamed-chunk-9-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-9-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/3b44dfde49612d49977fafe369d3cbf25a8f5525/docs/figure/20230324_MakeFigs.Rmd/unnamed-chunk-9-1.png" target="_blank">3b44dfd</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2023-03-30
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>dat.ZsFromAllTraitPairs %&gt;%
-ggplot(aes(x=beta.x, y=x.beta.in.y, color=PolyASpecific==&quot;[0,0.01]&quot;)) +
+ggplot(aes(x=beta.x, y=x.beta.in.y, color=PolyASpecific==&quot;[0,0.001]&quot;)) +
   geom_point(alpha=0.1) +
-  facet_wrap(~PC2) +
+  facet_grid(PC1~PC2) +
   guides(colour = guide_legend(override.aes = list(alpha = 1))) +
-  labs(color=&quot;PolyA-specific FDR &lt; 0.01&quot;)</code></pre>
+  labs(color=&quot;PolyA-specific FDR &lt; 0.001&quot;) +
+  theme(legend.position=&quot;bottom&quot;)</code></pre>
 <p><img src="figure/20230324_MakeFigs.Rmd/unnamed-chunk-9-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-2">
+Past versions of unnamed-chunk-9-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-9-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/3b44dfde49612d49977fafe369d3cbf25a8f5525/docs/figure/20230324_MakeFigs.Rmd/unnamed-chunk-9-2.png" target="_blank">3b44dfd</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2023-03-30
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>dat.ZsFromAllTraitPairs %&gt;%
   count(PC1, PC2, PolyASpecific) %&gt;%
   ggplot(aes(x=PC2, y=n, fill=fct_rev(PolyASpecific))) +
   geom_col(position=&quot;stack&quot;) +
-  scale_fill_manual(values = brewer.pal(4, &quot;Reds&quot;)) +
+  facet_wrap(~PC1) +
+  scale_fill_viridis_d(direction=1) +
   Rotate_x_labels</code></pre>
 <p><img src="figure/20230324_MakeFigs.Rmd/unnamed-chunk-9-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-3">
+Past versions of unnamed-chunk-9-3.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-9-3" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/3b44dfde49612d49977fafe369d3cbf25a8f5525/docs/figure/20230324_MakeFigs.Rmd/unnamed-chunk-9-3.png" target="_blank">3b44dfd</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2023-03-30
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>dat.ZsFromAllTraitPairs %&gt;%
   count(PC1, PC2, PolyASpecific) %&gt;%
   ggplot(aes(x=PC2, y=n, fill=fct_rev(PolyASpecific))) +
   geom_col(position=&quot;fill&quot;) +
-  scale_fill_manual(values = brewer.pal(4, &quot;Reds&quot;)) +
+  facet_wrap(~PC1) +
+  scale_fill_viridis_d(direction=1) +
   Rotate_x_labels</code></pre>
 <p><img src="figure/20230324_MakeFigs.Rmd/unnamed-chunk-9-4.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-4">
+Past versions of unnamed-chunk-9-4.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-9-4" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/3b44dfde49612d49977fafe369d3cbf25a8f5525/docs/figure/20230324_MakeFigs.Rmd/unnamed-chunk-9-4.png" target="_blank">3b44dfd</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2023-03-30
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Okay, keep in mind that there is both biology and power issues at
 play… Biologically, I would expect very few polyA-specific eQTLs when
 comparing to 4sU, yet there are basically the same amount of
@@ -1423,50 +1709,6 @@ could chalk that up to the 4sU dataset being so underpowered, that a lot
 more eQTLs would be considered polyA specific. Similarly, that could
 explain why so many are polyA-specific when comparing to the relatively
 underpowered H3K36me3 dataset.</p>
-<p>Let’s do the same but anchor on YRI eQTLs..</p>
-<pre class="r"><code>PC1.filter = &quot;Expression.Splicing.Subset_YRI&quot;
-
-dat.ZsFromAllTraitPairs &lt;- dat.recoded %&gt;%
-  filter(PC1 == PC1.filter) %&gt;%
-  filter(!str_detect(PC2, &quot;ActivatingMark_Enhancer&quot;)) %&gt;%
-  filter(!str_detect(PC2, &quot;ActivatingMark_OtherGenePromoter&quot;)) %&gt;%
-  group_by(PC1, P1, PC2) %&gt;%
-  slice(which.min(trait.x.p.in.y)) %&gt;%
-  ungroup() %&gt;%
-  filter(!is.na(x.beta.in.y)) %&gt;%
-  distinct(PC1, P1, PC2, .keep_all=T) %&gt;%
-  mutate(Z = (abs(beta.x)-abs(x.beta.in.y)*sign(beta.x)*sign(x.beta.in.y))/sqrt(x.beta_se.in.y**2 + beta_se.x**2)) %&gt;%
-  mutate(OneSidedZTest.P = pnorm(Z, lower.tail=F)) %&gt;%
-  group_by(PC1, PC2) %&gt;%
-  mutate(q = qvalue(OneSidedZTest.P)$qvalues)
-
-dat.ZsFromAllTraitPairs %&gt;%
-  mutate(PolyASpecific = cut(q, breaks=c(0, 0.01, 0.05, 0.1, 1), include.lowest=T, ordered_result = T)) %&gt;%
-ggplot(aes(x=beta.x, y=x.beta.in.y, color=PolyASpecific)) +
-  geom_point(alpha=0.1) +
-  scale_color_manual(values = rev(brewer.pal(4, &quot;Reds&quot;))) +
-  facet_wrap(~PC2) +
-  guides(colour = guide_legend(override.aes = list(alpha = 1))) +
-  labs(color=&quot;PolyA-specific FDR&quot;)</code></pre>
-<p><img src="figure/20230324_MakeFigs.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>dat.ZsFromAllTraitPairs %&gt;%
-  mutate(PolyASpecific = cut(q, breaks=c(0, 0.01, 0.05, 0.1, 1), include.lowest=T, ordered_result = T)) %&gt;%
-  # mutate(PolyASpecific = cut(OneSidedZTest.P, breaks=c(0, 0.01, 0.05, 0.1, 1), include.lowest=T, ordered_result = T)) %&gt;%
-  count(PC1, PC2, PolyASpecific) %&gt;%
-  ggplot(aes(x=PC2, y=n, fill=fct_rev(PolyASpecific))) +
-  geom_col(position=&quot;stack&quot;) +
-  scale_fill_manual(values = brewer.pal(4, &quot;Reds&quot;)) +
-  Rotate_x_labels</code></pre>
-<p><img src="figure/20230324_MakeFigs.Rmd/unnamed-chunk-10-2.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>dat.ZsFromAllTraitPairs %&gt;%
-  mutate(PolyASpecific = cut(q, breaks=c(0, 0.01, 0.05, 0.1, 1), include.lowest=T, ordered_result = T)) %&gt;%
-  # mutate(PolyASpecific = cut(OneSidedZTest.P, breaks=c(0, 0.01, 0.05, 0.1, 1), include.lowest=T, ordered_result = T)) %&gt;%
-  count(PC1, PC2, PolyASpecific) %&gt;%
-  ggplot(aes(x=PC2, y=n, fill=fct_rev(PolyASpecific))) +
-  geom_col(position=&quot;fill&quot;) +
-  scale_fill_manual(values = brewer.pal(4, &quot;Reds&quot;)) +
-  Rotate_x_labels</code></pre>
-<p><img src="figure/20230324_MakeFigs.Rmd/unnamed-chunk-10-3.png" width="672" style="display: block; margin: auto;" /></p>
 <p>Let’s explore Carlos’ susie finemapping output</p>
 <pre class="r"><code>susie.finemap &lt;- fread(&quot;/project2/yangili1/cfbuenabadn/ChromatinSplicingQTLs/code/FineMapping/susie_runs_Geuvadis/susie_output.tab&quot;)
  
@@ -1476,7 +1718,44 @@ susie.finemap %&gt;%
   ggplot(aes(x=n)) +
   geom_bar() +
   labs(y=&quot;Num genes&quot;, x=&quot;Num eQTL signals&quot;)</code></pre>
-<p><img src="figure/20230324_MakeFigs.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/20230324_MakeFigs.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-10-1">
+Past versions of unnamed-chunk-10-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-10-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/3b44dfde49612d49977fafe369d3cbf25a8f5525/docs/figure/20230324_MakeFigs.Rmd/unnamed-chunk-10-1.png" target="_blank">3b44dfd</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2023-03-30
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>susie.finemap %&gt;%
   group_by(cs_gene, cs_names) %&gt;%
   summarise(PIP.sum = sum(cs_pip)) %&gt;%
@@ -1485,18 +1764,665 @@ susie.finemap %&gt;%
   stat_ecdf() +
   labs(x=&quot;Sum PIP in CI&quot;, title=&quot;These are 95% CIs&quot;) +
   coord_cartesian(xlim=c(0.9,1))</code></pre>
-<p><img src="figure/20230324_MakeFigs.Rmd/unnamed-chunk-11-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/20230324_MakeFigs.Rmd/unnamed-chunk-10-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-10-2">
+Past versions of unnamed-chunk-10-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-10-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/3b44dfde49612d49977fafe369d3cbf25a8f5525/docs/figure/20230324_MakeFigs.Rmd/unnamed-chunk-10-2.png" target="_blank">3b44dfd</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2023-03-30
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>susie.finemap %&gt;%
   count(cs_gene, cs_names) %&gt;%
   ggplot(aes(x=n)) +
   stat_ecdf() +
   coord_cartesian(xlim=c(0,20)) +
   labs(x=&quot;Num SNPs in CI&quot;)</code></pre>
-<p><img src="figure/20230324_MakeFigs.Rmd/unnamed-chunk-11-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/20230324_MakeFigs.Rmd/unnamed-chunk-10-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-10-3">
+Past versions of unnamed-chunk-10-3.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-10-3" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/3b44dfde49612d49977fafe369d3cbf25a8f5525/docs/figure/20230324_MakeFigs.Rmd/unnamed-chunk-10-3.png" target="_blank">3b44dfd</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2023-03-30
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Ok great, next I will intersect the finemapped SNPs with annotations,
 and sum up the number of SNPs in each annotation (weighted by PIP), and
-compare transcriptional vs post-transcriptional eQTLs. I think I’ll do
-some work in the snakemake to accomplish this and come back to it…</p>
+compare transcriptional vs post-transcriptional eQTLs. I did some work
+in the snakemake to intersect Carlos’s finemap output with SNP
+annotations and now let’s explore that output.</p>
+<pre class="r"><code>finemappip.annotation.intersections &lt;- fread(&quot;../code/QTL_SNP_Enrichment/FinemapIntersections_Susie/YRI.bed.gz&quot;, col.names=c(&quot;chrom&quot;, &quot;start&quot;, &quot;stop&quot;, &quot;name&quot;, &quot;pip&quot;,&quot;featChrom&quot;, &quot;featStart&quot;, &quot;featStop&quot;,&quot;Annotation&quot;, &quot;Overlap&quot;)) %&gt;%
+  separate(name, into=c(&quot;snp&quot;, &quot;eGene&quot;, &quot;Signal&quot;), sep = &quot;_&quot;) %&gt;%
+  mutate(Annotation = str_replace_all(Annotation, &quot;_0$&quot;, &quot;_UnannotatedButObserved&quot;)) %&gt;%
+  mutate(Annotation = str_replace_all(Annotation, &quot;_1$&quot;, &quot;_Annotated&quot;)) %&gt;%
+  mutate(Annotation = str_replace_all(Annotation, &quot;^\\d+?_&quot;, &quot;ChromHMM:&quot;)) %&gt;%
+  filter(!is.na(Annotation)) %&gt;%
+  mutate(Annotation = if_else(Annotation==&quot;.&quot;, &quot;No annotation&quot;, Annotation)) %&gt;%
+  filter(!str_detect(Annotation, &quot;^ncRNA&quot;)) %&gt;%
+  filter(!Annotation==&quot;No annotation&quot;)
+
+transcriptional.PC2s &lt;- c(&quot;chRNA.Expression.Splicing&quot;, &quot;H3K27AC&quot;, &quot;H3K4ME3&quot;)
+
+transcriptional.eQTLs &lt;- dat.ZsFromAllTraitPairs %&gt;%
+  filter(PC2 %in% transcriptional.PC2s) %&gt;%
+  mutate(IsPolyASpecific = if_else(q &lt; 0.001, &quot;PostTxn&quot;, &quot;Txn&quot;))
+
+count(transcriptional.eQTLs,PC1, PC2, IsPolyASpecific)</code></pre>
+<pre><code># A tibble: 12 × 4
+# Groups:   PC1, PC2 [6]
+   PC1                            PC2                      IsPolyASpecific     n
+   &lt;chr&gt;                          &lt;chr&gt;                    &lt;chr&gt;           &lt;int&gt;
+ 1 Expression.Splicing            H3K27AC                  PostTxn           523
+ 2 Expression.Splicing            H3K27AC                  Txn              7751
+ 3 Expression.Splicing            H3K4ME3                  PostTxn           473
+ 4 Expression.Splicing            H3K4ME3                  Txn              8447
+ 5 Expression.Splicing            chRNA.Expression.Splici… PostTxn           565
+ 6 Expression.Splicing            chRNA.Expression.Splici… Txn              9275
+ 7 Expression.Splicing.Subset_YRI H3K27AC                  PostTxn           760
+ 8 Expression.Splicing.Subset_YRI H3K27AC                  Txn              2610
+ 9 Expression.Splicing.Subset_YRI H3K4ME3                  PostTxn           643
+10 Expression.Splicing.Subset_YRI H3K4ME3                  Txn              2935
+11 Expression.Splicing.Subset_YRI chRNA.Expression.Splici… PostTxn           746
+12 Expression.Splicing.Subset_YRI chRNA.Expression.Splici… Txn              3167</code></pre>
+<pre class="r"><code>finemappip.annotation.intersections %&gt;%
+  filter(Signal == &quot;L1&quot;) %&gt;%
+  left_join(transcriptional.eQTLs, by=c(&quot;eGene&quot;=&quot;P1&quot;)) %&gt;%
+  filter(!is.na(IsPolyASpecific)) %&gt;%
+  group_by(Annotation, IsPolyASpecific, PC1, PC2) %&gt;%
+  summarise(SumInAnnotation = sum(pip, na.rm=T)) %&gt;%
+  ungroup() %&gt;%
+  group_by(IsPolyASpecific, PC1, PC2) %&gt;%
+  mutate(TotalPIP = sum(SumInAnnotation, na.rm=T)) %&gt;%
+  ungroup() %&gt;%
+  mutate(FractionPIP_in_Annotation = SumInAnnotation/TotalPIP ) %&gt;%
+  dplyr::select(FractionPIP_in_Annotation, PC1, PC2, IsPolyASpecific, Annotation) %&gt;%
+  pivot_wider(names_from = &quot;IsPolyASpecific&quot;, values_from = c(&quot;FractionPIP_in_Annotation&quot;)) %&gt;%
+  mutate(Enrichment = log2(PostTxn/Txn)) %&gt;%
+  ggplot(aes(x=Annotation, y=Enrichment)) +
+  geom_col() +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+  coord_flip() +
+  facet_grid(PC2~PC1) +
+  labs(x = &quot;Annotation&quot;, y=&quot;Finemapping posterior mass fold enrichment\n(Txn &lt;-- --&gt; PostTxn)&quot;)</code></pre>
+<p><img src="figure/20230324_MakeFigs.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-11-1">
+Past versions of unnamed-chunk-11-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-11-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/3b44dfde49612d49977fafe369d3cbf25a8f5525/docs/figure/20230324_MakeFigs.Rmd/unnamed-chunk-11-1.png" target="_blank">3b44dfd</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2023-03-30
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>set.seed(0)
+results &lt;- list()
+for (i in 1:100){
+  print(paste(&quot;Bootstrap resample&quot;, i))
+  transcriptional.eQTLs.sample &lt;- transcriptional.eQTLs %&gt;%
+  group_by(PC1, PC2, IsPolyASpecific) %&gt;%
+  sample_frac(replace=T)
+  results[[i]] &lt;-
+  finemappip.annotation.intersections %&gt;%
+  filter(Signal == &quot;L1&quot;) %&gt;%
+  left_join(transcriptional.eQTLs.sample, by=c(&quot;eGene&quot;=&quot;P1&quot;)) %&gt;%
+  filter(!is.na(IsPolyASpecific)) %&gt;%
+  group_by(Annotation, IsPolyASpecific, PC1, PC2) %&gt;%
+  summarise(SumInAnnotation = sum(pip, na.rm=T)) %&gt;%
+  ungroup() %&gt;%
+  group_by(IsPolyASpecific, PC1, PC2) %&gt;%
+  mutate(TotalPIP = sum(SumInAnnotation, na.rm=T)) %&gt;%
+  ungroup() %&gt;%
+  mutate(FractionPIP_in_Annotation = SumInAnnotation/TotalPIP ) %&gt;%
+  dplyr::select(FractionPIP_in_Annotation, PC1, PC2, IsPolyASpecific, Annotation) %&gt;%
+  pivot_wider(names_from = &quot;IsPolyASpecific&quot;, values_from = c(&quot;FractionPIP_in_Annotation&quot;)) %&gt;%
+  mutate(Enrichment = log2(PostTxn/Txn)) %&gt;%
+  mutate(i=i)
+}</code></pre>
+<pre><code>[1] &quot;Bootstrap resample 1&quot;
+[1] &quot;Bootstrap resample 2&quot;
+[1] &quot;Bootstrap resample 3&quot;
+[1] &quot;Bootstrap resample 4&quot;
+[1] &quot;Bootstrap resample 5&quot;
+[1] &quot;Bootstrap resample 6&quot;
+[1] &quot;Bootstrap resample 7&quot;
+[1] &quot;Bootstrap resample 8&quot;
+[1] &quot;Bootstrap resample 9&quot;
+[1] &quot;Bootstrap resample 10&quot;
+[1] &quot;Bootstrap resample 11&quot;
+[1] &quot;Bootstrap resample 12&quot;
+[1] &quot;Bootstrap resample 13&quot;
+[1] &quot;Bootstrap resample 14&quot;
+[1] &quot;Bootstrap resample 15&quot;
+[1] &quot;Bootstrap resample 16&quot;
+[1] &quot;Bootstrap resample 17&quot;
+[1] &quot;Bootstrap resample 18&quot;
+[1] &quot;Bootstrap resample 19&quot;
+[1] &quot;Bootstrap resample 20&quot;
+[1] &quot;Bootstrap resample 21&quot;
+[1] &quot;Bootstrap resample 22&quot;
+[1] &quot;Bootstrap resample 23&quot;
+[1] &quot;Bootstrap resample 24&quot;
+[1] &quot;Bootstrap resample 25&quot;
+[1] &quot;Bootstrap resample 26&quot;
+[1] &quot;Bootstrap resample 27&quot;
+[1] &quot;Bootstrap resample 28&quot;
+[1] &quot;Bootstrap resample 29&quot;
+[1] &quot;Bootstrap resample 30&quot;
+[1] &quot;Bootstrap resample 31&quot;
+[1] &quot;Bootstrap resample 32&quot;
+[1] &quot;Bootstrap resample 33&quot;
+[1] &quot;Bootstrap resample 34&quot;
+[1] &quot;Bootstrap resample 35&quot;
+[1] &quot;Bootstrap resample 36&quot;
+[1] &quot;Bootstrap resample 37&quot;
+[1] &quot;Bootstrap resample 38&quot;
+[1] &quot;Bootstrap resample 39&quot;
+[1] &quot;Bootstrap resample 40&quot;
+[1] &quot;Bootstrap resample 41&quot;
+[1] &quot;Bootstrap resample 42&quot;
+[1] &quot;Bootstrap resample 43&quot;
+[1] &quot;Bootstrap resample 44&quot;
+[1] &quot;Bootstrap resample 45&quot;
+[1] &quot;Bootstrap resample 46&quot;
+[1] &quot;Bootstrap resample 47&quot;
+[1] &quot;Bootstrap resample 48&quot;
+[1] &quot;Bootstrap resample 49&quot;
+[1] &quot;Bootstrap resample 50&quot;
+[1] &quot;Bootstrap resample 51&quot;
+[1] &quot;Bootstrap resample 52&quot;
+[1] &quot;Bootstrap resample 53&quot;
+[1] &quot;Bootstrap resample 54&quot;
+[1] &quot;Bootstrap resample 55&quot;
+[1] &quot;Bootstrap resample 56&quot;
+[1] &quot;Bootstrap resample 57&quot;
+[1] &quot;Bootstrap resample 58&quot;
+[1] &quot;Bootstrap resample 59&quot;
+[1] &quot;Bootstrap resample 60&quot;
+[1] &quot;Bootstrap resample 61&quot;
+[1] &quot;Bootstrap resample 62&quot;
+[1] &quot;Bootstrap resample 63&quot;
+[1] &quot;Bootstrap resample 64&quot;
+[1] &quot;Bootstrap resample 65&quot;
+[1] &quot;Bootstrap resample 66&quot;
+[1] &quot;Bootstrap resample 67&quot;
+[1] &quot;Bootstrap resample 68&quot;
+[1] &quot;Bootstrap resample 69&quot;
+[1] &quot;Bootstrap resample 70&quot;
+[1] &quot;Bootstrap resample 71&quot;
+[1] &quot;Bootstrap resample 72&quot;
+[1] &quot;Bootstrap resample 73&quot;
+[1] &quot;Bootstrap resample 74&quot;
+[1] &quot;Bootstrap resample 75&quot;
+[1] &quot;Bootstrap resample 76&quot;
+[1] &quot;Bootstrap resample 77&quot;
+[1] &quot;Bootstrap resample 78&quot;
+[1] &quot;Bootstrap resample 79&quot;
+[1] &quot;Bootstrap resample 80&quot;
+[1] &quot;Bootstrap resample 81&quot;
+[1] &quot;Bootstrap resample 82&quot;
+[1] &quot;Bootstrap resample 83&quot;
+[1] &quot;Bootstrap resample 84&quot;
+[1] &quot;Bootstrap resample 85&quot;
+[1] &quot;Bootstrap resample 86&quot;
+[1] &quot;Bootstrap resample 87&quot;
+[1] &quot;Bootstrap resample 88&quot;
+[1] &quot;Bootstrap resample 89&quot;
+[1] &quot;Bootstrap resample 90&quot;
+[1] &quot;Bootstrap resample 91&quot;
+[1] &quot;Bootstrap resample 92&quot;
+[1] &quot;Bootstrap resample 93&quot;
+[1] &quot;Bootstrap resample 94&quot;
+[1] &quot;Bootstrap resample 95&quot;
+[1] &quot;Bootstrap resample 96&quot;
+[1] &quot;Bootstrap resample 97&quot;
+[1] &quot;Bootstrap resample 98&quot;
+[1] &quot;Bootstrap resample 99&quot;
+[1] &quot;Bootstrap resample 100&quot;</code></pre>
+<pre class="r"><code>finemappip.annotation.intersections$Annotation %&gt;% unique()</code></pre>
+<pre><code> [1] &quot;ChromHMM:Weak_Promoter&quot;                        
+ [2] &quot;ChromHMM:Active_Promoter&quot;                      
+ [3] &quot;ChromHMM:Heterochrom/lo&quot;                       
+ [4] &quot;ChromHMM:Repressed&quot;                            
+ [5] &quot;SpliceBranchpointRegion_UnannotatedButObserved&quot;
+ [6] &quot;ChromHMM:Txn_Elongation&quot;                       
+ [7] &quot;SpliceAcceptor_UnannotatedButObserved&quot;         
+ [8] &quot;SpliceDonor_UnannotatedButObserved&quot;            
+ [9] &quot;ChromHMM:Txn_Transition&quot;                       
+[10] &quot;SpliceDonor_Annotated&quot;                         
+[11] &quot;ChromHMM:Strong_Enhancer&quot;                      
+[12] &quot;ChromHMM:Weak_Enhancer&quot;                        
+[13] &quot;ChromHMM:Weak_Txn&quot;                             
+[14] &quot;SpliceAcceptor_Annotated&quot;                      
+[15] &quot;SpliceBranchpointRegion_Annotated&quot;             
+[16] &quot;PAS_Region&quot;                                    
+[17] &quot;ChromHMM:Repetitive/CNV&quot;                       
+[18] &quot;ChromHMM:Poised_Promoter&quot;                      
+[19] &quot;ChromHMM:Insulator&quot;                            
+[20] &quot;miRNA_BS&quot;                                      </code></pre>
+<pre class="r"><code>bind_rows(results) %&gt;%
+  # filter(PC1 == &quot;Expression.Splicing&quot; &amp; PC2 == &quot;H3K27AC&quot; &amp; Annotation == &quot;ChromHMM:Active_Promoter&quot;)
+  group_by(Annotation, PC1, PC2) %&gt;%
+  summarise(mean = mean(Enrichment, na.rm=T),
+            Percentile10 = quantile(Enrichment, probs = 0.05, na.rm=T),
+            Percentile90 = quantile(Enrichment, probs = 0.95, na.rm=T)) %&gt;%
+  mutate(color = case_when(
+    str_detect(Annotation, &quot;^Splic&quot;) ~ &quot;Splice region&quot;,
+    str_detect(Annotation, &quot;Enhancer&quot;) ~ &quot;Enhancer&quot;,
+    str_detect(Annotation, &quot;Promoter&quot;) ~ &quot;Promoter&quot;,
+    str_detect(Annotation, &quot;Txn&quot;) ~ &quot;Transcribed&quot;,
+    str_detect(Annotation, &quot;ChromHMM&quot;) ~ &quot;Other ChromHMM&quot;,
+    TRUE ~ &quot;Other&quot;
+  )) %&gt;%
+  ggplot(aes(x=Annotation, y=mean, color=color)) +
+    geom_hline(yintercept = 0) +
+    geom_point() +
+    geom_errorbar(aes(ymin=Percentile10, ymax=Percentile90)) +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+    coord_flip() +
+    facet_grid(PC2~PC1) +
+    labs(x = &quot;Annotation&quot;, y=&quot;Finemapping posterior mass fold enrichment\n(ChromatinQTL|eQTL &lt;-- --&gt; sQTL)&quot;,
+         caption = &quot;Bootsrapped 90% confidence interval&quot;)</code></pre>
+<p><img src="figure/20230324_MakeFigs.Rmd/unnamed-chunk-11-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-11-2">
+Past versions of unnamed-chunk-11-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-11-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/3b44dfde49612d49977fafe369d3cbf25a8f5525/docs/figure/20230324_MakeFigs.Rmd/unnamed-chunk-11-2.png" target="_blank">3b44dfd</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2023-03-30
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Hmm, the results aren’t quite what I was expecting, and they aren’t
+so consistent across the different ways to classify eQTLs as post txn vs
+txn (H3K27AC, H3K4ME3, chRNA). I wonder how consistent the
+classifications are…</p>
+<pre class="r"><code>transcriptional.eQTLs &lt;- dat.ZsFromAllTraitPairs %&gt;%
+  filter(PC2 %in% transcriptional.PC2s) %&gt;%
+  mutate(IsPolyASpecific = if_else(q &lt; 0.01, &quot;PostTxn&quot;, &quot;Txn&quot;))
+
+transcriptional.eQTLs %&gt;%
+  group_by(PC1) %&gt;%
+  add_count(P1) %&gt;%
+  filter(n==3) %&gt;%
+  ungroup() %&gt;%
+  mutate(IsPolyASpecific = IsPolyASpecific==&quot;Txn&quot;) %&gt;%
+  group_by(P1, PC1) %&gt;%
+  summarise(TxnQTL_In_HowManyOf3 = sum(IsPolyASpecific)) %&gt;%
+  ggplot(aes(x=TxnQTL_In_HowManyOf3)) +
+  geom_bar() +
+  facet_wrap(~PC1) +
+  labs(&quot;How many of the 3 methods is a gene classified as txn eQTL&quot;)</code></pre>
+<p><img src="figure/20230324_MakeFigs.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-12-1">
+Past versions of unnamed-chunk-12-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-12-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/3b44dfde49612d49977fafe369d3cbf25a8f5525/docs/figure/20230324_MakeFigs.Rmd/unnamed-chunk-12-1.png" target="_blank">3b44dfd</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2023-03-30
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>transcriptional.eQTLs &lt;- dat.ZsFromAllTraitPairs %&gt;%
+  filter(PC2 %in% transcriptional.PC2s) %&gt;%
+  mutate(IsPolyASpecific = if_else(q &lt; 0.001, &quot;PostTxn&quot;, &quot;Txn&quot;))
+
+transcriptional.eQTLs %&gt;%
+  group_by(PC1) %&gt;%
+  add_count(P1) %&gt;%
+  filter(n==3) %&gt;%
+  ungroup() %&gt;%
+  mutate(IsPolyASpecific = IsPolyASpecific==&quot;Txn&quot;) %&gt;%
+  group_by(P1, PC1) %&gt;%
+  summarise(TxnQTL_In_HowManyOf3 = sum(IsPolyASpecific)) %&gt;%
+  ggplot(aes(x=TxnQTL_In_HowManyOf3)) +
+  geom_bar() +
+  facet_wrap(~PC1) +
+  labs(&quot;How many of the 3 methods is a gene classified as txn eQTL&quot;)</code></pre>
+<p><img src="figure/20230324_MakeFigs.Rmd/unnamed-chunk-12-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>transcriptional.eQTLs &lt;- dat.ZsFromAllTraitPairs %&gt;%
+  filter(PC2 %in% transcriptional.PC2s) %&gt;%
+  mutate(IsPolyASpecific = if_else(q &lt; 0.0001, &quot;PostTxn&quot;, &quot;Txn&quot;))
+
+transcriptional.eQTLs %&gt;%
+  group_by(PC1) %&gt;%
+  add_count(P1) %&gt;%
+  filter(n==3) %&gt;%
+  ungroup() %&gt;%
+  mutate(IsPolyASpecific = IsPolyASpecific==&quot;Txn&quot;) %&gt;%
+  group_by(P1, PC1) %&gt;%
+  summarise(TxnQTL_In_HowManyOf3 = sum(IsPolyASpecific)) %&gt;%
+  ggplot(aes(x=TxnQTL_In_HowManyOf3)) +
+  geom_bar() +
+  facet_wrap(~PC1) +
+  labs(&quot;How many of the 3 methods is a gene classified as txn eQTL&quot;)</code></pre>
+<p><img src="figure/20230324_MakeFigs.Rmd/unnamed-chunk-12-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok so playing with the thresholds still doesn’t get a nice
+clean/consistent classification between the different methods… It’s not
+like there are a lot of genes that are in txn class in all 3 and in
+non-txn class in all 3. There are a lot of in-betweens. Let’s maybe just
+try reclassifying them as txn if they are significant any of the
+three…</p>
+<pre class="r"><code>transcriptional.eQTLs &lt;- dat.ZsFromAllTraitPairs %&gt;%
+  filter(PC2 %in% transcriptional.PC2s) %&gt;%
+  group_by(PC1) %&gt;%
+  add_count(P1) %&gt;%
+  filter(n==3) %&gt;%
+  ungroup() %&gt;%
+  group_by(P1, PC1) %&gt;%
+  mutate(IsPolyASpecific = if_else(any(q &lt; 0.001), &quot;PostTxn&quot;, &quot;Txn&quot;)) %&gt;%
+  ungroup()
+
+count(transcriptional.eQTLs,PC1, PC2, IsPolyASpecific)</code></pre>
+<pre><code># A tibble: 12 × 4
+   PC1                            PC2                      IsPolyASpecific     n
+   &lt;chr&gt;                          &lt;chr&gt;                    &lt;chr&gt;           &lt;int&gt;
+ 1 Expression.Splicing            H3K27AC                  PostTxn          1027
+ 2 Expression.Splicing            H3K27AC                  Txn              7107
+ 3 Expression.Splicing            H3K4ME3                  PostTxn          1027
+ 4 Expression.Splicing            H3K4ME3                  Txn              7107
+ 5 Expression.Splicing            chRNA.Expression.Splici… PostTxn          1027
+ 6 Expression.Splicing            chRNA.Expression.Splici… Txn              7107
+ 7 Expression.Splicing.Subset_YRI H3K27AC                  PostTxn          1274
+ 8 Expression.Splicing.Subset_YRI H3K27AC                  Txn              2014
+ 9 Expression.Splicing.Subset_YRI H3K4ME3                  PostTxn          1274
+10 Expression.Splicing.Subset_YRI H3K4ME3                  Txn              2014
+11 Expression.Splicing.Subset_YRI chRNA.Expression.Splici… PostTxn          1274
+12 Expression.Splicing.Subset_YRI chRNA.Expression.Splici… Txn              2014</code></pre>
+<pre class="r"><code>set.seed(0)
+results &lt;- list()
+for (i in 1:100){
+  print(paste(&quot;Bootstrap resample&quot;, i))
+  transcriptional.eQTLs.sample &lt;- transcriptional.eQTLs %&gt;%
+  group_by(PC1, PC2, IsPolyASpecific) %&gt;%
+  sample_frac(replace=T)
+  results[[i]] &lt;-
+  finemappip.annotation.intersections %&gt;%
+  filter(Signal == &quot;L1&quot;) %&gt;%
+  inner_join(transcriptional.eQTLs.sample, by=c(&quot;eGene&quot;=&quot;P1&quot;)) %&gt;%
+  filter(!is.na(IsPolyASpecific)) %&gt;%
+  group_by(Annotation, IsPolyASpecific, PC1, PC2) %&gt;%
+  summarise(SumInAnnotation = sum(pip, na.rm=T)) %&gt;%
+  ungroup() %&gt;%
+  group_by(IsPolyASpecific, PC1, PC2) %&gt;%
+  mutate(TotalPIP = sum(SumInAnnotation, na.rm=T)) %&gt;%
+  ungroup() %&gt;%
+  mutate(FractionPIP_in_Annotation = SumInAnnotation/TotalPIP ) %&gt;%
+  dplyr::select(FractionPIP_in_Annotation, PC1, PC2, IsPolyASpecific, Annotation) %&gt;%
+  pivot_wider(names_from = &quot;IsPolyASpecific&quot;, values_from = c(&quot;FractionPIP_in_Annotation&quot;)) %&gt;%
+  mutate(Enrichment = log2(PostTxn/Txn)) %&gt;%
+  mutate(i=i)
+}</code></pre>
+<pre><code>[1] &quot;Bootstrap resample 1&quot;
+[1] &quot;Bootstrap resample 2&quot;
+[1] &quot;Bootstrap resample 3&quot;
+[1] &quot;Bootstrap resample 4&quot;
+[1] &quot;Bootstrap resample 5&quot;
+[1] &quot;Bootstrap resample 6&quot;
+[1] &quot;Bootstrap resample 7&quot;
+[1] &quot;Bootstrap resample 8&quot;
+[1] &quot;Bootstrap resample 9&quot;
+[1] &quot;Bootstrap resample 10&quot;
+[1] &quot;Bootstrap resample 11&quot;
+[1] &quot;Bootstrap resample 12&quot;
+[1] &quot;Bootstrap resample 13&quot;
+[1] &quot;Bootstrap resample 14&quot;
+[1] &quot;Bootstrap resample 15&quot;
+[1] &quot;Bootstrap resample 16&quot;
+[1] &quot;Bootstrap resample 17&quot;
+[1] &quot;Bootstrap resample 18&quot;
+[1] &quot;Bootstrap resample 19&quot;
+[1] &quot;Bootstrap resample 20&quot;
+[1] &quot;Bootstrap resample 21&quot;
+[1] &quot;Bootstrap resample 22&quot;
+[1] &quot;Bootstrap resample 23&quot;
+[1] &quot;Bootstrap resample 24&quot;
+[1] &quot;Bootstrap resample 25&quot;
+[1] &quot;Bootstrap resample 26&quot;
+[1] &quot;Bootstrap resample 27&quot;
+[1] &quot;Bootstrap resample 28&quot;
+[1] &quot;Bootstrap resample 29&quot;
+[1] &quot;Bootstrap resample 30&quot;
+[1] &quot;Bootstrap resample 31&quot;
+[1] &quot;Bootstrap resample 32&quot;
+[1] &quot;Bootstrap resample 33&quot;
+[1] &quot;Bootstrap resample 34&quot;
+[1] &quot;Bootstrap resample 35&quot;
+[1] &quot;Bootstrap resample 36&quot;
+[1] &quot;Bootstrap resample 37&quot;
+[1] &quot;Bootstrap resample 38&quot;
+[1] &quot;Bootstrap resample 39&quot;
+[1] &quot;Bootstrap resample 40&quot;
+[1] &quot;Bootstrap resample 41&quot;
+[1] &quot;Bootstrap resample 42&quot;
+[1] &quot;Bootstrap resample 43&quot;
+[1] &quot;Bootstrap resample 44&quot;
+[1] &quot;Bootstrap resample 45&quot;
+[1] &quot;Bootstrap resample 46&quot;
+[1] &quot;Bootstrap resample 47&quot;
+[1] &quot;Bootstrap resample 48&quot;
+[1] &quot;Bootstrap resample 49&quot;
+[1] &quot;Bootstrap resample 50&quot;
+[1] &quot;Bootstrap resample 51&quot;
+[1] &quot;Bootstrap resample 52&quot;
+[1] &quot;Bootstrap resample 53&quot;
+[1] &quot;Bootstrap resample 54&quot;
+[1] &quot;Bootstrap resample 55&quot;
+[1] &quot;Bootstrap resample 56&quot;
+[1] &quot;Bootstrap resample 57&quot;
+[1] &quot;Bootstrap resample 58&quot;
+[1] &quot;Bootstrap resample 59&quot;
+[1] &quot;Bootstrap resample 60&quot;
+[1] &quot;Bootstrap resample 61&quot;
+[1] &quot;Bootstrap resample 62&quot;
+[1] &quot;Bootstrap resample 63&quot;
+[1] &quot;Bootstrap resample 64&quot;
+[1] &quot;Bootstrap resample 65&quot;
+[1] &quot;Bootstrap resample 66&quot;
+[1] &quot;Bootstrap resample 67&quot;
+[1] &quot;Bootstrap resample 68&quot;
+[1] &quot;Bootstrap resample 69&quot;
+[1] &quot;Bootstrap resample 70&quot;
+[1] &quot;Bootstrap resample 71&quot;
+[1] &quot;Bootstrap resample 72&quot;
+[1] &quot;Bootstrap resample 73&quot;
+[1] &quot;Bootstrap resample 74&quot;
+[1] &quot;Bootstrap resample 75&quot;
+[1] &quot;Bootstrap resample 76&quot;
+[1] &quot;Bootstrap resample 77&quot;
+[1] &quot;Bootstrap resample 78&quot;
+[1] &quot;Bootstrap resample 79&quot;
+[1] &quot;Bootstrap resample 80&quot;
+[1] &quot;Bootstrap resample 81&quot;
+[1] &quot;Bootstrap resample 82&quot;
+[1] &quot;Bootstrap resample 83&quot;
+[1] &quot;Bootstrap resample 84&quot;
+[1] &quot;Bootstrap resample 85&quot;
+[1] &quot;Bootstrap resample 86&quot;
+[1] &quot;Bootstrap resample 87&quot;
+[1] &quot;Bootstrap resample 88&quot;
+[1] &quot;Bootstrap resample 89&quot;
+[1] &quot;Bootstrap resample 90&quot;
+[1] &quot;Bootstrap resample 91&quot;
+[1] &quot;Bootstrap resample 92&quot;
+[1] &quot;Bootstrap resample 93&quot;
+[1] &quot;Bootstrap resample 94&quot;
+[1] &quot;Bootstrap resample 95&quot;
+[1] &quot;Bootstrap resample 96&quot;
+[1] &quot;Bootstrap resample 97&quot;
+[1] &quot;Bootstrap resample 98&quot;
+[1] &quot;Bootstrap resample 99&quot;
+[1] &quot;Bootstrap resample 100&quot;</code></pre>
+<pre class="r"><code>bind_rows(results) %&gt;%
+  # filter(PC1 == &quot;Expression.Splicing&quot; &amp; PC2 == &quot;H3K27AC&quot; &amp; Annotation == &quot;ChromHMM:Active_Promoter&quot;)
+  group_by(Annotation, PC1, PC2) %&gt;%
+  summarise(mean = mean(Enrichment, na.rm=T),
+            Percentile10 = quantile(Enrichment, probs = 0.05, na.rm=T),
+            Percentile90 = quantile(Enrichment, probs = 0.95, na.rm=T)) %&gt;%
+  mutate(color = case_when(
+    str_detect(Annotation, &quot;^Splic&quot;) ~ &quot;Splice region&quot;,
+    str_detect(Annotation, &quot;Enhancer&quot;) ~ &quot;Enhancer&quot;,
+    str_detect(Annotation, &quot;Promoter&quot;) ~ &quot;Promoter&quot;,
+    str_detect(Annotation, &quot;Txn&quot;) ~ &quot;Transcribed&quot;,
+    str_detect(Annotation, &quot;ChromHMM&quot;) ~ &quot;Other ChromHMM&quot;,
+    TRUE ~ &quot;Other&quot;
+  )) %&gt;%
+  ggplot(aes(x=Annotation, y=mean, color=color)) +
+    geom_hline(yintercept = 0) +
+    geom_point() +
+    geom_errorbar(aes(ymin=Percentile10, ymax=Percentile90)) +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+    coord_flip() +
+    facet_grid(PC2~PC1) +
+    labs(x = &quot;Annotation&quot;, y=&quot;Finemapping posterior mass fold enrichment\n(ChromatinQTL|eQTL &lt;-- --&gt; sQTL)&quot;,
+         caption = &quot;Bootsrapped 90% confidence interval&quot;)</code></pre>
+<p><img src="figure/20230324_MakeFigs.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 </div>
 <div id="figs2c" class="section level2">
@@ -1510,16 +2436,22 @@ transcriptional.eQTLs &lt;- dat.ZsFromAllTraitPairs %&gt;%
   mutate(IsPolyASpecific = q &lt; 0.01 &amp; trait.x.p.in.y&gt;0.01 )
 
 count(transcriptional.eQTLs, IsPolyASpecific, PC2)</code></pre>
-<pre><code># A tibble: 6 × 4
-# Groups:   PC1, PC2 [3]
-  PC1                            PC2                       IsPolyASpecific     n
-  &lt;chr&gt;                          &lt;chr&gt;                     &lt;lgl&gt;           &lt;int&gt;
-1 Expression.Splicing.Subset_YRI H3K27AC                   FALSE            1965
-2 Expression.Splicing.Subset_YRI H3K27AC                   TRUE             1405
-3 Expression.Splicing.Subset_YRI H3K4ME3                   FALSE            2217
-4 Expression.Splicing.Subset_YRI H3K4ME3                   TRUE             1361
-5 Expression.Splicing.Subset_YRI chRNA.Expression.Splicing FALSE            2326
-6 Expression.Splicing.Subset_YRI chRNA.Expression.Splicing TRUE             1587</code></pre>
+<pre><code># A tibble: 12 × 4
+# Groups:   PC1, PC2 [6]
+   PC1                            PC2                      IsPolyASpecific     n
+   &lt;chr&gt;                          &lt;chr&gt;                    &lt;lgl&gt;           &lt;int&gt;
+ 1 Expression.Splicing            H3K27AC                  FALSE            7294
+ 2 Expression.Splicing            H3K27AC                  TRUE              980
+ 3 Expression.Splicing            H3K4ME3                  FALSE            8021
+ 4 Expression.Splicing            H3K4ME3                  TRUE              899
+ 5 Expression.Splicing            chRNA.Expression.Splici… FALSE            8943
+ 6 Expression.Splicing            chRNA.Expression.Splici… TRUE              897
+ 7 Expression.Splicing.Subset_YRI H3K27AC                  FALSE            1965
+ 8 Expression.Splicing.Subset_YRI H3K27AC                  TRUE             1405
+ 9 Expression.Splicing.Subset_YRI H3K4ME3                  FALSE            2217
+10 Expression.Splicing.Subset_YRI H3K4ME3                  TRUE             1361
+11 Expression.Splicing.Subset_YRI chRNA.Expression.Splici… FALSE            2326
+12 Expression.Splicing.Subset_YRI chRNA.Expression.Splici… TRUE             1587</code></pre>
 <pre class="r"><code>PC1.filter &lt;- c(&quot;Expression.Splicing&quot;, &quot;Expression.Splicing.Subset_YRI&quot;)
 
 PC1.sQTL.filter &lt;- c(&quot;polyA.Splicing&quot;, &quot;polyA.Splicing.Subset_YRI&quot;, &quot;chRNA.Splicing&quot;)
@@ -1542,11 +2474,325 @@ dat.forsQTLQQ %&gt;%
   geom_abline(slope=1) +
   facet_grid(PC2~ClassificationPC, scales = &quot;free&quot;) +
   labs(x=&quot;Expected -log10P&quot;, y=&quot;Observed -log10P&quot;, title=&quot;sQTL QQ for top eQTL SNPs&quot;, caption=&quot;Column facets: criteria to determine polyA-specific eQTLs\nRow facets: sQTL dataset&quot;)</code></pre>
-<p><img src="figure/20230324_MakeFigs.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/20230324_MakeFigs.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 <div id="fig2c" class="section level2">
 <h2>Fig2c</h2>
-<p>The eQTL QQplot of transcriptional</p>
+<p>The eQTL QQplot of stable sQTLs, unstable sQTLs, and H3K27AC QTLs</p>
+<pre class="r"><code>PC2.filter &lt;- c(&quot;Expression.Splicing&quot;, &quot;Expression.Splicing.Subset_YRI&quot;)
+PC2.SignificanceFilter &lt;- c(&quot;H3K27AC&quot;, &quot;H3K4ME3&quot;, &quot;H3K36ME3&quot;)
+PC1.filter &lt;- c(&quot;polyA.Splicing&quot;, &quot;H3K27AC&quot;, &quot;H3K4ME1&quot;, &quot;H3K4ME3&quot;)
+PC1.filter.Splicing &lt;- PC1.filter[str_detect(PC1.filter, &quot;Splicing&quot;)]
+PC1.filter.NonSplicing &lt;- PC1.filter[!str_detect(PC1.filter, &quot;Splicing&quot;)]
+
+dat.foreQTLQQ &lt;- fread(&quot;../code/pi1/PairwisePi1Traits.P.all.txt.gz&quot;) %&gt;%
+  filter((PC1 %in% PC1.filter))
+
+IntronAnnotatins &lt;- read_tsv(&quot;../data/IntronAnnotationsFromYang.tsv.gz&quot;) %&gt;%
+  mutate(chrom = str_remove_all(chrom, &quot;chr&quot;)) %&gt;%
+  mutate(Intron = paste(chrom, start, end, sep=&quot;:&quot;)) %&gt;%
+  filter(!str_detect(SuperAnnotation, &quot;NoncodingGene&quot;))
+
+IntronAnnotatins$SuperAnnotation %&gt;% unique()</code></pre>
+<pre><code>[1] &quot;AnnotatedJunc_UnproductiveCodingGene&quot;  
+[2] &quot;UnannotatedJunc_UnproductiveCodingGene&quot;
+[3] &quot;AnnotatedJunc_ProductiveCodingGene&quot;    
+[4] &quot;UnannotatedJunc_ProductiveCodingGene&quot;  </code></pre>
+<pre class="r"><code>RandomTestSNPs &lt;- paste0(&quot;../code/QTLs/QTLTools/&quot;, PC2.filter, &quot;/NominalPassForColoc.RandomSamplePvals.txt.gz&quot;) %&gt;%
+  setNames(PC2.filter) %&gt;%
+  lapply(fread) %&gt;%
+  bind_rows(.id=&quot;PC2&quot;) %&gt;%
+  dplyr::select(trait.x.p.in.y=V1, PC2) %&gt;%
+  mutate(SNP_group=&quot;Random test SNPs&quot;) %&gt;%
+  group_by(PC2) %&gt;%
+  sample_n(50000)
+
+
+dat.foreQTLQQ.sQTLs &lt;- dat.foreQTLQQ %&gt;%
+    filter(PC1 %in% PC1.filter.Splicing) %&gt;%
+    group_by(PC1, P1) %&gt;%
+    filter(!any((PC2 %in% PC2.SignificanceFilter) &amp; (trait.x.p.in.y &lt; 0.01))) %&gt;%
+    ungroup() %&gt;%
+    filter(PC2 %in% PC2.filter) %&gt;%
+    separate(P1, into=c(&quot;Intron&quot;, &quot;Cluster&quot;), sep=&quot;:clu&quot;, remove=F) %&gt;%
+    inner_join(
+      IntronAnnotatins %&gt;%
+        dplyr::select(Intron, SuperAnnotation),
+      by=&quot;Intron&quot;) %&gt;%
+    group_by(PC1, PC2, Cluster) %&gt;%
+    mutate(SNP_group = case_when(
+      all(str_detect(SuperAnnotation, &quot;Productive&quot;)) ~ &quot;Productive sQTL cluster&quot;,
+      any(str_detect(SuperAnnotation, &quot;Unproductive&quot;)) ~ &quot;Unproductive sQTL cluster&quot;,
+      TRUE ~ &quot;sQTL Other&quot;
+    )) %&gt;%
+    # sample_n(1) %&gt;%
+    slice(which.min(p_permutation.x)) %&gt;%
+    ungroup()
+
+bind_rows(
+  dat.foreQTLQQ.sQTLs,
+  dat.foreQTLQQ %&gt;%
+    filter(PC2 %in% PC2.filter) %&gt;%
+    filter(PC1 %in% PC1.filter.NonSplicing) %&gt;%
+    mutate(SNP_group = PC1),
+  RandomTestSNPs
+) %&gt;%
+  group_by(SNP_group, PC2) %&gt;%
+  mutate(MyRank = rank(trait.x.p.in.y, ties.method=&#39;random&#39;)) %&gt;%
+  mutate(ExpectedP = MyRank/(max(MyRank) + 1)) %&gt;%
+  ungroup() %&gt;%
+  ggplot(aes(x=-log10(ExpectedP), y=-log10(trait.x.p.in.y), color=SNP_group)) +
+  geom_abline(slope=1, intercept=0) +
+  geom_point() +
+  facet_wrap(~PC2, scales=&quot;free&quot;) +
+  labs(y=&quot;-log10(ObservedP)&quot;, caption=&quot;sQTL clusters containing any significant unproductive sQTL intron are grouped as Unproductive sQTL\nP value from only one significant sQTL intron from cluster selected at random from cluster\nsQTLs with nominal P&lt;0.01 for H3K36me3, H3K27Ac, or H3K4me3 removed&quot;, title=&quot;eQTL QQ plot&quot;)</code></pre>
+<p><img src="figure/20230324_MakeFigs.Rmd/unnamed-chunk-15-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>dat.foreQTLQQ.sQTLs %&gt;%
+  count(SNP_group, PC2)</code></pre>
+<pre><code># A tibble: 4 × 3
+  SNP_group                 PC2                                n
+  &lt;chr&gt;                     &lt;chr&gt;                          &lt;int&gt;
+1 Productive sQTL cluster   Expression.Splicing             1472
+2 Productive sQTL cluster   Expression.Splicing.Subset_YRI  1472
+3 Unproductive sQTL cluster Expression.Splicing             1791
+4 Unproductive sQTL cluster Expression.Splicing.Subset_YRI  1791</code></pre>
+<pre class="r"><code># pi0est function breaks sometimes. this wrapper function returns 1 when that happens
+CalculatePi1_2 &lt;- function (dat.in, ...) {
+  return(tryCatch(1-pi0est(dat.in$trait.x.p.in.y, ...)$pi0, error=function(e) 1))
+}
+
+labels &lt;- dat.foreQTLQQ.sQTLs %&gt;%
+  split(paste(.$SNP_group, .$PC2, sep=&quot;;&quot;)) %&gt;%
+  lapply(CalculatePi1_2, pi0.method=&quot;bootstrap&quot;) %&gt;%
+  unlist() %&gt;%
+  data.frame(pi1=.) %&gt;%
+  rownames_to_column(&quot;sQTLGroup_eQTLDataset&quot;) %&gt;%
+  separate(sQTLGroup_eQTLDataset, into=c(&quot;SNP_group&quot;, &quot;PC2&quot;), sep=&quot;;&quot;) %&gt;%
+  mutate(label=paste0(&quot;pi=&quot;, signif(pi1, digits=3)))
+
+  
+dat.foreQTLQQ.sQTLs %&gt;%
+  ggplot(aes(x=trait.x.p.in.y)) +
+  geom_histogram() +
+  geom_text(data = labels, aes(label=label), x=Inf, y=Inf, vjust=1, hjust=1) +
+  facet_grid(SNP_group ~ PC2) +
+  labs(x=&quot;P&quot;, title=&quot;eQTL P value historgram&quot;, caption=&quot;Vertical facets: eQTL dataset\nHorizontal facets: sQTL cluster type&quot;) +
+  theme(strip.text = element_text(size = 8))</code></pre>
+<p><img src="figure/20230324_MakeFigs.Rmd/unnamed-chunk-15-2.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="fig3" class="section level2">
+<h2>Fig3</h2>
+<p>Fig3, exploring connection to complex traits using gwas. There’s a
+few ways I did this. Firstly I took all molQTL top SNPs and got the
+corresponding gwas P-values, to compare to global gwas P-values and plot
+enrichment in QQplot form. I currently don’t have any good control sets
+of SNPs. Later I can come up with a control, and also come up with a
+systematic way to quantify enrichment of molQTLs for GWAS SNPs (ie
+lambda inflation factor, compared to control SNPs, or something like
+that) and think of a way to present these results not just for one GWAS
+but for many… The second way I am considering this problem is with
+hyprcoloc… I attempt to colocalize all molQTLs (chromatinQTLs,
+expressionQTLs, sQTLs, APA QTLs, etc) within a 1MB window centered
+around top SNP at each GWAS loci.</p>
+<p>First let’s try to make the QQ plot.</p>
+<pre class="r"><code>gwas.trait.accession &lt;- &quot;IMSGC2019&quot;
+
+molQTL.gwas.P &lt;- fread(paste0(&quot;../code/gwas_summary_stats/MolQTLIntersections/&quot;, gwas.trait.accession, &quot;.bed.gz&quot;), col.names = c(&quot;chrom&quot;, &quot;varPos&quot;, &quot;GWAS.P&quot;, &quot;molQTL.name&quot;, &quot;molQTL.P&quot;, &quot;strand&quot;, &quot;molQTL.beta&quot;, &quot;molQTL.se&quot;, &quot;molQTL.q&quot;, &quot;varID&quot;, &quot;overlap&quot;)) %&gt;%
+  separate(molQTL.name, into=c(&quot;PhenotypeClass&quot;, &quot;MolPhenotypeName&quot;), sep = &quot;;&quot;)
+
+gwas.P &lt;- fread(paste0(&quot;../code/gwas_summary_stats/sorted_index_summarystat_hg38beds/&quot;, gwas.trait.accession, &quot;.bed.gz&quot;), select = 4, col.names = &quot;GWAS.P&quot;) %&gt;%
+  mutate(PhenotypeClass = &quot;All SNPs&quot;)
+
+molQTL.gwas.P$PhenotypeClass %&gt;% unique()</code></pre>
+<pre><code> [1] &quot;APA_Nuclear&quot;                      &quot;H3K27AC&quot;                         
+ [3] &quot;MetabolicLabelled.30min.Splicing&quot; &quot;H3K4ME1&quot;                         
+ [5] &quot;polyA.Splicing&quot;                   &quot;polyA.Splicing.Subset_YRI&quot;       
+ [7] &quot;MetabolicLabelled.60min.Splicing&quot; &quot;chRNA.Splicing&quot;                  
+ [9] &quot;chRNA.Splicing.Order&quot;             &quot;CTCF&quot;                            
+[11] &quot;APA_Total&quot;                        &quot;chRNA.Expression_ncRNA&quot;          
+[13] &quot;DNaseISensitivity&quot;                &quot;H3K36ME3_ncRNA&quot;                  
+[15] &quot;chRNA.IER&quot;                        &quot;polyA.IER&quot;                       
+[17] &quot;H3K36ME3&quot;                         &quot;Expression.Splicing&quot;             
+[19] &quot;MetabolicLabelled.30min&quot;          &quot;polyA.IER.Subset_YRI&quot;            
+[21] &quot;ProCap&quot;                           &quot;H3K4ME3&quot;                         
+[23] &quot;MetabolicLabelled.60min&quot;          &quot;chRNA.Expression.Splicing&quot;       
+[25] &quot;Expression.Splicing.Subset_YRI&quot;   &quot;MetabolicLabelled.60min.IER&quot;     
+[27] &quot;chRNA.Slopes&quot;                     &quot;MetabolicLabelled.30min.IER&quot;     </code></pre>
+<pre class="r"><code>PhenotypeClass.filter &lt;- c(&quot;Expression.Splicing.Subset_YRI&quot;, &quot;Expression.Splicing&quot;, &quot;polyA.Splicing&quot;, &quot;H3K27AC&quot;)
+
+
+
+QQ.gwas &lt;- bind_rows(
+  molQTL.gwas.P %&gt;%
+    filter(PhenotypeClass %in% PhenotypeClass.filter) %&gt;%
+    filter(molQTL.q &lt; 0.1) %&gt;%
+    dplyr::select(PhenotypeClass, GWAS.P),
+  gwas.P %&gt;%
+    sample_n(1E5)
+) %&gt;%
+dplyr::select(SNP_group = PhenotypeClass, GWAS.P) %&gt;%
+group_by(SNP_group) %&gt;%
+  mutate(MyRank = rank(GWAS.P, ties.method=&#39;random&#39;)) %&gt;%
+  mutate(ExpectedP = MyRank/(max(MyRank) + 1)) %&gt;%
+  ungroup() %&gt;%
+  mutate(SNP_group = relevel(factor(SNP_group), &quot;All SNPs&quot;)) %&gt;%
+  arrange(SNP_group) %&gt;%
+  ggplot(aes(x=-log10(ExpectedP), y=-log10(GWAS.P), color=SNP_group)) +
+  geom_abline(slope=1, intercept=0) +
+  geom_point() +
+  labs(y=&quot;-log10(ObservedP)&quot;, title=&quot;GWAS QQ plot&quot;, caption=&quot;GWAS SNPs sub-sampled to 100K for plotting speed&quot;)
+QQ.gwas</code></pre>
+<p><img src="figure/20230324_MakeFigs.Rmd/unnamed-chunk-16-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>QQ.gwas +
+  coord_cartesian(ylim=c(0,20))</code></pre>
+<p><img src="figure/20230324_MakeFigs.Rmd/unnamed-chunk-16-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok, it is nice to see some enrichment, though just plotting different
+axis limits can really visually change the story. I will need to be
+careful here. Let’s distinguish the sQTLs now, between productive and
+non-productive…</p>
+<pre class="r"><code># sQTL.permutationPass.Classified &lt;- read_delim(&quot;../code/QTLs/QTLTools/polyA.Splicing/PermutationPass.FDR_Added.txt.gz&quot;, delim=&#39; &#39;) %&gt;%
+#   # head() %&gt;%
+#   separate(phe_id, into=c(&quot;intron&quot;, &quot;cluster&quot;), sep=&quot;:clu&quot;, remove=F) %&gt;%
+#   mutate(IntronName = str_replace(phe_id, &quot;^(.+?:.+?:.+?:)clu_.+?_([+-])$&quot;, &quot;chr\\1\\2&quot;)) %&gt;%
+#   inner_join(Intron.Annotations, by=&quot;IntronName&quot;) %&gt;%
+#   filter(q &lt; 0.1) %&gt;%
+#   group_by(cluster) %&gt;%
+#   mutate(SNP_group = case_when(
+#       all(str_detect(SuperAnnotation, &quot;Productive&quot;)) ~ &quot;Productive sQTL cluster&quot;,
+#       any(str_detect(SuperAnnotation, &quot;Unproductive&quot;)) ~ &quot;Unproductive sQTL cluster&quot;,
+#       TRUE ~ &quot;sQTL Other&quot;
+#     )) %&gt;%
+#     slice(which.min(nom_pval)) %&gt;%
+#     ungroup()
+# 
+# sQTL.permutationPass.Classified %&gt;%
+#   count(SNP_group)
+
+SplicingPhenotypeFilter &lt;- PhenotypeClass.filter[str_detect(PhenotypeClass.filter, &quot;Splicing&quot;) &amp; !str_detect(PhenotypeClass.filter, &quot;Expression&quot;)]
+
+ 
+
+QQ.gwas &lt;- bind_rows(
+  molQTL.gwas.P %&gt;%
+    filter((PhenotypeClass %in% PhenotypeClass.filter) &amp; !(PhenotypeClass %in% SplicingPhenotypeFilter)) %&gt;%
+    filter(molQTL.q &lt; 0.1) %&gt;%
+    dplyr::select(PhenotypeClass, GWAS.P),
+  molQTL.gwas.P %&gt;%
+    filter(PhenotypeClass %in% SplicingPhenotypeFilter) %&gt;%
+    filter(molQTL.q &lt; 0.1) %&gt;%
+    dplyr::select(GWAS.P, MolPhenotypeName) %&gt;%
+    inner_join(
+      dat.foreQTLQQ.sQTLs %&gt;%
+        dplyr::select(MolPhenotypeName=P1, PhenotypeClass=SNP_group) %&gt;%
+        distinct(),
+      by=c(&quot;MolPhenotypeName&quot;)) %&gt;%
+    filter(!PhenotypeClass==&quot;sQTL Other&quot;),
+  gwas.P %&gt;%
+    sample_n(1E5)
+) %&gt;%
+dplyr::select(SNP_group = PhenotypeClass, GWAS.P) %&gt;%
+group_by(SNP_group) %&gt;%
+  mutate(MyRank = rank(GWAS.P, ties.method=&#39;random&#39;)) %&gt;%
+  mutate(ExpectedP = MyRank/(max(MyRank) + 1)) %&gt;%
+  ungroup() %&gt;%
+  mutate(SNP_group = relevel(factor(SNP_group), &quot;All SNPs&quot;)) %&gt;%
+  arrange(SNP_group) %&gt;%
+  ggplot(aes(x=-log10(ExpectedP), y=-log10(GWAS.P), color=SNP_group)) +
+  geom_abline(slope=1, intercept=0) +
+  geom_point() +
+  labs(y=&quot;-log10(ObservedP)&quot;, title=&quot;GWAS QQ plot&quot;, caption=&quot;GWAS SNPs sub-sampled to 100K for plotting speed&quot;)
+QQ.gwas</code></pre>
+<p><img src="figure/20230324_MakeFigs.Rmd/unnamed-chunk-17-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>QQ.gwas +
+  coord_cartesian(ylim=c(0,20))</code></pre>
+<p><img src="figure/20230324_MakeFigs.Rmd/unnamed-chunk-17-2.png" width="672" style="display: block; margin: auto;" />
+So from this the enrichment is similar whether looking at productive or
+unproductive sQTLs. Now let me go back and add some control SNPs. One
+easy control to include would be like what Yang did in his 2016 paper:
+Include molQTL test SNPs within peaks (or within introns) may work for
+sQTLs. Also, no need to include the YRI subset anymore. I was just
+including it in my exploratory analysis but it is
+unnecessary/distracting for a main figure. Let’s also take that out…</p>
+<pre class="r"><code>ControlSNPs &lt;- fread(paste0(&quot;../code/gwas_summary_stats/MolQTLIntersections_ControlSNPs/&quot;, gwas.trait.accession, &quot;/ALL.txt.gz&quot;), col.names=c(&quot;GWAS.P&quot;, &quot;PhenotypeClassControl&quot;))
+
+ControlSNPs$PhenotypeClassControl %&gt;% unique()</code></pre>
+<pre><code> [1] &quot;Expression.Splicing&quot;              &quot;Expression.Splicing.Subset_YRI&quot;  
+ [3] &quot;chRNA.Expression.Splicing&quot;        &quot;MetabolicLabelled.30min&quot;         
+ [5] &quot;MetabolicLabelled.60min&quot;          &quot;CTCF&quot;                            
+ [7] &quot;H3K27AC&quot;                          &quot;H3K4ME3&quot;                         
+ [9] &quot;H3K4ME1&quot;                          &quot;H3K36ME3&quot;                        
+[11] &quot;H3K36ME3_ncRNA&quot;                   &quot;ProCap&quot;                          
+[13] &quot;polyA.Splicing&quot;                   &quot;polyA.Splicing.Subset_YRI&quot;       
+[15] &quot;chRNA.Splicing&quot;                   &quot;MetabolicLabelled.30min.Splicing&quot;
+[17] &quot;MetabolicLabelled.60min.Splicing&quot; &quot;chRNA.Expression_ncRNA&quot;          
+[19] &quot;APA_Nuclear&quot;                      &quot;APA_Total&quot;                       
+[21] &quot;polyA.IER&quot;                        &quot;polyA.IER.Subset_YRI&quot;            
+[23] &quot;chRNA.IER&quot;                        &quot;MetabolicLabelled.30min.IER&quot;     
+[25] &quot;MetabolicLabelled.60min.IER&quot;      &quot;chRNA.Slopes&quot;                    
+[27] &quot;chRNA.Splicing.Order&quot;             &quot;DNaseISensitivity&quot;               </code></pre>
+<pre class="r"><code>QQ.gwas &lt;- bind_rows(
+  molQTL.gwas.P %&gt;%
+    filter((PhenotypeClass %in% PhenotypeClass.filter) &amp; !(PhenotypeClass %in% SplicingPhenotypeFilter)) %&gt;%
+    filter(!PhenotypeClass == &quot;Expression.Splicing.Subset_YRI&quot;) %&gt;%
+    filter(molQTL.q &lt; 0.1) %&gt;%
+    dplyr::select(PhenotypeClass, GWAS.P),
+  molQTL.gwas.P %&gt;%
+    filter(PhenotypeClass %in% SplicingPhenotypeFilter) %&gt;%
+    filter(molQTL.q &lt; 0.1) %&gt;%
+    dplyr::select(GWAS.P, MolPhenotypeName) %&gt;%
+    inner_join(
+      dat.foreQTLQQ.sQTLs %&gt;%
+        dplyr::select(MolPhenotypeName=P1, PhenotypeClass=SNP_group) %&gt;%
+        distinct(),
+      by=c(&quot;MolPhenotypeName&quot;)) %&gt;%
+    filter(!PhenotypeClass==&quot;sQTL Other&quot;),
+  ControlSNPs %&gt;%
+    filter(PhenotypeClassControl %in% c(&quot;polyA.Splicing&quot;, &quot;H3K27AC&quot;, &quot;Expression.Splicing&quot;)) %&gt;%
+    mutate(PhenotypeClass = recode(PhenotypeClassControl, &quot;polyA.Splicing&quot;=&quot;Intronic SNPS&quot;, &quot;H3K27AC&quot;=&quot;H3K27AC peak SNPs&quot;, &quot;Expression.Splicing&quot;=&quot;genic SNPs&quot;)) %&gt;%
+    dplyr::select(-PhenotypeClassControl),
+  gwas.P %&gt;%
+    sample_n(1E5)
+) %&gt;%
+dplyr::select(SNP_group = PhenotypeClass, GWAS.P) %&gt;%
+group_by(SNP_group) %&gt;%
+  mutate(MyRank = rank(GWAS.P, ties.method=&#39;random&#39;)) %&gt;%
+  mutate(ExpectedP = MyRank/(max(MyRank) + 1)) %&gt;%
+  ungroup() %&gt;%
+  mutate(SNP_group = relevel(factor(SNP_group), &quot;All SNPs&quot;)) %&gt;%
+  arrange(SNP_group) %&gt;%
+  ggplot(aes(x=-log10(ExpectedP), y=-log10(GWAS.P), color=SNP_group)) +
+  geom_abline(slope=1, intercept=0) +
+  geom_point() +
+  labs(y=&quot;-log10(ObservedP)&quot;, title=&quot;GWAS QQ plot&quot;, caption=&quot;GWAS SNPs sub-sampled to 100K for plotting speed&quot;)
+QQ.gwas</code></pre>
+<p><img src="figure/20230324_MakeFigs.Rmd/unnamed-chunk-18-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>QQ.gwas +
+  coord_cartesian(ylim=c(0,20))</code></pre>
+<p><img src="figure/20230324_MakeFigs.Rmd/unnamed-chunk-18-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Hmm, ok there seems to be subtle shift compared to the control SNPs.
+These may not be the best controls. Will have to think about this more
+later.</p>
+<p>Now Let’s expore the hypercoloc results.</p>
+<p>Note that I did the hyprcoloc a number of different ways, each with
+different sets of molQTLs attempted… Let’s explore the most inclusive
+hyprcoloc iteration.</p>
+<pre class="r"><code>gwas.traits &lt;- read_tsv(&quot;../code/config/gwas_table.tsv&quot;)
+
+
+hyprcoloc.results &lt;- read_tsv(&quot;../code/hyprcoloc/Results/ForGWASColoc/GWASColoc_ChromatinAPAAndRNA/results.txt.gz&quot;) %&gt;%
+  dplyr::rename(GWAS.Loci = GWASLeadSnpChrom_Pos_RefAllele_AltAllele_rsID_trait) %&gt;%
+  separate(GWAS.Loci, into=c(&quot;GWAS.LeadSNP.Chrom&quot;, &quot;GWAS.LeadSNP.Pos&quot;, &quot;GWAS.accession&quot;), sep=&quot;_&quot;, remove=F) %&gt;%
+  separate_rows(ColocalizedTraits, sep = &quot;,&quot;) %&gt;%
+  mutate(IsColocalizedWithSomething = !ColocalizedTraits == &quot;None&quot;) %&gt;%
+  mutate(Trait = if_else(IsColocalizedWithSomething, ColocalizedTraits, DroppedTrait)) %&gt;%
+  dplyr::select(-DroppedTrait, -ColocalizedTraits) %&gt;%
+  mutate(Trait = if_else(Trait == GWAS.Loci, paste(&quot;GWAS&quot;,GWAS.Loci, sep=&quot;;&quot;),Trait)) %&gt;%
+  separate(Trait, into=c(&quot;PhenotypeClass&quot;, &quot;Phenotype&quot;), sep=&quot;;&quot;)
+
+
+# hyprcoloc.results %&gt;%
+#   distinct(GWAS.Loci, .keep_all=T) %&gt;%
+#   count(GWAS.accession)</code></pre>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
