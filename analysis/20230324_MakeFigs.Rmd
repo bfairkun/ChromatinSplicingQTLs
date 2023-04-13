@@ -783,6 +783,126 @@ dat.foreQTLQQ.sQTLs %>%
 
 ```
 
+save a qqplot For lab meeting...
+
+```{r, eval=F}
+bind_rows(
+  dat.foreQTLQQ.sQTLs,
+  dat.foreQTLQQ %>%
+    filter(PC2 %in% PC2.filter) %>%
+    filter(PC1 %in% PC1.filter.NonSplicing) %>%
+    mutate(SNP_group = PC1),
+  RandomTestSNPs
+) %>%
+  group_by(SNP_group, PC2) %>%
+  mutate(MyRank = rank(trait.x.p.in.y, ties.method='random')) %>%
+  mutate(ExpectedP = MyRank/(max(MyRank) + 1)) %>%
+  ungroup() %>%
+  filter(PC2=="Expression.Splicing") %>%
+  filter(!PC1 %in% c("H3K4ME1", "H3K4ME3")) %>%
+  ggplot(aes(x=-log10(ExpectedP), y=-log10(trait.x.p.in.y), color=SNP_group)) +
+  geom_abline(slope=1, intercept=0) +
+  geom_point() +
+  scale_color_manual(values=
+                       c("Random test SNPs"="#000000", "Unproductive sQTL cluster"="#e31a1c", "Productive sQTL cluster"="#1f78b4", "H3K27AC"="#6a3d9a"),
+                     labels=c("Random test SNPs"="Random test SNPs", "Unproductive sQTL cluster"="Unproductive sQTL", "Productive sQTL cluster"="Productive sQTL", "H3K27AC"="H3K27AC QTL w/in 100kb")) +
+  labs(y="-log10(ObservedP)", caption="sQTL clusters containing any significant unproductive sQTL intron are grouped as Unproductive sQTL\nP value from only one significant sQTL intron from cluster selected at random from cluster\nsQTLs with nominal P<0.01 for H3K36me3, H3K27Ac, or H3K4me3 removed", title="eQTL QQ plot") +
+  theme(plot.subtitle=element_text(size=5))
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/20230412_WIP_eQTLQQ.png", height=5, width=7)
+```
+
+For lab meeting I'm also going to make those beta beta scatter plots
+
+```{r}
+PC1.PossibleValues <- c("polyA.Splicing", "polyA.Splicing.Subset_YRI", "chRNA.Splicing")
+PC2.PossibleValues <-c("Expression.Splicing", "Expression.Splicing.Subset_YRI", "H3K4ME3", "H3K36ME3", "H3K27AC", "H3K4ME1", "MetabolicLabelled.30min", "MetabolicLabelled.60min", "chRNA.Expression.Splicing")
+
+
+dat <- fread("../code/pi1/PairwisePi1Traits.P.all.txt.gz") %>%
+  filter((PC1 %in% PC1.PossibleValues) & (PC2 %in% PC2.PossibleValues))
+
+Intron.Annotations <- read_tsv("../data/IntronAnnotationsFromYang.tsv.gz") %>%
+  mutate(IntronName = paste(chrom, start, end, strand, sep=":"))
+
+dat.sQTLs.eQTLs.ForScatter <- dat %>%
+  mutate(IntronName = str_replace(P1, "^(.+?:)clu_.+?([+-])$", "chr\\1\\2")) %>%
+  mutate(ClusterName =  str_replace(P1, "^(.+?:).+?(clu_.+?[+-])$", "chr\\1\\2")) %>%
+  left_join(Intron.Annotations)
+
+PC1.filter = c("polyA.Splicing")
+PC2.filter = c("H3K36ME3", "chRNA.Expression.Splicing" , "MetabolicLabelled.30min", "MetabolicLabelled.60min", "Expression.Splicing", "Expression.Splicing.Subset_YRI")
+PC2.SignificanceFilter <- c("H3K4ME3", "H3K27AC", "H3K36ME3")
+
+Intron.Annotations$SuperAnnotation %>% unique()
+
+dat.sQTLs.eQTLs.ForScatter.ToPlot <- dat.sQTLs.eQTLs.ForScatter %>%
+  filter(PC1 %in% PC1.filter) %>%
+  group_by(P1) %>%
+  filter(!any((PC2 %in% PC2.SignificanceFilter) & (trait.x.p.in.y < 0.01))) %>%
+  ungroup() %>%
+  filter(PC2 %in% PC2.filter) %>%
+  # pull(PC2) %>% unique()
+  filter(SuperAnnotation %in% c("UnannotatedJunc_UnproductiveCodingGene", "AnnotatedJunc_ProductiveCodingGene", "AnnotatedJunc_UnproductiveCodingGene", "UnannotatedJunc_ProductiveCodingGene")) %>%
+  group_by(PC1, ClusterName) %>%
+  filter(abs(beta.x) == max(abs(beta.x))) %>%
+  ungroup() %>%
+  mutate(SuperAnnotation = str_replace_all(SuperAnnotation, "_", " ")) %>%
+  filter(GeneLocus == gene) %>%
+  filter(FDR.x < 0.1) %>%
+  group_by(P2, PC2, SuperAnnotation) %>%
+  sample_n(1) %>%
+  ungroup() %>%
+  mutate(PC2 = factor(PC2, levels=PC2.filter)) %>%
+  mutate(PC2 = recode(PC2, !!!c("chRNA.Expression.Splicing"="chRNA" , "MetabolicLabelled.30min"="30min 4sU", "MetabolicLabelled.60min"="60min 4sU", "Expression.Splicing"="polyA", "Expression.Splicing.Subset_YRI"="polyA YRI"))) %>%
+  mutate(PC2 = factor(PC2, levels=c("H3K36ME3","chRNA", "30min 4sU", "60min 4sU", "polyA", "polyA YRI"))) %>%
+  filter(!PC2 %in% c("polyA YRI", "H3K36ME3")) %>%
+  # pull(SuperAnnotation) %>% unique()
+  mutate(SuperAnnotation = recode(SuperAnnotation, !!!c("AnnotatedJunc UnproductiveCodingGene"="Unproductive", "UnannotatedJunc UnproductiveCodingGene"="Unproductive", "AnnotatedJunc ProductiveCodingGene"="Productive", "UnannotatedJunc ProductiveCodingGene"="Productive")))
+
+dat.sQTLs.eQTLs.ForScatter.ToPlot.labels <- dat.sQTLs.eQTLs.ForScatter.ToPlot %>%
+  count(SuperAnnotation, PC2) %>%
+  distinct(SuperAnnotation, .keep_all=T) %>%
+  dplyr::select(n, SuperAnnotation) %>%
+  mutate(SuperAnnotationLabel = paste0(SuperAnnotation, " (n=", n, ")"))
+
+library(broom)
+
+dat.sQTLs.eQTLs.ForScatter.ToPlot %>%
+  left_join(dat.sQTLs.eQTLs.ForScatter.ToPlot.labels, by="SuperAnnotation") %>%
+  nest(-SuperAnnotationLabel, -PC2) %>% 
+  mutate(cor=map(data,~cor.test(.x$beta.x, .x$x.beta.in.y, method = "sp"))) %>%
+  mutate(tidied = map(cor, tidy)) %>% 
+  unnest(tidied, .drop = T) %>%
+  unnest(data) %>%
+ggplot(aes(x=beta.x, y=x.beta.in.y, color=SuperAnnotation)) +
+    geom_point(alpha=0.1) +
+    # geom_smooth(method = "tls", se = FALSE, color = "red", method='bootstrap') +
+    # geom_smooth(method='lm', color='black') +
+    geom_vline(xintercept=0, linetype='dashed') +
+    geom_hline(yintercept=0, linetype='dashed') +
+    scale_color_manual(values=c("Productive"="#1f78b4", "Unproductive"="#e31a1c")) +
+    geom_abline(data = . %>%
+                  distinct(SuperAnnotationLabel, PC2, .keep_all=T),
+                aes(slope=estimate, intercept=0), size=2) +
+    geom_text(
+    data = . %>%
+        distinct(SuperAnnotationLabel, PC2, .keep_all=T) %>%
+        mutate(R=signif(estimate, 3), P=format.pval(p.value, 3)) %>%
+      mutate(label = str_glue("rho:{R}\nP:{P}")),
+    aes(x=-Inf, y=-Inf, label=label),
+    hjust=-.1, vjust=-0.1, color='black', size=6
+    ) +
+    facet_grid(SuperAnnotationLabel ~ PC2, labeller = label_wrap_gen(10)) +
+    theme_bw() +
+    theme(strip.text = element_text(size = 12), legend.position='none') +
+  labs(caption = "FDR<10% sQTLs. sQTLs with nominal P<0.01 for H3K36me3, H3K27Ac, or H3K4me3 removed\nOnly top sQTL per cluster plotted", y="host gene eQTL beta", x="sQTL beta")
+
+```
+
+```{r, eval=F}
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/20230412_WIP_eQTLsQTLbetascatter.png", height=4, width=10)
+```
+
 
 ## Fig3
 
@@ -917,11 +1037,13 @@ QQ.gwas <- bind_rows(
   ControlSNPs %>%
     filter(PhenotypeClassControl %in% c("polyA.Splicing", "H3K27AC", "Expression.Splicing")) %>%
     mutate(PhenotypeClass = recode(PhenotypeClassControl, "polyA.Splicing"="Intronic SNPS", "H3K27AC"="H3K27AC peak SNPs", "Expression.Splicing"="genic SNPs")) %>%
+    filter(!PhenotypeClass=="Intronic SNPS") %>%
     dplyr::select(-PhenotypeClassControl),
   gwas.P %>%
     sample_n(1E5)
 ) %>%
 dplyr::select(SNP_group = PhenotypeClass, GWAS.P) %>%
+  # pull(SNP_group) %>% unique()
 group_by(SNP_group) %>%
   mutate(MyRank = rank(GWAS.P, ties.method='random')) %>%
   mutate(ExpectedP = MyRank/(max(MyRank) + 1)) %>%
@@ -931,12 +1053,17 @@ group_by(SNP_group) %>%
   ggplot(aes(x=-log10(ExpectedP), y=-log10(GWAS.P), color=SNP_group)) +
   geom_abline(slope=1, intercept=0) +
   geom_point() +
-  labs(y="-log10(ObservedP)", title="GWAS QQ plot", caption="GWAS SNPs sub-sampled to 100K for plotting speed")
+  # scale_color_brewer(palette = "Dark2") +
+  scale_color_manual(values=
+                       c("genic SNPs"="#969696", "All SNPs"="#000000", "Unproductive sQTL cluster"="#e31a1c", "Productive sQTL cluster"="#1f78b4", "H3K27AC"="#6a3d9a", "H3K27AC peak SNPs"="#cab2d6", "Expression.Splicing"="#ff7f00"),
+                     labels=c("genic SNPs"="genic SNPs", "All SNPs"="All SNPs", "Unproductive sQTL cluster"="Unproductive sQTL", "Productive sQTL cluster"="Productive sQTL", "H3K27AC"="H3K27AC QTL", "H3K27AC peak SNPs"="H3K27AC peak SNPs", "Expression.Splicing"="eQTL")) +
+  labs(y="-log10(ObservedP)", title="MS GWAS QQ plot", caption="GWAS SNPs sub-sampled to 100K for plotting speed", fill="SNP category")
 QQ.gwas
 
 QQ.gwas +
   coord_cartesian(ylim=c(0,20))
 
+# ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/20230412_WIP_GWAS_QQ.png")
 ```
 
 Hmm, ok there seems to be subtle shift compared to the control SNPs. These may not be the best controls. Will have to think about this more later.
@@ -945,8 +1072,9 @@ Now Let's expore the hypercoloc results.
 
 Note that I did the hyprcoloc a number of different ways, each with different sets of molQTLs attempted... Let's explore the most inclusive hyprcoloc iteration.
 
-```{r, eval=F}
-gwas.traits <- read_tsv("../code/config/gwas_table.tsv")
+```{r, eval=T, fig.height=6, fig.width=10}
+gwas.traits <- read_tsv("../code/config/gwas_table.tsv") %>%
+  dplyr::rename(GWAS.accession=gwas, gwas.trait=trait)
 
 
 hyprcoloc.results <- read_tsv("../code/hyprcoloc/Results/ForGWASColoc/GWASColoc_ChromatinAPAAndRNA/results.txt.gz") %>%
@@ -956,16 +1084,121 @@ hyprcoloc.results <- read_tsv("../code/hyprcoloc/Results/ForGWASColoc/GWASColoc_
   mutate(IsColocalizedWithSomething = !ColocalizedTraits == "None") %>%
   mutate(Trait = if_else(IsColocalizedWithSomething, ColocalizedTraits, DroppedTrait)) %>%
   dplyr::select(-DroppedTrait, -ColocalizedTraits) %>%
-  mutate(Trait2 = if_else(Trait == GWAS.Loci, paste(across("GWAS",GWAS.Loci,sep = ";")),Trait)) %>%
-  separate(Trait, into=c("PhenotypeClass", "Phenotype"), sep=";")
+  mutate(Trait = str_replace_all(Trait, " ", "")) %>%
+  mutate(GWAS.Loci = str_replace_all(GWAS.Loci, " ", "")) %>%
+  mutate(Trait = if_else(Trait == GWAS.Loci, paste("GWAS",GWAS.Loci,sep = ";"),Trait)) %>%
+  separate(Trait, into=c("PhenotypeClass", "Phenotype"), sep=";", remove=F) %>%
+  group_by(GWAS.Loci, HyprcolocIteration) %>%
+  mutate(ColocalizedClusterContainsGWASTrait = any(PhenotypeClass=="GWAS") & IsColocalizedWithSomething) %>%
+  ungroup() %>%
+  inner_join(gwas.traits %>%
+               dplyr::select(1:2))
+
+hyprcoloc.results$PhenotypeClass %>% unique()
 
 hyprcoloc.results %>%
-  separate(Trait, into=c("PhenotypeClass", "Phenotype"), sep=";")
+  filter(!GWAS.accession=="IMSGC2019") %>%
+  pull(PhenotypeClass) %>% unique()
+
+PhenotypeRecodes = c("H3K36ME3"="hQTL", "H3K27AC"="hQTL", "H3K4ME3"="hQTL", "H3K4ME1"="hQTL",
+                     "Expression.Splicing"="eQTL", "chRNA.Expression.Splicing"="chRNA eQTL",
+                     "APA_Nuclear"="APA QTL", "APA_Total"="APA QTL", "polyA.Splicing"="sQTL", "GWAS"="GWAS")
+
+PhenotypeRecodes.df <- data.frame(PhenotypeRecodes) %>%
+  rownames_to_column("PhenotypeClass")
+
+hyprcoloc.results %>%
+  filter(GWAS.Loci == "chr9_79683075_GCST004627")
+  filter(is.na(PhenotypeClass))
+  
   
 
-# hyprcoloc.results %>%
-#   distinct(GWAS.Loci, .keep_all=T) %>%
-#   count(GWAS.accession)
+hyprcoloc.results.toplot <- hyprcoloc.results %>%
+  filter(!GWAS.accession=="IMSGC2019") %>%
+  left_join(PhenotypeRecodes.df) %>%
+  mutate(PhenotypeRecodes = if_else(is.na(PhenotypeRecodes), PhenotypeClass, PhenotypeRecodes)) %>%
+  filter(!PhenotypeRecodes == "APA QTL") %>%
+  group_by(GWAS.Loci, HyprcolocIteration) %>%
+  filter(any(ColocalizedClusterContainsGWASTrait) | PhenotypeClass=="GWAS") %>%
+  mutate(Category = case_when(
+    all(ColocalizedClusterContainsGWASTrait==FALSE) | all(is.na(HyprcolocIteration))  ~ "No molQTL colocs",
+    all(PhenotypeRecodes %in% c("GWAS", "hQTL")) ~ "Only hQTL colocs",
+    all(PhenotypeRecodes %in% c("GWAS", "eQTL")) ~ "Only eQTL colocs",
+    all(PhenotypeRecodes %in% c("GWAS", "eQTL", "hQTL", "chRNA eQTL")) ~ "hQTL+eQTL colocs",
+    all(PhenotypeRecodes %in% c("GWAS", "sQTL")) ~ "sQTL colocs",
+    all(PhenotypeRecodes %in% c("GWAS", "sQTL", "chRNA eQTL", "eQTL")) ~ "sQTL+eQTL colocs",
+    # all(PhenotypeRecodes %in% c("GWAS", "sQTL", "chRNA eQTL", "eQTL", "hQTL")) ~ "sQTL+eQTL+hQTL colocs",
+    TRUE ~ "Other"
+  )) %>%
+  ungroup()
+  # filter(Category=="Other")
 
+Num.Gwas.loci <- hyprcoloc.results.toplot %>%
+  distinct(GWAS.Loci, .keep_all=T) %>%
+  count(GWAS.accession, gwas.trait)
+
+hyprcoloc.results.toplot %>%
+  distinct(GWAS.Loci, .keep_all=T) %>%
+  count(Category,GWAS.accession, gwas.trait) %>%
+  ggplot(aes(x=gwas.trait)) +
+  geom_col(position="fill", aes( y=n, fill=Category)) +
+  geom_text(data=Num.Gwas.loci, aes(x=gwas.trait, label=n), y=Inf, hjust=1.1, size=4, angle=90) +
+  scale_fill_brewer(palette = "Dark2") +
+  Rotate_x_labels +
+  theme(axis.text.x = element_text(size=8)) +
+  labs(fill="Exclusive\nCategory", caption="Categories are exclusive; sQTL means no hQTL or eQTL\nsQTL + eQTL means no hQTLs\nhQTL + sQTL + eQTL would be Other\nTotal number GWAS loci marked at top", y="Fraction of colocalizations") +
+  scale_y_continuous(expand=c(0,0))
+
+# ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/20230412_WIP_Colocs.png", height=6, width=12)
+
+```
+
+```{r}
+test.results <- hyprcoloc.results.toplot %>%
+  filter(Category %in% c("sQTL colocs", "sQTL+eQTL colocs")) %>%
+  filter(PhenotypeClass == "polyA.Splicing") %>%
+  distinct(GWAS.Loci, .keep_all=T) %>%
+  inner_join(dat.foreQTLQQ.sQTLs %>%
+               filter(PC1=="polyA.Splicing"), by=c("Phenotype"="P1")) %>%
+  count(SNP_group, Category) %>%
+  pivot_wider(names_from="Category", values_from ="n") %>%
+  column_to_rownames("SNP_group") %>%
+  as.matrix() %>%
+  fisher.test(alternative="greater")
+
+hyprcoloc.results.toplot %>%
+  filter(Category %in% c("sQTL colocs", "sQTL+eQTL colocs")) %>%
+  filter(PhenotypeClass == "polyA.Splicing") %>%
+  distinct(GWAS.Loci, .keep_all=T) %>%
+  inner_join(dat.foreQTLQQ.sQTLs %>%
+               filter(PC1=="polyA.Splicing"), by=c("Phenotype"="P1")) %>%
+  count(SNP_group, Category) %>%
+  ggplot(aes(x=Category, y=n, fill=SNP_group)) +
+  geom_col() +
+  scale_y_continuous(expand=c(0,0)) +
+  scale_fill_manual(values=c("Productive sQTL cluster"="#377eb8", "Unproductive sQTL cluster"="#e41a1c"), labels=c("Productive sQTL cluster"="Productive sQTL", "Unproductive sQTL cluster"="Unproductive sQTL")) +
+  labs(caption=paste("One sided Fisher test P:", format.pval(test.results$p.value, 3), "\nOR:", round(test.results$estimate, 3)), y="Number of\nGWAS/sQTL colocalizations", fill="sQTL type", x="") +
+  Rotate_x_labels +
+  theme(legend.position='bottom', legend.box="vertical", legend.margin=margin()) +
+  guides(fill=guide_legend(nrow=2,byrow=TRUE))
+
+# ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/20230412_WIP_Colocs_ProductiveOrUnproductive.png", height=6, width=3)
+
+
+```
+
+
+Next I want to find some nice examples to highlight. I think I'll filter for eQTL/sQTL/GWAS colocs, plot the systematically, then pick one that looks nice and also highlight it as a coloc plot.
+
+### Small molecule stuff
+
+```{r}
+small.molecule.dat.genes <- read_tsv("../code/SmallMolecule/FitModels/polyA_genes.tsv.gz")
+
+small.molecule.dat.introns <- read_tsv("../code/SmallMolecule/FitModels/polyA_GAGTIntrons.tsv.gz") %>%
+  mutate(Intron = str_replace(junc, "^chr(.+?):[+-]$", "\\1")) %>%
+  inner_join(IntronAnnotatins)
+
+small.molecule.joined <- 
 ```
 
