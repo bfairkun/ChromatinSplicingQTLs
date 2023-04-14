@@ -297,6 +297,21 @@ rule Collect_SmallMolecule_CountOver3ssWindows:
     input:
         expand("SmallMolecule/3ssWindows/{Window}.counts.txt", Window=["Upstream", "Down"])
 
+rule SmallMoleculeScore3ss:
+    input:
+        fa = "ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa",
+        bed = "SmallMolecule/FullSpliceSiteAnnotations/JuncfilesMerged.annotated.basic.bed.gz"
+    output:
+        scores = "SmallMolecule/MaxEntScan/3ss.tsv.gz",
+        seqs = "SmallMolecule/MaxEntScan/3ss.seqs.bed.gz",
+        bed = "SmallMolecule/MaxEntScan/3ss.bed"
+    conda:
+        "../envs/maxentscan.yml"
+    shell:
+        """
+        zcat {input.bed} | awk 'NR>1' | awk -F'\\t' -v OFS='\\t' '$6=="+" {{ print $1, $3-21, $3+2, $1"_"$3, ".", $6 }} $6=="-" {{ print $1, $2-3, $2+20, $1"_"$2, ".", $6 }}' | awk -F'\\t' -v OFS='\\t' '$2>0 {{print $0}}' | bedtools sort -i - | tee {output.bed} | bedtools getfasta -s -bed - -fi {input.fa} | maxentscan_score3.pl /dev/stdin | tr ' ' '\\t' | sort | uniq | gzip - > {output.scores}
+        bedtools getfasta -s -bed {output.bed} -fi {input.fa} -bedOut | gzip - > {output.seqs}
+        """
 
 
 

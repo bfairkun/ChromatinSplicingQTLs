@@ -1,0 +1,1432 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+<meta name="date" content="2023-04-13" />
+
+<title>check splicing time of SM affected introns</title>
+
+<script src="site_libs/header-attrs-2.14/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.tab('show');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">myproject</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">check splicing time of SM affected
+introns</h1>
+<h4 class="date">2023-04-13</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span
+class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2023-04-14
+</p>
+<p>
+<strong>Checks:</strong> <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> 1
+</p>
+<p>
+<strong>Knit directory:</strong>
+<code>ChromatinSplicingQTLs/analysis/</code> <span
+class="glyphicon glyphicon-question-sign" aria-hidden="true"
+title="This is the local directory in which the code in this file was executed.">
+</span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a>
+analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version
+1.7.0). The <em>Checks</em> tab describes the reproducibility checks
+that were applied when the results were created. The <em>Past
+versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges">
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted
+changes </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguncommittedchanges"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The R Markdown is untracked by Git. To know which version of the R
+Markdown file created these results, you’ll want to first commit it to
+the Git repo. If you’re still working on the analysis, you can ignore
+this warning. When you’re finished, you can run
+<code>wflow_publish</code> to commit the R Markdown file and build the
+HTML.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the
+global environment can affect the analysis in your R Markdown file in
+unknown ways. For reproduciblity it’s best to always run the code in an
+empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20191126code">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Seed:</strong>
+<code>set.seed(20191126)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20191126code"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20191126)</code> was run prior to running
+the code in the R Markdown file. Setting a seed ensures that any results
+that rely on randomness, e.g. subsampling or permutations, are
+reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Session information:</strong>
+recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package
+versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be
+confident that you successfully produced the results during this
+run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr
+project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstree2ee57a6fc6f7d5ba04c337e50199bb1c45229e86targetblank2ee57a6a">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Repository version:</strong>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/2ee57a6fc6f7d5ba04c337e50199bb1c45229e86" target="_blank">2ee57a6</a>
+</a>
+</p>
+</div>
+<div
+id="strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstree2ee57a6fc6f7d5ba04c337e50199bb1c45229e86targetblank2ee57a6a"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development
+and connecting the code version to the results is critical for
+reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/2ee57a6fc6f7d5ba04c337e50199bb1c45229e86" target="_blank">2ee57a6</a>.
+See the <em>Past versions</em> tab to see a history of the changes made
+to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for
+the analysis have been committed to Git prior to generating the results
+(you can use <code>wflow_publish</code> or
+<code>wflow_git_commit</code>). workflowr only checks the R Markdown
+file, but you know if there are other scripts or data files that it
+depends on. Below is the status of the Git repository when the results
+were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    analysis/.Rhistory
+    Ignored:    analysis/figure/
+    Ignored:    code/.DS_Store
+    Ignored:    code/.RData
+    Ignored:    code/._report.html
+    Ignored:    code/.ipynb_checkpoints/
+    Ignored:    code/.snakemake/
+    Ignored:    code/APA_Processing/
+    Ignored:    code/Alignments/
+    Ignored:    code/ChromHMM/
+    Ignored:    code/ENCODE/
+    Ignored:    code/ExpressionAnalysis/
+    Ignored:    code/FastqFastp/
+    Ignored:    code/FastqFastpSE/
+    Ignored:    code/FastqSE/
+    Ignored:    code/FineMapping/
+    Ignored:    code/Genotypes/
+    Ignored:    code/H3K36me3_CutAndTag.pdf
+    Ignored:    code/IntronSlopes/
+    Ignored:    code/LR.bed
+    Ignored:    code/LR.seq.bed
+    Ignored:    code/LongReads/
+    Ignored:    code/Metaplots/
+    Ignored:    code/Misc/
+    Ignored:    code/MiscCountTables/
+    Ignored:    code/Multiqc/
+    Ignored:    code/Multiqc_chRNA/
+    Ignored:    code/NonCodingRNA/
+    Ignored:    code/NonCodingRNA_annotation/
+    Ignored:    code/PairwisePi1Traits.P.all.txt.gz
+    Ignored:    code/PeakCalling/
+    Ignored:    code/Phenotypes/
+    Ignored:    code/PlotGruberQTLs/
+    Ignored:    code/PlotQTLs/
+    Ignored:    code/ProCapAnalysis/
+    Ignored:    code/QC/
+    Ignored:    code/QTL_SNP_Enrichment/
+    Ignored:    code/QTLs/
+    Ignored:    code/RPKM_tables/
+    Ignored:    code/ReadLengthMapExperiment/
+    Ignored:    code/ReadLengthMapExperimentResults/
+    Ignored:    code/ReadLengthMapExperimentSpliceCounts/
+    Ignored:    code/ReferenceGenome/
+    Ignored:    code/Rplots.pdf
+    Ignored:    code/Session.vim
+    Ignored:    code/SmallMolecule/
+    Ignored:    code/SplicingAnalysis/
+    Ignored:    code/TODO
+    Ignored:    code/Tehranchi/
+    Ignored:    code/bigwigs/
+    Ignored:    code/bigwigs_FromNonWASPFilteredReads/
+    Ignored:    code/config/.DS_Store
+    Ignored:    code/config/._.DS_Store
+    Ignored:    code/config/.ipynb_checkpoints/
+    Ignored:    code/config/config.local.yaml
+    Ignored:    code/dag.pdf
+    Ignored:    code/dag.png
+    Ignored:    code/dag.svg
+    Ignored:    code/debug.ipynb
+    Ignored:    code/debug_python.ipynb
+    Ignored:    code/deepTools/
+    Ignored:    code/featureCounts/
+    Ignored:    code/featureCountsBasicGtf/
+    Ignored:    code/gwas_summary_stats/
+    Ignored:    code/hyprcoloc/
+    Ignored:    code/igv_session.xml
+    Ignored:    code/isoseqbams/
+    Ignored:    code/log
+    Ignored:    code/logs/
+    Ignored:    code/notebooks/.ipynb_checkpoints/
+    Ignored:    code/pi1/
+    Ignored:    code/rules/.ProcessSmallMoleculeData.smk.swp
+    Ignored:    code/rules/.ipynb_checkpoints/
+    Ignored:    code/rules/OldRules/
+    Ignored:    code/rules/notebooks/
+    Ignored:    code/scratch/
+    Ignored:    code/scripts/.ipynb_checkpoints/
+    Ignored:    code/scripts/GTFtools_0.8.0/
+    Ignored:    code/scripts/__pycache__/
+    Ignored:    code/scripts/liftOverBedpe/liftOverBedpe.py
+    Ignored:    code/snakemake.dryrun.log
+    Ignored:    code/snakemake.log
+    Ignored:    code/snakemake.sbatch.log
+    Ignored:    code/snakemake_profiles/slurm/__pycache__/
+    Ignored:    code/test.introns.bed
+    Ignored:    code/test.introns2.bed
+    Ignored:    code/test.log
+    Ignored:    code/tracks.xml
+    Ignored:    data/.DS_Store
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-10.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-11.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-2.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-3.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-4.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-5.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-6.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-7.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-8.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022.csv
+    Ignored:    data/Metaplots/.DS_Store
+
+Untracked files:
+    Untracked:  analysis/20230413_CheckSplicingTimingOfSM_sensitiveIntrons.Rmd
+    Untracked:  code/envs/maxentscan.yml
+
+Unstaged changes:
+    Modified:   analysis/20230324_MakeFigs.Rmd
+    Modified:   code/rules/ProcessSmallMoleculeData.smk
+    Modified:   code/scripts/GenometracksByGenotype
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not
+included in this status report because it is ok for generated content to
+have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+<p>
+There are no past versions. Publish this analysis with
+<code>wflow_publish()</code> to start tracking its development.
+</p>
+<hr>
+</div>
+</div>
+</div>
+<pre class="r"><code>knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+
+library(tidyverse)</code></pre>
+<pre><code>── Attaching packages ─────────────────────────────────────── tidyverse 1.3.1 ──</code></pre>
+<pre><code>✔ ggplot2 3.3.6     ✔ purrr   0.3.4
+✔ tibble  3.1.7     ✔ dplyr   1.0.9
+✔ tidyr   1.2.0     ✔ stringr 1.4.0
+✔ readr   2.1.2     ✔ forcats 0.5.1</code></pre>
+<pre><code>── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>library(RColorBrewer)
+library(data.table)</code></pre>
+<pre><code>
+Attaching package: &#39;data.table&#39;</code></pre>
+<pre><code>The following objects are masked from &#39;package:dplyr&#39;:
+
+    between, first, last</code></pre>
+<pre><code>The following object is masked from &#39;package:purrr&#39;:
+
+    transpose</code></pre>
+<pre class="r"><code>library(edgeR)</code></pre>
+<pre><code>Loading required package: limma</code></pre>
+<pre class="r"><code># Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family=&quot;Helvetica&quot;)))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels &lt;- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+
+#test plot
+ggplot(mtcars, aes(x=mpg, y=cyl)) +
+  geom_point()</code></pre>
+<p><img src="figure/20230413_CheckSplicingTimingOfSM_sensitiveIntrons.Rmd/setup-1.png" width="672" style="display: block; margin: auto;" /></p>
+<div id="intro" class="section level2">
+<h2>Intro</h2>
+<p>Yang hypothesizes that cryptic exons induced by risdiplam will be in
+host introns that are spliced slower than typical introns. The idea is
+that the small molecule needs time to have its effect, and it is in
+competition with the splicing of the canonical host introns. To test
+this, I will assess the splicing timing of introns using the ratio of
+coverage in 25nt window upstream of 3’ss, versus 25 nt window downstream
+of 3’ss for each intron. I hypothesize that introns that host a
+risdiplam-induced cryptic exon will have higher upstream/downstream
+ratio than random set of introns. I will specifically look at the DMSO
+control samples of chRNA.</p>
+<pre class="r"><code>UpstreamCoverage &lt;- read_tsv(&quot;../code/SmallMolecule/3ssWindows/Upstream.counts.txt&quot;) %&gt;%
+  rename_at(-c(1:6), ~str_replace(.x, &quot;SmallMolecule/AlignmentsPass2/(.+?)/Aligned.sortedByCoord.out.bam&quot;, &quot;\\1&quot;)) %&gt;%
+  dplyr::select(-c(1:3), -5, -6) %&gt;%
+  column_to_rownames(&quot;name&quot;) %&gt;%
+  as.matrix()
+
+DownstreamCoverage &lt;- read_tsv(&quot;../code/SmallMolecule/3ssWindows/Down.counts.txt&quot;) %&gt;%
+  rename_at(-c(1:6), ~str_replace(.x, &quot;SmallMolecule/AlignmentsPass2/(.+?)/Aligned.sortedByCoord.out.bam&quot;, &quot;\\1&quot;)) %&gt;%
+  dplyr::select(-c(1:3), -5, -6) %&gt;%
+  column_to_rownames(&quot;name&quot;) %&gt;%
+  as.matrix()
+
+
+UpstreamCoverage.DMSO.chRNA &lt;- UpstreamCoverage %&gt;%
+  as.data.frame() %&gt;%
+  dplyr::select(contains(&quot;DMSO&quot;) &amp; contains(&quot;chRNA&quot;)) %&gt;%
+  as.matrix()
+
+DownstreamCoverage.DMSO.chRNA &lt;- DownstreamCoverage %&gt;%
+  as.data.frame() %&gt;%
+  dplyr::select(contains(&quot;DMSO&quot;) &amp; contains(&quot;chRNA&quot;)) %&gt;%
+  as.matrix()
+
+hist(log10(UpstreamCoverage + DownstreamCoverage + 1))</code></pre>
+<p><img src="figure/20230413_CheckSplicingTimingOfSM_sensitiveIntrons.Rmd/unnamed-chunk-1-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>hist(log10(apply(UpstreamCoverage + DownstreamCoverage,  1, sum) + 1))</code></pre>
+<p><img src="figure/20230413_CheckSplicingTimingOfSM_sensitiveIntrons.Rmd/unnamed-chunk-1-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Let’s process samples an a per-sample basis, so we can use the
+replicates. Also, I will filter out 3’ss in each sample with less than
+10 reads between the upstream and downstream window. Let’s add a small
+psueodcount to everything to not get divide by 0 errors.</p>
+<pre class="r"><code>RisdiplamSensitiveIntrons &lt;- read_tsv(&quot;../output/SmallMoleculeGAGT_CassetteExonclusters.bed&quot;, col_names=c(&quot;chrom&quot;, &quot;start&quot;, &quot;stop&quot;, &quot;name&quot;, &quot;score&quot;, &quot;strand&quot;, &quot;thickStart&quot;, &quot;thickEnd&quot;, &quot;color&quot;)) %&gt;%
+  filter(str_detect(name, &quot;junc.skipping&quot;)) %&gt;%
+  mutate(SpliceAcceptor = if_else(
+    strand == &quot;+&quot;,
+    paste(chrom, stop, sep=&quot;_&quot;),
+    paste(chrom, start, sep=&quot;_&quot;)
+  )) %&gt;%
+  dplyr::select(GAGTIntron=name, name=SpliceAcceptor) %&gt;%
+  mutate(GAGTIntron = str_replace(GAGTIntron, &quot;junc.skipping_clu_.+?_(chr.+?)$&quot;, &quot;\\1&quot;))
+
+Merged &lt;- bind_rows(
+  DownstreamCoverage %&gt;%
+    as.data.frame() %&gt;%
+    dplyr::select(contains(&quot;DMSO&quot;) &amp; contains(&quot;chRNA&quot;)) %&gt;%
+    rownames_to_column(&quot;name&quot;) %&gt;%
+    mutate(Window = &quot;Down&quot;),
+  UpstreamCoverage %&gt;%
+    as.data.frame() %&gt;%
+    dplyr::select(contains(&quot;DMSO&quot;) &amp; contains(&quot;chRNA&quot;)) %&gt;%
+    rownames_to_column(&quot;name&quot;) %&gt;%
+    mutate(Window = &quot;Up&quot;)
+) %&gt;%
+  pivot_longer(contains(&quot;DMSO&quot;),names_to = &quot;Sample&quot;) %&gt;%
+  mutate(value = value + 0.1) %&gt;%
+  pivot_wider(names_from=&quot;Window&quot;, values_from = &quot;value&quot;) %&gt;%
+  mutate(sum = Down + Up) %&gt;%
+  filter(sum &gt;= 10) %&gt;%
+  mutate(Ratio = Up/Down) %&gt;%
+  left_join(RisdiplamSensitiveIntrons) %&gt;%
+  mutate(Group = if_else(is.na(GAGTIntron), &quot;No SM-induced exon&quot;, &quot;Contains SM-induced exon&quot;))
+
+Merged %&gt;%
+  ggplot(aes(x=Ratio, color=Sample)) +
+  stat_ecdf() +
+  geom_vline(xintercept=1) +
+  scale_x_continuous(trans=&quot;log10&quot;) +
+  labs(y=&quot;ecdf&quot;)</code></pre>
+<p><img src="figure/20230413_CheckSplicingTimingOfSM_sensitiveIntrons.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>Merged %&gt;%
+  ggplot(aes(x=Ratio, color=Sample)) +
+  stat_ecdf(aes(linetype=Group)) +
+  geom_vline(xintercept=1) +
+  scale_x_continuous(trans=&quot;log10&quot;) +
+  labs(y=&quot;ecdf&quot;) +
+  coord_cartesian(c(1E-2, 1)) +
+  labs(x=&quot;Upstream/Downstream coverage at 3&#39;ss\nFastSplicing&lt;--&gt;SlowSplicing&quot;)</code></pre>
+<p><img src="figure/20230413_CheckSplicingTimingOfSM_sensitiveIntrons.Rmd/unnamed-chunk-2-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>Merged %&gt;%
+  ggplot(aes(x=Ratio, color=Sample)) +
+  stat_ecdf(aes(linetype=Group)) +
+  geom_vline(xintercept=1) +
+  labs(y=&quot;ecdf&quot;) +
+  coord_cartesian(c(1E-2, 1)) +
+  labs(x=&quot;Upstream/Downstream coverage at 3&#39;ss\nFastSplicing&lt;--&gt;SlowSplicing&quot;)</code></pre>
+<p><img src="figure/20230413_CheckSplicingTimingOfSM_sensitiveIntrons.Rmd/unnamed-chunk-2-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Yang suggested distinguishing introns by ED50…</p>
+<pre class="r"><code>ModelFits &lt;- read_tsv(&quot;../code/SmallMolecule/FitModels/polyA_GAGTIntrons.tsv.gz&quot;)
+
+Merged %&gt;%
+  # filter(!is.na(GAGTIntron)) %&gt;%
+  left_join(
+    ModelFits %&gt;%
+      filter(param==&quot;ED50:(Intercept)&quot;),
+    by=c(&quot;GAGTIntron&quot;=&quot;junc&quot;)
+  ) %&gt;%
+  mutate(ED50Group = cut_number(Estimate, 4)) %&gt;%
+  ggplot(aes(x=Ratio, color=ED50Group)) +
+  stat_ecdf() +
+  geom_vline(xintercept=1) +
+  labs(y=&quot;ecdf&quot;) +
+  scale_x_continuous(trans=&quot;log10&quot;) +
+  coord_cartesian(c(1E-2, 1)) +
+  scale_color_brewer(palette = &quot;YlGnBu&quot;, na.value=&quot;black&quot;, direction=-1) +
+  facet_wrap(~Sample) +
+  labs(x=&quot;Upstream/Downstream coverage at 3&#39;ss\nFastSplicing&lt;--&gt;SlowSplicing&quot;)</code></pre>
+<p><img src="figure/20230413_CheckSplicingTimingOfSM_sensitiveIntrons.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Yang suggested matching introns by length…</p>
+<pre class="r"><code>Introns &lt;- read_tsv(&quot;../code/SmallMolecule/FullSpliceSiteAnnotations/JuncfilesMerged.annotated.basic.bed.gz&quot;) %&gt;%
+  filter(known_junction == 0) %&gt;%
+  mutate(SpliceAcceptor = if_else(
+    strand == &quot;+&quot;,
+    paste(chrom, end, sep=&quot;_&quot;),
+    paste(chrom, start, sep=&quot;_&quot;)
+  )) %&gt;%
+  add_count(SpliceAcceptor)
+
+ggplot(Introns, aes(x=n)) +
+  stat_ecdf() +
+  coord_cartesian(x=c(0,10)) +
+  labs(x=&quot;Number donors associated with each annotated 3&#39;ss&quot;, y=&quot;ecdf&quot;)</code></pre>
+<p><img src="figure/20230413_CheckSplicingTimingOfSM_sensitiveIntrons.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>Merged %&gt;%
+  left_join(
+    ModelFits %&gt;%
+      filter(param==&quot;ED50:(Intercept)&quot;),
+    by=c(&quot;GAGTIntron&quot;=&quot;junc&quot;)
+  ) %&gt;%
+  mutate(ED50Group = cut_number(Estimate, 4)) %&gt;%
+  inner_join(Introns, by=c(&quot;name&quot;=&quot;SpliceAcceptor&quot;)) %&gt;%
+  mutate(Length = end - start) %&gt;%
+  distinct(chrom, start, end, .keep_all=T) %&gt;%
+  ggplot(aes(x=Length, color=ED50Group)) +
+  stat_ecdf() +
+  scale_x_continuous(trans=&quot;log10&quot;) +
+  coord_cartesian(xlim=c(100, 1E5)) +
+  labs(y=&quot;ecdf&quot;) +
+  scale_color_brewer(palette = &quot;YlGnBu&quot;, na.value=&quot;black&quot;, direction=-1) +
+  labs(x=&quot;Intron length by group&quot;)</code></pre>
+<p><img src="figure/20230413_CheckSplicingTimingOfSM_sensitiveIntrons.Rmd/unnamed-chunk-4-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>Merged %&gt;%
+  left_join(
+    ModelFits %&gt;%
+      filter(param==&quot;ED50:(Intercept)&quot;),
+    by=c(&quot;GAGTIntron&quot;=&quot;junc&quot;)
+  ) %&gt;%
+  inner_join(Introns, by=c(&quot;name&quot;=&quot;SpliceAcceptor&quot;)) %&gt;%
+  mutate(Length = end - start) %&gt;%
+  mutate(LengthGroup = cut_number(Length, 5)) %&gt;%
+  distinct(chrom, start, end, .keep_all=T) %&gt;%
+  ggplot(aes(x=Ratio, color=LengthGroup)) +
+  stat_ecdf() +
+  scale_x_continuous(trans=&quot;log10&quot;) +
+  coord_cartesian(c(1E-1, 1)) +
+  labs(y=&quot;ecdf&quot;) +
+  scale_color_brewer(palette = &quot;YlGnBu&quot;, na.value=&quot;black&quot;, direction=-1) +
+  labs(x=&quot;Upstream/Downstream coverage at 3&#39;ss\nFastSplicing&lt;--&gt;SlowSplicing&quot;, color=&quot;Intron length ntile&quot;)</code></pre>
+<p><img src="figure/20230413_CheckSplicingTimingOfSM_sensitiveIntrons.Rmd/unnamed-chunk-4-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok, so there is some confounding by intron length… Longer introns are
+spliced faster (which i find surprising anyway), and the small-molecule
+affected introns tend to be slightly longer. So if you correct for the
+length effect, either by comparing length-matched groups or fitting a
+model with length as covariate, perhaps we would see that the small
+molecule effected introns are in fact spliced slow.</p>
+<pre class="r"><code>lm.fit &lt;- Merged %&gt;%
+  inner_join(Introns, by=c(&quot;name&quot;=&quot;SpliceAcceptor&quot;)) %&gt;%
+  mutate(Dummy_1_ForIntronsWithCrypticExons = if_else(is.na(GAGTIntron), 0, 1)) %&gt;%
+  mutate(Length = log10(end - start)) %&gt;%
+  mutate(Response = log10(Ratio)) %&gt;%
+  lm(Response ~ Length + Dummy_1_ForIntronsWithCrypticExons, data=.)
+
+summary(lm.fit)</code></pre>
+<pre><code>
+Call:
+lm(formula = Response ~ Length + Dummy_1_ForIntronsWithCrypticExons, 
+    data = .)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-3.7029 -0.2219  0.0768  0.3164  2.9021 
+
+Coefficients:
+                                    Estimate Std. Error  t value Pr(&gt;|t|)    
+(Intercept)                        -0.338914   0.002776 -122.100  &lt; 2e-16 ***
+Length                             -0.055253   0.000771  -71.662  &lt; 2e-16 ***
+Dummy_1_ForIntronsWithCrypticExons -0.025155   0.006006   -4.189 2.81e-05 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 0.4536 on 724009 degrees of freedom
+Multiple R-squared:  0.007087,  Adjusted R-squared:  0.007085 
+F-statistic:  2584 on 2 and 724009 DF,  p-value: &lt; 2.2e-16</code></pre>
+<pre class="r"><code>library(MASS)
+# library(sfsmisc)
+
+rlm.fit &lt;- Merged %&gt;%
+  inner_join(Introns, by=c(&quot;name&quot;=&quot;SpliceAcceptor&quot;)) %&gt;%
+  mutate(Dummy_1_ForIntronsWithCrypticExons = if_else(is.na(GAGTIntron), 0, 1)) %&gt;%
+  mutate(Length = log10(end - start)) %&gt;%
+  mutate(Response = log10(Ratio)) %&gt;%
+  rlm(Response ~ Length + Dummy_1_ForIntronsWithCrypticExons, data=.)
+
+summary(rlm.fit)</code></pre>
+<pre><code>
+Call: rlm(formula = Response ~ Length + Dummy_1_ForIntronsWithCrypticExons, 
+    data = .)
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-3.74099 -0.26470  0.03432  0.27396  2.85295 
+
+Coefficients:
+                                   Value     Std. Error t value  
+(Intercept)                          -0.3249    0.0024  -137.9842
+Length                               -0.0471    0.0007   -72.0779
+Dummy_1_ForIntronsWithCrypticExons   -0.0152    0.0051    -2.9767
+
+Residual standard error: 0.401 on 724009 degrees of freedom</code></pre>
+<p>Ok, so somewhat significant in a direction consistent with the
+hypothesis.. Wait, I feel I did that oddly. t makes more natural sense
+for the Dummy_1_ForIntronsWithCrypticExons to be a response…</p>
+<pre class="r"><code>lm.fit &lt;- Merged %&gt;%
+  inner_join(Introns, by=c(&quot;name&quot;=&quot;SpliceAcceptor&quot;)) %&gt;%
+  mutate(Dummy_1_ForIntronsWithCrypticExons = if_else(is.na(GAGTIntron), 0, 1)) %&gt;%
+  mutate(Length = log10(end - start)) %&gt;%
+  mutate(Response = log10(Ratio)) %&gt;%
+  lm(Dummy_1_ForIntronsWithCrypticExons ~ Length + Response, data=.)
+
+summary(lm.fit)</code></pre>
+<pre><code>
+Call:
+lm(formula = Dummy_1_ForIntronsWithCrypticExons ~ Length + Response, 
+    data = .)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.01593 -0.00932 -0.00801 -0.00657  0.99709 
+
+Coefficients:
+              Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept) -0.0019304  0.0005487  -3.518 0.000435 ***
+Length       0.0026496  0.0001514  17.502  &lt; 2e-16 ***
+Response    -0.0009633  0.0002300  -4.189 2.81e-05 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 0.08877 on 724009 degrees of freedom
+Multiple R-squared:  0.0004674, Adjusted R-squared:  0.0004647 
+F-statistic: 169.3 on 2 and 724009 DF,  p-value: &lt; 2.2e-16</code></pre>
+<p>Ok, the sign of the effect and P-value are more or less the same…</p>
+<p>Now Let’s do the length matching thing and plot as ecdf more more
+intuitive visualization of the effect…</p>
+<pre class="r"><code>#Get control introns as the introns just bigger or just smaller than the test introns in a list of introns ranked by length
+Merged.tidyForMatching &lt;- Merged %&gt;%
+  left_join(
+    ModelFits %&gt;%
+      filter(param==&quot;ED50:(Intercept)&quot;),
+    by=c(&quot;GAGTIntron&quot;=&quot;junc&quot;)
+  ) %&gt;%
+  mutate(ED50Group = cut_number(Estimate, 4)) %&gt;%
+  inner_join(Introns, by=c(&quot;name&quot;=&quot;SpliceAcceptor&quot;)) %&gt;%
+  mutate(Length = end - start) %&gt;%
+  group_by(Sample) %&gt;%
+  arrange(Length) %&gt;%
+  mutate(LaggingIntronGroup = lag(Group)) %&gt;%
+  mutate(LeadingIntronGroup = lead(Group)) %&gt;%
+  ungroup()
+Merged.WithLengthMatchedControlIntrons &lt;- 
+bind_rows(
+  Merged.tidyForMatching %&gt;%
+    filter(Group == &quot;Contains SM-induced exon&quot;),
+  Merged.tidyForMatching %&gt;%
+    filter(!(Group == &quot;Contains SM-induced exon&quot;) &amp; LaggingIntronGroup ==&quot;Contains SM-induced exon&quot;),
+  Merged.tidyForMatching %&gt;%
+    filter(!(Group == &quot;Contains SM-induced exon&quot;) &amp; LeadingIntronGroup ==&quot;Contains SM-induced exon&quot;)
+)
+
+
+P &lt;- Merged.WithLengthMatchedControlIntrons %&gt;%
+  ggplot(aes(x=Length, color=Group)) +
+  stat_ecdf() +
+  scale_x_continuous(trans=&quot;log10&quot;) +
+  labs(y=&quot;ecdf&quot;, title=&quot;No SM-induced exons are length matched&quot;)
+P</code></pre>
+<p><img src="figure/20230413_CheckSplicingTimingOfSM_sensitiveIntrons.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>P +facet_wrap(~Group)</code></pre>
+<p><img src="figure/20230413_CheckSplicingTimingOfSM_sensitiveIntrons.Rmd/unnamed-chunk-7-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>Merged.WithLengthMatchedControlIntrons %&gt;%
+  ggplot(aes(x=Ratio, color=Sample)) +
+  stat_ecdf(aes(linetype=Group)) +
+  geom_vline(xintercept=1) +
+  scale_x_continuous(trans=&quot;log10&quot;) +
+  labs(y=&quot;ecdf&quot;) +
+  coord_cartesian(c(1E-1, 1)) +
+  labs(x=&quot;Upstream/Downstream coverage at 3&#39;ss\nFastSplicing&lt;--&gt;SlowSplicing&quot;)</code></pre>
+<p><img src="figure/20230413_CheckSplicingTimingOfSM_sensitiveIntrons.Rmd/unnamed-chunk-7-3.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>Merged.WithLengthMatchedControlIntrons %&gt;%
+  ggplot(aes(x=Ratio, color=Sample)) +
+  stat_ecdf(aes(linetype=Group)) +
+  geom_vline(xintercept=1) +
+  scale_x_continuous(trans=&quot;log10&quot;) +
+  labs(y=&quot;ecdf&quot;) +
+  coord_cartesian(c(1E-1, 1)) +
+  facet_wrap(~Sample) +
+  labs(x=&quot;Upstream/Downstream coverage at 3&#39;ss\nFastSplicing&lt;--&gt;SlowSplicing&quot;)</code></pre>
+<p><img src="figure/20230413_CheckSplicingTimingOfSM_sensitiveIntrons.Rmd/unnamed-chunk-7-4.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>Merged.WithLengthMatchedControlIntrons %&gt;%
+  ggplot(aes(x=Ratio, color=ED50Group)) +
+  stat_ecdf(aes(linetype=Group)) +
+  geom_vline(xintercept=1) +
+  scale_x_continuous(trans=&quot;log10&quot;) +
+  scale_color_brewer(palette = &quot;YlGnBu&quot;, na.value=&quot;black&quot;, direction=-1) +
+  labs(y=&quot;ecdf&quot;) +
+  coord_cartesian(c(1E-2, 1)) +
+  labs(x=&quot;Upstream/Downstream coverage at 3&#39;ss\nFastSplicing&lt;--&gt;SlowSplicing&quot;) +
+  facet_wrap(~Sample)</code></pre>
+<p><img src="figure/20230413_CheckSplicingTimingOfSM_sensitiveIntrons.Rmd/unnamed-chunk-7-5.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok but in the last plot I didn’t length match per ED50 group… let’s
+do that…</p>
+<pre class="r"><code>Merged.tidyForMatching &lt;- Merged %&gt;%
+  left_join(
+    ModelFits %&gt;%
+      filter(param==&quot;ED50:(Intercept)&quot;),
+    by=c(&quot;GAGTIntron&quot;=&quot;junc&quot;)
+  ) %&gt;%
+  mutate(ED50Group = cut_number(Estimate, 4)) %&gt;%
+  inner_join(Introns, by=c(&quot;name&quot;=&quot;SpliceAcceptor&quot;)) %&gt;%
+  mutate(Length = end - start) %&gt;%
+  group_by(Sample) %&gt;%
+  arrange(Length) %&gt;%
+  mutate(LaggingIntronGroup = lag(ED50Group)) %&gt;%
+  mutate(LeadingIntronGroup = lead(ED50Group)) %&gt;%
+  ungroup()
+Merged.WithLengthMatchedControlIntrons &lt;- 
+bind_rows(
+  Merged.tidyForMatching %&gt;%
+    filter(Group == &quot;Contains SM-induced exon&quot;),
+  Merged.tidyForMatching %&gt;%
+    filter(!Group == &quot;Contains SM-induced exon&quot; &amp; !is.na(LaggingIntronGroup)) %&gt;%
+    mutate(ED50Group = LaggingIntronGroup),
+  Merged.tidyForMatching %&gt;%
+    filter(!Group == &quot;Contains SM-induced exon&quot; &amp; !is.na(LeadingIntronGroup)) %&gt;%
+    mutate(ED50Group = LeadingIntronGroup)
+)
+
+
+P &lt;- Merged.WithLengthMatchedControlIntrons %&gt;%
+  ggplot(aes(x=Length, color=ED50Group)) +
+  stat_ecdf(aes(linetype=Group)) +
+  scale_x_continuous(trans=&quot;log10&quot;) +
+  scale_color_brewer(palette = &quot;YlGnBu&quot;, na.value=&quot;black&quot;, direction=-1) +
+  labs(y=&quot;ecdf&quot;, title=&quot;No SM-induced exons are length matched&quot;)
+P</code></pre>
+<p><img src="figure/20230413_CheckSplicingTimingOfSM_sensitiveIntrons.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>P +facet_wrap(~Group)</code></pre>
+<p><img src="figure/20230413_CheckSplicingTimingOfSM_sensitiveIntrons.Rmd/unnamed-chunk-8-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>Merged.WithLengthMatchedControlIntrons %&gt;%
+  ggplot(aes(x=Ratio, color=ED50Group)) +
+  stat_ecdf(aes(linetype=Group)) +
+  geom_vline(xintercept=1) +
+  scale_x_continuous(trans=&quot;log10&quot;) +
+  scale_color_brewer(palette = &quot;YlGnBu&quot;, na.value=&quot;black&quot;, direction=-1) +
+  labs(y=&quot;ecdf&quot;) +
+  coord_cartesian(c(1E-2, 1)) +
+  labs(x=&quot;Upstream/Downstream coverage at 3&#39;ss\nFastSplicing&lt;--&gt;SlowSplicing&quot;) +
+  facet_wrap(~Sample)</code></pre>
+<p><img src="figure/20230413_CheckSplicingTimingOfSM_sensitiveIntrons.Rmd/unnamed-chunk-8-3.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>Merged.WithLengthMatchedControlIntrons %&gt;%
+  filter(ED50Group == &quot;[20.4,843]&quot;) %&gt;%
+  ggplot(aes(x=Ratio, color=ED50Group)) +
+  stat_ecdf(aes(linetype=Group)) +
+  geom_vline(xintercept=1) +
+  scale_x_continuous(trans=&quot;log10&quot;) +
+  scale_color_brewer(palette = &quot;YlGnBu&quot;, na.value=&quot;black&quot;, direction=-1) +
+  labs(y=&quot;ecdf&quot;) +
+  coord_cartesian(c(1E-2, 1)) +
+  labs(x=&quot;Upstream/Downstream coverage at 3&#39;ss\nFastSplicing&lt;--&gt;SlowSplicing&quot;) +
+  facet_wrap(~Sample)</code></pre>
+<p><img src="figure/20230413_CheckSplicingTimingOfSM_sensitiveIntrons.Rmd/unnamed-chunk-8-4.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Overall not so convincing…</p>
+<p>One other thing Yang asked for some of the same analysis but looking
+for correlations with splice site scores to explain where the crpyic
+exons are… Like do the cryptic exons have particular strong upstream
+3’ss? I’m not sure why it would make sense to look at any other splice
+site. Though, while I’m scoring splice sites I mine as well also just
+verify a previous observation that introns with weak splice sites are
+spliced slower, as a positive control that I am doing these analysis
+correctly.</p>
+<pre class="r"><code>ThreeSS.Scores &lt;- read_tsv(&quot;../code/SmallMolecule/MaxEntScan/3ss.tsv.gz&quot;, col_names=c(&quot;Seq&quot;, &quot;Score&quot;))
+
+
+ThreeSS.Seqs &lt;- read_tsv(&quot;../code/SmallMolecule/MaxEntScan/3ss.seqs.bed.gz&quot;, col_names=c(&quot;chrom&quot;, &quot;start&quot;, &quot;stop&quot;, &quot;AcceptorName&quot;, &quot;score&quot;, &quot;strand&quot;, &quot;Seq&quot;)) %&gt;%
+  inner_join(ThreeSS.Scores) %&gt;%
+  dplyr::select(AcceptorName, Seq, Score) %&gt;%
+  distinct()
+
+Merged %&gt;%
+  inner_join(ThreeSS.Seqs, by=c(&quot;name&quot;=&quot;AcceptorName&quot;)) %&gt;%
+  mutate(AcceptorScoreGroup = cut_number(Score, 4)) %&gt;%
+  ggplot(aes(x=Ratio, color=AcceptorScoreGroup)) +
+  stat_ecdf() +
+  geom_vline(xintercept=1) +
+  scale_x_continuous(trans=&quot;log10&quot;) +
+  scale_color_brewer(palette = &quot;YlGnBu&quot;, na.value=&quot;black&quot;, direction=-1) +
+  labs(y=&quot;ecdf&quot;) +
+  coord_cartesian(c(1E-2, 1)) +
+  labs(x=&quot;Upstream/Downstream coverage at 3&#39;ss\nFastSplicing&lt;--&gt;SlowSplicing&quot;) +
+  facet_wrap(~Sample)</code></pre>
+<p><img src="figure/20230413_CheckSplicingTimingOfSM_sensitiveIntrons.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" />
+Ok, there seems to be a sensible effect wherein 3’ss in the worst
+quartile of MaxEntScores have slower splicing…</p>
+<p>Now let’s check the scores of the downstream 3’ss of host introns
+with or without the induced cryptic exons…</p>
+<pre class="r"><code>Merged %&gt;%
+  inner_join(ThreeSS.Seqs, by=c(&quot;name&quot;=&quot;AcceptorName&quot;)) %&gt;%
+  distinct(name, .keep_all=T) %&gt;%
+  ggplot(aes(x=Score, color=Group)) +
+  stat_ecdf(aes()) +
+  # geom_vline(xintercept=1) +
+  # scale_x_continuous(trans=&quot;log10&quot;) +
+  # scale_color_brewer(palette = &quot;YlGnBu&quot;, na.value=&quot;black&quot;, direction=-1) +
+  labs(y=&quot;ecdf&quot;) +
+  coord_cartesian(c(0, 15)) +
+  labs(x=&quot;3ss MaxEntScore&quot;)</code></pre>
+<p><img src="figure/20230413_CheckSplicingTimingOfSM_sensitiveIntrons.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>Merged %&gt;%
+  left_join(
+    ModelFits %&gt;%
+      filter(param==&quot;ED50:(Intercept)&quot;),
+    by=c(&quot;GAGTIntron&quot;=&quot;junc&quot;)
+  ) %&gt;%
+  mutate(ED50Group = cut_number(Estimate, 4)) %&gt;%
+  inner_join(ThreeSS.Seqs, by=c(&quot;name&quot;=&quot;AcceptorName&quot;)) %&gt;%
+  distinct(name, .keep_all=T) %&gt;%
+  ggplot(aes(x=Score, color=ED50Group)) +
+  stat_ecdf(aes(linetype=Group)) +
+  # geom_vline(xintercept=1) +
+  # scale_x_continuous(trans=&quot;log10&quot;) +
+  scale_color_brewer(palette = &quot;YlGnBu&quot;, na.value=&quot;black&quot;, direction=-1) +
+  labs(y=&quot;ecdf&quot;) +
+  coord_cartesian(c(0, 15)) +
+  labs(x=&quot;3ss MaxEntScore&quot;)</code></pre>
+<p><img src="figure/20230413_CheckSplicingTimingOfSM_sensitiveIntrons.Rmd/unnamed-chunk-10-2.png" width="672" style="display: block; margin: auto;" />
+Ok, now let’s check for a correlation between MaxEntScore and intron
+length…</p>
+<pre class="r"><code>inner_join(Introns, ThreeSS.Seqs, by=c(&quot;SpliceAcceptor&quot;=&quot;AcceptorName&quot;)) %&gt;%
+  mutate(Length = end - start) %&gt;%
+  mutate(LengthGroup = cut_number(Length, 5)) %&gt;%
+  ggplot(aes(x=Score, color=LengthGroup)) +
+  stat_ecdf() +
+  scale_color_brewer(palette = &quot;YlGnBu&quot;, na.value=&quot;black&quot;, direction=-1) +
+  labs(y=&quot;ecdf&quot;) +
+  coord_cartesian(c(0, 15)) +
+  labs(x=&quot;3ss MaxEntScore&quot;)</code></pre>
+<p><img src="figure/20230413_CheckSplicingTimingOfSM_sensitiveIntrons.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>inner_join(Introns, ThreeSS.Seqs, by=c(&quot;SpliceAcceptor&quot;=&quot;AcceptorName&quot;)) %&gt;%
+  mutate(Length = end - start) %&gt;%
+  ggplot(aes(y=Score, x=log10(Length))) +
+  geom_hex(bins=100) +
+  geom_smooth(method=&#39;lm&#39;) +
+  scale_x_continuous(trans=&#39;log10&#39;) +
+  labs(x=&quot;IntronLength&quot;, y=&quot;3ss MaxEntScore&quot;)</code></pre>
+<p><img src="figure/20230413_CheckSplicingTimingOfSM_sensitiveIntrons.Rmd/unnamed-chunk-11-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Hmmm, ok maybe there is some odd relationship with 3’ss MaxEntScore
+and length.. In any case, now let’s compare to length-matched control
+introns just in case there is correlation between length and 3ss
+MaxEntScore.</p>
+<pre class="r"><code>Merged.tidyForMatching &lt;- Merged %&gt;%
+  left_join(
+    ModelFits %&gt;%
+      filter(param==&quot;ED50:(Intercept)&quot;),
+    by=c(&quot;GAGTIntron&quot;=&quot;junc&quot;)
+  ) %&gt;%
+  mutate(ED50Group = cut_number(Estimate, 4)) %&gt;%
+  inner_join(Introns, by=c(&quot;name&quot;=&quot;SpliceAcceptor&quot;)) %&gt;%
+  mutate(Length = end - start) %&gt;%
+  group_by(Sample) %&gt;%
+  arrange(Length) %&gt;%
+  mutate(LaggingIntronGroup = lag(ED50Group)) %&gt;%
+  mutate(LeadingIntronGroup = lead(ED50Group)) %&gt;%
+  ungroup()
+Merged.WithLengthMatchedControlIntrons &lt;- 
+bind_rows(
+  Merged.tidyForMatching %&gt;%
+    filter(Group == &quot;Contains SM-induced exon&quot;),
+  Merged.tidyForMatching %&gt;%
+    filter(!Group == &quot;Contains SM-induced exon&quot; &amp; !is.na(LaggingIntronGroup)) %&gt;%
+    mutate(ED50Group = LaggingIntronGroup),
+  Merged.tidyForMatching %&gt;%
+    filter(!Group == &quot;Contains SM-induced exon&quot; &amp; !is.na(LeadingIntronGroup)) %&gt;%
+    mutate(ED50Group = LeadingIntronGroup)
+) %&gt;%
+  inner_join(ThreeSS.Seqs, by=c(&quot;name&quot;=&quot;AcceptorName&quot;)) %&gt;%
+  distinct(name, .keep_all=T)
+
+P &lt;- Merged.WithLengthMatchedControlIntrons %&gt;%
+  ggplot(aes(x=Length, color=ED50Group)) +
+  stat_ecdf(aes(linetype=Group)) +
+  scale_x_continuous(trans=&quot;log10&quot;) +
+  scale_color_brewer(palette = &quot;YlGnBu&quot;, na.value=&quot;black&quot;, direction=-1) +
+  labs(y=&quot;ecdf&quot;, title=&quot;No SM-induced exons are length matched&quot;)
+P</code></pre>
+<p><img src="figure/20230413_CheckSplicingTimingOfSM_sensitiveIntrons.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>P + facet_wrap(~Group)</code></pre>
+<p><img src="figure/20230413_CheckSplicingTimingOfSM_sensitiveIntrons.Rmd/unnamed-chunk-12-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>Merged.WithLengthMatchedControlIntrons %&gt;%
+  ggplot(aes(x=Score, color=ED50Group)) +
+  stat_ecdf(aes(linetype=Group)) +
+  # geom_vline(xintercept=1) +
+  # scale_x_continuous(trans=&quot;log10&quot;) +
+  scale_color_brewer(palette = &quot;YlGnBu&quot;, na.value=&quot;black&quot;, direction=-1) +
+  labs(y=&quot;ecdf&quot;) +
+  coord_cartesian(c(0, 15)) +
+  labs(x=&quot;3ss MaxEntScore&quot;) +
+  facet_wrap(~ED50Group)</code></pre>
+<p><img src="figure/20230413_CheckSplicingTimingOfSM_sensitiveIntrons.Rmd/unnamed-chunk-12-3.png" width="672" style="display: block; margin: auto;" />
+Ok, nothing obvious here. But since Yang seemed to be satisfied enough
+to use the lm model results for assessing relationship between 3ss
+coverage and host intron having cryptic exon, let’s do the same sort of
+linear model with the DummyVariable as the response, and Length and
+MaxEntScore as predictors…</p>
+<pre class="r"><code>lm.fit &lt;- Merged %&gt;%
+  inner_join(ThreeSS.Seqs, by=c(&quot;name&quot;=&quot;AcceptorName&quot;)) %&gt;%
+  inner_join(Introns, by=c(&quot;name&quot;=&quot;SpliceAcceptor&quot;)) %&gt;%
+  distinct(name, .keep_all=T) %&gt;%
+  mutate(Dummy_1_ForIntronsWithCrypticExons = if_else(is.na(GAGTIntron), 0, 1)) %&gt;%
+  mutate(Length = log10(end - start)) %&gt;%
+  lm(Dummy_1_ForIntronsWithCrypticExons ~ Length + Score, data=.)
+
+summary(lm.fit)</code></pre>
+<pre><code>
+Call:
+lm(formula = Dummy_1_ForIntronsWithCrypticExons ~ Length + Score, 
+    data = .)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.00522 -0.00400 -0.00374 -0.00345  0.99787 
+
+Coefficients:
+             Estimate Std. Error t value Pr(&gt;|t|)  
+(Intercept) 1.625e-03  1.133e-03   1.435   0.1514  
+Length      2.366e-04  2.768e-04   0.855   0.3927  
+Score       1.467e-04  7.274e-05   2.017   0.0436 *
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 0.06078 on 97084 degrees of freedom
+Multiple R-squared:  5.216e-05, Adjusted R-squared:  3.156e-05 
+F-statistic: 2.532 on 2 and 97084 DF,  p-value: 0.07949</code></pre>
+<p>Ok.. Pval is 0.0436… I don’t think we shold take anything from
+this…</p>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.2.0 (2022-04-22)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: CentOS Linux 7 (Core)
+
+Matrix products: default
+BLAS/LAPACK: /software/openblas-0.3.13-el7-x86_64/lib/libopenblas_haswellp-r0.3.13.so
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8 LC_NUMERIC=C         LC_TIME=C           
+ [4] LC_COLLATE=C         LC_MONETARY=C        LC_MESSAGES=C       
+ [7] LC_PAPER=C           LC_NAME=C            LC_ADDRESS=C        
+[10] LC_TELEPHONE=C       LC_MEASUREMENT=C     LC_IDENTIFICATION=C 
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] MASS_7.3-56        edgeR_3.38.4       limma_3.52.4       data.table_1.14.2 
+ [5] RColorBrewer_1.1-3 forcats_0.5.1      stringr_1.4.0      dplyr_1.0.9       
+ [9] purrr_0.3.4        readr_2.1.2        tidyr_1.2.0        tibble_3.1.7      
+[13] ggplot2_3.3.6      tidyverse_1.3.1   
+
+loaded via a namespace (and not attached):
+ [1] httr_1.4.3       sass_0.4.1       splines_4.2.0    bit64_4.0.5     
+ [5] vroom_1.5.7      jsonlite_1.8.0   modelr_0.1.8     bslib_0.3.1     
+ [9] assertthat_0.2.1 highr_0.9        cellranger_1.1.0 yaml_2.3.5      
+[13] pillar_1.7.0     backports_1.4.1  lattice_0.20-45  glue_1.6.2      
+[17] digest_0.6.29    promises_1.2.0.1 rvest_1.0.2      colorspace_2.0-3
+[21] Matrix_1.5-3     htmltools_0.5.2  httpuv_1.6.5     pkgconfig_2.0.3 
+[25] broom_0.8.0      haven_2.5.0      scales_1.2.0     later_1.3.0     
+[29] tzdb_0.3.0       git2r_0.30.1     mgcv_1.8-40      generics_0.1.2  
+[33] farver_2.1.0     ellipsis_0.3.2   withr_2.5.0      hexbin_1.28.3   
+[37] cli_3.3.0        magrittr_2.0.3   crayon_1.5.1     readxl_1.4.0    
+[41] evaluate_0.15    fs_1.5.2         fansi_1.0.3      nlme_3.1-157    
+[45] xml2_1.3.3       tools_4.2.0      hms_1.1.1        lifecycle_1.0.1 
+[49] munsell_0.5.0    reprex_2.0.1     locfit_1.5-9.7   compiler_4.2.0  
+[53] jquerylib_0.1.4  rlang_1.0.2      grid_4.2.0       rstudioapi_0.13 
+[57] labeling_0.4.2   rmarkdown_2.14   gtable_0.3.0     DBI_1.1.2       
+[61] R6_2.5.1         lubridate_1.8.0  knitr_1.39       fastmap_1.1.0   
+[65] bit_4.0.4        utf8_1.2.2       workflowr_1.7.0  rprojroot_2.0.3 
+[69] stringi_1.7.6    parallel_4.2.0   Rcpp_1.0.8.3     vctrs_0.4.1     
+[73] dbplyr_2.1.1     tidyselect_1.1.2 xfun_0.30       </code></pre>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

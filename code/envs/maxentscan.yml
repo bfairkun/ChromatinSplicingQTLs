@@ -1,0 +1,20 @@
+name: maxentscan
+channels:
+  - bioconda
+  - defaults
+  - conda-forge
+  - r
+dependencies:
+  - _libgcc_mutex=0.1=main
+  - _openmp_mutex=5.1=1_gnu
+  - bedtools=2.30.0=h468198e_3
+  - bzip2=1.0.8=h7b6447c_0
+  - libgcc-ng=11.2.0=h1234567_1
+  - libgomp=11.2.0=h1234567_1
+  - libstdcxx-ng=11.2.0=h1234567_1
+  - libzlib=1.2.11=h166bdaf_1014
+  - maxentscan=0_2004.04.21=pl526_1
+  - perl=5.26.2=h14c3975_0
+  - xz=5.2.10=h5eee18b_1
+  - zlib=1.2.11=h166bdaf_1014
+prefix: /project2/gilad/bjf79_project1/envs/maxentscan

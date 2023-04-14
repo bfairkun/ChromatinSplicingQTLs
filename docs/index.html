@@ -305,7 +305,7 @@ class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2023-03-27
+<strong>Last updated:</strong> 2023-04-14
 </p>
 <p>
 <strong>Checks:</strong> <span
@@ -437,15 +437,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstreede90abf6c2b1a988631ef11c2edd5100a5cf39c9targetblankde90abfa">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstree2ee57a6fc6f7d5ba04c337e50199bb1c45229e86targetblank2ee57a6a">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/de90abf6c2b1a988631ef11c2edd5100a5cf39c9" target="_blank">de90abf</a>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/2ee57a6fc6f7d5ba04c337e50199bb1c45229e86" target="_blank">2ee57a6</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstreede90abf6c2b1a988631ef11c2edd5100a5cf39c9targetblankde90abfa"
+id="strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstree2ee57a6fc6f7d5ba04c337e50199bb1c45229e86targetblank2ee57a6a"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -455,7 +455,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/de90abf6c2b1a988631ef11c2edd5100a5cf39c9" target="_blank">de90abf</a>.
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/2ee57a6fc6f7d5ba04c337e50199bb1c45229e86" target="_blank">2ee57a6</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -487,6 +487,7 @@ Ignored files:
     Ignored:    code/FastqFastp/
     Ignored:    code/FastqFastpSE/
     Ignored:    code/FastqSE/
+    Ignored:    code/FineMapping/
     Ignored:    code/Genotypes/
     Ignored:    code/H3K36me3_CutAndTag.pdf
     Ignored:    code/IntronSlopes/
@@ -542,7 +543,7 @@ Ignored files:
     Ignored:    code/logs/
     Ignored:    code/notebooks/.ipynb_checkpoints/
     Ignored:    code/pi1/
-    Ignored:    code/rules/.CalculatePi1.smk.swp
+    Ignored:    code/rules/.ProcessSmallMoleculeData.smk.swp
     Ignored:    code/rules/.ipynb_checkpoints/
     Ignored:    code/rules/OldRules/
     Ignored:    code/rules/notebooks/
@@ -560,8 +561,6 @@ Ignored files:
     Ignored:    code/test.log
     Ignored:    code/tracks.xml
     Ignored:    data/.DS_Store
-    Ignored:    data/._.DS_Store
-    Ignored:    data/._20220414203249_JASPAR2022_combined_matrices_25818_jaspar.txt
     Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-10.csv
     Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-11.csv
     Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-2.csv
@@ -575,9 +574,12 @@ Ignored files:
     Ignored:    data/Metaplots/.DS_Store
 
 Untracked files:
-    Untracked:  analysis/20230324_MakeFigs.Rmd
+    Untracked:  analysis/20230413_CheckSplicingTimingOfSM_sensitiveIntrons.Rmd
+    Untracked:  code/envs/maxentscan.yml
 
 Unstaged changes:
+    Modified:   analysis/20230324_MakeFigs.Rmd
+    Modified:   code/rules/ProcessSmallMoleculeData.smk
     Modified:   code/scripts/GenometracksByGenotype
 
 </code></pre>
@@ -623,6 +625,23 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/ddbf2225e7f71ace4a67a2cdae69ece7e4026b66/docs/index.html" target="_blank">ddbf222</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2023-03-27
+</td>
+<td>
+add pi1 heatmaps nb
+</td>
+</tr>
 <tr>
 <td>
 html
@@ -1321,6 +1340,8 @@ href="20230314_ProcessSM_ForInterpretableSplicingEffectSizes.html">20230314_Proc
 <p><a
 href="20230320_RemakeEffectSizeScatters_UpdatedAnnotations.html">20230320_RemakeEffectSizeScatters_UpdatedAnnotations.html</a></p>
 <p><a href="20230324_MakeFigs.html">20230324_MakeFigs.html</a></p>
+<p><a
+href="20230413_CheckSplicingTimingOfSM_sensitiveIntrons.html">20230413_CheckSplicingTimingOfSM_sensitiveIntrons.html</a></p>
 <p>Also, a list of links to ipynb files that were incorporated into the
 snakemake. Since github renders ipynbs directly, this is not a relative
 link from the site folder, but rather links directly to the file to view

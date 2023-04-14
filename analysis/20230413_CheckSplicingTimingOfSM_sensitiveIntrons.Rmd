@@ -1,0 +1,538 @@
+---
+title: "check splicing time of SM affected introns"
+output: html_document
+date: '2023-04-13'
+---
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+
+library(tidyverse)
+library(RColorBrewer)
+library(data.table)
+library(edgeR)
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family="Helvetica")))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+
+#test plot
+ggplot(mtcars, aes(x=mpg, y=cyl)) +
+  geom_point()
+
+```
+
+## Intro
+Yang hypothesizes that cryptic exons induced by risdiplam will be in host introns that are spliced slower than typical introns. The idea is that the small molecule needs time to have its effect, and it is in competition with the splicing of the canonical host introns. To test this, I will assess the splicing timing of introns using the ratio of coverage in 25nt window upstream of 3'ss, versus 25 nt window downstream of 3'ss for each intron. I hypothesize that introns that host a risdiplam-induced cryptic exon will have higher upstream/downstream ratio than random set of introns. I will specifically look at the DMSO control samples of chRNA.
+
+```{r}
+UpstreamCoverage <- read_tsv("../code/SmallMolecule/3ssWindows/Upstream.counts.txt") %>%
+  rename_at(-c(1:6), ~str_replace(.x, "SmallMolecule/AlignmentsPass2/(.+?)/Aligned.sortedByCoord.out.bam", "\\1")) %>%
+  dplyr::select(-c(1:3), -5, -6) %>%
+  column_to_rownames("name") %>%
+  as.matrix()
+
+DownstreamCoverage <- read_tsv("../code/SmallMolecule/3ssWindows/Down.counts.txt") %>%
+  rename_at(-c(1:6), ~str_replace(.x, "SmallMolecule/AlignmentsPass2/(.+?)/Aligned.sortedByCoord.out.bam", "\\1")) %>%
+  dplyr::select(-c(1:3), -5, -6) %>%
+  column_to_rownames("name") %>%
+  as.matrix()
+
+
+UpstreamCoverage.DMSO.chRNA <- UpstreamCoverage %>%
+  as.data.frame() %>%
+  dplyr::select(contains("DMSO") & contains("chRNA")) %>%
+  as.matrix()
+
+DownstreamCoverage.DMSO.chRNA <- DownstreamCoverage %>%
+  as.data.frame() %>%
+  dplyr::select(contains("DMSO") & contains("chRNA")) %>%
+  as.matrix()
+
+hist(log10(UpstreamCoverage + DownstreamCoverage + 1))
+
+hist(log10(apply(UpstreamCoverage + DownstreamCoverage,  1, sum) + 1))
+
+```
+
+Let's process samples an a per-sample basis, so we can use the replicates. Also, I will filter out 3'ss in each sample with less than 10 reads between the upstream and downstream window. Let's add a small psueodcount to everything to not get divide by 0 errors.
+
+```{r}
+RisdiplamSensitiveIntrons <- read_tsv("../output/SmallMoleculeGAGT_CassetteExonclusters.bed", col_names=c("chrom", "start", "stop", "name", "score", "strand", "thickStart", "thickEnd", "color")) %>%
+  filter(str_detect(name, "junc.skipping")) %>%
+  mutate(SpliceAcceptor = if_else(
+    strand == "+",
+    paste(chrom, stop, sep="_"),
+    paste(chrom, start, sep="_")
+  )) %>%
+  dplyr::select(GAGTIntron=name, name=SpliceAcceptor) %>%
+  mutate(GAGTIntron = str_replace(GAGTIntron, "junc.skipping_clu_.+?_(chr.+?)$", "\\1"))
+
+Merged <- bind_rows(
+  DownstreamCoverage %>%
+    as.data.frame() %>%
+    dplyr::select(contains("DMSO") & contains("chRNA")) %>%
+    rownames_to_column("name") %>%
+    mutate(Window = "Down"),
+  UpstreamCoverage %>%
+    as.data.frame() %>%
+    dplyr::select(contains("DMSO") & contains("chRNA")) %>%
+    rownames_to_column("name") %>%
+    mutate(Window = "Up")
+) %>%
+  pivot_longer(contains("DMSO"),names_to = "Sample") %>%
+  mutate(value = value + 0.1) %>%
+  pivot_wider(names_from="Window", values_from = "value") %>%
+  mutate(sum = Down + Up) %>%
+  filter(sum >= 10) %>%
+  mutate(Ratio = Up/Down) %>%
+  left_join(RisdiplamSensitiveIntrons) %>%
+  mutate(Group = if_else(is.na(GAGTIntron), "No SM-induced exon", "Contains SM-induced exon"))
+
+Merged %>%
+  ggplot(aes(x=Ratio, color=Sample)) +
+  stat_ecdf() +
+  geom_vline(xintercept=1) +
+  scale_x_continuous(trans="log10") +
+  labs(y="ecdf")
+
+
+
+Merged %>%
+  ggplot(aes(x=Ratio, color=Sample)) +
+  stat_ecdf(aes(linetype=Group)) +
+  geom_vline(xintercept=1) +
+  scale_x_continuous(trans="log10") +
+  labs(y="ecdf") +
+  coord_cartesian(c(1E-2, 1)) +
+  labs(x="Upstream/Downstream coverage at 3'ss\nFastSplicing<-->SlowSplicing")
+
+Merged %>%
+  ggplot(aes(x=Ratio, color=Sample)) +
+  stat_ecdf(aes(linetype=Group)) +
+  geom_vline(xintercept=1) +
+  labs(y="ecdf") +
+  coord_cartesian(c(1E-2, 1)) +
+  labs(x="Upstream/Downstream coverage at 3'ss\nFastSplicing<-->SlowSplicing")
+```
+
+Yang suggested distinguishing introns by ED50...
+
+```{r}
+ModelFits <- read_tsv("../code/SmallMolecule/FitModels/polyA_GAGTIntrons.tsv.gz")
+
+Merged %>%
+  # filter(!is.na(GAGTIntron)) %>%
+  left_join(
+    ModelFits %>%
+      filter(param=="ED50:(Intercept)"),
+    by=c("GAGTIntron"="junc")
+  ) %>%
+  mutate(ED50Group = cut_number(Estimate, 4)) %>%
+  ggplot(aes(x=Ratio, color=ED50Group)) +
+  stat_ecdf() +
+  geom_vline(xintercept=1) +
+  labs(y="ecdf") +
+  scale_x_continuous(trans="log10") +
+  coord_cartesian(c(1E-2, 1)) +
+  scale_color_brewer(palette = "YlGnBu", na.value="black", direction=-1) +
+  facet_wrap(~Sample) +
+  labs(x="Upstream/Downstream coverage at 3'ss\nFastSplicing<-->SlowSplicing")
+```
+
+
+Yang suggested matching introns by length...
+
+```{r}
+Introns <- read_tsv("../code/SmallMolecule/FullSpliceSiteAnnotations/JuncfilesMerged.annotated.basic.bed.gz") %>%
+  filter(known_junction == 0) %>%
+  mutate(SpliceAcceptor = if_else(
+    strand == "+",
+    paste(chrom, end, sep="_"),
+    paste(chrom, start, sep="_")
+  )) %>%
+  add_count(SpliceAcceptor)
+
+ggplot(Introns, aes(x=n)) +
+  stat_ecdf() +
+  coord_cartesian(x=c(0,10)) +
+  labs(x="Number donors associated with each annotated 3'ss", y="ecdf")
+
+
+
+Merged %>%
+  left_join(
+    ModelFits %>%
+      filter(param=="ED50:(Intercept)"),
+    by=c("GAGTIntron"="junc")
+  ) %>%
+  mutate(ED50Group = cut_number(Estimate, 4)) %>%
+  inner_join(Introns, by=c("name"="SpliceAcceptor")) %>%
+  mutate(Length = end - start) %>%
+  distinct(chrom, start, end, .keep_all=T) %>%
+  ggplot(aes(x=Length, color=ED50Group)) +
+  stat_ecdf() +
+  scale_x_continuous(trans="log10") +
+  coord_cartesian(xlim=c(100, 1E5)) +
+  labs(y="ecdf") +
+  scale_color_brewer(palette = "YlGnBu", na.value="black", direction=-1) +
+  labs(x="Intron length by group")
+
+
+Merged %>%
+  left_join(
+    ModelFits %>%
+      filter(param=="ED50:(Intercept)"),
+    by=c("GAGTIntron"="junc")
+  ) %>%
+  inner_join(Introns, by=c("name"="SpliceAcceptor")) %>%
+  mutate(Length = end - start) %>%
+  mutate(LengthGroup = cut_number(Length, 5)) %>%
+  distinct(chrom, start, end, .keep_all=T) %>%
+  ggplot(aes(x=Ratio, color=LengthGroup)) +
+  stat_ecdf() +
+  scale_x_continuous(trans="log10") +
+  coord_cartesian(c(1E-1, 1)) +
+  labs(y="ecdf") +
+  scale_color_brewer(palette = "YlGnBu", na.value="black", direction=-1) +
+  labs(x="Upstream/Downstream coverage at 3'ss\nFastSplicing<-->SlowSplicing", color="Intron length ntile")
+
+```
+
+Ok, so there is some confounding by intron length... Longer introns are spliced faster (which i find surprising anyway), and the small-molecule affected introns tend to be slightly longer. So if you correct for the length effect, either by comparing length-matched groups or fitting a model with length as covariate, perhaps we would see that the small molecule effected introns are in fact spliced slow.
+
+```{r}
+
+lm.fit <- Merged %>%
+  inner_join(Introns, by=c("name"="SpliceAcceptor")) %>%
+  mutate(Dummy_1_ForIntronsWithCrypticExons = if_else(is.na(GAGTIntron), 0, 1)) %>%
+  mutate(Length = log10(end - start)) %>%
+  mutate(Response = log10(Ratio)) %>%
+  lm(Response ~ Length + Dummy_1_ForIntronsWithCrypticExons, data=.)
+
+summary(lm.fit)
+
+
+
+library(MASS)
+# library(sfsmisc)
+
+rlm.fit <- Merged %>%
+  inner_join(Introns, by=c("name"="SpliceAcceptor")) %>%
+  mutate(Dummy_1_ForIntronsWithCrypticExons = if_else(is.na(GAGTIntron), 0, 1)) %>%
+  mutate(Length = log10(end - start)) %>%
+  mutate(Response = log10(Ratio)) %>%
+  rlm(Response ~ Length + Dummy_1_ForIntronsWithCrypticExons, data=.)
+
+summary(rlm.fit)
+
+
+```
+
+Ok, so somewhat significant in a direction consistent with the hypothesis.. Wait, I feel I did that oddly. t makes more natural sense for the Dummy_1_ForIntronsWithCrypticExons to be a response... 
+
+```{r}
+lm.fit <- Merged %>%
+  inner_join(Introns, by=c("name"="SpliceAcceptor")) %>%
+  mutate(Dummy_1_ForIntronsWithCrypticExons = if_else(is.na(GAGTIntron), 0, 1)) %>%
+  mutate(Length = log10(end - start)) %>%
+  mutate(Response = log10(Ratio)) %>%
+  lm(Dummy_1_ForIntronsWithCrypticExons ~ Length + Response, data=.)
+
+summary(lm.fit)
+```
+
+Ok, the sign of the effect and P-value are more or less the same... 
+
+Now Let's do the length matching thing and plot as ecdf more more intuitive visualization of the effect...
+
+```{r}
+
+#Get control introns as the introns just bigger or just smaller than the test introns in a list of introns ranked by length
+Merged.tidyForMatching <- Merged %>%
+  left_join(
+    ModelFits %>%
+      filter(param=="ED50:(Intercept)"),
+    by=c("GAGTIntron"="junc")
+  ) %>%
+  mutate(ED50Group = cut_number(Estimate, 4)) %>%
+  inner_join(Introns, by=c("name"="SpliceAcceptor")) %>%
+  mutate(Length = end - start) %>%
+  group_by(Sample) %>%
+  arrange(Length) %>%
+  mutate(LaggingIntronGroup = lag(Group)) %>%
+  mutate(LeadingIntronGroup = lead(Group)) %>%
+  ungroup()
+Merged.WithLengthMatchedControlIntrons <- 
+bind_rows(
+  Merged.tidyForMatching %>%
+    filter(Group == "Contains SM-induced exon"),
+  Merged.tidyForMatching %>%
+    filter(!(Group == "Contains SM-induced exon") & LaggingIntronGroup =="Contains SM-induced exon"),
+  Merged.tidyForMatching %>%
+    filter(!(Group == "Contains SM-induced exon") & LeadingIntronGroup =="Contains SM-induced exon")
+)
+
+
+P <- Merged.WithLengthMatchedControlIntrons %>%
+  ggplot(aes(x=Length, color=Group)) +
+  stat_ecdf() +
+  scale_x_continuous(trans="log10") +
+  labs(y="ecdf", title="No SM-induced exons are length matched")
+P
+P +facet_wrap(~Group)
+
+Merged.WithLengthMatchedControlIntrons %>%
+  ggplot(aes(x=Ratio, color=Sample)) +
+  stat_ecdf(aes(linetype=Group)) +
+  geom_vline(xintercept=1) +
+  scale_x_continuous(trans="log10") +
+  labs(y="ecdf") +
+  coord_cartesian(c(1E-1, 1)) +
+  labs(x="Upstream/Downstream coverage at 3'ss\nFastSplicing<-->SlowSplicing")
+
+Merged.WithLengthMatchedControlIntrons %>%
+  ggplot(aes(x=Ratio, color=Sample)) +
+  stat_ecdf(aes(linetype=Group)) +
+  geom_vline(xintercept=1) +
+  scale_x_continuous(trans="log10") +
+  labs(y="ecdf") +
+  coord_cartesian(c(1E-1, 1)) +
+  facet_wrap(~Sample) +
+  labs(x="Upstream/Downstream coverage at 3'ss\nFastSplicing<-->SlowSplicing")
+
+Merged.WithLengthMatchedControlIntrons %>%
+  ggplot(aes(x=Ratio, color=ED50Group)) +
+  stat_ecdf(aes(linetype=Group)) +
+  geom_vline(xintercept=1) +
+  scale_x_continuous(trans="log10") +
+  scale_color_brewer(palette = "YlGnBu", na.value="black", direction=-1) +
+  labs(y="ecdf") +
+  coord_cartesian(c(1E-2, 1)) +
+  labs(x="Upstream/Downstream coverage at 3'ss\nFastSplicing<-->SlowSplicing") +
+  facet_wrap(~Sample)
+
+```
+
+Ok but in the last plot I didn't length match per ED50 group... let's do that...
+
+```{r}
+Merged.tidyForMatching <- Merged %>%
+  left_join(
+    ModelFits %>%
+      filter(param=="ED50:(Intercept)"),
+    by=c("GAGTIntron"="junc")
+  ) %>%
+  mutate(ED50Group = cut_number(Estimate, 4)) %>%
+  inner_join(Introns, by=c("name"="SpliceAcceptor")) %>%
+  mutate(Length = end - start) %>%
+  group_by(Sample) %>%
+  arrange(Length) %>%
+  mutate(LaggingIntronGroup = lag(ED50Group)) %>%
+  mutate(LeadingIntronGroup = lead(ED50Group)) %>%
+  ungroup()
+Merged.WithLengthMatchedControlIntrons <- 
+bind_rows(
+  Merged.tidyForMatching %>%
+    filter(Group == "Contains SM-induced exon"),
+  Merged.tidyForMatching %>%
+    filter(!Group == "Contains SM-induced exon" & !is.na(LaggingIntronGroup)) %>%
+    mutate(ED50Group = LaggingIntronGroup),
+  Merged.tidyForMatching %>%
+    filter(!Group == "Contains SM-induced exon" & !is.na(LeadingIntronGroup)) %>%
+    mutate(ED50Group = LeadingIntronGroup)
+)
+
+
+P <- Merged.WithLengthMatchedControlIntrons %>%
+  ggplot(aes(x=Length, color=ED50Group)) +
+  stat_ecdf(aes(linetype=Group)) +
+  scale_x_continuous(trans="log10") +
+  scale_color_brewer(palette = "YlGnBu", na.value="black", direction=-1) +
+  labs(y="ecdf", title="No SM-induced exons are length matched")
+P
+P +facet_wrap(~Group)
+
+Merged.WithLengthMatchedControlIntrons %>%
+  ggplot(aes(x=Ratio, color=ED50Group)) +
+  stat_ecdf(aes(linetype=Group)) +
+  geom_vline(xintercept=1) +
+  scale_x_continuous(trans="log10") +
+  scale_color_brewer(palette = "YlGnBu", na.value="black", direction=-1) +
+  labs(y="ecdf") +
+  coord_cartesian(c(1E-2, 1)) +
+  labs(x="Upstream/Downstream coverage at 3'ss\nFastSplicing<-->SlowSplicing") +
+  facet_wrap(~Sample)
+
+Merged.WithLengthMatchedControlIntrons %>%
+  filter(ED50Group == "[20.4,843]") %>%
+  ggplot(aes(x=Ratio, color=ED50Group)) +
+  stat_ecdf(aes(linetype=Group)) +
+  geom_vline(xintercept=1) +
+  scale_x_continuous(trans="log10") +
+  scale_color_brewer(palette = "YlGnBu", na.value="black", direction=-1) +
+  labs(y="ecdf") +
+  coord_cartesian(c(1E-2, 1)) +
+  labs(x="Upstream/Downstream coverage at 3'ss\nFastSplicing<-->SlowSplicing") +
+  facet_wrap(~Sample)
+```
+
+Overall not so convincing...
+
+One other thing Yang asked for some of the same analysis but looking for correlations with splice site scores to explain where the crpyic exons are... Like do the cryptic exons have particular strong upstream 3'ss? I'm not sure why it would make sense to look at any other splice site. Though, while I'm scoring splice sites I mine as well also just verify a previous observation that introns with weak splice sites are spliced slower, as a positive control that I am doing these analysis correctly.
+
+```{r}
+ThreeSS.Scores <- read_tsv("../code/SmallMolecule/MaxEntScan/3ss.tsv.gz", col_names=c("Seq", "Score"))
+
+
+ThreeSS.Seqs <- read_tsv("../code/SmallMolecule/MaxEntScan/3ss.seqs.bed.gz", col_names=c("chrom", "start", "stop", "AcceptorName", "score", "strand", "Seq")) %>%
+  inner_join(ThreeSS.Scores) %>%
+  dplyr::select(AcceptorName, Seq, Score) %>%
+  distinct()
+
+Merged %>%
+  inner_join(ThreeSS.Seqs, by=c("name"="AcceptorName")) %>%
+  mutate(AcceptorScoreGroup = cut_number(Score, 4)) %>%
+  ggplot(aes(x=Ratio, color=AcceptorScoreGroup)) +
+  stat_ecdf() +
+  geom_vline(xintercept=1) +
+  scale_x_continuous(trans="log10") +
+  scale_color_brewer(palette = "YlGnBu", na.value="black", direction=-1) +
+  labs(y="ecdf") +
+  coord_cartesian(c(1E-2, 1)) +
+  labs(x="Upstream/Downstream coverage at 3'ss\nFastSplicing<-->SlowSplicing") +
+  facet_wrap(~Sample)
+
+```
+Ok, there seems to be a sensible effect wherein 3'ss in the worst quartile of MaxEntScores have slower splicing...
+
+Now let's check the scores of the downstream 3'ss of host introns with or without the induced cryptic exons...
+
+```{r}
+Merged %>%
+  inner_join(ThreeSS.Seqs, by=c("name"="AcceptorName")) %>%
+  distinct(name, .keep_all=T) %>%
+  ggplot(aes(x=Score, color=Group)) +
+  stat_ecdf(aes()) +
+  # geom_vline(xintercept=1) +
+  # scale_x_continuous(trans="log10") +
+  # scale_color_brewer(palette = "YlGnBu", na.value="black", direction=-1) +
+  labs(y="ecdf") +
+  coord_cartesian(c(0, 15)) +
+  labs(x="3ss MaxEntScore")
+
+Merged %>%
+  left_join(
+    ModelFits %>%
+      filter(param=="ED50:(Intercept)"),
+    by=c("GAGTIntron"="junc")
+  ) %>%
+  mutate(ED50Group = cut_number(Estimate, 4)) %>%
+  inner_join(ThreeSS.Seqs, by=c("name"="AcceptorName")) %>%
+  distinct(name, .keep_all=T) %>%
+  ggplot(aes(x=Score, color=ED50Group)) +
+  stat_ecdf(aes(linetype=Group)) +
+  # geom_vline(xintercept=1) +
+  # scale_x_continuous(trans="log10") +
+  scale_color_brewer(palette = "YlGnBu", na.value="black", direction=-1) +
+  labs(y="ecdf") +
+  coord_cartesian(c(0, 15)) +
+  labs(x="3ss MaxEntScore")
+```
+Ok, now let's check for a correlation between MaxEntScore and intron length...
+
+
+```{r}
+inner_join(Introns, ThreeSS.Seqs, by=c("SpliceAcceptor"="AcceptorName")) %>%
+  mutate(Length = end - start) %>%
+  mutate(LengthGroup = cut_number(Length, 5)) %>%
+  ggplot(aes(x=Score, color=LengthGroup)) +
+  stat_ecdf() +
+  scale_color_brewer(palette = "YlGnBu", na.value="black", direction=-1) +
+  labs(y="ecdf") +
+  coord_cartesian(c(0, 15)) +
+  labs(x="3ss MaxEntScore")
+
+inner_join(Introns, ThreeSS.Seqs, by=c("SpliceAcceptor"="AcceptorName")) %>%
+  mutate(Length = end - start) %>%
+  ggplot(aes(y=Score, x=log10(Length))) +
+  geom_hex(bins=100) +
+  geom_smooth(method='lm') +
+  scale_x_continuous(trans='log10') +
+  labs(x="IntronLength", y="3ss MaxEntScore")
+
+```
+
+
+Hmmm, ok maybe there is some odd relationship with 3'ss MaxEntScore and length.. In any case, now let's compare to length-matched control introns just in case there is correlation between length and 3ss MaxEntScore.
+
+```{r}
+Merged.tidyForMatching <- Merged %>%
+  left_join(
+    ModelFits %>%
+      filter(param=="ED50:(Intercept)"),
+    by=c("GAGTIntron"="junc")
+  ) %>%
+  mutate(ED50Group = cut_number(Estimate, 4)) %>%
+  inner_join(Introns, by=c("name"="SpliceAcceptor")) %>%
+  mutate(Length = end - start) %>%
+  group_by(Sample) %>%
+  arrange(Length) %>%
+  mutate(LaggingIntronGroup = lag(ED50Group)) %>%
+  mutate(LeadingIntronGroup = lead(ED50Group)) %>%
+  ungroup()
+Merged.WithLengthMatchedControlIntrons <- 
+bind_rows(
+  Merged.tidyForMatching %>%
+    filter(Group == "Contains SM-induced exon"),
+  Merged.tidyForMatching %>%
+    filter(!Group == "Contains SM-induced exon" & !is.na(LaggingIntronGroup)) %>%
+    mutate(ED50Group = LaggingIntronGroup),
+  Merged.tidyForMatching %>%
+    filter(!Group == "Contains SM-induced exon" & !is.na(LeadingIntronGroup)) %>%
+    mutate(ED50Group = LeadingIntronGroup)
+) %>%
+  inner_join(ThreeSS.Seqs, by=c("name"="AcceptorName")) %>%
+  distinct(name, .keep_all=T)
+
+P <- Merged.WithLengthMatchedControlIntrons %>%
+  ggplot(aes(x=Length, color=ED50Group)) +
+  stat_ecdf(aes(linetype=Group)) +
+  scale_x_continuous(trans="log10") +
+  scale_color_brewer(palette = "YlGnBu", na.value="black", direction=-1) +
+  labs(y="ecdf", title="No SM-induced exons are length matched")
+P
+P + facet_wrap(~Group)
+
+Merged.WithLengthMatchedControlIntrons %>%
+  ggplot(aes(x=Score, color=ED50Group)) +
+  stat_ecdf(aes(linetype=Group)) +
+  # geom_vline(xintercept=1) +
+  # scale_x_continuous(trans="log10") +
+  scale_color_brewer(palette = "YlGnBu", na.value="black", direction=-1) +
+  labs(y="ecdf") +
+  coord_cartesian(c(0, 15)) +
+  labs(x="3ss MaxEntScore") +
+  facet_wrap(~ED50Group)
+
+```
+Ok, nothing obvious here. But since Yang seemed to be satisfied enough to use the lm model results for assessing relationship between 3ss coverage and host intron having cryptic exon, let's do the same sort of linear model with the DummyVariable as the response, and Length and MaxEntScore as predictors...
+
+```{r}
+lm.fit <- Merged %>%
+  inner_join(ThreeSS.Seqs, by=c("name"="AcceptorName")) %>%
+  inner_join(Introns, by=c("name"="SpliceAcceptor")) %>%
+  distinct(name, .keep_all=T) %>%
+  mutate(Dummy_1_ForIntronsWithCrypticExons = if_else(is.na(GAGTIntron), 0, 1)) %>%
+  mutate(Length = log10(end - start)) %>%
+  lm(Dummy_1_ForIntronsWithCrypticExons ~ Length + Score, data=.)
+
+summary(lm.fit)
+```
+
+
+Ok.. Pval is 0.0436... I don't think we shold take anything from this...

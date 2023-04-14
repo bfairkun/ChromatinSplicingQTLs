@@ -24,15 +24,6 @@ Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust
 ggplot(mtcars, aes(x=mpg, y=cyl)) +
   geom_point()
 
-
-ExpectedP <- function(vec){
-  L <- length(vec)
-  Interval = 1/(L+1)
-  return(seq(Interval, 1-Interval, Interval))
-}
-
-ExpectedP(c(0.1, 0.2, 0.3, 0.9))
-
 ```
 
 ## Intro
