@@ -1,0 +1,565 @@
+---
+title: "20230420_FindGWASeQTLsQTLColocsToPlot"
+output: html_document
+date: '2023-04-20'
+---
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+
+library(tidyverse)
+library(RColorBrewer)
+library(data.table)
+library(edgeR)
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family="Helvetica")))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+
+#test plot
+ggplot(mtcars, aes(x=mpg, y=cyl)) +
+  geom_point()
+
+```
+
+```{r}
+gwas.traits <- read_tsv("../code/config/gwas_table.tsv") %>%
+  dplyr::rename(GWAS.accession=gwas, gwas.trait=trait)
+
+
+hyprcoloc.results <- read_tsv("../code/hyprcoloc/Results/ForGWASColoc/GWASColoc_ChromatinAPAAndRNA/results.txt.gz") %>%
+# hyprcoloc.results <- read_tsv("../code/hyprcoloc/Results/ForGWASColoc/GWASColoc_ChromatinAPAAndRNAYRI/results.txt.gz") %>%
+  dplyr::rename(GWAS.Loci = GWASLeadSnpChrom_Pos_RefAllele_AltAllele_rsID_trait) %>%
+  separate(GWAS.Loci, into=c("GWAS.LeadSNP.Chrom", "GWAS.LeadSNP.Pos", "GWAS.accession"), sep="_", remove=F) %>%
+  separate_rows(ColocalizedTraits, sep = ",") %>%
+  mutate(IsColocalizedWithSomething = !ColocalizedTraits == "None") %>%
+  mutate(Trait = if_else(IsColocalizedWithSomething, ColocalizedTraits, DroppedTrait)) %>%
+  dplyr::select(-DroppedTrait, -ColocalizedTraits) %>%
+  mutate(Trait = str_replace_all(Trait, " ", "")) %>%
+  mutate(GWAS.Loci = str_replace_all(GWAS.Loci, " ", "")) %>%
+  mutate(Trait = if_else(Trait == GWAS.Loci, paste("GWAS",GWAS.Loci,sep = ";"),Trait)) %>%
+  separate(Trait, into=c("PhenotypeClass", "Phenotype"), sep=";", remove=F) %>%
+  group_by(GWAS.Loci, HyprcolocIteration) %>%
+  mutate(ColocalizedClusterContainsGWASTrait = any(PhenotypeClass=="GWAS") & IsColocalizedWithSomething) %>%
+  ungroup() %>%
+  inner_join(gwas.traits %>%
+               dplyr::select(1:2))
+
+hyprcoloc.results$PhenotypeClass %>% unique()
+
+hyprcoloc.results %>%
+  filter(!GWAS.accession=="IMSGC2019") %>%
+  pull(PhenotypeClass) %>% unique()
+
+PhenotypeRecodes = c("H3K36ME3"="hQTL", "H3K27AC"="hQTL", "H3K4ME3"="hQTL", "H3K4ME1"="hQTL",
+                     "Expression.Splicing"="eQTL", "Expression.Splicing.Subset_YRI"="eQTL", "polyA.Splicing.Subset_YRI"="sQTL", "chRNA.Expression.Splicing"="chRNA eQTL",
+                     "APA_Nuclear"="APA QTL", "APA_Total"="APA QTL", "polyA.Splicing"="sQTL", "GWAS"="GWAS")
+
+PhenotypeRecodes.df <- data.frame(PhenotypeRecodes) %>%
+  rownames_to_column("PhenotypeClass")
+
+hyprcoloc.results %>%
+  filter(GWAS.Loci == "chr9_79683075_GCST004627") %>%
+  filter(is.na(PhenotypeClass))
+  
+  
+
+hyprcoloc.results.toplot <- hyprcoloc.results %>%
+  filter(!GWAS.accession=="IMSGC2019") %>%
+  left_join(PhenotypeRecodes.df) %>%
+  mutate(PhenotypeRecodes = if_else(is.na(PhenotypeRecodes), PhenotypeClass, PhenotypeRecodes)) %>%
+  filter(!PhenotypeRecodes == "APA QTL") %>%
+  group_by(GWAS.Loci, HyprcolocIteration) %>%
+  filter(any(ColocalizedClusterContainsGWASTrait) | PhenotypeClass=="GWAS") %>%
+  mutate(Category = case_when(
+    all(ColocalizedClusterContainsGWASTrait==FALSE) | all(is.na(HyprcolocIteration))  ~ "No molQTL colocs",
+    all(PhenotypeRecodes %in% c("GWAS", "hQTL")) ~ "Only hQTL colocs",
+    all(PhenotypeRecodes %in% c("GWAS", "eQTL")) ~ "Only eQTL colocs",
+    all(PhenotypeRecodes %in% c("GWAS", "eQTL", "hQTL", "chRNA eQTL")) ~ "hQTL+eQTL colocs",
+    all(PhenotypeRecodes %in% c("GWAS", "sQTL")) ~ "sQTL colocs",
+    all(PhenotypeRecodes %in% c("GWAS", "sQTL", "eQTL", "eQTL")) ~ "sQTL+eQTL colocs",
+    # all(PhenotypeRecodes %in% c("GWAS", "sQTL", "chRNA eQTL", "eQTL", "hQTL")) ~ "sQTL+eQTL+hQTL colocs",
+    TRUE ~ "Other"
+  )) %>%
+  ungroup()
+  # filter(Category=="Other")
+
+Num.Gwas.loci <- hyprcoloc.results.toplot %>%
+  distinct(GWAS.Loci, .keep_all=T) %>%
+  count(GWAS.accession, gwas.trait)
+
+hyprcoloc.results.toplot %>%
+  distinct(GWAS.Loci, .keep_all=T) %>%
+  count(Category,GWAS.accession, gwas.trait) %>%
+  ggplot(aes(x=gwas.trait)) +
+  geom_col(position="fill", aes( y=n, fill=Category)) +
+  geom_text(data=Num.Gwas.loci, aes(x=gwas.trait, label=n), y=Inf, hjust=1.1, size=4, angle=90) +
+  scale_fill_brewer(palette = "Dark2") +
+  Rotate_x_labels +
+  theme(axis.text.x = element_text(size=8)) +
+  labs(fill="Exclusive\nCategory", caption="Categories are exclusive; sQTL means no hQTL or eQTL\nsQTL + eQTL means no hQTLs\nhQTL + sQTL + eQTL would be Other\nTotal number GWAS loci marked at top", y="Fraction of colocalizations") +
+  scale_y_continuous(expand=c(0,0))
+
+
+```
+
+```{r}
+
+PC2.filter <- c("Expression.Splicing", "Expression.Splicing.Subset_YRI")
+PC2.SignificanceFilter <- c("H3K27AC", "H3K4ME3", "H3K36ME3")
+PC1.filter <- c("polyA.Splicing", "H3K27AC", "H3K4ME1", "H3K4ME3")
+PC1.filter.Splicing <- PC1.filter[str_detect(PC1.filter, "Splicing")]
+PC1.filter.NonSplicing <- PC1.filter[!str_detect(PC1.filter, "Splicing")]
+
+dat.foreQTLQQ <- fread("../code/pi1/PairwisePi1Traits.P.all.txt.gz") %>%
+  filter((PC1 %in% PC1.filter))
+
+IntronAnnotatins <- read_tsv("../data/IntronAnnotationsFromYang.tsv.gz") %>%
+  mutate(chrom = str_remove_all(chrom, "chr")) %>%
+  mutate(Intron = paste(chrom, start, end, sep=":")) %>%
+  filter(!str_detect(SuperAnnotation, "NoncodingGene"))
+
+dat.foreQTLQQ.sQTLs <- dat.foreQTLQQ %>%
+    filter(PC1 %in% PC1.filter.Splicing) %>%
+    group_by(PC1, P1) %>%
+    filter(!any((PC2 %in% PC2.SignificanceFilter) & (trait.x.p.in.y < 0.01))) %>%
+    ungroup() %>%
+    filter(PC2 %in% PC2.filter) %>%
+    separate(P1, into=c("Intron", "Cluster"), sep=":clu", remove=F) %>%
+    inner_join(
+      IntronAnnotatins %>%
+        dplyr::select(Intron, SuperAnnotation),
+      by="Intron") %>%
+    group_by(PC1, PC2, Cluster) %>%
+    mutate(SNP_group = case_when(
+      all(str_detect(SuperAnnotation, "Productive")) ~ "Productive sQTL cluster",
+      any(str_detect(SuperAnnotation, "Unproductive")) ~ "Unproductive sQTL cluster",
+      TRUE ~ "sQTL Other"
+    )) 
+
+
+# bind_rows(
+#   hyprcoloc.results.toplot %>%
+#   filter(Category == "sQTL+eQTL colocs") %>%
+#   filter(PhenotypeClass=="Expression.Splicing") %>%
+#   dplyr::select(GWAS.Loci, TopCandidateSNP),
+# )
+
+hyprcoloc.results.toplot %>%
+  # filter(Category == "sQTL+eQTL colocs") %>%
+  group_by(Category, GWAS.Loci) %>%
+  count(PhenotypeClass) %>%
+  ungroup() %>%
+  ggplot(aes(x=n)) +
+  geom_histogram(aes(fill=PhenotypeClass)) +
+  facet_wrap(~Category, scales="free") +
+  labs(x="Num molQTLs in colocalized cluster")
+
+
+CategoriesWith_sQTLs <- c("sQTL+eQTL colocs", "Other", "sQTL")
+
+
+inner_join(
+  hyprcoloc.results.toplot %>%
+    filter(Category %in% CategoriesWith_sQTLs) %>%
+    filter(PhenotypeClass %in% c("polyA.Splicing")) %>%
+    dplyr::select(GWAS.Loci, sQTL=Trait),
+  hyprcoloc.results.toplot %>%
+    filter(Category %in% CategoriesWith_sQTLs) %>%
+    filter(PhenotypeClass %in% c("Expression.Splicing")) %>%
+    dplyr::select(GWAS.Loci, eQTL=Trait, everything())
+) %>%
+  inner_join(
+    dat.foreQTLQQ.sQTLs %>%
+      mutate(sQTL=paste(PC1, P1, sep=";"))
+  ) %>%
+  mutate(IntronGroup = if_else(str_detect(SuperAnnotation, "Unproductive"), "Unproductive", "Productive")) %>%
+  group_by(GWAS.Loci, PC2) %>%
+  filter(p_permutation.x == min(p_permutation.x)) %>%
+  ungroup() %>%
+  mutate(Category = recode(Category, "Other"="...+hQTL")) %>%
+  mutate(PC2 = recode(PC2, "Expression.Splicing"="eQTL beta from all GEU","Expression.Splicing.Subset_YRI"="eQTL beta from YRI" )) %>%
+  ggplot(aes(x=beta.x, y=x.beta.in.y, color=SNP_group)) +
+  geom_point() +
+  facet_grid(IntronGroup ~ Category ~ PC2) +
+  theme_bw() +
+  # geom_smooth(method='lm') +
+  labs(x="sQTL beta", y="eQTL beta", title="sQTL and eQTL effects for eQTL/sQTL/GWAS colocs", caption="Only top sQTL intron per GWAS colocalization plotted\nEffects relative to top sQTL SNP\nFacets are intron level category category, gwas coloc category (Other includes sQTL+eQTL+hQTL) and whether eQTL effect measured in YRI or all")
+
+
+```
+
+Let's also include the sQTL/GWAS colocs, because i'm curious how many of them have direction effects also consistent with eQTL regulation...
+
+```{r, include=F}
+### Unfinished
+inner_join(
+  hyprcoloc.results.toplot %>%
+    filter(Category %in% CategoriesWith_sQTLs) %>%
+    filter(PhenotypeClass %in% c("polyA.Splicing")) %>%
+    dplyr::select(GWAS.Loci, sQTL=Trait),
+  hyprcoloc.results.toplot %>%
+    filter(Category %in% CategoriesWith_sQTLs) %>%
+    filter(PhenotypeClass %in% c("Expression.Splicing")) %>%
+    dplyr::select(GWAS.Loci, eQTL=Trait, everything())
+) %>%
+  inner_join(
+    dat.foreQTLQQ.sQTLs %>%
+      mutate(sQTL=paste(PC1, P1, sep=";"))
+  ) %>%
+  mutate(IntronGroup = if_else(str_detect(SuperAnnotation, "Unproductive"), "Unproductive", "Productive")) %>%
+  group_by(GWAS.Loci, PC2) %>%
+  filter(p_permutation.x == min(p_permutation.x)) %>%
+  ungroup() %>%
+  ggplot(aes(x=beta.x, y=x.beta.in.y, color=SNP_group)) +
+  geom_point() +
+  facet_grid(IntronGroup ~ Category ~ PC2) +
+  theme_bw() +
+  labs(x="sQTL beta", y="eQTL beta", title="sQTL and eQTL effects for eQTL/sQTL/GWAS colocs", caption="Only top sQTL intron per GWAS colocalization plotted\nEffects relative to top sQTL SNP\nFacets are intron level category category, gwas coloc category (Other includes sQTL+eQTL+hQTL) and whether eQTL effect measured in YRI or all")
+
+```
+
+
+```{r}
+
+CandidateGenesToHighlight <- inner_join(
+  hyprcoloc.results.toplot %>%
+    filter(Category == "sQTL+eQTL colocs") %>%
+    filter(PhenotypeClass %in% c("polyA.Splicing")) %>%
+    dplyr::select(GWAS.Loci, sQTL=Trait),
+  hyprcoloc.results.toplot %>%
+    filter(Category == "sQTL+eQTL colocs") %>%
+    filter(PhenotypeClass %in% c("Expression.Splicing")) %>%
+    dplyr::select(GWAS.Loci, eQTL=Trait, everything())
+) %>%
+  inner_join(
+    dat.foreQTLQQ.sQTLs %>%
+      mutate(sQTL=paste(PC1, P1, sep=";")) %>%
+      filter(PC2 == "Expression.Splicing")
+  ) %>%
+  mutate(IntronGroup = if_else(str_detect(SuperAnnotation, "Unproductive"), "Unproductive", "Productive"))
+
+CandidateGenesToHighlight %>%
+  filter(SNP_group == "Unproductive sQTL cluster") %>%
+  group_by(eQTL, GWAS.Loci) %>%
+  filter(any(abs(x.beta.in.y)>0.25 & IntronGroup=="Unproductive")) %>%
+  ungroup() %>%
+  distinct(GWAS.Loci)
+
+CandidateGenesToHighlight %>%
+  filter(SNP_group == "Unproductive sQTL cluster") %>%
+  group_by(eQTL, GWAS.Loci) %>%
+  filter(any(abs(x.beta.in.y)>0.25 & IntronGroup=="Unproductive")) %>%
+  ungroup() %>%
+  distinct(P2, .keep_all=T)
+
+CandidateGenesToHighlight.ToPlot <- CandidateGenesToHighlight %>%
+  separate(Intron, into=c("IntronChrom", "IntronStart", "IntronEnd"), sep=":", convert=T, remove=F ) %>%
+  filter(SNP_group == "Unproductive sQTL cluster") %>%
+  group_by(eQTL, GWAS.Loci) %>%
+  filter(any(abs(x.beta.in.y)>0.25 & IntronGroup=="Unproductive")) %>%
+  mutate(MinIntron = min(IntronStart), MaxIntron=max(IntronEnd)) %>%
+  ungroup()
+
+```
+
+So far we have a list of 16 genes, many of which are represented as hits in multiple gwas for a total of 50ish sQTL/eQTL/GWAS colocs with large sQTL/eQTL effects that I want to plot...
+
+```{r, eval=F}
+dir.create("../code/scratch/Plot_sQTLeQTLGWASColocs/")
+
+## Make bwList
+
+bwList <- read_tsv("../code/PlotQTLs/bwList.tsv") %>%
+  filter(Group_label %in% c("polyA.RNA", "chRNA", "MetabolicLabelled.30min"))
+
+FullGeuvadisBigwigs <- data.frame(BigwigFilepath = list.files("../code/bigwigs/Expression.Splicing")) %>%
+  mutate(BigwigFilepath = paste0("bigwigs/Expression.Splicing/",BigwigFilepath)) %>%
+  mutate(SampleID = str_replace(BigwigFilepath, "bigwigs/Expression.Splicing/(.+?).1.bw", "\\1")) %>%
+  mutate(Group_label = "polyA.RNA", Strand=".")
+
+
+bwList %>% count(Group_label)
+
+full_join(FullGeuvadisBigwigs, bwList) %>%
+  dplyr::select(SampleID, BigwigFilepath, Group_label, Strand) %>%
+  write_tsv("../code/PlotQTLs/bwList.AllPolyAAndchRNA.tsv")
+
+read_tsv("../code/PlotQTLs/bwList.Groups.4col.tsv") %>%
+  filter(Group_label %in% c("polyA.RNA", "MetabolicLabelled.30min", "chRNA")) %>%
+  write_tsv("../code/PlotQTLs/bwList.Groups.4col.RNA.tsv")
+
+#Write a bash script for plotting. Just pick one gwas row randomly for each of the distinct genes
+  
+CandidateGenesToHighlight.ToPlot %>%
+  mutate(score = ".", strand = str_extract(P1, "[+-]")) %>%
+  dplyr::select(IntronChrom, IntronStart, IntronEnd, P1, score, strand) %>%
+  mutate(IntronChrom=paste0("chr", IntronChrom)) %>%
+  arrange(IntronChrom, IntronStart, IntronEnd) %>%
+  distinct(.keep_all=T) %>%
+  write_tsv("/scratch/midway2/bjf79/Juncs.bed", col_names = F)
+
+
+CandidateGenesToHighlight.ToPlot %>%
+  distinct(eQTL, .keep_all=T) %>%
+  mutate(n = row_number()) %>%
+  mutate(npad = str_pad(n, side="left", pad="0", width=2)) %>%
+  separate(TopCandidateSNP, into=c("SNP_Chrom", "SNP_Pos", "SNP_Ref", "SNP_Alt"), sep=":", remove=F) %>%
+  mutate(CustomScriptCall = str_glue("python scripts/GenometracksByGenotype/AggregateBigwigsForPlotting.py --BigwigList PlotQTLs/bwList.AllPolyAAndchRNA.tsv --BigwigListType KeyFile --OutputPrefix /scratch/midway2/bjf79/PlotDat --FilterJuncsByBed /scratch/midway2/bjf79/Juncs.bed --VCF Genotypes/1KG_GRCh38/{IntronChrom}.vcf.gz --SnpPos {GWAS.LeadSNP.Chrom}:{SNP_Pos} --SnpName {TopCandidateSNP} --Region {GWAS.LeadSNP.Chrom}:{MinIntron-300}-{MaxIntron+300} --GroupSettingsFile PlotQTLs/bwList.Groups.4col.RNA.tsv -vv --Bed12GenesToIni scripts/GenometracksByGenotype/PremadeTracks/gencode.v26.FromGTEx.genes.bed12.gz"),
+         PyGenometracksCall = str_glue("pyGenomeTracks --region {GWAS.LeadSNP.Chrom}:{MinIntron-300}-{MaxIntron+300} -out scratch/Plot_sQTLeQTLGWASColocs/{npad}_{GWAS.Loci}_{P2}.png --tracks /scratch/midway2/bjf79/PlotDattracks.ini")) %>%
+  dplyr::select(CustomScriptCall, PyGenometracksCall, n) %>%
+  gather("CommandType", "Command", -n) %>%
+  arrange(n) %>%
+  dplyr::select(Command) %>%
+  write_tsv("../code/scratch/Plot_sQTLeQTLGWASColocs/MakePlots.sh",col_names = F)
+  
+
+```
+
+After plotting those, some of the nicest examples that i think are worth highlighting in the manuscript are here:
+
+![Example1](assets/06_chr16_29855474_GCST004599_ENSG00000013364.19.png)
+
+![Example2](assets/13_chr14_105178084_GCST004611_ENSG00000183828.15.png)
+
+I think I will also plot genotype/phenotype boxplots for these, in polyA splicing, chRNA splicing, polyA Expression, and chRNA Expression.
+
+```{r, eval=F}
+
+# Some scratch code to quickly get data or making these specific boxplots
+
+##NUDT14 phenotypes
+CandidateGenesToHighlight.ToPlot %>%
+  filter(GWAS.Loci %in% c( "chr14_105178084_GCST004611")) %>%
+  filter(sQTL == "polyA.Splicing;14:105175987:105176534:clu_34934_-") %>%
+  mutate(gwas.pid = str_replace(GWAS.Loci, "(^.+?_.+?_)(.+?$)", "\\1N_N_\\2")) %>%
+  mutate(pid = str_glue("{P1}:{gwas.pid}")) %>%
+  separate(TopCandidateSNP, into=c("SNP_Chrom", "SNP_Pos", "SNP_Ref", "SNP_Alt"), sep=":", remove=F) %>%
+  mutate(CustomScriptCall = str_glue("python scripts/GenometracksByGenotype/ExtractPhenotypeBedByGenotype.py --Bed /project2/yangili1/bjf79/ChromatinSplicingQTLs/code/QTLs/QTLTools/polyA.Splicing/OnlyFirstRepsForGWASColoc.sorted.qqnorm.bed.gz --VCF /project2/yangili1/bjf79/ChromatinSplicingQTLs/code/Genotypes/1KG_GRCh38/Autosomes.vcf.gz -vvv --SnpName {TopCandidateSNP} --SnpPos chr{SNP_Chrom}:{SNP_Pos} --FeatureName {pid}  --CisWindowAroundSnpToGetFeatures 1000000 > scratch/Plot_sQTLeQTLGWASColocs/DatForBoxplots.NUDT14.sQTL.polyA.tsv")) %>%
+  pull(CustomScriptCall)
+
+CandidateGenesToHighlight.ToPlot %>%
+  filter(GWAS.Loci %in% c( "chr14_105178084_GCST004611")) %>%
+  filter(sQTL == "polyA.Splicing;14:105175987:105176534:clu_34934_-") %>%
+  mutate(gwas.pid = str_replace(GWAS.Loci, "(^.+?_.+?_)(.+?$)", "\\1N_N_\\2")) %>%
+  mutate(pid = str_glue("{P1}:{gwas.pid}")) %>%
+  separate(TopCandidateSNP, into=c("SNP_Chrom", "SNP_Pos", "SNP_Ref", "SNP_Alt"), sep=":", remove=F) %>%
+  mutate(CustomScriptCall = str_glue("python scripts/GenometracksByGenotype/ExtractPhenotypeBedByGenotype.py --Bed /project2/yangili1/bjf79/ChromatinSplicingQTLs/code/QTLs/QTLTools/chRNA.Splicing/OnlyFirstRepsForGWASColoc.sorted.qqnorm.bed.gz --VCF /project2/yangili1/bjf79/ChromatinSplicingQTLs/code/Genotypes/1KG_GRCh38/Autosomes.vcf.gz -vvv --SnpName {TopCandidateSNP} --SnpPos chr{SNP_Chrom}:{SNP_Pos} --FeatureName {pid}  --CisWindowAroundSnpToGetFeatures 1000000 > scratch/Plot_sQTLeQTLGWASColocs/DatForBoxplots.NUDT14.sQTL.chRNA.tsv")) %>%
+  pull(CustomScriptCall)
+
+CandidateGenesToHighlight.ToPlot %>%
+  filter(GWAS.Loci %in% c("chr14_105178084_GCST004611")) %>%
+  filter(eQTL == "Expression.Splicing;ENSG00000183828.15") %>%
+  distinct(eQTL, .keep_all=T) %>%
+  mutate(gwas.pid = str_replace(GWAS.Loci, "(^.+?_.+?_)(.+?$)", "\\1N_N_\\2")) %>%
+  mutate(pid = str_glue("{Phenotype}:{gwas.pid}")) %>%
+  separate(TopCandidateSNP, into=c("SNP_Chrom", "SNP_Pos", "SNP_Ref", "SNP_Alt"), sep=":", remove=F) %>%
+  mutate(CustomScriptCall = str_glue("python scripts/GenometracksByGenotype/ExtractPhenotypeBedByGenotype.py --Bed /project2/yangili1/bjf79/ChromatinSplicingQTLs/code/QTLs/QTLTools/chRNA.Expression.Splicing/OnlyFirstRepsForGWASColoc.sorted.qqnorm.bed.gz --VCF /project2/yangili1/bjf79/ChromatinSplicingQTLs/code/Genotypes/1KG_GRCh38/Autosomes.vcf.gz -vvv --SnpName {TopCandidateSNP} --SnpPos chr{SNP_Chrom}:{SNP_Pos} --FeatureName {pid}  --CisWindowAroundSnpToGetFeatures 1000000 > scratch/Plot_sQTLeQTLGWASColocs/DatForBoxplots.NUDT14.eQTL.chRNA.tsv")) %>%
+  pull(CustomScriptCall)
+
+CandidateGenesToHighlight.ToPlot %>%
+  filter(GWAS.Loci %in% c( "chr14_105178084_GCST004611")) %>%
+  filter(eQTL == "Expression.Splicing;ENSG00000183828.15") %>%
+  distinct(eQTL, .keep_all=T) %>%
+  mutate(gwas.pid = str_replace(GWAS.Loci, "(^.+?_.+?_)(.+?$)", "\\1N_N_\\2")) %>%
+  mutate(pid = str_glue("{Phenotype}:{gwas.pid}")) %>%
+  separate(TopCandidateSNP, into=c("SNP_Chrom", "SNP_Pos", "SNP_Ref", "SNP_Alt"), sep=":", remove=F) %>%
+  mutate(CustomScriptCall = str_glue("python scripts/GenometracksByGenotype/ExtractPhenotypeBedByGenotype.py --Bed /project2/yangili1/bjf79/ChromatinSplicingQTLs/code/QTLs/QTLTools/Expression.Splicing/OnlyFirstRepsForGWASColoc.sorted.qqnorm.bed.gz --VCF /project2/yangili1/bjf79/ChromatinSplicingQTLs/code/Genotypes/1KG_GRCh38/Autosomes.vcf.gz -vvv --SnpName {TopCandidateSNP} --SnpPos chr{SNP_Chrom}:{SNP_Pos} --FeatureName {pid}  --CisWindowAroundSnpToGetFeatures 1000000 > scratch/Plot_sQTLeQTLGWASColocs/DatForBoxplots.NUDT14.eQTL.polyA.tsv")) %>%
+  pull(CustomScriptCall)
+
+
+##MVP phenotypes
+CandidateGenesToHighlight.ToPlot %>%
+  filter(GWAS.Loci %in% c("chr16_29855474_GCST004599")) %>%
+  filter(sQTL == "polyA.Splicing;16:29834437:29835704:clu_38570_+") %>%
+  mutate(gwas.pid = str_replace(GWAS.Loci, "(^.+?_.+?_)(.+?$)", "\\1N_N_\\2")) %>%
+  mutate(pid = str_glue("{P1}:{gwas.pid}")) %>%
+  separate(TopCandidateSNP, into=c("SNP_Chrom", "SNP_Pos", "SNP_Ref", "SNP_Alt"), sep=":", remove=F) %>%
+  mutate(CustomScriptCall = str_glue("python scripts/GenometracksByGenotype/ExtractPhenotypeBedByGenotype.py --Bed /project2/yangili1/bjf79/ChromatinSplicingQTLs/code/QTLs/QTLTools/polyA.Splicing/OnlyFirstRepsForGWASColoc.sorted.qqnorm.bed.gz --VCF /project2/yangili1/bjf79/ChromatinSplicingQTLs/code/Genotypes/1KG_GRCh38/Autosomes.vcf.gz -vvv --SnpName {TopCandidateSNP} --SnpPos chr{SNP_Chrom}:{SNP_Pos} --FeatureName {pid}  --CisWindowAroundSnpToGetFeatures 1000000 > scratch/Plot_sQTLeQTLGWASColocs/DatForBoxplots.MVP.sQTL.polyA.tsv")) %>%
+  pull(CustomScriptCall)
+
+CandidateGenesToHighlight.ToPlot %>%
+  filter(GWAS.Loci %in% c("chr16_29855474_GCST004599")) %>%
+  filter(sQTL == "polyA.Splicing;16:29834437:29835704:clu_38570_+") %>%
+  mutate(gwas.pid = str_replace(GWAS.Loci, "(^.+?_.+?_)(.+?$)", "\\1N_N_\\2")) %>%
+  mutate(pid = str_glue("{P1}:{gwas.pid}")) %>%
+  separate(TopCandidateSNP, into=c("SNP_Chrom", "SNP_Pos", "SNP_Ref", "SNP_Alt"), sep=":", remove=F) %>%
+  mutate(CustomScriptCall = str_glue("python scripts/GenometracksByGenotype/ExtractPhenotypeBedByGenotype.py --Bed /project2/yangili1/bjf79/ChromatinSplicingQTLs/code/QTLs/QTLTools/chRNA.Splicing/OnlyFirstRepsForGWASColoc.sorted.qqnorm.bed.gz --VCF /project2/yangili1/bjf79/ChromatinSplicingQTLs/code/Genotypes/1KG_GRCh38/Autosomes.vcf.gz -vvv --SnpName {TopCandidateSNP} --SnpPos chr{SNP_Chrom}:{SNP_Pos} --FeatureName {pid}  --CisWindowAroundSnpToGetFeatures 1000000 > scratch/Plot_sQTLeQTLGWASColocs/DatForBoxplots.MVP.sQTL.chRNA.tsv")) %>%
+  pull(CustomScriptCall)
+
+CandidateGenesToHighlight.ToPlot %>%
+  filter(GWAS.Loci %in% c("chr16_29855474_GCST004599")) %>%
+  filter(eQTL == "Expression.Splicing;ENSG00000013364.19") %>%
+  distinct(eQTL, .keep_all=T) %>%
+  mutate(gwas.pid = str_replace(GWAS.Loci, "(^.+?_.+?_)(.+?$)", "\\1N_N_\\2")) %>%
+  mutate(pid = str_glue("{Phenotype}:{gwas.pid}")) %>%
+  separate(TopCandidateSNP, into=c("SNP_Chrom", "SNP_Pos", "SNP_Ref", "SNP_Alt"), sep=":", remove=F) %>%
+  mutate(CustomScriptCall = str_glue("python scripts/GenometracksByGenotype/ExtractPhenotypeBedByGenotype.py --Bed /project2/yangili1/bjf79/ChromatinSplicingQTLs/code/QTLs/QTLTools/chRNA.Expression.Splicing/OnlyFirstRepsForGWASColoc.sorted.qqnorm.bed.gz --VCF /project2/yangili1/bjf79/ChromatinSplicingQTLs/code/Genotypes/1KG_GRCh38/Autosomes.vcf.gz -vvv --SnpName {TopCandidateSNP} --SnpPos chr{SNP_Chrom}:{SNP_Pos} --FeatureName {pid}  --CisWindowAroundSnpToGetFeatures 1000000 > scratch/Plot_sQTLeQTLGWASColocs/DatForBoxplots.MVP.eQTL.chRNA.tsv")) %>%
+  pull(CustomScriptCall)
+
+CandidateGenesToHighlight.ToPlot %>%
+  filter(GWAS.Loci %in% c("chr16_29855474_GCST004599")) %>%
+  filter(eQTL == "Expression.Splicing;ENSG00000013364.19") %>%
+  distinct(eQTL, .keep_all=T) %>%
+  mutate(gwas.pid = str_replace(GWAS.Loci, "(^.+?_.+?_)(.+?$)", "\\1N_N_\\2")) %>%
+  mutate(pid = str_glue("{Phenotype}:{gwas.pid}")) %>%
+  separate(TopCandidateSNP, into=c("SNP_Chrom", "SNP_Pos", "SNP_Ref", "SNP_Alt"), sep=":", remove=F) %>%
+  mutate(CustomScriptCall = str_glue("python scripts/GenometracksByGenotype/ExtractPhenotypeBedByGenotype.py --Bed /project2/yangili1/bjf79/ChromatinSplicingQTLs/code/QTLs/QTLTools/Expression.Splicing/OnlyFirstRepsForGWASColoc.sorted.qqnorm.bed.gz --VCF /project2/yangili1/bjf79/ChromatinSplicingQTLs/code/Genotypes/1KG_GRCh38/Autosomes.vcf.gz -vvv --SnpName {TopCandidateSNP} --SnpPos chr{SNP_Chrom}:{SNP_Pos} --FeatureName {pid}  --CisWindowAroundSnpToGetFeatures 1000000 > scratch/Plot_sQTLeQTLGWASColocs/DatForBoxplots.MVP.eQTL.polyA.tsv")) %>%
+  pull(CustomScriptCall)
+```
+
+```{r}
+Sys.glob("../code/scratch/Plot_sQTLeQTLGWASColocs/DatForBoxplots.*.tsv") %>%
+  setNames(str_replace(., "../code/scratch/Plot_sQTLeQTLGWASColocs/DatForBoxplots.(.+?).tsv", "\\1")) %>%
+  lapply(fread, col.names=c("SampleID", "NormalizedExpression", "genotype", "Ref", "Alt", "ID")) %>%
+  bind_rows(.id="Phenotype") %>%
+  filter(!genotype==3) %>%
+  separate(Phenotype, into=c("Locus", "xQTL", "Dataset"), sep="\\.", remove=F) %>%
+  mutate(genotype = factor(genotype)) %>%
+  ggplot(aes(x=genotype, y=NormalizedExpression)) +
+  geom_boxplot(outlier.shape=NA) +
+  geom_jitter(width=0.25, alpha=0.25) +
+  geom_smooth(method='lm') +
+  facet_grid(xQTL~Dataset~Locus) +
+  theme_bw()
+```
+
+Ok, I think the last thing I might consider plotting is the sort of coloc plot with -log10P vs -log10P scatter for pairs of colocalized traits...
+
+```{r}
+library(GGally)
+library(RColorBrewer)
+
+lower_point <- function(data, mapping, ...) { 
+  ggplot(data = data, mapping = mapping, ...) + 
+    geom_point(..., size=0.5, alpha=0.2, color="gray") + 
+    geom_point(data = (
+                       data %>% filter(!is.na(TopCandidateSNP))),
+                       shape = 21, color="black", alpha=1, size=1.5
+                       ) +
+    scale_fill_identity() +
+    # scale_fill_brewer(palette="Dark2", type="qualitative", na.value="gray") +
+    theme_classic()
+}
+
+my_fn <- function(data, mapping, method="p", use="pairwise", ...){
+              # grab data
+              x <- eval_data_col(data, mapping$x)
+              y <- eval_data_col(data, mapping$y)
+              # calculate correlation
+              corr <- cor(x, y, method=method, use=use)
+              # calculate colour based on correlation value
+              # Here I have set a correlation of minus one to blue, 
+              # zero to white, and one to red 
+              # Change this to suit: possibly extend to add as an argument of `my_fn`
+              colFn <- colorRampPalette(c("blue", "white", "red"), interpolate ='spline')
+              fill <- colFn(100)[findInterval(corr, seq(-1, 1, length=100))]
+              ggally_cor(data = data, mapping = mapping, ...) + 
+                theme_void() +
+                theme(panel.background = element_rect(fill=fill))
+}
+
+
+```
+
+Plot the coloc for NUDT14
+
+```{r}
+
+MolPhenotypes <- c("14:105175987:105176534:clu_34934_-", "ENSG00000183828.15")
+GwasLocus <- "chr14_105178084_GCST004611"
+TopSNP <- "14:105172594:T:C"
+GwasLocus.trait <- str_replace(GwasLocus, "(^.+?_.+?_)(.+?$)", "\\1N_N_\\2")
+GWAS <- str_replace(GwasLocus.trait, ".+?_N_N_(.+?)", "\\1")
+TopSNP_Pos <- as.numeric(str_replace(TopSNP, "^.+?:(.+?):.+?:.+?$", "\\1"))
+
+
+PlotColoc <- function(){
+  molQTL.SummaryStats <- fread(paste0("../code/hyprcoloc/LociWiseSummaryStatsInput/ForGWASColoc/", GWAS, ".txt.gz")) %>%
+  filter(gwas_locus == GwasLocus.trait) %>%
+  filter(phenotype %in% MolPhenotypes) %>%
+  mutate(xQTL = str_replace(source_file, "QTLs/QTLTools/(.+?)/.+", "\\1"))
+
+
+GWAS.SummaryStats <- fread(paste0("../code/gwas_summary_stats/StatsForColoc/", GWAS, ".standardized.txt.gz")) %>%
+  filter(loci == GwasLocus.trait)
+
+dat.toplot <- molQTL.SummaryStats %>%
+  separate(snp, into=c("SNP_Chrom", "SNP_Pos", "SNP_Ref", "SNP_Alt"), sep=":", remove=F, convert=T) %>%
+  mutate(SNP_Chrom = paste0("chr", SNP_Chrom)) %>%
+  mutate(logP = -log10(p)) %>%
+  dplyr::select(SNP_Chrom, SNP_Pos, logP, phenotype, xQTL ) %>%
+  unite(phenotype_xQTL, xQTL, phenotype) %>%
+  pivot_wider(names_from = phenotype_xQTL, values_from=logP) %>%
+  inner_join(
+    GWAS.SummaryStats %>%
+      mutate(logP.gwas=-log10(2*pnorm(abs(beta/SE), lower.tail=F))) %>%
+      dplyr::select(SNP_Chrom=chrom, SNP_Pos=start, logP.gwas)
+  ) %>%
+  mutate(TopCandidateSNP = if_else(SNP_Pos == TopSNP_Pos, TopSNP, NA_character_)) %>%
+  dplyr::select(SNP_Chrom, SNP_Pos, TopCandidateSNP, everything())
+
+P <- ggpairs(dat.toplot,
+            columnLabels = gsub('[;.]', ' ', colnames(dat.toplot)[-c(1:3)], perl=T),
+            labeller = label_wrap_gen(10),
+            columns = 4:ncol(dat.toplot),
+            diag=list(continuous = "blankDiag"),
+            lower=list(continuous = lower_point),
+            upper=list(continuous = my_fn)
+            )
+return(list(dat=dat.toplot, P=P))
+}
+
+NUDT14.ColocPlot <- PlotColoc()
+
+NUDT14.ColocPlot$P + labs(title="NUDT14 sQTL/eQTL/GWAS coloc")
+
+```
+
+Same for MVP
+
+```{r}
+
+MolPhenotypes <- c("16:29834437:29835704:clu_38570_+", "ENSG00000013364.19")
+GwasLocus <- "chr16_29855474_GCST004599"
+TopSNP <- "16:29839384:C:T"
+GwasLocus.trait <- str_replace(GwasLocus, "(^.+?_.+?_)(.+?$)", "\\1N_N_\\2")
+GWAS <- str_replace(GwasLocus.trait, ".+?_N_N_(.+?)", "\\1")
+TopSNP_Pos <- as.numeric(str_replace(TopSNP, "^.+?:(.+?):.+?:.+?$", "\\1"))
+
+
+MVP.ColocPlot <- PlotColoc()
+
+MVP.ColocPlot$P + labs(title="MVP sQTL/eQTL/GWAS coloc")
+
+MVP.ColocPlot$dat %>%
+  dplyr::select(1:3, 4, 7, 9) %>%
+  ggpairs(
+            columnLabels = gsub('[;.]', ' ', colnames(.)[-c(1:3)], perl=T),
+            labeller = label_wrap_gen(10),
+            columns = 4:ncol(.),
+            diag=list(continuous = "blankDiag"),
+            lower=list(continuous = lower_point),
+            upper=list(continuous = my_fn)
+            ) +
+   labs(title="MVP sQTL/eQTL/GWAS coloc")
+
+```
+
+Ok, let's write out the data for these plots in case I want to easily plot them prettier later...
+
+```{r, eval=F}
+
+MVP.ColocPlot$dat %>%
+  write_tsv("../output/ColocPlotData.MVP.tsv.gz")
+
+NUDT14.ColocPlot$dat %>%
+  write_tsv("../output/ColocPlotData.NUDT15.tsv.gz")
+
+
+```
+

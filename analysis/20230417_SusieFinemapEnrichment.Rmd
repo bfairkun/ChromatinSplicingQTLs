@@ -1,0 +1,65 @@
+---
+title: "20230427_SusieFinemapSNP_enrichment"
+output: html_document
+date: '2023-04-17'
+---
+
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+
+library(tidyverse)
+library(RColorBrewer)
+library(data.table)
+library(edgeR)
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family="Helvetica")))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+
+#test plot
+ggplot(mtcars, aes(x=mpg, y=cyl)) +
+  geom_point()
+
+```
+
+## Intro
+
+In this notebook I want to explore enrichment of QTL SNPs for various feature annotations (eg ChromHMM states, splice sites), using the finemapped eQTL signals output from Susie. I have previously done something similar with hyprcoloc finemap signals, to find that post-transcriptional eQTLs are enriched for splice sites. I see something similar with susie, but the effect is less and there a couple notable methodological discrepencies between the two previous analyses. Here I just want to explore these datas a bit more, including first doing some sensible positive control experiments (ie, checking that eQTL/sQTLs are enriched for splice sites)...
+
+
+```{r}
+susie.finemap <- fread("/project2/yangili1/cfbuenabadn/ChromatinSplicingQTLs/code/FineMapping/susie_runs_Geuvadis/susie_output.tab")
+ 
+susie.finemap %>%
+  distinct(cs_gene, cs_names) %>%
+  count(cs_gene) %>%
+  ggplot(aes(x=n)) +
+  geom_bar() +
+  labs(y="Num genes", x="Num eQTL signals")
+```
+
+
+
+```{r}
+hyprcoloc.output <- read_tsv("../code/hyprcoloc/Results/ForColoc/MolColocNonRedundantFullSplicing/tidy_results_OnlyColocalized.txt.gz") %>%
+  separate(phenotype_full, into=c("PC", "P"), sep=";")
+
+hyprcoloc.output$PC %>% unique()
+
+hyprcoloc.output %>%
+  group_by(Locus, snp) %>%
+  filter(any(PC=="Expression.Splicing.Subset_YRI")) %>%
+  mutate(eQTLType = case_when(
+    any(PC=="polyA.Splicing") & !any(PC %in% c("H3K27AC", "H3K4ME1", "H3K4ME3")) ~ "sQTL/eQTL",
+    !any(PC=="polyA.Splicing") & any(PC %in% c("H3K27AC", "H3K4ME1", "H3K4ME3")) ~ "hQTL/eQTL",
+    TRUE ~
+  ))
+  ungroup() %>%
+  count(Locus)
+```
+

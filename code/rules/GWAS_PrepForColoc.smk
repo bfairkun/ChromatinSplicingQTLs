@@ -1,3 +1,9 @@
+# rule GWASFromPhoenix:
+#     input:
+# /project/yangili1/zpmu/GWAS_loci/liftOver/hg38_RA_GWASmeta_TransEthnic_v2.txt.gz
+# /project/yangili1/zpmu/GWAS_loci/liftOver/hg38_sle_Vyse_chr1-22.txt.gz
+# 
+
 rule MS_GWAS_to_bed:
     input:
         "/project2/yangili1/bjf79/gwas_summary_stats/discovery_metav3.0.meta.gz"

@@ -1063,7 +1063,7 @@ Now Let's expore the hypercoloc results.
 
 Note that I did the hyprcoloc a number of different ways, each with different sets of molQTLs attempted... Let's explore the most inclusive hyprcoloc iteration.
 
-```{r, eval=T, fig.height=6, fig.width=10}
+```{r, fig.height=6, fig.width=10}
 gwas.traits <- read_tsv("../code/config/gwas_table.tsv") %>%
   dplyr::rename(GWAS.accession=gwas, gwas.trait=trait)
 
@@ -1098,9 +1098,9 @@ PhenotypeRecodes = c("H3K36ME3"="hQTL", "H3K27AC"="hQTL", "H3K4ME3"="hQTL", "H3K
 PhenotypeRecodes.df <- data.frame(PhenotypeRecodes) %>%
   rownames_to_column("PhenotypeClass")
 
-hyprcoloc.results %>%
-  filter(GWAS.Loci == "chr9_79683075_GCST004627")
-  filter(is.na(PhenotypeClass))
+# hyprcoloc.results %>%
+#   filter(GWAS.Loci == "chr9_79683075_GCST004627")
+#   filter(is.na(PhenotypeClass))
   
   
 
@@ -1190,6 +1190,5 @@ small.molecule.dat.introns <- read_tsv("../code/SmallMolecule/FitModels/polyA_GA
   mutate(Intron = str_replace(junc, "^chr(.+?):[+-]$", "\\1")) %>%
   inner_join(IntronAnnotatins)
 
-small.molecule.joined <- 
 ```
 
