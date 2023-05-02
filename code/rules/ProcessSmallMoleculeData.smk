@@ -228,6 +228,25 @@ rule FitDoseResponseLogLogisticModel:
         Rscript scripts/FitSmallMoleculeModels.R &> {log}
         """
 
+rule FitDoseResponseLogLogisticModel_toPSI:
+    """
+    Similar to before but fit to PSI based on intron trios
+    """
+    input:
+        SplicingCounts = "SmallMolecule/leafcutter/clustering/autosomes/leafcutter_perind_numers.counts.gz",
+        IntronTrios = "../output/SmallMoleculeGAGT_CassetteExonclusters.bed",
+    output:
+        IntronTrioPSI_tidy = "SmallMolecule/CassetteExons/TidyPSI.tsv.gz",
+        IntronModelParams = "SmallMolecule/FitModels/polyA_GAGTIntrons_asPSI.tsv.gz",
+    log:
+        "logs/FitDoseResponseLogLogisticModel2.log"
+    conda:
+        "../envs/r_2.yaml"
+    shell:
+        """
+        Rscript scripts/SmallMolecule_fitDoseResponseSplicing_AsCassetteExons.R {input.SplicingCounts} {input.IntronTrios} {output.IntronTrioPSI_tidy} {output.IntronModelParams} &> {log}
+        """
+
 
 rule Get_Fit_GAGTInts_bed:
     input:
@@ -313,7 +332,107 @@ rule SmallMoleculeScore3ss:
         bedtools getfasta -s -bed {output.bed} -fi {input.fa} -bedOut | gzip - > {output.seqs}
         """
 
+rule EdgeR_DE_chRNA:
+    input:
+        "SmallMolecule/featureCounts/Counts.txt"
+    output:
+        "SmallMolecule/chRNA/DE.results.tsv.gz"
+    log:
+        "logs/EdgeR_DE_chRNA.log"
+    conda:
+        "../envs/r_2.yaml"
+    shell:
+        """
+        Rscript scripts/SmallMolecule_chRNA_DE.R {input} {output} &> {log}
+        """
 
+rule MakeGroupsFiles_SM_chRNA:
+    input:
+        "SmallMolecule/leafcutter/clustering/autosomes/leafcutter_perind_numers.counts.gz"
+    output:
+        A = "SmallMolecule/leafcutter/groupsfiles/chRNA_risdiplam_100.txt",
+        B = "SmallMolecule/leafcutter/groupsfiles/chRNA_risdiplam_3160.txt"
+    shell:
+        """
+        set +o pipefail;
+        zcat {input} | head -n 1 | tr ' ' '\\n' | grep -e '100_LCL_chRNA' -e 'DMSO_NA_LCL_chRNA' | awk -v OFS='\\t' '$1~"DMSO" {{print $1, "DMSO"}} $1!~"DMSO" {{print $1, "treated"}}' | tac > {output.A}
+        zcat {input} | head -n 1 | tr ' ' '\\n' | grep -e '3160_LCL_chRNA' -e 'DMSO_NA_LCL_chRNA' | awk -v OFS='\\t' '$1~"DMSO" {{print $1, "DMSO"}} $1!~"DMSO" {{print $1, "treated"}}' | tac > {output.B}
+        """
+
+rule SM_leafcutter_ds:
+    input:
+        groups = "SmallMolecule/leafcutter/groupsfiles/{contrast}.txt",
+        numers = "SmallMolecule/leafcutter/clustering/autosomes/leafcutter_perind_numers.counts.gz" 
+    output:
+        "SmallMolecule/leafcutter/ds/{contrast}_effect_sizes.txt",
+        "SmallMolecule/leafcutter/ds/{contrast}_cluster_significance.txt"
+    params:
+        Prefix = "SmallMolecule/leafcutter/ds/{contrast}",
+        ExtraParams = "-i 1 -g 2"
+    threads:
+        2
+    log:
+        "logs/SM_leafcutter_ds/{contrast}.log"
+    shell:
+        """
+        /software/R-3.4.3-el7-x86_64/bin/Rscript scripts/leafcutter/scripts/leafcutter_ds.R -p {threads} -o {params.Prefix} {params.ExtraParams} {input.numers} {input.groups} &> {log}
+        """
+
+rule Gather_SM_leafcutter_ds:
+    input:
+        expand("SmallMolecule/leafcutter/ds/{contrast}_effect_sizes.txt", contrast=["chRNA_risdiplam_100", "chRNA_risdiplam_3160"])
+
+rule SM_Salmon_quant:
+    input:
+        index = "alias/hg38/salmon_sa_index/default/seq.bin",
+        R1 = "SmallMolecule/FastqFastp/{Sample}.R1.fastq.gz",
+        R2 = "SmallMolecule/FastqFastp/{Sample}.R2.fastq.gz",
+    output:
+        "SmallMolecule/salmon/{Sample}/quant.sf"
+    conda:
+        "../envs/salmon.yml"
+    resources:
+        mem_mb = 32000
+    threads:
+        2
+    shell:
+        """
+        salmon quant -l A -1 {input.R1} -2 {input.R2} -i alias/hg38/salmon_sa_index/default  -p {threads} -o SmallMolecule/salmon/{wildcards.Sample}
+        """
+
+rule sort_BasicExonsBed:
+    input:
+        "ReferenceGenome/Annotations/GTFTools_BasicAnnotations/gencode.v34.chromasomal.exons.bed"
+    output:
+        "ReferenceGenome/Annotations/GTFTools_BasicAnnotations/gencode.v34.chromasomal.exons.sorted.bed"
+    shell:
+        """
+        awk -F'\\t' -v OFS='\\t' '{{ print "chr"$1, $2, $3, $6"_"$5, ".", $4 }}' {input} | bedtools sort -i - > {output}
+        """
+
+rule GetOverlappingExons:
+    input:
+        GAGT_intron_trios = "../output/SmallMoleculeGAGT_CassetteExonclusters.bed",
+        All_exons = "ReferenceGenome/Annotations/GTFTools_BasicAnnotations/gencode.v34.chromasomal.exons.sorted.bed"
+    output:
+        "SmallMolecule/CassetteExons/FlankingExons.tsv.gz"
+    shell:
+        """
+        awk -F'\\t' -v OFS='\\t' '$4~/^junc.skipping/ {{ $2=$2-1; print $0 }}' {input.GAGT_intron_trios} | bedtools intersect -a - -b {input.All_exons} -sorted -wao | gzip - > {output}
+        """
+
+
+rule MergeSalmon:
+    input:
+        expand("SmallMolecule/salmon/{Sample}/quant.sf", Sample = [i for i in SM_samples['SampleName'].unique() if 'DMSO' in i and 'polyA' in i])
+    output:
+        "SmallMolecule/salmon.DMSO.merged.txt"
+    conda:
+        "../envs/salmon.yml"
+    shell:
+        """
+        salmon quantmerge --quants SmallMolecule/salmon/* -o {output}
+        """
 
 # rule featureCountInducedCassetteExons:
 #     input:

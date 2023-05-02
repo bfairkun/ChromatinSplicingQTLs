@@ -413,20 +413,108 @@ CandidateGenesToHighlight.ToPlot %>%
 ```
 
 ```{r}
-Sys.glob("../code/scratch/Plot_sQTLeQTLGWASColocs/DatForBoxplots.*.tsv") %>%
+gwas.traits %>%
+  filter(GWAS.accession == "GCST004611")
+
+dat.boxplot <- Sys.glob("../code/scratch/Plot_sQTLeQTLGWASColocs/DatForBoxplots.*.tsv") %>%
   setNames(str_replace(., "../code/scratch/Plot_sQTLeQTLGWASColocs/DatForBoxplots.(.+?).tsv", "\\1")) %>%
   lapply(fread, col.names=c("SampleID", "NormalizedExpression", "genotype", "Ref", "Alt", "ID")) %>%
   bind_rows(.id="Phenotype") %>%
   filter(!genotype==3) %>%
-  separate(Phenotype, into=c("Locus", "xQTL", "Dataset"), sep="\\.", remove=F) %>%
-  mutate(genotype = factor(genotype)) %>%
-  ggplot(aes(x=genotype, y=NormalizedExpression)) +
-  geom_boxplot(outlier.shape=NA) +
-  geom_jitter(width=0.25, alpha=0.25) +
+  separate(Phenotype, into=c("Locus", "xQTL", "Dataset"), sep="\\.", remove=F)
+
+ggplot(dat.boxplot, aes(x=genotype, y=NormalizedExpression)) +
+  geom_hline(yintercept=0, linetype='dashed') +
+  geom_boxplot(outlier.shape=NA, alpha=1, aes(group=genotype)) +
   geom_smooth(method='lm') +
-  facet_grid(xQTL~Dataset~Locus) +
-  theme_bw()
+  scale_x_continuous(breaks=c(0,1,2)) +
+  geom_jitter(width=0.25, alpha=0.25) +
+  facet_grid(xQTL~Dataset~Locus)
 ```
+
+Ok that looks nice, the sQTL effect is apparent in both chRNA and polyA, but the eQTL is specific to polyA. Let's plot this a bit nicer and save plots as small pdfs, as they might appear in manuscript.
+
+```{r}
+caption.text.size <- 2
+
+P.MVP.sQTL <- dat.boxplot %>%
+  filter(Locus == "MVP") %>%
+  filter(xQTL == "sQTL") %>%
+  ggplot(aes(x=genotype, y=NormalizedExpression)) +
+  geom_hline(yintercept=0, linetype='dashed') +
+  geom_boxplot(outlier.shape=NA, alpha=1, aes(group=genotype)) +
+  geom_smooth(method='lm', color='red',) +
+  scale_x_continuous(breaks=c(0,1,2), labels=c("C/C", "C/T", "T/T")) +
+  geom_jitter(width=0.25, alpha=0.25) +
+  facet_wrap(~Dataset) +
+  labs(x="rs13332078 genotype", y="Unproductive junction\nNormalized splicing")
+  # labs(caption="Unproductive junction: chr16:29834437-29835704") +
+  # theme(plot.subtitle=element_text(size=caption.text.size))
+
+P.MVP.eQTL <- dat.boxplot %>%
+  filter(Locus == "MVP") %>%
+  filter(xQTL == "eQTL") %>%
+  ggplot(aes(x=genotype, y=NormalizedExpression)) +
+  geom_hline(yintercept=0, linetype='dashed') +
+  geom_boxplot(outlier.shape=NA, alpha=1, aes(group=genotype)) +
+  geom_smooth(method='lm', color='red',) +
+  scale_x_continuous(breaks=c(0,1,2), labels=c("C/C", "C/T", "T/T")) +
+  geom_jitter(width=0.25, alpha=0.25) +
+  facet_wrap(~Dataset) +
+  labs(x="rs13332078 genotype", y="MVP\nNormalized expression")
+  # labs(caption=str_wrap("T allele associated with descreased mean platelet volume.\nMVP TWAS (whole blood model, TWAS hub) associates downregulation with higher BMI, higher UC risk, etc", 30)) +
+  # theme(plot.subtitle=element_text(size=caption.text.size))
+
+
+P.MVP.sQTL
+P.MVP.eQTL
+
+P.NUDT14.sQTL <- dat.boxplot %>%
+  filter(Locus == "NUDT14") %>%
+  filter(xQTL == "sQTL") %>%
+  ggplot(aes(x=genotype, y=NormalizedExpression)) +
+  geom_hline(yintercept=0, linetype='dashed') +
+  geom_boxplot(outlier.shape=NA, alpha=1, aes(group=genotype)) +
+  geom_smooth(method='lm', color='red',) +
+  scale_x_continuous(breaks=c(0,1,2), labels=c("C/C", "C/T", "T/T")) +
+  geom_jitter(width=0.25, alpha=0.25) +
+  facet_wrap(~Dataset) +
+  labs(x="rs3825761 genotype", y="Unproductive junction\nNormalized splicing") +
+  labs(caption="Unproductive junction: chr14:105175987:105176534")
+  # theme(plot.subtitle=element_text(size=caption.text.size))
+
+
+P.NUDT14.eQTL <- dat.boxplot %>%
+  filter(Locus == "NUDT14") %>%
+  filter(xQTL == "eQTL") %>%
+  ggplot(aes(x=genotype, y=NormalizedExpression)) +
+  geom_hline(yintercept=0, linetype='dashed') +
+  geom_boxplot(outlier.shape=NA, alpha=1, aes(group=genotype)) +
+  geom_smooth(method='lm', color='red',) +
+  scale_x_continuous(breaks=c(0,1,2), labels=c("C/C", "C/T", "T/T")) +
+  geom_jitter(width=0.25, alpha=0.25) +
+  facet_wrap(~Dataset) +
+  labs(x="rs3825761 genotype", y="NUDT14\nNormalized expression")
+  # labs(caption=str_wrap("T allele associated with higher high-light scatter reticulocyte count.\nNUDT14 TWAS (whole blood model, TWAS hub) associates upregulation with higher Crohns disease risk, lower white blood cell count, etc"), 30) +
+  # theme(plot.subtitle=element_text(size=caption.text.size))
+
+
+P.NUDT14.sQTL
+P.NUDT14.eQTL
+```
+
+```{r, eval=F}
+
+height=3.5
+width=4
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/20230426_GWAS_MVP_sQTL_Boxplot.pdf", P.MVP.sQTL, height=height, width=width)
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/20230426_GWAS_MVP_eQTL_Boxplot.pdf", P.MVP.eQTL, height=height, width=width)
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/20230426_GWAS_NUDT14_sQTL_Boxplot.pdf", P.NUDT14.sQTL, height=height, width=width)
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/20230426_GWAS_NUDT14_eQTL_Boxplot.pdf", P.NUDT14.eQTL, height=height, width=width)
+
+```
+
 
 Ok, I think the last thing I might consider plotting is the sort of coloc plot with -log10P vs -log10P scatter for pairs of colocalized traits...
 
@@ -561,5 +649,118 @@ NUDT14.ColocPlot$dat %>%
   write_tsv("../output/ColocPlotData.NUDT15.tsv.gz")
 
 
+```
+
+
+Plotting them a bit prettier right now...
+
+```{r}
+library(ggrepel)
+
+Coloc.P.dat <- NUDT14.ColocPlot$dat %>%
+  dplyr::select(SNP_Pos, TopCandidateSNP, sQTL=`polyA.Splicing_14:105175987:105176534:clu_34934_-`, eQTL=`Expression.Splicing_ENSG00000183828.15`, GWAS=`logP.gwas`) %>%
+  mutate(label = if_else(is.na(TopCandidateSNP), NA_character_, "rs3825761"))
+
+P.N.sQTL.eQTL <- ggplot(Coloc.P.dat, aes(x=sQTL, y=eQTL)) +
+  geom_point(color='gray', alpha=0.5) +
+  scale_x_continuous(expand=c(0,0.1)) +
+  scale_y_continuous(expand=c(0,0.1)) +
+  geom_point(data = . %>%
+               filter(!is.na(TopCandidateSNP)),
+             color='black') +
+  geom_text_repel(data = . %>%
+               filter(!is.na(TopCandidateSNP)),
+             aes(label=label)) +
+  labs(x="sQTL, -log10(P)", y="eQTL, -log10(P)")
+
+P.N.sQTL.GWAS <- ggplot(Coloc.P.dat, aes(x=sQTL, y=GWAS)) +
+  geom_point(color='gray', alpha=0.5) +
+  scale_x_continuous(expand=c(0,0.1)) +
+  scale_y_continuous(expand=c(0,0.1)) +
+  geom_point(data = . %>%
+               filter(!is.na(TopCandidateSNP)),
+             color='black') +
+  geom_text_repel(data = . %>%
+               filter(!is.na(TopCandidateSNP)),
+             aes(label=label)) +
+  labs(x="sQTL, -log10(P)", y="GWAS, -log10(P)")
+
+P.N.eQTL.GWAS <- ggplot(Coloc.P.dat, aes(x=eQTL, y=GWAS)) +
+  geom_point(color='gray', alpha=0.5) +
+  scale_x_continuous(expand=c(0,0.1)) +
+  scale_y_continuous(expand=c(0,0.1)) +
+  geom_point(data = . %>%
+               filter(!is.na(TopCandidateSNP)),
+             color='black') +
+  geom_text_repel(data = . %>%
+               filter(!is.na(TopCandidateSNP)),
+             aes(label=label)) +
+  labs(x="eQTL, -log10(P)", y="GWAS, -log10(P)")
+
+P.N.sQTL.eQTL
+P.N.sQTL.GWAS
+P.N.eQTL.GWAS
+
+```
+
+And same for MVP...
+
+```{r}
+Coloc.P.dat <- MVP.ColocPlot$dat %>%
+  dplyr::select(SNP_Pos, TopCandidateSNP, sQTL=`polyA.Splicing_16:29834437:29835704:clu_38570_+`, eQTL=`Expression.Splicing_ENSG00000013364.19`, GWAS=`logP.gwas`) %>%
+  mutate(label = if_else(is.na(TopCandidateSNP), NA_character_, "rs13332078"))
+
+P.M.sQTL.eQTL <- ggplot(Coloc.P.dat, aes(x=sQTL, y=eQTL)) +
+  geom_point(color='gray', alpha=0.5) +
+  scale_x_continuous(expand=c(0,0.1)) +
+  scale_y_continuous(expand=c(0,0.1)) +
+  geom_point(data = . %>%
+               filter(!is.na(TopCandidateSNP)),
+             color='black') +
+  geom_text_repel(data = . %>%
+               filter(!is.na(TopCandidateSNP)),
+             aes(label=label)) +
+  labs(x="sQTL, -log10(P)", y="eQTL, -log10(P)")
+
+P.M.sQTL.GWAS <- ggplot(Coloc.P.dat, aes(x=sQTL, y=GWAS)) +
+  geom_point(color='gray', alpha=0.5) +
+  scale_x_continuous(expand=c(0,0.1)) +
+  scale_y_continuous(expand=c(0,0.1)) +
+  geom_point(data = . %>%
+               filter(!is.na(TopCandidateSNP)),
+             color='black') +
+  geom_text_repel(data = . %>%
+               filter(!is.na(TopCandidateSNP)),
+             aes(label=label)) +
+  labs(x="sQTL, -log10(P)", y="GWAS, -log10(P)")
+
+P.M.eQTL.GWAS <- ggplot(Coloc.P.dat, aes(x=eQTL, y=GWAS)) +
+  geom_point(color='gray', alpha=0.5) +
+  scale_x_continuous(expand=c(0,0.1)) +
+  scale_y_continuous(expand=c(0,0.1)) +
+  geom_point(data = . %>%
+               filter(!is.na(TopCandidateSNP)),
+             color='black') +
+  geom_text_repel(data = . %>%
+               filter(!is.na(TopCandidateSNP)),
+             aes(label=label)) +
+  labs(x="eQTL, -log10(P)", y="GWAS, -log10(P)")
+
+P.M.sQTL.eQTL
+P.M.sQTL.GWAS
+P.M.eQTL.GWAS
+```
+
+```{r, eval=F}
+height=2.5
+width=2.5
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/20230426_Coloc_MVP_eQTL_sQTL.pdf", P.M.sQTL.eQTL, height=height, width=width)
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/20230426_Coloc_MVP_sQTL_GWAS.pdf", P.M.sQTL.GWAS, height=height, width=width)
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/20230426_Coloc_MVP_eQTL_GWAS.pdf", P.M.eQTL.GWAS, height=height, width=width)
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/20230426_Coloc_NUDT14_eQTL_sQTL.pdf", P.N.sQTL.eQTL, height=height, width=width)
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/20230426_Coloc_NUDT14_sQTL_GWAS.pdf", P.N.sQTL.GWAS, height=height, width=width)
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/20230426_Coloc_NUDT14_eQTL_GWAS.pdf", P.N.eQTL.GWAS, height=height, width=width)
 ```
 

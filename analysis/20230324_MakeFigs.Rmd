@@ -1184,11 +1184,378 @@ Next I want to find some nice examples to highlight. I think I'll filter for eQT
 ### Small molecule stuff
 
 ```{r}
+IntronAnnotatins <- read_tsv("../data/IntronAnnotationsFromYang.tsv.gz") %>%
+  mutate(chrom = str_remove_all(chrom, "chr")) %>%
+  mutate(Intron = paste(chrom, start, end, sep=":")) %>%
+  filter(!str_detect(SuperAnnotation, "NoncodingGene"))
+
 small.molecule.dat.genes <- read_tsv("../code/SmallMolecule/FitModels/polyA_genes.tsv.gz")
 
 small.molecule.dat.introns <- read_tsv("../code/SmallMolecule/FitModels/polyA_GAGTIntrons.tsv.gz") %>%
   mutate(Intron = str_replace(junc, "^chr(.+?):[+-]$", "\\1")) %>%
   inner_join(IntronAnnotatins)
 
+chRNA.DE.dat <- read_tsv("../code/SmallMolecule/chRNA/DE.results.tsv.gz")
+
+ClusterSignificance <- Sys.glob("../code/SmallMolecule/leafcutter/ds/chRNA_risdiplam_*_cluster_significance.txt") %>%
+  setNames(str_replace(., "../code/SmallMolecule/leafcutter/ds/chRNA_risdiplam_(.+?)_cluster_significance.txt", "\\1")) %>%
+  lapply(read_tsv) %>%
+  bind_rows(.id="dose.nM")
+
+EffectSizes <- Sys.glob("../code/SmallMolecule/leafcutter/ds/chRNA_risdiplam_*_effect_sizes.txt") %>%
+  setNames(str_replace(., "../code/SmallMolecule/leafcutter/ds/chRNA_risdiplam_(.+?)_effect_sizes.txt", "\\1")) %>%
+  lapply(read_tsv) %>%
+  bind_rows(.id="dose.nM") %>%
+  mutate(cluster = str_replace(intron, "^(.+?):.+?:.+?(:clu_.+$)", "\\1\\2"))
+
+chRNA.splicing.dat <- inner_join(EffectSizes, ClusterSignificance)
+
+
+MergedEstimatesFromModel <- right_join(
+  small.molecule.dat.introns %>%
+    filter(str_detect(param, "Pred")) %>%
+    mutate(gene = str_replace(gene, "(^.+?)\\..+?", "\\1")),
+  small.molecule.dat.genes %>%
+    filter(str_detect(param, "Pred")) %>%
+    mutate(gene = str_replace(Geneid, "(^.+?)\\..+?", "\\1")),
+  by=c("gene", "param"),
+  suffix=c(".splicing", ".expression")
+) %>%
+  separate(param, into=c("Dummy", "dose.nM"), convert=T, sep="_") %>%
+  dplyr::select(-Dummy)
+
+#Units for expression are log2CPM
+#Units for splicing is leafcutter PSI
+
+MergedEstimatesFromModel.deltas <- 
+  inner_join(
+    MergedEstimatesFromModel %>%
+      filter(dose.nM == 0) %>%
+      dplyr::select(Estimate.splicing, SE.splicing, Estimate.expression, SE.expression, junc, gene),
+    MergedEstimatesFromModel %>%
+      filter(!dose.nM == 0),
+    by=c("junc", "gene"),
+    suffix=c(".untreated", ".treated")
+  ) %>%
+  mutate(Estimate.Expression.FC = Estimate.expression.treated - Estimate.expression.untreated) %>%
+  mutate(Estimate.Splicing.deltaPSI = Estimate.splicing.treated - Estimate.splicing.untreated) %>%
+  mutate(Estimate.Splicing.FC = log2(Estimate.splicing.treated / Estimate.splicing.untreated))
+
+MergedEstimatesFromModel.deltas %>%
+  filter(!is.na(SuperAnnotation)) %>%
+  mutate(IsProductive = if_else(str_detect(SuperAnnotation, "Unproductive"), "Unproductive", "Productive")) %>%
+  ggplot(aes(x=Estimate.Splicing.FC, y=Estimate.Expression.FC)) +
+  geom_point(alpha=0.2) +
+  facet_grid(IsProductive~dose.nM) +
+  theme_bw() +
+  labs(x="Splicing change\nDeltaPSI of GAGT intron", y="Expression change\nlog2FC of host gene")
+
+MergedEstimatesFromModel.deltas %>%
+  filter(!is.na(SuperAnnotation)) %>%
+  mutate(IsProductive = if_else(str_detect(SuperAnnotation, "Unannotated"), "Unannotated", "Annotated")) %>%
+  filter(dose.nM == 3160) %>%
+  mutate(sign= sign(Estimate.Expression.FC)) %>%
+  filter(IsProductive=="Unannotated") %>%
+  ggplot(aes(x=Estimate.Splicing.FC, y=Estimate.Expression.FC, color=factor(sign))) +
+  geom_point(alpha=1) +
+  facet_grid(IsProductive~dose.nM) +
+  theme_bw() +
+  labs(x="Splicing change\nDeltaPSI of GAGT intron", y="Expression change\nlog2FC of host gene")
+
+
+
+MergedData.polyA.chRNA.Expression.Splicing <- MergedEstimatesFromModel.deltas %>%
+  inner_join(
+    chRNA.splicing.dat %>%
+      mutate(dose.nM = as.numeric(dose.nM)) %>%
+      mutate(Intron = str_replace(intron, "^chr(.+?):clu_.+$", "\\1")),
+    by=c("dose.nM", "Intron")
+    ) %>%
+  inner_join(
+    chRNA.DE.dat %>%
+      separate(Geneid, into=c("Geneid", "symbol"), sep="_"),
+    by=c("symbol", "Geneid", "dose.nM"="risdiplam_conc")
+  ) %>%
+  mutate(IsProductive = if_else(str_detect(SuperAnnotation, "Unproductive"), "Unproductive", "Productive"))
+
+
+ggplot(MergedData.polyA.chRNA.Expression.Splicing, aes(x=deltapsi*100, y=Estimate.Splicing.deltaPSI, color=IsProductive)) +
+  geom_point() +
+  geom_abline() +
+  labs(x="chRNA deltaPSI", y="polyA deltaPSI")
+
+ggplot(MergedData.polyA.chRNA.Expression.Splicing, aes(x=logef, y=Estimate.Splicing.FC, color=IsProductive)) +
+  geom_point() +
+  geom_abline() +
+  labs(x="chRNA splicing log2FC", y="polyA splicing log2FC")
+
+ggplot(MergedData.polyA.chRNA.Expression.Splicing, aes(x=logFC, y=Estimate.Expression.FC, color=IsProductive)) +
+  geom_point() +
+  geom_abline() +
+  labs(x="chRNA HostExpression log2FC", y="polyA HostExpression log2FC")
+
+ggplot(MergedData.polyA.chRNA.Expression.Splicing, aes(x=logFC, y=Estimate.Expression.FC, color=SemiSupergroupAnnotations)) +
+  geom_point() +
+  geom_abline() +
+  labs(x="chRNA HostExpression log2FC", y="polyA HostExpression log2FC") +
+  facet_wrap(~dose.nM) +
+  theme_bw()
+
+```
+
+But why are so many of the chRNA effects positive?
+
+```{r}
+chRNA.DE.dat %>%
+  ggplot(aes(x=logFC, color=FDR<0.1)) +
+  stat_ecdf() +
+  geom_vline(xintercept=0) +
+  facet_wrap(~risdiplam_conc) +
+  labs(x="chRNA expression logFC", y="ecdf")
+
+  
+```
+
+How many introns per cluster in these 100 genes
+
+```{r}
+
+JuncsOfInterest <- MergedData.polyA.chRNA.Expression.Splicing %>%
+  distinct(junc) %>% pull(junc)
+
+leafcutter.table <- read.table("../code/SmallMolecule/leafcutter/clustering/autosomes/leafcutter_perind_numers.counts.gz", sep=' ')
+
+#chr1:2189781:2192647:-
+
+leafcutter.table %>%
+  rownames_to_column("rowname") %>%
+  dplyr::select(rowname) %>%
+  mutate(junc_cluster = str_replace(rowname, "^(.+?:)(clu_.+?)_([+-])$", "\\1\\3;\\2")) %>%
+  separate(junc_cluster, into=c("junc", "cluster"), sep=";") %>%
+  group_by(cluster) %>%
+  filter(any(junc %in% JuncsOfInterest)) %>%
+  ungroup() %>%
+  count(cluster)
+  
+```
+
+I think the deltaPSI vs logFC expression plots will look better if I base PSI not on leafcutter PSI, but rather on PSI calculated just from junction reads in junction triplets for cassette exons... 
+
+```{r}
+cassette.exons <- read_tsv("../output/SmallMoleculeGAGT_CassetteExonclusters.bed",col_names=c("chrom","start", "end","name", "score", "strand", "thickStart", "thickEnd", "color" )) 
+
+cassette.exons %>%
+  filter(str_detect(name, "junc.GAGT"))
+```
+
+Based on those cassette exon (intron trios), in the snakemake I recalculated PSI and fit dose response curves, and now I can repeat some of the previous plots...
+
+```{r}
+small.molecule.dat.introns.asPSI <- read_tsv("../code/SmallMolecule/FitModels/polyA_GAGTIntrons_asPSI.tsv.gz") %>%
+  mutate(Intron = str_replace(junc, "^chr(.+?):[+-]$", "\\1")) %>%
+  inner_join(IntronAnnotatins)
+
+
+
+MergedEstimatesFromModel <- right_join(
+  small.molecule.dat.introns.asPSI %>%
+    filter(str_detect(param, "Pred")) %>%
+    mutate(gene = str_replace(gene, "(^.+?)\\..+?", "\\1")),
+  small.molecule.dat.genes %>%
+    filter(str_detect(param, "Pred")) %>%
+    mutate(gene = str_replace(Geneid, "(^.+?)\\..+?", "\\1")),
+  by=c("gene", "param"),
+  suffix=c(".splicing", ".expression")
+) %>%
+  separate(param, into=c("Dummy", "dose.nM"), convert=T, sep="_") %>%
+  dplyr::select(-Dummy)
+
+MergedEstimatesFromModel.deltas <- 
+  inner_join(
+    MergedEstimatesFromModel %>%
+      filter(dose.nM == 0) %>%
+      dplyr::select(Estimate.splicing, SE.splicing, Estimate.expression, SE.expression, junc, gene),
+    MergedEstimatesFromModel %>%
+      filter(!dose.nM == 0),
+    by=c("junc", "gene"),
+    suffix=c(".untreated", ".treated")
+  ) %>%
+  mutate(Estimate.Expression.FC = Estimate.expression.treated - Estimate.expression.untreated) %>%
+  mutate(Estimate.Splicing.deltaPSI = Estimate.splicing.treated - Estimate.splicing.untreated) %>%
+  mutate(Estimate.Splicing.FC = log2(Estimate.splicing.treated / Estimate.splicing.untreated))
+
+MergedEstimatesFromModel.deltas %>%
+  filter(!is.na(SuperAnnotation)) %>%
+  distinct(gene, dose.nM, .keep_all=T) %>%
+  mutate(IsProductive = if_else(str_detect(SuperAnnotation, "Unproductive"), "Unproductive", "Productive")) %>%
+  ggplot(aes(x=Estimate.Splicing.FC, y=Estimate.Expression.FC, color=SemiSupergroupAnnotations)) +
+  geom_point() +
+  facet_grid(IsProductive~dose.nM) +
+  theme_bw() +
+  labs(x="Splicing change\nDeltaPSI of GAGT intron", y="Expression change\nlog2FC of host gene")
+
+MergedEstimatesFromModel.deltas %>%
+  filter(!is.na(SuperAnnotation)) %>%
+  mutate(IsProductive = if_else(str_detect(SuperAnnotation, "Unannotated"), "Unannotated", "Annotated")) %>%
+  filter(dose.nM == 3160) %>%
+  mutate(sign= sign(Estimate.Expression.FC)) %>%
+  filter(IsProductive=="Unannotated") %>%
+  ggplot(aes(x=Estimate.Splicing.FC, y=Estimate.Expression.FC, color=factor(sign))) +
+  geom_point(alpha=1) +
+  facet_grid(IsProductive~dose.nM) +
+  theme_bw() +
+  labs(x="Splicing change\nDeltaPSI of GAGT intron", y="Expression change\nlog2FC of host gene")
+
+```
+
+Ok, actually that doesn't look so different.. One thing that is kind of annoying is how we only have ~100 introns, when I know I modelled close to 350...
+
+
+```{r}
+ read_tsv("../code/SmallMolecule/FitModels/polyA_GAGTIntrons_asPSI.tsv.gz") %>%
+   distinct(junc) %>% nrow()
+
+small.molecule.dat.introns.asPSI %>%
+  distinct(junc) %>% nrow()
+```
+
+Now that I think of it, the reason why is that I am joining on Yang's annotations (which I'm not sure he included my small molecule unique junctions)... But since intron trios are likely to contain something in Yang's annotation file, I think I can still figure it out. And this one way to link introns to host genes
+
+```{r}
+cassette.exons %>%
+  mutate(chrom = str_remove_all(chrom, "chr")) %>%
+  left_join(IntronAnnotatins) %>% head()
+
+GAGTjuncs_to_genes <- cassette.exons %>%
+  mutate(chrom = str_remove_all(chrom, "chr")) %>%
+  separate(name, into=c("type", "dummy", "clusterNum", "GAGTjunc"), sep="_", convert=T) %>%
+  left_join(IntronAnnotatins) %>%
+  distinct(GAGTjunc, gene) %>%
+  inner_join(
+    cassette.exons %>%
+      separate(name, into=c("type", "dummy", "clusterNum", "GAGTjunc"), sep="_", convert=T) %>%
+      filter(type %in% c("junc.GAGT", "junc.UpstreamIntron")) %>%
+      dplyr::select(GAGTjunc, start, end, type, strand) %>%
+      pivot_wider(names_from="type", values_from=c("start", "end")) %>%
+      mutate(ExonLen = case_when(
+        strand == "+" ~ start_junc.GAGT - end_junc.UpstreamIntron,
+        strand == "-" ~ start_junc.UpstreamIntron - end_junc.GAGT
+      )) %>%
+      dplyr::select(GAGTjunc, ExonLen)
+  )
+
+small.molecule.dat.introns.asPSI <- read_tsv("../code/SmallMolecule/FitModels/polyA_GAGTIntrons_asPSI.tsv.gz") %>%
+  mutate(Intron = str_replace(junc, "^chr(.+?):[+-]$", "\\1")) %>%
+  left_join(IntronAnnotatins) %>%
+  dplyr::select(-symbol, -gene) %>%
+  left_join(GAGTjuncs_to_genes, by=c("junc"="GAGTjunc")) %>%
+  mutate(ExonLenRemainder = ExonLen%%3)
+
+MergedEstimatesFromModel <- right_join(
+  small.molecule.dat.introns.asPSI %>%
+    filter(str_detect(param, "Pred")) %>%
+    mutate(gene = str_replace(gene, "(^.+?)\\..+?", "\\1")),
+  small.molecule.dat.genes %>%
+    filter(str_detect(param, "Pred")) %>%
+    mutate(gene = str_replace(Geneid, "(^.+?)\\..+?", "\\1")),
+  by=c("gene", "param"),
+  suffix=c(".splicing", ".expression")
+) %>%
+  separate(param, into=c("Dummy", "dose.nM"), convert=T, sep="_") %>%
+  dplyr::select(-Dummy)
+
+
+MergedEstimatesFromModel.deltas <- 
+  inner_join(
+    MergedEstimatesFromModel %>%
+      filter(dose.nM == 0) %>%
+      dplyr::select(Estimate.splicing, SE.splicing, Estimate.expression, SE.expression, junc, gene),
+    MergedEstimatesFromModel %>%
+      filter(!dose.nM == 0),
+    by=c("junc", "gene"),
+    suffix=c(".untreated", ".treated")
+  ) %>%
+  mutate(Estimate.Expression.FC = Estimate.expression.treated - Estimate.expression.untreated) %>%
+  mutate(Estimate.Splicing.deltaPSI = Estimate.splicing.treated - Estimate.splicing.untreated) %>%
+  mutate(Estimate.Splicing.FC = log2(Estimate.splicing.treated / Estimate.splicing.untreated))
+
+MergedEstimatesFromModel.deltas %>%
+  mutate(ExonLenRemainder= as.character(ExonLenRemainder)) %>%
+  mutate(IsProductive = case_when(
+    is.na(SuperAnnotation) ~ ExonLenRemainder,
+    TRUE ~ SuperAnnotation
+  )) %>%
+  ggplot(aes(x=Estimate.Splicing.deltaPSI, y=Estimate.Expression.FC, color=IsProductive)) +
+  geom_point() +
+  facet_grid(IsProductive~dose.nM) +
+  theme_bw() +
+  labs(x="Splicing change\nDeltaPSI of GAGT intron", y="Expression change\nlog2FC of host gene")
+
+MergedEstimatesFromModel.deltas %>%
+  mutate(ExonLenRemainder= as.character(ExonLenRemainder)) %>%
+  mutate(IsProductive = case_when(
+    is.na(SuperAnnotation) ~ ExonLenRemainder,
+    TRUE ~ SuperAnnotation
+  )) %>%
+  filter(Estimate.Splicing.FC)
+  ggplot(aes(x=Estimate.Splicing.FC, y=Estimate.Expression.FC, color=IsProductive)) +
+  geom_point() +
+  facet_grid(IsProductive~dose.nM) +
+  theme_bw() +
+  labs(x="Splicing change\nDeltaPSI of GAGT intron", y="Expression change\nlog2FC of host gene")
+```
+
+Ok, this is getting messy, and not clean effects... I think it will actually be worth the time to translate the cassette exon from the annotated frame...
+
+Some pseudocode approach to doing that...
+
+get flanking basic exons (and their transcripts, sometimes there will be more than one)... filter for the most used transcript from salmon quantifications... then start translating with and without the cassette exon.
+
+```{r}
+IntersectingExons <- read_tsv("../code/SmallMolecule/CassetteExons/FlankingExons.tsv.gz", col_names=c("SkipJuncChrom", "SkipJuncStart", "SkipJuncStop", "SkipJuncName", "SkipJuncScore", "Strand", "dummy_thickStart", "dummy_thickEnd", "dummy_color", "ExonChrom","ExonStart", "ExonStop", "gene_transcript", "dummy", "dummy_2", "overlappingBases")) %>%
+  dplyr::select(-contains("dummy")) %>%
+  separate(gene_transcript, into=c("gene", "transcript"), sep="\\_")
+
+TPM.transcripts.DMSO <- read_tsv("../code/SmallMolecule/salmon.DMSO.merged.txt") %>%
+  column_to_rownames("Name") %>%
+  apply(1, median) %>%
+  as.data.frame() %>%
+  rownames_to_column("transcript") %>%
+  dplyr::rename("Median.TPM"=".")
+
+hist(log10(TPM.transcripts.DMSO$Median.TPM))
+
+IntersectingExons %>%
+  inner_join(TPM.transcripts.DMSO) %>%
+  group_by(SkipJuncName, gene) %>%
+  filter(Median.TPM == max(Median.TPM)) %>%
+  ungroup() %>%
+  add_count(SkipJuncName) %>%
+  filter(n==2) %>%
+  filter(overlappingBases==1) %>%
+  distinct(SkipJuncName) %>%
+  nrow()
+
+IntersectingExons %>%
+  inner_join(TPM.transcripts.DMSO) %>%
+  group_by(SkipJuncName, gene) %>%
+  filter(Median.TPM == max(Median.TPM)) %>%
+  filter(overlappingBases==1) %>%
+  ungroup() %>%
+  count(SkipJuncName) %>%
+  ggplot(aes(x=n)) +
+  geom_histogram()
+  
+
+IntersectingExons %>%
+  inner_join(TPM.transcripts.DMSO) %>%
+  group_by(SkipJuncName, gene) %>%
+  filter(Median.TPM == max(Median.TPM)) %>%
+  ungroup() %>%
+  add_count(SkipJuncName) %>%
+  filter(n==2) %>%
+  filter(overlappingBases==1)
+
+cassette.exons
 ```
 

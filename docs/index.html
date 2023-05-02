@@ -305,7 +305,7 @@ class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2023-04-25
+<strong>Last updated:</strong> 2023-05-02
 </p>
 <p>
 <strong>Checks:</strong> <span
@@ -437,15 +437,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstreeddf600dbb95a36158c06a26c5d7df9d69c969ed0targetblankddf600da">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstree6c60c18d86f538cf04f01f094fe200eb6da55140targetblank6c60c18a">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/ddf600dbb95a36158c06a26c5d7df9d69c969ed0" target="_blank">ddf600d</a>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/6c60c18d86f538cf04f01f094fe200eb6da55140" target="_blank">6c60c18</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstreeddf600dbb95a36158c06a26c5d7df9d69c969ed0targetblankddf600da"
+id="strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstree6c60c18d86f538cf04f01f094fe200eb6da55140targetblank6c60c18a"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -455,7 +455,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/ddf600dbb95a36158c06a26c5d7df9d69c969ed0" target="_blank">ddf600d</a>.
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/6c60c18d86f538cf04f01f094fe200eb6da55140" target="_blank">6c60c18</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -522,6 +522,7 @@ Ignored files:
     Ignored:    code/SplicingAnalysis/
     Ignored:    code/TODO
     Ignored:    code/Tehranchi/
+    Ignored:    code/alias/
     Ignored:    code/bigwigs/
     Ignored:    code/bigwigs_FromNonWASPFilteredReads/
     Ignored:    code/config/.DS_Store
@@ -531,11 +532,13 @@ Ignored files:
     Ignored:    code/dag.pdf
     Ignored:    code/dag.png
     Ignored:    code/dag.svg
+    Ignored:    code/data/
     Ignored:    code/debug.ipynb
     Ignored:    code/debug_python.ipynb
     Ignored:    code/deepTools/
     Ignored:    code/featureCounts/
     Ignored:    code/featureCountsBasicGtf/
+    Ignored:    code/genome_config.yaml
     Ignored:    code/gwas_summary_stats/
     Ignored:    code/hyprcoloc/
     Ignored:    code/igv_session.xml
@@ -544,10 +547,11 @@ Ignored files:
     Ignored:    code/logs/
     Ignored:    code/notebooks/.ipynb_checkpoints/
     Ignored:    code/pi1/
-    Ignored:    code/rules/.GWAS_PrepForColoc.smk.swp
+    Ignored:    code/rules/.ProcessSmallMoleculeData.smk.swp
     Ignored:    code/rules/.ipynb_checkpoints/
     Ignored:    code/rules/OldRules/
     Ignored:    code/rules/notebooks/
+    Ignored:    code/salmontest/
     Ignored:    code/scratch/
     Ignored:    code/scripts/.ipynb_checkpoints/
     Ignored:    code/scripts/GTFtools_0.8.0/
@@ -575,16 +579,18 @@ Ignored files:
     Ignored:    data/Metaplots/.DS_Store
 
 Untracked files:
-    Untracked:  analysis/20230417_SusieFinemapEnrichment.Rmd
-    Untracked:  analysis/20230420_FindeQTLsQTLGWAS_Colocs.Rmd
-    Untracked:  code/rules/molQTL_GWAS_QQ.smk
-    Untracked:  data/Ben_ncQTL.groups.tsv
-    Untracked:  output/ColocPlotData.MVP.tsv.gz
-    Untracked:  output/ColocPlotData.NUDT15.tsv.gz
+    Untracked:  analysis/20230502_GetColocsForCarlos.Rmd
+    Untracked:  code/envs/salmon.yml
+    Untracked:  code/scripts/SmallMolecule_chRNA_DE.R
+    Untracked:  code/scripts/SmallMolecule_fitDoseResponseSplicing_AsCassetteExons.R
+    Untracked:  output/GwasColocs_by_MolQTLCategory_ForCarlos.All.tsv.gz
+    Untracked:  output/GwasColocs_by_MolQTLCategory_ForCarlos.YRI_Only.tsv.gz
 
 Unstaged changes:
     Modified:   analysis/20230324_MakeFigs.Rmd
-    Modified:   code/rules/GWAS_PrepForColoc.smk
+    Modified:   analysis/20230420_FindeQTLsQTLGWAS_Colocs.Rmd
+    Modified:   code/Snakefile
+    Modified:   code/rules/ProcessSmallMoleculeData.smk
     Modified:   code/scripts/GenometracksByGenotype
 
 </code></pre>
@@ -630,6 +636,23 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/6c60c18d86f538cf04f01f094fe200eb6da55140/docs/index.html" target="_blank">6c60c18</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2023-04-25
+</td>
+<td>
+update nb
+</td>
+</tr>
 <tr>
 <td>
 html
@@ -1368,6 +1391,8 @@ href="20230413_CheckSplicingTimingOfSM_sensitiveIntrons.html">20230413_CheckSpli
 href="20230417_SusieFinemapEnrichment.html">20230417_SusieFinemapEnrichment.html</a></p>
 <p><a
 href="20230420_FindeQTLsQTLGWAS_Colocs.html">20230420_FindeQTLsQTLGWAS_Colocs.html</a></p>
+<p><a
+href="20230502_GetColocsForCarlos.html">20230502_GetColocsForCarlos.html</a></p>
 <p>Also, a list of links to ipynb files that were incorporated into the
 snakemake. Since github renders ipynbs directly, this is not a relative
 link from the site folder, but rather links directly to the file to view

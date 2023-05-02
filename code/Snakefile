@@ -113,7 +113,9 @@ rule all:
         ),
         "QTLs/QTLTools/polyA.Splicing.5PrimeSS.Subset_YRI/NominalPass.txt.gz",
         "QTLs/QTLTools/polyA.Splicing.3PrimeSS.Subset_YRI/NominalPass.txt.gz",
-        expand("scratch/PairwisePi1Traits.P.{chunk}.txt.gz", chunk=range(1, NumPvalsForPi1Chunks+1))
+        expand("scratch/PairwisePi1Traits.P.{chunk}.txt.gz", chunk=range(1, NumPvalsForPi1Chunks+1)),
+        expand("SmallMolecule/leafcutter/ds/{contrast}_effect_sizes.txt", contrast=["chRNA_risdiplam_100", "chRNA_risdiplam_3160"]),
+        "SmallMolecule/chRNA/DE.results.tsv.gz"
 
 rule Collect_chRNASeq_Fastq:
     """
