@@ -1,0 +1,7 @@
+rule TransformToBedBgz:
+    input:
+        
+        
+        
+        
+        zcat /project2/yangili1/bjf79/ChromatinSplicingQTLs/code/QTLs/QTLTools/polyA.Splicing.Subset_YRI/NominalPassForColoc.txt.gz | awk '{print $2, $3, $4, $1, $8, $5, $6, $7, $9, $10, $11, $12, $13, $14, $15, $16}' OFS='\t' | tail -n+2 - | bedtools sort -i - | bgzip > polyA.Splicing.Subset_YRI.NominalPassForColoc.bed.bgz
