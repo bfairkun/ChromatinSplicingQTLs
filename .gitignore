@@ -9,6 +9,7 @@ analysis/*png
 analysis/*html
 analysis/*_cache
 analysis/site_libs
+analysis/.ipynb_checkpoints
 
 .DS_Store
 ._.DS_Store
