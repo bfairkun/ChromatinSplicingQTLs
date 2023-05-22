@@ -37,7 +37,7 @@ rule GetSpliceJunctionAnnotation:
 rule AnnotateJuncFiles:
     input:
         junc = "LongReads/Junctions/{sample}.junc.gz",
-        annot = "LongReads/Annotations/Annotation.bed.gz"
+        annot = "../data/IntronAnnotationsFromYang.tsv.gz"
     output:
         "LongReads/Junctions/{sample}.annotated.junc.gz"
     wildcard_constraints:
@@ -46,7 +46,7 @@ rule AnnotateJuncFiles:
         "logs/LongReads/Junctions/Annotate.{sample}.log"
     shell:
         """
-        (bedtools intersect -r -f 1 -a {input.junc} -b {input.annot} -wb | awk '{{print $1, $2, $3, $1":"$2"-"$3":"$6, $5, $6, $10, $11, $13}}' FS='\\t' OFS='\\t' - | gzip - > {output}) &> {log}
+        (bedtools intersect -r -f 1 -a {input.junc} -b {input.annot} -wb | awk '{{print $1, $2, $3, $1":"$2"-"$3":"$6, $5, $6, $11, $12, $13, $14, $15}}' FS='\\t' OFS='\\t' - | gzip - > {output}) &> {log}
         """
         
 def GetDownloadLinkFuncsONT(LinkType):

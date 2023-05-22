@@ -171,21 +171,21 @@ rule GatherONTFastq:
 rule GatherLongReadJunc:
     input:
         expand("LongReads/Junctions/{sample}.annotated.junc.gz", sample = all_long_reads),
-        'LongReads/Analysis/IsoSeq.nmd.tab.gz',
-        'LongReads/Analysis/IsoSeq.stable.tab.gz',
-        'LongReads/Analysis/IsoSeq.nmd_avg.tab.gz',
-        'LongReads/Analysis/IsoSeq.stable_avg.tab.gz',
-        'LongReads/Analysis/NMD_KD.nmd.tab.gz',
-        'LongReads/Analysis/NMD_KD.stable.tab.gz',
-        'LongReads/Analysis/NMD_KD.nmd_avg.tab.gz',
-        'LongReads/Analysis/NMD_KD.stable_avg.tab.gz',
-        'LongReads/Analysis/Churchman.nmd.tab.gz',
-        'LongReads/Analysis/Churchman.stable.tab.gz',
-        'LongReads/Analysis/Churchman.nmd_avg.tab.gz',
-        'LongReads/Analysis/Churchman.stable_avg.tab.gz',
-        'LongReads/Analysis/IsoSeq.ByQuartile.tab.gz',
-        'LongReads/Analysis/NMD_KD.ByQuartile.tab.gz',
-        'LongReads/Analysis/Churchman.ByQuartile.tab.gz'
+        #'LongReads/Analysis/IsoSeq.nmd.tab.gz',
+        #'LongReads/Analysis/IsoSeq.stable.tab.gz',
+        #'LongReads/Analysis/IsoSeq.nmd_avg.tab.gz',
+        #'LongReads/Analysis/IsoSeq.stable_avg.tab.gz',
+        #'LongReads/Analysis/NMD_KD.nmd.tab.gz',
+        #'LongReads/Analysis/NMD_KD.stable.tab.gz',
+        #'LongReads/Analysis/NMD_KD.nmd_avg.tab.gz',
+        #'LongReads/Analysis/NMD_KD.stable_avg.tab.gz',
+        #'LongReads/Analysis/Churchman.nmd.tab.gz',
+        #'LongReads/Analysis/Churchman.stable.tab.gz',
+        #'LongReads/Analysis/Churchman.nmd_avg.tab.gz',
+        #'LongReads/Analysis/Churchman.stable_avg.tab.gz',
+        #'LongReads/Analysis/IsoSeq.ByQuartile.tab.gz',
+        #'LongReads/Analysis/NMD_KD.ByQuartile.tab.gz',
+        #'LongReads/Analysis/Churchman.ByQuartile.tab.gz'
         
 
 
