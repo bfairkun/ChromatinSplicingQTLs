@@ -1,0 +1,161 @@
+---
+title: "MakeFinalFigs_Fig2"
+output: html_document
+date: '2023-05-18'
+---
+
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+
+library(tidyverse)
+library(RColorBrewer)
+library(data.table)
+library(readxl)
+library(qvalue)
+library(ggrepel)
+library(knitr)
+library(ggbreak)
+
+
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family="Helvetica")))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+```
+
+
+## List
+
+#### Number QTLs
+
+```{r}
+PhenotypeWildcardsAll <- Sys.glob("../code/QTLs/QTLTools/*/PermutationPass.FDR_Added.txt.gz") %>%
+  str_replace("../code/QTLs/QTLTools/(.+?)/PermutationPass.FDR_Added.txt.gz", "\\1")
+
+PhenotypeWildcards_ToIncluide <- c("APA_Nuclear", "APA_Total", "Expression.Splicing.Subset_YRI", "Expression.Splicing", "H3K27AC", "H3K36ME3", "H3K4ME3", "H3K4ME1", "MetabolicLabelled.30min", "MetabolicLabelled.60min", "chRNA.Expression.Splicing", "chRNA.Splicing", "polyA.Splicing", "polyA.Splicing.Subset_YRI", "MetabolicLabelled.30min.Splicing", "MetabolicLabelled.60min.Splicing")
+
+GroupedPhenotypeWildcards_ToIncluide <- c( "chRNA.Splicing", "polyA.Splicing.Subset_YRI", "polyA.Splicing",  "MetabolicLabelled.30min.Splicing", "MetabolicLabelled.60min.Splicing")
+
+UngroupedPhenotypeWildcards_ToIncluide <- setdiff(PhenotypeWildcards_ToIncluide, GroupedPhenotypeWildcards_ToIncluide)
+
+Grouped.dat <- setNames(paste0("../code/QTLs/QTLTools/",GroupedPhenotypeWildcards_ToIncluide,"/GroupedPermutationPass.FDR_Added.txt.gz"), GroupedPhenotypeWildcards_ToIncluide) %>%
+  lapply(fread) %>%
+  bind_rows(.id="PC")
+
+Ungrouped.dat <- setNames(paste0("../code/QTLs/QTLTools/",UngroupedPhenotypeWildcards_ToIncluide,"/PermutationPass.FDR_Added.txt.gz"), UngroupedPhenotypeWildcards_ToIncluide) %>%
+  lapply(fread) %>%
+  bind_rows(.id="PC")
+
+Full.dat <- bind_rows(
+  Grouped.dat, Ungrouped.dat
+)
+
+```
+
+First plot number of individuals for each assay
+
+```{r}
+SampleSize <- read_tsv("../code/QC/SampleSize.PerPhenotype.tsv", col_names=c("fn", "dummy", "n")) %>%
+  mutate(PC = str_replace(fn,"QTLs/QTLTools/(.+?)/OnlyFirstReps.sorted.qqnorm.bed.gz", "\\1")) %>%
+  filter(PC %in% c("Expression.Splicing", "Expression.Splicing.Subset_YRI", "chRNA.Expression.Splicing", "MetabolicLabelled.30min", "MetabolicLabelled.60min", "H3K27AC", "H3K4ME3", "H3K4ME1", "H3K36ME3", "APA_Nuclear", "APA_Total"))
+
+SampleSize %>%
+  dplyr::select(PC, n) %>%
+  kable()
+
+
+
+SourcePublications <- setNames(c("Lappalainen et al", "Lappalainen et al", "This study", "Li et al", "Li et al", "Grubert et al", "Grubert et al", "Grubert et al", "This study", "Mittleman et al", "Mittleman et al"), SampleSize$PC)
+
+Labels =  setNames(c("polyA RNA-seq*", "polyA RNA-seq", "chRNA-seq", "30m 4sU RNA-seq", "60m 4sU RNA-seq", "H3K4me1 ChIP-seq", "H3K27Ac ChIP-seq", "H3K4me3 ChIP-seq", "H3K36me3 Cut&Tag", "nuclear RNA 3'seq", "Total RNA 3'seq"), SampleSize$PC)
+
+SampleSizes <- SampleSize %>%
+  filter(!PC %in% "Expression.Splicing.Subset_YRI") %>%
+  mutate(publication = recode(PC, !!!SourcePublications)) %>%
+  mutate(Assay = factor(PC, levels=c("H3K4ME1", "H3K27AC", "H3K4ME3", "H3K36ME3", "chRNA.Expression.Splicing", "APA_Nuclear", "APA_Total", "MetabolicLabelled.30min","MetabolicLabelled.60min", "Expression.Splicing"))) %>%
+  ggplot(aes(x=Assay, y=n)) +
+  geom_col() +
+  # geom_text(aes(label=n), color="black") +
+  geom_text(aes(label=publication),angle=90, color="black", y=0, hjust=-0.05) +
+  scale_x_discrete(labels=Labels) +
+  scale_y_continuous(expand=c(0,0)) +
+  scale_y_break(c(100,425), scales="fixed", ticklabels=c(425, 450, 475), expand=F, space=0.4) +
+  Rotate_x_labels +
+  labs(x="Assay", y="Sample size", caption=str_wrap("*Includes samples non-YRI donors, though some supplementary analyses only utilize the 89 YRI samples in this dataset", 30)) +
+  theme(axis.text.x=element_text(size=rel(0.5)))
+
+P.SampleSizes <- ggplotify::as.ggplot(print(SampleSizes))
+P.SampleSizes
+```
+Now number of QTLs
+
+```{r}
+relabel.df <- read_tsv("../data/Phenotypes_recode_for_Plotting.txt")
+
+relabel.df %>% head()
+
+Full.dat$PC %>% unique()
+
+MolQTL_Labels <- relabel.df %>% dplyr::select(PC, Shortest) %>% deframe()
+MolQTL_AssayLabels <- relabel.df %>% dplyr::select(PC, Assay) %>% deframe()
+Factor_Order <- relabel.df %>% dplyr::select(PC, OrderFactor) %>% deframe()
+
+NumQTLs <- Full.dat %>%
+  filter(PC %in% c("APA_Total", "APA_Nuclear")) %>%
+  separate(phe_id, into=c("gene", "region", "peak"), sep="_") %>%
+  arrange(adj_emp_pval) %>% 
+  group_by(gene) %>% slice(1) %>%
+  bind_rows(
+    Full.dat %>%
+      filter(!PC %in% c("APA_Total", "APA_Nuclear"))
+  ) %>%
+  group_by(PC) %>%
+  summarise(
+    FDR_10 = sum(q<0.1, na.rm=T),
+    FDR_05 = sum(q<0.05,  na.rm=T),
+    FDR_01 = sum(q<0.01,  na.rm=T)) %>%
+  gather("FDR", "n", -PC) %>%
+  mutate(PC_relabeled = recode(PC, !!!MolQTL_Labels)) %>%
+  mutate(Assay_relabeled = recode(PC, !!!MolQTL_AssayLabels)) %>%
+  mutate(FinalLabels = paste(PC_relabeled, Assay_relabeled, sep="\n")) %>%
+  # pull(FinalLabels) %>% unique()
+  mutate(OrderFactor = recode(PC, !!!Factor_Order)) %>%
+  mutate(FinalLabels = fct_reorder(FinalLabels, OrderFactor)) %>%
+  ggplot(aes(x=FinalLabels, y=n, fill=FDR)) +
+  geom_col(position="identity", width=0.8) +
+  Rotate_x_labels +
+  scale_y_continuous(trans="log10", breaks=10**(1:5), labels=c(10, 100, "1K", "10K", "100K")) +
+  # geom_text_repel(
+  #   data = . %>%
+  #     gather("FDR","n",-PC),
+  #     aes(label=n, y=n), angle=90, hjust=-0.05,
+  #   min.segment.length = unit(0, 'lines'),
+  #   color="black") +
+  geom_text(
+    data = . %>%
+      filter(FDR== "FDR_10"),
+      aes(label=n), angle=90, hjust=0,
+    color="black") +
+  coord_cartesian(ylim=c(100,1E5)) +
+  scale_fill_manual(values=c("FDR_10"="#ffeda0", "FDR_05"="#feb24c", "FDR_01"="#f03b20"), labels=c("FDR_10"="10%", "FDR_05"="5%", "FDR_01"="1%")) +
+  # scale_x_discrete(labels=c())
+  labs(x="molQTL type, assay", y="Number QTLs", fill="FDR", caption=str_wrap("*Each sQTL/APA-QTL count here represents a likely independent genetic effect that may effect multiple introns/APA-sites within a local leafcutter cluster of introns/APA-sites", 40)) +
+  theme(axis.text.x = element_text(size=9, hjust=1, angle=70))
+
+NumQTLs
+
+```
+
+
+```{r, eval=F}
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_SampleSize.pdf",P.SampleSizes, width=6, height=6)
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_NumQTLs.pdf",NumQTLs, width=8, height=6)
+
+```
+

@@ -141,6 +141,18 @@ Spearman.cors.CPM <- CPM.StandardNormFactors.tidy %>%
 # Spearman of dose and PSI
 chRNADoses <- c(0, 100, 3160)
 
+model.dat.df.AllIntrons <- PSI.tidy %>%
+  filter(LibraryType == "polyA") %>%
+  drop_na() %>%
+  add_count(Intron) %>%
+  filter(n==11) %>%
+  nest(-Intron) %>%
+  mutate(cor=map(data,~cor.test(.x$dose.nM, .x$PSI, method = "sp", alternative="greater"))) %>%
+  mutate(tidied = map(cor, tidy)) %>% 
+  unnest(tidied, .drop = T) %>%
+  dplyr::select(Intron:data, spearman=estimate, spearman.p = p.value) %>%
+  mutate(q = qvalue(spearman.p)$qvalues)
+
 
 model.dat.df.AllGAGT <- PSI.tidy %>%
   filter(LibraryType == "polyA") %>%
@@ -155,6 +167,7 @@ model.dat.df.AllGAGT <- PSI.tidy %>%
   unnest(tidied, .drop = T) %>%
   dplyr::select(Intron:data, spearman=estimate, spearman.p = p.value) %>%
   mutate(q = qvalue(spearman.p)$qvalues)
+
 
 
 #pre-filter data for model fitting. just do GAGT introns with positive dose response cor (q<0.01)
@@ -354,3 +367,16 @@ ModelFits.Coefficients.Genes <- bind_rows(Results, .id="Geneid")
 
 write_tsv(ModelFits.Coefficients.Genes, "SmallMolecule/FitModels/polyA_genes.tsv.gz")
 write_tsv(ModelFits.Coefficients.GAGTIntrons, "SmallMolecule/FitModels/polyA_GAGTIntrons.tsv.gz")
+
+model.dat.df.AllIntrons %>%
+    unnest(data) %>%
+    write_tsv("SmallMolecule/FitModels/Data/polyA_GAGTIntrons.tsv.gz")
+
+bind_rows(
+    model.dat.df.CPM.StandardNormFactors %>%
+      unnest(data),
+    CPM.StandardNormFactors.tidy %>%
+      filter(LibraryType == "chRNA") %>%
+      mutate(Log2CPM = log2(CPM)) 
+) %>%
+  write_tsv("SmallMolecule/FitModels/Data/polyA_genes.tsv.gz")

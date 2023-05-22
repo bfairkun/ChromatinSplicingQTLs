@@ -1,0 +1,207 @@
+---
+title: "20230516_CheckChaosAnnotations"
+output: html_document
+date: '2023-05-16'
+---
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+
+library(tidyverse)
+library(data.table)
+
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family="Helvetica")))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+```
+
+## Intro
+
+Chao annotated introns from Gencode, and somehow they don't match up my annotation file. Let's explore what's going on...
+
+
+```{r}
+chao.annotations <- read_tsv("/project2/yangili1/cdai/annotations/hg38/use_gtftk/gencode_v43_basic.intron_by_transcript.bed.gz", col_names=c("chrom", "start", "end", "name", "score", "strand")) %>%
+  separate(name, into=c("type", "Geneid", "transcript_id", "symbol", "gene_tag", "transcript_tag"), sep="\\|", remove=F)
+
+chao.annotations %>%
+  filter(!gene_tag == transcript_tag)
+
+annotations <- read_tsv("../data/IntronAnnotationsFromYang.tsv.gz")
+
+joined <- full_join(
+  annotations %>%
+    mutate(end = end - 1),
+  chao.annotations
+) %>%
+  mutate(IsInBens = !is.na(NewAnnotation)) %>%
+  mutate(IsInChaos = !is.na(type))
+
+joined %>%
+  count(IsInBens, IsInChaos)
+
+```
+
+Ok, so there are some in Chaos that aren't in mine, that's expected since I am only annotating ones in the leafcutter count table. But there are also lot's in mine that aren't in Chaos. But so far I haven't actually been filtering for annotated productive, so that's expected. Let's filter and recount...
+
+```{r}
+joined$SuperAnnotation %>% unique()
+
+joined %>%
+  filter(is.na(SuperAnnotation) | SuperAnnotation == "AnnotatedJunc_ProductiveCodingGene") %>%
+  count(IsInBens, IsInChaos)
+
+```
+
+Ok I need to know more about what these 54051 introns are that are in my file that aren't in Chao's.
+
+```{r}
+joined %>%
+  filter(is.na(SuperAnnotation) | SuperAnnotation == "AnnotatedJunc_ProductiveCodingGene") %>%
+  filter(IsInBens & !IsInChaos) %>%
+  mutate(Coords = str_glue("{chrom}:{start}-{end}")) %>%
+  dplyr::select(symbol, Coords) %>%
+  sample_n(10)
+
+joined %>%
+  filter(is.na(SuperAnnotation) | SuperAnnotation == "AnnotatedJunc_ProductiveCodingGene") %>%
+  filter(IsInBens & !IsInChaos) %>%
+  count(NewAnnotation)
+
+joined %>%
+  filter(is.na(SuperAnnotation) | SuperAnnotation == "AnnotatedJunc_ProductiveCodingGene") %>%
+  filter(IsInBens & !IsInChaos) %>%
+  count(strand)
+
+joined %>%
+  filter(is.na(SuperAnnotation) | SuperAnnotation == "AnnotatedJunc_ProductiveCodingGene") %>%
+  filter(IsInBens & !IsInChaos) %>%
+  mutate(score = ".") %>%
+  dplyr::select(chrom, start, end, gene, score, strand) %>%
+  arrange(chrom, start ,end) %>%
+  write_tsv("../code/scratch/gtfs/AnnotatedJunc_ProductiveCodingGene_IntronsNotInChaos.bed",  col_names = F)
+
+joined %>%
+  filter(is.na(SuperAnnotation) | SuperAnnotation == "AnnotatedJunc_ProductiveCodingGene") %>%
+  filter(IsInBens & !IsInChaos) %>%
+  mutate(score = ".") %>%
+  dplyr::select(chrom, start, end, gene, score, strand) %>%
+  filter(chrom=="chr6", start==160032713)
+
+joined %>%
+  filter(IsInBens) %>%
+  count(NewAnnotation)
+
+Yangs <- read_tsv("/project2/yangili1/yangili/chRNA/IntronTypeAnnotations.txt.gz") %>%
+  dplyr::rename(end=stop) %>%
+  mutate(end = end-1)
+
+
+
+joined %>%
+  filter(is.na(SuperAnnotation) | SuperAnnotation == "AnnotatedJunc_ProductiveCodingGene") %>%
+  filter(IsInBens & !IsInChaos) %>%
+  inner_join(
+    Yangs
+    ) %>%
+  count(Annotation)
+```
+
+Ok so for the vast majority of those 50,000 that Yang reannotated because of 'basic' tag, I also annotated as 'basic' tag even before that. So i'm still confused about how Chao's file is missing these.
+
+I think maybe the best thing to do would be to open that basic gtf in IGV and inspect some of these introns
+
+
+## Totally something else
+
+> Hi Ben. I wonder if you have checked the relationship between peak level and QTL effect size for your caQTL data in LCL?
+
+```{r}
+hQTLs.header <- read_tsv("../code/QTLs/QTLTools/H3K27AC/NominalPassForColoc.txt.tabix.gz", n_max=1)
+
+hQTLs <- read_delim("../code/QTLs/QTLTools/H3K27AC/NominalPass_Unstandardized.OnlyTopSites.txt.gz", col_names = colnames(hQTLs.header), delim=' ')
+
+hQTLs.unstandardized <- hQTLs %>%
+  group_by(`#phe_id`) %>%
+  filter(nom_pval == min(nom_pval)) %>%
+  distinct(`#phe_id`, .keep_all=T) %>%
+  ungroup()
+
+hQTLs.unstandardized %>%
+  ggplot(aes(x=slope)) +
+  geom_histogram()
+
+mean.cpm <- read_tsv("../code/QTLs/QTLTools/H3K27AC/OnlyFirstRepsUnstandardized.sorted.qqnorm.bed.gz") %>%
+  dplyr::select(pid, contains("NA")) %>%
+  column_to_rownames("pid") %>%
+  apply(1, mean)
+
+head(mean.cpm)
+hist(mean.cpm)
+
+sig.hQTLs <- read_delim("../code/QTLs/QTLTools/H3K27AC/PermutationPass.FDR_Added.txt.gz", delim=' ')
+
+hQTLs.unstandardized %>%
+  inner_join(
+    data.frame(mean.cpm = mean.cpm) %>%
+      rownames_to_column("#phe_id")
+  ) %>%
+  inner_join(
+    sig.hQTLs %>%
+      dplyr::select("#phe_id"="phe_id", q) %>%
+      filter(q<0.1)
+  ) %>%
+  ggplot(aes(x=mean.cpm, y=abs(slope))) +
+  # geom_point(alpha=0.5) +
+  geom_hex(bins=100) +
+  scale_fill_viridis_c() +
+  labs(x="Mean( log2 CPM )", y="hQTL beta, in units of log2FC")
+```
+
+> I think this is interesting. I also see this in my data. But what’s even more interesting is that eqtl looks very different. Can you check your eqtl as well?
+
+```{r}
+eQTLs <- read_delim("../code/QTLs/QTLTools/Expression.Splicing.Subset_YRI//NominalPass_Unstandardized.OnlyTopSites.txt.gz", col_names = colnames(hQTLs.header), delim=' ')
+
+eQTLs.unstandardized <- eQTLs %>%
+  group_by(`#phe_id`) %>%
+  filter(nom_pval == min(nom_pval)) %>%
+  distinct(`#phe_id`, .keep_all=T) %>%
+  ungroup()
+
+eQTLs.unstandardized %>%
+  ggplot(aes(x=slope)) +
+  geom_histogram()
+
+mean.rpkm <- read_tsv("../code/QTLs/QTLTools/Expression.Splicing/OnlyFirstRepsUnstandardized.sorted.qqnorm.bed.gz") %>%
+  dplyr::select(pid, contains("NA")) %>%
+  column_to_rownames("pid") %>%
+  apply(1, mean)
+
+head(mean.rpkm)
+hist(mean.rpkm)
+
+sig.eQTLs <- read_delim("../code/QTLs/QTLTools/Expression.Splicing.Subset_YRI/PermutationPass.FDR_Added.txt.gz", delim=' ')
+
+eQTLs.unstandardized %>%
+  inner_join(
+    data.frame(mean.cpm = mean.rpkm) %>%
+      rownames_to_column("#phe_id")
+  ) %>%
+  inner_join(
+    sig.eQTLs %>%
+      dplyr::select("#phe_id"="phe_id", q) %>%
+      filter(q<0.1)
+  ) %>%
+  ggplot(aes(x=mean.cpm, y=abs(slope))) +
+  # geom_point(alpha=0.5) +
+  geom_hex(bins=100) +
+  scale_fill_viridis_c() +
+  labs(x="Mean( log2 RPKM )", y="eQTL beta, in units of log2FC")
+```
+

@@ -47,3 +47,6 @@ rule GatherPvalsForPi1AllTraitPairs:
         """
         cat <(zcat {input[0]} | head -1) <(zcat {input} | grep -v -P '^PC1\\t') | gzip - > {output}
         """
+
+# rule CalculatePi1:
+#     input:

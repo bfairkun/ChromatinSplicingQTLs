@@ -402,3 +402,25 @@ rule SampleRandomPvals:
 rule GatherSampleRandomPvals:
     input:
         expand("QTLs/QTLTools/{Phenotype}/NominalPass{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.RandomSamplePvals.txt.gz", Phenotype=PhenotypesToColoc, QTLsGenotypeSet="", FeatureCoordinatesRedefinedFor="ForColoc")
+
+rule CountPCs_and_SampleSize:
+    input:
+        beds = expand("QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.gz", Phenotype=MyPhenotypes),
+        PCs = expand("QTLs/QTLTools/{Phenotype}/OnlyFirstReps.sorted.qqnorm.bed.pca", Phenotype=MyPhenotypes)
+    output:
+        N = "QC/SampleSize.PerPhenotype.tsv",
+        PCs = "QC/NumPCs.PerPhenotype.tsv"
+    shell:
+        """
+        set +o pipefail;
+        for fn in {input.beds};
+        do
+            printf "$fn\\tn\\t" >> {output.N}
+            zcat $fn | head -1 | tr '\\t' '\\n' | wc -l | awk '{{print $1-6}}' >> {output.N}
+        done
+        for fn in {input.PCs};
+        do
+            printf "$fn\\tn_PCs\\t" >> {output.PCs}
+            wc -l $fn | awk '{{print $1-1}}' >> {output.PCs}
+        done
+        """

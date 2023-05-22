@@ -1,0 +1,2043 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+<meta name="date" content="2023-05-04" />
+
+<title>20230504_SmallMoleculeFig</title>
+
+<script src="site_libs/header-attrs-2.14/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.tab('show');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">myproject</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">20230504_SmallMoleculeFig</h1>
+<h4 class="date">2023-05-04</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span
+class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2023-05-10
+</p>
+<p>
+<strong>Checks:</strong> <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> 1
+</p>
+<p>
+<strong>Knit directory:</strong>
+<code>ChromatinSplicingQTLs/analysis/</code> <span
+class="glyphicon glyphicon-question-sign" aria-hidden="true"
+title="This is the local directory in which the code in this file was executed.">
+</span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a>
+analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version
+1.7.0). The <em>Checks</em> tab describes the reproducibility checks
+that were applied when the results were created. The <em>Past
+versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges">
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted
+changes </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguncommittedchanges"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The R Markdown is untracked by Git. To know which version of the R
+Markdown file created these results, you’ll want to first commit it to
+the Git repo. If you’re still working on the analysis, you can ignore
+this warning. When you’re finished, you can run
+<code>wflow_publish</code> to commit the R Markdown file and build the
+HTML.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the
+global environment can affect the analysis in your R Markdown file in
+unknown ways. For reproduciblity it’s best to always run the code in an
+empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20191126code">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Seed:</strong>
+<code>set.seed(20191126)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20191126code"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20191126)</code> was run prior to running
+the code in the R Markdown file. Setting a seed ensures that any results
+that rely on randomness, e.g. subsampling or permutations, are
+reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Session information:</strong>
+recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package
+versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be
+confident that you successfully produced the results during this
+run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr
+project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstree1fbb2dc857c60e51cb7656fca6b7375065bfa5b9targetblank1fbb2dca">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Repository version:</strong>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/1fbb2dc857c60e51cb7656fca6b7375065bfa5b9" target="_blank">1fbb2dc</a>
+</a>
+</p>
+</div>
+<div
+id="strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstree1fbb2dc857c60e51cb7656fca6b7375065bfa5b9targetblank1fbb2dca"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development
+and connecting the code version to the results is critical for
+reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/1fbb2dc857c60e51cb7656fca6b7375065bfa5b9" target="_blank">1fbb2dc</a>.
+See the <em>Past versions</em> tab to see a history of the changes made
+to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for
+the analysis have been committed to Git prior to generating the results
+(you can use <code>wflow_publish</code> or
+<code>wflow_git_commit</code>). workflowr only checks the R Markdown
+file, but you know if there are other scripts or data files that it
+depends on. Below is the status of the Git repository when the results
+were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    analysis/.Rhistory
+    Ignored:    analysis/figure/
+    Ignored:    code/.DS_Store
+    Ignored:    code/.RData
+    Ignored:    code/._report.html
+    Ignored:    code/.ipynb_checkpoints/
+    Ignored:    code/.snakemake/
+    Ignored:    code/APA_Processing/
+    Ignored:    code/Alignments/
+    Ignored:    code/ChromHMM/
+    Ignored:    code/ENCODE/
+    Ignored:    code/ExpressionAnalysis/
+    Ignored:    code/ExtractPhenotypeBedByGenotype.py
+    Ignored:    code/FastqFastp/
+    Ignored:    code/FastqFastpSE/
+    Ignored:    code/FastqSE/
+    Ignored:    code/FineMapping/
+    Ignored:    code/Genotypes/
+    Ignored:    code/H3K36me3_CutAndTag.pdf
+    Ignored:    code/IntronSlopes/
+    Ignored:    code/LR.bed
+    Ignored:    code/LR.seq.bed
+    Ignored:    code/LongReads/
+    Ignored:    code/Metaplots/
+    Ignored:    code/Misc/
+    Ignored:    code/MiscCountTables/
+    Ignored:    code/Multiqc/
+    Ignored:    code/Multiqc_chRNA/
+    Ignored:    code/NonCodingRNA/
+    Ignored:    code/NonCodingRNA_annotation/
+    Ignored:    code/PairwisePi1Traits.P.all.txt.gz
+    Ignored:    code/PeakCalling/
+    Ignored:    code/Phenotypes/
+    Ignored:    code/PlotGruberQTLs/
+    Ignored:    code/PlotQTLs/
+    Ignored:    code/ProCapAnalysis/
+    Ignored:    code/QC/
+    Ignored:    code/QTL_SNP_Enrichment/
+    Ignored:    code/QTLs/
+    Ignored:    code/RPKM_tables/
+    Ignored:    code/ReadLengthMapExperiment/
+    Ignored:    code/ReadLengthMapExperimentResults/
+    Ignored:    code/ReadLengthMapExperimentSpliceCounts/
+    Ignored:    code/ReferenceGenome/
+    Ignored:    code/Rplots.pdf
+    Ignored:    code/Session.vim
+    Ignored:    code/SmallMolecule/
+    Ignored:    code/SplicingAnalysis/
+    Ignored:    code/TODO
+    Ignored:    code/Tehranchi/
+    Ignored:    code/alias/
+    Ignored:    code/bigwigs/
+    Ignored:    code/bigwigs_FromNonWASPFilteredReads/
+    Ignored:    code/config/.DS_Store
+    Ignored:    code/config/._.DS_Store
+    Ignored:    code/config/.ipynb_checkpoints/
+    Ignored:    code/config/config.local.yaml
+    Ignored:    code/dag.pdf
+    Ignored:    code/dag.png
+    Ignored:    code/dag.svg
+    Ignored:    code/data/
+    Ignored:    code/debug.ipynb
+    Ignored:    code/debug_python.ipynb
+    Ignored:    code/deepTools/
+    Ignored:    code/featureCounts/
+    Ignored:    code/featureCountsBasicGtf/
+    Ignored:    code/genome_config.yaml
+    Ignored:    code/gwas_summary_stats/
+    Ignored:    code/hyprcoloc/
+    Ignored:    code/igv_session.xml
+    Ignored:    code/isoseqbams/
+    Ignored:    code/log
+    Ignored:    code/logs/
+    Ignored:    code/notebooks/.ipynb_checkpoints/
+    Ignored:    code/pi1/
+    Ignored:    code/polyA.Splicing.Subset_YRI.NominalPassForColoc.bed.bgz
+    Ignored:    code/rules/.ipynb_checkpoints/
+    Ignored:    code/rules/OldRules/
+    Ignored:    code/rules/notebooks/
+    Ignored:    code/salmontest/
+    Ignored:    code/scratch/
+    Ignored:    code/scripts/.SmallMolecule_chRNA_DE.R.swp
+    Ignored:    code/scripts/.ipynb_checkpoints/
+    Ignored:    code/scripts/GTFtools_0.8.0/
+    Ignored:    code/scripts/__pycache__/
+    Ignored:    code/scripts/liftOverBedpe/liftOverBedpe.py
+    Ignored:    code/snakemake.dryrun.log
+    Ignored:    code/snakemake.log
+    Ignored:    code/snakemake.sbatch.log
+    Ignored:    code/snakemake_profiles/slurm/__pycache__/
+    Ignored:    code/test.introns.bed
+    Ignored:    code/test.introns2.bed
+    Ignored:    code/test.log
+    Ignored:    code/tracks.xml
+    Ignored:    data/.DS_Store
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-10.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-11.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-2.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-3.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-4.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-5.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-6.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-7.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-8.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022.csv
+    Ignored:    data/Metaplots/.DS_Store
+
+Untracked files:
+    Untracked:  analysis/20230504_SmallMoleculeFig.Rmd
+    Untracked:  code/scripts/SmallMolecule_GetFlankingExonsInBasicTranscriptsToTranslate.R
+    Untracked:  data/Tau_gene_V8.csv.gz
+    Untracked:  data/mart_export.txt.gz
+    Untracked:  data/tissue_category_rna_brain_Tissue.tsv.gz
+
+Unstaged changes:
+    Modified:   analysis/20221102_PlotStuffForYang.Rmd
+    Modified:   analysis/20230324_MakeFigs.Rmd
+    Modified:   code/rules/ProcessSmallMoleculeData.smk
+    Modified:   code/scripts/SmallMoleculeParseCassetteExons.py
+    Modified:   code/scripts/SmallMolecule_chRNA_DE.R
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not
+included in this status report because it is ok for generated content to
+have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+<p>
+There are no past versions. Publish this analysis with
+<code>wflow_publish()</code> to start tracking its development.
+</p>
+<hr>
+</div>
+</div>
+</div>
+<pre class="r"><code>knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+
+library(tidyverse)</code></pre>
+<pre><code>── Attaching packages ─────────────────────────────────────── tidyverse 1.3.1 ──</code></pre>
+<pre><code>✔ ggplot2 3.3.6     ✔ purrr   0.3.4
+✔ tibble  3.1.7     ✔ dplyr   1.0.9
+✔ tidyr   1.2.0     ✔ stringr 1.4.0
+✔ readr   2.1.2     ✔ forcats 0.5.1</code></pre>
+<pre><code>── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>library(RColorBrewer)
+library(data.table)</code></pre>
+<pre><code>
+Attaching package: &#39;data.table&#39;</code></pre>
+<pre><code>The following objects are masked from &#39;package:dplyr&#39;:
+
+    between, first, last</code></pre>
+<pre><code>The following object is masked from &#39;package:purrr&#39;:
+
+    transpose</code></pre>
+<pre class="r"><code>library(edgeR)</code></pre>
+<pre><code>Loading required package: limma</code></pre>
+<pre class="r"><code>library(readxl)
+library(qvalue)
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family=&quot;Helvetica&quot;)))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels &lt;- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+
+#test plot
+ggplot(mtcars, aes(x=mpg, y=cyl)) +
+  geom_point()</code></pre>
+<p><img src="figure/20230504_SmallMoleculeFig.Rmd/setup-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>IntronAnnotatins &lt;- read_tsv(&quot;../data/IntronAnnotationsFromYang.tsv.gz&quot;) %&gt;%
+  mutate(chrom = str_remove_all(chrom, &quot;chr&quot;)) %&gt;%
+  mutate(Intron = paste(chrom, start, end, sep=&quot;:&quot;)) %&gt;%
+  filter(!str_detect(SuperAnnotation, &quot;NoncodingGene&quot;))
+
+small.molecule.dat.genes &lt;- read_tsv(&quot;../code/SmallMolecule/FitModels/polyA_genes.tsv.gz&quot;)
+
+# Model fits using PSI using intron trios
+small.molecule.dat.introns &lt;- read_tsv(&quot;../code/SmallMolecule/FitModels/polyA_GAGTIntrons_asPSI.tsv.gz&quot;) %&gt;%
+  mutate(Intron = str_replace(junc, &quot;^chr(.+?):[+-]$&quot;, &quot;\\1&quot;)) %&gt;%
+  left_join(IntronAnnotatins)
+
+
+ClusterSignificance &lt;- Sys.glob(&quot;../code/SmallMolecule/leafcutter/ds/chRNA_risdiplam_*_cluster_significance.txt&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/SmallMolecule/leafcutter/ds/chRNA_risdiplam_(.+?)_cluster_significance.txt&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(read_tsv) %&gt;%
+  bind_rows(.id=&quot;dose.nM&quot;)
+
+EffectSizes &lt;- Sys.glob(&quot;../code/SmallMolecule/leafcutter/ds/chRNA_risdiplam_*_effect_sizes.txt&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/SmallMolecule/leafcutter/ds/chRNA_risdiplam_(.+?)_effect_sizes.txt&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(read_tsv) %&gt;%
+  bind_rows(.id=&quot;dose.nM&quot;) %&gt;%
+  mutate(cluster = str_replace(intron, &quot;^(.+?):.+?:.+?(:clu_.+$)&quot;, &quot;\\1\\2&quot;))
+
+chRNA.splicing.dat &lt;- inner_join(EffectSizes, ClusterSignificance)
+
+
+
+Translated.GAGT_CassetteExons &lt;- read_tsv(&quot;../code/SmallMolecule/CassetteExons/ExonsToTranslate.Translated.tsv.gz&quot;) %&gt;%
+  dplyr::select(-chrom, -Strand) %&gt;%
+  mutate(TranslationDiff = str_length(IncludedTranslation) - str_length(SkippedTranslation)) %&gt;%
+  mutate(InFrame = str_length(IncludedTranslation)-str_length(SkippedTranslation)==(ExonStop_Cassette-ExonStart_Cassette)/3) %&gt;%
+  mutate(ExonRemainder = (ExonStop_Cassette - ExonStart_Cassette)%%3) %&gt;%
+  mutate(Effect = case_when(
+    is.na(InFrame) ~ &quot;Cassette in UTR&quot;,
+    InFrame ~ &quot;Preserves frame&quot;,
+    ExonRemainder %in% c(1,2) ~ &quot;Frame shifting&quot;,
+    InFrame == F ~ &quot;In-frame PTC&quot;,
+  ))
+
+PolyA.SplicingEffects.Annotationed &lt;- small.molecule.dat.introns %&gt;%
+  left_join(Translated.GAGT_CassetteExons, by=c(&quot;junc&quot;=&quot;GAGTInt&quot;)) %&gt;%
+  filter(!(is.na(gene.x) &amp; is.na(gene.y))) %&gt;%
+  mutate(NewAnnotation = case_when(
+    SuperAnnotation %in% c(&quot;AnnotatedJunc_UnproductiveCodingGene&quot;, &quot;AnnotatedJunc_ProductiveCodingGene&quot;) ~ SuperAnnotation,
+    TRUE ~ Effect
+  )) %&gt;%
+  filter(!is.na(NewAnnotation)) %&gt;%
+  mutate(gene = case_when(
+    SuperAnnotation %in% c(&quot;AnnotatedJunc_UnproductiveCodingGene&quot;, &quot;AnnotatedJunc_ProductiveCodingGene&quot;) ~ gene.x,
+    TRUE ~ gene.y
+  )) %&gt;%
+  dplyr::select(-gene.x, -gene.y)
+
+
+PolyA.SplicingEffects.Annotationed %&gt;%
+  distinct(junc, .keep_all=T) %&gt;%
+  filter(!str_detect(NewAnnotation, &quot;Annotated&quot;)) %&gt;%
+  count(ExonRemainder, NewAnnotation) %&gt;%
+  ggplot(aes(x=ExonRemainder, y=n, fill=NewAnnotation)) +
+  geom_col(position=&#39;stack&#39;) +
+  labs(x=&quot;CassetteExon Length %% 3&quot;, y=&quot;Count&quot;, fill=&quot;Effect of exon inclusion&quot;, title=&quot;Custom annotation of unannotated SM-induced exons&quot;)</code></pre>
+<p><img src="figure/20230504_SmallMoleculeFig.Rmd/unnamed-chunk-1-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>small.molecule.dat.genes %&gt;% distinct(Geneid) %&gt;% nrow()</code></pre>
+<pre><code>[1] 10348</code></pre>
+<pre class="r"><code>MergedEstimatesFromModel &lt;- right_join(
+  PolyA.SplicingEffects.Annotationed %&gt;%
+    filter(str_detect(param, &quot;Pred&quot;)) %&gt;%
+    mutate(gene = str_replace(gene, &quot;(^.+?)\\..+?$&quot;, &quot;\\1&quot;)),
+  small.molecule.dat.genes %&gt;%
+    filter(str_detect(param, &quot;Pred&quot;)) %&gt;%
+    mutate(gene = str_replace(Geneid, &quot;(^.+?)\\..+?$&quot;, &quot;\\1&quot;)),
+  by=c(&quot;gene&quot;, &quot;param&quot;),
+  suffix=c(&quot;.splicing&quot;, &quot;.expression&quot;)
+) %&gt;%
+  separate(param, into=c(&quot;Dummy&quot;, &quot;dose.nM&quot;), convert=T, sep=&quot;_&quot;) %&gt;%
+  dplyr::select(-Dummy)</code></pre>
+<p>Now calculate difference between PSI at dose!=0 and dose==0..</p>
+<pre class="r"><code>MergedEstimatesFromModel.deltas &lt;- 
+  inner_join(
+    MergedEstimatesFromModel %&gt;%
+      filter(dose.nM == 0) %&gt;%
+      dplyr::select(Estimate.splicing, SE.splicing, Estimate.expression, SE.expression, junc, gene),
+    MergedEstimatesFromModel %&gt;%
+      filter(!dose.nM == 0),
+    by=c(&quot;junc&quot;, &quot;gene&quot;),
+    suffix=c(&quot;.untreated&quot;, &quot;.treated&quot;)
+  ) %&gt;%
+  mutate(Estimate.Expression.FC = Estimate.expression.treated - Estimate.expression.untreated) %&gt;%
+  mutate(Estimate.Splicing.deltaPSI = Estimate.splicing.treated - Estimate.splicing.untreated) %&gt;%
+  mutate(Estimate.Splicing.FC = log2(Estimate.splicing.treated / Estimate.splicing.untreated))</code></pre>
+<p>Now plot using the old annotations (filling in unproductive whenever
+one doesn’t exist, since all of that’s how they would be annotated using
+Yang and my previous scheme anyway)</p>
+<pre class="r"><code>MergedEstimatesFromModel.deltas %&gt;%
+  replace_na(list(SuperAnnotation = &quot;NewlyAnnotated as\nUnnnotatedJunc_UnproductiveCodingGene&quot;)) %&gt;%
+  mutate(PlottingGroup = str_replace_all(SuperAnnotation, &quot;_&quot;, &quot; &quot;)) %&gt;%
+  ggplot(aes(x=Estimate.Splicing.deltaPSI, y=Estimate.Expression.FC)) +
+  geom_hline(yintercept = 0, linetype=&#39;dashed&#39;) +
+  geom_point() +
+  facet_grid(PlottingGroup~dose.nM, labeller = label_wrap_gen()) +
+  # facet_grid(~dose.nM) +
+  theme_bw() +
+  labs(x=&quot;Splicing change\nDeltaPSI of GAGT intron&quot;, y=&quot;Expression change\nlog2FC of host gene&quot;) +
+  theme(strip.text.y = element_text(size = 8))</code></pre>
+<p><img src="figure/20230504_SmallMoleculeFig.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>MergedEstimatesFromModel.deltas %&gt;%
+  filter(!is.na(NewAnnotation)) %&gt;%
+  mutate(PlottingGroup = str_replace_all(NewAnnotation, &quot;_&quot;, &quot; &quot;)) %&gt;%
+  ggplot(aes(x=Estimate.Splicing.deltaPSI, y=Estimate.Expression.FC)) +
+  geom_hline(yintercept = 0, linetype=&#39;dashed&#39;) +
+  geom_point() +
+  facet_grid(PlottingGroup~dose.nM, labeller = label_wrap_gen()) +
+  # facet_grid(~dose.nM) +
+  theme_bw() +
+  labs(x=&quot;Splicing change\nDeltaPSI of GAGT intron&quot;, y=&quot;Expression change\nlog2FC of host gene&quot;) +
+  theme(strip.text.y = element_text(size = 8))</code></pre>
+<p><img src="figure/20230504_SmallMoleculeFig.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Plot as ecdf at high dose…</p>
+<pre class="r"><code>MergedEstimatesFromModel.deltas$NewAnnotation %&gt;% unique()</code></pre>
+<pre><code>[1] &quot;AnnotatedJunc_UnproductiveCodingGene&quot;
+[2] &quot;Frame shifting&quot;                      
+[3] &quot;Cassette in UTR&quot;                     
+[4] &quot;Preserves frame&quot;                     
+[5] &quot;In-frame PTC&quot;                        
+[6] &quot;AnnotatedJunc_ProductiveCodingGene&quot;  
+[7] NA                                    </code></pre>
+<pre class="r"><code>MergedEstimatesFromModel.deltas %&gt;%
+  filter(dose.nM==3160) %&gt;%
+  filter(!is.na(NewAnnotation)) %&gt;%
+  filter(NewAnnotation!=&quot;Cassette in UTR&quot;) %&gt;%
+  mutate(PlottingGroup = recode(NewAnnotation, &quot;Preserves frame&quot;=&quot;UnannotatedJunc_ProductiveCodingGene&quot;, &quot;Frame shifting&quot;=&quot;UnannotatedJunc_UnproductiveCodingGene&quot;, &quot;In-frame PTC&quot;=&quot;UnannotatedJunc_UnproductiveCodingGene&quot;)) %&gt;%
+  ggplot(aes(x=Estimate.Expression.FC, color=PlottingGroup)) +
+  geom_vline(xintercept = 0, linetype=&#39;dashed&#39;) +
+  stat_ecdf() +
+  # geom_density() +
+  theme_bw() +
+  labs(x=&quot;Expression FC of host gene&quot;, y=&quot;ecdf&quot;)</code></pre>
+<p><img src="figure/20230504_SmallMoleculeFig.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ColorKey &lt;- c(&quot;UnannotatedJunc_ProductiveCodingGene&quot;=&quot;#a6cee3&quot;, &quot;AnnotatedJunc_ProductiveCodingGene&quot;=&quot;#1f78b4&quot;, &quot;UnannotatedJunc_UnproductiveCodingGene&quot;=&quot;#fb9a99&quot;, &quot;AnnotatedJunc_UnproductiveCodingGene&quot;=&quot;#e31a1c&quot;)
+
+
+MergedEstimatesFromModel.deltas %&gt;%
+  filter(dose.nM==3160) %&gt;%
+  filter(Estimate.Splicing.deltaPSI &gt; 0.1) %&gt;%
+  filter(!is.na(NewAnnotation)) %&gt;%
+  filter(NewAnnotation!=&quot;Cassette in UTR&quot;) %&gt;%
+  mutate(PlottingGroup = recode(NewAnnotation, &quot;Preserves frame&quot;=&quot;UnannotatedJunc_ProductiveCodingGene&quot;, &quot;Frame shifting&quot;=&quot;UnannotatedJunc_UnproductiveCodingGene&quot;, &quot;In-frame PTC&quot;=&quot;UnannotatedJunc_UnproductiveCodingGene&quot;)) %&gt;%
+  mutate(PlottingGroup, factor(PlottingGroup, levels=c(&quot;AnnotatedJunc_ProductiveCodingGene&quot;, &quot;UnannotatedJunc_ProductiveCodingGene&quot;, &quot;AnnotatedJunc_UnproductiveCodingGene&quot;, &quot;UnannotatedJunc_UnproductiveCodingGene&quot;))) %&gt;%
+  ggplot(aes(y=Estimate.Expression.FC, x=PlottingGroup, color=PlottingGroup)) +
+  geom_boxplot(outlier.shape=NA) +
+  geom_jitter(width=0.25) +
+  theme_bw() +
+  scale_color_manual(values=ColorKey) +
+  labs(y=&quot;Host gene log2FC&quot;) +
+  Rotate_x_labels</code></pre>
+<p><img src="figure/20230504_SmallMoleculeFig.Rmd/unnamed-chunk-5-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>MergedEstimatesFromModel.deltas %&gt;%
+  filter(dose.nM==3160) %&gt;%
+  filter(Estimate.Splicing.deltaPSI &gt; 0.1) %&gt;%
+  filter(!is.na(NewAnnotation)) %&gt;%
+  filter(NewAnnotation!=&quot;Cassette in UTR&quot;) %&gt;%
+  mutate(PlottingGroup = recode(NewAnnotation, &quot;Preserves frame&quot;=&quot;Productive&quot;, &quot;Frame shifting&quot;=&quot;Unproductive&quot;, &quot;In-frame PTC&quot;=&quot;Unproductive&quot;, &quot;AnnotatedJunc_UnproductiveCodingGene&quot;=&quot;Unproductive&quot;, &quot;AnnotatedJunc_ProductiveCodingGene&quot;=&quot;Productive&quot;)) %&gt;%
+  mutate(IsAnnotated = str_detect(NewAnnotation, &quot;Annotated&quot;)) %&gt;%
+  # distinct(gene, .keep_all=T) %&gt;%
+  # mutate(PlottingGroup, factor(PlottingGroup, levels=c(&quot;AnnotatedJunc_ProductiveCodingGene&quot;, &quot;UnannotatedJunc_ProductiveCodingGene&quot;, &quot;AnnotatedJunc_UnproductiveCodingGene&quot;, &quot;UnannotatedJunc_UnproductiveCodingGene&quot;))) %&gt;%
+  ggplot(aes(y=Estimate.Expression.FC, x=PlottingGroup, color=PlottingGroup, alpha=IsAnnotated, group=interaction(IsAnnotated, PlottingGroup))) +
+  geom_boxplot(outlier.shape=NA) +
+  geom_point(position=position_jitterdodge(jitter.width=0.125)) +
+  theme_bw() +
+  scale_color_manual(values=c(&quot;Productive&quot;=&quot;#1f78b4&quot;, &quot;Unproductive&quot;=&quot;#e31a1c&quot;)) +
+  labs(y=&quot;Host gene log2FC&quot;) +
+  Rotate_x_labels</code></pre>
+<p><img src="figure/20230504_SmallMoleculeFig.Rmd/unnamed-chunk-5-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Great, now I think we should look at the same gene changes in
+chromatin.</p>
+<pre class="r"><code>chRNA.DE.dat &lt;- read_tsv(&quot;../code/SmallMolecule/chRNA/DE.results.tsv.gz&quot;)
+
+
+chRNA.DE.dat %&gt;%
+    mutate(Sig = FDR&lt;0.1) %&gt;%
+    count(risdiplam_conc, Sig)</code></pre>
+<pre><code># A tibble: 4 × 3
+  risdiplam_conc Sig       n
+           &lt;dbl&gt; &lt;lgl&gt; &lt;int&gt;
+1            100 FALSE 15970
+2            100 TRUE      8
+3           3160 FALSE 12788
+4           3160 TRUE   3190</code></pre>
+<pre class="r"><code>chRNA.DE.dat %&gt;%
+    ggplot(aes(x=logFC, color=FDR&lt;0.1)) +
+    stat_ecdf() +
+    facet_wrap(~risdiplam_conc)</code></pre>
+<p><img src="figure/20230504_SmallMoleculeFig.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>chRNA.DE.dat %&gt;%
+  count()</code></pre>
+<pre><code># A tibble: 1 × 1
+      n
+  &lt;int&gt;
+1 31956</code></pre>
+<pre class="r"><code>MergedEstimatesFromModel.deltas.WithPolyA.And.chRNA &lt;- MergedEstimatesFromModel.deltas %&gt;%
+  filter(dose.nM==3160) %&gt;%
+  # filter(Estimate.Splicing.deltaPSI &gt; 0.1) %&gt;%
+  filter(!is.na(NewAnnotation)) %&gt;%
+  filter(NewAnnotation!=&quot;Cassette in UTR&quot;) %&gt;%
+  mutate(PlottingGroup = recode(NewAnnotation, &quot;Preserves frame&quot;=&quot;Productive&quot;, &quot;Frame shifting&quot;=&quot;Unproductive&quot;, &quot;In-frame PTC&quot;=&quot;Unproductive&quot;, &quot;AnnotatedJunc_UnproductiveCodingGene&quot;=&quot;Unproductive&quot;, &quot;AnnotatedJunc_ProductiveCodingGene&quot;=&quot;Productive&quot;)) %&gt;%
+  mutate(IsAnnotated = str_detect(NewAnnotation, &quot;Annotated&quot;)) %&gt;%
+  dplyr::select(gene, Estimate.Expression.FC, PlottingGroup, IsAnnotated, Intron) %&gt;%
+  left_join(
+    chRNA.DE.dat %&gt;%
+      filter(risdiplam_conc==3160) %&gt;%
+      separate(Geneid, into=c(&quot;gene&quot;, &quot;symbol&quot;), sep=&quot;_&quot;) %&gt;%
+      dplyr::select(gene, logFC) %&gt;%
+      mutate(gene = str_replace(gene, &quot;(^E.+?)\\..+?$&quot;, &quot;\\1&quot;)),
+    by=&quot;gene&quot;
+  )
+
+MergedEstimatesFromModel.deltas.WithPolyA.And.chRNA %&gt;%
+  gather(key=&quot;source&quot;, value=&quot;log2FC&quot;, logFC, Estimate.Expression.FC) %&gt;%
+  mutate(source=recode(source, &quot;logFC&quot;=&quot;chRNA&quot;, &quot;Estimate.Expression.FC&quot;=&quot;polyA&quot;)) %&gt;%
+  ggplot(aes(y=log2FC, x=PlottingGroup, color=PlottingGroup, alpha=IsAnnotated, group=interaction(IsAnnotated, PlottingGroup))) +
+  geom_boxplot(outlier.shape=NA) +
+  geom_point(position=position_jitterdodge(jitter.width=0.125)) +
+  theme_bw() +
+  scale_color_manual(values=c(&quot;Productive&quot;=&quot;#1f78b4&quot;, &quot;Unproductive&quot;=&quot;#e31a1c&quot;)) +
+  facet_wrap(~source) +
+  labs(y=&quot;Host gene log2FC&quot;) +
+  Rotate_x_labels</code></pre>
+<p><img src="figure/20230504_SmallMoleculeFig.Rmd/unnamed-chunk-6-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok, maybe later I will figure out why the chRNA effects sizes are
+positive in both productive and non-productive group… Porbably has
+something to do with library normalization.</p>
+<p>Next I want to make some figures related to the splicing druggable
+genome. <a
+href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6321762/#SD1">This
+paper</a> has a nice supplemental table of small molecule “druggable”
+proteins that I can use to compare… I expect the splicing-modified genes
+to be not particularly enriched in any caetgory, and be more or less
+totally independent with the list of “druggable” proteins… The only
+hypothesis I do have (which I will test below) about what genes are more
+druggable by splicing-mediated expression effects are that longer genes
+(with more introns/exons, more potential for cryptic sites) will be
+enriched.</p>
+<p>I think to do this, it will be uesful to make a list of
+splicing-mediated-risdiplam-effected genes, then an expression-matched
+list of control genes.</p>
+<pre class="r"><code>SplicingDruggableGenes &lt;- MergedEstimatesFromModel.deltas.WithPolyA.And.chRNA %&gt;%
+  filter(PlottingGroup == &quot;Unproductive&quot;) %&gt;%
+  # filter(Estimate.Expression.FC &lt; -0.5) %&gt;%
+  distinct(gene, .keep_all=T)
+
+nrow(SplicingDruggableGenes)</code></pre>
+<pre><code>[1] 203</code></pre>
+<p>Now let’s get an expression-matched list of control genes.</p>
+<pre class="r"><code>exons &lt;- read_tsv(&quot;../code/ReferenceGenome/Annotations/GTFTools_BasicAnnotations/gencode.v34.chromasomal.exons.sorted.bed&quot;, col_names=c(&quot;chrom&quot;, &quot;start&quot;, &quot;stop&quot;, &quot;gene_transcript&quot;, &quot;score&quot;, &quot;strand&quot;))
+
+transcripts_to_genes &lt;- exons %&gt;%
+  distinct(gene_transcript) %&gt;%
+  separate(gene_transcript, into=c(&quot;gene&quot;, &quot;transcript&quot;), sep=&quot;_&quot;) %&gt;%
+  mutate(gene = str_replace(gene, &quot;(^.+?)\\..+?$&quot;, &quot;\\1&quot;))
+
+
+Expression.table.transcripts &lt;- read_tsv(&quot;../code/SmallMolecule/salmon.DMSO.merged.txt&quot;)
+Expression.table.genes &lt;- Expression.table.transcripts %&gt;%
+  inner_join(transcripts_to_genes, by=c(&quot;Name&quot;=&quot;transcript&quot;)) %&gt;%
+  # filter(gene == &quot;ENSG00000213225&quot;)
+  # add_count(gene) %&gt;%
+  # filter(n==2)
+  group_by(gene) %&gt;%
+  summarise_at(vars(contains(&quot;DMSO&quot;)), sum) %&gt;%
+  gather(&quot;sample&quot;, &quot;TPM&quot;, -gene) %&gt;%
+  group_by(gene) %&gt;%
+  summarise(medianTPM = median(TPM))
+
+hist(log2(Expression.table.genes$medianTPM))</code></pre>
+<p><img src="figure/20230504_SmallMoleculeFig.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>Expression.table.genes %&gt;%
+  filter(gene == &quot;ENSG00000111640&quot;)</code></pre>
+<pre><code># A tibble: 1 × 2
+  gene            medianTPM
+  &lt;chr&gt;               &lt;dbl&gt;
+1 ENSG00000111640     4502.</code></pre>
+<pre class="r"><code>Expression.tidyForMatchingGenes &lt;- Expression.table.genes %&gt;%
+  mutate(IsSplicingDruggable = gene %in% SplicingDruggableGenes$gene) %&gt;%
+  arrange(medianTPM) %&gt;%
+  mutate(LaggingGeneGroup = lag(IsSplicingDruggable)) %&gt;%
+  mutate(LeadingGeneGroup = lead(IsSplicingDruggable)) %&gt;%
+  ungroup()
+
+Merged.WithExpressionMatchedControlGenes &lt;- 
+bind_rows(
+  Expression.tidyForMatchingGenes %&gt;%
+    filter(IsSplicingDruggable) %&gt;%
+    mutate(Group = &quot;SplicingPerturbed&quot;),
+  Expression.tidyForMatchingGenes %&gt;%
+    filter(!IsSplicingDruggable &amp; LaggingGeneGroup) %&gt;%
+    mutate(Group = &quot;SplicingUnperturbedControl&quot;),
+  Expression.tidyForMatchingGenes %&gt;%
+    filter(!IsSplicingDruggable &amp; LeadingGeneGroup) %&gt;%
+    mutate(Group = &quot;SplicingUnperturbedControl&quot;),
+) %&gt;%
+  dplyr::select(gene, medianTPM, Group)
+
+Merged.WithExpressionMatchedControlGenes %&gt;%
+  ggplot(aes(medianTPM)) +
+  stat_ecdf() +
+  scale_x_continuous(trans=&#39;log10&#39;) +
+  facet_wrap(~Group)</code></pre>
+<p><img src="figure/20230504_SmallMoleculeFig.Rmd/unnamed-chunk-8-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Now download the supplemental table from <a
+href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6321762/#SD1">This
+paper</a>…</p>
+<pre class="r"><code>url1&lt;-&#39;https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6321762/bin/NIHMS80906-supplement-Table_S1.xlsx&#39;
+p1f &lt;- tempfile()
+download.file(url1, p1f, mode=&quot;wb&quot;)
+p1&lt;-read_excel(path = p1f, sheet = 1)
+
+head(p1)</code></pre>
+<pre><code># A tibble: 6 × 12
+  ensembl_gene_id druggability_tier hgnc_names chr_b37 start_b37  end_b37 strand
+  &lt;chr&gt;           &lt;chr&gt;             &lt;chr&gt;      &lt;chr&gt;       &lt;dbl&gt;    &lt;dbl&gt;  &lt;dbl&gt;
+1 ENSG00000000938 Tier 1            FGR        1        27938575   2.80e7     -1
+2 ENSG00000001626 Tier 1            CFTR       7       117105838   1.17e8      1
+3 ENSG00000001630 Tier 1            CYP51A1    7        91741465   9.18e7     -1
+4 ENSG00000002549 Tier 1            LAP3       4        17578815   1.76e7      1
+5 ENSG00000004468 Tier 1            CD38       4        15779898   1.59e7      1
+6 ENSG00000004478 Tier 1            FKBP4      12        2904119   2.91e6      1
+# … with 5 more variables: description &lt;chr&gt;, no_of_gwas_regions &lt;dbl&gt;,
+#   small_mol_druggable &lt;chr&gt;, bio_druggable &lt;chr&gt;, adme_gene &lt;chr&gt;</code></pre>
+<p>Ok, now let’s add the list of genes in here as well…</p>
+<pre class="r"><code>CodingGenes &lt;- read_tsv(&quot;../data/mart_export.txt.gz&quot;) %&gt;%
+  distinct(`Gene stable ID`) %&gt;%
+  dplyr::select(gene = &quot;Gene stable ID&quot;)
+
+GeneCategories &lt;- p1 %&gt;%
+  filter(small_mol_druggable==&quot;Y&quot;) %&gt;%
+  left_join(Expression.table.genes, by=c(&quot;ensembl_gene_id&quot;=&quot;gene&quot;)) %&gt;%
+  dplyr::select(Group=druggability_tier, gene=ensembl_gene_id, medianTPM) %&gt;%
+  bind_rows(
+    Merged.WithExpressionMatchedControlGenes,
+    Expression.table.genes %&gt;%
+      mutate(Group = &quot;Whole protein coding genome&quot;)
+    ) %&gt;%
+  filter(gene %in% CodingGenes$gene)</code></pre>
+<p>Now let’s inspect for differences in features of genes…</p>
+<pre class="r"><code>GeneCategories %&gt;%
+  ggplot(aes(x=medianTPM, color=Group)) +
+  scale_x_continuous(trans=&#39;log10&#39;) +
+  stat_ecdf()</code></pre>
+<p><img src="figure/20230504_SmallMoleculeFig.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok, perhaps its unsurprising that the splicing perturbed genes (as
+identified in LCLs) have higher expression (as measured in LCLs) than
+the other druggable gene groups.</p>
+<p>Now let’s look at number of exons and or gene length (proxy for how
+likely gene is by chance to contain cryptic splice sites)</p>
+<p>Will used number of exons and gene length of highest expressed
+transcript.</p>
+<pre class="r"><code>TopTranscriptPerGene &lt;- Expression.table.transcripts %&gt;%
+  # # summarise_at(vars(contains(&quot;DMSO&quot;)), sum) %&gt;%
+  gather(&quot;sample&quot;, &quot;TPM&quot;, -Name) %&gt;%
+  group_by(Name) %&gt;%
+  summarise(medianTPM = median(TPM)) %&gt;%
+  inner_join(transcripts_to_genes, by=c(&quot;Name&quot;=&quot;transcript&quot;)) %&gt;%
+  group_by(gene) %&gt;%
+  filter(medianTPM == max(medianTPM)) %&gt;%
+  ungroup() %&gt;%
+  distinct(gene, .keep_all=T)
+
+NumExonsAndLength &lt;- exons %&gt;%
+  group_by(gene_transcript) %&gt;%
+  summarise(NumExons = n(),
+            Min = min(start),
+            Max = max(stop)) %&gt;%
+  mutate(GeneLength = Max - Min) %&gt;%
+  separate(gene_transcript, into=c(&quot;gene&quot;, &quot;transcript&quot;), sep=&quot;_&quot;) %&gt;%
+  filter(transcript %in% TopTranscriptPerGene$Name) %&gt;%
+  mutate(gene = str_replace(gene, &quot;(^.+?)\\..+?$&quot;, &quot;\\1&quot;)) %&gt;%
+  dplyr::select(-Min, -Max)
+
+NumExonsAndLength %&gt;%
+  filter(gene %in% CodingGenes$gene) %&gt;%
+  ggplot(aes(x=GeneLength)) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(1E3, 1E6)) +
+  scale_x_continuous(trans=&#39;log10&#39;) +
+  annotation_logticks() +
+  theme_bw()</code></pre>
+<p><img src="figure/20230504_SmallMoleculeFig.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>GeneCategories %&gt;%
+  left_join(NumExonsAndLength) %&gt;%
+  filter(!Group %in% c(&quot;Tier 2&quot;, &quot;Tier 3A&quot;, &quot;Tier 3B&quot;)) %&gt;%
+  gather(key=&quot;Feature&quot;, value=&quot;value&quot;, NumExons, GeneLength, medianTPM) %&gt;%
+  ggplot(aes(x=value, color=Group)) +
+  stat_ecdf() +
+  scale_x_continuous(trans=&#39;log10&#39;) +
+  annotation_logticks() +
+  facet_wrap(~Feature, scales = &quot;free&quot;) +
+  labs(y=&quot;ecdf&quot;, color=&quot;Druggability gene group&quot;)</code></pre>
+<p><img src="figure/20230504_SmallMoleculeFig.Rmd/unnamed-chunk-12-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Next want to check enrichment of Tier1 (drugged genes),
+SplicingPerturbed, SplicingPerturbed control in different gene
+categories (ie kinase, nuclear receptors,GPCRs etc). I will define the
+categories based on GO categories, as retrieved from <a
+href="https://www.gsea-msigdb.org/gsea/msigdb/human/genesets.jsp?collection=GO:MF">msigdb</a>.
+I expected the Tier1 genes to be enriched in (non-olfactory) GPCRs,
+nuclear hormone receptors, kinases, and ion channels, while I expect
+Splicing perturbed to show no such enrichment.</p>
+<pre class="r"><code>library(biomaRt)
+ensembl = useMart(&quot;ensembl&quot;,dataset=&quot;hsapiens_gene_ensembl&quot;)
+
+ensembl_to_symbols &lt;- getBM(attributes= c(&quot;ensembl_gene_id&quot;,&quot;hgnc_symbol&quot;),mart=ensembl)
+
+#Manually copy paste links from MsigDB
+go=c(
+  &quot;GO:0015075&quot;=&quot;https://www.gsea-msigdb.org/gsea/msigdb/human/download_geneset.jsp?geneSetName=GOMF_MONOATOMIC_ION_TRANSMEMBRANE_TRANSPORTER_ACTIVITY&amp;fileType=grp&quot;,
+  &quot;GO:0004930&quot;=&quot;https://www.gsea-msigdb.org/gsea/msigdb/human/download_geneset.jsp?geneSetName=GOMF_G_PROTEIN_COUPLED_RECEPTOR_ACTIVITY&amp;fileType=grp&quot;,
+  &quot;GO:0004984&quot;=&quot;https://www.gsea-msigdb.org/gsea/msigdb/human/download_geneset.jsp?geneSetName=GOMF_OLFACTORY_RECEPTOR_ACTIVITY&amp;fileType=grp&quot;,
+  &quot;GO:0004879&quot;=&quot;https://www.gsea-msigdb.org/gsea/msigdb/human/download_geneset.jsp?geneSetName=GOMF_NUCLEAR_RECEPTOR_ACTIVITY&amp;fileType=grp&quot;,
+  &quot;GO:0016301&quot;=&quot;https://www.gsea-msigdb.org/gsea/msigdb/human/download_geneset.jsp?geneSetName=GOMF_KINASE_ACTIVITY&amp;fileType=grp&quot;,
+  &quot;GO:0003700&quot;=&quot;https://www.gsea-msigdb.org/gsea/msigdb/human/download_geneset.jsp?geneSetName=GOMF_DNA_BINDING_TRANSCRIPTION_FACTOR_ACTIVITY&amp;fileType=grp&quot;)
+
+GO.genes.of.interest &lt;- lapply(go, read.table, skip=2, col.names=c(&quot;hgnc_symbol&quot;)) %&gt;%
+  bind_rows(.id=&quot;GO&quot;) %&gt;%
+  mutate(GO_Name = recode(GO, !!!go)) %&gt;%
+  mutate(GO_Name = str_replace(GO_Name, &quot;.+?geneSetName=(.+?)&amp;fileType=grp$&quot;, &quot;\\1&quot;)) %&gt;%
+  left_join(ensembl_to_symbols)
+
+GO.genes.of.interest %&gt;%
+  distinct(hgnc_symbol, GO_Name) %&gt;%
+  count(GO_Name)</code></pre>
+<pre><code>                                                 GO_Name    n
+1         GOMF_DNA_BINDING_TRANSCRIPTION_FACTOR_ACTIVITY 1240
+2               GOMF_G_PROTEIN_COUPLED_RECEPTOR_ACTIVITY  845
+3                                   GOMF_KINASE_ACTIVITY  738
+4 GOMF_MONOATOMIC_ION_TRANSMEMBRANE_TRANSPORTER_ACTIVITY  710
+5                         GOMF_NUCLEAR_RECEPTOR_ACTIVITY   46
+6                       GOMF_OLFACTORY_RECEPTOR_ACTIVITY  342</code></pre>
+<pre class="r"><code>GPCRs &lt;- GO.genes.of.interest %&gt;%
+  filter(GO_Name == &quot;GOMF_G_PROTEIN_COUPLED_RECEPTOR_ACTIVITY&quot;) %&gt;%
+  pull(hgnc_symbol) %&gt;% unique() %&gt;%
+  setdiff(
+    GO.genes.of.interest %&gt;%
+      filter(GO_Name == &quot;GOMF_OLFACTORY_RECEPTOR_ACTIVITY&quot;) %&gt;%
+      pull(hgnc_symbol) %&gt;% unique()
+  )</code></pre>
+<p>Ok, now let’s do the fisher/hypergeometric tests to look for
+enrichment gene set enrichment in Tier1 small molecule druggable genes,
+risdiplam-affected, and risdiplam-unaffected, using whole genome
+background as a control.</p>
+<pre class="r"><code>brain.genes &lt;- read_tsv(&quot;../data/tissue_category_rna_brain_Tissue.tsv.gz&quot;)
+
+NumExonsAndLength %&gt;%
+  filter(gene %in% CodingGenes$gene) %&gt;%
+  mutate(BrainEnriched_HumanProteinAtlas = gene %in% brain.genes$Ensembl) %&gt;%
+  ggplot(aes(x=GeneLength, color=BrainEnriched_HumanProteinAtlas)) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(1E3, 1E6)) +
+  scale_x_continuous(trans=&#39;log10&#39;) +
+  annotation_logticks() +
+  theme_bw() +
+  labs(y=&quot;ecdf&quot;)</code></pre>
+<p><img src="figure/20230504_SmallMoleculeFig.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>GO.genes.of.interest %&gt;%
+  filter(ensembl_gene_id %in% CodingGenes$gene) %&gt;%
+  count(GO_Name)</code></pre>
+<pre><code>                                                 GO_Name    n
+1         GOMF_DNA_BINDING_TRANSCRIPTION_FACTOR_ACTIVITY 1319
+2               GOMF_G_PROTEIN_COUPLED_RECEPTOR_ACTIVITY 1004
+3                                   GOMF_KINASE_ACTIVITY  792
+4 GOMF_MONOATOMIC_ION_TRANSMEMBRANE_TRANSPORTER_ACTIVITY  764
+5                         GOMF_NUCLEAR_RECEPTOR_ACTIVITY   51
+6                       GOMF_OLFACTORY_RECEPTOR_ACTIVITY  444</code></pre>
+<pre class="r"><code>GO.genes.of.interest.totest &lt;- 
+  bind_rows(
+    # filter out olfactor GPCRs from GPCR group
+    GO.genes.of.interest %&gt;%
+      filter(ensembl_gene_id %in% CodingGenes$gene) %&gt;%
+      filter(!GO_Name==&quot;GOMF_OLFACTORY_RECEPTOR_ACTIVITY&quot;) %&gt;%
+      filter(!(GO_Name==&quot;GOMF_G_PROTEIN_COUPLED_RECEPTOR_ACTIVITY&quot; &amp; !hgnc_symbol %in% GPCRs)),
+    NumExonsAndLength %&gt;%
+  filter(gene %in% CodingGenes$gene) %&gt;%
+    mutate(GO_Name = case_when(
+      GeneLength &gt; 1E3 &amp; GeneLength &lt; 1E4 ~ &quot;1-10kb&quot;,
+      GeneLength &gt; 1E4 &amp; GeneLength &lt; 5E4 ~ &quot;10-50kb&quot;,
+      GeneLength &gt; 5E4 &amp; GeneLength &lt; 1E5 ~ &quot;50-100kb&quot;,
+      GeneLength &gt; 1E5 ~ &quot;&gt;100kb&quot;,
+      TRUE ~ NA_character_
+    )) %&gt;%
+    filter(!is.na(GO_Name)) %&gt;%
+    dplyr::select(ensembl_gene_id=gene, GO_Name),
+  brain.genes %&gt;%
+    dplyr::select(ensembl_gene_id=Ensembl) %&gt;%
+    mutate(GO_Name = &quot;BrainEnriched_HumanProteinAtlas&quot;) %&gt;%
+    filter(ensembl_gene_id %in% CodingGenes$gene)
+  )
+GO_Categories &lt;- GO.genes.of.interest.totest %&gt;%
+  pull(GO_Name) %&gt;% unique()
+
+count(GO.genes.of.interest.totest, GO_Name)</code></pre>
+<pre><code>                                                  GO_Name    n
+1                                                  1-10kb 4988
+2                                                 10-50kb 7745
+3                                                50-100kb 2615
+4                                                  &gt;100kb 2701
+5                         BrainEnriched_HumanProteinAtlas 2637
+6          GOMF_DNA_BINDING_TRANSCRIPTION_FACTOR_ACTIVITY 1319
+7                GOMF_G_PROTEIN_COUPLED_RECEPTOR_ACTIVITY  579
+8                                    GOMF_KINASE_ACTIVITY  792
+9  GOMF_MONOATOMIC_ION_TRANSMEMBRANE_TRANSPORTER_ACTIVITY  764
+10                         GOMF_NUCLEAR_RECEPTOR_ACTIVITY   51</code></pre>
+<pre class="r"><code>DruggabilityCategories &lt;- GeneCategories %&gt;%
+  filter(!Group==&quot;Whole protein coding genome&quot;) %&gt;% pull(Group) %&gt;% unique()
+DruggabilityCategories</code></pre>
+<pre><code>[1] &quot;Tier 1&quot;                     &quot;Tier 2&quot;                    
+[3] &quot;Tier 3A&quot;                    &quot;Tier 3B&quot;                   
+[5] &quot;SplicingPerturbed&quot;          &quot;SplicingUnperturbedControl&quot;</code></pre>
+<pre class="r"><code>GeneCategories.totest &lt;- GeneCategories %&gt;%
+  sample_frac() %&gt;%
+  group_by(Group) %&gt;%
+  mutate(n = row_number()) %&gt;%
+  ungroup() %&gt;%
+  filter(!Group == &quot;Tier 1&quot; | (Group == &quot;Tier 1&quot; &amp; n &lt;= 116))
+count(GeneCategories.totest, Group)</code></pre>
+<pre><code># A tibble: 7 × 2
+  Group                           n
+  &lt;chr&gt;                       &lt;int&gt;
+1 SplicingPerturbed             203
+2 SplicingUnperturbedControl    371
+3 Tier 1                        116
+4 Tier 2                        648
+5 Tier 3A                        67
+6 Tier 3B                       516
+7 Whole protein coding genome 18484</code></pre>
+<pre class="r"><code>library(broom)
+
+results &lt;- list()
+for (DruggabilitySetName in DruggabilityCategories){
+  for (GO_CategoryName in GO_Categories){
+    print(paste(DruggabilitySetName, GO_CategoryName))
+    DruggabilitySet &lt;- GeneCategories.totest %&gt;%
+      filter(Group==DruggabilitySetName) %&gt;% pull(gene)
+    GO_CategorySet &lt;- GO.genes.of.interest.totest %&gt;%
+      filter(GO_Name==GO_CategoryName) %&gt;% pull(ensembl_gene_id)
+    test.results &lt;- data.frame(gene=CodingGenes$gene) %&gt;%
+      mutate(IsDruggable = gene %in% DruggabilitySet, IsInGO.Set = gene %in% GO_CategorySet) %&gt;%
+      mutate(IsDruggable = factor(IsDruggable),
+             IsInGO.Set = factor(IsInGO.Set)) %&gt;%
+      count(IsDruggable, IsInGO.Set, .drop=F) %&gt;%
+      pivot_wider(names_from=&quot;IsInGO.Set&quot;, values_from=&quot;n&quot;) %&gt;%
+      column_to_rownames(&quot;IsDruggable&quot;) %&gt;%
+      fisher.test() %&gt;% glance()
+    results[[paste(DruggabilitySetName, GO_CategoryName, sep=&quot;;&quot;)]] &lt;- test.results %&gt;%
+      as.data.frame()
+  }
+}</code></pre>
+<pre><code>[1] &quot;Tier 1 GOMF_MONOATOMIC_ION_TRANSMEMBRANE_TRANSPORTER_ACTIVITY&quot;
+[1] &quot;Tier 1 GOMF_G_PROTEIN_COUPLED_RECEPTOR_ACTIVITY&quot;
+[1] &quot;Tier 1 GOMF_NUCLEAR_RECEPTOR_ACTIVITY&quot;
+[1] &quot;Tier 1 GOMF_KINASE_ACTIVITY&quot;
+[1] &quot;Tier 1 GOMF_DNA_BINDING_TRANSCRIPTION_FACTOR_ACTIVITY&quot;
+[1] &quot;Tier 1 1-10kb&quot;
+[1] &quot;Tier 1 10-50kb&quot;
+[1] &quot;Tier 1 50-100kb&quot;
+[1] &quot;Tier 1 &gt;100kb&quot;
+[1] &quot;Tier 1 BrainEnriched_HumanProteinAtlas&quot;
+[1] &quot;Tier 2 GOMF_MONOATOMIC_ION_TRANSMEMBRANE_TRANSPORTER_ACTIVITY&quot;
+[1] &quot;Tier 2 GOMF_G_PROTEIN_COUPLED_RECEPTOR_ACTIVITY&quot;
+[1] &quot;Tier 2 GOMF_NUCLEAR_RECEPTOR_ACTIVITY&quot;
+[1] &quot;Tier 2 GOMF_KINASE_ACTIVITY&quot;
+[1] &quot;Tier 2 GOMF_DNA_BINDING_TRANSCRIPTION_FACTOR_ACTIVITY&quot;
+[1] &quot;Tier 2 1-10kb&quot;
+[1] &quot;Tier 2 10-50kb&quot;
+[1] &quot;Tier 2 50-100kb&quot;
+[1] &quot;Tier 2 &gt;100kb&quot;
+[1] &quot;Tier 2 BrainEnriched_HumanProteinAtlas&quot;
+[1] &quot;Tier 3A GOMF_MONOATOMIC_ION_TRANSMEMBRANE_TRANSPORTER_ACTIVITY&quot;
+[1] &quot;Tier 3A GOMF_G_PROTEIN_COUPLED_RECEPTOR_ACTIVITY&quot;
+[1] &quot;Tier 3A GOMF_NUCLEAR_RECEPTOR_ACTIVITY&quot;
+[1] &quot;Tier 3A GOMF_KINASE_ACTIVITY&quot;
+[1] &quot;Tier 3A GOMF_DNA_BINDING_TRANSCRIPTION_FACTOR_ACTIVITY&quot;
+[1] &quot;Tier 3A 1-10kb&quot;
+[1] &quot;Tier 3A 10-50kb&quot;
+[1] &quot;Tier 3A 50-100kb&quot;
+[1] &quot;Tier 3A &gt;100kb&quot;
+[1] &quot;Tier 3A BrainEnriched_HumanProteinAtlas&quot;
+[1] &quot;Tier 3B GOMF_MONOATOMIC_ION_TRANSMEMBRANE_TRANSPORTER_ACTIVITY&quot;
+[1] &quot;Tier 3B GOMF_G_PROTEIN_COUPLED_RECEPTOR_ACTIVITY&quot;
+[1] &quot;Tier 3B GOMF_NUCLEAR_RECEPTOR_ACTIVITY&quot;
+[1] &quot;Tier 3B GOMF_KINASE_ACTIVITY&quot;
+[1] &quot;Tier 3B GOMF_DNA_BINDING_TRANSCRIPTION_FACTOR_ACTIVITY&quot;
+[1] &quot;Tier 3B 1-10kb&quot;
+[1] &quot;Tier 3B 10-50kb&quot;
+[1] &quot;Tier 3B 50-100kb&quot;
+[1] &quot;Tier 3B &gt;100kb&quot;
+[1] &quot;Tier 3B BrainEnriched_HumanProteinAtlas&quot;
+[1] &quot;SplicingPerturbed GOMF_MONOATOMIC_ION_TRANSMEMBRANE_TRANSPORTER_ACTIVITY&quot;
+[1] &quot;SplicingPerturbed GOMF_G_PROTEIN_COUPLED_RECEPTOR_ACTIVITY&quot;
+[1] &quot;SplicingPerturbed GOMF_NUCLEAR_RECEPTOR_ACTIVITY&quot;
+[1] &quot;SplicingPerturbed GOMF_KINASE_ACTIVITY&quot;
+[1] &quot;SplicingPerturbed GOMF_DNA_BINDING_TRANSCRIPTION_FACTOR_ACTIVITY&quot;
+[1] &quot;SplicingPerturbed 1-10kb&quot;
+[1] &quot;SplicingPerturbed 10-50kb&quot;
+[1] &quot;SplicingPerturbed 50-100kb&quot;
+[1] &quot;SplicingPerturbed &gt;100kb&quot;
+[1] &quot;SplicingPerturbed BrainEnriched_HumanProteinAtlas&quot;
+[1] &quot;SplicingUnperturbedControl GOMF_MONOATOMIC_ION_TRANSMEMBRANE_TRANSPORTER_ACTIVITY&quot;
+[1] &quot;SplicingUnperturbedControl GOMF_G_PROTEIN_COUPLED_RECEPTOR_ACTIVITY&quot;
+[1] &quot;SplicingUnperturbedControl GOMF_NUCLEAR_RECEPTOR_ACTIVITY&quot;
+[1] &quot;SplicingUnperturbedControl GOMF_KINASE_ACTIVITY&quot;
+[1] &quot;SplicingUnperturbedControl GOMF_DNA_BINDING_TRANSCRIPTION_FACTOR_ACTIVITY&quot;
+[1] &quot;SplicingUnperturbedControl 1-10kb&quot;
+[1] &quot;SplicingUnperturbedControl 10-50kb&quot;
+[1] &quot;SplicingUnperturbedControl 50-100kb&quot;
+[1] &quot;SplicingUnperturbedControl &gt;100kb&quot;
+[1] &quot;SplicingUnperturbedControl BrainEnriched_HumanProteinAtlas&quot;</code></pre>
+<pre class="r"><code>results %&gt;%
+  bind_rows(.id=&quot;Druggability_GO&quot;) %&gt;%
+  separate(Druggability_GO, into=c(&quot;Druggability&quot;, &quot;GO category&quot;), sep=&quot;;&quot;) %&gt;%
+  mutate(GO = recode(`GO category`, &quot;GOMF_KINASE_ACTIVITY&quot;=&quot;Kinases&quot;, &quot;GOMF_NUCLEAR_RECEPTOR_ACTIVITY&quot;=&quot;Nuc receptors&quot;, &quot;GOMF_G_PROTEIN_COUPLED_RECEPTOR_ACTIVITY&quot;=&quot;GPCRs&quot;, &quot;GOMF_MONOATOMIC_ION_TRANSMEMBRANE_TRANSPORTER_ACTIVITY&quot;=&quot;Ion transporters&quot;, &quot;GOMF_DNA_BINDING_TRANSCRIPTION_FACTOR_ACTIVITY&quot;=&quot;TFs&quot;)) %&gt;%
+  # pull(GO) %&gt;% unique()
+  mutate(GO = factor(GO, levels=c(&quot;1-10kb&quot;, &quot;10-50kb&quot;, &quot;50-100kb&quot;, &quot;&gt;100kb&quot;, &quot;GPCRs&quot;, &quot;Nuc receptors&quot;, &quot;Kinases&quot;, &quot;Ion transporters&quot;, &quot;TFs&quot;, &quot;BrainEnriched_HumanProteinAtlas&quot;))) %&gt;%
+  filter(Druggability %in% c(&quot;Tier 1&quot;, &quot;SplicingPerturbed&quot;, &quot;SplicingUnperturbedControl&quot;)) %&gt;%
+  ggplot(aes(x=GO, y=log2(estimate), fill=GO)) +
+  geom_col() +
+  geom_errorbar(aes(ymin=log2(conf.low), ymax=log2(conf.high)), width=.2) +
+  geom_hline(yintercept = 0) +
+  Rotate_x_labels +
+  # scale_y_continuous(trans=&quot;log2&quot;) +
+  facet_wrap(~Druggability) +
+  labs(y=&quot;Enrichment; log2(OddsRatio)&quot;, x=&quot;Gene category&quot;, fill=&quot;Gene category&quot;)</code></pre>
+<p><img src="figure/20230504_SmallMoleculeFig.Rmd/unnamed-chunk-14-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>So long genes are over-represented. And from previous literature we
+know long genes are more expressed in brain, but let’s double check that
+from GTEx data…</p>
+<pre class="r"><code>url &lt;- &quot;https://storage.googleapis.com/gtex_analysis_v8/rna_seq_data/GTEx_Analysis_2017-06-05_v8_RNASeQCv1.1.9_gene_median_tpm.gct.gz&quot;
+zip_file &lt;- tempfile(fileext = &quot;.gz&quot;)
+download.file(url, zip_file, mode = &quot;wb&quot;)
+df &lt;- read_tsv(zip_file, skip=2) %&gt;%
+  mutate(gene = str_replace(Name, &quot;(^.+?)\\..+?$&quot;, &quot;\\1&quot;)) %&gt;%
+  filter(gene %in% CodingGenes$gene) %&gt;%
+  inner_join(NumExonsAndLength, by=c(&quot;gene&quot;))
+
+df %&gt;%
+  dplyr::select(GeneLength, 3:56) %&gt;%
+  cor(method=&#39;s&#39;) %&gt;% as.data.frame() %&gt;%
+  dplyr::select(GeneLength) %&gt;%
+  rownames_to_column(&quot;tissue&quot;) %&gt;%
+  filter(!tissue==&quot;GeneLength&quot;) %&gt;%
+  mutate(tissue = fct_reorder(tissue, GeneLength, .desc=T)) %&gt;%
+  mutate(IsBrain = if_else(str_detect(tissue, &quot;Brain&quot;), &quot;Brain&quot;, &quot;Non-brain&quot;)) %&gt;%
+  ggplot(aes(x=tissue, fill=IsBrain, y=GeneLength)) +
+  geom_col() +
+  Rotate_x_labels +
+  labs(y=&quot;expression:length spearman cor&quot;)</code></pre>
+<p><img src="figure/20230504_SmallMoleculeFig.Rmd/unnamed-chunk-15-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok, so despite that I can clearly see that brain genes are enriched
+in long genes, and that the brain-specific genes from human protein
+atlas also skew long, they are not enriched in the short list of
+risdiplam targets. Now let’s make a more final version of this figure,
+by excluding some of the less interesting results, and coloring and
+labelling things nicer…</p>
+<pre class="r"><code>GO.genes.of.interest.totest &lt;- 
+  bind_rows(
+    # filter out olfactor GPCRs from GPCR group
+    GO.genes.of.interest %&gt;%
+      filter(ensembl_gene_id %in% CodingGenes$gene) %&gt;%
+      filter(!GO_Name==&quot;GOMF_OLFACTORY_RECEPTOR_ACTIVITY&quot;) %&gt;%
+      filter(!(GO_Name==&quot;GOMF_G_PROTEIN_COUPLED_RECEPTOR_ACTIVITY&quot; &amp; !hgnc_symbol %in% GPCRs)),
+  NumExonsAndLength %&gt;%
+    filter(gene %in% CodingGenes$gene) %&gt;%
+    # mutate(GO_Name = cut_number(GeneLength, 5, ordered_result=T)) %&gt;%
+    mutate(GO_Name = factor(ntile(GeneLength, 4))) %&gt;%
+    # mutate(GO_Name = cut(GeneLength, breaks=c(-Inf,1E3, 1E4, 1E5, Inf), include.lowest=T)) %&gt;%
+    filter(!is.na(GO_Name)) %&gt;%
+    dplyr::select(ensembl_gene_id=gene, GO_Name)
+  )
+GO_Categories &lt;- GO.genes.of.interest.totest %&gt;%
+  pull(GO_Name) %&gt;% unique()
+
+count(GO.genes.of.interest.totest, GO_Name)</code></pre>
+<pre><code>                                                 GO_Name    n
+1                                                      1 4621
+2                                                      2 4621
+3                                                      3 4621
+4                                                      4 4621
+5         GOMF_DNA_BINDING_TRANSCRIPTION_FACTOR_ACTIVITY 1319
+6               GOMF_G_PROTEIN_COUPLED_RECEPTOR_ACTIVITY  579
+7                                   GOMF_KINASE_ACTIVITY  792
+8 GOMF_MONOATOMIC_ION_TRANSMEMBRANE_TRANSPORTER_ACTIVITY  764
+9                         GOMF_NUCLEAR_RECEPTOR_ACTIVITY   51</code></pre>
+<pre class="r"><code>DruggabilityCategories &lt;- GeneCategories %&gt;%
+  filter(!Group==&quot;Whole protein coding genome&quot;) %&gt;% pull(Group) %&gt;% unique()
+DruggabilityCategories</code></pre>
+<pre><code>[1] &quot;Tier 1&quot;                     &quot;Tier 2&quot;                    
+[3] &quot;Tier 3A&quot;                    &quot;Tier 3B&quot;                   
+[5] &quot;SplicingPerturbed&quot;          &quot;SplicingUnperturbedControl&quot;</code></pre>
+<pre class="r"><code>GeneCategories.totest &lt;- GeneCategories %&gt;%
+  sample_frac() %&gt;%
+  group_by(Group) %&gt;%
+  mutate(n = row_number()) %&gt;%
+  ungroup()
+  # filter(!Group == &quot;Tier 1&quot; | (Group == &quot;Tier 1&quot; &amp; n &lt;= 116))
+count(GeneCategories.totest, Group)</code></pre>
+<pre><code># A tibble: 7 × 2
+  Group                           n
+  &lt;chr&gt;                       &lt;int&gt;
+1 SplicingPerturbed             203
+2 SplicingUnperturbedControl    371
+3 Tier 1                       1059
+4 Tier 2                        648
+5 Tier 3A                        67
+6 Tier 3B                       516
+7 Whole protein coding genome 18484</code></pre>
+<pre class="r"><code>NumExonsAndLength %&gt;%
+    filter(gene %in% CodingGenes$gene) %&gt;% 
+    mutate(N = cut_number(GeneLength, 4)) %&gt;%
+    distinct(N)</code></pre>
+<pre><code># A tibble: 4 × 1
+  N                  
+  &lt;fct&gt;              
+1 (8.21e+03,2.25e+04]
+2 (2.25e+04,5.88e+04]
+3 (5.88e+04,2.3e+06] 
+4 [117,8.21e+03]     </code></pre>
+<pre class="r"><code>results &lt;- list()
+for (DruggabilitySetName in DruggabilityCategories){
+  for (GO_CategoryName in GO_Categories){
+    print(paste(DruggabilitySetName, GO_CategoryName))
+    DruggabilitySet &lt;- GeneCategories.totest %&gt;%
+      filter(Group==DruggabilitySetName) %&gt;% pull(gene)
+    GO_CategorySet &lt;- GO.genes.of.interest.totest %&gt;%
+      filter(GO_Name==GO_CategoryName) %&gt;% pull(ensembl_gene_id)
+    test.results &lt;- data.frame(gene=CodingGenes$gene) %&gt;%
+      mutate(IsDruggable = gene %in% DruggabilitySet, IsInGO.Set = gene %in% GO_CategorySet) %&gt;%
+      mutate(IsDruggable = factor(IsDruggable),
+             IsInGO.Set = factor(IsInGO.Set)) %&gt;%
+      count(IsDruggable, IsInGO.Set, .drop=F) %&gt;%
+      pivot_wider(names_from=&quot;IsInGO.Set&quot;, values_from=&quot;n&quot;) %&gt;%
+      column_to_rownames(&quot;IsDruggable&quot;) %&gt;%
+      fisher.test() %&gt;% glance()
+    results[[paste(DruggabilitySetName, GO_CategoryName, sep=&quot;;&quot;)]] &lt;- test.results %&gt;%
+      as.data.frame()
+  }
+}</code></pre>
+<pre><code>[1] &quot;Tier 1 GOMF_MONOATOMIC_ION_TRANSMEMBRANE_TRANSPORTER_ACTIVITY&quot;
+[1] &quot;Tier 1 GOMF_G_PROTEIN_COUPLED_RECEPTOR_ACTIVITY&quot;
+[1] &quot;Tier 1 GOMF_NUCLEAR_RECEPTOR_ACTIVITY&quot;
+[1] &quot;Tier 1 GOMF_KINASE_ACTIVITY&quot;
+[1] &quot;Tier 1 GOMF_DNA_BINDING_TRANSCRIPTION_FACTOR_ACTIVITY&quot;
+[1] &quot;Tier 1 2&quot;
+[1] &quot;Tier 1 3&quot;
+[1] &quot;Tier 1 4&quot;
+[1] &quot;Tier 1 1&quot;
+[1] &quot;Tier 2 GOMF_MONOATOMIC_ION_TRANSMEMBRANE_TRANSPORTER_ACTIVITY&quot;
+[1] &quot;Tier 2 GOMF_G_PROTEIN_COUPLED_RECEPTOR_ACTIVITY&quot;
+[1] &quot;Tier 2 GOMF_NUCLEAR_RECEPTOR_ACTIVITY&quot;
+[1] &quot;Tier 2 GOMF_KINASE_ACTIVITY&quot;
+[1] &quot;Tier 2 GOMF_DNA_BINDING_TRANSCRIPTION_FACTOR_ACTIVITY&quot;
+[1] &quot;Tier 2 2&quot;
+[1] &quot;Tier 2 3&quot;
+[1] &quot;Tier 2 4&quot;
+[1] &quot;Tier 2 1&quot;
+[1] &quot;Tier 3A GOMF_MONOATOMIC_ION_TRANSMEMBRANE_TRANSPORTER_ACTIVITY&quot;
+[1] &quot;Tier 3A GOMF_G_PROTEIN_COUPLED_RECEPTOR_ACTIVITY&quot;
+[1] &quot;Tier 3A GOMF_NUCLEAR_RECEPTOR_ACTIVITY&quot;
+[1] &quot;Tier 3A GOMF_KINASE_ACTIVITY&quot;
+[1] &quot;Tier 3A GOMF_DNA_BINDING_TRANSCRIPTION_FACTOR_ACTIVITY&quot;
+[1] &quot;Tier 3A 2&quot;
+[1] &quot;Tier 3A 3&quot;
+[1] &quot;Tier 3A 4&quot;
+[1] &quot;Tier 3A 1&quot;
+[1] &quot;Tier 3B GOMF_MONOATOMIC_ION_TRANSMEMBRANE_TRANSPORTER_ACTIVITY&quot;
+[1] &quot;Tier 3B GOMF_G_PROTEIN_COUPLED_RECEPTOR_ACTIVITY&quot;
+[1] &quot;Tier 3B GOMF_NUCLEAR_RECEPTOR_ACTIVITY&quot;
+[1] &quot;Tier 3B GOMF_KINASE_ACTIVITY&quot;
+[1] &quot;Tier 3B GOMF_DNA_BINDING_TRANSCRIPTION_FACTOR_ACTIVITY&quot;
+[1] &quot;Tier 3B 2&quot;
+[1] &quot;Tier 3B 3&quot;
+[1] &quot;Tier 3B 4&quot;
+[1] &quot;Tier 3B 1&quot;
+[1] &quot;SplicingPerturbed GOMF_MONOATOMIC_ION_TRANSMEMBRANE_TRANSPORTER_ACTIVITY&quot;
+[1] &quot;SplicingPerturbed GOMF_G_PROTEIN_COUPLED_RECEPTOR_ACTIVITY&quot;
+[1] &quot;SplicingPerturbed GOMF_NUCLEAR_RECEPTOR_ACTIVITY&quot;
+[1] &quot;SplicingPerturbed GOMF_KINASE_ACTIVITY&quot;
+[1] &quot;SplicingPerturbed GOMF_DNA_BINDING_TRANSCRIPTION_FACTOR_ACTIVITY&quot;
+[1] &quot;SplicingPerturbed 2&quot;
+[1] &quot;SplicingPerturbed 3&quot;
+[1] &quot;SplicingPerturbed 4&quot;
+[1] &quot;SplicingPerturbed 1&quot;
+[1] &quot;SplicingUnperturbedControl GOMF_MONOATOMIC_ION_TRANSMEMBRANE_TRANSPORTER_ACTIVITY&quot;
+[1] &quot;SplicingUnperturbedControl GOMF_G_PROTEIN_COUPLED_RECEPTOR_ACTIVITY&quot;
+[1] &quot;SplicingUnperturbedControl GOMF_NUCLEAR_RECEPTOR_ACTIVITY&quot;
+[1] &quot;SplicingUnperturbedControl GOMF_KINASE_ACTIVITY&quot;
+[1] &quot;SplicingUnperturbedControl GOMF_DNA_BINDING_TRANSCRIPTION_FACTOR_ACTIVITY&quot;
+[1] &quot;SplicingUnperturbedControl 2&quot;
+[1] &quot;SplicingUnperturbedControl 3&quot;
+[1] &quot;SplicingUnperturbedControl 4&quot;
+[1] &quot;SplicingUnperturbedControl 1&quot;</code></pre>
+<pre class="r"><code>results %&gt;%
+  bind_rows(.id=&quot;Druggability_GO&quot;) %&gt;%
+  separate(Druggability_GO, into=c(&quot;Druggability&quot;, &quot;GO category&quot;), sep=&quot;;&quot;) %&gt;%
+  mutate(GO = recode(`GO category`, &quot;GOMF_KINASE_ACTIVITY&quot;=&quot;Kinases&quot;, &quot;GOMF_NUCLEAR_RECEPTOR_ACTIVITY&quot;=&quot;Nuc receptors&quot;, &quot;GOMF_G_PROTEIN_COUPLED_RECEPTOR_ACTIVITY&quot;=&quot;GPCRs&quot;, &quot;GOMF_MONOATOMIC_ION_TRANSMEMBRANE_TRANSPORTER_ACTIVITY&quot;=&quot;Ion transporters&quot;, &quot;GOMF_DNA_BINDING_TRANSCRIPTION_FACTOR_ACTIVITY&quot;=&quot;TFs&quot;)) %&gt;%
+  # filter(!GO==&quot;TFs&quot;) %&gt;%
+  # pull(GO) %&gt;% unique()
+  # mutate(GO = factor(GO, levels=c(&quot;1-10kb&quot;, &quot;10-50kb&quot;, &quot;50-100kb&quot;, &quot;&gt;100kb&quot;, &quot;GPCRs&quot;, &quot;Nuc receptors&quot;, &quot;Kinases&quot;, &quot;Ion transporters&quot;, &quot;TFs&quot;, &quot;BrainEnriched_HumanProteinAtlas&quot;))) %&gt;%
+  filter(Druggability %in% c(&quot;Tier 1&quot;, &quot;SplicingPerturbed&quot;)) %&gt;%
+  mutate(Druggability = recode(Druggability, &quot;Tier 1&quot;=&quot;1059 targets of approved small molecules&quot;, &quot;SplicingPerturbed&quot;=&quot;116 Risdiplam-induced NMD targets&quot;)) %&gt;%
+  ggplot(aes(x=GO, y=log2(estimate), fill=GO)) +
+  geom_col() +
+  geom_errorbar(aes(ymin=log2(conf.low), ymax=log2(conf.high)), width=.2) +
+  geom_hline(yintercept = 0) +
+  Rotate_x_labels +
+  scale_fill_manual(
+    values=c(
+      &quot;1&quot;=&quot;#b2e2e2&quot;,
+      &quot;2&quot;=&quot;#66c2a4&quot;,
+      &quot;3&quot;=&quot;#2ca25f&quot;,
+      &quot;4&quot;=&quot;#006d2c&quot;,
+      &quot;GPCRs&quot;=&quot;#ffffb3&quot;,
+      &quot;Ion transporters&quot;=&quot;#bebada&quot;,
+      &quot;Kinases&quot;=&quot;#fb8072&quot;,
+      &quot;Nuc receptors&quot;=&quot;#80b1d3&quot;,
+      &quot;TFs&quot;=&quot;#fdb462&quot;),
+    labels=c(
+      &quot;1&quot;=&quot;Q1 gene length; &lt;8.2kb&quot;,
+      &quot;2&quot;=&quot;Q2 gene length; 8-23kb&quot;,
+      &quot;3&quot;=&quot;Q3 gene length; 23-59kb&quot;,
+      &quot;4&quot;=&quot;Q4 gene length; &gt;59kb&quot;,
+      &quot;GPCRs&quot;=&quot;GPCRs&quot;,
+      &quot;Ion transporters&quot;,
+      &quot;Kinases&quot;,
+      &quot;Nuc receptors&quot;=&quot;Nuclear receptors&quot;,
+      &quot;TFs&quot;=&quot;Transcription factors&quot;
+    )) +
+  # scale_y_continuous(trans=&quot;log2&quot;) +
+  facet_wrap(~Druggability, labeller = label_wrap_gen(25)) +
+  labs(y=&quot;Enrichment; log2(OddsRatio)&quot;, x=&quot;Gene category&quot;, fill=&quot;Gene category&quot;)</code></pre>
+<p><img src="figure/20230504_SmallMoleculeFig.Rmd/unnamed-chunk-16-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Now let’s do another version of this analysis but with a larger
+category of risdiplam-sensitive genes… For example, just identify the
+potential post-txnal events.</p>
+<pre class="r"><code>polyA.GeneEffects &lt;- small.molecule.dat.genes %&gt;%
+  filter(str_detect(param, &quot;Pred&quot;)) %&gt;%
+  mutate(gene = str_replace(Geneid, &quot;(^.+?)\\..+?$&quot;, &quot;\\1&quot;)) %&gt;%
+  separate(param, into=c(&quot;Dummy&quot;, &quot;dose.nM&quot;), convert=T, sep=&quot;_&quot;) %&gt;%
+  dplyr::select(-Dummy)
+
+SplicingPerturbed &lt;- SplicingDruggableGenes$gene
+
+GeneEffects.Changes &lt;- 
+  inner_join(
+    polyA.GeneEffects %&gt;%
+      filter(dose.nM == 0) %&gt;%
+      dplyr::select(-dose.nM, -Geneid),
+    polyA.GeneEffects %&gt;%
+      filter(dose.nM == 3160) %&gt;%
+      dplyr::select(-dose.nM),
+    by=c(&quot;gene&quot;),
+    suffix=c(&quot;.expression.untreated&quot;, &quot;.expression.treated&quot;)
+  ) %&gt;%
+  mutate(Estimate.Expression.FC = Estimate.expression.treated - Estimate.expression.untreated) %&gt;%
+  mutate(IsGeneEffected = gene %in% SplicingPerturbed ) %&gt;%
+  left_join(
+    chRNA.DE.dat %&gt;%
+      filter(risdiplam_conc==3160) %&gt;%
+      separate(Geneid, into=c(&quot;gene&quot;, &quot;symbol&quot;), sep=&quot;_&quot;) %&gt;%
+      mutate(gene = str_replace(gene, &quot;(^E.+?)\\..+?$&quot;, &quot;\\1&quot;)),
+    by=&quot;gene&quot;
+  ) %&gt;%
+  mutate(z = Estimate.Expression.FC/sqrt((SE.expression.treated + SE.expression.untreated))) %&gt;%
+  mutate(abs.z = abs(z))
+
+#For the life of me I can&#39;t figure out why this didn&#39;t work in a pipe. So I&#39;m assigning the column this way
+GeneEffects.Changes$polyA.P &lt;- 2*pnorm(GeneEffects.Changes$abs.z, lower.tail = F)
+
+GeneEffects.Changes &lt;- GeneEffects.Changes %&gt;%
+  mutate(polyA.FDR = qvalue(polyA.P)$qvalues)
+
+hist(GeneEffects.Changes$polyA.P)</code></pre>
+<p><img src="figure/20230504_SmallMoleculeFig.Rmd/unnamed-chunk-17-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>GeneEffects.Changes %&gt;%
+  ggplot(aes(x=Estimate.Expression.FC, y=logFC)) +
+  geom_point(alpha=0.1) +
+  theme_bw()</code></pre>
+<p><img src="figure/20230504_SmallMoleculeFig.Rmd/unnamed-chunk-17-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>GeneEffects.Changes %&gt;%
+  arrange(IsGeneEffected) %&gt;%
+  ggplot(aes(x=Estimate.Expression.FC, y=logFC, color=IsGeneEffected)) +
+  geom_point(alpha=0.5) +
+  theme_bw()</code></pre>
+<p><img src="figure/20230504_SmallMoleculeFig.Rmd/unnamed-chunk-17-3.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>GeneEffects.Changes %&gt;%
+  arrange(IsGeneEffected) %&gt;%
+  ggplot(aes(x=Estimate.Expression.FC, y=logFC, color=polyA.FDR&lt;0.1)) +
+  geom_point(alpha=0.5) +
+  theme_bw()</code></pre>
+<p><img src="figure/20230504_SmallMoleculeFig.Rmd/unnamed-chunk-17-4.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>GeneEffects.Changes %&gt;%
+  arrange(IsGeneEffected) %&gt;%
+  ggplot(aes(x=Estimate.Expression.FC, y=logFC, color=FDR&lt;0.1)) +
+  geom_point(alpha=0.5) +
+  theme_bw()</code></pre>
+<p><img src="figure/20230504_SmallMoleculeFig.Rmd/unnamed-chunk-17-5.png" width="672" style="display: block; margin: auto;" /></p>
+<p>It’s already obvious that there are more down-regulated genes that
+upregulated genes.</p>
+<p>Let’s do something simple to find the polyA-specific effects…</p>
+<p>Like it must be significant, with FC&lt;0.5 in polyA, and not
+significant in chRNA or significant in oppossite direction.</p>
+<pre class="r"><code>TypesOfChangesClassification &lt;- GeneEffects.Changes %&gt;%
+  mutate(SignificantInPolyA = polyA.FDR&lt;0.1 &amp; abs(Estimate.Expression.FC)&gt;0.5) %&gt;%
+  mutate(SignificantIn_chRNA = FDR&lt;0.05) %&gt;%
+  mutate(SameSignChanges = sign(Estimate.Expression.FC)==sign(logFC)) %&gt;%
+  mutate(IsPolyASpecific = SignificantInPolyA &amp; !(SignificantIn_chRNA &amp; SameSignChanges))
+
+TypesOfChangesClassification %&gt;%
+  filter(IsGeneEffected) %&gt;%
+  count(SignificantInPolyA)</code></pre>
+<pre><code># A tibble: 2 × 2
+  SignificantInPolyA     n
+  &lt;lgl&gt;              &lt;int&gt;
+1 FALSE                101
+2 TRUE                 102</code></pre>
+<pre class="r"><code>TypesOfChangesClassification %&gt;%
+  ggplot(aes(x=Estimate.Expression.FC, y=logFC, color=IsPolyASpecific)) +
+  geom_point(alpha=0.1) +
+  geom_point(data = . %&gt;%
+               filter(IsGeneEffected),
+             color=&#39;black&#39;) +
+  theme_bw()</code></pre>
+<p><img src="figure/20230504_SmallMoleculeFig.Rmd/unnamed-chunk-18-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>LargerSetOfRisdiplamEffectedGenes &lt;- TypesOfChangesClassification %&gt;%
+  filter(IsPolyASpecific)</code></pre>
+<p>Ok now let’s remake that plot with this expanded set of effects…</p>
+<pre class="r"><code>GO.genes.of.interest.totest &lt;- 
+  bind_rows(
+    # filter out olfactor GPCRs from GPCR group
+    GO.genes.of.interest %&gt;%
+      filter(ensembl_gene_id %in% CodingGenes$gene) %&gt;%
+      filter(!GO_Name==&quot;GOMF_OLFACTORY_RECEPTOR_ACTIVITY&quot;) %&gt;%
+      filter(!(GO_Name==&quot;GOMF_G_PROTEIN_COUPLED_RECEPTOR_ACTIVITY&quot; &amp; !hgnc_symbol %in% GPCRs)),
+  NumExonsAndLength %&gt;%
+    filter(gene %in% CodingGenes$gene) %&gt;%
+    # mutate(GO_Name = cut_number(GeneLength, 5, ordered_result=T)) %&gt;%
+    mutate(GO_Name = factor(ntile(GeneLength, 4))) %&gt;%
+    # mutate(GO_Name = cut(GeneLength, breaks=c(-Inf,1E3, 1E4, 1E5, Inf), include.lowest=T)) %&gt;%
+    filter(!is.na(GO_Name)) %&gt;%
+    dplyr::select(ensembl_gene_id=gene, GO_Name)
+  )
+GO_Categories &lt;- GO.genes.of.interest.totest %&gt;%
+  pull(GO_Name) %&gt;% unique()
+
+count(GO.genes.of.interest.totest, GO_Name)</code></pre>
+<pre><code>                                                 GO_Name    n
+1                                                      1 4621
+2                                                      2 4621
+3                                                      3 4621
+4                                                      4 4621
+5         GOMF_DNA_BINDING_TRANSCRIPTION_FACTOR_ACTIVITY 1319
+6               GOMF_G_PROTEIN_COUPLED_RECEPTOR_ACTIVITY  579
+7                                   GOMF_KINASE_ACTIVITY  792
+8 GOMF_MONOATOMIC_ION_TRANSMEMBRANE_TRANSPORTER_ACTIVITY  764
+9                         GOMF_NUCLEAR_RECEPTOR_ACTIVITY   51</code></pre>
+<pre class="r"><code>DruggabilityCategories.totest.df &lt;- GeneCategories %&gt;%
+  sample_frac() %&gt;%
+  group_by(Group) %&gt;%
+  mutate(n = row_number()) %&gt;%
+  ungroup() %&gt;%
+  # filter(!Group == &quot;Tier 1&quot; | (Group == &quot;Tier 1&quot; &amp; n &lt;= 116))
+  bind_rows(
+    LargerSetOfRisdiplamEffectedGenes %&gt;%
+      dplyr::select(gene) %&gt;%
+      filter(gene %in% CodingGenes$gene) %&gt;%
+      mutate(Group = &quot;Larger set of risdiplam-effected&quot;)
+  )
+count(DruggabilityCategories.totest.df, Group)</code></pre>
+<pre><code># A tibble: 8 × 2
+  Group                                n
+  &lt;chr&gt;                            &lt;int&gt;
+1 Larger set of risdiplam-effected  1114
+2 SplicingPerturbed                  203
+3 SplicingUnperturbedControl         371
+4 Tier 1                            1059
+5 Tier 2                             648
+6 Tier 3A                             67
+7 Tier 3B                            516
+8 Whole protein coding genome      18484</code></pre>
+<pre class="r"><code>DruggabilityCategories &lt;- DruggabilityCategories.totest.df %&gt;%
+  filter(!Group==&quot;Whole protein coding genome&quot;) %&gt;% pull(Group) %&gt;% unique()
+DruggabilityCategories</code></pre>
+<pre><code>[1] &quot;Tier 2&quot;                           &quot;Tier 3B&quot;                         
+[3] &quot;Tier 1&quot;                           &quot;SplicingUnperturbedControl&quot;      
+[5] &quot;SplicingPerturbed&quot;                &quot;Tier 3A&quot;                         
+[7] &quot;Larger set of risdiplam-effected&quot;</code></pre>
+<pre class="r"><code>NumExonsAndLength %&gt;%
+    filter(gene %in% CodingGenes$gene) %&gt;% 
+    mutate(N = cut_number(GeneLength, 4)) %&gt;%
+    distinct(N)</code></pre>
+<pre><code># A tibble: 4 × 1
+  N                  
+  &lt;fct&gt;              
+1 (8.21e+03,2.25e+04]
+2 (2.25e+04,5.88e+04]
+3 (5.88e+04,2.3e+06] 
+4 [117,8.21e+03]     </code></pre>
+<pre class="r"><code>results &lt;- list()
+for (DruggabilitySetName in DruggabilityCategories){
+  for (GO_CategoryName in GO_Categories){
+    print(paste(DruggabilitySetName, GO_CategoryName))
+    DruggabilitySet &lt;- DruggabilityCategories.totest.df %&gt;%
+      filter(Group==DruggabilitySetName) %&gt;% pull(gene)
+    GO_CategorySet &lt;- GO.genes.of.interest.totest %&gt;%
+      filter(GO_Name==GO_CategoryName) %&gt;% pull(ensembl_gene_id)
+    test.results &lt;- data.frame(gene=CodingGenes$gene) %&gt;%
+      mutate(IsDruggable = gene %in% DruggabilitySet, IsInGO.Set = gene %in% GO_CategorySet) %&gt;%
+      mutate(IsDruggable = factor(IsDruggable),
+             IsInGO.Set = factor(IsInGO.Set)) %&gt;%
+      count(IsDruggable, IsInGO.Set, .drop=F) %&gt;%
+      pivot_wider(names_from=&quot;IsInGO.Set&quot;, values_from=&quot;n&quot;) %&gt;%
+      column_to_rownames(&quot;IsDruggable&quot;) %&gt;%
+      fisher.test() %&gt;% glance()
+    results[[paste(DruggabilitySetName, GO_CategoryName, sep=&quot;;&quot;)]] &lt;- test.results %&gt;%
+      as.data.frame()
+  }
+}</code></pre>
+<pre><code>[1] &quot;Tier 2 GOMF_MONOATOMIC_ION_TRANSMEMBRANE_TRANSPORTER_ACTIVITY&quot;
+[1] &quot;Tier 2 GOMF_G_PROTEIN_COUPLED_RECEPTOR_ACTIVITY&quot;
+[1] &quot;Tier 2 GOMF_NUCLEAR_RECEPTOR_ACTIVITY&quot;
+[1] &quot;Tier 2 GOMF_KINASE_ACTIVITY&quot;
+[1] &quot;Tier 2 GOMF_DNA_BINDING_TRANSCRIPTION_FACTOR_ACTIVITY&quot;
+[1] &quot;Tier 2 2&quot;
+[1] &quot;Tier 2 3&quot;
+[1] &quot;Tier 2 4&quot;
+[1] &quot;Tier 2 1&quot;
+[1] &quot;Tier 3B GOMF_MONOATOMIC_ION_TRANSMEMBRANE_TRANSPORTER_ACTIVITY&quot;
+[1] &quot;Tier 3B GOMF_G_PROTEIN_COUPLED_RECEPTOR_ACTIVITY&quot;
+[1] &quot;Tier 3B GOMF_NUCLEAR_RECEPTOR_ACTIVITY&quot;
+[1] &quot;Tier 3B GOMF_KINASE_ACTIVITY&quot;
+[1] &quot;Tier 3B GOMF_DNA_BINDING_TRANSCRIPTION_FACTOR_ACTIVITY&quot;
+[1] &quot;Tier 3B 2&quot;
+[1] &quot;Tier 3B 3&quot;
+[1] &quot;Tier 3B 4&quot;
+[1] &quot;Tier 3B 1&quot;
+[1] &quot;Tier 1 GOMF_MONOATOMIC_ION_TRANSMEMBRANE_TRANSPORTER_ACTIVITY&quot;
+[1] &quot;Tier 1 GOMF_G_PROTEIN_COUPLED_RECEPTOR_ACTIVITY&quot;
+[1] &quot;Tier 1 GOMF_NUCLEAR_RECEPTOR_ACTIVITY&quot;
+[1] &quot;Tier 1 GOMF_KINASE_ACTIVITY&quot;
+[1] &quot;Tier 1 GOMF_DNA_BINDING_TRANSCRIPTION_FACTOR_ACTIVITY&quot;
+[1] &quot;Tier 1 2&quot;
+[1] &quot;Tier 1 3&quot;
+[1] &quot;Tier 1 4&quot;
+[1] &quot;Tier 1 1&quot;
+[1] &quot;SplicingUnperturbedControl GOMF_MONOATOMIC_ION_TRANSMEMBRANE_TRANSPORTER_ACTIVITY&quot;
+[1] &quot;SplicingUnperturbedControl GOMF_G_PROTEIN_COUPLED_RECEPTOR_ACTIVITY&quot;
+[1] &quot;SplicingUnperturbedControl GOMF_NUCLEAR_RECEPTOR_ACTIVITY&quot;
+[1] &quot;SplicingUnperturbedControl GOMF_KINASE_ACTIVITY&quot;
+[1] &quot;SplicingUnperturbedControl GOMF_DNA_BINDING_TRANSCRIPTION_FACTOR_ACTIVITY&quot;
+[1] &quot;SplicingUnperturbedControl 2&quot;
+[1] &quot;SplicingUnperturbedControl 3&quot;
+[1] &quot;SplicingUnperturbedControl 4&quot;
+[1] &quot;SplicingUnperturbedControl 1&quot;
+[1] &quot;SplicingPerturbed GOMF_MONOATOMIC_ION_TRANSMEMBRANE_TRANSPORTER_ACTIVITY&quot;
+[1] &quot;SplicingPerturbed GOMF_G_PROTEIN_COUPLED_RECEPTOR_ACTIVITY&quot;
+[1] &quot;SplicingPerturbed GOMF_NUCLEAR_RECEPTOR_ACTIVITY&quot;
+[1] &quot;SplicingPerturbed GOMF_KINASE_ACTIVITY&quot;
+[1] &quot;SplicingPerturbed GOMF_DNA_BINDING_TRANSCRIPTION_FACTOR_ACTIVITY&quot;
+[1] &quot;SplicingPerturbed 2&quot;
+[1] &quot;SplicingPerturbed 3&quot;
+[1] &quot;SplicingPerturbed 4&quot;
+[1] &quot;SplicingPerturbed 1&quot;
+[1] &quot;Tier 3A GOMF_MONOATOMIC_ION_TRANSMEMBRANE_TRANSPORTER_ACTIVITY&quot;
+[1] &quot;Tier 3A GOMF_G_PROTEIN_COUPLED_RECEPTOR_ACTIVITY&quot;
+[1] &quot;Tier 3A GOMF_NUCLEAR_RECEPTOR_ACTIVITY&quot;
+[1] &quot;Tier 3A GOMF_KINASE_ACTIVITY&quot;
+[1] &quot;Tier 3A GOMF_DNA_BINDING_TRANSCRIPTION_FACTOR_ACTIVITY&quot;
+[1] &quot;Tier 3A 2&quot;
+[1] &quot;Tier 3A 3&quot;
+[1] &quot;Tier 3A 4&quot;
+[1] &quot;Tier 3A 1&quot;
+[1] &quot;Larger set of risdiplam-effected GOMF_MONOATOMIC_ION_TRANSMEMBRANE_TRANSPORTER_ACTIVITY&quot;
+[1] &quot;Larger set of risdiplam-effected GOMF_G_PROTEIN_COUPLED_RECEPTOR_ACTIVITY&quot;
+[1] &quot;Larger set of risdiplam-effected GOMF_NUCLEAR_RECEPTOR_ACTIVITY&quot;
+[1] &quot;Larger set of risdiplam-effected GOMF_KINASE_ACTIVITY&quot;
+[1] &quot;Larger set of risdiplam-effected GOMF_DNA_BINDING_TRANSCRIPTION_FACTOR_ACTIVITY&quot;
+[1] &quot;Larger set of risdiplam-effected 2&quot;
+[1] &quot;Larger set of risdiplam-effected 3&quot;
+[1] &quot;Larger set of risdiplam-effected 4&quot;
+[1] &quot;Larger set of risdiplam-effected 1&quot;</code></pre>
+<pre class="r"><code>results %&gt;%
+  bind_rows(.id=&quot;Druggability_GO&quot;) %&gt;%
+  separate(Druggability_GO, into=c(&quot;Druggability&quot;, &quot;GO category&quot;), sep=&quot;;&quot;) %&gt;%
+  mutate(GO = recode(`GO category`, &quot;GOMF_KINASE_ACTIVITY&quot;=&quot;Kinases&quot;, &quot;GOMF_NUCLEAR_RECEPTOR_ACTIVITY&quot;=&quot;Nuc receptors&quot;, &quot;GOMF_G_PROTEIN_COUPLED_RECEPTOR_ACTIVITY&quot;=&quot;GPCRs&quot;, &quot;GOMF_MONOATOMIC_ION_TRANSMEMBRANE_TRANSPORTER_ACTIVITY&quot;=&quot;Ion transporters&quot;, &quot;GOMF_DNA_BINDING_TRANSCRIPTION_FACTOR_ACTIVITY&quot;=&quot;TFs&quot;)) %&gt;%
+  # filter(!GO==&quot;TFs&quot;) %&gt;%
+  # pull(GO) %&gt;% unique()
+  # mutate(GO = factor(GO, levels=c(&quot;1-10kb&quot;, &quot;10-50kb&quot;, &quot;50-100kb&quot;, &quot;&gt;100kb&quot;, &quot;GPCRs&quot;, &quot;Nuc receptors&quot;, &quot;Kinases&quot;, &quot;Ion transporters&quot;, &quot;TFs&quot;, &quot;BrainEnriched_HumanProteinAtlas&quot;))) %&gt;%
+  filter(Druggability %in% c(&quot;Tier 1&quot;, &quot;SplicingPerturbed&quot;, &quot;Larger set of risdiplam-effected&quot;)) %&gt;%
+  mutate(Druggability = recode(Druggability, &quot;Tier 1&quot;=&quot;1059 targets of approved small molecules&quot;, &quot;SplicingPerturbed&quot;=&quot;116 Risdiplam-induced NMD targets&quot;, &quot;Larger set of risdiplam-effected&quot;=&quot;Larger set&quot;)) %&gt;%
+  ggplot(aes(x=GO, y=log2(estimate), fill=GO)) +
+  geom_col() +
+  geom_errorbar(aes(ymin=log2(conf.low), ymax=log2(conf.high)), width=.2) +
+  geom_hline(yintercept = 0) +
+  Rotate_x_labels +
+  scale_fill_manual(
+    values=c(
+      &quot;1&quot;=&quot;#b2e2e2&quot;,
+      &quot;2&quot;=&quot;#66c2a4&quot;,
+      &quot;3&quot;=&quot;#2ca25f&quot;,
+      &quot;4&quot;=&quot;#006d2c&quot;,
+      &quot;GPCRs&quot;=&quot;#ffffb3&quot;,
+      &quot;Ion transporters&quot;=&quot;#bebada&quot;,
+      &quot;Kinases&quot;=&quot;#fb8072&quot;,
+      &quot;Nuc receptors&quot;=&quot;#80b1d3&quot;,
+      &quot;TFs&quot;=&quot;#fdb462&quot;),
+    labels=c(
+      &quot;1&quot;=&quot;Q1 gene length; &lt;8.2kb&quot;,
+      &quot;2&quot;=&quot;Q2 gene length; 8-23kb&quot;,
+      &quot;3&quot;=&quot;Q3 gene length; 23-59kb&quot;,
+      &quot;4&quot;=&quot;Q4 gene length; &gt;59kb&quot;,
+      &quot;GPCRs&quot;=&quot;GPCRs&quot;,
+      &quot;Ion transporters&quot;,
+      &quot;Kinases&quot;,
+      &quot;Nuc receptors&quot;=&quot;Nuclear receptors&quot;,
+      &quot;TFs&quot;=&quot;Transcription factors&quot;
+    )) +
+  # scale_y_continuous(trans=&quot;log2&quot;) +
+  facet_wrap(~Druggability, labeller = label_wrap_gen(25)) +
+  labs(y=&quot;Enrichment; log2(OddsRatio)&quot;, x=&quot;Gene category&quot;, fill=&quot;Gene category&quot;)</code></pre>
+<p><img src="figure/20230504_SmallMoleculeFig.Rmd/unnamed-chunk-19-1.png" width="672" style="display: block; margin: auto;" />
+## Making final figs…</p>
+<p>Ok so I’ve done enough exploring I know in detail what I want to
+plot:</p>
+<ul>
+<li>Plot of induction of GAGT introns specifically in chRNA and polyA
+(main)</li>
+<li>A barplots of expression effect in chRNA and polyA, grouped by
+whether induced exons are productive or unproductive. (main)</li>
+<li>barplot of induced exons and proportion which are “poison” and why.
+(Supplement, possibly main)</li>
+<li>The druggability gene enrichment barplots comparing genes w/
+ris-induced poison exons (not based on expression effects) (main)</li>
+<li>the druggability gene enrichment barplot comparing genes w/
+post-txnal downregulation (Supplement)</li>
+<li>the polyA vs chRNA gene expression effect scatter, highlighting
+various categories (Supplement)</li>
+<li>polyA volcano at high dose, at low dose (Supplement)</li>
+<li>the splicing vs expression beta faceted by predicted splicing effect
+(ie frame shift, in-frame PTC, frame-preserving, etc) (Supplement)</li>
+</ul>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.2.0 (2022-04-22)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: CentOS Linux 7 (Core)
+
+Matrix products: default
+BLAS/LAPACK: /software/openblas-0.3.13-el7-x86_64/lib/libopenblas_haswellp-r0.3.13.so
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8 LC_NUMERIC=C         LC_TIME=C           
+ [4] LC_COLLATE=C         LC_MONETARY=C        LC_MESSAGES=C       
+ [7] LC_PAPER=C           LC_NAME=C            LC_ADDRESS=C        
+[10] LC_TELEPHONE=C       LC_MEASUREMENT=C     LC_IDENTIFICATION=C 
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] broom_0.8.0        biomaRt_2.52.0     qvalue_2.28.0      readxl_1.4.0      
+ [5] edgeR_3.38.4       limma_3.52.4       data.table_1.14.2  RColorBrewer_1.1-3
+ [9] forcats_0.5.1      stringr_1.4.0      dplyr_1.0.9        purrr_0.3.4       
+[13] readr_2.1.2        tidyr_1.2.0        tibble_3.1.7       ggplot2_3.3.6     
+[17] tidyverse_1.3.1   
+
+loaded via a namespace (and not attached):
+ [1] bitops_1.0-7           fs_1.5.2               lubridate_1.8.0       
+ [4] bit64_4.0.5            filelock_1.0.2         progress_1.2.2        
+ [7] httr_1.4.3             GenomeInfoDb_1.32.2    rprojroot_2.0.3       
+[10] tools_4.2.0            backports_1.4.1        bslib_0.3.1           
+[13] utf8_1.2.2             R6_2.5.1               BiocGenerics_0.42.0   
+[16] DBI_1.1.2              colorspace_2.0-3       withr_2.5.0           
+[19] prettyunits_1.1.1      tidyselect_1.1.2       curl_4.3.2            
+[22] bit_4.0.4              compiler_4.2.0         git2r_0.30.1          
+[25] Biobase_2.56.0         cli_3.3.0              rvest_1.0.2           
+[28] xml2_1.3.3             labeling_0.4.2         sass_0.4.1            
+[31] scales_1.2.0           rappdirs_0.3.3         digest_0.6.29         
+[34] rmarkdown_2.14         XVector_0.36.0         pkgconfig_2.0.3       
+[37] htmltools_0.5.2        dbplyr_2.1.1           fastmap_1.1.0         
+[40] highr_0.9              rlang_1.0.2            rstudioapi_0.13       
+[43] RSQLite_2.2.14         jquerylib_0.1.4        farver_2.1.0          
+[46] generics_0.1.2         jsonlite_1.8.0         vroom_1.5.7           
+[49] RCurl_1.98-1.7         magrittr_2.0.3         GenomeInfoDbData_1.2.8
+[52] S4Vectors_0.34.0       Rcpp_1.0.8.3           munsell_0.5.0         
+[55] fansi_1.0.3            lifecycle_1.0.1        stringi_1.7.6         
+[58] yaml_2.3.5             zlibbioc_1.42.0        BiocFileCache_2.4.0   
+[61] plyr_1.8.7             grid_4.2.0             blob_1.2.3            
+[64] parallel_4.2.0         promises_1.2.0.1       crayon_1.5.1          
+[67] lattice_0.20-45        Biostrings_2.64.0      haven_2.5.0           
+[70] splines_4.2.0          KEGGREST_1.36.2        hms_1.1.1             
+[73] locfit_1.5-9.7         knitr_1.39             pillar_1.7.0          
+[76] reshape2_1.4.4         stats4_4.2.0           reprex_2.0.1          
+[79] XML_3.99-0.14          glue_1.6.2             evaluate_0.15         
+[82] modelr_0.1.8           png_0.1-7              vctrs_0.4.1           
+[85] tzdb_0.3.0             httpuv_1.6.5           cellranger_1.1.0      
+[88] gtable_0.3.0           assertthat_0.2.1       cachem_1.0.6          
+[91] xfun_0.30              later_1.3.0            IRanges_2.30.0        
+[94] memoise_2.0.1          AnnotationDbi_1.58.0   workflowr_1.7.0       
+[97] ellipsis_0.3.2        </code></pre>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,928 @@
+---
+title: "20230504_SmallMoleculeFig"
+output: html_document
+date: '2023-05-04'
+---
+
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+
+library(tidyverse)
+library(RColorBrewer)
+library(data.table)
+library(edgeR)
+library(readxl)
+library(qvalue)
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family="Helvetica")))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+```
+
+```{r}
+IntronAnnotatins <- read_tsv("../data/IntronAnnotationsFromYang.tsv.gz") %>%
+  mutate(chrom = str_remove_all(chrom, "chr")) %>%
+  mutate(Intron = paste(chrom, start, end, sep=":")) %>%
+  filter(!str_detect(SuperAnnotation, "NoncodingGene"))
+
+small.molecule.dat.genes <- read_tsv("../code/SmallMolecule/FitModels/polyA_genes.tsv.gz")
+
+# Model fits using PSI using intron trios
+small.molecule.dat.introns <- read_tsv("../code/SmallMolecule/FitModels/polyA_GAGTIntrons_asPSI.tsv.gz") %>%
+  mutate(Intron = str_replace(junc, "^chr(.+?):[+-]$", "\\1")) %>%
+  left_join(IntronAnnotatins)
+
+
+ClusterSignificance <- Sys.glob("../code/SmallMolecule/leafcutter/ds/chRNA_risdiplam_*_cluster_significance.txt") %>%
+  setNames(str_replace(., "../code/SmallMolecule/leafcutter/ds/chRNA_risdiplam_(.+?)_cluster_significance.txt", "\\1")) %>%
+  lapply(read_tsv) %>%
+  bind_rows(.id="dose.nM")
+
+EffectSizes <- Sys.glob("../code/SmallMolecule/leafcutter/ds/chRNA_risdiplam_*_effect_sizes.txt") %>%
+  setNames(str_replace(., "../code/SmallMolecule/leafcutter/ds/chRNA_risdiplam_(.+?)_effect_sizes.txt", "\\1")) %>%
+  lapply(read_tsv) %>%
+  bind_rows(.id="dose.nM") %>%
+  mutate(cluster = str_replace(intron, "^(.+?):.+?:.+?(:clu_.+$)", "\\1\\2"))
+
+chRNA.splicing.dat <- inner_join(EffectSizes, ClusterSignificance)
+
+
+
+Translated.GAGT_CassetteExons <- read_tsv("../code/SmallMolecule/CassetteExons/ExonsToTranslate.Translated.tsv.gz") %>%
+  dplyr::select(-chrom, -Strand) %>%
+  mutate(TranslationDiff = str_length(IncludedTranslation) - str_length(SkippedTranslation)) %>%
+  mutate(InFrame = str_length(IncludedTranslation)-str_length(SkippedTranslation)==(ExonStop_Cassette-ExonStart_Cassette)/3) %>%
+  mutate(ExonRemainder = (ExonStop_Cassette - ExonStart_Cassette)%%3) %>%
+  mutate(Effect = case_when(
+    is.na(InFrame) ~ "Cassette in UTR",
+    InFrame ~ "Preserves frame",
+    ExonRemainder %in% c(1,2) ~ "Frame shifting",
+    InFrame == F ~ "In-frame PTC",
+  ))
+
+PolyA.SplicingEffects.Annotationed <- small.molecule.dat.introns %>%
+  left_join(Translated.GAGT_CassetteExons, by=c("junc"="GAGTInt")) %>%
+  filter(!(is.na(gene.x) & is.na(gene.y))) %>%
+  mutate(NewAnnotation = case_when(
+    SuperAnnotation %in% c("AnnotatedJunc_UnproductiveCodingGene", "AnnotatedJunc_ProductiveCodingGene") ~ SuperAnnotation,
+    TRUE ~ Effect
+  )) %>%
+  filter(!is.na(NewAnnotation)) %>%
+  mutate(gene = case_when(
+    SuperAnnotation %in% c("AnnotatedJunc_UnproductiveCodingGene", "AnnotatedJunc_ProductiveCodingGene") ~ gene.x,
+    TRUE ~ gene.y
+  )) %>%
+  dplyr::select(-gene.x, -gene.y)
+
+
+PolyA.SplicingEffects.Annotationed %>%
+  distinct(junc, .keep_all=T) %>%
+  filter(!str_detect(NewAnnotation, "Annotated")) %>%
+  count(ExonRemainder, NewAnnotation) %>%
+  ggplot(aes(x=ExonRemainder, y=n, fill=NewAnnotation)) +
+  geom_col(position='stack') +
+  labs(x="CassetteExon Length %% 3", y="Count", fill="Effect of exon inclusion", title="Custom annotation of unannotated SM-induced exons")
+
+small.molecule.dat.genes %>% distinct(Geneid) %>% nrow()
+
+MergedEstimatesFromModel <- right_join(
+  PolyA.SplicingEffects.Annotationed %>%
+    filter(str_detect(param, "Pred")) %>%
+    mutate(gene = str_replace(gene, "(^.+?)\\..+?$", "\\1")),
+  small.molecule.dat.genes %>%
+    filter(str_detect(param, "Pred")) %>%
+    mutate(gene = str_replace(Geneid, "(^.+?)\\..+?$", "\\1")),
+  by=c("gene", "param"),
+  suffix=c(".splicing", ".expression")
+) %>%
+  separate(param, into=c("Dummy", "dose.nM"), convert=T, sep="_") %>%
+  dplyr::select(-Dummy)
+
+
+```
+
+Now calculate difference between PSI at dose!=0 and dose==0..
+
+```{r}
+MergedEstimatesFromModel.deltas <- 
+  inner_join(
+    MergedEstimatesFromModel %>%
+      filter(dose.nM == 0) %>%
+      dplyr::select(Estimate.splicing, SE.splicing, Estimate.expression, SE.expression, junc, gene),
+    MergedEstimatesFromModel %>%
+      filter(!dose.nM == 0),
+    by=c("junc", "gene"),
+    suffix=c(".untreated", ".treated")
+  ) %>%
+  mutate(Estimate.Expression.FC = Estimate.expression.treated - Estimate.expression.untreated) %>%
+  mutate(Estimate.Splicing.deltaPSI = Estimate.splicing.treated - Estimate.splicing.untreated) %>%
+  mutate(Estimate.Splicing.FC = log2(Estimate.splicing.treated / Estimate.splicing.untreated))
+
+```
+
+Now plot using the old annotations (filling in unproductive whenever one doesn't exist, since all of that's how they would be annotated using Yang and my previous scheme anyway)
+
+```{r}
+MergedEstimatesFromModel.deltas %>%
+  replace_na(list(SuperAnnotation = "NewlyAnnotated as\nUnnnotatedJunc_UnproductiveCodingGene")) %>%
+  mutate(PlottingGroup = str_replace_all(SuperAnnotation, "_", " ")) %>%
+  ggplot(aes(x=Estimate.Splicing.deltaPSI, y=Estimate.Expression.FC)) +
+  geom_hline(yintercept = 0, linetype='dashed') +
+  geom_point() +
+  facet_grid(PlottingGroup~dose.nM, labeller = label_wrap_gen()) +
+  # facet_grid(~dose.nM) +
+  theme_bw() +
+  labs(x="Splicing change\nDeltaPSI of GAGT intron", y="Expression change\nlog2FC of host gene") +
+  theme(strip.text.y = element_text(size = 8))
+```
+
+
+```{r}
+
+MergedEstimatesFromModel.deltas %>%
+  filter(!is.na(NewAnnotation)) %>%
+  mutate(PlottingGroup = str_replace_all(NewAnnotation, "_", " ")) %>%
+  ggplot(aes(x=Estimate.Splicing.deltaPSI, y=Estimate.Expression.FC)) +
+  geom_hline(yintercept = 0, linetype='dashed') +
+  geom_point() +
+  facet_grid(PlottingGroup~dose.nM, labeller = label_wrap_gen()) +
+  # facet_grid(~dose.nM) +
+  theme_bw() +
+  labs(x="Splicing change\nDeltaPSI of GAGT intron", y="Expression change\nlog2FC of host gene") +
+  theme(strip.text.y = element_text(size = 8))
+```
+
+
+Plot as ecdf at high dose...
+
+```{r}
+MergedEstimatesFromModel.deltas$NewAnnotation %>% unique()
+
+MergedEstimatesFromModel.deltas %>%
+  filter(dose.nM==3160) %>%
+  filter(!is.na(NewAnnotation)) %>%
+  filter(NewAnnotation!="Cassette in UTR") %>%
+  mutate(PlottingGroup = recode(NewAnnotation, "Preserves frame"="UnannotatedJunc_ProductiveCodingGene", "Frame shifting"="UnannotatedJunc_UnproductiveCodingGene", "In-frame PTC"="UnannotatedJunc_UnproductiveCodingGene")) %>%
+  ggplot(aes(x=Estimate.Expression.FC, color=PlottingGroup)) +
+  geom_vline(xintercept = 0, linetype='dashed') +
+  stat_ecdf() +
+  # geom_density() +
+  theme_bw() +
+  labs(x="Expression FC of host gene", y="ecdf")
+
+ColorKey <- c("UnannotatedJunc_ProductiveCodingGene"="#a6cee3", "AnnotatedJunc_ProductiveCodingGene"="#1f78b4", "UnannotatedJunc_UnproductiveCodingGene"="#fb9a99", "AnnotatedJunc_UnproductiveCodingGene"="#e31a1c")
+
+
+MergedEstimatesFromModel.deltas %>%
+  filter(dose.nM==3160) %>%
+  filter(Estimate.Splicing.deltaPSI > 0.1) %>%
+  filter(!is.na(NewAnnotation)) %>%
+  filter(NewAnnotation!="Cassette in UTR") %>%
+  mutate(PlottingGroup = recode(NewAnnotation, "Preserves frame"="UnannotatedJunc_ProductiveCodingGene", "Frame shifting"="UnannotatedJunc_UnproductiveCodingGene", "In-frame PTC"="UnannotatedJunc_UnproductiveCodingGene")) %>%
+  mutate(PlottingGroup, factor(PlottingGroup, levels=c("AnnotatedJunc_ProductiveCodingGene", "UnannotatedJunc_ProductiveCodingGene", "AnnotatedJunc_UnproductiveCodingGene", "UnannotatedJunc_UnproductiveCodingGene"))) %>%
+  ggplot(aes(y=Estimate.Expression.FC, x=PlottingGroup, color=PlottingGroup)) +
+  geom_boxplot(outlier.shape=NA) +
+  geom_jitter(width=0.25) +
+  theme_bw() +
+  scale_color_manual(values=ColorKey) +
+  labs(y="Host gene log2FC") +
+  Rotate_x_labels
+
+MergedEstimatesFromModel.deltas %>%
+  filter(dose.nM==3160) %>%
+  filter(Estimate.Splicing.deltaPSI > 0.1) %>%
+  filter(!is.na(NewAnnotation)) %>%
+  filter(NewAnnotation!="Cassette in UTR") %>%
+  mutate(PlottingGroup = recode(NewAnnotation, "Preserves frame"="Productive", "Frame shifting"="Unproductive", "In-frame PTC"="Unproductive", "AnnotatedJunc_UnproductiveCodingGene"="Unproductive", "AnnotatedJunc_ProductiveCodingGene"="Productive")) %>%
+  mutate(IsAnnotated = str_detect(NewAnnotation, "Annotated")) %>%
+  # distinct(gene, .keep_all=T) %>%
+  # mutate(PlottingGroup, factor(PlottingGroup, levels=c("AnnotatedJunc_ProductiveCodingGene", "UnannotatedJunc_ProductiveCodingGene", "AnnotatedJunc_UnproductiveCodingGene", "UnannotatedJunc_UnproductiveCodingGene"))) %>%
+  ggplot(aes(y=Estimate.Expression.FC, x=PlottingGroup, color=PlottingGroup, alpha=IsAnnotated, group=interaction(IsAnnotated, PlottingGroup))) +
+  geom_boxplot(outlier.shape=NA) +
+  geom_point(position=position_jitterdodge(jitter.width=0.125)) +
+  theme_bw() +
+  scale_color_manual(values=c("Productive"="#1f78b4", "Unproductive"="#e31a1c")) +
+  labs(y="Host gene log2FC") +
+  Rotate_x_labels
+```
+
+
+Great, now I think we should look at the same gene changes in chromatin.
+
+```{r}
+chRNA.DE.dat <- read_tsv("../code/SmallMolecule/chRNA/DE.results.tsv.gz")
+
+
+chRNA.DE.dat %>%
+    mutate(Sig = FDR<0.1) %>%
+    count(risdiplam_conc, Sig)
+
+chRNA.DE.dat %>%
+    ggplot(aes(x=logFC, color=FDR<0.1)) +
+    stat_ecdf() +
+    facet_wrap(~risdiplam_conc)
+
+chRNA.DE.dat %>%
+  count()
+
+MergedEstimatesFromModel.deltas.WithPolyA.And.chRNA <- MergedEstimatesFromModel.deltas %>%
+  filter(dose.nM==3160) %>%
+  # filter(Estimate.Splicing.deltaPSI > 0.1) %>%
+  filter(!is.na(NewAnnotation)) %>%
+  filter(NewAnnotation!="Cassette in UTR") %>%
+  mutate(PlottingGroup = recode(NewAnnotation, "Preserves frame"="Productive", "Frame shifting"="Unproductive", "In-frame PTC"="Unproductive", "AnnotatedJunc_UnproductiveCodingGene"="Unproductive", "AnnotatedJunc_ProductiveCodingGene"="Productive")) %>%
+  mutate(IsAnnotated = str_detect(NewAnnotation, "Annotated")) %>%
+  dplyr::select(gene, Estimate.Expression.FC, PlottingGroup, IsAnnotated, Intron) %>%
+  left_join(
+    chRNA.DE.dat %>%
+      filter(risdiplam_conc==3160) %>%
+      separate(Geneid, into=c("gene", "symbol"), sep="_") %>%
+      dplyr::select(gene, logFC) %>%
+      mutate(gene = str_replace(gene, "(^E.+?)\\..+?$", "\\1")),
+    by="gene"
+  )
+
+MergedEstimatesFromModel.deltas.WithPolyA.And.chRNA %>%
+  gather(key="source", value="log2FC", logFC, Estimate.Expression.FC) %>%
+  mutate(source=recode(source, "logFC"="chRNA", "Estimate.Expression.FC"="polyA")) %>%
+  ggplot(aes(y=log2FC, x=PlottingGroup, color=PlottingGroup, alpha=IsAnnotated, group=interaction(IsAnnotated, PlottingGroup))) +
+  geom_boxplot(outlier.shape=NA) +
+  geom_point(position=position_jitterdodge(jitter.width=0.125)) +
+  theme_bw() +
+  scale_color_manual(values=c("Productive"="#1f78b4", "Unproductive"="#e31a1c")) +
+  facet_wrap(~source) +
+  labs(y="Host gene log2FC") +
+  Rotate_x_labels
+  
+```
+
+Ok, maybe later I will figure out why the chRNA effects sizes are positive in both productive and non-productive group... Porbably has something to do with library normalization.
+
+
+Next I want to make some figures related to the splicing druggable genome. [This paper](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6321762/#SD1) has a nice supplemental table of small molecule "druggable" proteins that I can use to compare... I expect the splicing-modified genes to be not particularly enriched in any caetgory, and be more or less totally independent with the list of "druggable" proteins... The only hypothesis I do have (which I will test below) about what genes are more druggable by splicing-mediated expression effects are that longer genes (with more introns/exons, more potential for cryptic sites) will be enriched.
+
+I think to do this, it will be uesful to make a list of splicing-mediated-risdiplam-effected genes, then an expression-matched list of control genes.
+
+```{r}
+SplicingDruggableGenes <- MergedEstimatesFromModel.deltas.WithPolyA.And.chRNA %>%
+  filter(PlottingGroup == "Unproductive") %>%
+  # filter(Estimate.Expression.FC < -0.5) %>%
+  distinct(gene, .keep_all=T)
+
+nrow(SplicingDruggableGenes)
+```
+
+Now let's get an expression-matched list of control genes.
+
+```{r}
+
+exons <- read_tsv("../code/ReferenceGenome/Annotations/GTFTools_BasicAnnotations/gencode.v34.chromasomal.exons.sorted.bed", col_names=c("chrom", "start", "stop", "gene_transcript", "score", "strand"))
+
+transcripts_to_genes <- exons %>%
+  distinct(gene_transcript) %>%
+  separate(gene_transcript, into=c("gene", "transcript"), sep="_") %>%
+  mutate(gene = str_replace(gene, "(^.+?)\\..+?$", "\\1"))
+
+
+Expression.table.transcripts <- read_tsv("../code/SmallMolecule/salmon.DMSO.merged.txt")
+Expression.table.genes <- Expression.table.transcripts %>%
+  inner_join(transcripts_to_genes, by=c("Name"="transcript")) %>%
+  # filter(gene == "ENSG00000213225")
+  # add_count(gene) %>%
+  # filter(n==2)
+  group_by(gene) %>%
+  summarise_at(vars(contains("DMSO")), sum) %>%
+  gather("sample", "TPM", -gene) %>%
+  group_by(gene) %>%
+  summarise(medianTPM = median(TPM))
+
+hist(log2(Expression.table.genes$medianTPM))
+
+Expression.table.genes %>%
+  filter(gene == "ENSG00000111640")
+
+
+Expression.tidyForMatchingGenes <- Expression.table.genes %>%
+  mutate(IsSplicingDruggable = gene %in% SplicingDruggableGenes$gene) %>%
+  arrange(medianTPM) %>%
+  mutate(LaggingGeneGroup = lag(IsSplicingDruggable)) %>%
+  mutate(LeadingGeneGroup = lead(IsSplicingDruggable)) %>%
+  ungroup()
+
+Merged.WithExpressionMatchedControlGenes <- 
+bind_rows(
+  Expression.tidyForMatchingGenes %>%
+    filter(IsSplicingDruggable) %>%
+    mutate(Group = "SplicingPerturbed"),
+  Expression.tidyForMatchingGenes %>%
+    filter(!IsSplicingDruggable & LaggingGeneGroup) %>%
+    mutate(Group = "SplicingUnperturbedControl"),
+  Expression.tidyForMatchingGenes %>%
+    filter(!IsSplicingDruggable & LeadingGeneGroup) %>%
+    mutate(Group = "SplicingUnperturbedControl"),
+) %>%
+  dplyr::select(gene, medianTPM, Group)
+
+Merged.WithExpressionMatchedControlGenes %>%
+  ggplot(aes(medianTPM)) +
+  stat_ecdf() +
+  scale_x_continuous(trans='log10') +
+  facet_wrap(~Group)
+
+```
+
+
+Now download the supplemental table from  [This paper](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6321762/#SD1)...
+
+```{r}
+
+url1<-'https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6321762/bin/NIHMS80906-supplement-Table_S1.xlsx'
+p1f <- tempfile()
+download.file(url1, p1f, mode="wb")
+p1<-read_excel(path = p1f, sheet = 1)
+
+head(p1)
+```
+
+Ok, now let's add the list of genes in here as well...
+
+```{r}
+CodingGenes <- read_tsv("../data/mart_export.txt.gz") %>%
+  distinct(`Gene stable ID`) %>%
+  dplyr::select(gene = "Gene stable ID")
+
+GeneCategories <- p1 %>%
+  filter(small_mol_druggable=="Y") %>%
+  left_join(Expression.table.genes, by=c("ensembl_gene_id"="gene")) %>%
+  dplyr::select(Group=druggability_tier, gene=ensembl_gene_id, medianTPM) %>%
+  bind_rows(
+    Merged.WithExpressionMatchedControlGenes,
+    Expression.table.genes %>%
+      mutate(Group = "Whole protein coding genome")
+    ) %>%
+  filter(gene %in% CodingGenes$gene)
+
+
+
+```
+
+Now let's inspect for differences in features of genes...
+
+```{r}
+GeneCategories %>%
+  ggplot(aes(x=medianTPM, color=Group)) +
+  scale_x_continuous(trans='log10') +
+  stat_ecdf()
+```
+
+Ok, perhaps its unsurprising that the splicing perturbed genes (as identified in LCLs) have higher expression (as measured in LCLs) than the other druggable gene groups.
+
+Now let's look at number of exons and or gene length (proxy for how likely gene is by chance to contain cryptic splice sites)
+
+Will used number of exons and gene length of highest expressed transcript.
+
+```{r}
+TopTranscriptPerGene <- Expression.table.transcripts %>%
+  # # summarise_at(vars(contains("DMSO")), sum) %>%
+  gather("sample", "TPM", -Name) %>%
+  group_by(Name) %>%
+  summarise(medianTPM = median(TPM)) %>%
+  inner_join(transcripts_to_genes, by=c("Name"="transcript")) %>%
+  group_by(gene) %>%
+  filter(medianTPM == max(medianTPM)) %>%
+  ungroup() %>%
+  distinct(gene, .keep_all=T)
+
+NumExonsAndLength <- exons %>%
+  group_by(gene_transcript) %>%
+  summarise(NumExons = n(),
+            Min = min(start),
+            Max = max(stop)) %>%
+  mutate(GeneLength = Max - Min) %>%
+  separate(gene_transcript, into=c("gene", "transcript"), sep="_") %>%
+  filter(transcript %in% TopTranscriptPerGene$Name) %>%
+  mutate(gene = str_replace(gene, "(^.+?)\\..+?$", "\\1")) %>%
+  dplyr::select(-Min, -Max)
+
+NumExonsAndLength %>%
+  filter(gene %in% CodingGenes$gene) %>%
+  ggplot(aes(x=GeneLength)) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(1E3, 1E6)) +
+  scale_x_continuous(trans='log10') +
+  annotation_logticks() +
+  theme_bw()
+
+GeneCategories %>%
+  left_join(NumExonsAndLength) %>%
+  filter(!Group %in% c("Tier 2", "Tier 3A", "Tier 3B")) %>%
+  gather(key="Feature", value="value", NumExons, GeneLength, medianTPM) %>%
+  ggplot(aes(x=value, color=Group)) +
+  stat_ecdf() +
+  scale_x_continuous(trans='log10') +
+  annotation_logticks() +
+  facet_wrap(~Feature, scales = "free") +
+  labs(y="ecdf", color="Druggability gene group")
+
+  
+
+```
+
+Next want to check enrichment of Tier1 (drugged genes), SplicingPerturbed, SplicingPerturbed control in different gene categories (ie kinase, nuclear receptors,GPCRs etc). I will define the categories based on GO categories, as retrieved from [msigdb](https://www.gsea-msigdb.org/gsea/msigdb/human/genesets.jsp?collection=GO:MF). I expected the Tier1 genes to be enriched in (non-olfactory) GPCRs, nuclear hormone receptors, kinases, and ion channels, while I expect Splicing perturbed to show no such enrichment.
+
+```{r}
+library(biomaRt)
+ensembl = useMart("ensembl",dataset="hsapiens_gene_ensembl")
+
+ensembl_to_symbols <- getBM(attributes= c("ensembl_gene_id","hgnc_symbol"),mart=ensembl)
+
+#Manually copy paste links from MsigDB
+go=c(
+  "GO:0015075"="https://www.gsea-msigdb.org/gsea/msigdb/human/download_geneset.jsp?geneSetName=GOMF_MONOATOMIC_ION_TRANSMEMBRANE_TRANSPORTER_ACTIVITY&fileType=grp",
+  "GO:0004930"="https://www.gsea-msigdb.org/gsea/msigdb/human/download_geneset.jsp?geneSetName=GOMF_G_PROTEIN_COUPLED_RECEPTOR_ACTIVITY&fileType=grp",
+  "GO:0004984"="https://www.gsea-msigdb.org/gsea/msigdb/human/download_geneset.jsp?geneSetName=GOMF_OLFACTORY_RECEPTOR_ACTIVITY&fileType=grp",
+  "GO:0004879"="https://www.gsea-msigdb.org/gsea/msigdb/human/download_geneset.jsp?geneSetName=GOMF_NUCLEAR_RECEPTOR_ACTIVITY&fileType=grp",
+  "GO:0016301"="https://www.gsea-msigdb.org/gsea/msigdb/human/download_geneset.jsp?geneSetName=GOMF_KINASE_ACTIVITY&fileType=grp",
+  "GO:0003700"="https://www.gsea-msigdb.org/gsea/msigdb/human/download_geneset.jsp?geneSetName=GOMF_DNA_BINDING_TRANSCRIPTION_FACTOR_ACTIVITY&fileType=grp")
+
+GO.genes.of.interest <- lapply(go, read.table, skip=2, col.names=c("hgnc_symbol")) %>%
+  bind_rows(.id="GO") %>%
+  mutate(GO_Name = recode(GO, !!!go)) %>%
+  mutate(GO_Name = str_replace(GO_Name, ".+?geneSetName=(.+?)&fileType=grp$", "\\1")) %>%
+  left_join(ensembl_to_symbols)
+
+GO.genes.of.interest %>%
+  distinct(hgnc_symbol, GO_Name) %>%
+  count(GO_Name)
+
+GPCRs <- GO.genes.of.interest %>%
+  filter(GO_Name == "GOMF_G_PROTEIN_COUPLED_RECEPTOR_ACTIVITY") %>%
+  pull(hgnc_symbol) %>% unique() %>%
+  setdiff(
+    GO.genes.of.interest %>%
+      filter(GO_Name == "GOMF_OLFACTORY_RECEPTOR_ACTIVITY") %>%
+      pull(hgnc_symbol) %>% unique()
+  )
+```
+
+Ok, now let's do the fisher/hypergeometric tests to look for enrichment gene set enrichment in Tier1 small molecule druggable genes, risdiplam-affected, and risdiplam-unaffected, using whole genome background as a control.
+
+```{r}
+
+brain.genes <- read_tsv("../data/tissue_category_rna_brain_Tissue.tsv.gz")
+
+NumExonsAndLength %>%
+  filter(gene %in% CodingGenes$gene) %>%
+  mutate(BrainEnriched_HumanProteinAtlas = gene %in% brain.genes$Ensembl) %>%
+  ggplot(aes(x=GeneLength, color=BrainEnriched_HumanProteinAtlas)) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(1E3, 1E6)) +
+  scale_x_continuous(trans='log10') +
+  annotation_logticks() +
+  theme_bw() +
+  labs(y="ecdf")
+
+GO.genes.of.interest %>%
+  filter(ensembl_gene_id %in% CodingGenes$gene) %>%
+  count(GO_Name)
+
+
+GO.genes.of.interest.totest <- 
+  bind_rows(
+    # filter out olfactor GPCRs from GPCR group
+    GO.genes.of.interest %>%
+      filter(ensembl_gene_id %in% CodingGenes$gene) %>%
+      filter(!GO_Name=="GOMF_OLFACTORY_RECEPTOR_ACTIVITY") %>%
+      filter(!(GO_Name=="GOMF_G_PROTEIN_COUPLED_RECEPTOR_ACTIVITY" & !hgnc_symbol %in% GPCRs)),
+    NumExonsAndLength %>%
+  filter(gene %in% CodingGenes$gene) %>%
+    mutate(GO_Name = case_when(
+      GeneLength > 1E3 & GeneLength < 1E4 ~ "1-10kb",
+      GeneLength > 1E4 & GeneLength < 5E4 ~ "10-50kb",
+      GeneLength > 5E4 & GeneLength < 1E5 ~ "50-100kb",
+      GeneLength > 1E5 ~ ">100kb",
+      TRUE ~ NA_character_
+    )) %>%
+    filter(!is.na(GO_Name)) %>%
+    dplyr::select(ensembl_gene_id=gene, GO_Name),
+  brain.genes %>%
+    dplyr::select(ensembl_gene_id=Ensembl) %>%
+    mutate(GO_Name = "BrainEnriched_HumanProteinAtlas") %>%
+    filter(ensembl_gene_id %in% CodingGenes$gene)
+  )
+GO_Categories <- GO.genes.of.interest.totest %>%
+  pull(GO_Name) %>% unique()
+
+count(GO.genes.of.interest.totest, GO_Name)
+
+DruggabilityCategories <- GeneCategories %>%
+  filter(!Group=="Whole protein coding genome") %>% pull(Group) %>% unique()
+DruggabilityCategories
+
+GeneCategories.totest <- GeneCategories %>%
+  sample_frac() %>%
+  group_by(Group) %>%
+  mutate(n = row_number()) %>%
+  ungroup() %>%
+  filter(!Group == "Tier 1" | (Group == "Tier 1" & n <= 116))
+count(GeneCategories.totest, Group)
+
+library(broom)
+
+results <- list()
+for (DruggabilitySetName in DruggabilityCategories){
+  for (GO_CategoryName in GO_Categories){
+    print(paste(DruggabilitySetName, GO_CategoryName))
+    DruggabilitySet <- GeneCategories.totest %>%
+      filter(Group==DruggabilitySetName) %>% pull(gene)
+    GO_CategorySet <- GO.genes.of.interest.totest %>%
+      filter(GO_Name==GO_CategoryName) %>% pull(ensembl_gene_id)
+    test.results <- data.frame(gene=CodingGenes$gene) %>%
+      mutate(IsDruggable = gene %in% DruggabilitySet, IsInGO.Set = gene %in% GO_CategorySet) %>%
+      mutate(IsDruggable = factor(IsDruggable),
+             IsInGO.Set = factor(IsInGO.Set)) %>%
+      count(IsDruggable, IsInGO.Set, .drop=F) %>%
+      pivot_wider(names_from="IsInGO.Set", values_from="n") %>%
+      column_to_rownames("IsDruggable") %>%
+      fisher.test() %>% glance()
+    results[[paste(DruggabilitySetName, GO_CategoryName, sep=";")]] <- test.results %>%
+      as.data.frame()
+  }
+}
+
+results %>%
+  bind_rows(.id="Druggability_GO") %>%
+  separate(Druggability_GO, into=c("Druggability", "GO category"), sep=";") %>%
+  mutate(GO = recode(`GO category`, "GOMF_KINASE_ACTIVITY"="Kinases", "GOMF_NUCLEAR_RECEPTOR_ACTIVITY"="Nuc receptors", "GOMF_G_PROTEIN_COUPLED_RECEPTOR_ACTIVITY"="GPCRs", "GOMF_MONOATOMIC_ION_TRANSMEMBRANE_TRANSPORTER_ACTIVITY"="Ion transporters", "GOMF_DNA_BINDING_TRANSCRIPTION_FACTOR_ACTIVITY"="TFs")) %>%
+  # pull(GO) %>% unique()
+  mutate(GO = factor(GO, levels=c("1-10kb", "10-50kb", "50-100kb", ">100kb", "GPCRs", "Nuc receptors", "Kinases", "Ion transporters", "TFs", "BrainEnriched_HumanProteinAtlas"))) %>%
+  filter(Druggability %in% c("Tier 1", "SplicingPerturbed", "SplicingUnperturbedControl")) %>%
+  ggplot(aes(x=GO, y=log2(estimate), fill=GO)) +
+  geom_col() +
+  geom_errorbar(aes(ymin=log2(conf.low), ymax=log2(conf.high)), width=.2) +
+  geom_hline(yintercept = 0) +
+  Rotate_x_labels +
+  # scale_y_continuous(trans="log2") +
+  facet_wrap(~Druggability) +
+  labs(y="Enrichment; log2(OddsRatio)", x="Gene category", fill="Gene category")
+
+
+```
+
+So long genes are over-represented. And from previous literature we know long genes are more expressed in brain, but let's double check that from GTEx data...
+
+```{r}
+
+url <- "https://storage.googleapis.com/gtex_analysis_v8/rna_seq_data/GTEx_Analysis_2017-06-05_v8_RNASeQCv1.1.9_gene_median_tpm.gct.gz"
+zip_file <- tempfile(fileext = ".gz")
+download.file(url, zip_file, mode = "wb")
+df <- read_tsv(zip_file, skip=2) %>%
+  mutate(gene = str_replace(Name, "(^.+?)\\..+?$", "\\1")) %>%
+  filter(gene %in% CodingGenes$gene) %>%
+  inner_join(NumExonsAndLength, by=c("gene"))
+
+df %>%
+  dplyr::select(GeneLength, 3:56) %>%
+  cor(method='s') %>% as.data.frame() %>%
+  dplyr::select(GeneLength) %>%
+  rownames_to_column("tissue") %>%
+  filter(!tissue=="GeneLength") %>%
+  mutate(tissue = fct_reorder(tissue, GeneLength, .desc=T)) %>%
+  mutate(IsBrain = if_else(str_detect(tissue, "Brain"), "Brain", "Non-brain")) %>%
+  ggplot(aes(x=tissue, fill=IsBrain, y=GeneLength)) +
+  geom_col() +
+  Rotate_x_labels +
+  labs(y="expression:length spearman cor")
+```
+
+
+Ok, so despite that I can clearly see that brain genes are enriched in long genes, and that the brain-specific genes from human protein atlas also skew long, they are not enriched in the short list of risdiplam targets. Now let's make a more final version of this figure, by excluding some of the less interesting results, and coloring and labelling things nicer...
+
+```{r}
+GO.genes.of.interest.totest <- 
+  bind_rows(
+    # filter out olfactor GPCRs from GPCR group
+    GO.genes.of.interest %>%
+      filter(ensembl_gene_id %in% CodingGenes$gene) %>%
+      filter(!GO_Name=="GOMF_OLFACTORY_RECEPTOR_ACTIVITY") %>%
+      filter(!(GO_Name=="GOMF_G_PROTEIN_COUPLED_RECEPTOR_ACTIVITY" & !hgnc_symbol %in% GPCRs)),
+  NumExonsAndLength %>%
+    filter(gene %in% CodingGenes$gene) %>%
+    # mutate(GO_Name = cut_number(GeneLength, 5, ordered_result=T)) %>%
+    mutate(GO_Name = factor(ntile(GeneLength, 4))) %>%
+    # mutate(GO_Name = cut(GeneLength, breaks=c(-Inf,1E3, 1E4, 1E5, Inf), include.lowest=T)) %>%
+    filter(!is.na(GO_Name)) %>%
+    dplyr::select(ensembl_gene_id=gene, GO_Name)
+  )
+GO_Categories <- GO.genes.of.interest.totest %>%
+  pull(GO_Name) %>% unique()
+
+count(GO.genes.of.interest.totest, GO_Name)
+
+DruggabilityCategories <- GeneCategories %>%
+  filter(!Group=="Whole protein coding genome") %>% pull(Group) %>% unique()
+DruggabilityCategories
+
+GeneCategories.totest <- GeneCategories %>%
+  sample_frac() %>%
+  group_by(Group) %>%
+  mutate(n = row_number()) %>%
+  ungroup()
+  # filter(!Group == "Tier 1" | (Group == "Tier 1" & n <= 116))
+count(GeneCategories.totest, Group)
+
+NumExonsAndLength %>%
+    filter(gene %in% CodingGenes$gene) %>% 
+    mutate(N = cut_number(GeneLength, 4)) %>%
+    distinct(N)
+  
+
+results <- list()
+for (DruggabilitySetName in DruggabilityCategories){
+  for (GO_CategoryName in GO_Categories){
+    print(paste(DruggabilitySetName, GO_CategoryName))
+    DruggabilitySet <- GeneCategories.totest %>%
+      filter(Group==DruggabilitySetName) %>% pull(gene)
+    GO_CategorySet <- GO.genes.of.interest.totest %>%
+      filter(GO_Name==GO_CategoryName) %>% pull(ensembl_gene_id)
+    test.results <- data.frame(gene=CodingGenes$gene) %>%
+      mutate(IsDruggable = gene %in% DruggabilitySet, IsInGO.Set = gene %in% GO_CategorySet) %>%
+      mutate(IsDruggable = factor(IsDruggable),
+             IsInGO.Set = factor(IsInGO.Set)) %>%
+      count(IsDruggable, IsInGO.Set, .drop=F) %>%
+      pivot_wider(names_from="IsInGO.Set", values_from="n") %>%
+      column_to_rownames("IsDruggable") %>%
+      fisher.test() %>% glance()
+    results[[paste(DruggabilitySetName, GO_CategoryName, sep=";")]] <- test.results %>%
+      as.data.frame()
+  }
+}
+
+results %>%
+  bind_rows(.id="Druggability_GO") %>%
+  separate(Druggability_GO, into=c("Druggability", "GO category"), sep=";") %>%
+  mutate(GO = recode(`GO category`, "GOMF_KINASE_ACTIVITY"="Kinases", "GOMF_NUCLEAR_RECEPTOR_ACTIVITY"="Nuc receptors", "GOMF_G_PROTEIN_COUPLED_RECEPTOR_ACTIVITY"="GPCRs", "GOMF_MONOATOMIC_ION_TRANSMEMBRANE_TRANSPORTER_ACTIVITY"="Ion transporters", "GOMF_DNA_BINDING_TRANSCRIPTION_FACTOR_ACTIVITY"="TFs")) %>%
+  # filter(!GO=="TFs") %>%
+  # pull(GO) %>% unique()
+  # mutate(GO = factor(GO, levels=c("1-10kb", "10-50kb", "50-100kb", ">100kb", "GPCRs", "Nuc receptors", "Kinases", "Ion transporters", "TFs", "BrainEnriched_HumanProteinAtlas"))) %>%
+  filter(Druggability %in% c("Tier 1", "SplicingPerturbed")) %>%
+  mutate(Druggability = recode(Druggability, "Tier 1"="1059 targets of approved small molecules", "SplicingPerturbed"="116 Risdiplam-induced NMD targets")) %>%
+  ggplot(aes(x=GO, y=log2(estimate), fill=GO)) +
+  geom_col() +
+  geom_errorbar(aes(ymin=log2(conf.low), ymax=log2(conf.high)), width=.2) +
+  geom_hline(yintercept = 0) +
+  Rotate_x_labels +
+  scale_fill_manual(
+    values=c(
+      "1"="#b2e2e2",
+      "2"="#66c2a4",
+      "3"="#2ca25f",
+      "4"="#006d2c",
+      "GPCRs"="#ffffb3",
+      "Ion transporters"="#bebada",
+      "Kinases"="#fb8072",
+      "Nuc receptors"="#80b1d3",
+      "TFs"="#fdb462"),
+    labels=c(
+      "1"="Q1 gene length; <8.2kb",
+      "2"="Q2 gene length; 8-23kb",
+      "3"="Q3 gene length; 23-59kb",
+      "4"="Q4 gene length; >59kb",
+      "GPCRs"="GPCRs",
+      "Ion transporters",
+      "Kinases",
+      "Nuc receptors"="Nuclear receptors",
+      "TFs"="Transcription factors"
+    )) +
+  # scale_y_continuous(trans="log2") +
+  facet_wrap(~Druggability, labeller = label_wrap_gen(25)) +
+  labs(y="Enrichment; log2(OddsRatio)", x="Gene category", fill="Gene category")
+```
+
+Now let's do another version of this analysis but with a larger category of risdiplam-sensitive genes... For example, just identify the potential post-txnal events.
+
+```{r}
+
+polyA.GeneEffects <- small.molecule.dat.genes %>%
+  filter(str_detect(param, "Pred")) %>%
+  mutate(gene = str_replace(Geneid, "(^.+?)\\..+?$", "\\1")) %>%
+  separate(param, into=c("Dummy", "dose.nM"), convert=T, sep="_") %>%
+  dplyr::select(-Dummy)
+
+SplicingPerturbed <- SplicingDruggableGenes$gene
+
+GeneEffects.Changes <- 
+  inner_join(
+    polyA.GeneEffects %>%
+      filter(dose.nM == 0) %>%
+      dplyr::select(-dose.nM, -Geneid),
+    polyA.GeneEffects %>%
+      filter(dose.nM == 3160) %>%
+      dplyr::select(-dose.nM),
+    by=c("gene"),
+    suffix=c(".expression.untreated", ".expression.treated")
+  ) %>%
+  mutate(Estimate.Expression.FC = Estimate.expression.treated - Estimate.expression.untreated) %>%
+  mutate(IsGeneEffected = gene %in% SplicingPerturbed ) %>%
+  left_join(
+    chRNA.DE.dat %>%
+      filter(risdiplam_conc==3160) %>%
+      separate(Geneid, into=c("gene", "symbol"), sep="_") %>%
+      mutate(gene = str_replace(gene, "(^E.+?)\\..+?$", "\\1")),
+    by="gene"
+  ) %>%
+  mutate(z = Estimate.Expression.FC/sqrt((SE.expression.treated + SE.expression.untreated))) %>%
+  mutate(abs.z = abs(z))
+
+#For the life of me I can't figure out why this didn't work in a pipe. So I'm assigning the column this way
+GeneEffects.Changes$polyA.P <- 2*pnorm(GeneEffects.Changes$abs.z, lower.tail = F)
+
+GeneEffects.Changes <- GeneEffects.Changes %>%
+  mutate(polyA.FDR = qvalue(polyA.P)$qvalues)
+
+hist(GeneEffects.Changes$polyA.P)
+
+GeneEffects.Changes %>%
+  ggplot(aes(x=Estimate.Expression.FC, y=logFC)) +
+  geom_point(alpha=0.1) +
+  theme_bw()
+
+GeneEffects.Changes %>%
+  arrange(IsGeneEffected) %>%
+  ggplot(aes(x=Estimate.Expression.FC, y=logFC, color=IsGeneEffected)) +
+  geom_point(alpha=0.5) +
+  theme_bw()
+
+GeneEffects.Changes %>%
+  arrange(IsGeneEffected) %>%
+  ggplot(aes(x=Estimate.Expression.FC, y=logFC, color=polyA.FDR<0.1)) +
+  geom_point(alpha=0.5) +
+  theme_bw()
+
+GeneEffects.Changes %>%
+  arrange(IsGeneEffected) %>%
+  ggplot(aes(x=Estimate.Expression.FC, y=logFC, color=FDR<0.1)) +
+  geom_point(alpha=0.5) +
+  theme_bw()
+
+
+```
+
+It's already obvious that there are more down-regulated genes that upregulated genes.
+
+Let's do something simple to find the polyA-specific effects...
+
+Like it must be significant, with FC<0.5 in polyA, and not significant in chRNA or significant in oppossite direction.
+
+```{r}
+TypesOfChangesClassification <- GeneEffects.Changes %>%
+  mutate(SignificantInPolyA = polyA.FDR<0.1 & abs(Estimate.Expression.FC)>0.5) %>%
+  mutate(SignificantIn_chRNA = FDR<0.05) %>%
+  mutate(SameSignChanges = sign(Estimate.Expression.FC)==sign(logFC)) %>%
+  mutate(IsPolyASpecific = SignificantInPolyA & !(SignificantIn_chRNA & SameSignChanges))
+
+TypesOfChangesClassification %>%
+  filter(IsGeneEffected) %>%
+  count(SignificantInPolyA)
+
+TypesOfChangesClassification %>%
+  ggplot(aes(x=Estimate.Expression.FC, y=logFC, color=IsPolyASpecific)) +
+  geom_point(alpha=0.1) +
+  geom_point(data = . %>%
+               filter(IsGeneEffected),
+             color='black') +
+  theme_bw()
+  
+LargerSetOfRisdiplamEffectedGenes <- TypesOfChangesClassification %>%
+  filter(IsPolyASpecific)
+```
+
+Ok now let's remake that plot with this expanded set of effects...
+
+
+```{r}
+GO.genes.of.interest.totest <- 
+  bind_rows(
+    # filter out olfactor GPCRs from GPCR group
+    GO.genes.of.interest %>%
+      filter(ensembl_gene_id %in% CodingGenes$gene) %>%
+      filter(!GO_Name=="GOMF_OLFACTORY_RECEPTOR_ACTIVITY") %>%
+      filter(!(GO_Name=="GOMF_G_PROTEIN_COUPLED_RECEPTOR_ACTIVITY" & !hgnc_symbol %in% GPCRs)),
+  NumExonsAndLength %>%
+    filter(gene %in% CodingGenes$gene) %>%
+    # mutate(GO_Name = cut_number(GeneLength, 5, ordered_result=T)) %>%
+    mutate(GO_Name = factor(ntile(GeneLength, 4))) %>%
+    # mutate(GO_Name = cut(GeneLength, breaks=c(-Inf,1E3, 1E4, 1E5, Inf), include.lowest=T)) %>%
+    filter(!is.na(GO_Name)) %>%
+    dplyr::select(ensembl_gene_id=gene, GO_Name)
+  )
+GO_Categories <- GO.genes.of.interest.totest %>%
+  pull(GO_Name) %>% unique()
+
+count(GO.genes.of.interest.totest, GO_Name)
+
+
+
+DruggabilityCategories.totest.df <- GeneCategories %>%
+  sample_frac() %>%
+  group_by(Group) %>%
+  mutate(n = row_number()) %>%
+  ungroup() %>%
+  # filter(!Group == "Tier 1" | (Group == "Tier 1" & n <= 116))
+  bind_rows(
+    LargerSetOfRisdiplamEffectedGenes %>%
+      dplyr::select(gene) %>%
+      filter(gene %in% CodingGenes$gene) %>%
+      mutate(Group = "Larger set of risdiplam-effected")
+  )
+count(DruggabilityCategories.totest.df, Group)
+DruggabilityCategories <- DruggabilityCategories.totest.df %>%
+  filter(!Group=="Whole protein coding genome") %>% pull(Group) %>% unique()
+DruggabilityCategories
+
+NumExonsAndLength %>%
+    filter(gene %in% CodingGenes$gene) %>% 
+    mutate(N = cut_number(GeneLength, 4)) %>%
+    distinct(N)
+  
+
+results <- list()
+for (DruggabilitySetName in DruggabilityCategories){
+  for (GO_CategoryName in GO_Categories){
+    print(paste(DruggabilitySetName, GO_CategoryName))
+    DruggabilitySet <- DruggabilityCategories.totest.df %>%
+      filter(Group==DruggabilitySetName) %>% pull(gene)
+    GO_CategorySet <- GO.genes.of.interest.totest %>%
+      filter(GO_Name==GO_CategoryName) %>% pull(ensembl_gene_id)
+    test.results <- data.frame(gene=CodingGenes$gene) %>%
+      mutate(IsDruggable = gene %in% DruggabilitySet, IsInGO.Set = gene %in% GO_CategorySet) %>%
+      mutate(IsDruggable = factor(IsDruggable),
+             IsInGO.Set = factor(IsInGO.Set)) %>%
+      count(IsDruggable, IsInGO.Set, .drop=F) %>%
+      pivot_wider(names_from="IsInGO.Set", values_from="n") %>%
+      column_to_rownames("IsDruggable") %>%
+      fisher.test() %>% glance()
+    results[[paste(DruggabilitySetName, GO_CategoryName, sep=";")]] <- test.results %>%
+      as.data.frame()
+  }
+}
+
+results %>%
+  bind_rows(.id="Druggability_GO") %>%
+  separate(Druggability_GO, into=c("Druggability", "GO category"), sep=";") %>%
+  mutate(GO = recode(`GO category`, "GOMF_KINASE_ACTIVITY"="Kinases", "GOMF_NUCLEAR_RECEPTOR_ACTIVITY"="Nuc receptors", "GOMF_G_PROTEIN_COUPLED_RECEPTOR_ACTIVITY"="GPCRs", "GOMF_MONOATOMIC_ION_TRANSMEMBRANE_TRANSPORTER_ACTIVITY"="Ion transporters", "GOMF_DNA_BINDING_TRANSCRIPTION_FACTOR_ACTIVITY"="TFs")) %>%
+  # filter(!GO=="TFs") %>%
+  # pull(GO) %>% unique()
+  # mutate(GO = factor(GO, levels=c("1-10kb", "10-50kb", "50-100kb", ">100kb", "GPCRs", "Nuc receptors", "Kinases", "Ion transporters", "TFs", "BrainEnriched_HumanProteinAtlas"))) %>%
+  filter(Druggability %in% c("Tier 1", "SplicingPerturbed", "Larger set of risdiplam-effected")) %>%
+  mutate(Druggability = recode(Druggability, "Tier 1"="1059 targets of approved small molecules", "SplicingPerturbed"="116 Risdiplam-induced NMD targets", "Larger set of risdiplam-effected"="Larger set")) %>%
+  ggplot(aes(x=GO, y=log2(estimate), fill=GO)) +
+  geom_col() +
+  geom_errorbar(aes(ymin=log2(conf.low), ymax=log2(conf.high)), width=.2) +
+  geom_hline(yintercept = 0) +
+  Rotate_x_labels +
+  scale_fill_manual(
+    values=c(
+      "1"="#b2e2e2",
+      "2"="#66c2a4",
+      "3"="#2ca25f",
+      "4"="#006d2c",
+      "GPCRs"="#ffffb3",
+      "Ion transporters"="#bebada",
+      "Kinases"="#fb8072",
+      "Nuc receptors"="#80b1d3",
+      "TFs"="#fdb462"),
+    labels=c(
+      "1"="Q1 gene length; <8.2kb",
+      "2"="Q2 gene length; 8-23kb",
+      "3"="Q3 gene length; 23-59kb",
+      "4"="Q4 gene length; >59kb",
+      "GPCRs"="GPCRs",
+      "Ion transporters",
+      "Kinases",
+      "Nuc receptors"="Nuclear receptors",
+      "TFs"="Transcription factors"
+    )) +
+  # scale_y_continuous(trans="log2") +
+  facet_wrap(~Druggability, labeller = label_wrap_gen(25)) +
+  labs(y="Enrichment; log2(OddsRatio)", x="Gene category", fill="Gene category")
+```
+## Making final figs...
+
+Ok so I've done enough exploring I know in detail what I want to plot:
+
+- Plot of induction of GAGT introns specifically in chRNA and polyA (main)
+- A barplots of expression effect in chRNA and polyA, grouped by whether induced exons are productive or unproductive. (main)
+- barplot of induced exons and proportion which are "poison" and why. (Supplement, possibly main)
+- The druggability gene enrichment barplots comparing genes w/ ris-induced poison exons (not based on expression effects) (main)
+- the druggability gene enrichment barplot comparing genes w/ post-txnal downregulation (Supplement)
+- the polyA vs chRNA gene expression effect scatter, highlighting various categories (Supplement)
+- polyA volcano at high dose, at low dose (Supplement)
+- the splicing vs expression beta faceted by predicted splicing effect (ie frame shift, in-frame PTC, frame-preserving, etc) (Supplement)
+
+
