@@ -152,6 +152,151 @@ NumQTLs
 ```
 
 
+### Box plots for TTC3
+
+first do some quick data searching to figure out exactly the names of the phenotypes I want to make boxpltos for... 
+
+```{r, eval=F}
+dat <- fread("../code/pi1/PairwisePi1Traits.P.all.txt.gz")
+
+PeaksToTSS <- Sys.glob("../code/Misc/PeaksClosestToTSS/*_assigned.tsv.gz") %>%
+  setNames(str_replace(., "../code/Misc/PeaksClosestToTSS/(.+?)_assigned.tsv.gz", "\\1")) %>%
+  lapply(read_tsv) %>%
+  bind_rows(.id="ChromatinMark") %>%
+  mutate(GenePeakPair = paste(gene, peak, sep = ";")) %>%
+  distinct(ChromatinMark, peak, gene, .keep_all=T)
+
+PeaksToTSS %>%
+  filter(ChromatinMark == "H3K4ME3") %>%
+  filter(str_detect(gene, "ENSG00000075234"))
+
+dat %>%
+  filter(PC1 == "Expression.Splicing") %>%
+  filter(str_detect(P1, "ENSG00000075234")) %>%
+  # pull(PC2) %>% unique()
+  filter(PC2 == "polyA.Splicing")
+
+dat %>%
+  filter(PC1 == "Expression.Splicing") %>%
+  filter(str_detect(P1, "ENSG00000075234")) %>%
+  filter(P2 %in% c("H3K4ME3_peak_31179", "22:46292328:46292791:clu_48515_+"))
+  
+```
+
+So I'm looking to make boxplots for H3K4ME3_peak_31179 (hQTL), ENSG00000075234.17 (polyA eQTL), and chRNA sQTL and polyA sQTL for 22:46292328:46292791:clu_48515_+
+
+TopSNP: "22:46291323:G:A"
+
+Now use my helper script to get genotype/phenotype data for the top eSNP for those traits..
+
+```{bash, eval=F}
+cd ../code/scripts/GenometracksByGenotype
+
+python ExtractPhenotypeBedByGenotype.py --Bed ../../QTLs/QTLTools/Expression.Splicing/OnlyFirstReps.sorted.qqnorm.bed.gz --VCF ../../Genotypes/1KG_GRCh38/Autosomes.vcf.gz --FeatureName ENSG00000075234.17 --SnpPos chr22:46291323 > ../../scratch/Boxplot.dat.eQTL.tsv
+
+python ExtractPhenotypeBedByGenotype.py --Bed ../../QTLs/QTLTools/polyA.Splicing/OnlyFirstReps.sorted.qqnorm.bed.gz --VCF ../../Genotypes/1KG_GRCh38/Autosomes.vcf.gz --FeatureName 22:46292328:46292791:clu_48515_+  --SnpPos chr22:46291323 > ../../scratch/Boxplot.dat.polyAsQTL.tsv
+
+python ExtractPhenotypeBedByGenotype.py --Bed ../../QTLs/QTLTools/polyA.Splicing/OnlyFirstReps.sorted.qqnorm.bed.gz --VCF ../../Genotypes/1KG_GRCh38/Autosomes.vcf.gz --FeatureName 22:46292328:46292791:clu_48515_+  --SnpPos chr22:46291323 > ../../scratch/Boxplot.dat.polyAsQTL.tsv
+
+python ExtractPhenotypeBedByGenotype.py --Bed ../../QTLs/QTLTools/H3K4ME3/OnlyFirstReps.sorted.qqnorm.bed.gz --VCF ../../Genotypes/1KG_GRCh38/Autosomes.vcf.gz --FeatureName H3K4ME3_peak_31179  --SnpPos chr22:46291323 > ../../scratch/Boxplot.dat.PromoterhQTL.tsv
+```
+
+Now let's read in that data and do boxplots...
+
+```{r}
+dat.for.boxplots <- Sys.glob("../code/scratch/Boxplot.dat.*.tsv") %>%
+  setNames(str_replace(., "../code/scratch/Boxplot.dat.(.+?).tsv", "\\1")) %>%
+  lapply(read_tsv, col_names=c("SampleID", "P", "genotype", "Ref", "Alt", "ID"), skip=1) %>%
+  bind_rows(.id="PC")
+
+dat.for.boxplots %>%
+  filter(!genotype==3) %>%
+  mutate(genotype= factor(genotype, levels=c(0,1,2))) %>%
+  ggplot(aes(x=genotype, y=P, group=genotype)) +
+  geom_boxplot(outlier.shape = NA, aes(color=genotype)) +
+  # geom_jitter(width=0.25, alpha=0.1) +
+  geom_smooth(method='lm', aes(group=1), se=F, color="gray") +
+  scale_x_discrete(labels=c("0"="GG", "1"="GA", "2"="AA")) +
+  scale_color_manual(values=c("0"="#f03b20", "1"="#7a0177", "2"="#08519c")) +
+  # scale_x_discrete() +
+  facet_wrap(~PC) +
+  theme(legend.position="none") +
+  labs(x=NULL, color=NULL)
+```
+
+```{r, eval=F}
+dat.for.boxplots$PC %>% unique()
+
+dat.for.boxplots %>%
+  filter(!genotype==3) %>%
+  filter(PC=="PromoterhQTL") %>%
+  mutate(genotype= factor(genotype, levels=c(0,1,2))) %>%
+  ggplot(aes(x=genotype, y=P, group=genotype)) +
+  geom_boxplot(outlier.shape = NA, aes(color=genotype)) +
+  # geom_jitter(width=0.25, alpha=0.1) +
+  geom_smooth(method='lm', aes(group=1), se=F, color="gray") +
+  scale_x_discrete(labels=c("0"="GG", "1"="GA", "2"="AA")) +
+  scale_color_manual(values=c("0"="#f03b20", "1"="#7a0177", "2"="#08519c")) +
+  geom_text(x=-Inf, y=Inf, label=" beta=0.15\n P=0.48", hjust=0, vjust=1, size=5.5) +
+  # scale_x_discrete() +
+  theme(legend.position="none") +
+  Rotate_x_labels +
+  labs(x=NULL, color=NULL, y="H3K4me3 @ promoter")
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig2_ExampleBoxplot_hQTL.pdf", height=3, width=2)
+
+dat.for.boxplots %>%
+  filter(!genotype==3) %>%
+  filter(PC=="eQTL") %>%
+  mutate(genotype= factor(genotype, levels=c(0,1,2))) %>%
+  ggplot(aes(x=genotype, y=P, group=genotype)) +
+  geom_boxplot(outlier.shape = NA, aes(color=genotype)) +
+  # geom_jitter(width=0.25, alpha=0.1) +
+  geom_smooth(method='lm', aes(group=1), se=F, color="gray") +
+  scale_x_discrete(labels=c("0"="GG", "1"="GA", "2"="AA")) +
+  scale_color_manual(values=c("0"="#f03b20", "1"="#7a0177", "2"="#08519c")) +
+  geom_text(x=-Inf, y=Inf, label=" beta=1.1\n P<5E-43", hjust=0, vjust=1, size=5.5) +
+  # scale_x_discrete() +
+  theme(legend.position="none") +
+  Rotate_x_labels +
+  labs(x=NULL, color=NULL, y="TTC38 expression")
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig2_ExampleBoxplot_eQTL.pdf", height=3, width=2)
+
+dat.for.boxplots %>%
+  filter(!genotype==3) %>%
+  filter(PC=="polyAsQTL") %>%
+  mutate(genotype= factor(genotype, levels=c(0,1,2))) %>%
+  ggplot(aes(x=genotype, y=P, group=genotype)) +
+  geom_boxplot(outlier.shape = NA, aes(color=genotype)) +
+  # geom_jitter(width=0.25, alpha=0.1) +
+  geom_smooth(method='lm', aes(group=1), se=F, color="gray") +
+  scale_x_discrete(labels=c("0"="GG", "1"="GA", "2"="AA")) +
+  scale_color_manual(values=c("0"="#f03b20", "1"="#7a0177", "2"="#08519c")) +
+  geom_text(x=-Inf, y=Inf, label=" beta=-1.1\n P<3e-24", hjust=0, vjust=1, size=5.5) +
+  # scale_x_discrete() +
+  theme(legend.position="none") +
+  Rotate_x_labels +
+  labs(x=NULL, color=NULL, y="Splicing of cassette exon")
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig2_ExampleBoxplot_polyAsQTL.pdf", height=3, width=2)
+
+dat.for.boxplots %>%
+  filter(!genotype==3) %>%
+  filter(PC=="chRNAsQTL") %>%
+  mutate(genotype= factor(genotype, levels=c(0,1,2))) %>%
+  ggplot(aes(x=genotype, y=P, group=genotype)) +
+  geom_boxplot(outlier.shape = NA, aes(color=genotype)) +
+  # geom_jitter(width=0.25, alpha=0.1) +
+  geom_smooth(method='lm', aes(group=1), se=F, color="gray") +
+  scale_x_discrete(labels=c("0"="GG", "1"="GA", "2"="AA")) +
+  scale_color_manual(values=c("0"="#f03b20", "1"="#7a0177", "2"="#08519c")) +
+  geom_text(x=-Inf, y=Inf, label=" beta=-1.3\n P<4e-19", hjust=0, vjust=1, size=5.5) +
+  # scale_x_discrete() +
+  theme(legend.position="none") +
+  Rotate_x_labels +
+  labs(x=NULL, color=NULL, y="Splicing of cassette exon")
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig2_ExampleBoxplot_chRNAsQTL.pdf", height=3, width=2)
+```
+
+
 ```{r, eval=F}
 ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_SampleSize.pdf",P.SampleSizes, width=6, height=6)
 

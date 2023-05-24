@@ -40,6 +40,22 @@ rule make_leafcutter_juncfile:
                 if samplename not in  SamplesToRemove:
                     out.write(filepath + '\n')
 
+rule MakeLongJuncTable:
+    input:
+        expand ("SplicingAnalysis/leafcutter/juncfiles/autosomes/{Phenotype}_{IndID}_{Rep}.junc",  zip, Phenotype=RNASeqSamplesNoProcap_df['Phenotype'], IndID=RNASeqSamplesNoProcap_df['IndID'], Rep=RNASeqSamplesNoProcap_df['RepNumber']),
+    output:
+        "SplicingAnalysis/CombinedJuncTables/All.bed.gz"
+    shell:
+        """
+        awk -F'\\t' -v OFS='\\t' '{{n=split(FILENAME, f, "/"); split($11, a, ","); print $1, $2+a[1], $3-a[2], f[n],$5, $6}}' {input} | gzip > {output}
+        """
+
+use rule MakeLongJuncTable as MakeLongJuncTable_YRI with:
+    input:
+        expand ("SplicingAnalysis/leafcutter/juncfiles/autosomes/{Phenotype}_{IndID}_{Rep}.junc",  zip, Phenotype=RNASeqSamplesNoProcap_df_YRI['Phenotype'], IndID=RNASeqSamplesNoProcap_df_YRI['IndID'], Rep=RNASeqSamplesNoProcap_df_YRI['RepNumber']),
+    output:
+        "SplicingAnalysis/CombinedJuncTables/YRI.bed.gz"
+
 rule leafcutter_cluster:
     input:
         juncs = expand ("SplicingAnalysis/leafcutter/juncfiles/autosomes/{Phenotype}_{IndID}_{Rep}.junc",  zip, Phenotype=RNASeqSamplesNoProcap_df['Phenotype'], IndID=RNASeqSamplesNoProcap_df['IndID'], Rep=RNASeqSamplesNoProcap_df['RepNumber']),

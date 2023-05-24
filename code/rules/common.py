@@ -64,6 +64,9 @@ chRNASeqSamples_df = Fastq_samples.loc[ (Fastq_samples['Phenotype']=="chRNA.Expr
 
 igsr_samples = pd.read_csv('../data/igsr_samples.tsv.gz', sep='\t', index_col=0)
 chRNASeqSamples = list(pd.Index(chRNASeqSamples_df['IndID'].unique()).intersection(igsr_samples.index))
+YRI = igsr_samples.loc[igsr_samples['Population code']=="YRI"].index.tolist()
+
+RNASeqSamplesNoProcap_df_YRI = RNASeqSamplesNoProcap_df.loc[RNASeqSamplesNoProcap_df["IndID"].isin(YRI)]
 
 # Get random sample for each phenotype
 Fastq_samples.groupby('Phenotype').apply(lambda x: x.sample(2, random_state=1)).reset_index(drop=True)
