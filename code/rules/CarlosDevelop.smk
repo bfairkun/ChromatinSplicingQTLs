@@ -261,6 +261,13 @@ rule collect_metaplot:
             Phenotype = ["H3K36ME3"], IndID = ['NA18486'],
             metaplot=["CDS", "gene"]),
             
+rule CollectMetaplotIntrons:
+    input:
+        expand("Metaplots/AssayProfiles/Plots/Introns.{IndID}.{strand}.png", 
+        IndID = ['NA18486', 'NA19137', 'NA19152', 'NA19153'], strand = ['plus', 'minus']),
+        expand("Metaplots/AssayProfiles/Plots/Introns.{IndID}.{strand}.long_introns.png", 
+        IndID = ['NA18486', 'NA19137', 'NA19152', 'NA19153'], strand = ['plus', 'minus'])
+            
 rule H3K36ME3_corr:
     input:
         "QTLs/QTLTools/H3K36ME3/OnlyFirstRepsUnstandardized.Encode.qqnorm.bed.gz",
