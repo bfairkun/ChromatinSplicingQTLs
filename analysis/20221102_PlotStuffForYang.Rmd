@@ -1657,3 +1657,311 @@ Let's make the "polarized" version of this QQ plot... If the eQTL and xQTL betas
 
 ```
 
+## Update 05/05/2023
+
+Yang wants to plot boxpltos of unproductive, Annotated NMD, and predicted+annotated NMD
+
+```{r, eval=F}
+dat <- read_tsv("../code/ReadLengthMapExperimentResults/JuncCountsTidy/SummarisedBySampleAndAnnotation.txt.gz")
+
+IntronAnnotations <- read_tsv("../data/IntronAnnotationsFromYang.tsv.gz")
+
+OldAnnotationToNewAnnotationKey <- IntronAnnotations %>%
+  distinct(NewAnnotation, SemiSupergroupAnnotations, SuperAnnotation)
+
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family="Helvetica")))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+
+dat %>%
+  left_join(OldAnnotationToNewAnnotationKey) %>%
+  mutate(IsFocusCategory = !SemiSupergroupAnnotations == "basic tag") %>%
+  group_by(IsFocusCategory, Dataset, IndID) %>%
+  summarise(sum = sum(Count)) %>%
+  ungroup() %>%
+  group_by(Dataset, IndID) %>%
+  mutate(TotalSumForIndividual = sum(sum)) %>%
+  mutate(Percent = sum/TotalSumForIndividual*100) %>%
+  ungroup() %>%
+  mutate(IsFocusCategory == F) %>%
+  mutate(Dataset = recode(Dataset, "Expression.Splicing"="polyA", "MetabolicLabelled.30min"="30min", "MetabolicLabelled.60min"="60min", "chRNA.Expression.Splicing"="chRNA")) %>%
+  mutate(Dataset = factor(Dataset, levels=c("chRNA", "30min", "60min", "polyA"))) %>%
+  filter(IsFocusCategory==T) %>%
+  ggplot(aes(x=Dataset, y=Percent)) +
+  geom_boxplot() +
+  geom_jitter(width=0.25) +
+  Rotate_x_labels +
+  labs(title="Not basic tag", y="Percent splice juncs")
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/20230505_PercentNonBasicTag.pdf", width=2.5, height=3)
+
+dat %>%
+  left_join(OldAnnotationToNewAnnotationKey) %>%
+  filter(!str_detect(SuperAnnotation, "Noncoding")) %>%
+  mutate(IsFocusCategory = !SemiSupergroupAnnotations == "basic tag") %>%
+  group_by(IsFocusCategory, Dataset, IndID) %>%
+  summarise(sum = sum(Count)) %>%
+  ungroup() %>%
+  group_by(Dataset, IndID) %>%
+  mutate(TotalSumForIndividual = sum(sum)) %>%
+  mutate(Percent = sum/TotalSumForIndividual*100) %>%
+  ungroup() %>%
+  mutate(IsFocusCategory == F) %>%
+  mutate(Dataset = recode(Dataset, "Expression.Splicing"="polyA", "MetabolicLabelled.30min"="30min", "MetabolicLabelled.60min"="60min", "chRNA.Expression.Splicing"="chRNA")) %>%
+  mutate(Dataset = factor(Dataset, levels=c("chRNA", "30min", "60min", "polyA"))) %>%
+  filter(IsFocusCategory==T) %>%
+  ggplot(aes(x=Dataset, y=Percent)) +
+  geom_boxplot() +
+  geom_jitter(width=0.25) +
+  ylim(c(0,4)) +
+  Rotate_x_labels +
+  labs(title="Not basic tag", y="Percent splice juncs")
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/20230505_PercentNonBasicTag.pdf", width=2.5, height=3)
+
+
+dat %>%
+  left_join(OldAnnotationToNewAnnotationKey) %>%
+  filter(!str_detect(SuperAnnotation, "Noncoding")) %>%
+  mutate(IsFocusCategory = str_detect(SemiSupergroupAnnotations, "nonsense") | str_detect(SemiSupergroupAnnotations, "NMD")) %>%
+  group_by(IsFocusCategory, Dataset, IndID) %>%
+  summarise(sum = sum(Count)) %>%
+  ungroup() %>%
+  group_by(Dataset, IndID) %>%
+  mutate(TotalSumForIndividual = sum(sum)) %>%
+  mutate(Percent = sum/TotalSumForIndividual*100) %>%
+  ungroup() %>%
+  filter(IsFocusCategory==T) %>%
+  mutate(Dataset = recode(Dataset, "Expression.Splicing"="polyA", "MetabolicLabelled.30min"="30min", "MetabolicLabelled.60min"="60min", "chRNA.Expression.Splicing"="chRNA")) %>%
+  mutate(Dataset = factor(Dataset, levels=c("chRNA", "30min", "60min", "polyA"))) %>%
+  ggplot(aes(x=Dataset, y=Percent)) +
+  geom_boxplot() +
+  geom_jitter(width=0.25) +
+  ylim(c(0,2)) +
+  Rotate_x_labels +
+  labs(title="predicted + annotated NMD", y="Percent splice juncs")
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/20230505_PercentTotalPredictedNMD.pdf", width=2.5, height=3)
+
+dat %>%
+  left_join(OldAnnotationToNewAnnotationKey) %>%
+  filter(!str_detect(SuperAnnotation, "Noncoding")) %>%
+  mutate(IsFocusCategory = SemiSupergroupAnnotations == "uniquely nonsense_mediated_decay tag") %>%
+  group_by(IsFocusCategory, Dataset, IndID) %>%
+  summarise(sum = sum(Count)) %>%
+  ungroup() %>%
+  group_by(Dataset, IndID) %>%
+  mutate(TotalSumForIndividual = sum(sum)) %>%
+  mutate(Percent = sum/TotalSumForIndividual*100) %>%
+  ungroup() %>%
+  filter(IsFocusCategory==T) %>%
+  mutate(Dataset = recode(Dataset, "Expression.Splicing"="polyA", "MetabolicLabelled.30min"="30min", "MetabolicLabelled.60min"="60min", "chRNA.Expression.Splicing"="chRNA")) %>%
+  mutate(Dataset = factor(Dataset, levels=c("chRNA", "30min", "60min", "polyA"))) %>%
+  ggplot(aes(x=Dataset, y=Percent)) +
+  geom_boxplot() +
+  geom_jitter(width=0.25) +
+  ylim(c(0,1)) +
+  Rotate_x_labels +
+  labs(title="annotated NMD", y="Percent splice juncs")
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/20230505_PercentAnnotatedNMD.pdf", width=2.5, height=3)
+
+
+dat %>%
+  left_join(OldAnnotationToNewAnnotationKey) %>%
+  filter(!str_detect(SuperAnnotation, "Noncoding")) %>%
+  mutate(IsFocusCategory = str_detect(SemiSupergroupAnnotations, "nonsense") | str_detect(SemiSupergroupAnnotations, "NMD") | (SemiSupergroupAnnotations == "uniquely processed_transcript tag")) %>%
+  group_by(IsFocusCategory, Dataset, IndID) %>%
+  summarise(sum = sum(Count)) %>%
+  ungroup() %>%
+  group_by(Dataset, IndID) %>%
+  mutate(TotalSumForIndividual = sum(sum)) %>%
+  mutate(Percent = sum/TotalSumForIndividual*100) %>%
+  ungroup() %>%
+  filter(IsFocusCategory==T) %>%
+  mutate(Dataset = recode(Dataset, "Expression.Splicing"="polyA", "MetabolicLabelled.30min"="30min", "MetabolicLabelled.60min"="60min", "chRNA.Expression.Splicing"="chRNA")) %>%
+  mutate(Dataset = factor(Dataset, levels=c("chRNA", "30min", "60min", "polyA"))) %>%
+  ggplot(aes(x=Dataset, y=Percent)) +
+  geom_boxplot() +
+  geom_jitter(width=0.25) +
+  ylim(c(0,3.5)) +
+  Rotate_x_labels +
+  labs(title="annotated NMD + predicted NMD + processed", y="Percent splice juncs")
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/20230505_PercentNMD_andProcessed.pdf", width=2.5, height=3)
+
+```
+
+One last plot for percent in each non basic category
+
+```{r, eval=F}
+dat %>%
+  left_join(OldAnnotationToNewAnnotationKey) %>%
+  filter(!str_detect(SuperAnnotation, "Noncoding")) %>%
+  filter(!SemiSupergroupAnnotations == "basic tag") %>%
+  group_by(Dataset, SemiSupergroupAnnotations) %>%
+  summarise(sum=sum(Count)) %>%
+  ungroup() %>%
+  mutate(Dataset = recode(Dataset, "Expression.Splicing"="polyA", "MetabolicLabelled.30min"="30min", "MetabolicLabelled.60min"="60min", "chRNA.Expression.Splicing"="chRNA")) %>%
+  mutate(Dataset = factor(Dataset, levels=c("chRNA", "30min", "60min", "polyA"))) %>%
+  ggplot(aes(x=Dataset, y=sum, fill=SemiSupergroupAnnotations)) +
+  geom_col(position="fill") +
+  labs(y="Percent of non-basic juncs")
+
+dat %>%
+  left_join(OldAnnotationToNewAnnotationKey) %>%
+  filter(!str_detect(SuperAnnotation, "Noncoding")) %>%
+  filter(!SemiSupergroupAnnotations == "basic tag") %>%
+  mutate(SemiSupergroupAnnotations = case_when(
+    SemiSupergroupAnnotations == "uniquely nonsense_mediated_decay tag" ~ "NMD annotated",
+    str_detect(SemiSupergroupAnnotations, "nonsense") | str_detect(SemiSupergroupAnnotations, "NMD") ~ "NMD predicted",
+    TRUE ~ SemiSupergroupAnnotations
+    )) %>%
+  group_by(Dataset, SemiSupergroupAnnotations) %>%
+  summarise(sum=sum(Count)) %>%
+  ungroup() %>%
+  mutate(Dataset = recode(Dataset, "Expression.Splicing"="polyA", "MetabolicLabelled.30min"="30min", "MetabolicLabelled.60min"="60min", "chRNA.Expression.Splicing"="chRNA")) %>%
+  mutate(Dataset = factor(Dataset, levels=c("chRNA", "30min", "60min", "polyA"))) %>%
+  ggplot(aes(x=Dataset, y=sum, fill=SemiSupergroupAnnotations)) +
+  geom_col(position="fill") +
+  labs(y="Percent of non-basic juncs")
+
+```
+
+
+
+
+Yang also requests a scatter of junc RPM in chRNA vs polyA just for certain annotation groups...
+
+```{r}
+dat.perjunc <- read_tsv("../code/ReadLengthMapExperimentResults/JuncCountsTidy/SummarisedByJuncAndDataset.txt.gz")
+
+dat.toplot <- dat.perjunc %>%
+  filter(Dataset %in% c("chRNA.Expression.Splicing", "Expression.Splicing")) %>%
+  unite(Int, chrom, start, end, strand) %>%
+  group_by(Dataset, Int) %>%
+  summarise(sumPerJunc = sum(Count)) %>%
+  ungroup() %>%
+  group_by(Dataset) %>%
+  mutate(sumForDataset = sum(sumPerJunc)) %>%
+  ungroup() %>%
+  mutate(RPMJunc = sumPerJunc/sumForDataset*1E6) %>%
+  left_join(
+    IntronAnnotations %>%
+      unite(Int, chrom, start, end, strand),
+    by="Int"
+  ) %>%
+  mutate(AnnotationForPlot = case_when(
+    SemiSupergroupAnnotations == "basic tag" ~ "protein coding",
+    SemiSupergroupAnnotations == "uniquely processed_transcript tag" ~ "'processed_transcript' tag",
+    SemiSupergroupAnnotations == "uniquely nonsense_mediated_decay tag" ~ "NMD annotated",
+    str_detect(SemiSupergroupAnnotations, "nonsense") | str_detect(SemiSupergroupAnnotations, "NMD") ~ "NMD predicted",
+    TRUE ~ "Other"
+  )) %>%
+  distinct(Int, Dataset, .keep_all=T) %>%
+  dplyr::select(Int, RPMJunc, Dataset, AnnotationForPlot) %>%
+  pivot_wider(names_from="Dataset", values_from="RPMJunc") %>%
+  mutate(AnnotationForPlot = factor(AnnotationForPlot, levels=c("protein coding", "'processed_transcript' tag", "NMD annotated", "NMD predicted", "Other")))
+
+dat.toplot.labels <- dat.toplot %>%
+  mutate(`chRNA.Expression.Splicing`=`chRNA.Expression.Splicing`+1E-3,
+         `Expression.Splicing`=`Expression.Splicing`+1E-3) %>%
+  mutate(Ratio = `chRNA.Expression.Splicing`/`Expression.Splicing`) %>%
+  group_by(AnnotationForPlot) %>%
+    summarise(Med = signif(median(Ratio, na.rm=T), 3),
+              Num = n()) %>%
+  mutate(label = str_glue("n={Num}\nMedian(FC)={Med}")) %>%
+  filter(!AnnotationForPlot=="Other")
+
+
+dat.toplot %>%
+  filter(!AnnotationForPlot=="Other") %>%
+ggplot(aes(y=Expression.Splicing, x=chRNA.Expression.Splicing)) +
+  geom_point(alpha=0.05) +
+  geom_abline(color='red') +
+  scale_x_continuous(trans='log10') +
+  scale_y_continuous(trans='log10') +
+  geom_density_2d() +
+  geom_text(data =dat.toplot.labels,
+            aes(label=label),x=-Inf, y=Inf, color='blue', vjust=1.1, hjust=-.05) +
+  facet_wrap(~AnnotationForPlot) +
+  labs(x="RPM across juncs, chRNA", y="RPM across juncs, polyA")
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/20230505_JuncScatter.png", width=5.5, height=5)  
+```
+
+Yang also requests to see the percent of these non-basic categories in chRNA for each quartile of host gene expression.
+
+```{r}
+exons <- read_tsv("../code/ReferenceGenome/Annotations/GTFTools_BasicAnnotations/gencode.v34.chromasomal.exons.sorted.bed", col_names=c("chrom", "start", "stop", "gene_transcript", "score", "strand"))
+
+transcripts_to_genes <- exons %>%
+  distinct(gene_transcript) %>%
+  separate(gene_transcript, into=c("gene", "transcript"), sep="_") %>%
+  mutate(gene = str_replace(gene, "(^.+?)\\..+?$", "\\1"))
+
+
+Expression.table.transcripts <- read_tsv("../code/SmallMolecule/salmon.DMSO.merged.txt")
+Expression.table.genes <- Expression.table.transcripts %>%
+  inner_join(transcripts_to_genes, by=c("Name"="transcript")) %>%
+  # filter(gene == "ENSG00000213225")
+  # add_count(gene) %>%
+  # filter(n==2)
+  group_by(gene) %>%
+  summarise_at(vars(contains("DMSO")), sum) %>%
+  gather("sample", "TPM", -gene) %>%
+  group_by(gene) %>%
+  summarise(medianTPM = median(TPM))
+
+Long.table <- fread("../code/ReadLengthMapExperimentResults/JuncCountsTidy/LongTable.txt.gz")
+
+# OldAnnotationToNewAnnotationKey$SemiSupergroupAnnotations %>% unique()
+
+dat.tidier <- Long.table %>%
+  filter(Dataset %in% c("chRNA.Expression.Splicing")) %>%
+  left_join(OldAnnotationToNewAnnotationKey) %>%
+  filter(!str_detect(SuperAnnotation, "Noncoding")) %>%
+  mutate(IsUnrpoductive = str_detect(SuperAnnotation, "Unproductive")) %>%
+  group_by(IndID, gene, IsUnrpoductive) %>%
+  summarise(SumByProductivity = sum(score)) %>%
+  mutate(gene = str_replace(gene, "^(.+?)\\..+?$", "\\1")) %>%
+  inner_join(
+    Expression.table.genes %>%
+      filter(medianTPM > 0)
+  )
+
+dat.tidier %>%
+  ungroup() %>%
+  mutate(TPM_quartile = cut_number(medianTPM, n=4)) %>%
+  group_by(TPM_quartile, IndID, IsUnrpoductive) %>%
+  summarise(SumByProductivityByQuartile = sum(SumByProductivity)) %>%
+  ungroup() %>%
+  group_by(IndID, TPM_quartile) %>%
+  mutate(PercentUnrpdocutiveByQuartile = SumByProductivityByQuartile/sum(SumByProductivityByQuartile)*100) %>%
+  ungroup() %>%
+  filter(IsUnrpoductive) %>%
+  ggplot(aes(x=TPM_quartile, y=PercentUnrpdocutiveByQuartile)) +
+  geom_boxplot() +
+  ylim(c(0,12)) +
+  geom_jitter(width=0.25) +
+  Rotate_x_labels +
+  labs( y="Percent unproductive\nsplice juncs", x="")
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/20230508_UnproductiveSplicingByHostGeneExpression.pdf", height=3.5, width=3)
+
+dat.tidier %>%
+  ungroup() %>%
+  mutate(TPM_quartile = cut_number(medianTPM, n=4)) %>%
+  group_by(TPM_quartile, IndID, IsUnrpoductive) %>%
+  summarise(SumByProductivityByQuartile = sum(SumByProductivity)) %>%
+  ungroup() %>%
+  group_by(IndID, TPM_quartile) %>%
+  mutate(PercentUnrpdocutiveByQuartile = SumByProductivityByQuartile/sum(SumByProductivityByQuartile)*100) %>%
+  ungroup() %>%
+  filter(IsUnrpoductive) %>%
+  ggplot(aes(x=TPM_quartile, y=PercentUnrpdocutiveByQuartile)) +
+  geom_boxplot() +
+  ylim(c(0,12)) +
+  geom_jitter(width=0.25) +
+  scale_x_discrete(labels=c("Q1", "Q2", "Q3", "Q4")) +
+  labs( y="Percent unproductive\nsplice juncs", x="Increasing expression\nquartiles-->")
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/20230508_UnproductiveSplicingByHostGeneExpression2.pdf", height=3, width=3.2)
+
+```

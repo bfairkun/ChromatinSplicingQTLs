@@ -52,7 +52,9 @@ CONTRASTS <- colnames(design)[-1] %>%
 
 keep <- filterByExpr(y)
 filtered <- y[keep, , keep.lib.sizes=FALSE] %>%
-  calcNormFactors()
+  # calcNormFactors(method="upperquartile", p=0.95)
+  calcNormFactors(method="none")
+  # calcNormFactors(method="TMM")
 
 fit <- filtered %>%
   estimateDisp(design) %>%
@@ -71,5 +73,14 @@ for (i in 1:ncol(CONTRASTS)){
 
 results.df <- bind_rows(results, .id="risdiplam_conc") %>%
     mutate(risdiplam_conc = as.numeric(str_replace_all(risdiplam_conc, "group", "")))
+
+results.df %>%
+    mutate(Sig = FDR<0.1) %>%
+    count(risdiplam_conc, Sig)
+
+# results.df %>%
+#     ggplot(aes(x=logFC, color=FDR<0.1)) +
+#     stat_ecdf() +
+#     facet_wrap(~risdiplam_conc)
 
 write_tsv(results.df, f_out)

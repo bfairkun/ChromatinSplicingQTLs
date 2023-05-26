@@ -1,0 +1,132 @@
+---
+title: "20230524_FindCassetteExons"
+output: html_document
+date: '2023-05-24'
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+
+library(tidyverse)
+library(RColorBrewer)
+library(data.table)
+
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family="Helvetica")))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+```
+
+## Intro
+
+Identifying cassette exons from complex splicing patterns in leafcutter clusters is not trivial. Basically I'm looking for junction/intron trios: the upstream intron, the downstream intron, and the skipped junction. There are a total of 4 splice sites: the upstream donor, the downstream donor, the upstream acceptor, the downstream acceptor. Here is my approach, since I want to identify such introns from the risdiplam data...
+
+- Get the induced GAGT introns (significant dose response spearman), and all introns in those clusters
+- Filter for most used acceptor among the potentially multiple junctions with the GAGT donor. This defines the downstream donor and downstream acceptor.
+- Starting from the GAGT intron (presumably the downstream intron in the cassette exon), find the top most used introns that share the same 3'ss, and filter out if the GAGT intron is not one of them. This will help identify the upstream donor.
+- Find the two most used acceptors that pair to the upstream donor. Filter out if the acceptors aren't the acceptor found in the original GAGT intron and another that is within 500bp of the downstream donor.
+
+```{r}
+dat <- read_tsv("../code/SmallMolecule/FitModels/Data/polyA_GAGTIntrons.tsv.gz") %>%
+  separate(Leafcutter.ID, into=c("chrom", "start", "stop", "cluster"), sep=":", remove=F)
+
+dat.genes <- read_tsv("../code/SmallMolecule/FitModels/Data/polyA_genes.tsv.gz")
+
+dat.genes %>%
+  filter(str_detect(Geneid, "ENSG00000118513")) %>%
+  filter(LibraryType == "polyA") %>%
+  ggplot(aes(x=dose.nM+0.1, y=Log2CPM)) +
+  geom_line() +
+  scale_x_continuous(trans='log10')
+
+
+dat %>%
+  filter(q < 0.1 & str_detect(DonorSeq, "^\\w{2}GAGT")) %>%
+  filter(chrom=="chr6") %>%
+  distinct(cluster, .keep_all=T)
+
+
+```
+
+MYB intron is "chr6:151036577:151036965:clu_15327_+"
+
+```{r}
+dat %>%
+  filter(cluster=="clu_15327_+")
+
+SigClusters <- dat %>%
+  filter(q < 0.1 & str_detect(DonorSeq, "^\\w{2}GAGT")) %>%
+  pull(cluster) %>% unique()
+
+dat %>%
+  filter(cluster %in% SigClusters) %>%
+  distinct(Intron, .keep_all=T) %>%
+  count(cluster) %>%
+  ggplot(aes(x=n)) +
+  stat_ecdf()
+
+dat %>%
+  filter(spearman.p<0.1) %>%
+  filter(spearman.p==max(spearman.p))
+
+dat %>%
+  filter(cluster %in% SigClusters & LibraryType=="polyA" & abs(spearman)>0.418) %>%
+  distinct(Intron, .keep_all=T) %>%
+  count(cluster) %>%
+  ggplot(aes(x=n)) +
+  stat_ecdf()
+```
+
+Scratch all that procedure above. i think that would be overly complicated... here is a new way, and a way that also considers possible alt5ss instead of totally new cassettes...
+
+- Get the induced GAGT introns (significant dose response spearman), and all introns in those clusters
+- Filter for most used acceptor among the potentially multiple junctions with the GAGT donor. This defines the downstream donor and downstream acceptor.
+- Identify the basic annotated exon that begins at that downstream acceptor. Use the most expressed transcript structure in LCLs for each gene. If none is found, skip, though I think most should be found.
+- Get upstream exon in that same transcript structure, using bedtools closest.
+- If the upstream exon is downstream of the GAGT donor, skip. Something too complicated is happening.
+- If upstream exon uses the GAGT splice donor, well the GAGT intron is just a naturally occuring GAGT basic intron. Nothing to translate.
+- if the upstream exon intersects the splice donor it is a crptic exonic alt 5'ss Save what needs to be translated before and after induction. (UpstreamExonA, UpstreamExonB, and DownstreamExon)
+- if upstream exon is within 500bp upstream of the GAGT donor, it is a cryptic intron alt 5'ss. Save what needs to be translated before and after induction.  (UpstreamExonA, UpstreamExonB, and AnnotatedDownstreamExon)
+- if the upstream exon is >500 upstream of the GAGT donor, it is likely involved in poison exon inclusion. Find the most used splice acceptor within leafcutter cluster. Verify that the trio of introns is in the leafcutter cluster. Save what needs to be translated before and after induction.  (AnnotatedUpstreamExon, CassetteExon, and AnnotatedDownstreamExon)
+
+```{r}
+exons <- read_tsv("../code/ReferenceGenome/Annotations/GTFTools_BasicAnnotations/gencode.v34.chromasomal.exons.sorted.bed", col_names=c("chrom", "start", "stop", "gene_transcript", "score", "strand"))
+
+transcripts_to_genes <- exons %>%
+  distinct(gene_transcript) %>%
+  separate(gene_transcript, into=c("gene", "transcript"), sep="_") %>%
+  mutate(gene = str_replace(gene, "(^.+?)\\..+?$", "\\1"))
+
+
+Expression.table.transcripts <- read_tsv("../code/SmallMolecule/salmon.DMSO.merged.txt")
+Expression.table.genes <- Expression.table.transcripts %>%
+  inner_join(transcripts_to_genes, by=c("Name"="transcript")) %>%
+  group_by(gene) %>%
+  summarise_at(vars(contains("DMSO")), sum) %>%
+  gather("sample", "TPM", -gene) %>%
+  group_by(gene) %>%
+  summarise(medianTPM = median(TPM))
+
+MostExpressedTranscriptsPerGene <- Expression.table.transcripts %>%
+  inner_join(transcripts_to_genes, by=c("Name"="transcript")) %>%
+  rowwise() %>% 
+  mutate(Median = median(DMSO_NA_LCL_polyA_1, DMSO_NA_LCL_polyA_2, DMSO_NA_LCL_polyA_3)) %>%
+  ungroup() %>%
+  group_by(gene) %>%
+  filter(Median==max(Median)) %>%
+  ungroup() %>%
+  filter(Median>0) %>%
+  distinct(gene, .keep_all=T) %>%
+  dplyr::rename(transcript=Name)
+
+ExonsOfMostExpressed <- exons %>%
+  separate(gene_transcript, into=c("gene", "transcript"), sep="_") %>%
+  mutate(gene = str_replace(gene, "(.+)\\..+$", "\\1")) %>%
+  inner_join(MostExpressedTranscriptsPerGene)
+```
+

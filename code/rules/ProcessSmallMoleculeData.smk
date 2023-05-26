@@ -219,6 +219,8 @@ rule FitDoseResponseLogLogisticModel:
     output:
         GeneModelParams = "SmallMolecule/FitModels/polyA_genes.tsv.gz",
         IntronModelParams = "SmallMolecule/FitModels/polyA_GAGTIntrons.tsv.gz",
+        GeneTidy = "SmallMolecule/FitModels/Data/polyA_genes.tsv.gz",
+        IntronTidy = "SmallMolecule/FitModels/Data/polyA_GAGTIntrons.tsv.gz",
     log:
         "logs/FitDoseResponseLogLogisticModel.log"
     conda:
@@ -426,13 +428,49 @@ rule MergeSalmon:
     input:
         expand("SmallMolecule/salmon/{Sample}/quant.sf", Sample = [i for i in SM_samples['SampleName'].unique() if 'DMSO' in i and 'polyA' in i])
     output:
-        "SmallMolecule/salmon.DMSO.merged.txt"
+        transcripts = "SmallMolecule/salmon.DMSO.merged.txt",
     conda:
         "../envs/salmon.yml"
     shell:
         """
-        salmon quantmerge --quants SmallMolecule/salmon/* -o {output}
+        salmon quantmerge --quants SmallMolecule/salmon/* -o {output.transcripts}
         """
+
+rule SmallMolecule_GetFlankingExonsInBasicTransripts:
+    input:
+        salmon = "SmallMolecule/salmon.DMSO.merged.txt",
+        OverlappingExons = "SmallMolecule/CassetteExons/FlankingExons.tsv.gz",
+        CassetteExons = "../output/SmallMoleculeGAGT_CassetteExonclusters.bed"
+    output:
+        Wide = "SmallMolecule/CassetteExons/ExonsToTranslate.tsv.gz",
+        Long = "SmallMolecule/CassetteExons/ExonsToTranslate.long.bed"
+    log:
+        "logs/SmallMolecule_GetFlankingExonsInBasicTransripts.log"
+    conda:
+        "../envs/r_2.yaml"
+    shell:
+        """
+        Rscript scripts/SmallMolecule_GetFlankingExonsInBasicTranscriptsToTranslate.R {output} &> {log}
+        """
+
+rule SmallMolecule_TranslateCassetteExons:
+    input:
+        Exons = "SmallMolecule/CassetteExons/ExonsToTranslate.tsv.gz",
+        fa = "ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa",
+        fai = "ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa.fai",
+        gtf = "ReferenceGenome/Annotations/gencode.v34.chromasomal.basic.annotation.gtf.gz",
+        gtftbi = "ReferenceGenome/Annotations/gencode.v34.chromasomal.basic.annotation.gtf.gz.tbi",
+    output:
+        "SmallMolecule/CassetteExons/ExonsToTranslate.Translated.tsv.gz"
+    conda:
+        "../envs/py_tools.yml"
+    log:
+        "logs/SmallMolecule_TranslateCassetteExons.log"
+    shell:
+        """
+        python scripts/SmallMoleculeParseCassetteExons.py {output} {input.Exons} {input.gtf} {input.fa} &> {log}
+        """
+
 
 # rule featureCountInducedCassetteExons:
 #     input:

@@ -1,0 +1,144 @@
+---
+title: "20230522_ResolvePercentNMD_Discrepancy"
+output: html_document
+date: '2023-05-22'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+
+## Intro
+
+There might be a discrepancy in our estimate of % NMD-inducing junctions, based on the mapping settings... Is the percent 3%, or 6%?.. Let me try to get to the bottom of this...
+
+## Results
+
+### load libs
+
+```{r}
+library(tidyverse)
+library(data.table)
+
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family="Helvetica")))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+
+```
+
+
+### From remapped data
+
+samples with YRI sample in all 4 RNA-seq types were remapped with consistent single end read length, multi-sample two-pass star mapping.
+
+
+```{r}
+dat <- read_tsv("../code/ReadLengthMapExperimentResults/JuncCountsTidy/SummarisedBySampleAndAnnotation.txt.gz")
+
+IntronAnnotations <- read_tsv("../data/IntronAnnotationsFromYang.tsv.gz")
+
+OldAnnotationToNewAnnotationKey <- IntronAnnotations %>%
+  distinct(NewAnnotation, SemiSupergroupAnnotations, SuperAnnotation)
+
+
+dat %>%
+  left_join(OldAnnotationToNewAnnotationKey) %>%
+  mutate(IsFocusCategory = !SemiSupergroupAnnotations == "basic tag") %>%
+  group_by(IsFocusCategory, Dataset, IndID) %>%
+  summarise(sum = sum(Count)) %>%
+  ungroup() %>%
+  group_by(Dataset, IndID) %>%
+  mutate(TotalSumForIndividual = sum(sum)) %>%
+  mutate(Percent = sum/TotalSumForIndividual*100) %>%
+  ungroup() %>%
+  mutate(IsFocusCategory == F) %>%
+  mutate(Dataset = recode(Dataset, "Expression.Splicing"="polyA", "MetabolicLabelled.30min"="30min", "MetabolicLabelled.60min"="60min", "chRNA.Expression.Splicing"="chRNA")) %>%
+  mutate(Dataset = factor(Dataset, levels=c("chRNA", "30min", "60min", "polyA"))) %>%
+  filter(IsFocusCategory==T) %>%
+  ggplot(aes(x=Dataset, y=Percent)) +
+  geom_boxplot() +
+  geom_jitter(width=0.25) +
+  Rotate_x_labels +
+  labs(title="Not basic tag", y="Percent splice juncs")
+```
+
+Woah, that's different than i was expecting... oh.. i forgot to first filter out the junctions in non-coding genes...
+
+
+```{r}
+dat %>%
+  left_join(OldAnnotationToNewAnnotationKey) %>%
+  filter(!str_detect(SuperAnnotation, "Noncoding")) %>%
+  mutate(IsFocusCategory = !str_detect(SuperAnnotation, "Productive")) %>%
+  group_by(IsFocusCategory, Dataset, IndID) %>%
+  summarise(sum = sum(Count)) %>%
+  ungroup() %>%
+  group_by(Dataset, IndID) %>%
+  mutate(TotalSumForIndividual = sum(sum)) %>%
+  mutate(Percent = sum/TotalSumForIndividual*100) %>%
+  ungroup() %>%
+  mutate(IsFocusCategory == F) %>%
+  mutate(Dataset = recode(Dataset, "Expression.Splicing"="polyA", "MetabolicLabelled.30min"="30min", "MetabolicLabelled.60min"="60min", "chRNA.Expression.Splicing"="chRNA")) %>%
+  mutate(Dataset = factor(Dataset, levels=c("chRNA", "30min", "60min", "polyA"))) %>%
+  filter(IsFocusCategory==T) %>%
+  ggplot(aes(x=Dataset, y=Percent)) +
+  geom_boxplot() +
+  geom_jitter(width=0.25) +
+  ylim(0,4) +
+  Rotate_x_labels +
+  labs(title="Productive, remapped", y="Percent splice juncs")
+
+
+```
+
+### From original mapped data
+
+All samples were included, samples were mapped with full available read lengths. Single sample two-pass star mapping. This is how data were mapped for sQTL/eQTL calling.
+
+```{r}
+dat.originalmapping <- fread("../code/SplicingAnalysis/regtools_annotate_combined/Comprehensive.YRI.Sample.LongTable.Counts.tsv.gz") %>%
+  dplyr::rename(chrom=`#Chrom`) %>%
+  left_join(IntronAnnotations)
+
+# dat.originalmapping.ByAnnotationSummary <- dat.originalmapping %>%
+#   group_by(SemiSupergroupAnnotations, chrom, start, end, strand, Dataset, gene, Sample, SuperAnnotation) %>%
+#   summarise(Count = sum(Count)) %>%
+#   ungroup() %>%
+#   dplyr::rename(IndID = Sample)
+
+dat.originalmapping.ByAnnotationSummary <- dat.originalmapping %>%
+  group_by(SemiSupergroupAnnotations, Dataset, Sample) %>%
+  summarise(Count = sum(Count)) %>%
+  ungroup() %>%
+  dplyr::rename(IndID = Sample)
+
+dat.originalmapping.ByAnnotationSummary %>%
+  left_join(OldAnnotationToNewAnnotationKey %>% dplyr::select(SemiSupergroupAnnotations, SuperAnnotation)) %>%
+  filter(!str_detect(SuperAnnotation, "Noncoding")) %>%
+  mutate(IsFocusCategory = !str_detect(SuperAnnotation, "Productive")) %>%
+  group_by(IsFocusCategory, Dataset, IndID) %>%
+  summarise(sum = sum(Count)) %>%
+  ungroup() %>%
+  group_by(Dataset, IndID) %>%
+  mutate(TotalSumForIndividual = sum(sum)) %>%
+  mutate(Percent = sum/TotalSumForIndividual*100) %>%
+  ungroup() %>%
+  mutate(IsFocusCategory == F) %>%
+  mutate(Dataset = recode(Dataset, "Expression.Splicing"="polyA", "MetabolicLabelled.30min"="30min", "MetabolicLabelled.60min"="60min", "chRNA.Expression.Splicing"="chRNA")) %>%
+  mutate(Dataset = factor(Dataset, levels=c("chRNA", "30min", "60min", "polyA"))) %>%
+  filter(IsFocusCategory==T) %>%
+  ggplot(aes(x=Dataset, y=Percent)) +
+  geom_boxplot() +
+  geom_jitter(width=0.25) +
+  ylim(c(0,10)) +
+  Rotate_x_labels +
+  labs(title="Productive, original mapping", y="Percent splice juncs")
+
+
+
+```
+
