@@ -225,4 +225,153 @@ use rule plotHeatmapCoverageMetaplotsQuartiles as plotHeatmapCoverageMetaplotsQu
     log:
         "logs/Metaplots/PlotHeatmap.Quartiles.{Phenotype}.{IndID}.{quartiles}.{strand}.log"
         
+
+def GetStrandParams(wildcards):
+    if wildcards.strand == 'plus':
+        return '"+"'
+    elif wildcards.strand == 'minus':
+        return '"-"'
+
+rule GetIntronsBed:
+    input:
+        "QTLs/QTLTools/chRNA.IER/OnlyFirstReps.qqnorm.bed.gz"
+    output:
+        "Metaplots/AssayProfiles/References/spliceq.introns.{strand}.bed"
+    log:
+        "logs/Metaplots/spliceq.introns.{strand}.log"
+    resources:
+        mem_mb = 12000
+    params:
+        GetStrandParams
+    wildcard_constraints:
+        strand = 'plus|minus'
+    shell:
+        """
+        (zcat {input} | awk '(NR>1 && $6=={params})  {{print $1, $2, $3, $4, $5, $6}}' FS='\\t' OFS='\\t' | bedtools sort -i - > {output}) &> {log}
+        """
         
+rule GetIntronsBed_long:
+    input:
+        "QTLs/QTLTools/chRNA.IER/OnlyFirstReps.qqnorm.bed.gz"
+    output:
+        "Metaplots/AssayProfiles/References/spliceq.introns.{strand}.long_introns.bed"
+    log:
+        "logs/Metaplots/spliceq.introns.{strand}.log"
+    resources:
+        mem_mb = 12000
+    wildcard_constraints:
+        strand = 'plus|minus'
+    params:
+        GetStrandParams
+    shell:
+        """
+        (zcat {input} | awk '(NR>1 && $6=={params} && (($3-$2)>10000))  {{print $1, $2, $3, $4, $5, $6}}' FS='\\t' OFS='\\t' | bedtools sort -i - > {output}) &> {log}
+        """
+    
+def GetChRNASample(wildcards):
+    if wildcards.strand == 'plus':
+        return "/project2/yangili1/bjf79/ChromatinSplicingQTLs/code/bigwigs/chRNA.Expression.Splicing_stranded/{IndID}.1.minus.bw",
+    elif wildcards.strand == 'minus':
+        return "/project2/yangili1/bjf79/ChromatinSplicingQTLs/code/bigwigs/chRNA.Expression.Splicing_stranded/{IndID}.1.plus.bw",
+
+rule ComputeMatrixForIntrons_chRNA:
+    input:
+        chRNA = GetChRNASample,
+        ml30 = "/project2/yangili1/bjf79/ChromatinSplicingQTLs/code/bigwigs/MetabolicLabelled.30min/{IndID}.1.bw",
+        ml60 = "/project2/yangili1/bjf79/ChromatinSplicingQTLs/code/bigwigs/MetabolicLabelled.60min/{IndID}.1.bw",
+        polyA = "/project2/yangili1/bjf79/ChromatinSplicingQTLs/code/bigwigs/Expression.Splicing/{IndID}.1.bw",
+        bed = "Metaplots/AssayProfiles/References/spliceq.introns.{strand}.bed"
+    output:
+        "Metaplots/AssayProfiles/Matrix/Introns.{IndID}.{strand}.mat"
+    log:
+        "logs/Metaplots/ComputeMatrix.splicing.chRNA.Expression.Splicing.{IndID}.{strand}.log"
+    conda:
+        "../envs/deeptools.yml"
+    resources:
+        mem_mb = 12000
+    wildcard_constraints:
+        IndID = "|".join(['NA18486', 'NA19137', 'NA19152', 'NA19153']),
+        strand = 'plus|minus'
+    shell:
+        """
+        computeMatrix scale-regions -S {input.chRNA} {input.ml30} {input.ml60} {input.polyA} -R {input.bed} -m 600 -b 200 -a 200 -o {output} &> {log}
+        """
+        
+rule ComputeMatrixForIntrons_long:
+    input:
+        chRNA = GetChRNASample,
+        ml30 = "/project2/yangili1/bjf79/ChromatinSplicingQTLs/code/bigwigs/MetabolicLabelled.30min/{IndID}.1.bw",
+        ml60 = "/project2/yangili1/bjf79/ChromatinSplicingQTLs/code/bigwigs/MetabolicLabelled.60min/{IndID}.1.bw",
+        polyA = "/project2/yangili1/bjf79/ChromatinSplicingQTLs/code/bigwigs/Expression.Splicing/{IndID}.1.bw",
+        bed = "Metaplots/AssayProfiles/References/spliceq.introns.{strand}.long_introns.bed"
+    output:
+        "Metaplots/AssayProfiles/Matrix/Introns.{IndID}.{strand}.long_introns.mat"
+    log:
+        "logs/Metaplots/ComputeMatrix.splicing.chRNA.Expression.Splicing.{IndID}.{strand}.long_introns.log"
+    conda:
+        "../envs/deeptools.yml"
+    resources:
+        mem_mb = 12000
+    wildcard_constraints:
+        IndID = "|".join(['NA18486', 'NA19137', 'NA19152', 'NA19153']),
+        strand = 'plus|minus'
+    shell:
+        """
+        computeMatrix scale-regions -S {input.chRNA} {input.ml30} {input.ml60} {input.polyA} -R {input.bed} -m 600 -b 200 -a 200 -o {output} &> {log}
+        """
+
+#rule ComputeMatrixForIntrons:
+#    input:
+#        bigwigs = "/project2/yangili1/bjf79/ChromatinSplicingQTLs/code/bigwigs/{Phenotype}/{IndID}.1.bw",
+#        bed = "Metaplots/AssayProfiles/References/spliceq.introns.{strand}.bed"
+#    output:
+#        "Metaplots/AssayProfiles/Matrix/Introns.{Phenotype}.{IndID}.{strand}.mat"
+#    log:
+#        "logs/Metaplots/ComputeMatrix.splicing.{Phenotype}.{IndID}.{strand}.log"
+#    conda:
+#        "../envs/deeptools.yml"
+#    wildcard_constraints:
+#        Phenotype = "|".join(["Expression.Splicing", "MetabolicLabelled.30min", "MetabolicLabelled.60min"]),
+#        IndID = "|".join(['NA18486', 'NA19137', 'NA19152', 'NA19153']),
+#    resources:
+#        mem_mb = 12000
+#    shell:
+#        """
+#        computeMatrix scale-regions -S {input.bigwigs} -R {input.bed} -m 500 -b 100 -a 100 -o {output} &> {log}
+#        """
+        
+rule plotHeatmapMetaplots_Introns:
+    input:
+        "Metaplots/AssayProfiles/Matrix/Introns.{IndID}.{strand}.mat"
+    output:
+        "Metaplots/AssayProfiles/Plots/Introns.{IndID}.{strand}.png"
+    wildcard_constraints:
+        strand = 'plus|minus',
+        IndID = "|".join(['NA18486', 'NA19137', 'NA19152', 'NA19153']),
+    conda:
+        "../envs/deeptools.yml"
+    log:
+        "logs/Metaplots/PlotHeatmap.Introns.{IndID}.{strand}.log"
+    shell:
+        """
+        plotHeatmap -m {input} -o {output} --averageTypeSummaryPlot mean --heatmapHeight 14 &>> {log}
+        """
+        
+rule plotHeatmapMetaplots_Introns_long:
+    input:
+        "Metaplots/AssayProfiles/Matrix/Introns.{IndID}.{strand}.long_introns.mat"
+    output:
+        "Metaplots/AssayProfiles/Plots/Introns.{IndID}.{strand}.long_introns.png"
+    wildcard_constraints:
+        strand = 'plus|minus',
+        IndID = "|".join(['NA18486', 'NA19137', 'NA19152', 'NA19153']),
+    conda:
+        "../envs/deeptools.yml"
+    log:
+        "logs/Metaplots/PlotHeatmap.Introns.{IndID}.{strand}.log"
+    shell:
+        """
+        plotHeatmap -m {input} -o {output} --averageTypeSummaryPlot mean --heatmapHeight 14 &>> {log}
+        """
+
+
