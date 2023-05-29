@@ -105,7 +105,7 @@ MolQTL_Labels <- relabel.df %>% dplyr::select(PC, Shortest) %>% deframe()
 MolQTL_AssayLabels <- relabel.df %>% dplyr::select(PC, Assay) %>% deframe()
 Factor_Order <- relabel.df %>% dplyr::select(PC, OrderFactor) %>% deframe()
 
-NumQTLs <- Full.dat %>%
+NumQTLs.dat <- Full.dat %>%
   filter(PC %in% c("APA_Total", "APA_Nuclear")) %>%
   separate(phe_id, into=c("gene", "region", "peak"), sep="_") %>%
   arrange(adj_emp_pval) %>% 
@@ -118,15 +118,16 @@ NumQTLs <- Full.dat %>%
   summarise(
     FDR_10 = sum(q<0.1, na.rm=T),
     FDR_05 = sum(q<0.05,  na.rm=T),
-    FDR_01 = sum(q<0.01,  na.rm=T)) %>%
-  gather("FDR", "n", -PC) %>%
+    FDR_01 = sum(q<0.01,  na.rm=T),
+    TestFeats=n()) %>%
+  gather("FDR", "n", -PC, -TestFeats) %>%
   mutate(PC_relabeled = recode(PC, !!!MolQTL_Labels)) %>%
   mutate(Assay_relabeled = recode(PC, !!!MolQTL_AssayLabels)) %>%
   mutate(FinalLabels = paste(PC_relabeled, Assay_relabeled, sep="\n")) %>%
-  # pull(FinalLabels) %>% unique()
   mutate(OrderFactor = recode(PC, !!!Factor_Order)) %>%
-  mutate(FinalLabels = fct_reorder(FinalLabels, OrderFactor)) %>%
-  ggplot(aes(x=FinalLabels, y=n, fill=FDR)) +
+  mutate(FinalLabels = fct_reorder(FinalLabels, OrderFactor))
+
+Num.QTLs <- ggplot(NumQTLs.dat, aes(x=FinalLabels, y=n, fill=FDR)) +
   geom_col(position="identity", width=0.8) +
   Rotate_x_labels +
   scale_y_continuous(trans="log10", breaks=10**(1:5), labels=c(10, 100, "1K", "10K", "100K")) +
@@ -139,7 +140,7 @@ NumQTLs <- Full.dat %>%
   geom_text(
     data = . %>%
       filter(FDR== "FDR_10"),
-      aes(label=n), angle=90, hjust=0,
+      aes(label=str_glue("{n} / {TestFeats}")), angle=90, hjust=0,
     color="black") +
   coord_cartesian(ylim=c(100,1E5)) +
   scale_fill_manual(values=c("FDR_10"="#ffeda0", "FDR_05"="#feb24c", "FDR_01"="#f03b20"), labels=c("FDR_10"="10%", "FDR_05"="5%", "FDR_01"="1%")) +
@@ -147,8 +148,17 @@ NumQTLs <- Full.dat %>%
   labs(x="molQTL type, assay", y="Number QTLs", fill="FDR", caption=str_wrap("*Each sQTL/APA-QTL count here represents a likely independent genetic effect that may effect multiple introns/APA-sites within a local leafcutter cluster of introns/APA-sites", 40)) +
   theme(axis.text.x = element_text(size=9, hjust=1, angle=70))
 
-NumQTLs
+Num.QTLs
 
+NumQTLs.dat %>% kable()
+
+NumQTLs.dat %>%
+  filter(FDR=="FDR_10") %>%
+  pull(n) %>% sum()
+
+NumQTLs.dat %>%
+  filter(FDR=="FDR_10") %>%
+  pull(TestFeats) %>% sum()
 ```
 
 
@@ -296,11 +306,691 @@ dat.for.boxplots %>%
 ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig2_ExampleBoxplot_chRNAsQTL.pdf", height=3, width=2)
 ```
 
+### Classification of unannotated and unproductive juncs
+
+Actually a supplement related to fig1
+
+```{r}
+juncs.long <- fread("../code/SplicingAnalysis/CombinedJuncTables/YRI.tsv.gz")
+
+IntronAnnotations <- read_tsv("../data/IntronAnnotationsFromYang.tsv.gz") %>%
+  mutate(stop = end-1)
+
+juncs.long.summary <- juncs.long %>%
+  dplyr::select(chrom, start, stop, strand, Dataset, Count) %>%
+  inner_join(IntronAnnotations) %>%
+  group_by(Dataset, SemiSupergroupAnnotations, SuperAnnotation) %>%
+  summarise(Sum=sum(Count))
+
+
+P.PercentAnnotated <- juncs.long.summary %>%
+  ungroup() %>%
+  filter(Dataset %in% c("Expression.Splicing", "chRNA.Expression.Splicing")) %>%
+  filter(!str_detect(SuperAnnotation, "Noncoding")) %>%
+  group_by(Dataset, SuperAnnotation) %>%
+  summarise(TotalSum = sum(Sum)) %>%
+  ungroup() %>%
+  mutate(PlotGroup = if_else(SuperAnnotation=="AnnotatedJunc_ProductiveCodingGene", "Annotated productive (basic tag)", "Other")) %>%
+  group_by(Dataset) %>%
+  mutate(DatasetSum = sum(TotalSum)) %>%
+  ungroup() %>%
+  group_by(Dataset, PlotGroup) %>%
+  summarise(Percent=sum(TotalSum)/DatasetSum) %>%
+  ungroup() %>%
+  distinct() %>%
+  mutate(Dataset = factor(Dataset, levels=c("Expression.Splicing", "chRNA.Expression.Splicing"))) %>%
+  ggplot(aes(x=Dataset, y=Percent*100, fill=PlotGroup)) +
+  geom_col() +
+  scale_x_discrete(labels=c("Expression.Splicing"="polyA RNA", "chRNA.Expression.Splicing"="chRNA")) +
+  scale_y_continuous(expand=c(0,0)) +
+  scale_fill_manual(values=c("Annotated productive (basic tag)"="#1f78b4", "Other"="#969696")) + 
+  scale_y_break(c(5, 95), expand=F, space=0.5) +
+  labs(y="Percent of splice junction reads", fill="Intron classification") +
+  theme(legend.position="none")
+P.PercentAnnotated <- ggplotify::as.ggplot(print(P.PercentAnnotated))
+P.PercentAnnotated
+
+P.PercentOfUnannotated <- juncs.long.summary %>%
+  ungroup() %>%
+  filter(Dataset %in% c("chRNA.Expression.Splicing")) %>%
+  filter(!str_detect(SuperAnnotation, "Noncoding")) %>%
+  filter(SuperAnnotation!="AnnotatedJunc_ProductiveCodingGene") %>%
+  mutate(PercentOfNon_AnnotatedProductive = Sum/sum(Sum)*100) %>%
+  arrange(desc(SuperAnnotation), PercentOfNon_AnnotatedProductive) %>%
+  mutate(n=row_number()) %>%
+  mutate(SemiSupergroupAnnotations=fct_reorder(SemiSupergroupAnnotations, n)) %>%
+  ggplot(aes(x=Dataset, y=PercentOfNon_AnnotatedProductive, fill=SemiSupergroupAnnotations)) +
+  geom_col()
+P.PercentOfUnannotated
+```
+
+One more version... with fixed scale... borrowed code from [here](https://github.com/slowkow/ggrepel/issues/161)
+
+```{r}
+position_stack_and_nudge <- function(x = 0, y = 0, vjust = 1, reverse = FALSE) {
+  ggproto(NULL, PositionStackAndNudge,
+    x = x,
+    y = y,
+    vjust = vjust,
+    reverse = reverse
+  )
+}
+
+#' @rdname ggplot2-ggproto
+#' @format NULL
+#' @usage NULL
+#' @noRd
+PositionStackAndNudge <- ggproto("PositionStackAndNudge", PositionStack,
+  x = 0,
+  y = 0,
+
+  setup_params = function(self, data) {
+    c(
+        list(x = self$x, y = self$y),
+        ggproto_parent(PositionStack, self)$setup_params(data)
+    )
+  },
+
+  compute_layer = function(self, data, params, panel) {
+    # operate on the stacked positions (updated in August 2020)
+    data = ggproto_parent(PositionStack, self)$compute_layer(data, params, panel)
+
+    x_orig <- data$x
+    y_orig <- data$y
+    # transform only the dimensions for which non-zero nudging is requested
+    if (any(params$x != 0)) {
+      if (any(params$y != 0)) {
+        data <- transform_position(data, function(x) x + params$x, function(y) y + params$y)
+      } else {
+        data <- transform_position(data, function(x) x + params$x, NULL)
+      }
+    } else if (any(params$y != 0)) {
+      data <- transform_position(data, function(x) x, function(y) y + params$y)
+    }
+    data$nudge_x <- data$x
+    data$nudge_y <- data$y
+    data$x <- x_orig
+    data$y <- y_orig
+
+    data
+  },
+
+  compute_panel = function(self, data, params, scales) {
+      ggproto_parent(PositionStack, self)$compute_panel(data, params, scales)
+  }
+)
+```
+
+```{r}
+
+AnnotationColors <- IntronAnnotations %>%
+  distinct(SemiSupergroupAnnotations, SuperAnnotation) %>%
+  mutate(Color = recode(SuperAnnotation, !!!c(
+    "AnnotatedJunc_NoncodingGene"="#6a3d9a",
+    "UnannotatedJunc_NoncodingGene"="#cab2d6",
+    "AnnotatedJunc_ProductiveCodingGene"="#1f78b4",
+    "UnannotatedJunc_ProductiveCodingGene"="#a6cee3",
+    "AnnotatedJunc_UnproductiveCodingGene"="#e31a1c",
+    "UnannotatedJunc_UnproductiveCodingGene"="#fb9a99")))
+
+P.PercentOfUnannotated <- juncs.long.summary %>%
+  ungroup() %>%
+  filter(Dataset %in% c("chRNA.Expression.Splicing")) %>%
+  filter(!str_detect(SuperAnnotation, "Noncoding")) %>%
+  filter(SuperAnnotation!="AnnotatedJunc_ProductiveCodingGene") %>%
+  mutate(PercentOfNon_AnnotatedProductive = Sum/sum(Sum)*100) %>%
+  mutate(SemiSupergroupAnnotations=if_else(Sum <= 996286 & SuperAnnotation=="UnannotatedJunc_UnproductiveCodingGene", "Other predicted non-productive", SemiSupergroupAnnotations)) %>%
+  group_by(Dataset, SemiSupergroupAnnotations, SuperAnnotation) %>%
+  summarise(PercentOfNon_AnnotatedProductive=sum(PercentOfNon_AnnotatedProductive)) %>%
+  ungroup() %>%
+  arrange(desc(SuperAnnotation), PercentOfNon_AnnotatedProductive) %>%
+  mutate(n=row_number()) %>%
+  mutate(SemiSupergroupAnnotations=fct_reorder(SemiSupergroupAnnotations, n)) %>%
+  ggplot(aes(x=Dataset, y=PercentOfNon_AnnotatedProductive, fill=SemiSupergroupAnnotations)) +
+  geom_col(color='black') +
+  geom_text_repel(
+      aes(label = SemiSupergroupAnnotations, x=1.4),
+      max.overlaps = Inf,
+      min.segment.length=0,
+      label.padding=1,
+      position = position_stack_and_nudge(vjust = 0.5, x = 1),
+      direction = 'both',
+      arrow=NULL
+  ) +
+  scale_y_continuous(expand=c(0,0)) +
+  scale_x_discrete(expand=c(0,0)) +
+  scale_fill_manual(values=AnnotationColors %>% dplyr::select(SemiSupergroupAnnotations, Color) %>% deframe(), na.value="#fb9a99") +
+  theme(legend.position='none') +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  labs(y="Percent junction reads amongst other")
+
+P.PercentOfUnannotated
+
+P.PercentJuncsLegend.dat <- 
+  AnnotationColors %>%
+  distinct(SuperAnnotation, .keep_all=T) %>%
+  filter(!str_detect(SuperAnnotation, "Noncoding"))
+
+P.PercentJuncsLegend <- ggplot(P.PercentJuncsLegend.dat, aes(x=SuperAnnotation, y=1, fill=SuperAnnotation)) +
+  geom_col() +
+  scale_fill_manual(values=P.PercentJuncsLegend.dat %>%
+                      dplyr::select(SuperAnnotation, Color) %>% deframe(), labels=c("AnnotatedJunc_UnproductiveCodingGene"="Annotated unproductive", "AnnotatedJunc_ProductiveCodingGene"="Annotated productive", "UnannotatedJunc_ProductiveCodingGene"="Unannotated unproductive", "UnannotatedJunc_UnproductiveCodingGene"="Unannotated productive")) +
+  labs(fill="Intron classification")
+
+```
+
+Number eQTLs per gene, hQTLs, sQTLs
+
+```{r}
+dat <- fread("../code/pi1/PairwisePi1Traits.P.all.txt.gz")
+
+dat$PC2 %>% unique()
+
+
+
+NumMolQTLsPerGene <- dat %>%
+  filter(PC1=="Expression.Splicing" & FDR.x < 0.1) %>%
+  mutate(P2 = case_when(
+    PC2 %in% c("polyA.Splicing", "chRNA.Splicing", "polyA.Splicing.Subset_YRI") ~ str_extract(P2, "clu_.+$"),
+    TRUE ~ P2
+  )) %>%
+  group_by(PC1, PC2, P2, GeneLocus) %>%
+  slice(which.min(FDR.y)) %>%
+  ungroup() %>%
+  mutate(IsPc2SigFDR = FDR.y < 0.1) %>%
+  mutate(IsPc2SigPermutationP = p_permutation.y < 0.01) %>%
+  group_by(PC2, GeneLocus) %>%
+  summarise(Num_PC2_QTLs_FDR = sum(IsPc2SigFDR),
+            Num_PC2_QTLs_PermutationP = sum(IsPc2SigPermutationP)) %>%
+  ungroup()
+
+NumMolQTLsPerGene %>%
+  filter(PC2 %in% c("H3K27AC", "polyA.Splicing")) %>%
+  ggplot(aes(x=Num_PC2_QTLs_PermutationP)) +
+  stat_ecdf() +
+  facet_wrap(~PC2) +
+  coord_cartesian(xlim=c(0,5))
+
+NumMolQTLsPerGene %>%
+  filter(PC2 %in% c("H3K27AC", "polyA.Splicing")) %>%
+  ggplot(aes(x=Num_PC2_QTLs_FDR)) +
+  stat_ecdf() +
+  facet_wrap(~PC2) +
+  coord_cartesian(xlim=c(0,5))
+
+NumMolQTLsPerGene %>%
+  ggplot(aes(x=Num_PC2_QTLs_PermutationP)) +
+  stat_ecdf() +
+  facet_wrap(~PC2) +
+  coord_cartesian(xlim=c(0,5))
+```
+
+Ok, now let's plot that nicer for saving...
+
+```{r}
+eGenes <- dat %>%
+  filter(PC1=="Expression.Splicing" & FDR.x < 0.1) %>%
+  pull(P1) %>% unique()
+
+P.Number_hQTLsForColoc <- NumMolQTLsPerGene %>%
+  filter(GeneLocus %in% eGenes) %>%
+  # filter(PC2 %in% c("H3K27AC", "polyA.Splicing")) %>%
+  filter(PC2=="H3K27AC") %>%
+  mutate(n = if_else(Num_PC2_QTLs_PermutationP>5, as.integer(5), Num_PC2_QTLs_PermutationP)) %>%
+  count(PC2, n) %>%
+  ggplot(aes(x=n, y=nn)) +
+  geom_col() +
+  scale_x_continuous(breaks=0:5, labels=c(0:4, ">4")) +
+  labs(x="Number H3K27AC hQTLs w/in 100kb of gene", y="Number eGenes")
+NumMolQTLsPerGene %>%
+  filter(GeneLocus %in% eGenes) %>%
+  # filter(PC2 %in% c("H3K27AC", "polyA.Splicing")) %>%
+  filter(PC2=="H3K27AC") %>%
+  mutate(n = if_else(Num_PC2_QTLs_PermutationP>5, as.integer(5), Num_PC2_QTLs_PermutationP)) %>%
+  count(PC2, n)
+
+P.Number_sQTLsForColoc <- NumMolQTLsPerGene %>%
+  filter(GeneLocus %in% eGenes) %>%
+  # filter(PC2 %in% c("H3K27AC", "polyA.Splicing")) %>%
+  filter(PC2=="polyA.Splicing") %>%
+  mutate(n = if_else(Num_PC2_QTLs_PermutationP>5, as.integer(5), Num_PC2_QTLs_PermutationP)) %>%
+  count(PC2, n) %>%
+  ggplot(aes(x=n, y=nn)) +
+  geom_col() +
+  scale_x_continuous(breaks=0:5, labels=c(0:4, ">4")) +
+  labs(x="Number sQTLs within gene", y="Number eGenes")
+NumMolQTLsPerGene %>%
+  filter(GeneLocus %in% eGenes) %>%
+  # filter(PC2 %in% c("H3K27AC", "polyA.Splicing")) %>%
+  filter(PC2=="polyA.Splicing") %>%
+  mutate(n = if_else(Num_PC2_QTLs_PermutationP>5, as.integer(5), Num_PC2_QTLs_PermutationP)) %>%
+  count(PC2, n)
+
+P.Number_hQTLsForColoc
+P.Number_sQTLsForColoc
+```
+
+Same plots, but only considering eGenes discovered in YRI subset
+
+```{r}
+eGenes <- dat %>%
+  filter(PC1=="Expression.Splicing.Subset_YRI" & FDR.x < 0.1) %>%
+  pull(P1) %>% unique()
+
+P.Number_hQTLsForColoc <- NumMolQTLsPerGene %>%
+  filter(GeneLocus %in% eGenes) %>%
+  # filter(PC2 %in% c("H3K27AC", "polyA.Splicing")) %>%
+  filter(PC2=="H3K27AC") %>%
+  mutate(n = if_else(Num_PC2_QTLs_PermutationP>5, as.integer(5), Num_PC2_QTLs_PermutationP)) %>%
+  count(PC2, n) %>%
+  ggplot(aes(x=n, y=nn)) +
+  geom_col() +
+  scale_x_continuous(breaks=0:5, labels=c(0:4, ">4")) +
+  scale_y_continuous(expand=c(0,0)) +
+  labs(x="Number H3K27AC hQTLs w/in 100kb of gene", y="Number eGenes")
+NumMolQTLsPerGene %>%
+  filter(GeneLocus %in% eGenes) %>%
+  # filter(PC2 %in% c("H3K27AC", "polyA.Splicing")) %>%
+  filter(PC2=="H3K27AC") %>%
+  mutate(n = if_else(Num_PC2_QTLs_PermutationP>5, as.integer(5), Num_PC2_QTLs_PermutationP)) %>%
+  count(PC2, n)
+
+P.Number_sQTLsForColoc <- NumMolQTLsPerGene %>%
+  filter(GeneLocus %in% eGenes) %>%
+  # filter(PC2 %in% c("H3K27AC", "polyA.Splicing")) %>%
+  filter(PC2=="polyA.Splicing") %>%
+  mutate(n = if_else(Num_PC2_QTLs_PermutationP>5, as.integer(5), Num_PC2_QTLs_PermutationP)) %>%
+  count(PC2, n) %>%
+  ggplot(aes(x=n, y=nn)) +
+  geom_col() +
+  scale_x_continuous(breaks=0:5, labels=c(0:4, ">4")) +
+  scale_y_continuous(expand=c(0,0)) +
+  labs(x="Number sQTLs within gene", y="Number eGenes")
+NumMolQTLsPerGene %>%
+  filter(GeneLocus %in% eGenes) %>%
+  # filter(PC2 %in% c("H3K27AC", "polyA.Splicing")) %>%
+  filter(PC2=="polyA.Splicing") %>%
+  mutate(n = if_else(Num_PC2_QTLs_PermutationP>5, as.integer(5), Num_PC2_QTLs_PermutationP)) %>%
+  count(PC2, n)
+
+P.Number_hQTLsForColoc
+P.Number_sQTLsForColoc
+```
+
+
+```{r}
+coloc.dat <- read_tsv("../code/hyprcoloc/Results/ForColoc/MolColocNonRedundantFullSplicing/tidy_results_OnlyColocalized.txt.gz") %>%
+  separate(phenotype_full, into=c("PC", "P"), sep=";")
+
+Dat.TopQTLInFamily <- dat %>%
+  filter(PC1=="Expression.Splicing" & FDR.x < 0.1) %>%
+  mutate(P2 = case_when(
+    PC2 %in% c("polyA.Splicing", "chRNA.Splicing", "polyA.Splicing.Subset_YRI") ~ str_extract(P2, "clu_.+$"),
+    TRUE ~ P2
+  )) %>%
+  group_by(PC1, PC2, P2, GeneLocus) %>%
+  slice(which.min(FDR.y)) %>%
+  ungroup() %>%
+  group_by(PC1, PC2, GeneLocus) %>%
+  slice(which.min(FDR.y)) %>%
+  ungroup()
+
+coloc.dat %>%
+  mutate(P = case_when(
+    PC %in% c("polyA.Splicing", "chRNA.Splicing", "polyA.Splicing.Subset_YRI") ~ str_extract(P, "clu_.+$"),
+    TRUE ~ P
+  )) %>%
+  left_join(
+    Dat.TopQTLInFamily %>%
+      dplyr::select(Locus=GeneLocus, PC=PC2, P=P2) %>%
+      mutate(TopMolQTLAroundGene = T)
+  ) %>%
+  replace_na(list(TopMolQTLAroundGene=F)) %>%
+  group_by(Locus, snp) %>%
+  filter(any(PC=="Expression.Splicing.Subset_YRI")) %>%
+  ungroup() %>%
+  group_by(Locus, PC) %>%
+  summarise(ContainsTopMolQTL = any(TopMolQTLAroundGene)) %>%
+  ungroup() %>%
+  group_by(PC) %>%
+  summarise(FracContainsTop = sum(ContainsTopMolQTL)/n()) %>%
+  ungroup()
+```
+
+
+Same analysis without renaming to match all in cluster
+
+```{r}
+Dat.TopQTLInFamily2 <- dat %>%
+  filter(PC1=="Expression.Splicing" & FDR.x < 0.1) %>%
+  # mutate(P2 = case_when(
+  #   PC2 %in% c("polyA.Splicing", "chRNA.Splicing", "polyA.Splicing.Subset_YRI") ~ str_extract(P2, "clu_.+$"),
+  #   TRUE ~ P2
+  # )) %>%
+  # group_by(PC1, PC2, P2, GeneLocus) %>%
+  # slice(which.min(FDR.y)) %>%
+  # ungroup() %>%
+  group_by(PC1, PC2, GeneLocus) %>%
+  slice(which.min(FDR.y)) %>%
+  ungroup()
+
+dat.FractionNonPrimaryMolQTLColocs <- coloc.dat %>%
+  # mutate(P = case_when(
+  #   PC %in% c("polyA.Splicing", "chRNA.Splicing", "polyA.Splicing.Subset_YRI") ~ str_extract(P, "clu_.+$"),
+  #   TRUE ~ P
+  # )) %>%
+  left_join(
+    Dat.TopQTLInFamily2 %>%
+      dplyr::select(Locus=GeneLocus, PC=PC2, P=P2) %>%
+      mutate(TopMolQTLAroundGene = T)
+  ) %>%
+  replace_na(list(TopMolQTLAroundGene=F)) %>%
+  group_by(Locus, snp) %>%
+  filter(any(PC=="Expression.Splicing.Subset_YRI")) %>%
+  ungroup() %>%
+  group_by(Locus, PC) %>%
+  summarise(ContainsTopMolQTL = any(TopMolQTLAroundGene)) %>%
+  ungroup() %>%
+  group_by(PC) %>%
+  summarise(FracContainsTop = sum(ContainsTopMolQTL)/n()) %>%
+  ungroup()
+
+kable(dat.FractionNonPrimaryMolQTLColocs)
+
+
+P.NonPrimaryMolQTLs_OftenColoc <- dat.FractionNonPrimaryMolQTLColocs %>%
+  filter(PC %in% c("H3K27AC", "polyA.Splicing")) %>%
+  mutate(Complement = 1-FracContainsTop) %>%
+  gather("ContainsTop", "Fraction",-PC) %>%
+  ggplot(aes(x=PC, y=Fraction, fill=ContainsTop)) +
+  geom_col(position="fill") +
+  scale_y_continuous(limits=c(0, 1), expand=c(0,0)) +
+  scale_fill_manual(values=c("FracContainsTop"="#636363", "Complement"="#f0f0f0"), labels=c("eGene colocalizes with top molQTL", "colocalizes with non top molQTL")) +
+  scale_x_discrete(labels=c("H3K27AC hQTL", "polyA RNA sQTL")) +
+  labs(x=NULL, y=str_wrap("Fraction of eQTL/molQTL colocalizations", 30), fill=NULL) +
+  Rotate_x_labels
+
+P.NonPrimaryMolQTLs_OftenColoc
+```
+
+
+- Number of eQTLs that coloc with at least one molQTL
+
+```{r}
+eGenes <- dat %>%
+  filter(PC1=="Expression.Splicing.Subset_YRI" & FDR.x < 0.1) %>%
+  pull(P1) %>% unique()
+
+coloc.dat$PC %>% unique()
+
+
+coloc.dat %>%
+    group_by(Locus, snp) %>%
+    filter(any(PC=="Expression.Splicing.Subset_YRI")) %>%
+    ungroup() %>%
+    count(Locus, PC) %>%
+    count(PC) %>%
+  mutate(PC_relabeled = recode(PC, !!!MolQTL_Labels)) %>%
+  filter(!is.na(PC_relabeled) | PC=="Any hQTL") %>%
+  filter(!PC_relabeled %in% c("Splicing", "Expression; eQTLs (YRI only)")) %>%
+  mutate(Assay_relabeled = recode(PC, !!!MolQTL_AssayLabels)) %>%
+  mutate(FinalLabels = paste(PC_relabeled, Assay_relabeled, sep="\n")) %>%
+  mutate(OrderFactor = recode(PC, !!!Factor_Order)) %>%
+  mutate(FinalLabels = fct_reorder(FinalLabels, OrderFactor)) %>%
+  ggplot(aes(x=FinalLabels, y=n)) +
+  geom_col() +
+  scale_y_continuous(
+    name="Number eGenes with colocalized molQTL", 
+    sec.axis = sec_axis(~ . / length(eGenes), name = "% eGenes with colocalized molQTL")
+  ) +
+  Rotate_x_labels +
+  labs(x="Molecular QTL type, Assay")
+
+
+dat.eGeneColocsWith <- bind_rows(
+  coloc.dat %>%
+    group_by(Locus, snp) %>%
+    filter(any(PC=="Expression.Splicing.Subset_YRI")) %>%
+    ungroup() %>%
+    count(Locus, PC) %>%
+    count(PC),
+  coloc.dat %>%
+    mutate(PC = case_when(
+      PC %in% c("H3K4ME1", "H3K4ME3", "H3K27AC", "H3K36ME3") ~ "Any hQTL",
+      TRUE ~ PC
+    )) %>%
+    group_by(Locus, snp) %>%
+    filter(any(PC=="Expression.Splicing.Subset_YRI")) %>%
+    ungroup() %>%
+    count(Locus, PC) %>%
+    count(PC)
+) %>%
+  mutate(PC_relabeled = recode(PC, !!!MolQTL_Labels)) %>%
+  filter(!is.na(PC_relabeled) | PC=="Any hQTL") %>%
+  filter(!PC_relabeled %in% c("Splicing", "Expression; eQTLs (YRI only)")) %>%
+  mutate(Assay_relabeled = recode(PC, !!!MolQTL_AssayLabels)) %>%
+  mutate(FinalLabels = paste(PC_relabeled, Assay_relabeled, sep="\n")) %>%
+  mutate(OrderFactor = recode(PC, !!!Factor_Order))
+
+P.eGeneColocsWith <- dat.eGeneColocsWith %>%
+  mutate(FinalLabels = str_remove_all(FinalLabels, "\\*")) %>%
+  mutate(FinalLabels = case_when(
+    FinalLabels == "Any hQTL\nAny hQTL" ~ "Any hQTL*",
+    TRUE ~ FinalLabels
+  )) %>%
+  mutate(OrderFactor = case_when(
+    FinalLabels == "Any hQTL*" ~ 4.5,
+    TRUE ~ OrderFactor
+  )) %>%
+  mutate(FinalLabels = fct_reorder(FinalLabels, OrderFactor)) %>%
+  distinct(.keep_all=T) %>%
+  ggplot(aes(x=FinalLabels, y=n)) +
+  geom_col() +
+  scale_y_continuous(
+    name="Number eGenes with colocalized molQTL", 
+    sec.axis = sec_axis(~ . / length(eGenes), name = "% eGenes with colocalized molQTL")
+  ) +
+  Rotate_x_labels +
+  labs(x="Molecular QTL type, Assay")
+P.eGeneColocsWith
+
+dat.eGeneColocsWith
+```
+
+
+- Number of eQTLs that coloc with at least one molQTL (among non hQTL eQTLs)
+
+```{r}
+eGenes.NohQTLColoc <-
+  coloc.dat %>%
+  group_by(Locus, snp) %>%
+  filter(any(PC=="Expression.Splicing.Subset_YRI") & !any(PC %in% c("H3K4ME3", "H3K27AC", "H3K4ME1", "H3K36ME3"))) %>%
+  pull(Locus) %>% unique()
+
+dat.eGeneColocsWith.NohQTL <-
+  coloc.dat %>%
+  group_by(Locus, snp) %>%
+  filter(any(PC=="Expression.Splicing.Subset_YRI") & !any(PC %in% c("H3K4ME3", "H3K27AC", "H3K4ME1", "H3K36ME3"))) %>%
+  ungroup() %>%
+  count(Locus, PC) %>%
+  count(PC) %>%
+  mutate(PC_relabeled = recode(PC, !!!MolQTL_Labels)) %>%
+  filter(!is.na(PC_relabeled) | PC=="Any hQTL") %>%
+  filter(!PC_relabeled %in% c("Splicing", "Expression; eQTLs (YRI only)")) %>%
+  mutate(Assay_relabeled = recode(PC, !!!MolQTL_AssayLabels)) %>%
+  mutate(FinalLabels = paste(PC_relabeled, Assay_relabeled, sep="\n")) %>%
+  mutate(OrderFactor = recode(PC, !!!Factor_Order))
+
+P.eGeneColocsWith.nohQTL <- dat.eGeneColocsWith.NohQTL %>%
+  mutate(FinalLabels = str_remove_all(FinalLabels, "\\*")) %>%
+  mutate(FinalLabels = case_when(
+    FinalLabels == "Any hQTL\nAny hQTL" ~ "Any hQTL*",
+    TRUE ~ FinalLabels
+  )) %>%
+  mutate(OrderFactor = case_when(
+    FinalLabels == "Any hQTL*" ~ 4.5,
+    TRUE ~ OrderFactor
+  )) %>%
+  distinct(.keep_all=T) %>%
+  mutate(FinalLabels = fct_reorder(FinalLabels, OrderFactor)) %>%
+  ggplot(aes(x=FinalLabels, y=n)) +
+  geom_col() +
+  scale_y_continuous(
+    name="Number eGenes with colocalized molQTL", 
+    sec.axis = sec_axis(~ . / length(eGenes.NohQTLColoc), name = "% eGenes with colocalized molQTL\nAmong those that did not coloc with hQTL")
+  ) +
+  Rotate_x_labels +
+  labs(x="Molecular QTL type, Assay")
+P.eGeneColocsWith.nohQTL
+
+dat.eGeneColocsWith.NohQTL
+
+
+```
+
+
+- Plot of number of eQTLs that coloc with an hQTL, versus those that coloc with an sQTL (and not an hQTL)
+
+```{r}
+
+
+
+
+data.frame(name="Non hQTL", n=length(eGenes.NohQTLColoc))
+
+
+dat.SimplifiedNumberColocs <- bind_rows(
+  dat.eGeneColocsWith %>%
+    filter(PC=="Any hQTL") %>%
+    mutate(name="hQTL*", order=1) %>%
+    dplyr::select(name, n, order),
+  # dat.eGeneColocsWith %>%
+  #   filter(PC=="polyA.Splicing") %>%
+  #   mutate(name="sQTL", order=1.5) %>%
+  #   dplyr::select(name, n, order),
+  dat.eGeneColocsWith.NohQTL %>%
+    filter(PC=="APA_Total") %>%
+    mutate(name="APA QTL**", order=4) %>%
+    dplyr::select(name, n, order),
+  dat.eGeneColocsWith.NohQTL %>%
+    filter(PC=="polyA.Splicing") %>%
+    mutate(name="sQTL**", order=3) %>%
+    dplyr::select(name, n, order),
+) %>%
+  add_row(name="Any molQTL**", n=length(eGenes.NohQTLColoc), order=2) %>%
+  mutate(name = fct_reorder(name, order))
+
+P.SimplifiedNumberColocs <- ggplot(dat.SimplifiedNumberColocs, aes(x=name, y=n)) +
+  geom_col(fill="#bdbdbd") +
+  scale_y_continuous(expand=c(0,0), breaks=c(0, 200, 400, 600, 800), labels=c(0, "", "", "", 800)) +
+  geom_text(aes(label=name), y=10, angle=90, y=-Inf, hjust=0, size=8) +
+  labs(x=NULL, y="# eGenes coloc w/ molQTL") +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+P.SimplifiedNumberColocs
+
+kable(dat.SimplifiedNumberColocs)
+```
+
+
+- And finally, a plot about whether the sQTLs that do coloc with eQTL are enriched for non-productive juncs.
+```{r}
+IntronAnnotations <- read_tsv("../data/IntronAnnotationsFromYang.tsv.gz")
+
+ClusterLevelQTLAnnotations <- read_delim("../code/QTLs/QTLTools/polyA.Splicing/PermutationPassForColoc.txt.gz", delim=' ') %>%
+  mutate(IntronID = str_replace(phe_id, "(^.+?clu.+?):EN.+$", "\\1")) %>%
+  separate(IntronID, into=c("chrom", "start", "end", "cluster"), remove=F, convert=T, sep=":") %>%
+  mutate(chrom=paste0("chr", chrom)) %>%
+  mutate(q = qvalue(adj_beta_pval)$qvalues) %>%
+  left_join(IntronAnnotations) %>%
+  group_by(cluster) %>%
+  mutate(ContainsUnproductive = any(SuperAnnotation %in% c("AnnotatedJunc_UnproductiveCodingGene", "UnannotatedJunc_UnproductiveCodingGene") & q<0.1)) %>%
+  ungroup()
+
+ClusterLevelQTLAnnotations %>%
+  distinct(cluster, .keep_all=T) %>%
+  count(ContainsUnproductive)
+
+dat %>%
+  filter(PC1=="Expression.Splicing" & FDR.x < 0.1) %>%
+  filter(PC2=="polyA.Splicing" & p_permutation.y<0.01)
+
+
+Clusters.ThatColocWith_sQTL_not_hQTL <- coloc.dat %>%
+  group_by(Locus, snp) %>%
+  filter(any(PC=="Expression.Splicing.Subset_YRI") & !any(PC %in% c("H3K4ME3", "H3K27AC", "H3K4ME1"))) %>%
+  ungroup() %>%
+  filter(PC=="polyA.Splicing") %>%
+  separate(P, into=c("chrom", "start", "end", "cluster"), remove=F, convert=T, sep=":") %>%
+  distinct(cluster)
+
+Clusters.AttemptColoc_butOther <- dat %>%
+  filter(PC1=="Expression.Splicing" & FDR.x < 0.1) %>%
+  filter(PC2=="polyA.Splicing" & p_permutation.y<0.01) %>%
+  distinct(P2) %>%
+  separate(P2, into=c("chrom", "start", "end", "cluster"), remove=F, convert=T, sep=":") %>%
+  distinct(cluster) %>%
+  filter(!cluster %in% Clusters.ThatColocWith_sQTL_not_hQTL$cluster)
+
+dat.EnrichmentOfUnrpductiveClusters <- bind_rows(
+  Clusters.AttemptColoc_butOther %>%
+    mutate(Category="DoesNotColocWith_eGene"),
+  Clusters.ThatColocWith_sQTL_not_hQTL %>%
+    mutate(Category="DoesColocWith_eGene")
+) %>%
+  left_join(
+    ClusterLevelQTLAnnotations %>%
+      distinct(cluster, ContainsUnproductive))
+
+test.results <- dat.EnrichmentOfUnrpductiveClusters %>%
+  count(Category, ContainsUnproductive) %>%
+  pivot_wider(names_from="Category", values_from ="n") %>%
+  mutate(ContainsUnproductive=!ContainsUnproductive) %>%
+  column_to_rownames("ContainsUnproductive") %>%
+  as.matrix() %>%
+  fisher.test(alternative="less")
+test.results
+
+P.EnrichmentOfUnrpductiveClusters <- dat.EnrichmentOfUnrpductiveClusters %>%
+  count(Category, ContainsUnproductive) %>%
+  ggplot(aes(x=Category, fill=ContainsUnproductive, y=n)) +
+  geom_col() +
+  scale_fill_manual(values=c("FALSE"="#377eb8", "TRUE"="#e41a1c"), labels=c("FALSE"="Productive sQTL", "TRUE"="Unproductive sQTL")) +
+  scale_x_discrete(labels=c(str_wrap("sQTLs that coloc with eQTL and not hQTL", 20), str_wrap("Other sQTLs tested\nfor colocalization", 20))) +
+  labs(caption=paste("One sided Fisher test P:", format.pval(test.results$p.value, 3), "\nOR:", round(1/test.results$estimate, 3)), y="Number of sQTLs", fill="sQTL type", x="") +
+  Rotate_x_labels
+P.EnrichmentOfUnrpductiveClusters
+```
+
+
+
+
 
 ```{r, eval=F}
 ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_SampleSize.pdf",P.SampleSizes, width=6, height=6)
 
 ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_NumQTLs.pdf",NumQTLs, width=8, height=6)
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_PercentAnnotated.pdf",P.PercentAnnotated, width=4, height=6)
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_PercentOfUnannotated.pdf",P.PercentOfUnannotated, width=6, height=6)
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_PercentAnnotatedLegend.pdf",P.PercentJuncsLegend, width=8, height=6)
+
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_Multiple_hQTLs_PerGene.pdf",P.Number_hQTLsForColoc, width=6, height=6)
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_Multiple_sQTLs_PerGene.pdf",P.Number_sQTLsForColoc, width=6, height=6)
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_NonPrimaryMolQTLsColoc.pdf",P.NonPrimaryMolQTLs_OftenColoc, width=6, height=6)
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_EnrichmentOfUnrpoductiveSqtls.pdf",P.EnrichmentOfUnrpductiveClusters, width=6, height=6)
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_eGene_MolQTL_Colocs.pdf",P.eGeneColocsWith, width=10, height=7)
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_eGene_MolQTL_NonhQTL_Colocs.pdf",P.eGeneColocsWith.nohQTL, width=10, height=7)
+
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_eGene_MolQTL_Simplified.pdf",P.SimplifiedNumberColocs, width=2.7, height=2.7)
 
 ```
 

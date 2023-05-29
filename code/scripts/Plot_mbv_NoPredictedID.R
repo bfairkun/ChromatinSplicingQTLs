@@ -29,21 +29,21 @@ dat <- read_delim(f_in, ' ')
 # best_hom <- dat %>%
 #     filter(perc_het_consistent == max(perc_het_consistent)) %>% pull(SampleID)
 
-p<- dat %>%
-    mutate(IsSample=SampleID==expectedSampleID) %>%
-    arrange(IsSample) %>%
-    ggplot(aes(x=perc_het_consistent, y=perc_hom_consistent, color=IsSample, label=SampleID)) +
-    geom_text(size=1.5) +
-    theme_minimal() +
-    theme(legend.position="none")
-
 # p<- dat %>%
 #     mutate(IsSample=SampleID==expectedSampleID) %>%
 #     arrange(IsSample) %>%
-#     ggplot(aes(x=perc_het_consistent, y=perc_hom_consistent, label=SampleID)) +
+#     ggplot(aes(x=perc_het_consistent, y=perc_hom_consistent, color=IsSample, label=SampleID)) +
 #     geom_text(size=1.5) +
 #     theme_minimal() +
 #     theme(legend.position="none")
+
+p<- dat %>%
+    mutate(IsSample=SampleID==expectedSampleID) %>%
+    arrange(IsSample) %>%
+    ggplot(aes(x=perc_het_consistent, y=perc_hom_consistent, label=SampleID)) +
+    geom_text(size=1.5) +
+    theme_minimal() +
+    theme(legend.position="none")
 
 ggsave(plot_out, p, height=3, width=3)
 

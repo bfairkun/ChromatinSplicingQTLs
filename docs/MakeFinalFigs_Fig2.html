@@ -1,0 +1,3210 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+<meta name="date" content="2023-05-18" />
+
+<title>MakeFinalFigs_Fig2</title>
+
+<script src="site_libs/header-attrs-2.14/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.tab('show');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">myproject</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">MakeFinalFigs_Fig2</h1>
+<h4 class="date">2023-05-18</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span
+class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2023-05-29
+</p>
+<p>
+<strong>Checks:</strong> <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> 1
+</p>
+<p>
+<strong>Knit directory:</strong>
+<code>ChromatinSplicingQTLs/analysis/</code> <span
+class="glyphicon glyphicon-question-sign" aria-hidden="true"
+title="This is the local directory in which the code in this file was executed.">
+</span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a>
+analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version
+1.7.0). The <em>Checks</em> tab describes the reproducibility checks
+that were applied when the results were created. The <em>Past
+versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges">
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted
+changes </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguncommittedchanges"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The R Markdown file has unstaged changes. To know which version of
+the R Markdown file created these results, you’ll want to first commit
+it to the Git repo. If you’re still working on the analysis, you can
+ignore this warning. When you’re finished, you can run
+<code>wflow_publish</code> to commit the R Markdown file and build the
+HTML.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the
+global environment can affect the analysis in your R Markdown file in
+unknown ways. For reproduciblity it’s best to always run the code in an
+empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20191126code">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Seed:</strong>
+<code>set.seed(20191126)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20191126code"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20191126)</code> was run prior to running
+the code in the R Markdown file. Setting a seed ensures that any results
+that rely on randomness, e.g. subsampling or permutations, are
+reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Session information:</strong>
+recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package
+versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be
+confident that you successfully produced the results during this
+run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr
+project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstreed49ae42a91cf88840d8a3a91e8474d6fcd4044c1targetblankd49ae42a">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Repository version:</strong>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/d49ae42a91cf88840d8a3a91e8474d6fcd4044c1" target="_blank">d49ae42</a>
+</a>
+</p>
+</div>
+<div
+id="strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstreed49ae42a91cf88840d8a3a91e8474d6fcd4044c1targetblankd49ae42a"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development
+and connecting the code version to the results is critical for
+reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/d49ae42a91cf88840d8a3a91e8474d6fcd4044c1" target="_blank">d49ae42</a>.
+See the <em>Past versions</em> tab to see a history of the changes made
+to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for
+the analysis have been committed to Git prior to generating the results
+(you can use <code>wflow_publish</code> or
+<code>wflow_git_commit</code>). workflowr only checks the R Markdown
+file, but you know if there are other scripts or data files that it
+depends on. Below is the status of the Git repository when the results
+were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    analysis/.Rhistory
+    Ignored:    code/.DS_Store
+    Ignored:    code/.RData
+    Ignored:    code/._report.html
+    Ignored:    code/.ipynb_checkpoints/
+    Ignored:    code/.snakemake/
+    Ignored:    code/APA_Processing/
+    Ignored:    code/Alignments/
+    Ignored:    code/ChromHMM/
+    Ignored:    code/ENCODE/
+    Ignored:    code/ExpressionAnalysis/
+    Ignored:    code/ExtractPhenotypeBedByGenotype.py
+    Ignored:    code/FastqFastp/
+    Ignored:    code/FastqFastpSE/
+    Ignored:    code/FastqSE/
+    Ignored:    code/FineMapping/
+    Ignored:    code/Genotypes/
+    Ignored:    code/H3K36me3_CutAndTag.pdf
+    Ignored:    code/IntronSlopes/
+    Ignored:    code/LR.bed
+    Ignored:    code/LR.seq.bed
+    Ignored:    code/LongReads/
+    Ignored:    code/Metaplots/
+    Ignored:    code/Misc/
+    Ignored:    code/MiscCountTables/
+    Ignored:    code/Multiqc/
+    Ignored:    code/Multiqc_chRNA/
+    Ignored:    code/NonCodingRNA/
+    Ignored:    code/NonCodingRNA_annotation/
+    Ignored:    code/PairwisePi1Traits.P.all.txt.gz
+    Ignored:    code/PeakCalling/
+    Ignored:    code/Phenotypes/
+    Ignored:    code/PlotGruberQTLs/
+    Ignored:    code/PlotQTLs/
+    Ignored:    code/ProCapAnalysis/
+    Ignored:    code/QC/
+    Ignored:    code/QTL_SNP_Enrichment/
+    Ignored:    code/QTLs/
+    Ignored:    code/RPKM_tables/
+    Ignored:    code/ReadLengthMapExperiment/
+    Ignored:    code/ReadLengthMapExperimentResults/
+    Ignored:    code/ReadLengthMapExperimentSpliceCounts/
+    Ignored:    code/ReferenceGenome/
+    Ignored:    code/Rplots.pdf
+    Ignored:    code/Session.vim
+    Ignored:    code/SmallMolecule/
+    Ignored:    code/SplicingAnalysis/
+    Ignored:    code/TODO
+    Ignored:    code/Tehranchi/
+    Ignored:    code/alias/
+    Ignored:    code/bigwigs/
+    Ignored:    code/bigwigs_FromNonWASPFilteredReads/
+    Ignored:    code/config/.DS_Store
+    Ignored:    code/config/._.DS_Store
+    Ignored:    code/config/.ipynb_checkpoints/
+    Ignored:    code/config/config.local.yaml
+    Ignored:    code/dag.pdf
+    Ignored:    code/dag.png
+    Ignored:    code/dag.svg
+    Ignored:    code/data/
+    Ignored:    code/debug.ipynb
+    Ignored:    code/debug_python.ipynb
+    Ignored:    code/deepTools/
+    Ignored:    code/featureCounts/
+    Ignored:    code/featureCountsBasicGtf/
+    Ignored:    code/genome_config.yaml
+    Ignored:    code/gwas_summary_stats/
+    Ignored:    code/hyprcoloc/
+    Ignored:    code/igv_session.xml
+    Ignored:    code/isoseqbams/
+    Ignored:    code/log
+    Ignored:    code/logs/
+    Ignored:    code/notebooks/.ipynb_checkpoints/
+    Ignored:    code/pi1/
+    Ignored:    code/polyA.Splicing.Subset_YRI.NominalPassForColoc.bed.bgz
+    Ignored:    code/rules/.ipynb_checkpoints/
+    Ignored:    code/rules/OldRules/
+    Ignored:    code/rules/notebooks/
+    Ignored:    code/salmontest/
+    Ignored:    code/scratch/
+    Ignored:    code/scripts/.Plot_mbv.R.swp
+    Ignored:    code/scripts/.ipynb_checkpoints/
+    Ignored:    code/scripts/GTFtools_0.8.0/
+    Ignored:    code/scripts/__pycache__/
+    Ignored:    code/scripts/liftOverBedpe/liftOverBedpe.py
+    Ignored:    code/snakemake.dryrun.log
+    Ignored:    code/snakemake.log
+    Ignored:    code/snakemake.sbatch.log
+    Ignored:    code/snakemake_profiles/slurm/__pycache__/
+    Ignored:    code/test.introns.bed
+    Ignored:    code/test.introns2.bed
+    Ignored:    code/test.log
+    Ignored:    code/tracks.xml
+    Ignored:    data/.DS_Store
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-10.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-11.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-2.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-3.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-4.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-5.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-6.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-7.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-8.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022.csv
+    Ignored:    data/Metaplots/.DS_Store
+
+Untracked files:
+    Untracked:  analysis/20230528_IdentifyBrianaPacBio.Rmd
+    Untracked:  code/scripts/Plot_mbv_NoPredictedID.R
+
+Unstaged changes:
+    Modified:   analysis/MakeFinalFigs_Fig2.Rmd
+    Modified:   code/Snakefile
+    Modified:   code/config/ColocRunWildcards.tsv
+    Modified:   code/rules/LongReads.smk
+    Modified:   code/scripts/Plot_mbv.R
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not
+included in this status report because it is ok for generated content to
+have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+
+<p>
+These are the previous versions of the repository in which changes were
+made to the R Markdown (<code>analysis/MakeFinalFigs_Fig2.Rmd</code>)
+and HTML (<code>docs/MakeFinalFigs_Fig2.html</code>) files. If you’ve
+configured a remote Git repository (see <code>?wflow_git_remote</code>),
+click on the hyperlinks in the table below to view the files as they
+were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/b8b6d6d9bc9c0cdd8c69e3550e0dfe4c36e6fe2f/analysis/MakeFinalFigs_Fig2.Rmd" target="_blank">b8b6d6d</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2023-05-24
+</td>
+<td>
+add new long table
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/5946b5ad4bcc1f248d89293af6839c2e5a2c1fbb/analysis/MakeFinalFigs_Fig2.Rmd" target="_blank">5946b5a</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2023-05-22
+</td>
+<td>
+update site
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<pre class="r"><code>knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+
+library(tidyverse)</code></pre>
+<pre><code>── Attaching packages ─────────────────────────────────────── tidyverse 1.3.1 ──</code></pre>
+<pre><code>✔ ggplot2 3.3.6     ✔ purrr   0.3.4
+✔ tibble  3.1.7     ✔ dplyr   1.0.9
+✔ tidyr   1.2.0     ✔ stringr 1.4.0
+✔ readr   2.1.2     ✔ forcats 0.5.1</code></pre>
+<pre><code>── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>library(RColorBrewer)
+library(data.table)</code></pre>
+<pre><code>
+Attaching package: &#39;data.table&#39;</code></pre>
+<pre><code>The following objects are masked from &#39;package:dplyr&#39;:
+
+    between, first, last</code></pre>
+<pre><code>The following object is masked from &#39;package:purrr&#39;:
+
+    transpose</code></pre>
+<pre class="r"><code>library(readxl)
+library(qvalue)
+library(ggrepel)
+library(knitr)
+library(ggbreak)</code></pre>
+<pre><code>ggbreak v0.1.1
+
+If you use ggbreak in published research, please cite the following
+paper:
+
+S Xu, M Chen, T Feng, L Zhan, L Zhou, G Yu. Use ggbreak to effectively
+utilize plotting space to deal with large datasets and outliers.
+Frontiers in Genetics. 2021, 12:774846. doi: 10.3389/fgene.2021.774846</code></pre>
+<pre class="r"><code># Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family=&quot;Helvetica&quot;)))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels &lt;- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))</code></pre>
+<div id="list" class="section level2">
+<h2>List</h2>
+<div id="number-qtls" class="section level4">
+<h4>Number QTLs</h4>
+<pre class="r"><code>PhenotypeWildcardsAll &lt;- Sys.glob(&quot;../code/QTLs/QTLTools/*/PermutationPass.FDR_Added.txt.gz&quot;) %&gt;%
+  str_replace(&quot;../code/QTLs/QTLTools/(.+?)/PermutationPass.FDR_Added.txt.gz&quot;, &quot;\\1&quot;)
+
+PhenotypeWildcards_ToIncluide &lt;- c(&quot;APA_Nuclear&quot;, &quot;APA_Total&quot;, &quot;Expression.Splicing.Subset_YRI&quot;, &quot;Expression.Splicing&quot;, &quot;H3K27AC&quot;, &quot;H3K36ME3&quot;, &quot;H3K4ME3&quot;, &quot;H3K4ME1&quot;, &quot;MetabolicLabelled.30min&quot;, &quot;MetabolicLabelled.60min&quot;, &quot;chRNA.Expression.Splicing&quot;, &quot;chRNA.Splicing&quot;, &quot;polyA.Splicing&quot;, &quot;polyA.Splicing.Subset_YRI&quot;, &quot;MetabolicLabelled.30min.Splicing&quot;, &quot;MetabolicLabelled.60min.Splicing&quot;)
+
+GroupedPhenotypeWildcards_ToIncluide &lt;- c( &quot;chRNA.Splicing&quot;, &quot;polyA.Splicing.Subset_YRI&quot;, &quot;polyA.Splicing&quot;,  &quot;MetabolicLabelled.30min.Splicing&quot;, &quot;MetabolicLabelled.60min.Splicing&quot;)
+
+UngroupedPhenotypeWildcards_ToIncluide &lt;- setdiff(PhenotypeWildcards_ToIncluide, GroupedPhenotypeWildcards_ToIncluide)
+
+Grouped.dat &lt;- setNames(paste0(&quot;../code/QTLs/QTLTools/&quot;,GroupedPhenotypeWildcards_ToIncluide,&quot;/GroupedPermutationPass.FDR_Added.txt.gz&quot;), GroupedPhenotypeWildcards_ToIncluide) %&gt;%
+  lapply(fread) %&gt;%
+  bind_rows(.id=&quot;PC&quot;)
+
+Ungrouped.dat &lt;- setNames(paste0(&quot;../code/QTLs/QTLTools/&quot;,UngroupedPhenotypeWildcards_ToIncluide,&quot;/PermutationPass.FDR_Added.txt.gz&quot;), UngroupedPhenotypeWildcards_ToIncluide) %&gt;%
+  lapply(fread) %&gt;%
+  bind_rows(.id=&quot;PC&quot;)
+
+Full.dat &lt;- bind_rows(
+  Grouped.dat, Ungrouped.dat
+)</code></pre>
+<p>First plot number of individuals for each assay</p>
+<pre class="r"><code>SampleSize &lt;- read_tsv(&quot;../code/QC/SampleSize.PerPhenotype.tsv&quot;, col_names=c(&quot;fn&quot;, &quot;dummy&quot;, &quot;n&quot;)) %&gt;%
+  mutate(PC = str_replace(fn,&quot;QTLs/QTLTools/(.+?)/OnlyFirstReps.sorted.qqnorm.bed.gz&quot;, &quot;\\1&quot;)) %&gt;%
+  filter(PC %in% c(&quot;Expression.Splicing&quot;, &quot;Expression.Splicing.Subset_YRI&quot;, &quot;chRNA.Expression.Splicing&quot;, &quot;MetabolicLabelled.30min&quot;, &quot;MetabolicLabelled.60min&quot;, &quot;H3K27AC&quot;, &quot;H3K4ME3&quot;, &quot;H3K4ME1&quot;, &quot;H3K36ME3&quot;, &quot;APA_Nuclear&quot;, &quot;APA_Total&quot;))
+
+SampleSize %&gt;%
+  dplyr::select(PC, n) %&gt;%
+  kable()</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">PC</th>
+<th align="right">n</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Expression.Splicing</td>
+<td align="right">462</td>
+</tr>
+<tr class="even">
+<td align="left">Expression.Splicing.Subset_YRI</td>
+<td align="right">89</td>
+</tr>
+<tr class="odd">
+<td align="left">chRNA.Expression.Splicing</td>
+<td align="right">86</td>
+</tr>
+<tr class="even">
+<td align="left">MetabolicLabelled.30min</td>
+<td align="right">66</td>
+</tr>
+<tr class="odd">
+<td align="left">MetabolicLabelled.60min</td>
+<td align="right">66</td>
+</tr>
+<tr class="even">
+<td align="left">H3K27AC</td>
+<td align="right">72</td>
+</tr>
+<tr class="odd">
+<td align="left">H3K4ME3</td>
+<td align="right">72</td>
+</tr>
+<tr class="even">
+<td align="left">H3K4ME1</td>
+<td align="right">72</td>
+</tr>
+<tr class="odd">
+<td align="left">H3K36ME3</td>
+<td align="right">94</td>
+</tr>
+<tr class="even">
+<td align="left">APA_Nuclear</td>
+<td align="right">52</td>
+</tr>
+<tr class="odd">
+<td align="left">APA_Total</td>
+<td align="right">52</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>SourcePublications &lt;- setNames(c(&quot;Lappalainen et al&quot;, &quot;Lappalainen et al&quot;, &quot;This study&quot;, &quot;Li et al&quot;, &quot;Li et al&quot;, &quot;Grubert et al&quot;, &quot;Grubert et al&quot;, &quot;Grubert et al&quot;, &quot;This study&quot;, &quot;Mittleman et al&quot;, &quot;Mittleman et al&quot;), SampleSize$PC)
+
+Labels =  setNames(c(&quot;polyA RNA-seq*&quot;, &quot;polyA RNA-seq&quot;, &quot;chRNA-seq&quot;, &quot;30m 4sU RNA-seq&quot;, &quot;60m 4sU RNA-seq&quot;, &quot;H3K4me1 ChIP-seq&quot;, &quot;H3K27Ac ChIP-seq&quot;, &quot;H3K4me3 ChIP-seq&quot;, &quot;H3K36me3 Cut&amp;Tag&quot;, &quot;nuclear RNA 3&#39;seq&quot;, &quot;Total RNA 3&#39;seq&quot;), SampleSize$PC)
+
+SampleSizes &lt;- SampleSize %&gt;%
+  filter(!PC %in% &quot;Expression.Splicing.Subset_YRI&quot;) %&gt;%
+  mutate(publication = recode(PC, !!!SourcePublications)) %&gt;%
+  mutate(Assay = factor(PC, levels=c(&quot;H3K4ME1&quot;, &quot;H3K27AC&quot;, &quot;H3K4ME3&quot;, &quot;H3K36ME3&quot;, &quot;chRNA.Expression.Splicing&quot;, &quot;APA_Nuclear&quot;, &quot;APA_Total&quot;, &quot;MetabolicLabelled.30min&quot;,&quot;MetabolicLabelled.60min&quot;, &quot;Expression.Splicing&quot;))) %&gt;%
+  ggplot(aes(x=Assay, y=n)) +
+  geom_col() +
+  # geom_text(aes(label=n), color=&quot;black&quot;) +
+  geom_text(aes(label=publication),angle=90, color=&quot;black&quot;, y=0, hjust=-0.05) +
+  scale_x_discrete(labels=Labels) +
+  scale_y_continuous(expand=c(0,0)) +
+  scale_y_break(c(100,425), scales=&quot;fixed&quot;, ticklabels=c(425, 450, 475), expand=F, space=0.4) +
+  Rotate_x_labels +
+  labs(x=&quot;Assay&quot;, y=&quot;Sample size&quot;, caption=str_wrap(&quot;*Includes samples non-YRI donors, though some supplementary analyses only utilize the 89 YRI samples in this dataset&quot;, 30)) +
+  theme(axis.text.x=element_text(size=rel(0.5)))
+
+P.SampleSizes &lt;- ggplotify::as.ggplot(print(SampleSizes))</code></pre>
+<p><img src="figure/MakeFinalFigs_Fig2.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>P.SampleSizes</code></pre>
+<p><img src="figure/MakeFinalFigs_Fig2.Rmd/unnamed-chunk-2-2.png" width="672" style="display: block; margin: auto;" />
+Now number of QTLs</p>
+<pre class="r"><code>relabel.df &lt;- read_tsv(&quot;../data/Phenotypes_recode_for_Plotting.txt&quot;)
+
+relabel.df %&gt;% head()</code></pre>
+<pre><code># A tibble: 6 × 9
+  PC        Alias ShorterAlias ShorterAlias2 Shortest Include Assay Alias_202305
+  &lt;chr&gt;     &lt;chr&gt; &lt;chr&gt;        &lt;chr&gt;         &lt;chr&gt;    &lt;lgl&gt;   &lt;chr&gt; &lt;chr&gt;       
+1 APA_Nucl… APA_… APA_Nuclear  APA           APA QTL… TRUE    Nucl… APA (Nuclea…
+2 APA_Total APA_… APA_Total    APA           APA QTL… TRUE    Tota… APA (Total …
+3 chRNA.Ex… Expr… ncRNA_chRNA  ncRNA_chRNA   &lt;NA&gt;     TRUE    &lt;NA&gt;  &lt;NA&gt;        
+4 chRNA.Ex… Expr… ncRNA_chRNA  ncRNA_chRNA   &lt;NA&gt;     FALSE   &lt;NA&gt;  &lt;NA&gt;        
+5 chRNA.Ex… chRN… ncRNA_chRNA  ncRNA_chRNA   &lt;NA&gt;     FALSE   &lt;NA&gt;  &lt;NA&gt;        
+6 chRNA.Ex… chRN… ncRNA_chRNA  ncRNA_chRNA   &lt;NA&gt;     FALSE   &lt;NA&gt;  &lt;NA&gt;        
+# … with 1 more variable: OrderFactor &lt;dbl&gt;</code></pre>
+<pre class="r"><code>Full.dat$PC %&gt;% unique()</code></pre>
+<pre><code> [1] &quot;chRNA.Splicing&quot;                   &quot;polyA.Splicing.Subset_YRI&quot;       
+ [3] &quot;polyA.Splicing&quot;                   &quot;MetabolicLabelled.30min.Splicing&quot;
+ [5] &quot;MetabolicLabelled.60min.Splicing&quot; &quot;APA_Nuclear&quot;                     
+ [7] &quot;APA_Total&quot;                        &quot;Expression.Splicing.Subset_YRI&quot;  
+ [9] &quot;Expression.Splicing&quot;              &quot;H3K27AC&quot;                         
+[11] &quot;H3K36ME3&quot;                         &quot;H3K4ME3&quot;                         
+[13] &quot;H3K4ME1&quot;                          &quot;MetabolicLabelled.30min&quot;         
+[15] &quot;MetabolicLabelled.60min&quot;          &quot;chRNA.Expression.Splicing&quot;       </code></pre>
+<pre class="r"><code>MolQTL_Labels &lt;- relabel.df %&gt;% dplyr::select(PC, Shortest) %&gt;% deframe()
+MolQTL_AssayLabels &lt;- relabel.df %&gt;% dplyr::select(PC, Assay) %&gt;% deframe()
+Factor_Order &lt;- relabel.df %&gt;% dplyr::select(PC, OrderFactor) %&gt;% deframe()
+
+NumQTLs.dat &lt;- Full.dat %&gt;%
+  filter(PC %in% c(&quot;APA_Total&quot;, &quot;APA_Nuclear&quot;)) %&gt;%
+  separate(phe_id, into=c(&quot;gene&quot;, &quot;region&quot;, &quot;peak&quot;), sep=&quot;_&quot;) %&gt;%
+  arrange(adj_emp_pval) %&gt;% 
+  group_by(gene) %&gt;% slice(1) %&gt;%
+  bind_rows(
+    Full.dat %&gt;%
+      filter(!PC %in% c(&quot;APA_Total&quot;, &quot;APA_Nuclear&quot;))
+  ) %&gt;%
+  group_by(PC) %&gt;%
+  summarise(
+    FDR_10 = sum(q&lt;0.1, na.rm=T),
+    FDR_05 = sum(q&lt;0.05,  na.rm=T),
+    FDR_01 = sum(q&lt;0.01,  na.rm=T),
+    TestFeats=n()) %&gt;%
+  gather(&quot;FDR&quot;, &quot;n&quot;, -PC, -TestFeats) %&gt;%
+  mutate(PC_relabeled = recode(PC, !!!MolQTL_Labels)) %&gt;%
+  mutate(Assay_relabeled = recode(PC, !!!MolQTL_AssayLabels)) %&gt;%
+  mutate(FinalLabels = paste(PC_relabeled, Assay_relabeled, sep=&quot;\n&quot;)) %&gt;%
+  mutate(OrderFactor = recode(PC, !!!Factor_Order)) %&gt;%
+  mutate(FinalLabels = fct_reorder(FinalLabels, OrderFactor))
+
+Num.QTLs &lt;- ggplot(NumQTLs.dat, aes(x=FinalLabels, y=n, fill=FDR)) +
+  geom_col(position=&quot;identity&quot;, width=0.8) +
+  Rotate_x_labels +
+  scale_y_continuous(trans=&quot;log10&quot;, breaks=10**(1:5), labels=c(10, 100, &quot;1K&quot;, &quot;10K&quot;, &quot;100K&quot;)) +
+  # geom_text_repel(
+  #   data = . %&gt;%
+  #     gather(&quot;FDR&quot;,&quot;n&quot;,-PC),
+  #     aes(label=n, y=n), angle=90, hjust=-0.05,
+  #   min.segment.length = unit(0, &#39;lines&#39;),
+  #   color=&quot;black&quot;) +
+  geom_text(
+    data = . %&gt;%
+      filter(FDR== &quot;FDR_10&quot;),
+      aes(label=str_glue(&quot;{n} / {TestFeats}&quot;)), angle=90, hjust=0,
+    color=&quot;black&quot;) +
+  coord_cartesian(ylim=c(100,1E5)) +
+  scale_fill_manual(values=c(&quot;FDR_10&quot;=&quot;#ffeda0&quot;, &quot;FDR_05&quot;=&quot;#feb24c&quot;, &quot;FDR_01&quot;=&quot;#f03b20&quot;), labels=c(&quot;FDR_10&quot;=&quot;10%&quot;, &quot;FDR_05&quot;=&quot;5%&quot;, &quot;FDR_01&quot;=&quot;1%&quot;)) +
+  # scale_x_discrete(labels=c())
+  labs(x=&quot;molQTL type, assay&quot;, y=&quot;Number QTLs&quot;, fill=&quot;FDR&quot;, caption=str_wrap(&quot;*Each sQTL/APA-QTL count here represents a likely independent genetic effect that may effect multiple introns/APA-sites within a local leafcutter cluster of introns/APA-sites&quot;, 40)) +
+  theme(axis.text.x = element_text(size=9, hjust=1, angle=70))
+
+Num.QTLs</code></pre>
+<p><img src="figure/MakeFinalFigs_Fig2.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>NumQTLs.dat %&gt;% kable()</code></pre>
+<table>
+<colgroup>
+<col width="21%" />
+<col width="6%" />
+<col width="4%" />
+<col width="3%" />
+<col width="18%" />
+<col width="11%" />
+<col width="26%" />
+<col width="7%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">PC</th>
+<th align="right">TestFeats</th>
+<th align="left">FDR</th>
+<th align="right">n</th>
+<th align="left">PC_relabeled</th>
+<th align="left">Assay_relabeled</th>
+<th align="left">FinalLabels</th>
+<th align="right">OrderFactor</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">APA_Nuclear</td>
+<td align="right">4941</td>
+<td align="left">FDR_10</td>
+<td align="right">277</td>
+<td align="left">APA QTLs*</td>
+<td align="left">Nuclear RNA 3’seq</td>
+<td align="left">APA QTLs*</td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">Nuclear RNA 3’seq</td>
+<td align="right">7.0</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">APA_Total</td>
+<td align="right">2997</td>
+<td align="left">FDR_10</td>
+<td align="right">133</td>
+<td align="left">APA QTLs*</td>
+<td align="left">Total RNA 3’seq</td>
+<td align="left">APA QTLs*</td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">Total RNA 3’seq</td>
+<td align="right">14.0</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">Expression.Splicing</td>
+<td align="right">14000</td>
+<td align="left">FDR_10</td>
+<td align="right">11966</td>
+<td align="left">Expression; eQTLs</td>
+<td align="left">polyA RNA-seq</td>
+<td align="left">Expression; eQTLs</td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">polyA RNA-seq</td>
+<td align="right">10.0</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">Expression.Splicing.Subset_YRI</td>
+<td align="right">14000</td>
+<td align="left">FDR_10</td>
+<td align="right">3970</td>
+<td align="left">Expression; eQTLs (YRI only)</td>
+<td align="left">polyA RNA-seq</td>
+<td align="left">Expression; eQTLs (YRI only)</td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">polyA RNA-seq</td>
+<td align="right">11.0</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">H3K27AC</td>
+<td align="right">100858</td>
+<td align="left">FDR_10</td>
+<td align="right">10222</td>
+<td align="left">H3K27Ac; hQTLs</td>
+<td align="left">H3K27Ac ChIP-seq</td>
+<td align="left">H3K27Ac; hQTLs</td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">H3K27Ac ChIP-seq</td>
+<td align="right">2.0</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">H3K36ME3</td>
+<td align="right">14000</td>
+<td align="left">FDR_10</td>
+<td align="right">754</td>
+<td align="left">H3K36me3; hQTLs</td>
+<td align="left">H3K36me3 ChIP-seq</td>
+<td align="left">H3K36me3; hQTLs</td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">H3K36me3 ChIP-seq</td>
+<td align="right">4.0</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">H3K4ME1</td>
+<td align="right">182749</td>
+<td align="left">FDR_10</td>
+<td align="right">6328</td>
+<td align="left">H3K4me1; hQTLs</td>
+<td align="left">H3K4me1 ChIP-seq</td>
+<td align="left">H3K4me1; hQTLs</td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">H3K4me1 ChIP-seq</td>
+<td align="right">1.0</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">H3K4ME3</td>
+<td align="right">55769</td>
+<td align="left">FDR_10</td>
+<td align="right">4602</td>
+<td align="left">H3K4me3; hQTLs</td>
+<td align="left">H3K4me3 ChIP-seq</td>
+<td align="left">H3K4me3; hQTLs</td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">H3K4me3 ChIP-seq</td>
+<td align="right">3.0</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">MetabolicLabelled.30min</td>
+<td align="right">14000</td>
+<td align="left">FDR_10</td>
+<td align="right">955</td>
+<td align="left">Expression; eQTLs</td>
+<td align="left">30min 4sU RNA-seq</td>
+<td align="left">Expression; eQTLs</td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">30min 4sU RNA-seq</td>
+<td align="right">8.5</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">MetabolicLabelled.30min.Splicing</td>
+<td align="right">35099</td>
+<td align="left">FDR_10</td>
+<td align="right">390</td>
+<td align="left">Splicing</td>
+<td align="left">30min 4sU RNA-seq</td>
+<td align="left">Splicing</td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">30min 4sU RNA-seq</td>
+<td align="right">8.0</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">MetabolicLabelled.60min</td>
+<td align="right">13993</td>
+<td align="left">FDR_10</td>
+<td align="right">960</td>
+<td align="left">Expression; eQTLs</td>
+<td align="left">60min 4sU RNA-seq</td>
+<td align="left">Expression; eQTLs</td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">60min 4sU RNA-seq</td>
+<td align="right">9.0</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">MetabolicLabelled.60min.Splicing</td>
+<td align="right">35648</td>
+<td align="left">FDR_10</td>
+<td align="right">464</td>
+<td align="left">Splicing</td>
+<td align="left">60min 4sU RNA-seq</td>
+<td align="left">Splicing</td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">60min 4sU RNA-seq</td>
+<td align="right">9.5</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">chRNA.Expression.Splicing</td>
+<td align="right">14000</td>
+<td align="left">FDR_10</td>
+<td align="right">2976</td>
+<td align="left">Expression; eQTLs</td>
+<td align="left">chRNA-seq</td>
+<td align="left">Expression; eQTLs</td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">chRNA-seq</td>
+<td align="right">5.0</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">chRNA.Splicing</td>
+<td align="right">41406</td>
+<td align="left">FDR_10</td>
+<td align="right">3052</td>
+<td align="left">Splicing; sQTLs*</td>
+<td align="left">chRNA-seq</td>
+<td align="left">Splicing; sQTLs*</td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">chRNA-seq</td>
+<td align="right">6.0</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">polyA.Splicing</td>
+<td align="right">38280</td>
+<td align="left">FDR_10</td>
+<td align="right">8637</td>
+<td align="left">Splicing; sQTLs*</td>
+<td align="left">polyA RNA-seq</td>
+<td align="left">Splicing; sQTLs*</td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">polyA RNA-seq</td>
+<td align="right">12.0</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">polyA.Splicing.Subset_YRI</td>
+<td align="right">38280</td>
+<td align="left">FDR_10</td>
+<td align="right">2295</td>
+<td align="left">Splicing; sQTLs* (YRI only)</td>
+<td align="left">polyA RNA-seq</td>
+<td align="left">Splicing; sQTLs* (YRI only)</td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">polyA RNA-seq</td>
+<td align="right">13.0</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">APA_Nuclear</td>
+<td align="right">4941</td>
+<td align="left">FDR_05</td>
+<td align="right">217</td>
+<td align="left">APA QTLs*</td>
+<td align="left">Nuclear RNA 3’seq</td>
+<td align="left">APA QTLs*</td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">Nuclear RNA 3’seq</td>
+<td align="right">7.0</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">APA_Total</td>
+<td align="right">2997</td>
+<td align="left">FDR_05</td>
+<td align="right">84</td>
+<td align="left">APA QTLs*</td>
+<td align="left">Total RNA 3’seq</td>
+<td align="left">APA QTLs*</td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">Total RNA 3’seq</td>
+<td align="right">14.0</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">Expression.Splicing</td>
+<td align="right">14000</td>
+<td align="left">FDR_05</td>
+<td align="right">10403</td>
+<td align="left">Expression; eQTLs</td>
+<td align="left">polyA RNA-seq</td>
+<td align="left">Expression; eQTLs</td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">polyA RNA-seq</td>
+<td align="right">10.0</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">Expression.Splicing.Subset_YRI</td>
+<td align="right">14000</td>
+<td align="left">FDR_05</td>
+<td align="right">2834</td>
+<td align="left">Expression; eQTLs (YRI only)</td>
+<td align="left">polyA RNA-seq</td>
+<td align="left">Expression; eQTLs (YRI only)</td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">polyA RNA-seq</td>
+<td align="right">11.0</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">H3K27AC</td>
+<td align="right">100858</td>
+<td align="left">FDR_05</td>
+<td align="right">7380</td>
+<td align="left">H3K27Ac; hQTLs</td>
+<td align="left">H3K27Ac ChIP-seq</td>
+<td align="left">H3K27Ac; hQTLs</td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">H3K27Ac ChIP-seq</td>
+<td align="right">2.0</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">H3K36ME3</td>
+<td align="right">14000</td>
+<td align="left">FDR_05</td>
+<td align="right">540</td>
+<td align="left">H3K36me3; hQTLs</td>
+<td align="left">H3K36me3 ChIP-seq</td>
+<td align="left">H3K36me3; hQTLs</td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">H3K36me3 ChIP-seq</td>
+<td align="right">4.0</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">H3K4ME1</td>
+<td align="right">182749</td>
+<td align="left">FDR_05</td>
+<td align="right">4383</td>
+<td align="left">H3K4me1; hQTLs</td>
+<td align="left">H3K4me1 ChIP-seq</td>
+<td align="left">H3K4me1; hQTLs</td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">H3K4me1 ChIP-seq</td>
+<td align="right">1.0</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">H3K4ME3</td>
+<td align="right">55769</td>
+<td align="left">FDR_05</td>
+<td align="right">3246</td>
+<td align="left">H3K4me3; hQTLs</td>
+<td align="left">H3K4me3 ChIP-seq</td>
+<td align="left">H3K4me3; hQTLs</td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">H3K4me3 ChIP-seq</td>
+<td align="right">3.0</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">MetabolicLabelled.30min</td>
+<td align="right">14000</td>
+<td align="left">FDR_05</td>
+<td align="right">596</td>
+<td align="left">Expression; eQTLs</td>
+<td align="left">30min 4sU RNA-seq</td>
+<td align="left">Expression; eQTLs</td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">30min 4sU RNA-seq</td>
+<td align="right">8.5</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">MetabolicLabelled.30min.Splicing</td>
+<td align="right">35099</td>
+<td align="left">FDR_05</td>
+<td align="right">274</td>
+<td align="left">Splicing</td>
+<td align="left">30min 4sU RNA-seq</td>
+<td align="left">Splicing</td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">30min 4sU RNA-seq</td>
+<td align="right">8.0</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">MetabolicLabelled.60min</td>
+<td align="right">13993</td>
+<td align="left">FDR_05</td>
+<td align="right">640</td>
+<td align="left">Expression; eQTLs</td>
+<td align="left">60min 4sU RNA-seq</td>
+<td align="left">Expression; eQTLs</td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">60min 4sU RNA-seq</td>
+<td align="right">9.0</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">MetabolicLabelled.60min.Splicing</td>
+<td align="right">35648</td>
+<td align="left">FDR_05</td>
+<td align="right">362</td>
+<td align="left">Splicing</td>
+<td align="left">60min 4sU RNA-seq</td>
+<td align="left">Splicing</td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">60min 4sU RNA-seq</td>
+<td align="right">9.5</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">chRNA.Expression.Splicing</td>
+<td align="right">14000</td>
+<td align="left">FDR_05</td>
+<td align="right">2039</td>
+<td align="left">Expression; eQTLs</td>
+<td align="left">chRNA-seq</td>
+<td align="left">Expression; eQTLs</td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">chRNA-seq</td>
+<td align="right">5.0</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">chRNA.Splicing</td>
+<td align="right">41406</td>
+<td align="left">FDR_05</td>
+<td align="right">2345</td>
+<td align="left">Splicing; sQTLs*</td>
+<td align="left">chRNA-seq</td>
+<td align="left">Splicing; sQTLs*</td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">chRNA-seq</td>
+<td align="right">6.0</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">polyA.Splicing</td>
+<td align="right">38280</td>
+<td align="left">FDR_05</td>
+<td align="right">7344</td>
+<td align="left">Splicing; sQTLs*</td>
+<td align="left">polyA RNA-seq</td>
+<td align="left">Splicing; sQTLs*</td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">polyA RNA-seq</td>
+<td align="right">12.0</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">polyA.Splicing.Subset_YRI</td>
+<td align="right">38280</td>
+<td align="left">FDR_05</td>
+<td align="right">1766</td>
+<td align="left">Splicing; sQTLs* (YRI only)</td>
+<td align="left">polyA RNA-seq</td>
+<td align="left">Splicing; sQTLs* (YRI only)</td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">polyA RNA-seq</td>
+<td align="right">13.0</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">APA_Nuclear</td>
+<td align="right">4941</td>
+<td align="left">FDR_01</td>
+<td align="right">114</td>
+<td align="left">APA QTLs*</td>
+<td align="left">Nuclear RNA 3’seq</td>
+<td align="left">APA QTLs*</td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">Nuclear RNA 3’seq</td>
+<td align="right">7.0</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">APA_Total</td>
+<td align="right">2997</td>
+<td align="left">FDR_01</td>
+<td align="right">32</td>
+<td align="left">APA QTLs*</td>
+<td align="left">Total RNA 3’seq</td>
+<td align="left">APA QTLs*</td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">Total RNA 3’seq</td>
+<td align="right">14.0</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">Expression.Splicing</td>
+<td align="right">14000</td>
+<td align="left">FDR_01</td>
+<td align="right">8172</td>
+<td align="left">Expression; eQTLs</td>
+<td align="left">polyA RNA-seq</td>
+<td align="left">Expression; eQTLs</td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">polyA RNA-seq</td>
+<td align="right">10.0</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">Expression.Splicing.Subset_YRI</td>
+<td align="right">14000</td>
+<td align="left">FDR_01</td>
+<td align="right">1581</td>
+<td align="left">Expression; eQTLs (YRI only)</td>
+<td align="left">polyA RNA-seq</td>
+<td align="left">Expression; eQTLs (YRI only)</td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">polyA RNA-seq</td>
+<td align="right">11.0</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">H3K27AC</td>
+<td align="right">100858</td>
+<td align="left">FDR_01</td>
+<td align="right">4394</td>
+<td align="left">H3K27Ac; hQTLs</td>
+<td align="left">H3K27Ac ChIP-seq</td>
+<td align="left">H3K27Ac; hQTLs</td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">H3K27Ac ChIP-seq</td>
+<td align="right">2.0</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">H3K36ME3</td>
+<td align="right">14000</td>
+<td align="left">FDR_01</td>
+<td align="right">292</td>
+<td align="left">H3K36me3; hQTLs</td>
+<td align="left">H3K36me3 ChIP-seq</td>
+<td align="left">H3K36me3; hQTLs</td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">H3K36me3 ChIP-seq</td>
+<td align="right">4.0</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">H3K4ME1</td>
+<td align="right">182749</td>
+<td align="left">FDR_01</td>
+<td align="right">2422</td>
+<td align="left">H3K4me1; hQTLs</td>
+<td align="left">H3K4me1 ChIP-seq</td>
+<td align="left">H3K4me1; hQTLs</td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">H3K4me1 ChIP-seq</td>
+<td align="right">1.0</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">H3K4ME3</td>
+<td align="right">55769</td>
+<td align="left">FDR_01</td>
+<td align="right">1903</td>
+<td align="left">H3K4me3; hQTLs</td>
+<td align="left">H3K4me3 ChIP-seq</td>
+<td align="left">H3K4me3; hQTLs</td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">H3K4me3 ChIP-seq</td>
+<td align="right">3.0</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">MetabolicLabelled.30min</td>
+<td align="right">14000</td>
+<td align="left">FDR_01</td>
+<td align="right">285</td>
+<td align="left">Expression; eQTLs</td>
+<td align="left">30min 4sU RNA-seq</td>
+<td align="left">Expression; eQTLs</td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">30min 4sU RNA-seq</td>
+<td align="right">8.5</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">MetabolicLabelled.30min.Splicing</td>
+<td align="right">35099</td>
+<td align="left">FDR_01</td>
+<td align="right">160</td>
+<td align="left">Splicing</td>
+<td align="left">30min 4sU RNA-seq</td>
+<td align="left">Splicing</td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">30min 4sU RNA-seq</td>
+<td align="right">8.0</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">MetabolicLabelled.60min</td>
+<td align="right">13993</td>
+<td align="left">FDR_01</td>
+<td align="right">302</td>
+<td align="left">Expression; eQTLs</td>
+<td align="left">60min 4sU RNA-seq</td>
+<td align="left">Expression; eQTLs</td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">60min 4sU RNA-seq</td>
+<td align="right">9.0</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">MetabolicLabelled.60min.Splicing</td>
+<td align="right">35648</td>
+<td align="left">FDR_01</td>
+<td align="right">217</td>
+<td align="left">Splicing</td>
+<td align="left">60min 4sU RNA-seq</td>
+<td align="left">Splicing</td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">60min 4sU RNA-seq</td>
+<td align="right">9.5</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">chRNA.Expression.Splicing</td>
+<td align="right">14000</td>
+<td align="left">FDR_01</td>
+<td align="right">1162</td>
+<td align="left">Expression; eQTLs</td>
+<td align="left">chRNA-seq</td>
+<td align="left">Expression; eQTLs</td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">chRNA-seq</td>
+<td align="right">5.0</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">chRNA.Splicing</td>
+<td align="right">41406</td>
+<td align="left">FDR_01</td>
+<td align="right">1661</td>
+<td align="left">Splicing; sQTLs*</td>
+<td align="left">chRNA-seq</td>
+<td align="left">Splicing; sQTLs*</td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">chRNA-seq</td>
+<td align="right">6.0</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">polyA.Splicing</td>
+<td align="right">38280</td>
+<td align="left">FDR_01</td>
+<td align="right">5684</td>
+<td align="left">Splicing; sQTLs*</td>
+<td align="left">polyA RNA-seq</td>
+<td align="left">Splicing; sQTLs*</td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">polyA RNA-seq</td>
+<td align="right">12.0</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">polyA.Splicing.Subset_YRI</td>
+<td align="right">38280</td>
+<td align="left">FDR_01</td>
+<td align="right">1178</td>
+<td align="left">Splicing; sQTLs* (YRI only)</td>
+<td align="left">polyA RNA-seq</td>
+<td align="left">Splicing; sQTLs* (YRI only)</td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">polyA RNA-seq</td>
+<td align="right">13.0</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="right"></td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>NumQTLs.dat %&gt;%
+  filter(FDR==&quot;FDR_10&quot;) %&gt;%
+  pull(n) %&gt;% sum()</code></pre>
+<pre><code>[1] 57981</code></pre>
+<pre class="r"><code>NumQTLs.dat %&gt;%
+  filter(FDR==&quot;FDR_10&quot;) %&gt;%
+  pull(TestFeats) %&gt;% sum()</code></pre>
+<pre><code>[1] 620020</code></pre>
+</div>
+<div id="box-plots-for-ttc3" class="section level3">
+<h3>Box plots for TTC3</h3>
+<p>first do some quick data searching to figure out exactly the names of
+the phenotypes I want to make boxpltos for…</p>
+<pre class="r"><code>dat &lt;- fread(&quot;../code/pi1/PairwisePi1Traits.P.all.txt.gz&quot;)
+
+PeaksToTSS &lt;- Sys.glob(&quot;../code/Misc/PeaksClosestToTSS/*_assigned.tsv.gz&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/Misc/PeaksClosestToTSS/(.+?)_assigned.tsv.gz&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(read_tsv) %&gt;%
+  bind_rows(.id=&quot;ChromatinMark&quot;) %&gt;%
+  mutate(GenePeakPair = paste(gene, peak, sep = &quot;;&quot;)) %&gt;%
+  distinct(ChromatinMark, peak, gene, .keep_all=T)
+
+PeaksToTSS %&gt;%
+  filter(ChromatinMark == &quot;H3K4ME3&quot;) %&gt;%
+  filter(str_detect(gene, &quot;ENSG00000075234&quot;))
+
+dat %&gt;%
+  filter(PC1 == &quot;Expression.Splicing&quot;) %&gt;%
+  filter(str_detect(P1, &quot;ENSG00000075234&quot;)) %&gt;%
+  # pull(PC2) %&gt;% unique()
+  filter(PC2 == &quot;polyA.Splicing&quot;)
+
+dat %&gt;%
+  filter(PC1 == &quot;Expression.Splicing&quot;) %&gt;%
+  filter(str_detect(P1, &quot;ENSG00000075234&quot;)) %&gt;%
+  filter(P2 %in% c(&quot;H3K4ME3_peak_31179&quot;, &quot;22:46292328:46292791:clu_48515_+&quot;))</code></pre>
+<p>So I’m looking to make boxplots for H3K4ME3_peak_31179 (hQTL),
+ENSG00000075234.17 (polyA eQTL), and chRNA sQTL and polyA sQTL for
+22:46292328:46292791:clu_48515_+</p>
+<p>TopSNP: “22:46291323:G:A”</p>
+<p>Now use my helper script to get genotype/phenotype data for the top
+eSNP for those traits..</p>
+<pre class="bash"><code>cd ../code/scripts/GenometracksByGenotype
+
+python ExtractPhenotypeBedByGenotype.py --Bed ../../QTLs/QTLTools/Expression.Splicing/OnlyFirstReps.sorted.qqnorm.bed.gz --VCF ../../Genotypes/1KG_GRCh38/Autosomes.vcf.gz --FeatureName ENSG00000075234.17 --SnpPos chr22:46291323 &gt; ../../scratch/Boxplot.dat.eQTL.tsv
+
+python ExtractPhenotypeBedByGenotype.py --Bed ../../QTLs/QTLTools/polyA.Splicing/OnlyFirstReps.sorted.qqnorm.bed.gz --VCF ../../Genotypes/1KG_GRCh38/Autosomes.vcf.gz --FeatureName 22:46292328:46292791:clu_48515_+  --SnpPos chr22:46291323 &gt; ../../scratch/Boxplot.dat.polyAsQTL.tsv
+
+python ExtractPhenotypeBedByGenotype.py --Bed ../../QTLs/QTLTools/polyA.Splicing/OnlyFirstReps.sorted.qqnorm.bed.gz --VCF ../../Genotypes/1KG_GRCh38/Autosomes.vcf.gz --FeatureName 22:46292328:46292791:clu_48515_+  --SnpPos chr22:46291323 &gt; ../../scratch/Boxplot.dat.polyAsQTL.tsv
+
+python ExtractPhenotypeBedByGenotype.py --Bed ../../QTLs/QTLTools/H3K4ME3/OnlyFirstReps.sorted.qqnorm.bed.gz --VCF ../../Genotypes/1KG_GRCh38/Autosomes.vcf.gz --FeatureName H3K4ME3_peak_31179  --SnpPos chr22:46291323 &gt; ../../scratch/Boxplot.dat.PromoterhQTL.tsv</code></pre>
+<p>Now let’s read in that data and do boxplots…</p>
+<pre class="r"><code>dat.for.boxplots &lt;- Sys.glob(&quot;../code/scratch/Boxplot.dat.*.tsv&quot;) %&gt;%
+  setNames(str_replace(., &quot;../code/scratch/Boxplot.dat.(.+?).tsv&quot;, &quot;\\1&quot;)) %&gt;%
+  lapply(read_tsv, col_names=c(&quot;SampleID&quot;, &quot;P&quot;, &quot;genotype&quot;, &quot;Ref&quot;, &quot;Alt&quot;, &quot;ID&quot;), skip=1) %&gt;%
+  bind_rows(.id=&quot;PC&quot;)
+
+dat.for.boxplots %&gt;%
+  filter(!genotype==3) %&gt;%
+  mutate(genotype= factor(genotype, levels=c(0,1,2))) %&gt;%
+  ggplot(aes(x=genotype, y=P, group=genotype)) +
+  geom_boxplot(outlier.shape = NA, aes(color=genotype)) +
+  # geom_jitter(width=0.25, alpha=0.1) +
+  geom_smooth(method=&#39;lm&#39;, aes(group=1), se=F, color=&quot;gray&quot;) +
+  scale_x_discrete(labels=c(&quot;0&quot;=&quot;GG&quot;, &quot;1&quot;=&quot;GA&quot;, &quot;2&quot;=&quot;AA&quot;)) +
+  scale_color_manual(values=c(&quot;0&quot;=&quot;#f03b20&quot;, &quot;1&quot;=&quot;#7a0177&quot;, &quot;2&quot;=&quot;#08519c&quot;)) +
+  # scale_x_discrete() +
+  facet_wrap(~PC) +
+  theme(legend.position=&quot;none&quot;) +
+  labs(x=NULL, color=NULL)</code></pre>
+<p><img src="figure/MakeFinalFigs_Fig2.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>dat.for.boxplots$PC %&gt;% unique()
+
+dat.for.boxplots %&gt;%
+  filter(!genotype==3) %&gt;%
+  filter(PC==&quot;PromoterhQTL&quot;) %&gt;%
+  mutate(genotype= factor(genotype, levels=c(0,1,2))) %&gt;%
+  ggplot(aes(x=genotype, y=P, group=genotype)) +
+  geom_boxplot(outlier.shape = NA, aes(color=genotype)) +
+  # geom_jitter(width=0.25, alpha=0.1) +
+  geom_smooth(method=&#39;lm&#39;, aes(group=1), se=F, color=&quot;gray&quot;) +
+  scale_x_discrete(labels=c(&quot;0&quot;=&quot;GG&quot;, &quot;1&quot;=&quot;GA&quot;, &quot;2&quot;=&quot;AA&quot;)) +
+  scale_color_manual(values=c(&quot;0&quot;=&quot;#f03b20&quot;, &quot;1&quot;=&quot;#7a0177&quot;, &quot;2&quot;=&quot;#08519c&quot;)) +
+  geom_text(x=-Inf, y=Inf, label=&quot; beta=0.15\n P=0.48&quot;, hjust=0, vjust=1, size=5.5) +
+  # scale_x_discrete() +
+  theme(legend.position=&quot;none&quot;) +
+  Rotate_x_labels +
+  labs(x=NULL, color=NULL, y=&quot;H3K4me3 @ promoter&quot;)
+ggsave(&quot;/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig2_ExampleBoxplot_hQTL.pdf&quot;, height=3, width=2)
+
+dat.for.boxplots %&gt;%
+  filter(!genotype==3) %&gt;%
+  filter(PC==&quot;eQTL&quot;) %&gt;%
+  mutate(genotype= factor(genotype, levels=c(0,1,2))) %&gt;%
+  ggplot(aes(x=genotype, y=P, group=genotype)) +
+  geom_boxplot(outlier.shape = NA, aes(color=genotype)) +
+  # geom_jitter(width=0.25, alpha=0.1) +
+  geom_smooth(method=&#39;lm&#39;, aes(group=1), se=F, color=&quot;gray&quot;) +
+  scale_x_discrete(labels=c(&quot;0&quot;=&quot;GG&quot;, &quot;1&quot;=&quot;GA&quot;, &quot;2&quot;=&quot;AA&quot;)) +
+  scale_color_manual(values=c(&quot;0&quot;=&quot;#f03b20&quot;, &quot;1&quot;=&quot;#7a0177&quot;, &quot;2&quot;=&quot;#08519c&quot;)) +
+  geom_text(x=-Inf, y=Inf, label=&quot; beta=1.1\n P&lt;5E-43&quot;, hjust=0, vjust=1, size=5.5) +
+  # scale_x_discrete() +
+  theme(legend.position=&quot;none&quot;) +
+  Rotate_x_labels +
+  labs(x=NULL, color=NULL, y=&quot;TTC38 expression&quot;)
+ggsave(&quot;/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig2_ExampleBoxplot_eQTL.pdf&quot;, height=3, width=2)
+
+dat.for.boxplots %&gt;%
+  filter(!genotype==3) %&gt;%
+  filter(PC==&quot;polyAsQTL&quot;) %&gt;%
+  mutate(genotype= factor(genotype, levels=c(0,1,2))) %&gt;%
+  ggplot(aes(x=genotype, y=P, group=genotype)) +
+  geom_boxplot(outlier.shape = NA, aes(color=genotype)) +
+  # geom_jitter(width=0.25, alpha=0.1) +
+  geom_smooth(method=&#39;lm&#39;, aes(group=1), se=F, color=&quot;gray&quot;) +
+  scale_x_discrete(labels=c(&quot;0&quot;=&quot;GG&quot;, &quot;1&quot;=&quot;GA&quot;, &quot;2&quot;=&quot;AA&quot;)) +
+  scale_color_manual(values=c(&quot;0&quot;=&quot;#f03b20&quot;, &quot;1&quot;=&quot;#7a0177&quot;, &quot;2&quot;=&quot;#08519c&quot;)) +
+  geom_text(x=-Inf, y=Inf, label=&quot; beta=-1.1\n P&lt;3e-24&quot;, hjust=0, vjust=1, size=5.5) +
+  # scale_x_discrete() +
+  theme(legend.position=&quot;none&quot;) +
+  Rotate_x_labels +
+  labs(x=NULL, color=NULL, y=&quot;Splicing of cassette exon&quot;)
+ggsave(&quot;/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig2_ExampleBoxplot_polyAsQTL.pdf&quot;, height=3, width=2)
+
+dat.for.boxplots %&gt;%
+  filter(!genotype==3) %&gt;%
+  filter(PC==&quot;chRNAsQTL&quot;) %&gt;%
+  mutate(genotype= factor(genotype, levels=c(0,1,2))) %&gt;%
+  ggplot(aes(x=genotype, y=P, group=genotype)) +
+  geom_boxplot(outlier.shape = NA, aes(color=genotype)) +
+  # geom_jitter(width=0.25, alpha=0.1) +
+  geom_smooth(method=&#39;lm&#39;, aes(group=1), se=F, color=&quot;gray&quot;) +
+  scale_x_discrete(labels=c(&quot;0&quot;=&quot;GG&quot;, &quot;1&quot;=&quot;GA&quot;, &quot;2&quot;=&quot;AA&quot;)) +
+  scale_color_manual(values=c(&quot;0&quot;=&quot;#f03b20&quot;, &quot;1&quot;=&quot;#7a0177&quot;, &quot;2&quot;=&quot;#08519c&quot;)) +
+  geom_text(x=-Inf, y=Inf, label=&quot; beta=-1.3\n P&lt;4e-19&quot;, hjust=0, vjust=1, size=5.5) +
+  # scale_x_discrete() +
+  theme(legend.position=&quot;none&quot;) +
+  Rotate_x_labels +
+  labs(x=NULL, color=NULL, y=&quot;Splicing of cassette exon&quot;)
+ggsave(&quot;/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig2_ExampleBoxplot_chRNAsQTL.pdf&quot;, height=3, width=2)</code></pre>
+</div>
+<div id="classification-of-unannotated-and-unproductive-juncs"
+class="section level3">
+<h3>Classification of unannotated and unproductive juncs</h3>
+<p>Actually a supplement related to fig1</p>
+<pre class="r"><code>juncs.long &lt;- fread(&quot;../code/SplicingAnalysis/CombinedJuncTables/YRI.tsv.gz&quot;)
+
+IntronAnnotations &lt;- read_tsv(&quot;../data/IntronAnnotationsFromYang.tsv.gz&quot;) %&gt;%
+  mutate(stop = end-1)
+
+juncs.long.summary &lt;- juncs.long %&gt;%
+  dplyr::select(chrom, start, stop, strand, Dataset, Count) %&gt;%
+  inner_join(IntronAnnotations) %&gt;%
+  group_by(Dataset, SemiSupergroupAnnotations, SuperAnnotation) %&gt;%
+  summarise(Sum=sum(Count))
+
+
+P.PercentAnnotated &lt;- juncs.long.summary %&gt;%
+  ungroup() %&gt;%
+  filter(Dataset %in% c(&quot;Expression.Splicing&quot;, &quot;chRNA.Expression.Splicing&quot;)) %&gt;%
+  filter(!str_detect(SuperAnnotation, &quot;Noncoding&quot;)) %&gt;%
+  group_by(Dataset, SuperAnnotation) %&gt;%
+  summarise(TotalSum = sum(Sum)) %&gt;%
+  ungroup() %&gt;%
+  mutate(PlotGroup = if_else(SuperAnnotation==&quot;AnnotatedJunc_ProductiveCodingGene&quot;, &quot;Annotated productive (basic tag)&quot;, &quot;Other&quot;)) %&gt;%
+  group_by(Dataset) %&gt;%
+  mutate(DatasetSum = sum(TotalSum)) %&gt;%
+  ungroup() %&gt;%
+  group_by(Dataset, PlotGroup) %&gt;%
+  summarise(Percent=sum(TotalSum)/DatasetSum) %&gt;%
+  ungroup() %&gt;%
+  distinct() %&gt;%
+  mutate(Dataset = factor(Dataset, levels=c(&quot;Expression.Splicing&quot;, &quot;chRNA.Expression.Splicing&quot;))) %&gt;%
+  ggplot(aes(x=Dataset, y=Percent*100, fill=PlotGroup)) +
+  geom_col() +
+  scale_x_discrete(labels=c(&quot;Expression.Splicing&quot;=&quot;polyA RNA&quot;, &quot;chRNA.Expression.Splicing&quot;=&quot;chRNA&quot;)) +
+  scale_y_continuous(expand=c(0,0)) +
+  scale_fill_manual(values=c(&quot;Annotated productive (basic tag)&quot;=&quot;#1f78b4&quot;, &quot;Other&quot;=&quot;#969696&quot;)) + 
+  scale_y_break(c(5, 95), expand=F, space=0.5) +
+  labs(y=&quot;Percent of splice junction reads&quot;, fill=&quot;Intron classification&quot;) +
+  theme(legend.position=&quot;none&quot;)
+P.PercentAnnotated &lt;- ggplotify::as.ggplot(print(P.PercentAnnotated))</code></pre>
+<p><img src="figure/MakeFinalFigs_Fig2.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>P.PercentAnnotated</code></pre>
+<p><img src="figure/MakeFinalFigs_Fig2.Rmd/unnamed-chunk-8-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>P.PercentOfUnannotated &lt;- juncs.long.summary %&gt;%
+  ungroup() %&gt;%
+  filter(Dataset %in% c(&quot;chRNA.Expression.Splicing&quot;)) %&gt;%
+  filter(!str_detect(SuperAnnotation, &quot;Noncoding&quot;)) %&gt;%
+  filter(SuperAnnotation!=&quot;AnnotatedJunc_ProductiveCodingGene&quot;) %&gt;%
+  mutate(PercentOfNon_AnnotatedProductive = Sum/sum(Sum)*100) %&gt;%
+  arrange(desc(SuperAnnotation), PercentOfNon_AnnotatedProductive) %&gt;%
+  mutate(n=row_number()) %&gt;%
+  mutate(SemiSupergroupAnnotations=fct_reorder(SemiSupergroupAnnotations, n)) %&gt;%
+  ggplot(aes(x=Dataset, y=PercentOfNon_AnnotatedProductive, fill=SemiSupergroupAnnotations)) +
+  geom_col()
+P.PercentOfUnannotated</code></pre>
+<p><img src="figure/MakeFinalFigs_Fig2.Rmd/unnamed-chunk-8-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>One more version… with fixed scale… borrowed code from <a
+href="https://github.com/slowkow/ggrepel/issues/161">here</a></p>
+<pre class="r"><code>position_stack_and_nudge &lt;- function(x = 0, y = 0, vjust = 1, reverse = FALSE) {
+  ggproto(NULL, PositionStackAndNudge,
+    x = x,
+    y = y,
+    vjust = vjust,
+    reverse = reverse
+  )
+}
+
+#&#39; @rdname ggplot2-ggproto
+#&#39; @format NULL
+#&#39; @usage NULL
+#&#39; @noRd
+PositionStackAndNudge &lt;- ggproto(&quot;PositionStackAndNudge&quot;, PositionStack,
+  x = 0,
+  y = 0,
+
+  setup_params = function(self, data) {
+    c(
+        list(x = self$x, y = self$y),
+        ggproto_parent(PositionStack, self)$setup_params(data)
+    )
+  },
+
+  compute_layer = function(self, data, params, panel) {
+    # operate on the stacked positions (updated in August 2020)
+    data = ggproto_parent(PositionStack, self)$compute_layer(data, params, panel)
+
+    x_orig &lt;- data$x
+    y_orig &lt;- data$y
+    # transform only the dimensions for which non-zero nudging is requested
+    if (any(params$x != 0)) {
+      if (any(params$y != 0)) {
+        data &lt;- transform_position(data, function(x) x + params$x, function(y) y + params$y)
+      } else {
+        data &lt;- transform_position(data, function(x) x + params$x, NULL)
+      }
+    } else if (any(params$y != 0)) {
+      data &lt;- transform_position(data, function(x) x, function(y) y + params$y)
+    }
+    data$nudge_x &lt;- data$x
+    data$nudge_y &lt;- data$y
+    data$x &lt;- x_orig
+    data$y &lt;- y_orig
+
+    data
+  },
+
+  compute_panel = function(self, data, params, scales) {
+      ggproto_parent(PositionStack, self)$compute_panel(data, params, scales)
+  }
+)</code></pre>
+<pre class="r"><code>AnnotationColors &lt;- IntronAnnotations %&gt;%
+  distinct(SemiSupergroupAnnotations, SuperAnnotation) %&gt;%
+  mutate(Color = recode(SuperAnnotation, !!!c(
+    &quot;AnnotatedJunc_NoncodingGene&quot;=&quot;#6a3d9a&quot;,
+    &quot;UnannotatedJunc_NoncodingGene&quot;=&quot;#cab2d6&quot;,
+    &quot;AnnotatedJunc_ProductiveCodingGene&quot;=&quot;#1f78b4&quot;,
+    &quot;UnannotatedJunc_ProductiveCodingGene&quot;=&quot;#a6cee3&quot;,
+    &quot;AnnotatedJunc_UnproductiveCodingGene&quot;=&quot;#e31a1c&quot;,
+    &quot;UnannotatedJunc_UnproductiveCodingGene&quot;=&quot;#fb9a99&quot;)))
+
+P.PercentOfUnannotated &lt;- juncs.long.summary %&gt;%
+  ungroup() %&gt;%
+  filter(Dataset %in% c(&quot;chRNA.Expression.Splicing&quot;)) %&gt;%
+  filter(!str_detect(SuperAnnotation, &quot;Noncoding&quot;)) %&gt;%
+  filter(SuperAnnotation!=&quot;AnnotatedJunc_ProductiveCodingGene&quot;) %&gt;%
+  mutate(PercentOfNon_AnnotatedProductive = Sum/sum(Sum)*100) %&gt;%
+  mutate(SemiSupergroupAnnotations=if_else(Sum &lt;= 996286 &amp; SuperAnnotation==&quot;UnannotatedJunc_UnproductiveCodingGene&quot;, &quot;Other predicted non-productive&quot;, SemiSupergroupAnnotations)) %&gt;%
+  group_by(Dataset, SemiSupergroupAnnotations, SuperAnnotation) %&gt;%
+  summarise(PercentOfNon_AnnotatedProductive=sum(PercentOfNon_AnnotatedProductive)) %&gt;%
+  ungroup() %&gt;%
+  arrange(desc(SuperAnnotation), PercentOfNon_AnnotatedProductive) %&gt;%
+  mutate(n=row_number()) %&gt;%
+  mutate(SemiSupergroupAnnotations=fct_reorder(SemiSupergroupAnnotations, n)) %&gt;%
+  ggplot(aes(x=Dataset, y=PercentOfNon_AnnotatedProductive, fill=SemiSupergroupAnnotations)) +
+  geom_col(color=&#39;black&#39;) +
+  geom_text_repel(
+      aes(label = SemiSupergroupAnnotations, x=1.4),
+      max.overlaps = Inf,
+      min.segment.length=0,
+      label.padding=1,
+      position = position_stack_and_nudge(vjust = 0.5, x = 1),
+      direction = &#39;both&#39;,
+      arrow=NULL
+  ) +
+  scale_y_continuous(expand=c(0,0)) +
+  scale_x_discrete(expand=c(0,0)) +
+  scale_fill_manual(values=AnnotationColors %&gt;% dplyr::select(SemiSupergroupAnnotations, Color) %&gt;% deframe(), na.value=&quot;#fb9a99&quot;) +
+  theme(legend.position=&#39;none&#39;) +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  labs(y=&quot;Percent junction reads amongst other&quot;)
+
+P.PercentOfUnannotated</code></pre>
+<p><img src="figure/MakeFinalFigs_Fig2.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>P.PercentJuncsLegend.dat &lt;- 
+  AnnotationColors %&gt;%
+  distinct(SuperAnnotation, .keep_all=T) %&gt;%
+  filter(!str_detect(SuperAnnotation, &quot;Noncoding&quot;))
+
+P.PercentJuncsLegend &lt;- ggplot(P.PercentJuncsLegend.dat, aes(x=SuperAnnotation, y=1, fill=SuperAnnotation)) +
+  geom_col() +
+  scale_fill_manual(values=P.PercentJuncsLegend.dat %&gt;%
+                      dplyr::select(SuperAnnotation, Color) %&gt;% deframe(), labels=c(&quot;AnnotatedJunc_UnproductiveCodingGene&quot;=&quot;Annotated unproductive&quot;, &quot;AnnotatedJunc_ProductiveCodingGene&quot;=&quot;Annotated productive&quot;, &quot;UnannotatedJunc_ProductiveCodingGene&quot;=&quot;Unannotated unproductive&quot;, &quot;UnannotatedJunc_UnproductiveCodingGene&quot;=&quot;Unannotated productive&quot;)) +
+  labs(fill=&quot;Intron classification&quot;)</code></pre>
+<p>Number eQTLs per gene, hQTLs, sQTLs</p>
+<pre class="r"><code>dat &lt;- fread(&quot;../code/pi1/PairwisePi1Traits.P.all.txt.gz&quot;)
+
+dat$PC2 %&gt;% unique()</code></pre>
+<pre><code> [1] &quot;Expression.Splicing.Subset_YRI&quot; &quot;chRNA.Expression.Splicing&quot;     
+ [3] &quot;MetabolicLabelled.30min&quot;        &quot;MetabolicLabelled.60min&quot;       
+ [5] &quot;H3K27AC&quot;                        &quot;H3K4ME3&quot;                       
+ [7] &quot;H3K4ME1&quot;                        &quot;H3K36ME3&quot;                      
+ [9] &quot;APA_Nuclear&quot;                    &quot;APA_Total&quot;                     
+[11] &quot;polyA.Splicing&quot;                 &quot;polyA.Splicing.Subset_YRI&quot;     
+[13] &quot;chRNA.Splicing&quot;                 &quot;ProCap&quot;                        
+[15] &quot;Expression.Splicing&quot;           </code></pre>
+<pre class="r"><code>NumMolQTLsPerGene &lt;- dat %&gt;%
+  filter(PC1==&quot;Expression.Splicing&quot; &amp; FDR.x &lt; 0.1) %&gt;%
+  mutate(P2 = case_when(
+    PC2 %in% c(&quot;polyA.Splicing&quot;, &quot;chRNA.Splicing&quot;, &quot;polyA.Splicing.Subset_YRI&quot;) ~ str_extract(P2, &quot;clu_.+$&quot;),
+    TRUE ~ P2
+  )) %&gt;%
+  group_by(PC1, PC2, P2, GeneLocus) %&gt;%
+  slice(which.min(FDR.y)) %&gt;%
+  ungroup() %&gt;%
+  mutate(IsPc2SigFDR = FDR.y &lt; 0.1) %&gt;%
+  mutate(IsPc2SigPermutationP = p_permutation.y &lt; 0.01) %&gt;%
+  group_by(PC2, GeneLocus) %&gt;%
+  summarise(Num_PC2_QTLs_FDR = sum(IsPc2SigFDR),
+            Num_PC2_QTLs_PermutationP = sum(IsPc2SigPermutationP)) %&gt;%
+  ungroup()
+
+NumMolQTLsPerGene %&gt;%
+  filter(PC2 %in% c(&quot;H3K27AC&quot;, &quot;polyA.Splicing&quot;)) %&gt;%
+  ggplot(aes(x=Num_PC2_QTLs_PermutationP)) +
+  stat_ecdf() +
+  facet_wrap(~PC2) +
+  coord_cartesian(xlim=c(0,5))</code></pre>
+<p><img src="figure/MakeFinalFigs_Fig2.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>NumMolQTLsPerGene %&gt;%
+  filter(PC2 %in% c(&quot;H3K27AC&quot;, &quot;polyA.Splicing&quot;)) %&gt;%
+  ggplot(aes(x=Num_PC2_QTLs_FDR)) +
+  stat_ecdf() +
+  facet_wrap(~PC2) +
+  coord_cartesian(xlim=c(0,5))</code></pre>
+<p><img src="figure/MakeFinalFigs_Fig2.Rmd/unnamed-chunk-11-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>NumMolQTLsPerGene %&gt;%
+  ggplot(aes(x=Num_PC2_QTLs_PermutationP)) +
+  stat_ecdf() +
+  facet_wrap(~PC2) +
+  coord_cartesian(xlim=c(0,5))</code></pre>
+<p><img src="figure/MakeFinalFigs_Fig2.Rmd/unnamed-chunk-11-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok, now let’s plot that nicer for saving…</p>
+<pre class="r"><code>eGenes &lt;- dat %&gt;%
+  filter(PC1==&quot;Expression.Splicing&quot; &amp; FDR.x &lt; 0.1) %&gt;%
+  pull(P1) %&gt;% unique()
+
+P.Number_hQTLsForColoc &lt;- NumMolQTLsPerGene %&gt;%
+  filter(GeneLocus %in% eGenes) %&gt;%
+  # filter(PC2 %in% c(&quot;H3K27AC&quot;, &quot;polyA.Splicing&quot;)) %&gt;%
+  filter(PC2==&quot;H3K27AC&quot;) %&gt;%
+  mutate(n = if_else(Num_PC2_QTLs_PermutationP&gt;5, as.integer(5), Num_PC2_QTLs_PermutationP)) %&gt;%
+  count(PC2, n) %&gt;%
+  ggplot(aes(x=n, y=nn)) +
+  geom_col() +
+  scale_x_continuous(breaks=0:5, labels=c(0:4, &quot;&gt;4&quot;)) +
+  labs(x=&quot;Number H3K27AC hQTLs w/in 100kb of gene&quot;, y=&quot;Number eGenes&quot;)
+NumMolQTLsPerGene %&gt;%
+  filter(GeneLocus %in% eGenes) %&gt;%
+  # filter(PC2 %in% c(&quot;H3K27AC&quot;, &quot;polyA.Splicing&quot;)) %&gt;%
+  filter(PC2==&quot;H3K27AC&quot;) %&gt;%
+  mutate(n = if_else(Num_PC2_QTLs_PermutationP&gt;5, as.integer(5), Num_PC2_QTLs_PermutationP)) %&gt;%
+  count(PC2, n)</code></pre>
+<pre><code># A tibble: 6 × 3
+  PC2         n    nn
+  &lt;chr&gt;   &lt;int&gt; &lt;int&gt;
+1 H3K27AC     0  4241
+2 H3K27AC     1  3313
+3 H3K27AC     2  1942
+4 H3K27AC     3  1064
+5 H3K27AC     4   608
+6 H3K27AC     5   756</code></pre>
+<pre class="r"><code>P.Number_sQTLsForColoc &lt;- NumMolQTLsPerGene %&gt;%
+  filter(GeneLocus %in% eGenes) %&gt;%
+  # filter(PC2 %in% c(&quot;H3K27AC&quot;, &quot;polyA.Splicing&quot;)) %&gt;%
+  filter(PC2==&quot;polyA.Splicing&quot;) %&gt;%
+  mutate(n = if_else(Num_PC2_QTLs_PermutationP&gt;5, as.integer(5), Num_PC2_QTLs_PermutationP)) %&gt;%
+  count(PC2, n) %&gt;%
+  ggplot(aes(x=n, y=nn)) +
+  geom_col() +
+  scale_x_continuous(breaks=0:5, labels=c(0:4, &quot;&gt;4&quot;)) +
+  labs(x=&quot;Number sQTLs within gene&quot;, y=&quot;Number eGenes&quot;)
+NumMolQTLsPerGene %&gt;%
+  filter(GeneLocus %in% eGenes) %&gt;%
+  # filter(PC2 %in% c(&quot;H3K27AC&quot;, &quot;polyA.Splicing&quot;)) %&gt;%
+  filter(PC2==&quot;polyA.Splicing&quot;) %&gt;%
+  mutate(n = if_else(Num_PC2_QTLs_PermutationP&gt;5, as.integer(5), Num_PC2_QTLs_PermutationP)) %&gt;%
+  count(PC2, n)</code></pre>
+<pre><code># A tibble: 6 × 3
+  PC2                n    nn
+  &lt;chr&gt;          &lt;int&gt; &lt;int&gt;
+1 polyA.Splicing     0  4895
+2 polyA.Splicing     1  2926
+3 polyA.Splicing     2  1022
+4 polyA.Splicing     3   305
+5 polyA.Splicing     4   104
+6 polyA.Splicing     5   124</code></pre>
+<pre class="r"><code>P.Number_hQTLsForColoc</code></pre>
+<p><img src="figure/MakeFinalFigs_Fig2.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>P.Number_sQTLsForColoc</code></pre>
+<p><img src="figure/MakeFinalFigs_Fig2.Rmd/unnamed-chunk-12-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Same plots, but only considering eGenes discovered in YRI subset</p>
+<pre class="r"><code>eGenes &lt;- dat %&gt;%
+  filter(PC1==&quot;Expression.Splicing.Subset_YRI&quot; &amp; FDR.x &lt; 0.1) %&gt;%
+  pull(P1) %&gt;% unique()
+
+P.Number_hQTLsForColoc &lt;- NumMolQTLsPerGene %&gt;%
+  filter(GeneLocus %in% eGenes) %&gt;%
+  # filter(PC2 %in% c(&quot;H3K27AC&quot;, &quot;polyA.Splicing&quot;)) %&gt;%
+  filter(PC2==&quot;H3K27AC&quot;) %&gt;%
+  mutate(n = if_else(Num_PC2_QTLs_PermutationP&gt;5, as.integer(5), Num_PC2_QTLs_PermutationP)) %&gt;%
+  count(PC2, n) %&gt;%
+  ggplot(aes(x=n, y=nn)) +
+  geom_col() +
+  scale_x_continuous(breaks=0:5, labels=c(0:4, &quot;&gt;4&quot;)) +
+  scale_y_continuous(expand=c(0,0)) +
+  labs(x=&quot;Number H3K27AC hQTLs w/in 100kb of gene&quot;, y=&quot;Number eGenes&quot;)
+NumMolQTLsPerGene %&gt;%
+  filter(GeneLocus %in% eGenes) %&gt;%
+  # filter(PC2 %in% c(&quot;H3K27AC&quot;, &quot;polyA.Splicing&quot;)) %&gt;%
+  filter(PC2==&quot;H3K27AC&quot;) %&gt;%
+  mutate(n = if_else(Num_PC2_QTLs_PermutationP&gt;5, as.integer(5), Num_PC2_QTLs_PermutationP)) %&gt;%
+  count(PC2, n)</code></pre>
+<pre><code># A tibble: 6 × 3
+  PC2         n    nn
+  &lt;chr&gt;   &lt;int&gt; &lt;int&gt;
+1 H3K27AC     0  1193
+2 H3K27AC     1  1032
+3 H3K27AC     2   668
+4 H3K27AC     3   374
+5 H3K27AC     4   238
+6 H3K27AC     5   375</code></pre>
+<pre class="r"><code>P.Number_sQTLsForColoc &lt;- NumMolQTLsPerGene %&gt;%
+  filter(GeneLocus %in% eGenes) %&gt;%
+  # filter(PC2 %in% c(&quot;H3K27AC&quot;, &quot;polyA.Splicing&quot;)) %&gt;%
+  filter(PC2==&quot;polyA.Splicing&quot;) %&gt;%
+  mutate(n = if_else(Num_PC2_QTLs_PermutationP&gt;5, as.integer(5), Num_PC2_QTLs_PermutationP)) %&gt;%
+  count(PC2, n) %&gt;%
+  ggplot(aes(x=n, y=nn)) +
+  geom_col() +
+  scale_x_continuous(breaks=0:5, labels=c(0:4, &quot;&gt;4&quot;)) +
+  scale_y_continuous(expand=c(0,0)) +
+  labs(x=&quot;Number sQTLs within gene&quot;, y=&quot;Number eGenes&quot;)
+NumMolQTLsPerGene %&gt;%
+  filter(GeneLocus %in% eGenes) %&gt;%
+  # filter(PC2 %in% c(&quot;H3K27AC&quot;, &quot;polyA.Splicing&quot;)) %&gt;%
+  filter(PC2==&quot;polyA.Splicing&quot;) %&gt;%
+  mutate(n = if_else(Num_PC2_QTLs_PermutationP&gt;5, as.integer(5), Num_PC2_QTLs_PermutationP)) %&gt;%
+  count(PC2, n)</code></pre>
+<pre><code># A tibble: 6 × 3
+  PC2                n    nn
+  &lt;chr&gt;          &lt;int&gt; &lt;int&gt;
+1 polyA.Splicing     0  1411
+2 polyA.Splicing     1  1050
+3 polyA.Splicing     2   467
+4 polyA.Splicing     3   168
+5 polyA.Splicing     4    68
+6 polyA.Splicing     5    85</code></pre>
+<pre class="r"><code>P.Number_hQTLsForColoc</code></pre>
+<p><img src="figure/MakeFinalFigs_Fig2.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>P.Number_sQTLsForColoc</code></pre>
+<p><img src="figure/MakeFinalFigs_Fig2.Rmd/unnamed-chunk-13-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>coloc.dat &lt;- read_tsv(&quot;../code/hyprcoloc/Results/ForColoc/MolColocNonRedundantFullSplicing/tidy_results_OnlyColocalized.txt.gz&quot;) %&gt;%
+  separate(phenotype_full, into=c(&quot;PC&quot;, &quot;P&quot;), sep=&quot;;&quot;)
+
+Dat.TopQTLInFamily &lt;- dat %&gt;%
+  filter(PC1==&quot;Expression.Splicing&quot; &amp; FDR.x &lt; 0.1) %&gt;%
+  mutate(P2 = case_when(
+    PC2 %in% c(&quot;polyA.Splicing&quot;, &quot;chRNA.Splicing&quot;, &quot;polyA.Splicing.Subset_YRI&quot;) ~ str_extract(P2, &quot;clu_.+$&quot;),
+    TRUE ~ P2
+  )) %&gt;%
+  group_by(PC1, PC2, P2, GeneLocus) %&gt;%
+  slice(which.min(FDR.y)) %&gt;%
+  ungroup() %&gt;%
+  group_by(PC1, PC2, GeneLocus) %&gt;%
+  slice(which.min(FDR.y)) %&gt;%
+  ungroup()
+
+coloc.dat %&gt;%
+  mutate(P = case_when(
+    PC %in% c(&quot;polyA.Splicing&quot;, &quot;chRNA.Splicing&quot;, &quot;polyA.Splicing.Subset_YRI&quot;) ~ str_extract(P, &quot;clu_.+$&quot;),
+    TRUE ~ P
+  )) %&gt;%
+  left_join(
+    Dat.TopQTLInFamily %&gt;%
+      dplyr::select(Locus=GeneLocus, PC=PC2, P=P2) %&gt;%
+      mutate(TopMolQTLAroundGene = T)
+  ) %&gt;%
+  replace_na(list(TopMolQTLAroundGene=F)) %&gt;%
+  group_by(Locus, snp) %&gt;%
+  filter(any(PC==&quot;Expression.Splicing.Subset_YRI&quot;)) %&gt;%
+  ungroup() %&gt;%
+  group_by(Locus, PC) %&gt;%
+  summarise(ContainsTopMolQTL = any(TopMolQTLAroundGene)) %&gt;%
+  ungroup() %&gt;%
+  group_by(PC) %&gt;%
+  summarise(FracContainsTop = sum(ContainsTopMolQTL)/n()) %&gt;%
+  ungroup()</code></pre>
+<pre><code># A tibble: 21 × 2
+   PC                             FracContainsTop
+   &lt;chr&gt;                                    &lt;dbl&gt;
+ 1 APA_Nuclear                              0.939
+ 2 APA_Total                                1    
+ 3 CTCF                                     0    
+ 4 Expression.Splicing.Subset_YRI           0.999
+ 5 H3K27AC                                  0.701
+ 6 H3K36ME3                                 1    
+ 7 H3K4ME1                                  0.612
+ 8 H3K4ME3                                  0.763
+ 9 MetabolicLabelled.30min                  1    
+10 MetabolicLabelled.30min.IER              0    
+# … with 11 more rows</code></pre>
+<p>Same analysis without renaming to match all in cluster</p>
+<pre class="r"><code>Dat.TopQTLInFamily2 &lt;- dat %&gt;%
+  filter(PC1==&quot;Expression.Splicing&quot; &amp; FDR.x &lt; 0.1) %&gt;%
+  # mutate(P2 = case_when(
+  #   PC2 %in% c(&quot;polyA.Splicing&quot;, &quot;chRNA.Splicing&quot;, &quot;polyA.Splicing.Subset_YRI&quot;) ~ str_extract(P2, &quot;clu_.+$&quot;),
+  #   TRUE ~ P2
+  # )) %&gt;%
+  # group_by(PC1, PC2, P2, GeneLocus) %&gt;%
+  # slice(which.min(FDR.y)) %&gt;%
+  # ungroup() %&gt;%
+  group_by(PC1, PC2, GeneLocus) %&gt;%
+  slice(which.min(FDR.y)) %&gt;%
+  ungroup()
+
+dat.FractionNonPrimaryMolQTLColocs &lt;- coloc.dat %&gt;%
+  # mutate(P = case_when(
+  #   PC %in% c(&quot;polyA.Splicing&quot;, &quot;chRNA.Splicing&quot;, &quot;polyA.Splicing.Subset_YRI&quot;) ~ str_extract(P, &quot;clu_.+$&quot;),
+  #   TRUE ~ P
+  # )) %&gt;%
+  left_join(
+    Dat.TopQTLInFamily2 %&gt;%
+      dplyr::select(Locus=GeneLocus, PC=PC2, P=P2) %&gt;%
+      mutate(TopMolQTLAroundGene = T)
+  ) %&gt;%
+  replace_na(list(TopMolQTLAroundGene=F)) %&gt;%
+  group_by(Locus, snp) %&gt;%
+  filter(any(PC==&quot;Expression.Splicing.Subset_YRI&quot;)) %&gt;%
+  ungroup() %&gt;%
+  group_by(Locus, PC) %&gt;%
+  summarise(ContainsTopMolQTL = any(TopMolQTLAroundGene)) %&gt;%
+  ungroup() %&gt;%
+  group_by(PC) %&gt;%
+  summarise(FracContainsTop = sum(ContainsTopMolQTL)/n()) %&gt;%
+  ungroup()
+
+kable(dat.FractionNonPrimaryMolQTLColocs)</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">PC</th>
+<th align="right">FracContainsTop</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">APA_Nuclear</td>
+<td align="right">0.9393939</td>
+</tr>
+<tr class="even">
+<td align="left">APA_Total</td>
+<td align="right">1.0000000</td>
+</tr>
+<tr class="odd">
+<td align="left">CTCF</td>
+<td align="right">0.0000000</td>
+</tr>
+<tr class="even">
+<td align="left">Expression.Splicing.Subset_YRI</td>
+<td align="right">0.9992717</td>
+</tr>
+<tr class="odd">
+<td align="left">H3K27AC</td>
+<td align="right">0.7008850</td>
+</tr>
+<tr class="even">
+<td align="left">H3K36ME3</td>
+<td align="right">1.0000000</td>
+</tr>
+<tr class="odd">
+<td align="left">H3K4ME1</td>
+<td align="right">0.6124661</td>
+</tr>
+<tr class="even">
+<td align="left">H3K4ME3</td>
+<td align="right">0.7628866</td>
+</tr>
+<tr class="odd">
+<td align="left">MetabolicLabelled.30min</td>
+<td align="right">1.0000000</td>
+</tr>
+<tr class="even">
+<td align="left">MetabolicLabelled.30min.IER</td>
+<td align="right">0.0000000</td>
+</tr>
+<tr class="odd">
+<td align="left">MetabolicLabelled.30min.Splicing</td>
+<td align="right">0.0000000</td>
+</tr>
+<tr class="even">
+<td align="left">MetabolicLabelled.60min</td>
+<td align="right">1.0000000</td>
+</tr>
+<tr class="odd">
+<td align="left">MetabolicLabelled.60min.IER</td>
+<td align="right">0.0000000</td>
+</tr>
+<tr class="even">
+<td align="left">MetabolicLabelled.60min.Splicing</td>
+<td align="right">0.0000000</td>
+</tr>
+<tr class="odd">
+<td align="left">ProCap</td>
+<td align="right">0.7437811</td>
+</tr>
+<tr class="even">
+<td align="left">chRNA.Expression.Splicing</td>
+<td align="right">1.0000000</td>
+</tr>
+<tr class="odd">
+<td align="left">chRNA.Expression_ncRNA</td>
+<td align="right">0.0000000</td>
+</tr>
+<tr class="even">
+<td align="left">chRNA.IER</td>
+<td align="right">0.0000000</td>
+</tr>
+<tr class="odd">
+<td align="left">chRNA.Splicing</td>
+<td align="right">0.7853403</td>
+</tr>
+<tr class="even">
+<td align="left">polyA.IER</td>
+<td align="right">0.0000000</td>
+</tr>
+<tr class="odd">
+<td align="left">polyA.Splicing</td>
+<td align="right">0.7064057</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>P.NonPrimaryMolQTLs_OftenColoc &lt;- dat.FractionNonPrimaryMolQTLColocs %&gt;%
+  filter(PC %in% c(&quot;H3K27AC&quot;, &quot;polyA.Splicing&quot;)) %&gt;%
+  mutate(Complement = 1-FracContainsTop) %&gt;%
+  gather(&quot;ContainsTop&quot;, &quot;Fraction&quot;,-PC) %&gt;%
+  ggplot(aes(x=PC, y=Fraction, fill=ContainsTop)) +
+  geom_col(position=&quot;fill&quot;) +
+  scale_y_continuous(limits=c(0, 1), expand=c(0,0)) +
+  scale_fill_manual(values=c(&quot;FracContainsTop&quot;=&quot;#636363&quot;, &quot;Complement&quot;=&quot;#f0f0f0&quot;), labels=c(&quot;eGene colocalizes with top molQTL&quot;, &quot;colocalizes with non top molQTL&quot;)) +
+  scale_x_discrete(labels=c(&quot;H3K27AC hQTL&quot;, &quot;polyA RNA sQTL&quot;)) +
+  labs(x=NULL, y=str_wrap(&quot;Fraction of eQTL/molQTL colocalizations&quot;, 30), fill=NULL) +
+  Rotate_x_labels
+
+P.NonPrimaryMolQTLs_OftenColoc</code></pre>
+<p><img src="figure/MakeFinalFigs_Fig2.Rmd/unnamed-chunk-15-1.png" width="672" style="display: block; margin: auto;" /></p>
+<ul>
+<li>Number of eQTLs that coloc with at least one molQTL</li>
+</ul>
+<pre class="r"><code>eGenes &lt;- dat %&gt;%
+  filter(PC1==&quot;Expression.Splicing.Subset_YRI&quot; &amp; FDR.x &lt; 0.1) %&gt;%
+  pull(P1) %&gt;% unique()
+
+coloc.dat$PC %&gt;% unique()</code></pre>
+<pre><code> [1] &quot;polyA.Splicing&quot;                   &quot;MetabolicLabelled.30min&quot;         
+ [3] &quot;MetabolicLabelled.60min&quot;          &quot;H3K27AC&quot;                         
+ [5] &quot;H3K4ME3&quot;                          &quot;H3K4ME1&quot;                         
+ [7] &quot;chRNA.IER&quot;                        &quot;ProCap&quot;                          
+ [9] &quot;CTCF&quot;                             &quot;chRNA.Expression_ncRNA&quot;          
+[11] &quot;Expression.Splicing.Subset_YRI&quot;   &quot;chRNA.Splicing&quot;                  
+[13] &quot;MetabolicLabelled.30min.Splicing&quot; &quot;MetabolicLabelled.60min.Splicing&quot;
+[15] &quot;chRNA.Expression.Splicing&quot;        &quot;H3K36ME3&quot;                        
+[17] &quot;APA_Nuclear&quot;                      &quot;APA_Total&quot;                       
+[19] &quot;polyA.IER&quot;                        &quot;MetabolicLabelled.30min.IER&quot;     
+[21] &quot;MetabolicLabelled.60min.IER&quot;     </code></pre>
+<pre class="r"><code>coloc.dat %&gt;%
+    group_by(Locus, snp) %&gt;%
+    filter(any(PC==&quot;Expression.Splicing.Subset_YRI&quot;)) %&gt;%
+    ungroup() %&gt;%
+    count(Locus, PC) %&gt;%
+    count(PC) %&gt;%
+  mutate(PC_relabeled = recode(PC, !!!MolQTL_Labels)) %&gt;%
+  filter(!is.na(PC_relabeled) | PC==&quot;Any hQTL&quot;) %&gt;%
+  filter(!PC_relabeled %in% c(&quot;Splicing&quot;, &quot;Expression; eQTLs (YRI only)&quot;)) %&gt;%
+  mutate(Assay_relabeled = recode(PC, !!!MolQTL_AssayLabels)) %&gt;%
+  mutate(FinalLabels = paste(PC_relabeled, Assay_relabeled, sep=&quot;\n&quot;)) %&gt;%
+  mutate(OrderFactor = recode(PC, !!!Factor_Order)) %&gt;%
+  mutate(FinalLabels = fct_reorder(FinalLabels, OrderFactor)) %&gt;%
+  ggplot(aes(x=FinalLabels, y=n)) +
+  geom_col() +
+  scale_y_continuous(
+    name=&quot;Number eGenes with colocalized molQTL&quot;, 
+    sec.axis = sec_axis(~ . / length(eGenes), name = &quot;% eGenes with colocalized molQTL&quot;)
+  ) +
+  Rotate_x_labels +
+  labs(x=&quot;Molecular QTL type, Assay&quot;)</code></pre>
+<p><img src="figure/MakeFinalFigs_Fig2.Rmd/unnamed-chunk-16-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>dat.eGeneColocsWith &lt;- bind_rows(
+  coloc.dat %&gt;%
+    group_by(Locus, snp) %&gt;%
+    filter(any(PC==&quot;Expression.Splicing.Subset_YRI&quot;)) %&gt;%
+    ungroup() %&gt;%
+    count(Locus, PC) %&gt;%
+    count(PC),
+  coloc.dat %&gt;%
+    mutate(PC = case_when(
+      PC %in% c(&quot;H3K4ME1&quot;, &quot;H3K4ME3&quot;, &quot;H3K27AC&quot;, &quot;H3K36ME3&quot;) ~ &quot;Any hQTL&quot;,
+      TRUE ~ PC
+    )) %&gt;%
+    group_by(Locus, snp) %&gt;%
+    filter(any(PC==&quot;Expression.Splicing.Subset_YRI&quot;)) %&gt;%
+    ungroup() %&gt;%
+    count(Locus, PC) %&gt;%
+    count(PC)
+) %&gt;%
+  mutate(PC_relabeled = recode(PC, !!!MolQTL_Labels)) %&gt;%
+  filter(!is.na(PC_relabeled) | PC==&quot;Any hQTL&quot;) %&gt;%
+  filter(!PC_relabeled %in% c(&quot;Splicing&quot;, &quot;Expression; eQTLs (YRI only)&quot;)) %&gt;%
+  mutate(Assay_relabeled = recode(PC, !!!MolQTL_AssayLabels)) %&gt;%
+  mutate(FinalLabels = paste(PC_relabeled, Assay_relabeled, sep=&quot;\n&quot;)) %&gt;%
+  mutate(OrderFactor = recode(PC, !!!Factor_Order))
+
+P.eGeneColocsWith &lt;- dat.eGeneColocsWith %&gt;%
+  mutate(FinalLabels = str_remove_all(FinalLabels, &quot;\\*&quot;)) %&gt;%
+  mutate(FinalLabels = case_when(
+    FinalLabels == &quot;Any hQTL\nAny hQTL&quot; ~ &quot;Any hQTL*&quot;,
+    TRUE ~ FinalLabels
+  )) %&gt;%
+  mutate(OrderFactor = case_when(
+    FinalLabels == &quot;Any hQTL*&quot; ~ 4.5,
+    TRUE ~ OrderFactor
+  )) %&gt;%
+  mutate(FinalLabels = fct_reorder(FinalLabels, OrderFactor)) %&gt;%
+  distinct(.keep_all=T) %&gt;%
+  ggplot(aes(x=FinalLabels, y=n)) +
+  geom_col() +
+  scale_y_continuous(
+    name=&quot;Number eGenes with colocalized molQTL&quot;, 
+    sec.axis = sec_axis(~ . / length(eGenes), name = &quot;% eGenes with colocalized molQTL&quot;)
+  ) +
+  Rotate_x_labels +
+  labs(x=&quot;Molecular QTL type, Assay&quot;)
+P.eGeneColocsWith</code></pre>
+<p><img src="figure/MakeFinalFigs_Fig2.Rmd/unnamed-chunk-16-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>dat.eGeneColocsWith</code></pre>
+<pre><code># A tibble: 19 × 6
+   PC                     n PC_relabeled Assay_relabeled FinalLabels OrderFactor
+   &lt;chr&gt;              &lt;int&gt; &lt;chr&gt;        &lt;chr&gt;           &lt;chr&gt;             &lt;dbl&gt;
+ 1 APA_Nuclear           33 APA QTLs*    Nuclear RNA 3&#39;… &quot;APA QTLs*…         7  
+ 2 APA_Total             38 APA QTLs*    Total RNA 3&#39;seq &quot;APA QTLs*…        14  
+ 3 H3K27AC              565 H3K27Ac; hQ… H3K27Ac ChIP-s… &quot;H3K27Ac; …         2  
+ 4 H3K36ME3             284 H3K36me3; h… H3K36me3 ChIP-… &quot;H3K36me3;…         4  
+ 5 H3K4ME1              369 H3K4me1; hQ… H3K4me1 ChIP-s… &quot;H3K4me1; …         1  
+ 6 H3K4ME3              485 H3K4me3; hQ… H3K4me3 ChIP-s… &quot;H3K4me3; …         3  
+ 7 MetabolicLabelled…   433 Expression;… 30min 4sU RNA-… &quot;Expressio…         8.5
+ 8 MetabolicLabelled…   456 Expression;… 60min 4sU RNA-… &quot;Expressio…         9  
+ 9 chRNA.Expression.…   647 Expression;… chRNA-seq       &quot;Expressio…         5  
+10 chRNA.Splicing       191 Splicing; s… chRNA-seq       &quot;Splicing;…         6  
+11 polyA.Splicing       562 Splicing; s… polyA RNA-seq   &quot;Splicing;…        12  
+12 APA_Nuclear           33 APA QTLs*    Nuclear RNA 3&#39;… &quot;APA QTLs*…         7  
+13 APA_Total             38 APA QTLs*    Total RNA 3&#39;seq &quot;APA QTLs*…        14  
+14 Any hQTL             828 Any hQTL     Any hQTL        &quot;Any hQTL\…        NA  
+15 MetabolicLabelled…   433 Expression;… 30min 4sU RNA-… &quot;Expressio…         8.5
+16 MetabolicLabelled…   456 Expression;… 60min 4sU RNA-… &quot;Expressio…         9  
+17 chRNA.Expression.…   647 Expression;… chRNA-seq       &quot;Expressio…         5  
+18 chRNA.Splicing       191 Splicing; s… chRNA-seq       &quot;Splicing;…         6  
+19 polyA.Splicing       562 Splicing; s… polyA RNA-seq   &quot;Splicing;…        12  </code></pre>
+<ul>
+<li>Number of eQTLs that coloc with at least one molQTL (among non hQTL
+eQTLs)</li>
+</ul>
+<pre class="r"><code>eGenes.NohQTLColoc &lt;-
+  coloc.dat %&gt;%
+  group_by(Locus, snp) %&gt;%
+  filter(any(PC==&quot;Expression.Splicing.Subset_YRI&quot;) &amp; !any(PC %in% c(&quot;H3K4ME3&quot;, &quot;H3K27AC&quot;, &quot;H3K4ME1&quot;, &quot;H3K36ME3&quot;))) %&gt;%
+  pull(Locus) %&gt;% unique()
+
+dat.eGeneColocsWith.NohQTL &lt;-
+  coloc.dat %&gt;%
+  group_by(Locus, snp) %&gt;%
+  filter(any(PC==&quot;Expression.Splicing.Subset_YRI&quot;) &amp; !any(PC %in% c(&quot;H3K4ME3&quot;, &quot;H3K27AC&quot;, &quot;H3K4ME1&quot;, &quot;H3K36ME3&quot;))) %&gt;%
+  ungroup() %&gt;%
+  count(Locus, PC) %&gt;%
+  count(PC) %&gt;%
+  mutate(PC_relabeled = recode(PC, !!!MolQTL_Labels)) %&gt;%
+  filter(!is.na(PC_relabeled) | PC==&quot;Any hQTL&quot;) %&gt;%
+  filter(!PC_relabeled %in% c(&quot;Splicing&quot;, &quot;Expression; eQTLs (YRI only)&quot;)) %&gt;%
+  mutate(Assay_relabeled = recode(PC, !!!MolQTL_AssayLabels)) %&gt;%
+  mutate(FinalLabels = paste(PC_relabeled, Assay_relabeled, sep=&quot;\n&quot;)) %&gt;%
+  mutate(OrderFactor = recode(PC, !!!Factor_Order))
+
+P.eGeneColocsWith.nohQTL &lt;- dat.eGeneColocsWith.NohQTL %&gt;%
+  mutate(FinalLabels = str_remove_all(FinalLabels, &quot;\\*&quot;)) %&gt;%
+  mutate(FinalLabels = case_when(
+    FinalLabels == &quot;Any hQTL\nAny hQTL&quot; ~ &quot;Any hQTL*&quot;,
+    TRUE ~ FinalLabels
+  )) %&gt;%
+  mutate(OrderFactor = case_when(
+    FinalLabels == &quot;Any hQTL*&quot; ~ 4.5,
+    TRUE ~ OrderFactor
+  )) %&gt;%
+  distinct(.keep_all=T) %&gt;%
+  mutate(FinalLabels = fct_reorder(FinalLabels, OrderFactor)) %&gt;%
+  ggplot(aes(x=FinalLabels, y=n)) +
+  geom_col() +
+  scale_y_continuous(
+    name=&quot;Number eGenes with colocalized molQTL&quot;, 
+    sec.axis = sec_axis(~ . / length(eGenes.NohQTLColoc), name = &quot;% eGenes with colocalized molQTL\nAmong those that did not coloc with hQTL&quot;)
+  ) +
+  Rotate_x_labels +
+  labs(x=&quot;Molecular QTL type, Assay&quot;)
+P.eGeneColocsWith.nohQTL</code></pre>
+<p><img src="figure/MakeFinalFigs_Fig2.Rmd/unnamed-chunk-17-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>dat.eGeneColocsWith.NohQTL</code></pre>
+<pre><code># A tibble: 7 × 6
+  PC                      n PC_relabeled Assay_relabeled FinalLabels OrderFactor
+  &lt;chr&gt;               &lt;int&gt; &lt;chr&gt;        &lt;chr&gt;           &lt;chr&gt;             &lt;dbl&gt;
+1 APA_Nuclear            16 APA QTLs*    Nuclear RNA 3&#39;… &quot;APA QTLs*…         7  
+2 APA_Total              21 APA QTLs*    Total RNA 3&#39;seq &quot;APA QTLs*…        14  
+3 MetabolicLabelled.…   153 Expression;… 30min 4sU RNA-… &quot;Expressio…         8.5
+4 MetabolicLabelled.…   162 Expression;… 60min 4sU RNA-… &quot;Expressio…         9  
+5 chRNA.Expression.S…   213 Expression;… chRNA-seq       &quot;Expressio…         5  
+6 chRNA.Splicing         96 Splicing; s… chRNA-seq       &quot;Splicing;…         6  
+7 polyA.Splicing        258 Splicing; s… polyA RNA-seq   &quot;Splicing;…        12  </code></pre>
+<ul>
+<li>Plot of number of eQTLs that coloc with an hQTL, versus those that
+coloc with an sQTL (and not an hQTL)</li>
+</ul>
+<pre class="r"><code>data.frame(name=&quot;Non hQTL&quot;, n=length(eGenes.NohQTLColoc))</code></pre>
+<pre><code>      name   n
+1 Non hQTL 545</code></pre>
+<pre class="r"><code>dat.SimplifiedNumberColocs &lt;- bind_rows(
+  dat.eGeneColocsWith %&gt;%
+    filter(PC==&quot;Any hQTL&quot;) %&gt;%
+    mutate(name=&quot;hQTL*&quot;, order=1) %&gt;%
+    dplyr::select(name, n, order),
+  # dat.eGeneColocsWith %&gt;%
+  #   filter(PC==&quot;polyA.Splicing&quot;) %&gt;%
+  #   mutate(name=&quot;sQTL&quot;, order=1.5) %&gt;%
+  #   dplyr::select(name, n, order),
+  dat.eGeneColocsWith.NohQTL %&gt;%
+    filter(PC==&quot;APA_Total&quot;) %&gt;%
+    mutate(name=&quot;APA QTL**&quot;, order=4) %&gt;%
+    dplyr::select(name, n, order),
+  dat.eGeneColocsWith.NohQTL %&gt;%
+    filter(PC==&quot;polyA.Splicing&quot;) %&gt;%
+    mutate(name=&quot;sQTL**&quot;, order=3) %&gt;%
+    dplyr::select(name, n, order),
+) %&gt;%
+  add_row(name=&quot;Any molQTL**&quot;, n=length(eGenes.NohQTLColoc), order=2) %&gt;%
+  mutate(name = fct_reorder(name, order))
+
+P.SimplifiedNumberColocs &lt;- ggplot(dat.SimplifiedNumberColocs, aes(x=name, y=n)) +
+  geom_col(fill=&quot;#bdbdbd&quot;) +
+  scale_y_continuous(expand=c(0,0), breaks=c(0, 200, 400, 600, 800), labels=c(0, &quot;&quot;, &quot;&quot;, &quot;&quot;, 800)) +
+  geom_text(aes(label=name), y=10, angle=90, y=-Inf, hjust=0, size=8) +
+  labs(x=NULL, y=&quot;# eGenes coloc w/ molQTL&quot;) +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+P.SimplifiedNumberColocs</code></pre>
+<p><img src="figure/MakeFinalFigs_Fig2.Rmd/unnamed-chunk-18-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>kable(dat.SimplifiedNumberColocs)</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">name</th>
+<th align="right">n</th>
+<th align="right">order</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">hQTL*</td>
+<td align="right">828</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="left">APA QTL**</td>
+<td align="right">21</td>
+<td align="right">4</td>
+</tr>
+<tr class="odd">
+<td align="left">sQTL**</td>
+<td align="right">258</td>
+<td align="right">3</td>
+</tr>
+<tr class="even">
+<td align="left">Any molQTL**</td>
+<td align="right">545</td>
+<td align="right">2</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>And finally, a plot about whether the sQTLs that do coloc with eQTL
+are enriched for non-productive juncs.</li>
+</ul>
+<pre class="r"><code>IntronAnnotations &lt;- read_tsv(&quot;../data/IntronAnnotationsFromYang.tsv.gz&quot;)
+
+ClusterLevelQTLAnnotations &lt;- read_delim(&quot;../code/QTLs/QTLTools/polyA.Splicing/PermutationPassForColoc.txt.gz&quot;, delim=&#39; &#39;) %&gt;%
+  mutate(IntronID = str_replace(phe_id, &quot;(^.+?clu.+?):EN.+$&quot;, &quot;\\1&quot;)) %&gt;%
+  separate(IntronID, into=c(&quot;chrom&quot;, &quot;start&quot;, &quot;end&quot;, &quot;cluster&quot;), remove=F, convert=T, sep=&quot;:&quot;) %&gt;%
+  mutate(chrom=paste0(&quot;chr&quot;, chrom)) %&gt;%
+  mutate(q = qvalue(adj_beta_pval)$qvalues) %&gt;%
+  left_join(IntronAnnotations) %&gt;%
+  group_by(cluster) %&gt;%
+  mutate(ContainsUnproductive = any(SuperAnnotation %in% c(&quot;AnnotatedJunc_UnproductiveCodingGene&quot;, &quot;UnannotatedJunc_UnproductiveCodingGene&quot;) &amp; q&lt;0.1)) %&gt;%
+  ungroup()
+
+ClusterLevelQTLAnnotations %&gt;%
+  distinct(cluster, .keep_all=T) %&gt;%
+  count(ContainsUnproductive)</code></pre>
+<pre><code># A tibble: 2 × 2
+  ContainsUnproductive     n
+  &lt;lgl&gt;                &lt;int&gt;
+1 FALSE                31259
+2 TRUE                  4490</code></pre>
+<pre class="r"><code>dat %&gt;%
+  filter(PC1==&quot;Expression.Splicing&quot; &amp; FDR.x &lt; 0.1) %&gt;%
+  filter(PC2==&quot;polyA.Splicing&quot; &amp; p_permutation.y&lt;0.01)</code></pre>
+<pre><code>                       PC1                 P1          GeneLocus
+    1: Expression.Splicing ENSG00000198793.13 ENSG00000198793.13
+    2: Expression.Splicing ENSG00000127481.15 ENSG00000127481.15
+    3: Expression.Splicing ENSG00000127481.15 ENSG00000127481.15
+    4: Expression.Splicing ENSG00000160094.15 ENSG00000160094.15
+    5: Expression.Splicing ENSG00000116922.14 ENSG00000116922.14
+   ---                                                          
+15055: Expression.Splicing ENSG00000197128.11 ENSG00000197128.11
+15056: Expression.Splicing ENSG00000197128.11 ENSG00000197128.11
+15057: Expression.Splicing ENSG00000197128.11 ENSG00000197128.11
+15058: Expression.Splicing ENSG00000197128.11 ENSG00000197128.11
+15059: Expression.Splicing ENSG00000197128.11 ENSG00000197128.11
+       p_permutation.x    beta.x beta_se.x singletrait_topvar.x
+    1:     1.91282e-02 -0.119659 0.0283057       1:11324733:C:T
+    2:     4.07612e-05  0.125678 0.0219205       1:19123840:T:C
+    3:     4.07612e-05  0.125678 0.0219205       1:19123840:T:C
+    4:     2.74415e-02  0.181904 0.0442285       1:33257610:G:A
+    5:     4.57030e-13  0.332516 0.0384069       1:37683521:C:T
+   ---                                                         
+15055:     8.41409e-30  0.677943 0.0490979      19:57468799:C:T
+15056:     8.41409e-30  0.677943 0.0490979      19:57468799:C:T
+15057:     8.41409e-30  0.677943 0.0490979      19:57468799:C:T
+15058:     8.41409e-30  0.677943 0.0490979      19:57468799:C:T
+15059:     8.41409e-30  0.677943 0.0490979      19:57468799:C:T
+       singletrait_topvar_chr.x singletrait_topvar_pos.x        FDR.x
+    1:                     chr1                 11324733 6.570641e-03
+    2:                     chr1                 19123840 2.177979e-05
+    3:                     chr1                 19123840 2.177979e-05
+    4:                     chr1                 33257610 9.127945e-03
+    5:                     chr1                 37683521 5.503866e-13
+   ---                                                               
+15055:                    chr19                 57468799 3.275936e-29
+15056:                    chr19                 57468799 3.275936e-29
+15057:                    chr19                 57468799 3.275936e-29
+15058:                    chr19                 57468799 3.275936e-29
+15059:                    chr19                 57468799 3.275936e-29
+                  PC2                               P2 p_permutation.y
+    1: polyA.Splicing    1:11213566:11228668:clu_262_-     4.49478e-03
+    2: polyA.Splicing    1:19151859:19152313:clu_356_-     8.08673e-03
+    3: polyA.Splicing    1:19151804:19152313:clu_356_-     2.36350e-03
+    4: polyA.Splicing   1:33256654:33270487:clu_3059_+     3.48650e-03
+    5: polyA.Splicing    1:37689883:37690002:clu_644_-     4.23258e-03
+   ---                                                                
+15055: polyA.Splicing 19:57475786:57476380:clu_44453_-     7.50154e-03
+15056: polyA.Splicing 19:57475146:57475660:clu_44453_-     5.51692e-03
+15057: polyA.Splicing 19:57467085:57476634:clu_44453_-     5.08816e-05
+15058: polyA.Splicing 19:57456182:57476634:clu_44453_-     1.47938e-05
+15059: polyA.Splicing 19:57455743:57476634:clu_44453_-     5.45558e-06
+          beta.y beta_se.y singletrait_topvar.y singletrait_topvar_chr.y
+    1:  0.371906 0.0695477      1:11264089:CA:C                     chr1
+    2: -1.516750 0.2875090       1:19304026:G:C                     chr1
+    3:  0.877172 0.1666940     1:19264724:CTT:C                     chr1
+    4:  1.162510 0.2540520       1:33239322:G:C                     chr1
+    5:  0.349353 0.0767724       1:37681494:T:C                     chr1
+   ---                                                                  
+15055: -0.209531 0.0459838      19:57449940:G:A                    chr19
+15056:  0.312532 0.0719654      19:57469325:A:G                    chr19
+15057: -0.279717 0.0478831     19:57450880:A:AC                    chr19
+15058: -0.258663 0.0458791      19:57449940:G:A                    chr19
+15059: -0.259654 0.0430860      19:57449940:G:A                    chr19
+       singletrait_topvar_pos.y        FDR.y trait.x.p.in.y x.beta.in.y
+    1:                 11264085 0.0453688625    3.25581e-01  0.05805960
+    2:                 19304026 0.0731896350    8.65210e-01  0.01348910
+    3:                 19264723 0.0264276619    4.43321e-01 -0.03353030
+    4:                 33239322 0.0368014521    8.87217e-01 -0.00999069
+    5:                 37681494 0.0431957225    1.39465e-04  0.28945300
+   ---                                                                 
+15055:                 57449940 0.0689080148    3.01964e-03 -0.14960100
+15056:                 57469325 0.0535979864    9.87470e-04 -0.21649800
+15057:                 57450880 0.0008509990    1.05411e-07 -0.27950300
+15058:                 57449940 0.0002733075    2.71867e-06 -0.23710600
+15059:                 57449940 0.0001085746    3.63617e-09 -0.27939000
+       x.beta_se.in.y
+    1:      0.0589955
+    2:      0.0794210
+    3:      0.0437003
+    4:      0.0704026
+    5:      0.0753311
+   ---               
+15055:      0.0501670
+15056:      0.0652881
+15057:      0.0517077
+15058:      0.0498955
+15059:      0.0464090</code></pre>
+<pre class="r"><code>Clusters.ThatColocWith_sQTL_not_hQTL &lt;- coloc.dat %&gt;%
+  group_by(Locus, snp) %&gt;%
+  filter(any(PC==&quot;Expression.Splicing.Subset_YRI&quot;) &amp; !any(PC %in% c(&quot;H3K4ME3&quot;, &quot;H3K27AC&quot;, &quot;H3K4ME1&quot;))) %&gt;%
+  ungroup() %&gt;%
+  filter(PC==&quot;polyA.Splicing&quot;) %&gt;%
+  separate(P, into=c(&quot;chrom&quot;, &quot;start&quot;, &quot;end&quot;, &quot;cluster&quot;), remove=F, convert=T, sep=&quot;:&quot;) %&gt;%
+  distinct(cluster)
+
+Clusters.AttemptColoc_butOther &lt;- dat %&gt;%
+  filter(PC1==&quot;Expression.Splicing&quot; &amp; FDR.x &lt; 0.1) %&gt;%
+  filter(PC2==&quot;polyA.Splicing&quot; &amp; p_permutation.y&lt;0.01) %&gt;%
+  distinct(P2) %&gt;%
+  separate(P2, into=c(&quot;chrom&quot;, &quot;start&quot;, &quot;end&quot;, &quot;cluster&quot;), remove=F, convert=T, sep=&quot;:&quot;) %&gt;%
+  distinct(cluster) %&gt;%
+  filter(!cluster %in% Clusters.ThatColocWith_sQTL_not_hQTL$cluster)
+
+dat.EnrichmentOfUnrpductiveClusters &lt;- bind_rows(
+  Clusters.AttemptColoc_butOther %&gt;%
+    mutate(Category=&quot;DoesNotColocWith_eGene&quot;),
+  Clusters.ThatColocWith_sQTL_not_hQTL %&gt;%
+    mutate(Category=&quot;DoesColocWith_eGene&quot;)
+) %&gt;%
+  left_join(
+    ClusterLevelQTLAnnotations %&gt;%
+      distinct(cluster, ContainsUnproductive))
+
+test.results &lt;- dat.EnrichmentOfUnrpductiveClusters %&gt;%
+  count(Category, ContainsUnproductive) %&gt;%
+  pivot_wider(names_from=&quot;Category&quot;, values_from =&quot;n&quot;) %&gt;%
+  mutate(ContainsUnproductive=!ContainsUnproductive) %&gt;%
+  column_to_rownames(&quot;ContainsUnproductive&quot;) %&gt;%
+  as.matrix() %&gt;%
+  fisher.test(alternative=&quot;less&quot;)
+test.results</code></pre>
+<pre><code>
+    Fisher&#39;s Exact Test for Count Data
+
+data:  .
+p-value = 1.982e-15
+alternative hypothesis: true odds ratio is less than 1
+95 percent confidence interval:
+ 0.0000000 0.5214947
+sample estimates:
+odds ratio 
+ 0.4311536 </code></pre>
+<pre class="r"><code>P.EnrichmentOfUnrpductiveClusters &lt;- dat.EnrichmentOfUnrpductiveClusters %&gt;%
+  count(Category, ContainsUnproductive) %&gt;%
+  ggplot(aes(x=Category, fill=ContainsUnproductive, y=n)) +
+  geom_col() +
+  scale_fill_manual(values=c(&quot;FALSE&quot;=&quot;#377eb8&quot;, &quot;TRUE&quot;=&quot;#e41a1c&quot;), labels=c(&quot;FALSE&quot;=&quot;Productive sQTL&quot;, &quot;TRUE&quot;=&quot;Unproductive sQTL&quot;)) +
+  scale_x_discrete(labels=c(str_wrap(&quot;sQTLs that coloc with eQTL and not hQTL&quot;, 20), str_wrap(&quot;Other sQTLs tested\nfor colocalization&quot;, 20))) +
+  labs(caption=paste(&quot;One sided Fisher test P:&quot;, format.pval(test.results$p.value, 3), &quot;\nOR:&quot;, round(1/test.results$estimate, 3)), y=&quot;Number of sQTLs&quot;, fill=&quot;sQTL type&quot;, x=&quot;&quot;) +
+  Rotate_x_labels
+P.EnrichmentOfUnrpductiveClusters</code></pre>
+<p><img src="figure/MakeFinalFigs_Fig2.Rmd/unnamed-chunk-19-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggsave(&quot;/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_SampleSize.pdf&quot;,P.SampleSizes, width=6, height=6)
+
+ggsave(&quot;/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_NumQTLs.pdf&quot;,NumQTLs, width=8, height=6)
+
+ggsave(&quot;/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_PercentAnnotated.pdf&quot;,P.PercentAnnotated, width=4, height=6)
+ggsave(&quot;/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_PercentOfUnannotated.pdf&quot;,P.PercentOfUnannotated, width=6, height=6)
+ggsave(&quot;/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_PercentAnnotatedLegend.pdf&quot;,P.PercentJuncsLegend, width=8, height=6)
+
+
+ggsave(&quot;/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_Multiple_hQTLs_PerGene.pdf&quot;,P.Number_hQTLsForColoc, width=6, height=6)
+ggsave(&quot;/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_Multiple_sQTLs_PerGene.pdf&quot;,P.Number_sQTLsForColoc, width=6, height=6)
+
+ggsave(&quot;/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_NonPrimaryMolQTLsColoc.pdf&quot;,P.NonPrimaryMolQTLs_OftenColoc, width=6, height=6)
+
+ggsave(&quot;/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_EnrichmentOfUnrpoductiveSqtls.pdf&quot;,P.EnrichmentOfUnrpductiveClusters, width=6, height=6)
+
+ggsave(&quot;/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_eGene_MolQTL_Colocs.pdf&quot;,P.eGeneColocsWith, width=10, height=7)
+ggsave(&quot;/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_eGene_MolQTL_NonhQTL_Colocs.pdf&quot;,P.eGeneColocsWith.nohQTL, width=10, height=7)
+
+
+ggsave(&quot;/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_eGene_MolQTL_Simplified.pdf&quot;,P.SimplifiedNumberColocs, width=2.7, height=2.7)</code></pre>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.2.0 (2022-04-22)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: CentOS Linux 7 (Core)
+
+Matrix products: default
+BLAS/LAPACK: /software/openblas-0.3.13-el7-x86_64/lib/libopenblas_haswellp-r0.3.13.so
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8 LC_NUMERIC=C         LC_TIME=C           
+ [4] LC_COLLATE=C         LC_MONETARY=C        LC_MESSAGES=C       
+ [7] LC_PAPER=C           LC_NAME=C            LC_ADDRESS=C        
+[10] LC_TELEPHONE=C       LC_MEASUREMENT=C     LC_IDENTIFICATION=C 
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] ggbreak_0.1.1      knitr_1.39         ggrepel_0.9.1      qvalue_2.28.0     
+ [5] readxl_1.4.0       data.table_1.14.2  RColorBrewer_1.1-3 forcats_0.5.1     
+ [9] stringr_1.4.0      dplyr_1.0.9        purrr_0.3.4        readr_2.1.2       
+[13] tidyr_1.2.0        tibble_3.1.7       ggplot2_3.3.6      tidyverse_1.3.1   
+
+loaded via a namespace (and not attached):
+ [1] nlme_3.1-157       fs_1.5.2           lubridate_1.8.0    bit64_4.0.5       
+ [5] httr_1.4.3         rprojroot_2.0.3    tools_4.2.0        backports_1.4.1   
+ [9] bslib_0.3.1        utf8_1.2.2         R6_2.5.1           mgcv_1.8-40       
+[13] DBI_1.1.2          colorspace_2.0-3   withr_2.5.0        tidyselect_1.1.2  
+[17] bit_4.0.4          compiler_4.2.0     git2r_0.30.1       cli_3.3.0         
+[21] rvest_1.0.2        xml2_1.3.3         labeling_0.4.2     sass_0.4.1        
+[25] scales_1.2.0       digest_0.6.29      yulab.utils_0.0.6  rmarkdown_2.14    
+[29] R.utils_2.11.0     pkgconfig_2.0.3    htmltools_0.5.2    highr_0.9         
+[33] dbplyr_2.1.1       fastmap_1.1.0      rlang_1.0.2        rstudioapi_0.13   
+[37] farver_2.1.0       gridGraphics_0.5-1 jquerylib_0.1.4    generics_0.1.2    
+[41] jsonlite_1.8.0     vroom_1.5.7        R.oo_1.24.0        magrittr_2.0.3    
+[45] ggplotify_0.1.0    Matrix_1.5-3       patchwork_1.1.1    Rcpp_1.0.8.3      
+[49] munsell_0.5.0      fansi_1.0.3        lifecycle_1.0.1    R.methodsS3_1.8.1 
+[53] stringi_1.7.6      whisker_0.4        yaml_2.3.5         plyr_1.8.7        
+[57] grid_4.2.0         parallel_4.2.0     promises_1.2.0.1   crayon_1.5.1      
+[61] lattice_0.20-45    haven_2.5.0        splines_4.2.0      hms_1.1.1         
+[65] pillar_1.7.0       reshape2_1.4.4     reprex_2.0.1       glue_1.6.2        
+[69] evaluate_0.15      ggfun_0.0.9        modelr_0.1.8       vctrs_0.4.1       
+[73] tzdb_0.3.0         httpuv_1.6.5       cellranger_1.1.0   gtable_0.3.0      
+[77] assertthat_0.2.1   xfun_0.30          broom_0.8.0        later_1.3.0       
+[81] aplot_0.1.10       workflowr_1.7.0    ellipsis_0.3.2    </code></pre>
+</div>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
