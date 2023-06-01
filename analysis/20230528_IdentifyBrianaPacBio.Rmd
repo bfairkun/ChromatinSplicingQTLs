@@ -1,0 +1,60 @@
+---
+title: "IdentifyBrianaPacBioSamples"
+output: html_document
+date: '2023-05-28'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Intro
+
+Briana performed PacBio sequenced on 5 LCL lines Iwant to do more experiments to complement those datasets, but I'm not sure of what lines she used. I used QTLtools mbv to match her sewuencing data to the genotype data in 1000 genome's. Let's identify which samples she used here...
+
+
+```{r}
+library(tidyverse)
+library(data.table)
+
+dat <- Sys.glob("../code/QC/mbvLongReads/data/GM*.txt") %>%
+  setNames(str_replace(., "../code/QC/mbvLongReads/data/(.+?).txt", "\\1")) %>%
+  lapply(fread) %>%
+  bind_rows(.id="Sample")
+
+
+dat %>%
+    ggplot(aes(x=perc_het_consistent, y=perc_hom_consistent,  label=SampleID)) +
+    geom_text(size=1.5) +
+    theme_minimal() +
+    theme(legend.position="none") +
+  facet_wrap(~Sample)
+
+
+```
+
+Looks like all the sample can be pretty unambigously identified. Let's print those sample names...
+
+
+```{r}
+dat %>%
+  group_by(Sample) %>%
+  filter(perc_het_consistent==max(perc_het_consistent)) %>%
+  ungroup() %>%
+  distinct(SampleID, Sample)
+
+dat %>%
+  group_by(Sample) %>%
+  filter(perc_het_consistent==max(perc_het_consistent)) %>%
+  ungroup() %>%
+  distinct(SampleID)
+```
+
+Ok, so these are the samples to wake up:
+
+NA18500
+NA19153
+NA18504
+NA19144
+NA19239
+

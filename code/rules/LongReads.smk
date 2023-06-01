@@ -193,4 +193,23 @@ rule GetNMDPerJunctionByQuartile:
         """
         (python scripts/sample_long_read_by_expression_quartiles.py) &> {log}
         """
-        
+
+
+rule IdentifyBrianasSamples:
+    input:
+        bam = "/project2/yangili1/cfbuenabadn/iso-seq/demux.5p--YG_{sample}_3p.bam.fastq.hg38.sort.bam",
+        bai = "/project2/yangili1/cfbuenabadn/iso-seq/demux.5p--YG_{sample}_3p.bam.fastq.hg38.sort.bam.bai",
+        vcf = "QC/mbv/chr22.vcf.gz",
+        tbi = "QC/mbv/chr22.vcf.gz.tbi"
+    output:
+        text ="QC/mbvLongReads/data/{sample}.txt",
+    log:
+        "logs/IdentifyBrianasSamples/{sample}.txt"
+    shell:
+        """
+        QTLtools_1.2_CentOS7.8_x86_64 mbv --vcf {input.vcf} --bam {input.bam} --out {output.text}  --reg chr22 &> {log}
+        """
+
+rule GatherIdentifyBrianasSamples:
+    input:
+        expand("QC/mbvLongReads/data/{sample}.txt", sample=["GM1", "GM2", "GM3", "GM4", "GM5", "GM6", "GM7", "GM8", "GM9", "GM10"])
