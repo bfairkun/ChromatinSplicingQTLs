@@ -42,7 +42,7 @@ include: "rules/ReadLengthMapExperiment.smk"
 include: "rules/BenDevelop.smk"
 include: "rules/FineMapping.smk"
 include: "rules/MetaplotsAssays.smk"
-
+include: "rules/GTEx.smk"
 
 
 include: "rules/ProcessSmallMoleculeData.smk"
@@ -82,7 +82,9 @@ localrules:
     SM_CopyFastqFromLocal,
     DownloadONTFastqFromLink,
     ScorePWMSpliceSite,
-    CalculatePi1_GetTraitPairs_AllTraits
+    CalculatePi1_GetTraitPairs_AllTraits,
+    DownloadGTExCounts,
+    DownloadFromGTEx_VCF
 
 
 ruleorder: CopyFastqFromLocal > DownloadFastqFromLink

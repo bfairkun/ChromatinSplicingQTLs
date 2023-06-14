@@ -89,9 +89,9 @@ rule TabixSNPTables:
 
 def GetSusieInputNominal(wildcards):
     if wildcards.Subset == "Geuvadis":
-        return "QTLs/QTLTools/Expression.Splicing/NominalPass.txt.gz"
+        return "QTLs/QTLTools/Expression.Splicing/NominalPass.txt.tabix.gz"
     else:
-        return "QTLs/QTLTools/Expression.Splicing.Subset_{Subset}/NominalPass.txt.gz"
+        return "QTLs/QTLTools/Expression.Splicing.Subset_{Subset}/NominalPass.txt.tabix.gz"
 
 def GetSusieInputPermutation(wildcards):
     if wildcards.Subset == "Geuvadis":
@@ -102,19 +102,19 @@ def GetSusieInputPermutation(wildcards):
 
 rule run_susie:
     input:
-        nominal = GetSusieInputNominal, # "QTLs/QTLTools/Expression.Splicing.Subset_{Subset}/NominalPass.txt.gz",
-        permutation = GetSusieInputPermutation, # "QTLs/QTLTools/Expression.Splicing.Subset_{Subset}/PermutationPass.FDR_Added.txt.gz", 
+        nominal = GetSusieInputNominal, 
+        permutation = GetSusieInputPermutation, 
         genotype = "FineMapping/Genotypes/1KG_GRCh38/{Subset}.txt.bgz",
         tabix = "FineMapping/Genotypes/1KG_GRCh38/{Subset}.txt.bgz.tbi"
     output:
-        "FineMapping/susie_runs_{Subset}/susie_output.tab"
+        "FineMapping/susie_runs_{Subset}/susie_output.tab.gz"
     log:
         "logs/FineMapping/run_susie_{Subset}.log"
     resources:
         mem_mb = 32000
     shell:
         """
-        Rscript scripts/run_susie.R {input.nominal} {input.permutation} {input.genotype} {wildcards.Subset} {output} &> {log}
+        Rscript scripts/susie_finemapping.R {input.nominal} {input.permutation} {input.genotype} {wildcards.Subset} {output} &> {log}
         """
         
         
