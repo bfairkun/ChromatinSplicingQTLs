@@ -231,35 +231,38 @@ rule CollectBasicMapping:
         
 rule CollectFinemapping:
     input:
-        expand("FineMapping/susie_runs_{Subset}/susie_output.tab",
+        expand("FineMapping/susie_runs_{Subset}/susie_output.tab.gz",
                Subset = ["Geuvadis", "EUR", "YRI"])
         #"FineMapping/Genotypes/1KG_GRCh38/EUR.txt.bgz.tbi",
         #"FineMapping/susie_runs/susie_output.tab"
           
 rule collect_metaplot:
     input:
-        expand("Metaplots/AssayProfiles/Plots/{Phenotype}.{IndID}.{metaplot}.png",
+        #expand("Metaplots/AssayProfiles/Plots/{Phenotype}.{IndID}.{metaplot}.png",
+        #    Phenotype = ["Expression.Splicing", "MetabolicLabelled.30min",
+        #    "MetabolicLabelled.60min", "H3K36ME3"], IndID = ['NA19137', 'NA19152', 'NA19153'],
+        #    metaplot=["CDS", "gene"]),
+        expand("Metaplots/AssayProfiles/Plots/{Phenotype}.{IndID}.{quartiles}.{stat}.png",
             Phenotype = ["Expression.Splicing", "MetabolicLabelled.30min",
-            "MetabolicLabelled.60min", "H3K36ME3"], IndID = ['NA19137', 'NA19152', 'NA19153'],
-            metaplot=["CDS", "gene"]),
-        expand("Metaplots/AssayProfiles/Plots/{Phenotype}.{IndID}.{quartiles}.png",
-            Phenotype = ["Expression.Splicing", "MetabolicLabelled.30min",
-            "MetabolicLabelled.60min", "H3K36ME3"], IndID = ['NA19137', 'NA19152', 'NA19153'], 
-            quartiles = ["CDS_length", "gene_length"]),
-        expand("Metaplots/AssayProfiles/Plots/chRNA.Expression.Splicing.{IndID}.{metaplot}.{strand}.png",
-            IndID = ['NA18486', 'NA19137', 'NA19152', 'NA19153'],
-            metaplot=["CDS", "gene"], strand = ["plus", "minus"]),
-        expand("Metaplots/AssayProfiles/Plots/chRNA.Expression.Splicing.{IndID}.{quartiles}.{strand}.png",
-            IndID = ['NA18486', 'NA19137', 'NA19152', 'NA19153'], 
-            quartiles = ["CDS_length", "gene_length"], strand = ["plus", "minus"]),
+            "MetabolicLabelled.60min", "H3K36ME3", "H3K27AC", "H3K4ME3", "H3K4ME1"], 
+            IndID = ['NA19137', 'NA19152', 'NA19153'], stat = ['mean', 'median'],
+            quartiles = [#"CDS_length", "gene_length", 
+            "expression"]),
+        #expand("Metaplots/AssayProfiles/Plots/chRNA.Expression.Splicing.{IndID}.{metaplot}.{strand}.png",
+        #    IndID = ['NA18486', 'NA19137', 'NA19152', 'NA19153'],
+        #    metaplot=["CDS", "gene"], strand = ["plus", "minus"]),
+        expand("Metaplots/AssayProfiles/Plots/chRNA.Expression.Splicing.{IndID}.{quartiles}.{strand}.{stat}.png",
+            IndID = ['NA18486', 'NA19137', 'NA19152', 'NA19153'], stat = ['mean', 'median'],
+            quartiles = [#"CDS_length", "gene_length", 
+            "expression"], strand = ["plus", "minus"]),
         "QTLs/QTLTools/H3K36ME3/OnlyFirstRepsUnstandardized.Last3K.qqnorm.bed.gz",
         "QTLs/QTLTools/H3K36ME3/OnlyFirstRepsUnstandardized.Encode.qqnorm.bed.gz",
-        expand("Metaplots/AssayProfiles/Plots/{Phenotype}.{IndID}.{quartiles}.png",
-            Phenotype = ["H3K36ME3"], IndID = ['NA18486'], 
-            quartiles = ["CDS_length", "gene_length"]),
-        expand("Metaplots/AssayProfiles/Plots/{Phenotype}.{IndID}.{metaplot}.png",
-            Phenotype = ["H3K36ME3"], IndID = ['NA18486'],
-            metaplot=["CDS", "gene"]),
+        expand("Metaplots/AssayProfiles/Plots/{Phenotype}.{IndID}.{quartiles}.{stat}.png",
+            Phenotype = ["H3K36ME3"], IndID = ['NA18486'], stat = ['mean', 'median'],
+            quartiles = ["expression"]),#, "CDS_length", "gene_length"]),
+        #expand("Metaplots/AssayProfiles/Plots/{Phenotype}.{IndID}.{metaplot}.png",
+        #    Phenotype = ["H3K36ME3"], IndID = ['NA18486'],
+        #    metaplot=["CDS", "gene"]),
             
 rule CollectMetaplotIntrons:
     input:
@@ -273,3 +276,10 @@ rule H3K36ME3_corr:
         "QTLs/QTLTools/H3K36ME3/OnlyFirstRepsUnstandardized.Encode.qqnorm.bed.gz",
         "QTLs/QTLTools/H3K36ME3/OnlyFirstRepsUnstandardized.qqnorm.bed.gz",
         "QTLs/QTLTools/H3K36ME3/OnlyFirstRepsUnstandardized.Last3K.qqnorm.bed.gz"
+        
+rule CollectTES_TSS:
+    input:
+        expand("LongReads/ClosestAnnotatedTermini/{GTFType}_{TES_or_TSS}/{sample}.bed.gz",
+               GTFType = ["GTFTools_BasicAnnotations", "GTFTools"], TES_or_TSS = ["TSS", "TES"],
+               sample = all_long_reads)
+

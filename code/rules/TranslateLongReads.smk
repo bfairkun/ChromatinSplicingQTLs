@@ -20,6 +20,17 @@ rule Bam2Bed12:
         (bedtools bamtobed -i {input.bam} -bed12 -split | awk -F'\\t' -v OFS='\\t' '$11 !~ ",0,"' | bedtools getfasta -bedOut -s -split -bed - -name -fi {input.fa} | bgzip /dev/stdin -c > {output.bed} ) &> {log}
         (tabix -p bed {output.bed}) &>> {log}
         """
+        
+use rule Bam2Bed12 as Bam2Bed12_ONT with:
+    input:
+        bam = "Alignments/minimap2_Alignment/{sample}.sort.bam",
+        bai = "Alignments/minimap2_Alignment/{sample}.sort.bam.bai",
+        fa = "ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa"
+    output:
+        bed = "LongReads/bed12/{sample}.bed.gz",
+        tbi = "LongReads/bed12/{sample}.bed.gz.tbi",
+    wildcard_constraints:
+        sample = '|'.join(long_read_samples_ONT) 
 
 rule Bam2Bed12_5_and_3Termini:
     input:
@@ -66,5 +77,3 @@ rule ClosestTES_TSS:
         """
         bedtools closest -s -D a -t first -a {input.bed_reads_termini} -b {input.bed_annotated} | gzip - > {output}
         """
-
-

@@ -385,6 +385,35 @@ rule tabixNominalPassQTLResults:
         tabix -b 10 -e10 -s9 {output.txt} &>> {log}
         """
 
+
+
+#rule tabixNominalPass:
+#    """
+#    Convert QTLtools output to tab delimited bgzipped and tabix indexed files
+#    for easy access with tabix
+#    """
+#    input:
+#        "QTLs/QTLTools/{Phenotype}/NominalPass.txt.gz"
+#    wildcard_constraints:
+#        Phenotype = "Expression.Splicing"
+#    params:
+#        sort_temp = '-T ' + config['scratch'][:-1]
+#        # sort_temp = ""
+#    output:
+#        txt = "QTLs/QTLTools/{Phenotype}/NominalPass.txt.tabix.gz",
+#        tbi = "QTLs/QTLTools/{Phenotype}/NominalPass.txt.tabix.gz.tbi"
+#    resources:
+#        mem_mb = much_more_mem_after_first_attempt
+#    log:
+#        "logs/tabixNominalPass/{Phenotype}.log"
+#    shadow: "shallow"
+#    shell:
+#        """
+#        (cat <(zcat {input} | head -1 | perl -p -e 'printf("#") if $. ==1; s/ /\\t/g') <(zcat {input} | awk 'NR>1' |  perl -p -e 's/ /\\t/g' | sort {params.sort_temp} -k9,9 -k10,10n  ) | bgzip /dev/stdin -c > {output.txt}) &> {log}
+#        tabix -b 10 -e10 -s9 {output.txt} &>> {log}
+#        """
+
+
 rule SampleRandomPvals:
     input:
         txt = "QTLs/QTLTools/{Phenotype}/NominalPass{QTLsGenotypeSet}{FeatureCoordinatesRedefinedFor}.txt.tabix.gz",
