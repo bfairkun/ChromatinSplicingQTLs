@@ -1451,7 +1451,7 @@ sQTL.eQTL.colocs <- coloc.dat %>%
   ungroup() %>%
   filter(PC == "Expression.Splicing" | SuperAnnotation %in% c("AnnotatedJunc_UnproductiveCodingGene", "UnannotatedJunc_UnproductiveCodingGene")) %>%
   group_by(PC, snp, Locus) %>%
-  filter(beta == max(beta)) %>%
+  filter(abs(beta) == max(abs(beta))) %>%
   ungroup() %>%
   group_by(Locus, snp) %>%
   filter(!any(P %in% sQTL.Nominal.hQTLs$P1)) %>%
