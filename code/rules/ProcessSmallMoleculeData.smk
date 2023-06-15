@@ -416,11 +416,13 @@ rule GetOverlappingExons:
     input:
         GAGT_intron_trios = "../output/SmallMoleculeGAGT_CassetteExonclusters.bed",
         All_exons = "ReferenceGenome/Annotations/GTFTools_BasicAnnotations/gencode.v34.chromasomal.exons.sorted.bed"
+    log:
+        "logs/GetOverlappingExons.log"
     output:
         "SmallMolecule/CassetteExons/FlankingExons.tsv.gz"
     shell:
         """
-        awk -F'\\t' -v OFS='\\t' '$4~/^junc.skipping/ {{ $2=$2-1; print $0 }}' {input.GAGT_intron_trios} | bedtools intersect -a - -b {input.All_exons} -sorted -wao | gzip - > {output}
+        (awk -F'\\t' -v OFS='\\t' '$4~/^junc.skipping/ {{ $2=$2-1; print $0 }}' {input.GAGT_intron_trios} | bedtools intersect -a - -b {input.All_exons} -sorted -wao | gzip - > {output} ) &> {log}
         """
 
 

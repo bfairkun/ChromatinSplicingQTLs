@@ -87,7 +87,7 @@ Scratch all that procedure above. i think that would be overly complicated... he
 - Get the induced GAGT introns (significant dose response spearman), and all introns in those clusters
 - Filter for most used acceptor among the potentially multiple junctions with the GAGT donor. This defines the downstream donor and downstream acceptor.
 - Identify the basic annotated exon that begins at that downstream acceptor. Use the most expressed transcript structure in LCLs for each gene. If none is found, skip, though I think most should be found.
-- Get upstream exon in that same transcript structure, using bedtools closest.
+- Get upstream exon in that same transcript structure, possibly using bedtools closest.
 - If the upstream exon is downstream of the GAGT donor, skip. Something too complicated is happening.
 - If upstream exon uses the GAGT splice donor, well the GAGT intron is just a naturally occuring GAGT basic intron. Nothing to translate.
 - if the upstream exon intersects the splice donor it is a crptic exonic alt 5'ss Save what needs to be translated before and after induction. (UpstreamExonA, UpstreamExonB, and DownstreamExon)
@@ -127,6 +127,347 @@ MostExpressedTranscriptsPerGene <- Expression.table.transcripts %>%
 ExonsOfMostExpressed <- exons %>%
   separate(gene_transcript, into=c("gene", "transcript"), sep="_") %>%
   mutate(gene = str_replace(gene, "(.+)\\..+$", "\\1")) %>%
-  inner_join(MostExpressedTranscriptsPerGene)
+  inner_join(MostExpressedTranscriptsPerGene) %>%
+  group_by(transcript) %>%
+  mutate(PlusStrandExonNumber = dense_rank(start)) %>%
+  mutate(MinsStrandExonNumber = dense_rank(desc(start))) %>%
+  mutate(ExonNumber = case_when(
+    strand == "+" ~ PlusStrandExonNumber,
+    strand == "-" ~ MinsStrandExonNumber
+    )) %>%
+  ungroup() %>%
+  arrange(chrom, transcript, ExonNumber) %>%
+  mutate(Acceptor = case_when(
+    strand == "+" ~ start,
+    strand == "-" ~ stop +1
+  )) %>%
+  mutate(Donor = case_when(
+    strand == "+" ~ stop+1,
+    strand == "-" ~ start
+  )) %>%
+  mutate(Chrom_Donor = paste(chrom, Donor, sep='_'),
+         Chrom_Acceptor = paste(chrom, Acceptor, sep='_'))
+
+```
+
+Get induced splice juncs
+
+```{r}
+SpearmanCorr <- read_tsv("../code/SmallMolecule/FitModels/Data/polyA_GAGTIntrons.tsv.gz")
+
+SpearmanCorr %>%
+  distinct(Intron, .keep_all=T) %>%
+  filter(substr(DonorSeq, 3,4)=="GA") %>%
+  filter(q<0.1) %>%
+  mutate(numberInts = n()) %>%
+  filter(spearman == min(spearman))
+
+
+P.spearman.dist <- SpearmanCorr %>%
+  distinct(Intron, .keep_all=T) %>%
+  mutate(Is.GA.GT = substr(DonorSeq, 3,4)) %>%
+  mutate(DinculeotideCategory = case_when(
+    Is.GA.GT == "AG" ~ "AG|GU",
+    Is.GA.GT == "GA" ~ "GA|GU",
+    TRUE ~ "not (AG or GA)|GU"
+  )) %>%
+  filter(!is.na(spearman)) %>%
+  # mutate(DinculeotideCategory = factor(DinculeotideCategory, levels=c("GA|GU", "AG|GU", "not (AG or GA)|GU"))) %>%
+  arrange(desc(DinculeotideCategory)) %>%
+  ggplot(aes(x=spearman, group=Is.GA.GT, color=DinculeotideCategory)) +
+  geom_vline(xintercept=0) +
+  scale_colour_brewer(type="qual", palette = "Dark2", labels=labels, name="5'ss motif") +
+  stat_ecdf() +
+  labs(y="Cumulative fraction", x="dose:PSI spearman coef", caption=str_wrap("641 GA|GU induced introns with significant spearman correlation (FDR<10%, corresponding to spearman coef > 0.775) were used for futher interpretion of effects. 305 of which were classified as cassette exons, translated, and PSI was recalculated from junction trios", 40))
+
+P.spearman.dist 
+
+Sig.Juncs <- SpearmanCorr %>%
+  filter(dose.nM == 3160) %>%
+  distinct(Intron, .keep_all=T) %>%
+  mutate(Is.GA.GT = substr(DonorSeq, 3,4)) %>%
+  mutate(DinculeotideCategory = case_when(
+    Is.GA.GT == "AG" ~ "AG|GU",
+    Is.GA.GT == "GA" ~ "GA|GU",
+    TRUE ~ "not (AG or GA)|GU"
+  )) %>%
+  filter(DinculeotideCategory == "GA|GU") %>%
+  filter(q<0.1) 
+
+Sig.Juncs
+
+```
+
+- Filter for most used acceptor among the potentially multiple junctions with the GAGT donor. This defines the downstream donor and downstream acceptor.
+
+```{r}
+TopJuncPerDonor <- Sig.Juncs %>%
+  separate(Intron, into=c("chrom", "start", "stop", "strand"), sep=":", convert=T) %>%
+  mutate(start = as.numeric(start), stop=as.numeric(stop)) %>%
+  mutate(GAGT.Donor = case_when(
+    strand == "+" ~ start +1,
+    strand == "-" ~ stop -1
+  )) %>%
+  mutate(Downstream.Acceptor = case_when(
+    strand == "+" ~ stop-1,
+    strand == "-" ~ start+1
+  )) %>%
+  group_by(chrom, GAGT.Donor) %>%
+  filter(PSI == max(PSI)) %>%
+  ungroup()
+
+TopJuncPerDonor
+
+```
+
+- Identify the basic annotated exon that begins at that downstream acceptor. Use the most expressed transcript structure in LCLs for each gene. If none is found, skip, though I think most should be found.
+
+```{r}
+DownstreamExons <- ExonsOfMostExpressed %>%
+  dplyr::select(chrom, gene, transcript, ExonNumber, Acceptor, UpstreamExonStart = start, UpstreamExonStop=stop) %>%
+  inner_join(
+    TopJuncPerDonor,
+    by=c("Acceptor"="Downstream.Acceptor", "chrom")
+  ) %>%
+  dplyr::rename("Downstream.Acceptor"="Acceptor")
+
+DownstreamExons
+
+DownstreamExons %>%
+  filter(gene == "ENSG00000118513")
+```
+
+- Get upstream exon in that same transcript structure, possibly using bedtools closest.
+
+```{r}
+DownstreamExons.AndAnnotatedUpstreamExons <- DownstreamExons %>%
+  mutate(PrecedingExonNumber = ExonNumber-1) %>%
+  inner_join(ExonsOfMostExpressed %>%
+               dplyr::select(chrom, gene, transcript, PrecedingExonNumber=ExonNumber, AnnotatedUpstreamExon.Acceptor=Acceptor, AnnotatedUpstreamExon.Donor=Donor))
+
+DownstreamExons.AndAnnotatedUpstreamExons
+
+DownstreamExons.AndAnnotatedUpstreamExons %>%
+  filter(PrecedingExonNumber == 1)
+
+DownstreamExons.AndAnnotatedUpstreamExons %>%
+  filter(gene == "ENSG00000118513")
+
+CrypticIntronicVsCassetteExonCutoff <- 1000
+
+DownstreamExons.AndAnnotatedUpstreamExons %>%
+  # - If the upstream exon is downstream of the GAGT donor, skip. Something too complicated is happening.
+  filter(
+    !(strand == "+" & AnnotatedUpstreamExon.Donor > GAGT.Donor ) | (strand == "-" & AnnotatedUpstreamExon.Donor < GAGT.Donor)
+  ) %>%
+  mutate(TypeAS = case_when(
+    # - If upstream exon uses the GAGT splice donor, well the GAGT intron is just a naturally occuring GAGT basic intron. Nothing to translate.
+    AnnotatedUpstreamExon.Donor == GAGT.Donor ~ "natural Basic",
+    # - if the upstream exon intersects the splice donor it is a crptic exonic alt 5'ss Save what needs to be translated before and after induction. (UpstreamExonA, UpstreamExonB, and DownstreamExon)
+    (strand=="+" & between(GAGT.Donor, AnnotatedUpstreamExon.Acceptor, AnnotatedUpstreamExon.Donor)) | (strand=="-" & between(GAGT.Donor, AnnotatedUpstreamExon.Donor, AnnotatedUpstreamExon.Acceptor)) ~ "exonic alt 5'ss",
+    # - if upstream exon is within 500bp upstream of the GAGT donor, it is a cryptic intron alt 5'ss. Save what needs to be translated before and after induction.  (UpstreamExonA, UpstreamExonB, and AnnotatedDownstreamExon)
+    (strand=="+" & between(GAGT.Donor, AnnotatedUpstreamExon.Donor, AnnotatedUpstreamExon.Donor+CrypticIntronicVsCassetteExonCutoff)) | (strand=="-" & between(GAGT.Donor, AnnotatedUpstreamExon.Donor-CrypticIntronicVsCassetteExonCutoff, AnnotatedUpstreamExon.Donor)) ~ "intronic alt 5'ss",
+    TRUE ~ "Other",
+
+  )) %>%
+  filter(TypeAS=="intronic alt 5'ss") %>%
+  mutate(Dist = abs(GAGT.Donor - AnnotatedUpstreamExon.Donor)) %>%
+  mutate(Position = str_glue("{chrom}:{GAGT.Donor}")) %>%
+  dplyr::select(Position, Dist, strand)
+  ggplot(aes(x=Dist)) +
+  stat_ecdf() +
+  scale_x_continuous(trans="log10") +
+  facet_wrap(~TypeAS) +
+  theme_bw()
+  count(TypeAS)
+```
+
+
+- If the upstream exon is downstream of the GAGT donor, skip. Something too complicated is happening.
+- If upstream exon uses the GAGT splice donor, well the GAGT intron is just a naturally occuring GAGT basic intron. Nothing to translate.
+- if the upstream exon intersects the splice donor it is a crptic exonic alt 5'ss Save what needs to be translated before and after induction. (UpstreamExonA, UpstreamExonB, and DownstreamExon)
+- else it is probably involved in either cassette exon, or cryptic intronic 5'ss... Find most used upstream 3'ss within 500bp. If it's PSI is at least 1/5 the PSI of the GAGT donor, consider that the cryptic exon for translating... Else if it is within 500bp of annotated upstream donor, consider it intron retention. Else, it is unclear and remove from further analysis (splicing pattern too complicated to attempt translation)
+
+- if upstream exon is within 500bp upstream of the GAGT donor, it is a cryptic intron alt 5'ss. Save what needs to be translated before and after induction.  (UpstreamExonA, UpstreamExonB, and AnnotatedDownstreamExon)
+- if the upstream exon is >500 upstream of the GAGT donor, it is likely involved in poison exon inclusion. Find the most used splice acceptor within leafcutter cluster. Verify that the trio of introns is in the leafcutter cluster. Save what needs to be translated before and after induction.  (AnnotatedUpstreamExon, CassetteExon, and AnnotatedDownstreamExon)
+
+```{r}
+DownstreamExons.AndAnnotatedUpstreamExons
+```
+
+## Bedtools subtract approach
+
+Ok I still have yet to finish the approach I was working on above when I thought of this alternative approach that may be simpler and better...
+
+- Get the induced GAGT introns (significant dose response spearman), and all introns in those clusters
+- Filter for most used acceptor among the potentially multiple junctions with the GAGT donor. This defines the downstream donor and downstream acceptor.
+- Calculate deltaPSI (DMSO vs 3160nM) of the GAGT intron, and all introns in the cluster
+- Classify introns as either "defining the induced transcript structure" or "not defining the induced transcript structure"... I will do something like identifying all other intra-cluster introns that are induced PSI_FC at least 1/3 of the GAGT intron and PSI_3160 at least 1/3 of the GAGT intron. When multiple overlapping introns meet that critera, only the one with the strongest PSI_FC is considred "defining the induced transcript structure"
+- Add all the other (non-overlapping) introns in the most expressed basic transcript structure.
+- Exons are defined as the complement of the transcript and the introns, to infer the induced transcript structure. Save the annotated basic transcript structure and the induced transcript structure as bed12 with exon blocks.
+- Translate the new transcript, translate the old transcript. Find stop codons, determine if is subject to NMD (moreso than old transcript).
+
+
+
+```{r}
+TopJuncPerDonor %>%
+  mutate(Cluster = str_extract(Leafcutter.ID, "clu.+$")) %>%
+  distinct(Cluster)
+
+DeltaPSIs <- SpearmanCorr %>%
+  filter(dose.nM %in% c(0, 3160)) %>%
+  group_by(Intron, dose.nM) %>%
+  mutate(PSI = median(PSI)) %>%
+  ungroup() %>%
+  distinct(Intron, dose.nM, .keep_all=T) %>%
+  mutate(Cluster = str_extract(Leafcutter.ID, "clu.+$")) %>%
+  mutate(Is.GA.GT = substr(DonorSeq, 3,4)) %>%
+  mutate(DinculeotideCategory = case_when(
+    Is.GA.GT == "AG" ~ "AG|GU",
+    Is.GA.GT == "GA" ~ "GA|GU",
+    TRUE ~ "not (AG or GA)|GU"
+  )) %>%
+  group_by(Cluster) %>%
+  filter(any(DinculeotideCategory=="GA|GU" & q <0.1)) %>%
+  ungroup() %>%
+  dplyr::select(Intron, Leafcutter.ID, treatment, PSI, Counts, spearman, spearman.p, q, Cluster, DinculeotideCategory ) %>%
+  pivot_wider(names_from="treatment", values_from=c("PSI", "Counts")) %>%
+  mutate(DeltaPSI = PSI_Risdiplam - PSI_DMSO) %>%
+  group_by(Cluster, DinculeotideCategory) %>%
+  mutate(IsMax_InCluster_ByDinucleotide = DeltaPSI==max(DeltaPSI)) %>%
+  ungroup() %>%
+  mutate(IsMax_GAGT_InCluster = IsMax_InCluster_ByDinucleotide & DinculeotideCategory=="GA|GU") %>%
+  dplyr::select(-IsMax_InCluster_ByDinucleotide) %>%
+  separate(Intron, into=c("chrom", "start", "stop", "strand"), sep=":", convert=T, remove=F) %>%
+  mutate(Donor = case_when(
+    strand == "+" ~ start,
+    strand == "-" ~ stop
+  )) %>%
+  mutate(Acceptor = case_when(
+    strand == "+" ~ stop,
+    strand == "-" ~ start
+  ))
+
+DeltaPSIs %>%
+  mutate(name = str_glue("{IsMax_GAGT_InCluster}_{DeltaPSI}_{spearman}")) %>%
+  mutate(score = DeltaPSI) %>%
+  dplyr::select(chrom, start, stop, name, score, strand) %>%
+  arrange(chrom, start, stop) %>%
+  write_tsv("../code/scratch/InducedClusterIntrons.bed",col_names = F)
+
+DeltaPSIs %>%
+  filter(IsMax_GAGT_InCluster) %>%
+  mutate(name = str_glue("{IsMax_GAGT_InCluster}_{DeltaPSI}_{spearman}")) %>%
+  mutate(score = DeltaPSI) %>%
+  dplyr::select(chrom, start, stop, name, score, strand) %>%
+  arrange(chrom, start, stop) %>%
+  write_tsv("../code/scratch/InducedClusterGAGTIntrons.bed",col_names = F)
+
+DeltaPSIs %>%
+  group_by(Cluster) %>%
+  mutate(IsMax_InCluster = DeltaPSI==max(DeltaPSI)) %>%
+  mutate(MaxInCluster = max(DeltaPSI)) %>%
+  filter(DeltaPSI > 0.25 * MaxInCluster) %>%
+  ungroup() %>%
+  mutate(name = str_glue("{IsMax_GAGT_InCluster}_{DeltaPSI}_{spearman}")) %>%
+  mutate(score = DeltaPSI) %>%
+  dplyr::select(chrom, start, stop, name, score, strand) %>%
+  arrange(chrom, start, stop) %>%
+  write_tsv("../code/scratch/InducedClusterRemainingIntrons.bed",col_names = F)
+  
+
+```
+
+## update
+
+Ok, this was an interesting excercise but I am just going to go back and keep the original methodology of finding cassette exons, and figure out where MYB was filtered out and make sure I include it.
+
+- Get the induced GAGT introns (significant dose response spearman), and all introns in those clusters
+- Filter for most used acceptor among the potentially multiple junctions with the GAGT donor. This defines the downstream donor and downstream acceptor.
+- Calculate deltaPSI (DMSO vs 3160nM) of the GAGT intron, and all introns in the cluster
+- Find intra-cluster most used acceptor within 500bp. Find most used 
+
+<!-- chr1    8365974 8396444 junc.GAGT_clu_189_chr1:8365974:8396444:-        2567    -       8365974 8 -->
+<!-- chr1    8365974 8422727 junc.skipping_clu_189_chr1:8365974:8396444:-    2567    -       8365974 8 -->
+<!-- chr1    8396531 8422727 junc.UpstreamIntron_clu_189_chr1:8365974:8396444:-      2567    -   -->
+
+```{r}
+
+DeltaPSIs
+
+DeltaPSIs %>%
+  filter(IsMax_GAGT_InCluster) %>%
+  dplyr::select(Leafcutter.ID, chrom, Intron, strand, Cluster, DeltaPSI, Donor, Acceptor, start, stop) %>%
+  inner_join(
+    DeltaPSIs %>%
+        dplyr::select(Leafcutter.ID, chrom, Intron, strand, Cluster, DeltaPSI, Donor, Acceptor, start, stop),
+    by=c("Cluster", "strand", "chrom"),
+    suffix=c(".junc.GAGT", ".junc.UpstreamIntron")
+  ) %>%
+  filter(!Intron.junc.GAGT == Intron.junc.UpstreamIntron) %>%
+  filter(Intron.junc.GAGT == "chr14:34862322:34874492:-") %>%
+  filter(
+    (strand == "+" & between(Donor.junc.GAGT - Acceptor.junc.UpstreamIntron, 0, 500) ) |
+    (strand == "-" & between(Acceptor.junc.UpstreamIntron - Donor.junc.GAGT, 0, 500 ))
+    )
+
+```
+
+```{r}
+CassetteExons <- DeltaPSIs %>%
+  filter(IsMax_GAGT_InCluster) %>%
+  dplyr::select(Leafcutter.ID, chrom, Intron, strand, Cluster, DeltaPSI, Donor, Acceptor, start, stop) %>%
+  inner_join(
+    DeltaPSIs %>%
+        dplyr::select(Leafcutter.ID, chrom, Intron, strand, Cluster, DeltaPSI, Donor, Acceptor, start, stop),
+    by=c("Cluster", "strand", "chrom"),
+    suffix=c(".junc.GAGT", ".junc.UpstreamIntron")
+  ) %>%
+  filter(!Intron.junc.GAGT == Intron.junc.UpstreamIntron) %>%
+  filter(
+    (strand == "+" & between(Donor.junc.GAGT - Acceptor.junc.UpstreamIntron, 0, 500) ) |
+    (strand == "-" & between(Acceptor.junc.UpstreamIntron - Donor.junc.GAGT, 0, 500 ))
+    ) %>%
+  group_by(Cluster) %>%
+  filter(DeltaPSI.junc.UpstreamIntron == max(DeltaPSI.junc.UpstreamIntron)) %>%
+  ungroup() %>%
+  mutate(Intron.junc.skipping = case_when(
+    strand == "+" ~ str_glue("{chrom}:{Donor.junc.UpstreamIntron}:{Acceptor.junc.GAGT}:{strand}"),
+    strand == "-" ~ str_glue("{chrom}:{Acceptor.junc.GAGT}:{Donor.junc.UpstreamIntron}:{strand}"))) %>%
+  inner_join(
+    DeltaPSIs %>%
+        dplyr::select(Intron.junc.skipping=Intron, start.junc.skipping=start, stop.junc.skipping=stop),
+    by=c("Intron.junc.skipping"),
+    suffix = c("", ".junc.skipping")
+  ) %>%
+  filter(abs(log2(DeltaPSI.junc.GAGT/DeltaPSI.junc.UpstreamIntron)) < 2) %>%
+  mutate(Cluster = str_extract(Cluster, "clu_.+?_")) %>%
+  dplyr::select(Intron.junc.GAGT, DeltaPSI.junc.GAGT, strand, chrom, Cluster, contains("stop"), contains("start"))
+
+
+bind_rows(
+  #GAGT Int
+  CassetteExons %>%
+  dplyr::select(chrom, start=start.junc.GAGT, stop=stop.junc.GAGT, Intron.junc.GAGT, score=DeltaPSI.junc.GAGT, strand, Cluster) %>%
+  mutate(name = str_glue("junc.GAGT_{Cluster}{Intron.junc.GAGT}")) %>%
+  mutate(thickStart = start, thickEnd=stop, color="0,255,0") %>%
+  dplyr::select(chrom, start, stop, name, score, strand, thickStart, thickEnd, color),
+  #Upstream int
+  CassetteExons %>%
+  dplyr::select(chrom, start=start.junc.UpstreamIntron, stop=stop.junc.UpstreamIntron, Intron.junc.GAGT, score=DeltaPSI.junc.GAGT, strand, Cluster) %>%
+  mutate(name = str_glue("junc.UpstreamIntron_{Cluster}{Intron.junc.GAGT}")) %>%
+  mutate(thickStart = start, thickEnd=stop, color="0,255,0") %>%
+  dplyr::select(chrom, start, stop, name, score, strand, thickStart, thickEnd, color),
+  #Skipping junc
+  CassetteExons %>%
+  dplyr::select(chrom, start=start.junc.skipping, stop=stop.junc.skipping, Intron.junc.GAGT, score=DeltaPSI.junc.GAGT, strand, Cluster) %>%
+  mutate(name = str_glue("junc.skipping_{Cluster}{Intron.junc.GAGT}")) %>%
+  mutate(thickStart = start, thickEnd=stop, color="0,255,0") %>%
+  dplyr::select(chrom, start, stop, name, score, strand, thickStart, thickEnd, color)
+) %>%
+  arrange(chrom, start, stop) %>%
+  write_tsv("../output/SmallMoleculeGAGT_CassetteExonclusters.bed", col_names = F)
+
+
 ```
 

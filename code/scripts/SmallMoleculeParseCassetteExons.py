@@ -20,7 +20,8 @@ import pandas as pd
 # interactive interpreter to script quick args with sys.argv, parse_args with
 # hardcoded args below
 if hasattr(sys, 'ps1'):
-    sys.argv = ["", "scratch/test.out.tsv.gz","SmallMolecule/CassetteExons/ExonsToTranslate.tsv.gz", "ReferenceGenome/Annotations/gencode.v34.chromasomal.basic.annotation.gtf.gz", "ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa"]
+    sys.argv = "scripts/SmallMoleculeParseCassetteExons.py SmallMolecule/CassetteExons/ExonsToTranslate.Translated.tsv.gz SmallMolecule/CassetteExons/ExonsToTranslate.tsv.gz ReferenceGenome/Annotations/gencode.v34.chromasomal.basic.annotation.gtf.gz ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa".split(' ')
+    # sys.argv = ["", "scratch/test.out.tsv.gz","SmallMolecule/CassetteExons/ExonsToTranslate.tsv.gz", "ReferenceGenome/Annotations/gencode.v34.chromasomal.basic.annotation.gtf.gz", "ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa"]
 
 _, f_out, FlankBases_fn, gtf_fn, fa_fn = sys.argv
 
