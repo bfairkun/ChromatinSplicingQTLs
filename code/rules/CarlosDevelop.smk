@@ -232,7 +232,9 @@ rule CollectBasicMapping:
 rule CollectFinemapping:
     input:
         expand("FineMapping/susie_runs_{Subset}/susie_output.tab.gz",
-               Subset = ["Geuvadis", "EUR", "YRI"])
+               Subset = ["Geuvadis", "EUR", "YRI"]),
+        expand("FineMapping/susie_runs_{Subset}/susie_output_long.tab.gz",
+               Subset = ["Geuvadis", "EUR", "YRI"]),
         #"FineMapping/Genotypes/1KG_GRCh38/EUR.txt.bgz.tbi",
         #"FineMapping/susie_runs/susie_output.tab"
           

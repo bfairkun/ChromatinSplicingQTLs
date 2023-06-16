@@ -107,7 +107,8 @@ rule run_susie:
         genotype = "FineMapping/Genotypes/1KG_GRCh38/{Subset}.txt.bgz",
         tabix = "FineMapping/Genotypes/1KG_GRCh38/{Subset}.txt.bgz.tbi"
     output:
-        "FineMapping/susie_runs_{Subset}/susie_output.tab.gz"
+        "FineMapping/susie_runs_{Subset}/susie_output.tab.gz",
+        "FineMapping/susie_runs_{Subset}/susie_output_long.tab.gz"
     log:
         "logs/FineMapping/run_susie_{Subset}.log"
     resources:
