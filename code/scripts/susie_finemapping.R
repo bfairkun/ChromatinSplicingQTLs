@@ -57,14 +57,6 @@ filter.GT <- function(nominal.gene, GT){
     return (list(GT=GT_filtered, nominal.gene=nominal.gene_filtered))
 }
 
-
-#filter.GT <- function(nominal.gene, GT){
-#    GT <- GT %>% filter(ID %in% nominal.gene$var_id)
-#    nominal.gene <- nominal.gene %>% filter(var_id %in% GT$ID)
-#    return (list(GT=GT, nominal.gene=nominal.gene))
-#}
-
-
 genotype.cor <- function(GT){
     XCor <- cor(t(GT[,colnames(GT[6:dim(GT)[2]])]))
     return(XCor)
@@ -126,6 +118,7 @@ perm = args[2]
 genotype = args[3]
 Subset = args[4]
 output = args[5]
+output_long = args[6]
 
 perm <- read.table(perm, sep=' ', header=TRUE)
 
@@ -141,6 +134,14 @@ cs_beta_se <- c()
 cs_z <- c()
 cs_pval <- c()
 
+all_vars <- c()
+all_gene <- c()
+all_pip <- c()
+all_beta <- c()
+all_beta_se <- c()
+all_z <- c()
+all_pval <- c()
+
 for (gene in genes) {
 
     print(gene)
@@ -153,7 +154,7 @@ for (gene in genes) {
     
     susie_rdata_file <- paste0('FineMapping/susie_runs_', Subset, '/', gene, '.RData')
     
-    save(sus, file = susie_rdata_file)
+    save(sus$susie.out, file = susie_rdata_file)
     
     credible_sets <- names(sus$susie.out$sets$cs) 
     
@@ -163,26 +164,39 @@ for (gene in genes) {
         vars <- sus$nominal.gene[cs_idx,] %>% select('var_id') 
         vars <- vars[[1]] %>% as.vector()
         cs_vars <- c(cs_vars, vars)
+        
+        vars_all <- sus$nominal.gene %>% select('var_id')[[1]] %>% as.vector()
+        all_vars <- c(all_vars, vars_all)
+        
         cs_gene <- c(cs_gene, rep(gene, length(cs_idx)))
+        all_gene <- c(all_gene, rep(gene, length(vars_all)))
+        
         cs_pip <- c(cs_pip, sus$susie.out$pip[cs_idx])
+        all_pip <- c(all_pip, as.vector(sus$susie.out$pip))
         
-        beta <- sus$susie.input$slope[cs_idx]#nominal.gene[cs_idx,] %>% select('slope') 
-        
-        beta_se <- sus$susie.input$slope_se[cs_idx]#beta_se[[1]] %>% as.vector()
-        
-        z <- sus$susie.input$Z[cs_idx]#beta/beta_se
-        
+        beta <- sus$susie.input$slope[cs_idx]
+        beta_se <- sus$susie.input$slope_se[cs_idx]
+        z <- sus$susie.input$Z[cs_idx]
         pval <- sus$susie.input$nom.pval[cs_idx]
         
         cs_beta <- c(cs_beta, beta)
         cs_beta_se <- c(cs_beta_se, beta_se)
         cs_z <- c(cs_z, z)
         cs_pval <- c(cs_pval, pval)
+        
+        
+        
+        beta_all <- sus$susie.input$slope %>% as.vector()
+        beta_se_all <- sus$susie.input$slope_se %>% as.vector()
+        z_all <- sus$susie.input$Z %>% as.vector()
+        pval_all <- sus$susie.input$nom.pval %>% as.vector()
+        
+        all_beta <- c(all_beta, beta)
+        all_beta_se <- c(all_beta_se, beta_se)
+        all_z <- c(all_z, z)
+        all_pval <- c(all_pval, pval)
     }
     
-    
-    #cs_vars %>% length() %>% print()
-
 }
 
 cs_gene %>% length %>% print()
@@ -198,4 +212,9 @@ print('Finished running SuSiE. Creating output table...')
 out_df <- data.frame(cs_gene, cs_vars, cs_names, cs_pip, cs_beta, cs_beta_se, cs_z, cs_pval)
 print("If this message doesn't show up, the error is creating the matrix")
 out_df %>% write_delim(output, delim='\t')
+
+print('Creating long output table...')
+out_df_long <- data.frame(all_gene, all_vars, all_pip, all_beta, all_beta_se, all_z, all_pval)
+print("If this message doesn't show up, the error is creating the matrix")
+out_df %>% write_delim(output_long, delim='\t')
 

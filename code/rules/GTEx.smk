@@ -77,7 +77,8 @@ use rule PlotPhenotypePCs as PlotPhenotypePCs_GTEx with:
         tissues = '|'.join(gtex_tissues),
         norm = 'cpm|qqnorm'
         
-
+big_tissues = ['adipose_subcutaneous', 'artery_tibial', 'muscle_skeletal', 'skin_sun_exposed_lower_leg', 'whole_blood',
+               'fallopian_tube', 'kidney_medulla']
 
 use rule QTLtools_generalized as QTLtools_GTEx with:
     input:
@@ -98,8 +99,18 @@ use rule QTLtools_generalized as QTLtools_GTEx with:
     wildcard_constraints:
         n = "|".join(str(i) for i in ChunkNumbers),
         Pass = "PermutationPass|NominalPass",
-        tissues = '|'.join(gtex_tissues),
+        tissue = '|'.join([x for x in gtex_tissues if x not in big_tissues]),
         norm = 'cpm|qqnorm'
+
+ChunkNumbersLarge = range(0, 201)
+
+use rule QTLtools_GTEx as QTLtools_GTEx_large with:
+    wildcard_constraints:
+        n = "|".join(str(i) for i in ChunkNumbersLarge),
+        Pass = "PermutationPass|NominalPass",
+        tissue = '|'.join(big_tissues),
+        norm = 'cpm|qqnorm'
+
  
 use rule Gather_QTLtools_cis_pass as Gather_QTLtools_GTEx with:
     input:
@@ -108,10 +119,17 @@ use rule Gather_QTLtools_cis_pass as Gather_QTLtools_GTEx with:
         "GTEx/QTLs/{tissue}/{Pass}.{norm}.txt.gz"
     wildcard_constraints:
         Pass = "PermutationPass|NominalPass",
-        tissues = '|'.join(gtex_tissues),
+        tissue = '|'.join([x for x in gtex_tissues if x not in big_tissues]),
         norm = 'cpm|qqnorm'
     log:
         "logs/GTEx/QTLs/{tissue}/{Pass}.{norm}.collect.log"
+        
+use rule Gather_QTLtools_GTEx as Gather_QTLtools_GTEx_large with:
+    wildcard_constraints:
+        n = "|".join(str(i) for i in ChunkNumbersLarge),
+        Pass = "PermutationPass|NominalPass",
+        tissue = '|'.join(big_tissues),
+        norm = 'cpm|qqnorm'
 
 
 use rule AddQValueToPermutationPass as AddQValueToPermutationPass_GTEx with:
