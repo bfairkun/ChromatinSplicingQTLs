@@ -11,7 +11,7 @@
 #Use hard coded arguments in interactive R session, else use command line args
 if(interactive()){
     args <- scan(text=
-                 "scratch/test.tsv.gz", what='character')
+                 "scratch/test.tsv.gz scratch/test.tsv.long.gz", what='character')
 } else{
     args <- commandArgs(trailingOnly=TRUE)
 }
@@ -41,6 +41,9 @@ cassette.exons <- read_tsv(CassetteExons,col_names=c("chrom","start", "end","nam
     mutate(end = end-1) %>%
     dplyr::select(name, chrom, start, end, strand) %>%
     separate(name, into=c("type", "dummy","cluster", "GAGTInt"), sep="\\_") %>%
+    group_by(GAGTInt) %>%
+    filter(n()==3) %>%
+    ungroup() %>%
     pivot_wider(names_from="type", values_from=c("start", "end")) %>%
     mutate(CassetteExon_ExonStart = if_else(strand=="+", end_junc.UpstreamIntron, end_junc.GAGT)) %>%
     mutate(CassetteExon_ExonStop = if_else(strand=="+", start_junc.GAGT, start_junc.UpstreamIntron))

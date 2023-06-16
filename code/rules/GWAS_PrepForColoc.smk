@@ -27,7 +27,7 @@ rule liftover_Gwas_stats:
         "../envs/crossmap.yml"
     shadow: "shallow"
     wildcard_constraints:
-        accession = '|'.join(gwas_df.loc[gwas_df['FTPPath'].isna()].index)
+        accession = '|'.join(["IMSGC2019"])
     shell:
         """
         CrossMap.py bed {input.chain} {input.bed} gwas_summary_stats/hg38lifted_summarystat_beds/{wildcards.accession}.bed
@@ -41,7 +41,7 @@ rule CreateBedForNonGwasCatalogStats:
     input:
         "gwas_summary_stats/hg38lifted_summarystat_beds/{accession}.bed"
     wildcard_constraints:
-        accession = '|'.join(gwas_df.loc[gwas_df['FTPPath'].isna()].index)
+        accession = '|'.join(["IMSGC2019"])
     output:
         bed = "gwas_summary_stats/sorted_index_summarystat_hg38beds/{accession}.bed.gz",
         tbi = "gwas_summary_stats/sorted_index_summarystat_hg38beds/{accession}.bed.gz.tbi",
@@ -84,7 +84,38 @@ rule CreateBedForGwasCatalogStats:
         (zcat {input.summarystats} | awk -F'\\t' -v OFS='\\t' 'NR==1 {{ print "#Chr", "start", "end", "P", $0 }} NR>1 && $4!="NA" {{print "chr"$3, $4, $4+1, {params.GetPvalColumnAwk}, $0}}' | sort -k 1,1 -k2,2n  | bgzip /dev/stdin -c > {output.bed} ) &> {log}
         tabix -p bed {output.bed}
         """
-# zcat {input.summarystats} | head -1 | cut -f1-12,22-23 
+
+rule CreateBedForGwasCatalogStats_RA:
+    input:
+        summarystats = lambda wildcards: gwas_df.loc[wildcards.accession]['SummaryStatsLocalFilepath']
+    wildcard_constraints:
+        accession = "TRANSETHNICRA"
+    output:
+        bed = "gwas_summary_stats/sorted_index_summarystat_hg38beds/{accession}.bed.gz",
+        tbi = "gwas_summary_stats/sorted_index_summarystat_hg38beds/{accession}.bed.gz.tbi",
+    log:
+        "logs/CreateBedForGwasCatalogStats/{accession}.log"
+    shell:
+        """
+        (zcat {input.summarystats} | awk -F'\\t' -v OFS='\\t' 'NR==1 {{ print "#Chr", "start", "end", "P", $0 }} NR>1 {{print "chr"$10, $11, $11+1, $9, $0}}' | sort -k 1,1 -k2,2n  | bgzip /dev/stdin -c > {output.bed} ) &> {log}
+        tabix -p bed {output.bed}
+        """
+
+rule CreateBedForGwasCatalogStats_SLE:
+    input:
+        summarystats = lambda wildcards: gwas_df.loc[wildcards.accession]['SummaryStatsLocalFilepath']
+    wildcard_constraints:
+        accession = "SLEVYSE"
+    output:
+        bed = "gwas_summary_stats/sorted_index_summarystat_hg38beds/{accession}.bed.gz",
+        tbi = "gwas_summary_stats/sorted_index_summarystat_hg38beds/{accession}.bed.gz.tbi",
+    log:
+        "logs/CreateBedForGwasCatalogStats/{accession}.log"
+    shell:
+        """
+        (zcat {input.summarystats} | awk -F'\\t' -v OFS='\\t' 'NR==1 {{ print "#Chr", "start", "end", "P", $0 }} NR>1 {{print "chr"$24, $25, $25+1, $12, $0}}' | sort -k 1,1 -k2,2n  | bgzip /dev/stdin -c > {output.bed} ) &> {log}
+        tabix -p bed {output.bed}
+        """
 
 rule GetGWAS_LeadSnpWindows:
     """
@@ -133,6 +164,10 @@ def GetScriptToOutputStandardizedStats(wildcards):
         #processing script A
         if wildcards.accession == "IMSGC2019":
             return "scripts/StandardizeGwasStats_MS.R"
+        elif wildcards.accession == "TRANSETHNICRA":
+            return "scripts/StandardizeGwasStats_RA.R"
+        elif wildcards.accession == "SLEVYSE":
+            return "scripts/StandardizeGwasStats_SLE.R"
         elif wildcards.accession in ["GCST004988"]:
             return ""
     elif gwas_df.loc[wildcards.accession]['ProcessingMethod'] == 'GWAS_catalog_harmonised_from_beta_se':
@@ -164,7 +199,7 @@ rule GwasBedStatsAtWindows:
 rule GwasBedStatsToStandardizedFormat:
     """
     For coloc, gather summary stats in window centered on lead SNPs, with the
-    following columns: loci (chrom_leafSNPPos_A1_A2_gwas), chrom, pos, beta,
+    following columns: loci (chrom_leadSNPPos_A1_A2_gwas), chrom, pos, beta,
     beta_se, A1, and A2 to ensure we can refer to the same allele set as
     molQTL. No need to worry about harmonising the order of A1 and A2 to match
     molQTL. If the GWAS summary stats don't come with A1 and A2 listed, just
