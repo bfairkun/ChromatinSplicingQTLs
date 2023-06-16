@@ -1556,10 +1556,10 @@ sQTL.eQTL.colocs.filtered <- sQTL.eQTL.colocs %>%
 
 hQTL.eQTLs.ForCarlos <- inner_join(
   hQTL.eQTL.colocs %>%
-    dplyr::select(snp, Locus, beta, P, PC, TopSNPFinemapPr) %>%
+    dplyr::select(snp, Locus, beta, P, PC, TopSNPFinemapPr, beta_se, p) %>%
     filter(PC=="Expression.Splicing"),
   hQTL.eQTL.colocs %>%
-    dplyr::select(snp, Locus, beta, P, PC, TSS_start) %>%
+    dplyr::select(snp, Locus, beta, P, PC, TSS_start, beta_se, p) %>%
     filter(PC %in% c("H3K4ME3", "H3K27AC", "H3K4ME1")),
   by=c("snp", "Locus"),
   suffix=c("_Expression.Splicing", "_chromatin")
@@ -1573,14 +1573,14 @@ hQTL.eQTLs.ForCarlos <- inner_join(
   mutate(BensClassification = case_when(
     Dist_from_TopSNP_to_closest_hQTL_TSS < 5000 ~ "hQTL_Proximal",
     TRUE ~ "hQTL_Distal")) %>%
-  dplyr::select(TopSNP=snp, TopSNPFinemapPr, eGene=Locus, eQTL_beta=beta_Expression.Splicing, molQTL_beta=beta_chromatin, molQTL_Name=P_chromatin, molQTL_type=PC_chromatin, EffectSizeDirectionsAsExpected, Dist_from_TopSNP_to_closest_hQTL_TSS,  sQTL_or_hQTL, BensClassification)
+  dplyr::select(TopSNP=snp, TopSNPFinemapPr, eGene=Locus, eQTL_beta=beta_Expression.Splicing, eQTL_beta_se=beta_se_Expression.Splicing, eQTL_nomP=p_Expression.Splicing, molQTL_beta=beta_chromatin, molQTL_beta_se=beta_se_chromatin, molQTL_nomP=p_chromatin, molQTL_Name=P_chromatin, molQTL_type=PC_chromatin, EffectSizeDirectionsAsExpected, Dist_from_TopSNP_to_closest_hQTL_TSS,  sQTL_or_hQTL, BensClassification)
 
 sQTL.eQTL.colocs.ForCarlos <- sQTL.eQTL.colocs %>%
   filter(!Locus %in% hQTL.eQTL.colocs$Locus) %>%
-  dplyr::select(snp, TopSNPFinemapPr, Locus, beta, P, PC, snp, Locus) %>%
-  pivot_wider(names_from="PC", values_from=c("beta", "P")) %>%
+  dplyr::select(snp, TopSNPFinemapPr, Locus, beta, P, PC, snp, Locus, beta_se, p) %>%
+  pivot_wider(names_from="PC", values_from=c("beta", "P", "beta_se", "p")) %>%
   mutate(BensClassification = "sQTL", sQTL_or_hQTL="sQTL", Dist_from_TopSNP_to_closest_hQTL_TSS=NA, molQTL_type="polyA.Splicing", EffectSizeDirectionsAsExpected = !sign(beta_Expression.Splicing)==sign(beta_polyA.Splicing)) %>%
-  dplyr::select(TopSNP=snp, TopSNPFinemapPr, eGene=Locus, eQTL_beta=beta_Expression.Splicing, molQTL_beta=beta_polyA.Splicing, molQTL_Name=P_polyA.Splicing, molQTL_type, EffectSizeDirectionsAsExpected, Dist_from_TopSNP_to_closest_hQTL_TSS,  sQTL_or_hQTL, BensClassification)
+  dplyr::select(TopSNP=snp, TopSNPFinemapPr, eGene=Locus, eQTL_beta=beta_Expression.Splicing, eQTL_beta_se=beta_se_Expression.Splicing, eQTL_nomP=p_Expression.Splicing, molQTL_beta=beta_polyA.Splicing, molQTL_beta_se=beta_se_polyA.Splicing, molQTL_nomP=p_polyA.Splicing, molQTL_Name=P_polyA.Splicing, molQTL_type, EffectSizeDirectionsAsExpected, Dist_from_TopSNP_to_closest_hQTL_TSS,  sQTL_or_hQTL, BensClassification)
 
 sQTL.vs.hQTLs.EffectOnEqtls.ForCarlos <- bind_rows(sQTL.eQTL.colocs.ForCarlos, hQTL.eQTLs.ForCarlos)
 
