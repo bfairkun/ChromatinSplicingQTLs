@@ -185,13 +185,34 @@ volcano.dat %>% filter(dose.nM == 100 & FDR<0.1) %>%
 volcano.dat %>%
   filter(!is.na(FDR)) %>%
 ggplot( aes(x=logFC, y=-log10(PValue), color=FDR<0.1)) +
-  geom_point(alpha=0.5) +
+  geom_point(alpha=0.1) +
   facet_wrap(dataset~dose.nM, scales = "free_y")
 
 volcano.dat %>%
   filter(symbol %in% c("HTT", "SMN2", "GALC", "STAT1", "KCNT2", "FHOD3")) %>%
   arrange(dataset, dose.nM)
   
+
+volcano.dat %>%
+  filter(!is.na(FDR)) %>%
+  mutate(Effect = if_else(FDR<0.1, sign(logFC), NaN )) %>%
+  count(Effect, dose.nM, dataset) %>%
+  arrange(dataset, dose.nM, Effect)
+
+volcano.dat %>%
+  filter(!is.na(FDR)) %>%
+ggplot( aes(x=logFC, y=-log10(PValue), color=FDR<0.1)) +
+  geom_point(alpha=0.5) +
+  facet_wrap(dataset~dose.nM, scales = "free_y")
+
+volcano.dat %>%
+  filter(!is.na(FDR)) %>%
+  ggplot(aes(x=logFC)) +
+  stat_ecdf() +
+  geom_vline(xintercept = 0) +
+  coord_cartesian(xlim=c(-2,2)) +
+  facet_wrap(dataset~dose.nM, scales = "free_y")
+
 ```
 
 ### bar plots of predicted effects

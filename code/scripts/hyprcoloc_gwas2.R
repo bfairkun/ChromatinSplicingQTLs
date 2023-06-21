@@ -11,7 +11,7 @@
 #Use hard coded arguments in interactive R session, else use command line args
 if(interactive()){
     args <- scan(text=
-                 'hyprcoloc/LociWiseSummaryStatsInput/ForGWASColoc/IMSGC2019.txt.gz gwas_summary_stats/StatsForColoc/IMSGC2019.standardized.txt.gz scratch/testhyprcoloc.txt.gz "Expression.Splicing.Subset_YRI polyA.Splicing.Subset_YRI"',
+                 'hyprcoloc/LociWiseSummaryStatsInput/ForGWASColoc/SLEVYSE.txt.gz gwas_summary_stats/StatsForColoc/SLEVYSE.standardized.txt.gz hyprcoloc/Results/ForGWASColoc/GWASColocStandard/Chunks/4.txt.gz "Expression.Splicing Expression.Splicing.Subset_YRI chRNA.Expression.Splicing MetabolicLabelled.30min MetabolicLabelled.60min H3K27AC H3K4ME3 H3K4ME1 H3K36ME3 APA_Nuclear APA_Total polyA.Splicing polyA.Splicing.Subset_YRI chRNA.Splicing ProCap"',
 # 'hyprcoloc/LociWiseSummaryStatsInput/ForGWASColoc/GCST007800.txt.gz gwas_summary_stats/StatsForColoc/GCST007800.standardized.txt.gz hyprcoloc/Results/ForGWASColoc/GWASColocStandard/Chunks/2.txt.gz "Expression.Splicing Expression.Splicing.Subset_YRI chRNA.Expression.Splicing MetabolicLabelled.30min MetabolicLabelled.60min CTCF H3K27AC H3K4ME3 H3K4ME1 H3K36ME3 H3K36ME3_ncRNA ProCap polyA.Splicing polyA.Splicing.Subset_YRI chRNA.Splicing MetabolicLabelled.30min.Splicing MetabolicLabelled.60min.Splicing chRNA.Expression_ncRNA APA_Nuclear APA_Total polyA.IER polyA.IER.Subset_YRI chRNA.IER MetabolicLabelled.30min.IER MetabolicLabelled.60min.IER chRNA.Slopes chRNA.Splicing.Order"',
              what='character')
 } else{
@@ -52,7 +52,7 @@ main <- function(){
 
     for (i in seq_along(Loci)){
 
-        # TestLocus <- Loci[1]
+        # TestLocus <- Loci[2]
         TestLocus <- Loci[i]
         print(paste0("running loci", i, " : ", TestLocus))
 
@@ -144,7 +144,7 @@ main <- function(){
             print("Only one trait... skipping locus")
             next
         }
-        res <- hyprcoloc(betas, ses, trait.names=traits, snp.id=rsid)
+        res <- hyprcoloc(betas, ses, trait.names=traits, snp.id=rsid )
 
         HyprcolocResults.list[[i]] <- 
              res[[1]] %>%

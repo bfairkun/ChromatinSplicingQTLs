@@ -477,9 +477,155 @@ P.PercentJuncsLegend <- ggplot(P.PercentJuncsLegend.dat, aes(x=SuperAnnotation, 
   geom_col() +
   scale_fill_manual(values=P.PercentJuncsLegend.dat %>%
                       dplyr::select(SuperAnnotation, Color) %>% deframe(), labels=c("AnnotatedJunc_UnproductiveCodingGene"="Annotated unproductive", "AnnotatedJunc_ProductiveCodingGene"="Annotated productive", "UnannotatedJunc_ProductiveCodingGene"="Unannotated unproductive", "UnannotatedJunc_UnproductiveCodingGene"="Unannotated productive")) +
-  labs(fill="Intron classification")
+  labs(fill="Intron classification") 
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_Final_Fig_S_ScatterReasonsForJuncClassification.png",Scatter.P, height=12, width=10)
 
 ```
+
+Figure supplement that goes along with this... chRNA vs polyA scatter for junction RPM...
+
+
+```{r}
+juncs.long.summary.ForReasonsPlot <- juncs.long %>%
+  filter(Dataset %in% c("Expression.Splicing", "chRNA.Expression.Splicing")) %>%
+  dplyr::select(chrom, start, stop, strand, Dataset, Count) %>%
+  inner_join(IntronAnnotations) %>%
+  group_by(chrom, start, stop, strand, Dataset, SemiSupergroupAnnotations, SuperAnnotation) %>%
+  summarise(Sum=sum(Count)) %>%
+  ungroup() %>%
+  group_by(Dataset) %>%
+  mutate(TotalSum= sum(Sum)) %>%
+  mutate(RPM = Sum/TotalSum*1E6) %>%
+  ungroup() %>%
+  dplyr::select(-TotalSum) %>%
+  pivot_wider(names_from="Dataset", values_from=c("RPM", "Sum"), values_fill = 0)
+
+juncs.long.summary.ForReasonsPlot %>%
+  distinct(SuperAnnotation, SemiSupergroupAnnotations)
+
+juncs.long.summary.ForReasonsPlot %>%
+  distinct(SuperAnnotation)
+
+SupergroupLabels = c(
+  "AnnotatedJunc_ProductiveCodingGene"="Annotated\nProductive",
+  "UnannotatedJunc_ProductiveCodingGene"="Unannotated\nProductive",
+  "AnnotatedJunc_UnproductiveCodingGene"="Annotated\nUnproductive",
+  "UnannotatedJunc_UnproductiveCodingGene"="Unannotated\nUnproductive",
+  "AnnotatedJunc_NoncodingGene"="Annotated\nNoncoding or hypervariable gene",
+  "UnannotatedJunc_NoncodingGene"="Unannotated\nNoncoding or hypervariable gene")
+
+Orders <- juncs.long.summary.ForReasonsPlot %>%
+  distinct(SuperAnnotation, SemiSupergroupAnnotations) %>%
+  mutate(SuperAnnotation = factor(SuperAnnotation, levels=names(SupergroupLabels))) %>%
+  arrange(SuperAnnotation, SemiSupergroupAnnotations) %>%
+  mutate(rn = row_number())
+
+Scatter.P.dat <- juncs.long.summary.ForReasonsPlot %>%
+  add_count(SemiSupergroupAnnotations) %>%
+  filter(n>100) %>%
+  inner_join(Orders) %>%
+  mutate(SemiSupergroupAnnotations=fct_reorder(SemiSupergroupAnnotations, rn))
+
+
+Scatter.P.dat.summary <- Scatter.P.dat %>%
+  filter(Sum_Expression.Splicing + Sum_chRNA.Expression.Splicing >= 10) %>%
+  mutate(Ratio = RPM_chRNA.Expression.Splicing/RPM_Expression.Splicing) %>%
+  group_by(SemiSupergroupAnnotations, SuperAnnotation, n) %>%
+  summarise(median=round(median(Ratio, na.rm=F), digits=2)) %>%
+  mutate(label = str_glue("n:{n}\nmedian:{median}"))
+
+
+
+Scatter.P <- Scatter.P.dat %>%
+  ggplot(aes(x=RPM_chRNA.Expression.Splicing, y=RPM_Expression.Splicing)) +
+  geom_point(alpha=0.1) +
+  geom_abline(color='red') +
+  geom_density_2d(aes(color=SuperAnnotation)) +
+  geom_text(data = Scatter.P.dat.summary, aes(label=label),x=-Inf, y=Inf, size=3, hjust=0, vjust=1.1) +
+  scale_x_continuous(trans='log10') +
+  scale_y_continuous(trans='log10') +
+  scale_color_manual(values=AnnotationColors %>% dplyr::select(SuperAnnotation, Color) %>% deframe(), na.value="#fb9a99", labels=SupergroupLabels) +
+  facet_wrap(~SemiSupergroupAnnotations, labeller = label_wrap_gen(width=14)) +
+  coord_fixed() +
+  theme(strip.text.x = element_text(size = 7), legend.position="bottom") +
+  guides(colour = guide_legend(nrow = 2)) +
+  labs(title="Reason for splice junction classification", x="chRNA\nRPM across junctions", y="steady-state RNA\nRPM across junctions", color="Intron classification") +
+  Rotate_x_labels
+
+# ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_Final_Fig_S_ScatterReasonsForJuncClassification.pdf",Scatter.P, height=12, width=10)
+
+
+Scatter.P
+
+Scatter.P.NoPoints <- Scatter.P.dat %>%
+  ggplot(aes(x=RPM_chRNA.Expression.Splicing, y=RPM_Expression.Splicing)) +
+  # geom_point(alpha=0.1) +
+  geom_abline(color='red') +
+  geom_density_2d(aes(color=SuperAnnotation)) +
+  geom_text(data = Scatter.P.dat.summary, aes(label=label),x=-Inf, y=Inf, size=3, hjust=0, vjust=1.1) +
+  scale_x_continuous(trans='log10') +
+  scale_y_continuous(trans='log10') +
+  scale_color_manual(values=AnnotationColors %>% dplyr::select(SuperAnnotation, Color) %>% deframe(), na.value="#fb9a99", labels=SupergroupLabels) +
+  facet_wrap(~SemiSupergroupAnnotations, labeller = label_wrap_gen(width=14)) +
+  coord_fixed() +
+  theme(strip.text.x = element_text(size = 7), legend.position="bottom") +
+  guides(colour = guide_legend(nrow = 2)) +
+  labs(title="Reason for splice junction classification", x="chRNA\nRPM across junctions", y="steady-state RNA\nRPM across junctions", color="Intron classification") +
+  Rotate_x_labels
+
+# ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_Final_Fig_S_ScatterReasonsForJuncClassificationNoPoints.pdf",Scatter.P.NoPoints, height=12, width=10)
+
+Scatter.P.dat %>%
+  filter(SemiSupergroupAnnotations=='basic tag') %>%
+  ggplot(aes(x=RPM_chRNA.Expression.Splicing, y=RPM_Expression.Splicing)) +
+  geom_point(alpha=0.1) +
+  geom_abline(color='red') +
+  geom_density_2d(aes(color=SuperAnnotation)) +
+  geom_text(data = Scatter.P.dat.summary %>%
+              filter(SemiSupergroupAnnotations=='basic tag'), aes(label=label),x=-Inf, y=Inf, size=3, hjust=0, vjust=1.1) +
+  scale_x_continuous(trans='log10') +
+  scale_y_continuous(trans='log10') +
+  scale_color_manual(values=AnnotationColors %>% dplyr::select(SuperAnnotation, Color) %>% deframe(), na.value="#fb9a99", labels=SupergroupLabels) +
+  # facet_wrap(~SemiSupergroupAnnotations, labeller = label_wrap_gen(width=14)) +
+  coord_fixed() +
+  theme(strip.text.x = element_text(size = 7), legend.position="none") +
+  guides(colour = guide_legend(nrow = 2)) +
+  labs(x="chRNA\nRPM across junctions", y="steady-state RNA\nRPM across junctions", color="Intron classification") +
+  Rotate_x_labels
+
+# ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_Final_Fig_S_ScatterReasonsForJuncClassification_basicOnly.pdf", height=5, width=5)
+
+# ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_Final_Fig_S_ScatterReasonsForJuncClassification_basicOnly.png", height=5, width=5)
+
+Scatter.P.dat %>%
+  filter(SuperAnnotation%in% c("UnannotatedJunc_UnproductiveCodingGene", "AnnotatedJunc_UnproductiveCodingGene")) %>%
+  ggplot(aes(x=RPM_chRNA.Expression.Splicing, y=RPM_Expression.Splicing)) +
+  geom_point(alpha=0.05) +
+  # geom_hex(bins=100) +
+  geom_abline(color='red') +
+  scale_fill_viridis_c(trans = "log") +
+  # geom_density_2d(color='red') +
+  geom_text(data = . %>%
+              filter(Sum_Expression.Splicing + Sum_chRNA.Expression.Splicing >= 10) %>%
+              mutate(Ratio = RPM_chRNA.Expression.Splicing/RPM_Expression.Splicing) %>%
+              summarise(n=n(), median=round(median(Ratio, na.rm=F), digits=2)) %>%
+              mutate(label = str_glue("n:{n}\nmedian:{median}")),
+            aes(label=label),x=-Inf, y=Inf, size=3, hjust=0, vjust=1.1) +
+  scale_x_continuous(trans='log10') +
+  scale_y_continuous(trans='log10') +
+  coord_fixed() +
+  theme(strip.text.x = element_text(size = 7), legend.position="none") +
+  guides(colour = guide_legend(nrow = 2)) +
+  labs(x="chRNA\nRPM across junctions", y="steady-state RNA\nRPM across junctions", color="Intron classification") +
+  Rotate_x_labels
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_Final_Fig_S_ScatterReasonsForJuncClassification_UnproductiveOnlyPoints.pdf", height=5, width=5)
+
+
+```
+
+
 
 Number eQTLs per gene, hQTLs, sQTLs
 
@@ -1638,7 +1784,7 @@ ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/202
 
 ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_Final_Fig2_hQTLeQTLBetas.pdf",eQTL.H3k27ac.beta, height=2.5, width=10)
 
-
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_Final_Fig_S_ScatterReasonsForJuncClassification.png",Scatter.P, height=12, width=10)
 
 
 

@@ -10,6 +10,40 @@ rule DownloadHg38Ref:
         wget -O- ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_34/gencode.v34.annotation.gtf.gz | zcat > {output.chr_gtf}
         """
 
+rule DownloadGencode_v37:
+    output:
+        chr_gtf = "ReferenceGenome/Annotations/gencode.v37.chromasomal.annotation.gtf.gz"
+    shell:
+        """
+        wget -O {output.chr_gtf} https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_37/gencode.v37.annotation.gtf.gz
+        """
+
+rule GetGeneTypes_Gencode_v37:
+    input:
+        chr_gtf = "ReferenceGenome/Annotations/gencode.v37.chromasomal.annotation.gtf.gz"
+    output:
+        "ReferenceGenome/Annotations/gencode.v37.chromasomal.annotation.GeneTypes.tsv.gz"
+    shell:
+        """
+        zcat {input.chr_gtf} | awk '$3=="gene"' | perl -lne '$_ =~ m/.+gene_id "(.+?)"; gene_type "(.+?)";.+/; print "$1\\t$2"' | gzip - > {output}
+        """
+
+rule UpdateIntronAnnotations:
+    input:
+        IntronAnnotations = "../data/IntronAnnotationsFromYang.tsv.gz",
+        GeneTypes = "ReferenceGenome/Annotations/gencode.v37.chromasomal.annotation.GeneTypes.tsv.gz"
+    output:
+        "../data/IntronAnnotationsFromYang.Updated.tsv.gz"
+    conda:
+        "../envs/r_2.yaml"
+    log:
+        "logs/UpdateIntronAnnotations.log"
+    shell:
+        """
+        Rscript scripts/UpdateYangsIntronAnnotations.R {input.IntronAnnotations} {input.GeneTypes} {output} &> {log}
+        """
+
+
 rule indexHg38Ref:
     input:
         fa = "ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa",
