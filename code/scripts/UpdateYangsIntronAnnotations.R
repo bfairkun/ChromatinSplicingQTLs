@@ -47,7 +47,7 @@ NewIntronAnnotations <- IntronAnnotations %>%
         !type == "protein_coding" & IsAnnotated == "UnannotatedJunc" ~ "UnannotatedJunc_NoncodingJunc"
 
                                        )) %>%
-    dplyr::select(chrom, start, end, NewAnnotation, gene, symbol, SuperAnnotation, SemiSupergroupAnnotations, gene_type=type)
+    dplyr::select(chrom, start, end, strand, NewAnnotation, gene, symbol, SuperAnnotation, SemiSupergroupAnnotations, gene_type=type)
 
 IntronAnnotations %>%
     count(SuperAnnotation)
