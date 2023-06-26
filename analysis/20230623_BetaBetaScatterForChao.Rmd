@@ -1,0 +1,163 @@
+---
+title: "20230626_betaBetaForChao"
+output: html_document
+date: '2023-06-26'
+---
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+
+library(tidyverse)
+library(RColorBrewer)
+library(data.table)
+library(broom)
+
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family="Helvetica")))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+```
+
+The sQTL beta vs eQTL beta scatter result hasn't been reproduced by Chao, at least not to the extent that I saw a strong negative correlation (spearman rho~0.4) in polyA eQTL vs polyA sQTL for unproductive introns. Let me reproduce that plot here so Chao can better troubleshoot exactly what the discrepancy is.
+
+
+## Read in data
+
+I `/project2/yangili1/bjf79/ChromatinSplicingQTLs/code/pi1/PairwisePi1Traits.P.all.txt.gz` is a file where I take all the top SNPs for a trait (P1), and lookup the corresponding summary stats for a second trait (P2). Every phenotype has a phenotype class (PC; PC1 for P1, or PC2 for P2). Chao, feel free to use this file and inspect it, sorry if the column labels are confusing. From this file, the general approach will be to look for sQTLs (where P1 is splicing trait), and look at the effect sizes in expression traits (where P2 is an expression trait), while filtering out sQTLs where any P2 is a significant hQTL. All P1's in this file are significant (FDR<0.1).
+
+```{r}
+PC1.PossibleValues <- c("polyA.Splicing")
+PC2.PossibleValues <-c("Expression.Splicing", "chRNA.Expression.Splicing","H3K4ME3", "H3K36ME3", "H3K27AC", "H3K4ME1", "MetabolicLabelled.30min", "MetabolicLabelled.60min")
+
+
+dat <- fread("../code/pi1/PairwisePi1Traits.P.all.txt.gz") %>%
+  filter((PC1 %in% PC1.PossibleValues) & (PC2 %in% PC2.PossibleValues))
+
+head(dat)
+
+Intron.Annotations <- read_tsv("../data/IntronAnnotationsFromYang.tsv.gz") %>%
+  mutate(IntronName = paste(chrom, start, end, strand, sep=":"))
+```
+
+Let me do a little data tidying before plotting...
+
+```{r}
+dat.sQTLs.eQTLs.ForScatter <- dat %>%
+  mutate(IntronName = str_replace(P1, "^(.+?:)clu_.+?([+-])$", "chr\\1\\2")) %>%
+  mutate(ClusterName =  str_replace(P1, "^(.+?:).+?(clu_.+?[+-])$", "chr\\1\\2")) %>%
+  left_join(Intron.Annotations)
+
+PC1.filter = c("polyA.Splicing")
+PC2.filter = c( "chRNA.Expression.Splicing" , "MetabolicLabelled.30min", "MetabolicLabelled.60min", "Expression.Splicing")
+PC2.SignificanceFilter <- c("H3K4ME3", "H3K27AC", "H3K36ME3")
+
+
+dat.sQTLs.eQTLs.ForScatter.ToPlot <- dat.sQTLs.eQTLs.ForScatter %>%
+  # filter for sQTLs, where P1 is a splicing trait
+  filter(PC1 %in% PC1.filter) %>%
+  
+  # sanity check filter to make sure I am looking at junctions in the gene that I am supposed to be. The GeneLocus is the gene intersecting the junction from my file, the gene is the gene from Yangs splice junction annotations
+  filter(GeneLocus == gene) %>%
+  
+  # sanity check filter to make sure I am looking at significant sQTLs, even though they should already be filtered for that
+  filter(FDR.x < 0.1) %>%
+  
+   # filter out any sQTLs where the topSNP is nominally significant for any H3K4ME3, H3K27AC, or H3K36ME3 trait
+  group_by(P1) %>%
+  filter(!any((PC2 %in% PC2.SignificanceFilter) & (trait.x.p.in.y < 0.01))) %>%
+  ungroup() %>%
+  
+  # filter for rows where P2 is an expression trait
+  filter(PC2 %in% PC2.filter) %>%
+
+  # filter out the sQTLs in non protein coding genes
+  filter(SuperAnnotation %in% c("UnannotatedJunc_UnproductiveCodingGene", "AnnotatedJunc_ProductiveCodingGene", "AnnotatedJunc_UnproductiveCodingGene", "UnannotatedJunc_ProductiveCodingGene")) %>%
+  
+  # clasify sQTLs as unproductive if any of the introns in the cluster are unproductive introns.
+  group_by(PC1, ClusterName) %>%
+  mutate(sQTL_type = case_when(
+    any(SuperAnnotation %in% c("UnannotatedJunc_UnproductiveCodingGene", "AnnotatedJunc_UnproductiveCodingGene")) ~ "Unproductive sQTL",
+    TRUE ~ "Productive sQTL"
+    )) %>%
+  ungroup() %>%
+  
+  # For simplicity in downstream step, recode introns as either unrproductive or productive
+  mutate(ProductiveOrUnproductive_junction = recode(SuperAnnotation, "UnannotatedJunc_UnproductiveCodingGene"="Unproductive junc", "AnnotatedJunc_ProductiveCodingGene"="Productive junc", "AnnotatedJunc_UnproductiveCodingGene"="Unproductive junc", "UnannotatedJunc_ProductiveCodingGene"="Productive junc")) %>%
+  
+  # Keep just the strongest unproductive junction per unproductive sQTL, and the strongest productive junction per productive sQTL
+  group_by(ClusterName, P2, ProductiveOrUnproductive_junction) %>%
+  filter(abs(beta.x) == max(abs(beta.x))) %>%
+  ungroup() %>%
+  
+  # sanity check that I am only plotting one point per gene in each facet. The previous filter for max(beta) might actually still keep more than one intron if there are ties.
+  group_by(ClusterName, PC2, P2, ProductiveOrUnproductive_junction) %>%
+  sample_n(1) %>%
+  ungroup() %>%
+
+  # recode some things for better labels
+  mutate(PC2 = recode(PC2, !!!c("chRNA.Expression.Splicing"="chRNA" , "MetabolicLabelled.30min"="30min 4sU", "MetabolicLabelled.60min"="60min 4sU", "Expression.Splicing"="polyA"))) %>%
+  # redefine factor levels so order of facets is sensible
+  mutate(PC2 = factor(PC2, levels=c("chRNA", "30min 4sU", "60min 4sU", "polyA"))) %>%
+  mutate(sQTL_int_type = str_glue("{sQTL_type}\n{ProductiveOrUnproductive_junction}"))
+
+
+
+
+dat.sQTLs.eQTLs.ForScatter.ToPlot.labels <- dat.sQTLs.eQTLs.ForScatter.ToPlot %>%
+  count(sQTL_int_type, PC2) %>%
+  distinct(sQTL_int_type, .keep_all=T) %>%
+  dplyr::select(n, sQTL_int_type) %>%
+  mutate(AnnotationLabel = paste0(sQTL_int_type, " (n=", n, ")"))
+
+
+dat.sQTLs.eQTLs.ForScatter.ToPlot %>%
+  distinct(ClusterName, .keep_all=T) %>%
+  count(sQTL_type)
+
+
+sQTL.eQTL.beta.beta <- dat.sQTLs.eQTLs.ForScatter.ToPlot %>%
+  left_join(dat.sQTLs.eQTLs.ForScatter.ToPlot.labels, by="sQTL_int_type") %>%
+  nest(-sQTL_int_type, -PC2) %>% 
+  mutate(cor=map(data,~cor.test(.x$beta.x, .x$x.beta.in.y, method = "sp"))) %>%
+  mutate(tidied = map(cor, tidy)) %>% 
+  unnest(tidied, .drop = T) %>%
+  unnest(data) %>%
+ggplot(aes(x=beta.x, y=x.beta.in.y, color=ProductiveOrUnproductive_junction)) +
+    geom_point(alpha=0.1) +
+    # geom_smooth(method = "tls", se = FALSE, color = "red", method='bootstrap') +
+    # geom_smooth(method='lm', color='black') +
+    geom_vline(xintercept=0, linetype='dashed') +
+    geom_hline(yintercept=0, linetype='dashed') +
+    scale_color_manual(values=c("Productive junc"="#1f78b4", "Unproductive junc"="#e31a1c")) +
+    geom_abline(data = . %>%
+                  distinct(AnnotationLabel, PC2, .keep_all=T),
+                aes(slope=estimate, intercept=0), size=2) +
+    geom_text(
+    data = . %>%
+        distinct(AnnotationLabel, PC2, .keep_all=T) %>%
+        mutate(R=signif(estimate, 3), P=format.pval(p.value, 3)) %>%
+      mutate(label = str_glue("rho:{R}\nP:{P}")),
+    aes(x=-Inf, y=-Inf, label=label),
+    hjust=-.1, vjust=-0.1, color='black', size=6
+    ) +
+    facet_grid(AnnotationLabel ~ PC2, labeller = label_wrap_gen(10)) +
+    theme(strip.text = element_text(size = 12), legend.position='none') +
+  labs(caption = "FDR<10% sQTLs. sQTLs with nominal P<0.01 for H3K36me3, H3K27Ac, or H3K4me3 removed\nOnly top sQTL per cluster plotted", y="host gene eQTL beta", x="sQTL beta")
+
+sQTL.eQTL.beta.beta
+
+
+```
+
+The numbers of unproductive sQTLs is a bit more than my previous plot. At the moment I don't have time to go through my code to figure out exactly why there are 1498 unproductive sQTL clusters here, instead of the like 998 that i previously plotted. But I *think* this is still right.
+
+Let me write out the underlying data for Chao
+
+```{r, eval=F}
+write_tsv(dat.sQTLs.eQTLs.ForScatter.ToPlot, "/project2/yangili1/bjf79/scratch/DataForChao.tsv.gz")
+```
+
