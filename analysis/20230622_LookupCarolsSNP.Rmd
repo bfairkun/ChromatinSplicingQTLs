@@ -1,0 +1,54 @@
+---
+title: "20230623_LookUpQTLsForCarolsSNP"
+output: html_document
+date: '2023-06-22'
+---
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+
+library(tidyverse)
+library(RColorBrewer)
+library(data.table)
+library(edgeR)
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family="Helvetica")))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+
+#test plot
+ggplot(mtcars, aes(x=mpg, y=cyl)) +
+  geom_point()
+
+```
+## Intro
+
+Carol (Ober?) was specifically interested in the possible molQTL effects of chr17:39913696.
+
+I grabbed the molQTL summary stats from our datasets:
+
+```{r}
+dat.header.types <- read_tsv("../code/scratch/QTL_tests_chr17_39913696/APA_Nuclear.txt") %>% sapply(class)
+
+dat <- Sys.glob("../code/scratch/QTL_tests_chr17_39913696/*.txt") %>%
+  setNames(str_replace(., "../code/scratch/QTL_tests_chr17_39913696/(.+?).txt", "\\1")) %>%
+  lapply(read_tsv, col_types=dat.header.types) %>%
+  bind_rows(.id="Molecular_QTL_type")
+
+dat$Molecular_QTL_type %>% unique()
+
+dat %>%
+  mutate(Phenotype=str_replace(`#phe_id`,"(^.+):(EN.+$)", "\\1;\\2")) %>%
+  separate(Phenotype, into=c("MolecularTrait", "GeneRegion"), sep=";") %>%
+  distinct(MolecularTrait, .keep_all=T) %>%
+  arrange(nom_pval) %>%
+  mutate(BH.Adjust.p = p.adjust(nom_pval, method = "BH")) %>%
+  mutate(Molecular_QTL_type = recode(Molecular_QTL_type, "Expression.Splicing"="GeneExpression.FromAllGeuvadis", "Expression.Splicing.Subset_YRI"="GeneExpression.FromGeuvadisYRISubset", "polyA.Splicing.Subset_YRI"="polyA.Splicing.FromAllGeuvadis", "polyA.Splicing.Subset_YRI" ="polyA.Splicing.FromGeuvadisYRISubset", "chRNA.Expression.Splicing"="chRNA.GeneExpression", "MetabolicLabelled.30min"="MetabolicLabelled.30min.GeneExpression", "MetabolicLabelled.60min"="MetabolicLabelled.60min.GeneExpression")) %>%
+  write_tsv("../code/scratch/QTL_tests_chr17_39913696.summarystats.tsv")
+
+```
+

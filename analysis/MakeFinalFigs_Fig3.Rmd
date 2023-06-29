@@ -30,6 +30,128 @@ Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust
 
 ## Intro
 
+Fig GTEx thing
+
+```{r}
+dat <- read_tsv("../code/scratch/Tidy.SummaryStats.eQTLsQTLhQTL.tsv.gz") %>%
+  mutate(beta.diff = beta_GTEx-eQTL_beta) %>%
+  mutate(Z = beta.diff/sqrt(eQTL_beta_se**2 + betaSE_GTEx**2)) %>%
+  mutate(TestDifferenceInBeta.P = pnorm(abs(Z), lower.tail=F)*2) 
+
+
+dat %>%
+  ggplot(aes(x=TestDifferenceInBeta.P)) +
+  geom_histogram()
+
+dat %>%
+  filter(EffectSizeDirectionsAsExpected) %>%
+  filter(!(beta_GTEx == 0 & betaSE_GTEx==0)) %>%
+  filter(molQTL_type %in% c("polyA.Splicing", "H3K27AC")) %>%
+  distinct(tissue, TopSNP, eGene, .keep_all=T) %>%
+  group_by(TopSNP, eGene, sQTL_or_hQTL) %>%
+  summarise(MeanBetaDiff = median(beta.diff)) %>%
+  ungroup() %>%
+  ggplot(aes(x=abs(MeanBetaDiff), color=sQTL_or_hQTL)) +
+  stat_ecdf()
+
+
+  
+
+test <- dat %>%
+  filter(EffectSizeDirectionsAsExpected) %>%
+  filter(!(beta_GTEx == 0 & betaSE_GTEx==0)) %>%
+  filter(molQTL_type %in% c("polyA.Splicing", "H3K27AC")) %>%
+  distinct(tissue, TopSNP, eGene, .keep_all=T) %>%
+  group_by(TopSNP, eGene, sQTL_or_hQTL) %>%
+  summarise(MeanBetaDiff = abs(median(beta.diff))) %>%
+  ungroup() %>%
+  wilcox.test(MeanBetaDiff~sQTL_or_hQTL, data=.)
+
+```
+
+
+Let's more carefully look for difference between beta difference and distance from SNP to TSS
+
+```{r}
+dat %>%
+  filter(EffectSizeDirectionsAsExpected) %>%
+  filter(!(beta_GTEx == 0 & betaSE_GTEx==0)) %>%
+  filter(molQTL_type %in% c("polyA.Splicing", "H3K27AC")) %>%
+  distinct(tissue, TopSNP, eGene, .keep_all=T) %>%
+  group_by(TopSNP, eGene, sQTL_or_hQTL) %>%
+  mutate(MeanBetaDiff = median(beta.diff)) %>%
+  ungroup() %>%
+  distinct(TopSNP, eGene, sQTL_or_hQTL, .keep_all=T) %>%
+  filter(TopSNPFinemapPr > 0.9) %>%
+  ggplot(aes(x=abs(MeanBetaDiff), y=Dist_from_TopSNP_to_closest_hQTL_TSS)) +
+  geom_point() +
+  scale_y_continuous(trans='log10')
+
+dat.totest <- dat %>%
+  filter(EffectSizeDirectionsAsExpected) %>%
+  filter(!(beta_GTEx == 0 & betaSE_GTEx==0)) %>%
+  filter(molQTL_type %in% c("polyA.Splicing", "H3K27AC")) %>%
+  distinct(tissue, TopSNP, eGene, .keep_all=T) %>%
+  group_by(TopSNP, eGene, sQTL_or_hQTL) %>%
+  mutate(MeanBetaDiff = median(beta.diff)) %>%
+  ungroup() %>%
+  distinct(TopSNP, eGene, sQTL_or_hQTL, .keep_all=T) %>%
+  filter(sQTL_or_hQTL=="hQTL") %>%
+  mutate(absMeanBetaDiff = abs(MeanBetaDiff)) %>%
+  filter(TopSNPFinemapPr > 0.9)
+
+cor.test(dat.totest$Dist_from_TopSNP_to_closest_hQTL_TSS, dat.totest$absMeanBetaDiff, method='s')
+```
+
+
+```{r}
+dat.Distinct.H3k27ac <-   dat %>%
+  filter(EffectSizeDirectionsAsExpected) %>%
+  filter(!(beta_GTEx == 0 & betaSE_GTEx==0)) %>%
+  filter(molQTL_type %in% c("polyA.Splicing", "H3K27AC")) %>%
+  distinct(TopSNP, eGene, tissue, .keep_all=T)
+
+Ordered_eGenes <- dat.Distinct.H3k27ac %>%
+  distinct(TopSNP, eGene, .keep_all=T) %>%
+  arrange(eQTL_beta) %>%
+  pull(eGene)
+
+
+dat.toplot <- bind_rows(
+  dat.Distinct.H3k27ac %>%
+    dplyr::select(eGene,beta=beta_GTEx, tissue, sQTL_or_hQTL, BensClassification),
+  dat.Distinct.H3k27ac %>%
+    distinct(TopSNP, eGene, .keep_all=T) %>%
+    mutate(tissue="LCL_Geuvadis") %>%
+    dplyr::select(eGene, beta=eQTL_beta, tissue, sQTL_or_hQTL, BensClassification) 
+) %>%
+  mutate(tissue = relevel(factor(tissue), ref="LCL_Geuvadis")) %>%
+  mutate(eGene = factor(eGene, levels=Ordered_eGenes))
+ggplot(dat.toplot, aes(fill=beta, x=tissue, y=eGene)) +
+  geom_raster() +
+  facet_wrap(~sQTL_or_hQTL, scales="free") +
+  scale_fill_gradient2() +
+  Rotate_x_labels
+
+dat.toplot %>%
+  group_by(eGene, sQTL_or_hQTL, BensClassification) %>%
+  summarise(beta_sd = sd(beta)) %>%
+  ungroup() %>%
+  ggplot(aes(x=beta_sd, color=sQTL_or_hQTL)) +
+  stat_ecdf() +
+  labs(x="sd(beta) across GTEx 46 tissues")
+
+dat.toplot %>%
+  group_by(eGene, sQTL_or_hQTL, BensClassification) %>%
+  summarise(beta_sd = sd(beta)) %>%
+  ungroup() %>%
+  wilcox.test(beta_sd~sQTL_or_hQTL, data=.)
+
+
+dat.toplot$tissue %>% unique()
+```
+
+
 Fig3C
 
 ```{r}
@@ -54,7 +176,59 @@ hyprcoloc.results <- read_tsv("../code/hyprcoloc/Results/ForGWASColoc/GWASColoc_
   inner_join(gwas.traits %>%
                dplyr::select(1:2))
 
-hyprcoloc.results$gwas.trait %>% unique()
+hyprcoloc.results$gwas.trait %>% unique() %>% sort()
+
+hyprcoloc.results %>%
+  filter(gwas.trait == "Multiple sclerosis" & ColocalizedClusterContainsGWASTrait)
+
+
+MS.dat <- read_tsv("../code/gwas_summary_stats/StatsForColoc/TRANSETHNICRA.standardized.txt.gz")
+
+sample_n_of <- function(data, size, ...) {
+  dots <- quos(...)
+  
+  group_ids <- data %>% 
+    group_by(!!! dots) %>% 
+    group_indices()
+  
+  sampled_groups <- sample(unique(group_ids), size)
+  
+  data %>% 
+    filter(group_ids %in% sampled_groups)
+}
+
+RA.dat %>%
+  sample_n_of(10, loci) %>%
+  mutate(z=beta/SE)
+
+RA.dat %>% count(loci)
+
+
+```
+
+
+### MS locus For yang's grant
+
+```{r}
+
+# hyprcoloc/LociWiseSummaryStatsInput/ForGWASColoc/TRANSETHNICRA.txt.gz gwas_summary_stats/StatsForColoc/TRANSETHNICRA.standardized.txt.gz 
+
+SummaryStats <- fread("../code/hyprcoloc/LociWiseSummaryStatsInput/ForGWASColoc/IMSGC2019.txt.gz", nrows=Inf) %>%
+        separate(snp, into=c("chrom", "pos", "A1_mol", "A2_mol"), sep=":", convert=T, remove=F) %>%
+        mutate(chrom = paste0("chr", chrom)) %>%
+        mutate(gwas_locus = str_replace(gwas_locus, "(.+?)_(.+?)_.+_(.+?)$", "\\1_\\2_\\3"))
+
+
+Gwas_SummaryStats <- fread("../code/gwas_summary_stats/StatsForColoc/IMSGC2019.standardized.txt.gz") %>%
+        mutate(phenotype = str_replace(loci, "(.+?)_(.+?)_N_N_(.+)$", "\\1_\\2_\\3")) %>%
+        dplyr::select(chrom, pos=start, phenotype, beta, beta_se=SE, A1, A2)
+
+SummaryStats %>%
+  filter(phenotype== "ENSG00000067182.8")
+
+
+SummaryStats$phenotype %>% unique()
+  
 
 ```
 

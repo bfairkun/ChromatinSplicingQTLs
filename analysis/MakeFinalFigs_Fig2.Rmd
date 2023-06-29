@@ -1335,6 +1335,7 @@ dat.sQTLs.eQTLs.ForScatter.ToPlot.labels <- dat.sQTLs.eQTLs.ForScatter.ToPlot %>
 
 library(broom)
 
+
 sQTL.eQTL.beta.beta <- dat.sQTLs.eQTLs.ForScatter.ToPlot %>%
   left_join(dat.sQTLs.eQTLs.ForScatter.ToPlot.labels, by="SuperAnnotation") %>%
   nest(-SuperAnnotationLabel, -PC2) %>% 
