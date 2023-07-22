@@ -285,3 +285,22 @@ rule CollectTES_TSS:
                GTFType = ["GTFTools_BasicAnnotations", "GTFTools"], TES_or_TSS = ["TSS", "TES"],
                sample = all_long_reads)
 
+rule collect_NMD_KD:
+    input:
+        expand("Alignments/STAR_Align/NMD_KD/HeLa.scr/{IndID}/1/Filtered.bam", IndID=['SRR4081222', 'SRR4081223', 'SRR4081224',
+        'SRR4081237', 'SRR4081238', 'SRR4081239']),
+        expand("Alignments/STAR_Align/NMD_KD/HeLa.SMG6.KD/{IndID}/1/Filtered.bam", IndID=['SRR4081231', 'SRR4081232', 'SRR4081233']),
+        expand("Alignments/STAR_Align/NMD_KD/HeLa.SMG7.KD/{IndID}/1/Filtered.bam", IndID=['SRR4081240', 'SRR4081241', 'SRR4081242']),
+        expand("Alignments/STAR_Align/NMD_KD/HeLa.UPF1.KD/{IndID}/1/Filtered.bam", IndID=['SRR4081225', 'SRR4081226', 'SRR4081227']),
+        expand("Alignments/STAR_Align/NMD_KD/HeLa.dKD/{IndID}/1/Filtered.bam", IndID=['SRR4081246', 'SRR4081247', 'SRR4081248']),
+        expand("SplicingAnalysis/NMD_KD/juncfiles/autosomes/HeLa.scr_{IndID}_1.junc", IndID=['SRR4081222', 'SRR4081223',
+        'SRR4081224', 'SRR4081237', 'SRR4081238', 'SRR4081239']),
+        expand("SplicingAnalysis/NMD_KD/juncfiles/autosomes/HeLa.SMG6.KD_{IndID}_1.junc", IndID=['SRR4081231', 'SRR4081232', 'SRR4081233']),
+        expand("SplicingAnalysis/NMD_KD/juncfiles/autosomes/HeLa.SMG7.KD_{IndID}_1.junc", IndID=['SRR4081240', 'SRR4081241', 'SRR4081242']),
+        expand("SplicingAnalysis/NMD_KD/juncfiles/autosomes/HeLa.UPF1.KD_{IndID}_1.junc", IndID=['SRR4081225', 'SRR4081226', 'SRR4081227']),
+        expand("SplicingAnalysis/NMD_KD/juncfiles/autosomes/HeLa.dKD_{IndID}_1.junc", IndID=['SRR4081246', 'SRR4081247', 'SRR4081248']),
+        "SplicingAnalysis/CombinedJuncTables/NMD_KD.tsv.gz"
+        
+        
+        
+        

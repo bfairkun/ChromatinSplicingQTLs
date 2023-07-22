@@ -213,3 +213,26 @@ rule IdentifyBrianasSamples:
 rule GatherIdentifyBrianasSamples:
     input:
         expand("QC/mbvLongReads/data/{sample}.txt", sample=["GM1", "GM2", "GM3", "GM4", "GM5", "GM6", "GM7", "GM8", "GM9", "GM10"])
+        
+rule GetLongReadCassette:
+    input:
+        "LongReads/Junctions/{sample}.junc.gz"
+    output:
+        "LongReads/Exons/{sample}.cassette_exons.tab.gz"
+    wildcard_constraints:
+        sample = '|'.join(all_long_reads)
+    log:
+        "logs/LongReads/CassetteExons/{sample}.log"
+    resources:
+        mem_mb = 58000
+    conda:
+        "../envs/py_tools.yml"
+    shell:
+        """
+        python scripts/get_longread_cassette_exons.py {input} {output} &> {log}
+        """
+        
+rule GetLongReadCassettes:
+    input:
+        expand("LongReads/Exons/{sample}.cassette_exons.tab.gz", sample=all_long_reads)
+     

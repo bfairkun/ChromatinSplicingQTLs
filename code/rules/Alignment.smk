@@ -79,6 +79,14 @@ rule STAR_make_index:
         module load STAR/2.7.7a
         STAR --runMode genomeGenerate --genomeSAsparseD 2 --runThreadN {threads} --genomeDir {params.genomeDir} --sjdbGTFfile {input.gtf} --genomeFastaFiles {input.fasta} &> {log}
         """
+        
+use rule STAR_make_index as STAR_make_index_277a with:
+    output:
+        index = "ReferenceGenome/STARIndex_277a/chrLength.txt",
+    log:
+        "logs/STAR_make_index._277a.log"
+    params:
+        genomeDir = "ReferenceGenome/STARIndex_277a/"
 
 rule MakeDummyVcfForSTAR_WASP_MODE:
     """
@@ -150,6 +158,51 @@ use rule STAR_Align_WASP as STAR_Align_WASP_SE with:
     wildcard_constraints:
         Phenotype = "MetabolicLabelled.30min|MetabolicLabelled.60min|ProCap"
 
+
+rule STAR_Align_KD_experiments:
+    input:
+        index = "ReferenceGenome/STARIndex_277a/chrLength.txt",
+        R1 = "NMD_KD/{Phenotype}/{IndID}.fastq.gz",
+    wildcard_constraints:
+        Phenotype = "HeLa.scr|HeLa.UPF1.KD|HeLa.SMG6.KD|HeLa.SMG7.KD|HeLa.dKD",
+        IndID = '|'.join(NMD_KD_accessions)
+    output:
+        bam = temp("Alignments/STAR_Align/NMD_KD/{Phenotype}/{IndID}/1/Aligned.sortedByCoord.out.bam"),
+        align_log = "Alignments/STAR_Align/NMD_KD/{Phenotype}/{IndID}/1/Log.final.out"
+    resources:
+        cpus_per_node = 9,
+        mem = 58000,
+    threads: 8
+    params:
+        readMapNumber = -1,
+        ENCODE_params = "--outFilterType BySJout --outFilterMultimapNmax 20  --alignSJoverhangMin 8 --alignSJDBoverhangMin 1 --outFilterMismatchNmax 999 --outFilterMismatchNoverReadLmax 0.04 --alignIntronMin 20 --alignIntronMax 1000000 --alignMatesGapMax 1000000",
+        JunctionScore = GetSTARJunctionScoreParams,
+        PrefixPrefix =  "Alignments/STAR_Align/NMD_KD/"
+    log:
+        "logs/STAR_Align_NMD/{Phenotype}/{IndID}.1.log",
+    shell:
+        """
+        STAR --readMapNumber {params.readMapNumber} {params.JunctionScore} --outFileNamePrefix {params.PrefixPrefix}/{wildcards.Phenotype}/{wildcards.IndID}/1/ --genomeDir ReferenceGenome/STARIndex_277a/ --readFilesIn {input.R1} --outSAMtype BAM SortedByCoordinate --readFilesCommand zcat --runThreadN {threads} --outSAMmultNmax 1 --limitBAMsortRAM 16000000000 {params.ENCODE_params} --outSAMstrandField intronMotif  &> {log}
+        """
+
+rule FilterBAM_KD_experiments:
+    input:
+        bam = "Alignments/STAR_Align/NMD_KD/{Phenotype}/{IndID}/1/Aligned.sortedByCoord.out.bam"
+    output:
+        bam = "Alignments/STAR_Align/NMD_KD/{Phenotype}/{IndID}/1/Filtered.bam",
+        bai = "Alignments/STAR_Align/NMD_KD/{Phenotype}/{IndID}/1/Filtered.bam.bai",
+    log:
+        "logs/FilterBAM_NMD/{Phenotype}/{IndID}.1.log"
+    wildcard_constraints:
+        Phenotype = "HeLa.scr|HeLa.UPF1.KD|HeLa.SMG6.KD|HeLa.SMG7.KD|HeLa.dKD",
+        IndID = '|'.join(NMD_KD_accessions)
+    resources:
+        mem = much_more_mem_after_first_attempt
+    shell:
+        """
+        (samtools view -bh -F 256 {input.bam} > {output.bam}) &> {log}
+        samtools index {output.bam} &>> {log}
+        """
 
 rule FilterBAM_WaspTags:
     input:

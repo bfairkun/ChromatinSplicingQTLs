@@ -20,6 +20,32 @@ rule ExtractJuncs:
         done
         cat {output.junc} > {output.junc_autosomes}
         """
+        
+rule ExtractJuncs_NMD_KD:
+    input:
+        bam = "Alignments/STAR_Align/NMD_KD/{Phenotype}/{IndID}/1/Filtered.bam",
+        bai = "Alignments/STAR_Align/NMD_KD/{Phenotype}/{IndID}/1/Filtered.bam.bai", 
+    output:
+        junc = temp(expand("SplicingAnalysis/NMD_KD/juncfiles/chr{chrom}/{{Phenotype}}_{{IndID}}_{{Rep}}.junc", chrom=autosomes)),
+        junc_autosomes = "SplicingAnalysis/NMD_KD/juncfiles/autosomes/{Phenotype}_{IndID}_{Rep}.junc",
+    wildcard_constraints:
+        Phenotype = "HeLa.scr|HeLa.UPF1.KD|HeLa.SMG6.KD|HeLa.SMG7.KD|HeLa.dKD",
+        IndID = '|'.join(NMD_KD_accessions),
+        Rep = '1'
+    params:
+        strand = 0
+    conda:
+        "../envs/regtools.yml"
+    log:
+        "logs/ExtractJuncs_NMD_KD/{Phenotype}/{IndID}.{Rep}.log"
+    shell:
+        """
+        for chrom in {autosomes}
+        do
+            (regtools junctions extract -m 20 -s {params.strand} -r chr${{chrom}} {input.bam} > SplicingAnalysis/NMD_KD/juncfiles/chr${{chrom}}/{wildcards.Phenotype}_{wildcards.IndID}_{wildcards.Rep}.junc ) &> {log}
+        done
+        cat {output.junc} > {output.junc_autosomes}
+        """
 
 rule make_leafcutter_juncfile:
     input:
@@ -49,6 +75,17 @@ rule MakeLongJuncTable:
         """
         awk -F'\\t' -v OFS='\\t' 'BEGIN {{print "chrom", "start", "stop", "strand","Dataset", "IndID", "RepNumber", "Count"}} {{n=split(FILENAME, f, "/"); split(f[n], b, "_"); split($11, a, ","); print $1, $2+a[1], $3-a[2], $6, b[1],b[2],b[3], $5}}' {input} | gzip > {output}
         """
+
+use rule MakeLongJuncTable as MakeLongJuncTable_NMD_KD with:
+    input:
+        expand("SplicingAnalysis/NMD_KD/juncfiles/autosomes/HeLa.scr_{IndID}_1.junc", IndID=['SRR4081222', 'SRR4081223',
+        'SRR4081224', 'SRR4081237', 'SRR4081238', 'SRR4081239']),
+        expand("SplicingAnalysis/NMD_KD/juncfiles/autosomes/HeLa.SMG6.KD_{IndID}_1.junc", IndID=['SRR4081231', 'SRR4081232', 'SRR4081233']),
+        expand("SplicingAnalysis/NMD_KD/juncfiles/autosomes/HeLa.SMG7.KD_{IndID}_1.junc", IndID=['SRR4081240', 'SRR4081241', 'SRR4081242']),
+        expand("SplicingAnalysis/NMD_KD/juncfiles/autosomes/HeLa.UPF1.KD_{IndID}_1.junc", IndID=['SRR4081225', 'SRR4081226', 'SRR4081227']),
+        expand("SplicingAnalysis/NMD_KD/juncfiles/autosomes/HeLa.dKD_{IndID}_1.junc", IndID=['SRR4081246', 'SRR4081247', 'SRR4081248']),
+    output:
+        "SplicingAnalysis/CombinedJuncTables/NMD_KD.tsv.gz"
 
 use rule MakeLongJuncTable as MakeLongJuncTable_YRI with:
     input:
