@@ -371,3 +371,9 @@ gtex_tissues = ['adipose_subcutaneous',
 'uterus',    
 'vagina',               
 'whole_blood']
+
+NMD_KD_accessions = []
+with open('../data/KD.SRR_Acc_List.txt', 'r') as fh:
+    for line in fh:
+        NMD_KD_accessions.append(line.rstrip())
+        

@@ -152,20 +152,20 @@ for (gene in genes) {
     
     print(sus$susie.out$sets$cs)
     
-    susie_rdata_file <- paste0('FineMapping/susie_runs_', Subset, '/', gene, '.RData')
+#     susie_rdata_file <- paste0('FineMapping/susie_runs_', Subset, '/', gene, '.RData')
     
-    save(sus$susie.out, file = susie_rdata_file)
+#     save(sus$susie.out, file = susie_rdata_file)
     
     credible_sets <- names(sus$susie.out$sets$cs) 
     
     for (cs in credible_sets){
         cs_idx <- sus$susie.out$sets$cs[[cs]]
         cs_names <- c(cs_names, rep(cs, length(cs_idx)))
-        vars <- sus$nominal.gene[cs_idx,] %>% select('var_id') 
-        vars <- vars[[1]] %>% as.vector()
+        vars <- sus$nominal.gene[cs_idx,] %>% pull('var_id') %>% as.vector()
+#         vars <- vars[[1]] %>% as.vector()
         cs_vars <- c(cs_vars, vars)
         
-        vars_all <- sus$nominal.gene %>% select('var_id')[[1]] %>% as.vector()
+        vars_all <- sus$nominal.gene %>% pull('var_id') %>% as.vector()
         all_vars <- c(all_vars, vars_all)
         
         cs_gene <- c(cs_gene, rep(gene, length(cs_idx)))
@@ -191,10 +191,10 @@ for (gene in genes) {
         z_all <- sus$susie.input$Z %>% as.vector()
         pval_all <- sus$susie.input$nom.pval %>% as.vector()
         
-        all_beta <- c(all_beta, beta)
-        all_beta_se <- c(all_beta_se, beta_se)
-        all_z <- c(all_z, z)
-        all_pval <- c(all_pval, pval)
+        all_beta <- c(all_beta, beta_all)
+        all_beta_se <- c(all_beta_se, beta_se_all)
+        all_z <- c(all_z, z_all)
+        all_pval <- c(all_pval, pval_all)
     }
     
 }
@@ -208,6 +208,16 @@ cs_beta_se %>% length %>% print()
 cs_z %>% length %>% print()
 cs_pval %>% length %>% print()
 
+print('split')
+
+all_gene %>% length %>% print()
+all_vars %>% length %>% print()
+all_pip %>% length %>% print()
+all_beta %>% length %>% print()
+all_beta_se %>% length %>% print()
+all_z %>% length %>% print()
+all_pval %>% length %>% print()
+
 print('Finished running SuSiE. Creating output table...')
 out_df <- data.frame(cs_gene, cs_vars, cs_names, cs_pip, cs_beta, cs_beta_se, cs_z, cs_pval)
 print("If this message doesn't show up, the error is creating the matrix")
@@ -216,5 +226,5 @@ out_df %>% write_delim(output, delim='\t')
 print('Creating long output table...')
 out_df_long <- data.frame(all_gene, all_vars, all_pip, all_beta, all_beta_se, all_z, all_pval)
 print("If this message doesn't show up, the error is creating the matrix")
-out_df %>% write_delim(output_long, delim='\t')
+out_df_long %>% write_delim(output_long, delim='\t')
 
