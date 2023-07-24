@@ -140,6 +140,7 @@ rule CollectColocResultsToCodeDir:
     """
     input:
         expand("hyprcoloc/Results/ForColoc/{ColocName}/tidy_results_OnlyColocalized.txt.gz", ColocName = colocs_genewise.index),
+        expand("QTL_SNP_Enrichment/FinemapIntersections/{ColocName}.bed.gz", ColocName = colocs_genewise.index),
         expand("hyprcoloc/Results/ForGWASColoc/{ColocName}/results.txt.gz", ColocName = colocs_gwas.index )
 
 rule CollectColocResultsToOutputDir:

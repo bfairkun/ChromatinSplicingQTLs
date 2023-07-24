@@ -88,6 +88,47 @@ rule IntersectFinemapSNPsWithAnnotations:
         zcat {input.Finemap} | awk -v OFS='\\t' -F'\\t' 'NR>1 {{split($1,snp,":"); print "chr"snp[1], snp[2], snp[2]+1, $1"_"$2"_"$4, $3}}' | bedtools sort -i - | bedtools intersect -a - -b <(zcat {input.bed} | awk -F'\\t' -v OFS='\\t' '{{ print $1, $2, $3, $4 }}')  -wao | gzip - > {output}
         """ 
 
+rule GetContrastingGeneSetsFromColoc:
+    input:
+        coloc = "hyprcoloc/Results/ForColoc/{ColocRun}/tidy_results_OnlyColocalized.txt.gz"
+    output:
+        "QTL_SNP_Enrichment/ContrastingGeneSets/{ColocRun}.tsv.gz"
+    log:
+        "logs/GetContrastingGeneSetsFromColoc/{ColocRun}.log"
+    conda:
+        "../envs/r_2.yaml"
+    shell:
+        """
+        Rscript scripts/GetGeneSetsForQTLSNP_Enrichment.R {input} {output} &> {log}
+        """
+
+rule GatherContrastingGeneSets:
+    input:
+        expand("QTL_SNP_Enrichment/ContrastingGeneSets/{ColocRun}.tsv.gz", ColocRun = ["GenewiseColoc_ChromatinAPAAndRNA", "MolColocNonRedundantFullSplicing"])
+
+rule PlotEnrichmentFromColocFinemaps:
+    input:
+        gene_sets = "QTL_SNP_Enrichment/ContrastingGeneSets/{GeneSet}.tsv.gz",
+        finemap = "QTL_SNP_Enrichment/FinemapIntersections/{ColocRun}.bed.gz",
+        coloc = "hyprcoloc/Results/ForColoc/{ColocRun}/tidy_results_OnlyColocalized.txt.gz",
+    output:
+        dat = "QTL_SNP_Enrichment/ResultsFromColocFinemap/GeneSet_{GeneSet}_Finemap_{ColocRun}/dat.tsv.gz",
+        P = "QTL_SNP_Enrichment/ResultsFromColocFinemap/GeneSet_{GeneSet}_Finemap_{ColocRun}/P.pdf"
+    log:
+        "logs/PlotEnrichmentFromColocFinemaps/{GeneSet}/{ColocRun}.log"
+    wildcard_constraints:
+        ColocRun = "|".join(colocs_genewise.index)
+    conda:
+        "../envs/r_2.yaml"
+    shell:
+        """
+        Rscript scripts/GetSNPEnrichmentFromGeneSetsAndColocFinemap.R {input.gene_sets} {input.finemap} {input.coloc} QTL_SNP_Enrichment/ResultsFromColocFinemap/GeneSet_{wildcards.GeneSet}_Finemap_{wildcards.ColocRun}/ &> {log}
+        """
+
+rule GatherRelevant_SNP_Enrichments:
+    input:
+        expand("QTL_SNP_Enrichment/ResultsFromColocFinemap/GeneSet_{GeneSet}_Finemap_{ColocRun}/P.pdf", GeneSet = ["GenewiseColoc_ChromatinAPAAndRNA", "MolColocNonRedundantFullSplicing", "MolColocStandard"], ColocRun = ["GenewiseColoc_ChromatinAPAAndRNA", "MolColocTestOnlyExpressionFullGeauvadis"])
+
 def GetAwkCommandForParseQTLToolsPermutationPass(wildcards):
     if wildcards.Phenotype in ["polyA.Splicing", "chRNA.Splicing", "polyA.Splicing.Subset_YRI", "MetabolicLabelled.30min.Splicing", "MetabolicLabelled.60min.Splicing", "chRNA.RNA.Editing", "chRNA.Splicing.Order"]:
         return '$11, $12, $13, $10, $1, ".", $6";"$3";"$4";"$20";"$23";"$24'
@@ -143,19 +184,19 @@ rule IntersectFinemapSNPsWithAnnotations_susie:
     """
     input:
         bed = "QTL_SNP_Enrichment/Annotations.bed.gz",
-        Finemap = "FineMapping/susie_runs_{Pop}/susie_output.tab"
+        Finemap = "FineMapping/susie_runs_{Pop}/susie_output.tab.gz"
     output:
         "QTL_SNP_Enrichment/FinemapIntersections_Susie/{Pop}.bed.gz"
     log:
         "logs/IntersectFinemapSNPsWithAnnotations_Susie/{Pop}.log"
     shell:
         """
-        awk -v OFS='\\t' -F'\\t' 'NR>1 && $2!="NA" {{split($2,snp,":"); print "chr"snp[1], snp[2], snp[2]+1, $2"_"$1"_"$3, $4}}' {input.Finemap} | bedtools sort -i - | bedtools intersect -a - -b <(zcat {input.bed} | awk -F'\\t' -v OFS='\\t' '{{ print $1, $2, $3, $4 }}')  -wao | gzip - > {output}
+        zcat {input.Finemap} | awk -v OFS='\\t' -F'\\t' 'NR>1 && $2!="NA" {{split($2,snp,":"); print "chr"snp[1], snp[2], snp[2]+1, $2"_"$1"_"$3, $4}}' | bedtools sort -i - | bedtools intersect -a - -b <(zcat {input.bed} | awk -F'\\t' -v OFS='\\t' '{{ print $1, $2, $3, $4 }}')  -wao | gzip - > {output}
         """ 
 
 rule GatherFinemapSNPAnnotationIntersections_susie:
     input:
-        expand("QTL_SNP_Enrichment/FinemapIntersections_Susie/{Pop}.bed.gz", Pop=["YRI", "Geuvadis"])
+        expand("QTL_SNP_Enrichment/FinemapIntersections_Susie/{Pop}.bed.gz", Pop=["Geuvadis"])
 
 rule GatherFinemapSNPAnnotationIntersections:
     input:

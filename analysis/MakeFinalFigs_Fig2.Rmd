@@ -95,15 +95,11 @@ P.SampleSizes
 Now number of QTLs
 
 ```{r}
-relabel.df <- read_tsv("../data/Phenotypes_recode_for_Plotting.txt")
+Labels.df <- read_tsv("../data/Phenotypes_recode_for_Plotting.txt")
 
-relabel.df %>% head()
-
-Full.dat$PC %>% unique()
-
-MolQTL_Labels <- relabel.df %>% dplyr::select(PC, Shortest) %>% deframe()
-MolQTL_AssayLabels <- relabel.df %>% dplyr::select(PC, Assay) %>% deframe()
-Factor_Order <- relabel.df %>% dplyr::select(PC, OrderFactor) %>% deframe()
+MolQTL_Labels <- Labels.df %>% dplyr::select(PC, Shortest) %>% deframe()
+MolQTL_AssayLabels <- Labels.df %>% dplyr::select(PC, Assay) %>% deframe()
+Factor_Order <- Labels.df %>% dplyr::select(PC, OrderFactor) %>% deframe()
 
 NumQTLs.dat <- Full.dat %>%
   filter(PC %in% c("APA_Total", "APA_Nuclear")) %>%
@@ -167,6 +163,12 @@ NumQTLs.dat %>%
 first do some quick data searching to figure out exactly the names of the phenotypes I want to make boxpltos for... 
 
 ```{r, eval=F}
+coloc.dat <- read_tsv("../code/hyprcoloc/Results/ForColoc/MolColocNonRedundantFullSplicing/tidy_results_OnlyColocalized.txt.gz") %>%
+  separate(phenotype_full, into=c("PC", "P"), sep=";")
+
+coloc.dat %>%
+  filter(str_detect(Locus, "ENSG00000075234"))
+
 dat <- fread("../code/pi1/PairwisePi1Traits.P.all.txt.gz")
 
 PeaksToTSS <- Sys.glob("../code/Misc/PeaksClosestToTSS/*_assigned.tsv.gz") %>%
@@ -180,6 +182,10 @@ PeaksToTSS %>%
   filter(ChromatinMark == "H3K4ME3") %>%
   filter(str_detect(gene, "ENSG00000075234"))
 
+PeaksToTSS %>%
+  filter(ChromatinMark == "H3K27AC") %>%
+  filter(str_detect(gene, "ENSG00000075234"))
+
 dat %>%
   filter(PC1 == "Expression.Splicing") %>%
   filter(str_detect(P1, "ENSG00000075234")) %>%
@@ -189,13 +195,13 @@ dat %>%
 dat %>%
   filter(PC1 == "Expression.Splicing") %>%
   filter(str_detect(P1, "ENSG00000075234")) %>%
-  filter(P2 %in% c("H3K4ME3_peak_31179", "22:46292328:46292791:clu_48515_+"))
+  filter(P2 %in% c("H3K4ME3_peak_31179", "22:46292328:46292791:clu_48515_+", "H3K27AC_peak_60679", "ENSG00000075234.17"))
   
 ```
 
-So I'm looking to make boxplots for H3K4ME3_peak_31179 (hQTL), ENSG00000075234.17 (polyA eQTL), and chRNA sQTL and polyA sQTL for 22:46292328:46292791:clu_48515_+
+So I'm looking to make boxplots for H3K4ME3_peak_31179 (hQTL), H3K27AC_peak_60679 (hQTL), ENSG00000075234.17 (polyA eQTL), and chRNA sQTL and polyA sQTL for 22:46292328:46292791:clu_48515_+
 
-TopSNP: "22:46291323:G:A"
+TopSNP: "22:46291323:G:A". This is the top eQTL SNP and also topSNP from hyprcoloc finemap (which uses multiple clustered traits to help jointly finemap)
 
 Now use my helper script to get genotype/phenotype data for the top eSNP for those traits..
 
@@ -204,17 +210,21 @@ cd ../code/scripts/GenometracksByGenotype
 
 python ExtractPhenotypeBedByGenotype.py --Bed ../../QTLs/QTLTools/Expression.Splicing/OnlyFirstReps.sorted.qqnorm.bed.gz --VCF ../../Genotypes/1KG_GRCh38/Autosomes.vcf.gz --FeatureName ENSG00000075234.17 --SnpPos chr22:46291323 > ../../scratch/Boxplot.dat.eQTL.tsv
 
+python ExtractPhenotypeBedByGenotype.py --Bed ../../QTLs/QTLTools/chRNA.Expression.Splicing/OnlyFirstReps.sorted.qqnorm.bed.gz --VCF ../../Genotypes/1KG_GRCh38/Autosomes.vcf.gz --FeatureName ENSG00000075234.17 --SnpPos chr22:46291323 > ../../scratch/Boxplot.dat.chRNAeQTL.tsv
+
 python ExtractPhenotypeBedByGenotype.py --Bed ../../QTLs/QTLTools/polyA.Splicing/OnlyFirstReps.sorted.qqnorm.bed.gz --VCF ../../Genotypes/1KG_GRCh38/Autosomes.vcf.gz --FeatureName 22:46292328:46292791:clu_48515_+  --SnpPos chr22:46291323 > ../../scratch/Boxplot.dat.polyAsQTL.tsv
 
 python ExtractPhenotypeBedByGenotype.py --Bed ../../QTLs/QTLTools/polyA.Splicing/OnlyFirstReps.sorted.qqnorm.bed.gz --VCF ../../Genotypes/1KG_GRCh38/Autosomes.vcf.gz --FeatureName 22:46292328:46292791:clu_48515_+  --SnpPos chr22:46291323 > ../../scratch/Boxplot.dat.polyAsQTL.tsv
 
 python ExtractPhenotypeBedByGenotype.py --Bed ../../QTLs/QTLTools/H3K4ME3/OnlyFirstReps.sorted.qqnorm.bed.gz --VCF ../../Genotypes/1KG_GRCh38/Autosomes.vcf.gz --FeatureName H3K4ME3_peak_31179  --SnpPos chr22:46291323 > ../../scratch/Boxplot.dat.PromoterhQTL.tsv
+
+python ExtractPhenotypeBedByGenotype.py --Bed ../../QTLs/QTLTools/H3K27AC/OnlyFirstReps.sorted.qqnorm.bed.gz --VCF ../../Genotypes/1KG_GRCh38/Autosomes.vcf.gz --FeatureName H3K27AC_peak_60679  --SnpPos chr22:46291323 > ../../scratch/Boxplot.dat.Promoterh3K27QTL.tsv
 ```
 
 Now let's read in that data and do boxplots...
 
 ```{r}
-dat.for.boxplots <- Sys.glob("../code/scratch/Boxplot.dat.*.tsv") %>%
+dat.for.boxplots <- list.files("../code/scratch", pattern = "Boxplot.dat.[a-zA-Z0-9]+.tsv", full.names=T) %>%
   setNames(str_replace(., "../code/scratch/Boxplot.dat.(.+?).tsv", "\\1")) %>%
   lapply(read_tsv, col_names=c("SampleID", "P", "genotype", "Ref", "Alt", "ID"), skip=1) %>%
   bind_rows(.id="PC")
@@ -235,6 +245,9 @@ dat.for.boxplots %>%
 ```
 
 ```{r, eval=F}
+#colors
+#000000,#525252,#d9d9d9
+
 dat.for.boxplots$PC %>% unique()
 
 dat.for.boxplots %>%
@@ -242,49 +255,88 @@ dat.for.boxplots %>%
   filter(PC=="PromoterhQTL") %>%
   mutate(genotype= factor(genotype, levels=c(0,1,2))) %>%
   ggplot(aes(x=genotype, y=P, group=genotype)) +
-  geom_boxplot(outlier.shape = NA, aes(color=genotype)) +
+  geom_boxplot(outlier.shape = NA, aes(color=genotype), size=2) +
   # geom_jitter(width=0.25, alpha=0.1) +
   geom_smooth(method='lm', aes(group=1), se=F, color="gray") +
   scale_x_discrete(labels=c("0"="GG", "1"="GA", "2"="AA")) +
-  scale_color_manual(values=c("0"="#f03b20", "1"="#7a0177", "2"="#08519c")) +
-  geom_text(x=-Inf, y=Inf, label=" beta=0.15\n P=0.48", hjust=0, vjust=1, size=5.5) +
+  scale_color_manual(values=c("0"="#000000", "1"="#525252", "2"="#d9d9d9")) +
+  geom_text(data=. %>% head(1),x=-Inf, y=Inf, label=" beta=0.15\n P=0.48", hjust=0, vjust=1, size=5.5) +
   # scale_x_discrete() +
   theme(legend.position="none") +
   Rotate_x_labels +
+  scale_y_continuous(limits=c(-4,4)) +
   labs(x=NULL, color=NULL, y="H3K4me3 @ promoter")
-ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig2_ExampleBoxplot_hQTL.pdf", height=3, width=2)
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig2_ExampleBoxplot_h3k4meQTL.pdf", height=3, width=2)
+
+dat.for.boxplots %>%
+  filter(!genotype==3) %>%
+  filter(PC=="Promoterh3K27QTL") %>%
+  mutate(genotype= factor(genotype, levels=c(0,1,2))) %>%
+  ggplot(aes(x=genotype, y=P, group=genotype)) +
+  geom_boxplot(outlier.shape = NA, aes(color=genotype), size=2) +
+  # geom_jitter(width=0.25, alpha=0.1) +
+  geom_smooth(method='lm', aes(group=1), se=F, color="gray") +
+  scale_x_discrete(labels=c("0"="GG", "1"="GA", "2"="AA")) +
+  scale_color_manual(values=c("0"="#000000", "1"="#525252", "2"="#d9d9d9")) +
+  geom_text(data=. %>% head(1),x=-Inf, y=Inf, label=" beta=0.14\n P=0.10", hjust=0, vjust=1, size=5.5) +
+  # scale_x_discrete() +
+  theme(legend.position="none") +
+  Rotate_x_labels +
+  scale_y_continuous(limits=c(-4,4)) +
+  labs(x=NULL, color=NULL, y="H3K27ac @ promoter")
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig2_ExampleBoxplot_h3k27acQTL.pdf", height=3, width=2)
 
 dat.for.boxplots %>%
   filter(!genotype==3) %>%
   filter(PC=="eQTL") %>%
   mutate(genotype= factor(genotype, levels=c(0,1,2))) %>%
   ggplot(aes(x=genotype, y=P, group=genotype)) +
-  geom_boxplot(outlier.shape = NA, aes(color=genotype)) +
+  geom_boxplot(outlier.shape = NA, aes(color=genotype), size=2) +
   # geom_jitter(width=0.25, alpha=0.1) +
   geom_smooth(method='lm', aes(group=1), se=F, color="gray") +
   scale_x_discrete(labels=c("0"="GG", "1"="GA", "2"="AA")) +
-  scale_color_manual(values=c("0"="#f03b20", "1"="#7a0177", "2"="#08519c")) +
-  geom_text(x=-Inf, y=Inf, label=" beta=1.1\n P<5E-43", hjust=0, vjust=1, size=5.5) +
+  scale_color_manual(values=c("0"="#000000", "1"="#525252", "2"="#d9d9d9")) +
+  geom_text(data=. %>% head(1),x=-Inf, y=Inf, label=" beta=1.1\n P<5E-43", hjust=0, vjust=1, size=5.5) +
   # scale_x_discrete() +
   theme(legend.position="none") +
   Rotate_x_labels +
+  scale_y_continuous(limits=c(-4,4)) +
   labs(x=NULL, color=NULL, y="TTC38 expression")
 ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig2_ExampleBoxplot_eQTL.pdf", height=3, width=2)
+
+dat.for.boxplots %>%
+  filter(!genotype==3) %>%
+  filter(PC=="chRNAeQTL") %>%
+  mutate(genotype= factor(genotype, levels=c(0,1,2))) %>%
+  ggplot(aes(x=genotype, y=P, group=genotype)) +
+  geom_boxplot(outlier.shape = NA, aes(color=genotype), size=2) +
+  # geom_jitter(width=0.25, alpha=0.1) +
+  geom_smooth(method='lm', aes(group=1), se=F, color="gray") +
+  scale_x_discrete(labels=c("0"="GG", "1"="GA", "2"="AA")) +
+  scale_color_manual(values=c("0"="#000000", "1"="#525252", "2"="#d9d9d9")) +
+  geom_text(data=. %>% head(1),x=-Inf, y=Inf, label=" beta=0.40\n P<3E-4", hjust=0, vjust=1, size=5.5) +
+  # scale_x_discrete() +
+  theme(legend.position="none") +
+  Rotate_x_labels +
+  scale_y_continuous(limits=c(-4,4)) +
+  labs(x=NULL, color=NULL, y="TTC38 expression")
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig2_ExampleBoxplot_chRNAeQTL.pdf", height=3, width=2)
 
 dat.for.boxplots %>%
   filter(!genotype==3) %>%
   filter(PC=="polyAsQTL") %>%
   mutate(genotype= factor(genotype, levels=c(0,1,2))) %>%
   ggplot(aes(x=genotype, y=P, group=genotype)) +
-  geom_boxplot(outlier.shape = NA, aes(color=genotype)) +
+  geom_boxplot(outlier.shape = NA, aes(color=genotype), size=2) +
   # geom_jitter(width=0.25, alpha=0.1) +
   geom_smooth(method='lm', aes(group=1), se=F, color="gray") +
   scale_x_discrete(labels=c("0"="GG", "1"="GA", "2"="AA")) +
-  scale_color_manual(values=c("0"="#f03b20", "1"="#7a0177", "2"="#08519c")) +
-  geom_text(x=-Inf, y=Inf, label=" beta=-1.1\n P<3e-24", hjust=0, vjust=1, size=5.5) +
+  scale_color_manual(values=c("0"="#000000", "1"="#525252", "2"="#d9d9d9")) +
+  geom_text(data=. %>% head(1), x=-Inf, y=Inf, label=" beta=-1.1\n P<3e-24", hjust=0, vjust=1, size=5.5) +
   # scale_x_discrete() +
   theme(legend.position="none") +
   Rotate_x_labels +
+  scale_y_continuous(limits=c(-4,4)) +
   labs(x=NULL, color=NULL, y="Splicing of cassette exon")
 ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig2_ExampleBoxplot_polyAsQTL.pdf", height=3, width=2)
 
@@ -293,28 +345,70 @@ dat.for.boxplots %>%
   filter(PC=="chRNAsQTL") %>%
   mutate(genotype= factor(genotype, levels=c(0,1,2))) %>%
   ggplot(aes(x=genotype, y=P, group=genotype)) +
-  geom_boxplot(outlier.shape = NA, aes(color=genotype)) +
+  geom_boxplot(outlier.shape = NA, aes(color=genotype), size=2) +
   # geom_jitter(width=0.25, alpha=0.1) +
   geom_smooth(method='lm', aes(group=1), se=F, color="gray") +
   scale_x_discrete(labels=c("0"="GG", "1"="GA", "2"="AA")) +
-  scale_color_manual(values=c("0"="#f03b20", "1"="#7a0177", "2"="#08519c")) +
-  geom_text(x=-Inf, y=Inf, label=" beta=-1.3\n P<4e-19", hjust=0, vjust=1, size=5.5) +
+  scale_color_manual(values=c("0"="#000000", "1"="#525252", "2"="#d9d9d9")) +
+  geom_text(data=. %>% head(1),x=-Inf, y=Inf, label=" beta=-1.3\n P<4e-19", hjust=0, vjust=1, size=5.5) +
   # scale_x_discrete() +
   theme(legend.position="none") +
   Rotate_x_labels +
+  scale_y_continuous(limits=c(-4,4)) +
   labs(x=NULL, color=NULL, y="Splicing of cassette exon")
 ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig2_ExampleBoxplot_chRNAsQTL.pdf", height=3, width=2)
 ```
+
+
+And pygenometracks stuff for TTC38:
+
+```{bash, eval=F}
+cd project2/yangili1/bjf79/ChromatinSplicingQTLs/code
+conda activate GenometracksByGenotype
+
+python scripts/GenometracksByGenotype/AggregateBigwigsForPlotting.py --BigwigList PlotQTLs/bwList.tsv --BigwigListType KeyFile --OutputPrefix /scratch/midway2/bjf79/PlotDat --NoSashimi --VCF Genotypes/1KG_GRCh38/Autosomes.vcf.gz --SnpPos chr22:46291323  --Region chr22:46,267,416-46,294,315 --GroupSettingsFile <(cat PlotQTLs/bwList.Groups.4col.tsv | awk 'NR==1 || NR==2 || NR==3 || NR==8') --Bed12GenesToIni scripts/GenometracksByGenotype/PremadeTracks/gencode.v26.FromGTEx.genes.bed12.gz --GenotypeCustomPalette "#000000,#525252,#d9d9d9,#ffffff" -vv
+
+pyGenomeTracks --region chr22:46,267,416-46,294,315 -out scratch/TTC38.pdf --tracks /scratch/midway2/bjf79/PlotDattracks.ini
+
+```
+
+or to make a condensed version, create pdf for each exon and stitch together in illustrator
+
+```{bash, eval=F}
+pyGenomeTracks --region chr22:46267350-46268754 -out scratch/TTC38.1.pdf --tracks /scratch/midway2/bjf79/PlotDattracks.ini --plotWidth 8.16279
+pyGenomeTracks --region chr22:46272234-46272516 -out scratch/TTC38.2.pdf --tracks /scratch/midway2/bjf79/PlotDattracks.ini --plotWidth 1.63953
+pyGenomeTracks --region chr22:46273795-46274169 -out scratch/TTC38.3.pdf --tracks /scratch/midway2/bjf79/PlotDattracks.ini --plotWidth 2.17442
+pyGenomeTracks --region chr22:46275147-46275521 -out scratch/TTC38.4.pdf --tracks /scratch/midway2/bjf79/PlotDattracks.ini --plotWidth 2.17442
+pyGenomeTracks --region chr22:46278485-46278761 -out scratch/TTC38.5.pdf --tracks /scratch/midway2/bjf79/PlotDattracks.ini --plotWidth 1.60465
+pyGenomeTracks --region chr22:46281498-46281818 -out scratch/TTC38.6.pdf --tracks /scratch/midway2/bjf79/PlotDattracks.ini --plotWidth 1.86047
+pyGenomeTracks --region chr22:46283872-46284132 -out scratch/TTC38.7.pdf --tracks /scratch/midway2/bjf79/PlotDattracks.ini --plotWidth 1.51163
+pyGenomeTracks --region chr22:46285140-46285379 -out scratch/TTC38.8.pdf --tracks /scratch/midway2/bjf79/PlotDattracks.ini --plotWidth 1.38953
+pyGenomeTracks --region chr22:46286972-46287254 -out scratch/TTC38.9.pdf --tracks /scratch/midway2/bjf79/PlotDattracks.ini --plotWidth 1.63953
+pyGenomeTracks --region chr22:46288322-46288688 -out scratch/TTC38.10.pdf --tracks /scratch/midway2/bjf79/PlotDattracks.ini --plotWidth 2.12791
+pyGenomeTracks --region chr22:46289301-46289661 -out scratch/TTC38.11.pdf --tracks /scratch/midway2/bjf79/PlotDattracks.ini --plotWidth 2.09302
+pyGenomeTracks --region chr22:46289725-46289999 -out scratch/TTC38.12.pdf --tracks /scratch/midway2/bjf79/PlotDattracks.ini --plotWidth 1.59302
+pyGenomeTracks --region chr22:46292102-46292428 -out scratch/TTC38.13.pdf --tracks /scratch/midway2/bjf79/PlotDattracks.ini --plotWidth 1.89535
+pyGenomeTracks --region chr22:46292690-46294108 -out scratch/TTC38.14.pdf --tracks /scratch/midway2/bjf79/PlotDattracks.ini --plotWidth 8.24419
+```
+
+And also sashimi version:
+
+```{bash, eval=F}
+python scripts/GenometracksByGenotype/AggregateBigwigsForPlotting.py --BigwigList PlotQTLs/bwList.tsv --BigwigListType KeyFile --OutputPrefix /scratch/midway2/bjf79/PlotDatSashimi --VCF Genotypes/1KG_GRCh38/Autosomes.vcf.gz --SnpPos chr22:46291323  --Region chr22:46,289,843-46,292,952 --GroupSettingsFile <(cat PlotQTLs/bwList.Groups.4col.tsv | awk 'NR==1 || NR==8') --Bed12GenesToIni scripts/GenometracksByGenotype/PremadeTracks/gencode.v26.FromGTEx.genes.bed12.gz --GenotypeCustomPalette "#000000,#525252,#d9d9d9,#ffffff" --FilterJuncsByBed ../output/TTC38_RelevantJuncs.bed
+```
+
+
 
 ### Classification of unannotated and unproductive juncs
 
 Actually a supplement related to fig1
 
 ```{r}
-juncs.long <- fread("../code/SplicingAnalysis/CombinedJuncTables/YRI.tsv.gz")
+juncs.long <- fread("../code/SplicingAnalysis/CombinedJuncTables/All.tsv.gz")
 
-IntronAnnotations <- read_tsv("../data/IntronAnnotationsFromYang.tsv.gz") %>%
-  mutate(stop = end-1)
+IntronAnnotations <- read_tsv("../data/IntronAnnotationsFromYang.Updated.tsv.gz") %>%
+  mutate(stop = end-1) %>%
+  mutate(SuperAnnotation = recode(SuperAnnotation, "UnannotatedJunc_NoncodingJunc"="UnannotatedJunc_NoncodingGene"))
 
 juncs.long.summary <- juncs.long %>%
   dplyr::select(chrom, start, stop, strand, Dataset, Count) %>%
@@ -322,10 +416,11 @@ juncs.long.summary <- juncs.long %>%
   group_by(Dataset, SemiSupergroupAnnotations, SuperAnnotation) %>%
   summarise(Sum=sum(Count))
 
+juncs.long.summary$Dataset %>% unique()
 
 P.PercentAnnotated <- juncs.long.summary %>%
   ungroup() %>%
-  filter(Dataset %in% c("Expression.Splicing", "chRNA.Expression.Splicing")) %>%
+  # filter(Dataset %in% c("Expression.Splicing", "chRNA.Expression.Splicing")) %>%
   filter(!str_detect(SuperAnnotation, "Noncoding")) %>%
   group_by(Dataset, SuperAnnotation) %>%
   summarise(TotalSum = sum(Sum)) %>%
@@ -338,17 +433,92 @@ P.PercentAnnotated <- juncs.long.summary %>%
   summarise(Percent=sum(TotalSum)/DatasetSum) %>%
   ungroup() %>%
   distinct() %>%
-  mutate(Dataset = factor(Dataset, levels=c("Expression.Splicing", "chRNA.Expression.Splicing"))) %>%
+  mutate(Dataset = factor(Dataset, levels=c("Expression.Splicing", "MetabolicLabelled.60min","MetabolicLabelled.30min","chRNA.Expression.Splicing"))) %>%
   ggplot(aes(x=Dataset, y=Percent*100, fill=PlotGroup)) +
   geom_col() +
-  scale_x_discrete(labels=c("Expression.Splicing"="polyA RNA", "chRNA.Expression.Splicing"="chRNA")) +
+  scale_x_discrete(labels=c("Expression.Splicing"="steady-state\nRNA", "MetabolicLabelled.60min"="60m 4sU", "MetabolicLabelled.30min"="30m 4sU","chRNA.Expression.Splicing"="chRNA")) +
   scale_y_continuous(expand=c(0,0)) +
   scale_fill_manual(values=c("Annotated productive (basic tag)"="#1f78b4", "Other"="#969696")) + 
-  scale_y_break(c(5, 95), expand=F, space=0.5) +
+  scale_y_break(c(3, 97), expand=F, space=0.5) +
   labs(y="Percent of splice junction reads", fill="Intron classification") +
-  theme(legend.position="none")
+  theme(legend.position="none") +
+  Rotate_x_labels
 P.PercentAnnotated <- ggplotify::as.ggplot(print(P.PercentAnnotated))
 P.PercentAnnotated
+
+```
+
+Another version with bars for each individual to visualize variance
+
+```{r}
+juncs.long.summary.PerInd <- juncs.long %>%
+  dplyr::select(chrom, start, stop, strand, Dataset, Count, IndID) %>%
+  inner_join(IntronAnnotations) %>%
+  group_by(Dataset, SemiSupergroupAnnotations, SuperAnnotation, IndID) %>%
+  summarise(Sum=sum(Count))
+
+
+P.PercentAnnotated.PerSample <- juncs.long.summary.PerInd %>%
+  ungroup() %>%
+  filter(!str_detect(SuperAnnotation, "Noncoding")) %>%
+  group_by(Dataset, SuperAnnotation, IndID) %>%
+  summarise(TotalSum = sum(Sum)) %>%
+  ungroup() %>%
+  mutate(PlotGroup = if_else(SuperAnnotation=="AnnotatedJunc_ProductiveCodingGene", "Annotated productive (basic tag)", "Other")) %>%
+  group_by(Dataset, IndID) %>%
+  mutate(DatasetSum = sum(TotalSum)) %>%
+  ungroup() %>%
+  group_by(Dataset, PlotGroup, IndID) %>%
+  summarise(Percent=sum(TotalSum)/DatasetSum) %>%
+  ungroup() %>%
+  filter(PlotGroup=="Annotated productive (basic tag)") %>%
+  distinct(IndID, Dataset, .keep_all=T) %>%
+  mutate(Dataset = factor(Dataset, levels=c("Expression.Splicing", "MetabolicLabelled.60min","MetabolicLabelled.30min","chRNA.Expression.Splicing"))) %>%
+  arrange(Dataset, desc(Percent)) %>% 
+  mutate(rn = row_number()) %>%
+  mutate(Complement = 1-Percent) %>%
+  dplyr::select(-PlotGroup) %>%
+  gather(key="PlotGroup", value="NewPercent", Percent, Complement) %>%
+  mutate(PlotGroup = relevel(factor(PlotGroup), "Percent")) %>%
+  mutate(Dataset = recode(Dataset, "Expression.Splicing"="steady-state\nRNA", "MetabolicLabelled.60min"="60m 4sU", "MetabolicLabelled.30min"="30m 4sU","chRNA.Expression.Splicing"="chRNA")) %>%
+  mutate(Dataset = factor(Dataset, levels=c("steady-state\nRNA", "60m 4sU","30m 4sU","chRNA"))) %>%
+  ggplot(aes(x=rn, y=NewPercent*100, fill=PlotGroup)) +
+  geom_col() +
+  scale_x_discrete(labels=c("Expression.Splicing"="steady-state\nRNA", "MetabolicLabelled.60min"="60m 4sU", "MetabolicLabelled.30min"="30m 4sU","chRNA.Expression.Splicing"="chRNA")) +
+  geom_hline(data = . %>%
+                 filter(PlotGroup == "Complement") %>%
+                  group_by(Dataset) %>%
+                  summarise(Median = median(NewPercent)*100),
+             aes(yintercept = Median),
+             color="black", linetype='dashed', size=1.5
+             ) +
+  scale_y_continuous(expand=c(0,0)) +
+  scale_fill_manual(values=c("Percent"="#1f78b4", "Complement"="#969696"), labels=c("Percent"="Annotated productive (basic tag)","Complement"="Other")) + 
+  scale_y_break(c(4, 96), expand=F, space=0.1) +
+  labs(y="Percent of splice junction reads", fill="Intron classification") +
+  theme(legend.position="none") +
+  facet_grid(~Dataset, scales = 'free', switch = "both") +
+  Rotate_x_labels +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  theme(
+    aspect.ratio = 1,
+    strip.background = element_blank(),
+    strip.placement = "outside"
+  )
+
+P.PercentAnnotated.PerSample <- ggplotify::as.ggplot(print(P.PercentAnnotated.PerSample))
+P.PercentAnnotated.PerSample
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_PercentAnnotatedPerSample.pdf",P.PercentAnnotated.PerSample, width=4, height=6)
+
+
+```
+
+Plot to describe What are the unannoatted junctions
+
+```{r}
 
 P.PercentOfUnannotated <- juncs.long.summary %>%
   ungroup() %>%
@@ -459,7 +629,7 @@ P.PercentOfUnannotated <- juncs.long.summary %>%
   ) +
   scale_y_continuous(expand=c(0,0)) +
   scale_x_discrete(expand=c(0,0)) +
-  scale_fill_manual(values=AnnotationColors %>% dplyr::select(SemiSupergroupAnnotations, Color) %>% deframe(), na.value="#fb9a99") +
+  scale_fill_manual(values=AnnotationColors %>% dplyr::select(SemiSupergroupAnnotations, Color) %>% deframe(), na.value="#fb9a99", labels = function(x) str_wrap(x, width = 10)) +
   theme(legend.position='none') +
   theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
@@ -479,9 +649,12 @@ P.PercentJuncsLegend <- ggplot(P.PercentJuncsLegend.dat, aes(x=SuperAnnotation, 
                       dplyr::select(SuperAnnotation, Color) %>% deframe(), labels=c("AnnotatedJunc_UnproductiveCodingGene"="Annotated unproductive", "AnnotatedJunc_ProductiveCodingGene"="Annotated productive", "UnannotatedJunc_ProductiveCodingGene"="Unannotated unproductive", "UnannotatedJunc_UnproductiveCodingGene"="Unannotated productive")) +
   labs(fill="Intron classification") 
 
-ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_Final_Fig_S_ScatterReasonsForJuncClassification.png",Scatter.P, height=12, width=10)
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_PercentOfUnannotated.pdf",P.PercentOfUnannotated, width=4, height=6)
+
 
 ```
+
+
 
 Figure supplement that goes along with this... chRNA vs polyA scatter for junction RPM...
 
@@ -553,7 +726,6 @@ Scatter.P <- Scatter.P.dat %>%
   labs(title="Reason for splice junction classification", x="chRNA\nRPM across junctions", y="steady-state RNA\nRPM across junctions", color="Intron classification") +
   Rotate_x_labels
 
-# ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_Final_Fig_S_ScatterReasonsForJuncClassification.pdf",Scatter.P, height=12, width=10)
 
 
 Scatter.P
@@ -1753,14 +1925,27 @@ sQTL.vs.hQTLs.EffectOnEqtls.ForCarlos %>%
 ```
 
 
+Ok, Carlos ran QTLtools with log2CPM as units for expression matrix, so beta can be interpreted (across all tissues) as the log2FC per dose of alt allele.
+
+Let's read in those results and plot nicely...
+
+```{r}
+
+```
+
+
 ```{r, eval=F}
 ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_SampleSize.pdf",P.SampleSizes, width=6, height=6)
 
 ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_NumQTLs.pdf",NumQTLs, width=8, height=6)
 
 ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_PercentAnnotated.pdf",P.PercentAnnotated, width=4, height=6)
-ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_PercentOfUnannotated.pdf",P.PercentOfUnannotated, width=6, height=6)
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_PercentOfUnannotated.pdf",P.PercentOfUnannotated, width=3, height=6)
 ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_PercentAnnotatedLegend.pdf",P.PercentJuncsLegend, width=8, height=6)
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_PercentAnnotatedPerSample.pdf",P.PercentAnnotated.PerSample, width=4, height=6)
+
+
 
 
 ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_Multiple_hQTLs_PerGene.pdf",P.Number_hQTLsForColoc, width=6, height=6)
@@ -1785,9 +1970,10 @@ ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/202
 
 ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_Final_Fig2_hQTLeQTLBetas.pdf",eQTL.H3k27ac.beta, height=2.5, width=10)
 
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_Final_Fig_S_ScatterReasonsForJuncClassification.pdf",Scatter.P, height=12, width=10)
+
 ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_Final_Fig_S_ScatterReasonsForJuncClassification.png",Scatter.P, height=12, width=10)
-
-
 
 ```
 

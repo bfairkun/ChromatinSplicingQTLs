@@ -1,0 +1,87 @@
+---
+title: "20230707_MostAbundantUnrproductiveJuncPerGene"
+output: html_document
+date: '2023-07-07'
+---
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+
+library(tidyverse)
+library(RColorBrewer)
+library(data.table)
+library(readxl)
+library(qvalue)
+library(ggrepel)
+library(knitr)
+library(ggbreak)
+
+
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family="Helvetica")))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+```
+
+## Intro
+
+Want to check distribution of PSI (or various PSI-like metrics) for most abundant unproductive junc per gene.
+
+```{r}
+dat <- Sys.glob("../code/SplicingAnalysis/NormalizedPsiTables/*_Expression.Splicing.bed.gz") %>%
+  setNames(str_replace(., "../code/SplicingAnalysis/NormalizedPsiTables/(.+?)_Expression.Splicing.bed.gz", "\\1")) %>%
+  lapply(fread)
+
+IntronAnnotations <- read_tsv("../data/IntronAnnotationsFromYang.Updated.tsv.gz")
+
+
+CalculateMedian <- function(df){
+  df %>%
+    # head() %>%
+    unite(Intron, `#Chrom`, start, stop, strand) %>%
+    dplyr::select(-name, -score) %>%
+    column_to_rownames("Intron") %>%
+    as.matrix() %>%
+    apply(1, median, na.rm=T) %>%
+    as.data.frame() %>%
+    rownames_to_column("Intron") %>%
+    dplyr::select(Intron, med=".") %>%
+    separate(Intron, into=c("chrom", 'start', 'stop', 'strand'), sep="_", convert=T) %>%
+    return()
+}
+
+Medians <- dat %>%
+  # lapply(head, 10000) %>%
+  lapply(CalculateMedian)
+
+
+
+SummarisedPerJunc <- Medians %>%
+  map(~inner_join(.x, IntronAnnotations)) %>%
+  bind_rows(.id="Metric")
+
+SummarisedPerJunc$SuperAnnotation %>% unique()
+
+MaxPerGene <- SummarisedPerJunc %>%
+  filter(SuperAnnotation %in% c("AnnotatedJunc_UnproductiveCodingGene", "UnannotatedJunc_ProductiveCodingGene")) %>%
+  group_by(Metric, gene) %>%
+  filter(med == max(med)) %>%
+  ungroup()
+
+MaxPerGene %>%
+  filter(str_detect(gene, "ENSG00000205571")) %>%
+  mutate(Range = str_glue("{chrom}:{start}-{stop}"))
+
+MaxPerGene %>%
+  ggplot(aes(x=med)) +
+  stat_ecdf() +
+  scale_x_continuous(trans='log10') +
+  # coord_cartesian(xlim=c(1, 100)) +
+  facet_wrap(~Metric, scales="free") 
+
+```
+

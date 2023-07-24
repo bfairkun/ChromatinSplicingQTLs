@@ -30,6 +30,310 @@ Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust
 
 ## Intro
 
+## Coloc plot
+
+```{r, fig.height=6, fig.width=10}
+gwas.traits <- read_tsv("../code/config/gwas_table.tsv") %>%
+  dplyr::rename(GWAS.accession=gwas, gwas.trait=trait) %>%
+  mutate(gwas.trait = recode(gwas.trait, "rheumatoid arthritis"="Rheumatoid arthritis"))
+
+
+hyprcoloc.results <- read_tsv("../code/hyprcoloc/Results/ForGWASColoc/GWASColoc_ChromatinAPAAndRNA/results.txt.gz") %>%
+  dplyr::rename(GWAS.Loci = GWASLeadSnpChrom_Pos_RefAllele_AltAllele_rsID_trait) %>%
+  separate(GWAS.Loci, into=c("GWAS.LeadSNP.Chrom", "GWAS.LeadSNP.Pos", "GWAS.accession"), sep="_", remove=F) %>%
+  separate_rows(ColocalizedTraits, sep = ",") %>%
+  mutate(IsColocalizedWithSomething = !ColocalizedTraits == "None") %>%
+  mutate(Trait = if_else(IsColocalizedWithSomething, ColocalizedTraits, DroppedTrait)) %>%
+  dplyr::select(-DroppedTrait, -ColocalizedTraits) %>%
+  mutate(Trait = str_replace_all(Trait, " ", "")) %>%
+  mutate(GWAS.Loci = str_replace_all(GWAS.Loci, " ", "")) %>%
+  mutate(Trait = if_else(Trait == GWAS.Loci, paste("GWAS",GWAS.Loci,sep = ";"),Trait)) %>%
+  separate(Trait, into=c("PhenotypeClass", "Phenotype"), sep=";", remove=F) %>%
+  group_by(GWAS.Loci, HyprcolocIteration) %>%
+  mutate(ColocalizedClusterContainsGWASTrait = any(PhenotypeClass=="GWAS") & IsColocalizedWithSomething) %>%
+  ungroup() %>%
+  inner_join(gwas.traits %>%
+               dplyr::select(1:2))
+
+hyprcoloc.results$PhenotypeClass %>% unique()
+
+hyprcoloc.results %>%
+  filter(gwas.trait == "rheumatoid arthritis")
+
+hyprcoloc.results %>%
+  filter(!GWAS.accession=="IMSGC2019") %>%
+  pull(PhenotypeClass) %>% unique()
+
+PhenotypeRecodes = c("H3K36ME3"="hQTL", "H3K27AC"="hQTL", "H3K4ME3"="hQTL", "H3K4ME1"="hQTL",
+                     "Expression.Splicing"="eQTL", "chRNA.Expression.Splicing"="chRNA eQTL",
+                     "APA_Nuclear"="APA QTL", "APA_Total"="APA QTL", "polyA.Splicing"="sQTL", "GWAS"="GWAS")
+
+PhenotypeRecodes.df <- data.frame(PhenotypeRecodes) %>%
+  rownames_to_column("PhenotypeClass")
+
+# hyprcoloc.results %>%
+#   filter(GWAS.Loci == "chr9_79683075_GCST004627")
+#   filter(is.na(PhenotypeClass))
+  
+  
+
+hyprcoloc.results.toplot <- hyprcoloc.results %>%
+  # filter(!GWAS.accession=="IMSGC2019") %>%
+  left_join(PhenotypeRecodes.df) %>%
+  mutate(PhenotypeRecodes = if_else(is.na(PhenotypeRecodes), PhenotypeClass, PhenotypeRecodes)) %>%
+  filter(!PhenotypeRecodes == "APA QTL") %>%
+  group_by(GWAS.Loci, HyprcolocIteration) %>%
+  filter(any(ColocalizedClusterContainsGWASTrait) | PhenotypeClass=="GWAS") %>%
+  mutate(Category = case_when(
+    all(ColocalizedClusterContainsGWASTrait==FALSE) | all(is.na(HyprcolocIteration))  ~ "No molQTL colocs",
+    all(PhenotypeRecodes %in% c("GWAS", "hQTL")) ~ "Only hQTL colocs",
+    all(PhenotypeRecodes %in% c("GWAS", "eQTL")) ~ "Only eQTL colocs",
+    all(PhenotypeRecodes %in% c("GWAS", "eQTL", "hQTL", "chRNA eQTL")) ~ "hQTL+eQTL colocs",
+    all(PhenotypeRecodes %in% c("GWAS", "sQTL")) ~ "sQTL colocs",
+    all(PhenotypeRecodes %in% c("GWAS", "sQTL", "chRNA eQTL", "eQTL")) ~ "sQTL+eQTL colocs",
+    # all(PhenotypeRecodes %in% c("GWAS", "sQTL", "chRNA eQTL", "eQTL", "hQTL")) ~ "sQTL+eQTL+hQTL colocs",
+    TRUE ~ "Other"
+  )) %>%
+  ungroup()
+  # filter(Category=="Other")
+
+Num.Gwas.loci <-   bind_rows(
+    hyprcoloc.results.toplot %>%
+      distinct(GWAS.Loci, .keep_all=T) %>%
+      count(gwas.trait) %>%
+      mutate(facet="IndividualTraits"),
+    hyprcoloc.results.toplot %>%
+      distinct(GWAS.Loci, .keep_all=T) %>%
+      count() %>%
+      mutate(facet = "ALL", gwas.trait="All analyzed traits", GWAS.accession="ALL")) %>%
+    mutate(facet = relevel(factor(facet), ref="IndividualTraits"))
+
+
+ColorKey <- hyprcoloc.results.toplot %>%
+  distinct(Category) %>%
+  mutate(Category = relevel(factor(Category), "No molQTL colocs")) %>%
+  arrange(Category) %>%
+  mutate(Color = c("#f0f0f0",RColorBrewer::brewer.pal(nrow(.)-1, "Set3"))) %>%
+  deframe()
+
+gwas.plot <- 
+  bind_rows(
+    hyprcoloc.results.toplot %>%
+      distinct(GWAS.Loci, .keep_all=T) %>%
+      count(Category,GWAS.accession, gwas.trait) %>%
+      mutate(facet="IndividualTraits"),
+    hyprcoloc.results.toplot %>%
+      distinct(GWAS.Loci, .keep_all=T) %>%
+      count(Category) %>%
+      mutate(facet = "ALL", gwas.trait="All analyzed traits", GWAS.accession="ALL")) %>%
+  mutate(facet = relevel(factor(facet), ref="IndividualTraits")) %>%
+  arrange(facet) %>%
+  ggplot(aes(x=gwas.trait)) +
+  geom_col(position="fill", aes( y=n, fill=Category)) +
+  geom_text(data=Num.Gwas.loci, aes(x=gwas.trait, label=n), y=1, hjust=1, size=4, angle=90) +
+  scale_fill_manual(values=ColorKey) +
+  Rotate_x_labels +
+  theme(axis.text.x = element_text(size=8)) +
+  labs(fill="Exclusive\nCategory", caption="Categories are exclusive; sQTL means no hQTL or eQTL\nsQTL + eQTL means no hQTLs\nhQTL + sQTL + eQTL would be Other\nTotal number GWAS loci marked at top", y="Fraction of colocalizations") +
+  scale_y_continuous(expand=c(0,0)) +
+  scale_y_break(c(0.5, 0.92), scales="fixed", ticklabels=c(0.95, 1), expand=F, space=0.4) +
+  facet_grid(~facet, scales = "free", space='free') +
+  theme(
+  strip.background = element_blank(),
+  strip.text.x = element_blank())
+
+P.gwas.coloc <- ggplotify::as.ggplot(print(gwas.plot))
+P.gwas.coloc
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_Final_Fig3_GwasColocs.pdf", height=6, width=12)
+
+hyprcoloc.results.toplot %>%
+      distinct(GWAS.Loci, .keep_all=T) %>%
+      count(Category) %>%
+  mutate(Percent = n/sum(n)*100) %>%
+  kable()
+
+```
+
+
+Gather data for PSI histogram of sQTL/GWAS colocs
+
+```{r}
+IntronAnnotations <- read_tsv("../data/IntronAnnotationsFromYang.Updated.tsv.gz")
+
+sQTLs.Coloc.With.Gwas <- hyprcoloc.results.toplot %>%
+  filter(ColocalizedClusterContainsGWASTrait) %>%
+  filter(PhenotypeClass == "polyA.Splicing") %>%
+  mutate(Intron=str_replace(Trait, "^.+?;(.+)_([+-])$", "chr\\1:\\2")) %>%
+  separate(Intron, into=c("chrom", "start", "end", "cluster","strand"), sep=":", remove=F, convert=T) %>%
+  inner_join(IntronAnnotations)
+
+# write_tsv(sQTLs.Coloc.With.Gwas, "../output/sQTLsThatColocWithGWAS.tsv.gz")
+```
+
+...did some work in the snakemake and read in results here...
+
+```{r}
+PSI <- Sys.glob("../code/SplicingAnalysis/GWAS_sQTL_PSI/*.tsv.gz") %>%
+  setNames(str_replace(., "../code/SplicingAnalysis/GWAS_sQTL_PSI/(.+?).tsv.gz", "\\1")) %>%
+  lapply(fread, col.names=c("IndID","genotype", "Ref", "Alt", "TopCandidateSNP", "feature", "PSI")) %>%
+  bind_rows(.id="Dataset") %>%
+  separate(feature, into=c("chrom","start", "end", "Intron", "FeatScore", "strand"), sep=";", convert=T) %>%
+  dplyr::select(-Intron) %>%
+  inner_join(sQTLs.Coloc.With.Gwas)
+
+PSI.summarised <- PSI %>%
+  filter(genotype %in% c(0,2)) %>%
+  group_by(TopCandidateSNP, genotype, Dataset, Intron, GWAS.Loci) %>%
+  mutate(SummaryPSI = mean(PSI, na.rm=T)) %>%
+  ungroup() %>%
+  distinct(Dataset, Intron, GWAS.Loci, genotype, .keep_all=T) %>%
+  add_count(TopCandidateSNP, Dataset, Intron, GWAS.Loci) %>%
+  filter(n==2) %>%
+  group_by(TopCandidateSNP, Dataset, Intron, GWAS.Loci) %>%
+  mutate(Rank = dense_rank(SummaryPSI)) %>%
+  ungroup() %>%
+  filter(!str_detect(SuperAnnotation, "Noncoding")) %>%
+  mutate(ProductiveOrUnproductive = case_when(
+  str_detect(SuperAnnotation, "UnproductiveCodingGene") ~ "Unproductive",
+    TRUE ~ "Productive"))
+
+PSI.summarised %>%
+  filter(Category %in% c("sQTL+eQTL colocs", "sQTL colocs")) %>%
+  distinct(Intron, Dataset, Rank, .keep_all=T) %>%
+  mutate(Rank = factor(Rank)) %>%
+  ggplot(aes(x=SummaryPSI)) +
+    stat_ecdf(aes(color=Dataset, linetype=Rank)) +
+    facet_wrap(~Category) +
+    scale_x_continuous(trans='log10') +
+    scale_linetype_discrete(labels=c("2"="low/low", "1"="high/high"), name="genotype") +
+    coord_cartesian(xlim=c(0.1, 100))
+
+
+ggplot(PSI.summarised, aes(x=SummaryPSI)) +
+  geom_histogram() +
+  facet_grid(Category~Dataset~ProductiveOrUnproductive)
+
+
+dat.to.plot.PSI.Tests <- PSI.summarised %>%
+  filter(Category %in% c("sQTL+eQTL colocs", "sQTL colocs")) %>%
+  distinct(Intron, Dataset, Rank, .keep_all=T) %>%
+  mutate(Rank = recode(Rank, "2"="low/low", "1"="high/high")) %>%
+  mutate(Rank = factor(Rank)) %>%
+  filter(!is.na(Rank))
+
+
+
+
+ggplot(dat.to.plot.PSI.Tests, aes(x=SummaryPSI)) +
+    stat_ecdf(aes(color=Dataset)) +
+    geom_text(x=Inf, y=0.1,
+            data =
+              dat.to.plot.PSI.Tests %>%
+                filter(SummaryPSI>0) %>%
+                nest(-Rank, -Category, -ProductiveOrUnproductive) %>%                    # for each group nest data
+                mutate(P = map_dbl(data, ~wilcox.test(SummaryPSI~Dataset, data = ., alternative='t', paired=F)$p.value)) %>%  # get p value for wilcoxon test
+                dplyr::select(-data) %>%
+                mutate(P=format.pval(P, digits=2)) %>%
+                mutate(label=str_glue("P={P}")),
+            aes(label=label),
+            vjust=1, hjust=1) +
+    facet_grid(Category~Rank~ProductiveOrUnproductive) +
+    scale_x_continuous(trans='log10') +
+    coord_cartesian(xlim=c(0.1, 100)) +
+  labs(y='ecdf', x='PSI') +
+  theme_bw()
+
+ 
+```
+
+Let's also try plotting by DeltaPSI... That may be more proper
+
+```{r}
+PSI.summarised %>%
+  filter(Rank %in% c(1,2)) %>%
+  filter(!str_detect(SuperAnnotation, "Noncoding")) %>%
+  mutate(ProductiveOrUnproductive = case_when(
+    str_detect(SuperAnnotation, "UnproductiveCodingGene") ~ "Unproductive",
+    TRUE ~ "Productive")) %>%
+  dplyr::select(ProductiveOrUnproductive, Category, Rank, Dataset, SummaryPSI, TopCandidateSNP, Intron) %>%
+  distinct() %>%
+  pivot_wider(names_from = c("Dataset", "Rank"), values_from="SummaryPSI") %>%
+  mutate(DeltaPSI_1 = log2(chRNA.Expression.Splicing_1/Expression.Splicing_1)) %>%
+  mutate(DeltaPSI_2 = log2(chRNA.Expression.Splicing_2/Expression.Splicing_2)) %>%
+  dplyr::select(ProductiveOrUnproductive, DeltaPSI_1, DeltaPSI_2, Category,  TopCandidateSNP, Intron) %>%
+  gather(key="genotype", value="DeltaPSI", DeltaPSI_1, DeltaPSI_2) %>%
+  ggplot(aes(x=DeltaPSI, color=genotype)) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(-2,2)) +
+  geom_vline(xintercept = 0) +
+  scale_color_manual(values=c("DeltaPSI_1"="red", "DeltaPSI_2"="black"),labels=c("DeltaPSI_1"="low/low", "DeltaPSI_2"="high/high"), name="genotype") +
+  facet_grid(Category~ProductiveOrUnproductive) +
+  labs(y="ecdf", x="log2FC(chRNA.PSI/polyA.PSI)")
+
+PSI.summarised %>%
+  filter(Rank %in% c(1,2)) %>%
+  filter(!str_detect(SuperAnnotation, "Noncoding")) %>%
+  mutate(ProductiveOrUnproductive = case_when(
+    str_detect(SuperAnnotation, "UnproductiveCodingGene") ~ "Unproductive",
+    TRUE ~ "Productive")) %>%
+  dplyr::select(ProductiveOrUnproductive, Category, Rank, Dataset, SummaryPSI, TopCandidateSNP, Intron) %>%
+  distinct() %>%
+  pivot_wider(names_from = c("Dataset", "Rank"), values_from="SummaryPSI") %>%
+  mutate(DeltaPSI_1 = chRNA.Expression.Splicing_1-Expression.Splicing_1) %>%
+  mutate(DeltaPSI_2 = chRNA.Expression.Splicing_2-Expression.Splicing_2) %>%
+  dplyr::select(ProductiveOrUnproductive, DeltaPSI_1, DeltaPSI_2, Category,  TopCandidateSNP, Intron) %>%
+  gather(key="genotype", value="DeltaPSI", DeltaPSI_1, DeltaPSI_2) %>%
+  ggplot(aes(x=DeltaPSI, color=genotype)) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(-5,5)) +
+  geom_vline(xintercept = 0) +
+  scale_color_manual(values=c("DeltaPSI_1"="red", "DeltaPSI_2"="black"),labels=c("DeltaPSI_1"="low/low", "DeltaPSI_2"="high/high"), name="genotype") +
+  facet_grid(Category~ProductiveOrUnproductive) +
+  labs(y="ecdf", x="DeltaPSI\nchRNA.PSI - polyA.PSI") +
+  theme_bw()
+```
+
+
+Ok, so it seems all consistent with expectations... Let's think about exactly how to present for manuscript... For now let's just make some figures that I imagine may go best in supplemet:
+
+```{r}
+P.PSI.histogram <- dat.to.plot.PSI.Tests %>%
+  filter(Dataset == "Expression.Splicing" & Rank=="high/high") %>%
+  ggplot(aes(x=PSI, fill=ProductiveOrUnproductive)) +
+  geom_histogram() +
+  scale_x_continuous(expand=c(0,1)) +
+  scale_y_continuous(expand=c(0,1)) +
+  facet_wrap(~ProductiveOrUnproductive, scales="free") +
+  scale_fill_manual(name="Splice junction type", values=c("Productive"="#377eb8", "Unproductive"="#e41a1c")) +
+  labs(x="PSI in high/high genotype", y="Number unique sQTL introns\ncolocalized with GWAS")
+P.PSI.histogram
+
+P.PSI.histogram.tests <- ggplot(dat.to.plot.PSI.Tests, aes(x=SummaryPSI)) +
+    stat_ecdf(aes(color=Dataset)) +
+    geom_text(x=Inf, y=0.1,
+            data =
+              dat.to.plot.PSI.Tests %>%
+                filter(SummaryPSI>0) %>%
+                nest(-Rank, -Category, -ProductiveOrUnproductive) %>%                    # for each group nest data
+                mutate(P = map_dbl(data, ~wilcox.test(SummaryPSI~Dataset, data = ., alternative='t', paired=F)$p.value)) %>%  # get p value for wilcoxon test
+                dplyr::select(-data) %>%
+                mutate(P=format.pval(P, digits=2)) %>%
+                mutate(label=str_glue("P={P}")),
+            aes(label=label),
+            vjust=1, hjust=1) +
+    facet_grid(Category~Rank~ProductiveOrUnproductive, labeller = labeller(groupwrap = label_wrap_gen(10))) +
+    scale_x_continuous(trans='log10') +
+    scale_color_manual(values=c("Expression.Splicing"="#377eb8", "chRNA.Expression.Splicing"="#4daf4a"), labels=c("Expression.Splicing"="steady-state RNA", "chRNA.Expression.Splicing"="chRNA"), name="Dataset") +
+    coord_cartesian(xlim=c(0.1, 100)) +
+  labs(y='ecdf', x='PSI') +
+  theme_bw() +
+  theme(legend.position="bottom")
+P.PSI.histogram.tests
+  
+```
+
+
 Fig GTEx thing
 
 ```{r}
@@ -119,14 +423,15 @@ Ordered_eGenes <- dat.Distinct.H3k27ac %>%
 
 dat.toplot <- bind_rows(
   dat.Distinct.H3k27ac %>%
-    dplyr::select(eGene,beta=beta_GTEx, tissue, sQTL_or_hQTL, BensClassification),
+    dplyr::select(eGene,beta=beta_GTEx, tissue, sQTL_or_hQTL, BensClassification, nom_pval),
   dat.Distinct.H3k27ac %>%
     distinct(TopSNP, eGene, .keep_all=T) %>%
     mutate(tissue="LCL_Geuvadis") %>%
-    dplyr::select(eGene, beta=eQTL_beta, tissue, sQTL_or_hQTL, BensClassification) 
+    dplyr::select(eGene, beta=eQTL_beta, tissue, sQTL_or_hQTL, BensClassification, nom_pval) 
 ) %>%
   mutate(tissue = relevel(factor(tissue), ref="LCL_Geuvadis")) %>%
   mutate(eGene = factor(eGene, levels=Ordered_eGenes))
+
 ggplot(dat.toplot, aes(fill=beta, x=tissue, y=eGene)) +
   geom_raster() +
   facet_wrap(~sQTL_or_hQTL, scales="free") +
@@ -149,6 +454,344 @@ dat.toplot %>%
 
 
 dat.toplot$tissue %>% unique()
+```
+
+I like the heatmap, and the ecdf with a significance test results... But I think the heatmap could be imporoved in a few ways:
+
+- Exclude tissues that are particularly noisy. Maybe the really noisy ones are the ones with low sample size so I would feel extra justified throwing them out on that basis.
+- Reorder tissues (columns) of the heatmap according tissue similarity based on gene expression. I can just use GTEx's public data about median expression matrix across tissues to do that clustering/reordering.
+- Possibly consider an alternate heatmap, where rows are reordered based on sd, then the colors across rows will be centered on the median (but not rescaled by standard deviation) to really make it visually obvious where the non-tissue-pervasive effects are.
+
+First let's check out the sample size thing:
+
+```{r}
+SampleSizePerGTExTissue <- read_tsv("../code/scratch/GTExSampleSizePlus6.tsv", col_names=c("tissue", "NPlus6")) %>%
+  mutate(N = NPlus6-6) %>%
+  mutate(tissue = str_replace(tissue, "GTEx/QTLs/(.+?)/cpm.bed.gz", "\\1")) %>%
+  dplyr::select(tissue, N)
+
+SampleSizePerGTExTissue %>%
+  ggplot(aes(x=tissue, y=N)) +
+  geom_col() +
+  Rotate_x_labels
+
+
+
+```
+
+Ok, so some of those tissues have way too few samples for QTLcalling and they definitely should be filtered out. Let's filter out any tissues where n<=70
+
+```{r}
+tissues.to.keep <- SampleSizePerGTExTissue %>%
+  filter(N>=70) %>%
+  inner_join(dat.toplot) %>%
+  distinct(tissue) %>%
+  pull(tissue)
+
+```
+
+And now let's reorder the remaining tissues based on clustering of median gene expression
+
+```{r}
+url <- "https://storage.googleapis.com/gtex_analysis_v8/rna_seq_data/GTEx_Analysis_2017-06-05_v8_RNASeQCv1.1.9_gene_median_tpm.gct.gz"
+zip_file <- tempfile(fileext = ".gz")
+download.file(url, zip_file, mode = "wb")
+df <- read_tsv(zip_file, skip=2) %>%
+  mutate(gene = str_replace(Name, "(^.+?)\\..+?$", "\\1"))
+
+TissueConversionKey <- data.frame( OriginalNames = (df %>%
+  dplyr::select(-1, -2, -gene) %>%
+  colnames())) %>%
+  mutate(NewName = str_replace_all(OriginalNames, "[\\(\\)]", "")) %>%
+  mutate(NewName = str_replace_all(NewName, " - ", "_")) %>%
+  mutate(NewName = str_replace_all(NewName, " ", "_")) %>%
+  mutate(NewName = str_to_lower(NewName)) %>%
+  filter(NewName %in% tissues.to.keep)
+
+OrderedMeanExpressedGenes <- df %>%
+  dplyr::select(Name, all_of(TissueConversionKey$OriginalNames)) %>%
+  column_to_rownames("Name") %>%
+  as.matrix() %>%
+  log2() %>%
+  apply(1, mean) %>%
+  sort(decreasing=T)
+
+Top10KGenes <- OrderedMeanExpressedGenes[1:10000] %>% names()
+
+
+tree <- df %>%
+  filter(Name %in% Top10KGenes) %>%
+  dplyr::select(Name, all_of(TissueConversionKey$OriginalNames)) %>%
+  dplyr::rename(!!!(TissueConversionKey %>% dplyr::select(2, 1) %>% deframe())) %>%
+  column_to_rownames("Name") %>%
+  as.matrix() %>%
+  log2() %>%
+  cor(method='s') %>%
+  dist() %>% hclust()
+
+plot(x = tree, labels =  row.names(tree), cex = 0.5)
+
+OrderedTissues <- tree$labels[c(tree$order)]
+
+dat.toplot$tissue %>% unique()
+
+P.TissuePervasiveness <- dat.toplot %>%
+  mutate(beta = case_when(
+    beta > 1 ~ 1,
+    beta < -1 ~ -1,
+    TRUE ~ beta
+  )) %>%
+  filter(tissue %in% c(OrderedTissues, "LCL_Geuvadis")) %>%
+  mutate(tissue = factor(tissue, levels=c("LCL_Geuvadis", OrderedTissues))) %>%
+  ggplot(aes(fill=beta, x=tissue, y=eGene)) +
+  geom_raster() +
+  facet_wrap(~sQTL_or_hQTL, scales="free") +
+  scale_fill_gradient2(name="Effect size\nLog2FC per alt allele", limits=c(-1,1), breaks=c(-1, -0.5, 0, 0.5, 1), labels=c("<-1", -0.5, 0, 0.5, ">1"), high="#9e0142", low="#5e4fa2", mid="#ffffbf") +
+  # scale_fill_distiller(palette = "Spectral",  limits=c(-2,2), breaks=c(-2, -1, 0, 1, 2), labels=c("<-2", 1, 0, 1, ">2")) +
+  Rotate_x_labels +
+  theme(axis.text.y = element_text(size=1.2), axis.text.x = element_text(size=8))
+P.TissuePervasiveness
+
+P.TissuePervasiveness.Normalized <- 
+  inner_join(
+    dat.toplot %>%
+      filter(tissue %in% c(OrderedTissues)),
+    dat.toplot %>%
+      filter(tissue %in% "LCL_Geuvadis"),
+    by=c("eGene", "sQTL_or_hQTL", "BensClassification"),
+    suffix=c("", ".LCL")
+    ) %>%
+  mutate(tissue = factor(tissue, levels=c(OrderedTissues))) %>%
+  ggplot(aes(fill=beta-beta.LCL, x=tissue, y=eGene)) +
+  geom_raster() +
+  facet_wrap(~sQTL_or_hQTL, scales="free") +
+  # scale_fill_gradient2(name="beta_GTEx - beta_LCL", limits=c(-2,2), breaks=c(-2, -1, 0, 1, 2), labels=c("<-2", 1, 0, 1, ">2")) +
+  Rotate_x_labels +
+  theme(axis.text.y = element_text(size=1.2), axis.text.x = element_text(size=8))
+P.TissuePervasiveness.Normalized
+```
+
+Let's also calculate some row-wise summary stats
+
+```{r}
+sd.dat <- dat.toplot %>%
+  filter(tissue %in% c(OrderedTissues, "LCL_Geuvadis")) %>%
+  group_by(eGene, sQTL_or_hQTL) %>%
+  summarise(sd = sd(beta), AbsMedian=abs(median(beta)), NumSigTissues = sum(nom_pval < 0.01, na.rm = T)) %>%
+  ungroup()
+
+ggplot(sd.dat, aes(x=sd, color=sQTL_or_hQTL)) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(0,0.4)) +
+  scale_color_manual(values=c("hQTL"="#6a3d9a", "sQTL"="#e31a1c"), labels=c("hQTL"="313 hQTL/eQTLs", "sQTL"="359 sQTL/eQTLs"))
+
+ggplot(sd.dat, aes(x=AbsMedian, color=sQTL_or_hQTL)) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(0,0.4))
+
+wilcox.test(sd~sQTL_or_hQTL, data=sd.dat)
+
+P.TissuePervasiveness.SD <- ggplot(sd.dat, aes(fill=sd, x=1, y=eGene)) +
+  geom_raster() +
+  facet_wrap(~sQTL_or_hQTL, scales="free") +
+  scale_fill_viridis_c(option="C", limits=c(0,0.4), na.value="#f0f921",  breaks = c(0, 0.2, 0.4), labels=c(0, 0.2, ">0.4"), name=NULL) +
+  Rotate_x_labels +
+  theme(axis.text.y = element_text(size=1), axis.text.x = element_text(size=2)) +
+  theme_void()
+
+P.TissuePervasiveness.SD
+
+
+P.TissuePervasiveness.NumTissues <- ggplot(sd.dat, aes(fill=NumSigTissues, x=1, y=eGene)) +
+  geom_raster() +
+  facet_wrap(~sQTL_or_hQTL, scales="free") +
+  scale_fill_viridis_c(option="D", name=NULL) +
+  Rotate_x_labels +
+  theme(axis.text.y = element_text(size=1), axis.text.x = element_text(size=2)) +
+  theme_void()
+
+P.TissuePervasiveness.NumTissues
+
+
+
+wilcox.test(AbsMedian~sQTL_or_hQTL, data=sd.dat)
+
+sd.dat %>%
+  group_by(sQTL_or_hQTL) %>%
+  summarise(Med_sd = median(sd), Med_AbsMedian=median(AbsMedian))
+
+
+
+
+P.TissuePervasiveness.AbsMedian <- ggplot(sd.dat, aes(fill=AbsMedian, x=1, y=eGene)) +
+  geom_raster() +
+  facet_wrap(~sQTL_or_hQTL, scales="free") +
+  scale_fill_viridis_c(option="A", limits=c(0,0.4), na.value="#fcfdbf", breaks = c(0, 0.2, 0.4), labels=c(0, 0.2, ">0.4"), name=NULL) +
+  Rotate_x_labels +
+  theme(axis.text.y = element_text(size=1), axis.text.x = element_text(size=2)) +
+  theme_void()
+P.TissuePervasiveness.AbsMedian
+
+
+TissuePervasiveness.TestDat <- sd.dat %>%
+  gather(key="stat", value="value", sd, AbsMedian, NumSigTissues) %>%
+  bind_rows(
+    dat.toplot %>%
+    filter(tissue %in% c("LCL_Geuvadis")) %>%
+    mutate(value=abs(beta), stat="|EffectSize| in LCL_Geuvadis (Disovery set)") %>%
+    dplyr::select(eGene, sQTL_or_hQTL, stat, value)
+  ) %>%
+  mutate(stat=recode(stat, "sd"="Standard deviation of effect across GTEx tissues", "sd"="Standard deviation of effect across GTEx tissues", "AbsMedian"="Median |EffectSize| across GTEx tissues", "NumSigTissues"="# significant tissues (P<0.01)")) %>%
+  mutate(stat = relevel(factor(stat), ref="|EffectSize| in LCL_Geuvadis (Disovery set)"))
+
+TissuePervasiveness.TestDat
+
+
+
+P.TissuePervasiveness.TestResults <- ggplot(TissuePervasiveness.TestDat) +
+  stat_ecdf(aes(color=sQTL_or_hQTL, x=value)) +
+  scale_color_manual(values=c("hQTL"="#6a3d9a", "sQTL"="#e31a1c"), labels=c("hQTL"="313 hQTL/eQTLs", "sQTL"="359 sQTL/eQTLs")) +
+  geom_text(x=Inf, y=0.1,
+            data = 
+              TissuePervasiveness.TestDat %>% group_by(stat) %>% 
+                 do(w = wilcox.test(value~sQTL_or_hQTL, data=., paired=FALSE)) %>% 
+                 summarise(stat, P = format.pval(signif(w$p.value, 3))) %>%
+                ungroup() %>%
+                mutate(label=str_glue("P={P}")),
+            aes(label=label),
+            vjust=1, hjust=1) +
+  facet_wrap(~ stat, scales = "free_x", nrow = 1, strip.position = "bottom", labeller = label_wrap_gen(20)) +
+  theme(
+    aspect.ratio = 1,
+    strip.background = element_blank(),
+    strip.placement = "outside"
+  ) +
+  labs(x=NULL, y="cumulative fraction", color=NULL) +
+  theme(legend.position = "bottom")
+
+P.TissuePervasiveness.TestResults
+
+P.TissuePervasiveness.TestResults +
+  coord_cartesian(xlim=c(0,0.4))
+
+
+P.TissuePervasiveness.TestResults +
+  coord_cartesian(xlim=c(0,1))
+
+```
+
+Let's plot it one more way that I think will make the heatmap visually pop more, especially if I am going to downsize it for the inclusion in a main figure. Specifically, if I just plot cells in the heatmap as black/white for significant or not significant, it might get the point across better visually (though lacking a some analytical nuance, so maybe I would still include the full beta heatmap in the supplement)
+
+```{r}
+Ordered_eGenes <- dat.Distinct.H3k27ac %>%
+  distinct(TopSNP, eGene, .keep_all=T) %>%
+  arrange(abs(eQTL_beta)) %>%
+  pull(eGene)
+
+dat.toplot.forsimplified <- inner_join(
+  dat.toplot %>%
+    mutate(eGene = factor(eGene, levels=Ordered_eGenes)),
+  dat.toplot %>%
+    filter(tissue=="LCL_Geuvadis") %>%
+    dplyr::select(-tissue),
+  by = c("eGene", "sQTL_or_hQTL", "BensClassification")) %>%
+  mutate(IsSig = case_when(
+  nom_pval.x < 0.01 ~ "SigCon",
+  TRUE ~ "NS"
+  )) %>%
+  filter(tissue %in% c(OrderedTissues, "LCL_Geuvadis")) %>%
+  mutate(tissue = factor(tissue, levels=c("LCL_Geuvadis", OrderedTissues))) %>%
+  mutate(sQTL_or_hQTL = recode(sQTL_or_hQTL, "sQTL"="359 AS-NMD mediated eQTLs", "hQTL"="313 transcription mediated eQTLs"))
+
+
+dat.toplot.forsimplified %>%
+  filter(tissue=="LCL_Geuvadis")
+
+
+ggplot(dat.toplot.forsimplified, aes(fill=abs(beta.y), x=tissue, y=eGene)) +
+  geom_raster() +
+  facet_wrap(~sQTL_or_hQTL, scales="free") +
+  scale_fill_gradient2() +
+  Rotate_x_labels +
+  theme(axis.text.y = element_text(size=1.2), axis.text.x = element_text(size=8))
+
+dat.toplot.forsimplified %>%
+  distinct(eGene, .keep_all=T) %>%
+  count(sQTL_or_hQTL)
+
+P.TissuePervasiveness.simplified <- dat.toplot.forsimplified %>%
+  mutate(IsSig = recode(IsSig, "SigDis"="SigCon")) %>%
+  filter(!tissue=="LCL_Geuvadis") %>%
+  ggplot() +
+  geom_raster(aes(fill=IsSig, x=tissue, y=eGene)) +
+  facet_wrap(~sQTL_or_hQTL, scales="free", ncol=1, strip.position = "left", labeller = label_wrap_gen(10)) +
+  # scale_fill_manual(name="IsSig", values=c("SigCon"="red", "NS"="black", "SigDis"="red")) +
+  scale_fill_manual(name=NULL, values=c("SigCon"="#f7fcb9", "NS"="black"), labels=c("SigCon"="Significant eQTL in GTEx tissue\nP<0.01", "NS"="Not significant")) +
+  geom_rect(data=data.frame(sQTL_or_hQTL = "359 AS-NMD mediated eQTLs"), xmin=-Inf, xmax=Inf, ymin=-Inf, ymax=Inf, color="#e31a1c", alpha=0, size=3) +
+  geom_rect(data=data.frame(sQTL_or_hQTL = "313 transcription mediated eQTLs"), xmin=-Inf, xmax=Inf, ymin=-Inf, ymax=Inf, color="#6a3d9a", alpha=0, size=3) +
+  theme(axis.text.y = element_text(size=1.2), axis.text.x = element_text(size=8)) +
+  theme(axis.title.y=element_blank(),
+        axis.text.y =element_blank(),
+        axis.ticks.y=element_blank())+
+  theme(
+        # axis.title.x =element_blank(),
+        axis.text.x =element_blank(),
+        axis.ticks.x=element_blank()) +
+  theme(legend.position='bottom') +
+  labs(x="33 GTEx tissues") +
+  guides(fill=guide_legend(nrow=2,byrow=TRUE))
+P.TissuePervasiveness.simplified
+
+
+P.TissuePervasiveness.TestResults
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_CondensedGTExHeatmap.pdf",P.TissuePervasiveness.simplified , width=3, height=4.5)
+
+
+P.NumTissues.simplfied <- dat.toplot.forsimplified %>%
+  filter(!tissue=="LCL_Geuvadis") %>%
+  group_by(eGene, sQTL_or_hQTL) %>%
+  count(IsSig) %>%
+  filter(IsSig == "SigCon") %>%
+  ungroup() %>%
+  ggplot(aes(x=n, color=sQTL_or_hQTL)) +
+  stat_ecdf() +
+  scale_color_manual(values=c("359 AS-NMD mediated eQTLs"="#e31a1c", "313 transcription mediated eQTLs"="#6a3d9a")) +
+  scale_x_continuous(breaks=c(0,8,16,24, 32)) +
+  labs(y="Cumulative\nfraction", x="# significant\ntissues") +
+  theme(legend.position='none')
+P.NumTissues.simplfied
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_CondensedGTExNumTissues.pdf",P.NumTissues.simplfied , width=2.5, height=2.5)
+
+dat.toplot.forsimplified %>%
+  filter(!tissue=="LCL_Geuvadis") %>%
+  group_by(eGene, sQTL_or_hQTL) %>%
+  count(IsSig) %>%
+  filter(IsSig == "SigCon") %>%
+  ungroup() %>%
+  wilcox.test(n~sQTL_or_hQTL ,data=.)
+
+dat.toplot.forsimplified %>%
+  filter(!tissue=="LCL_Geuvadis") %>%
+  group_by(eGene, sQTL_or_hQTL) %>%
+  count(IsSig) %>%
+  filter(IsSig == "SigCon") %>%
+  ungroup() %>%
+  ggplot(aes(fill=n, x=1, y=eGene)) +
+  geom_raster() +
+  scale_fill_viridis_c() +
+  facet_wrap(~sQTL_or_hQTL, scales="free", ncol=1, strip.position = "left", labeller = label_wrap_gen(15)) +
+    theme_void()
+
+
+dat.toplot.forsimplified %>%
+  filter(!tissue=="LCL_Geuvadis") %>%
+  group_by(eGene, sQTL_or_hQTL) %>%
+  count(IsSig) %>%
+  filter(IsSig == "SigCon") %>%
+  ungroup() %>%
+  group_by(sQTL_or_hQTL) %>%
+  summarise(median = median(n))
 ```
 
 
@@ -178,57 +821,117 @@ hyprcoloc.results <- read_tsv("../code/hyprcoloc/Results/ForGWASColoc/GWASColoc_
 
 hyprcoloc.results$gwas.trait %>% unique() %>% sort()
 
-hyprcoloc.results %>%
-  filter(gwas.trait == "Multiple sclerosis" & ColocalizedClusterContainsGWASTrait)
-
-
-MS.dat <- read_tsv("../code/gwas_summary_stats/StatsForColoc/TRANSETHNICRA.standardized.txt.gz")
-
-sample_n_of <- function(data, size, ...) {
-  dots <- quos(...)
-  
-  group_ids <- data %>% 
-    group_by(!!! dots) %>% 
-    group_indices()
-  
-  sampled_groups <- sample(unique(group_ids), size)
-  
-  data %>% 
-    filter(group_ids %in% sampled_groups)
-}
-
-RA.dat %>%
-  sample_n_of(10, loci) %>%
-  mutate(z=beta/SE)
-
-RA.dat %>% count(loci)
-
 
 ```
+
+### Figure about GWAS eQTL sQTL hQTL concordance
+
+Are there cases where an sQTL/eQTL and also a hQTL/eQTL both contribute independent effects to a gene/GWAS pair. Are the effects concordant? If so, that would be consistent with eQTL mediating the sQTL/GWAS signal.
+
+Here is the approach I will take:
+
+- Find all sQTL/GWAS and sQTL/eQTL/GWAS colocalizations. For each of those, get the top sQTL SNP, filter out if nominally any hQTL @ TSS. Then for each of those genes, look if it contains any hQTL @ TSS that is also an eQTL.
+
+Save both of those SNPs, including their eQTL effect sizes. Assess LD (Should be low because of prior filtering) and possibly further filter. Look up the effects of both of those SNPs in GWAS. Assess concordance of eQTL-->GWAS effect
 
 
 ### MS locus For yang's grant
 
 ```{r}
 
-# hyprcoloc/LociWiseSummaryStatsInput/ForGWASColoc/TRANSETHNICRA.txt.gz gwas_summary_stats/StatsForColoc/TRANSETHNICRA.standardized.txt.gz 
+hyprcoloc.results %>%
+  filter(gwas.trait == "Multiple sclerosis" & ColocalizedClusterContainsGWASTrait) %>%
+  filter(GWAS.Loci == "chr12_6330843_IMSGC2019")
 
-SummaryStats <- fread("../code/hyprcoloc/LociWiseSummaryStatsInput/ForGWASColoc/IMSGC2019.txt.gz", nrows=Inf) %>%
-        separate(snp, into=c("chrom", "pos", "A1_mol", "A2_mol"), sep=":", convert=T, remove=F) %>%
-        mutate(chrom = paste0("chr", chrom)) %>%
-        mutate(gwas_locus = str_replace(gwas_locus, "(.+?)_(.+?)_.+_(.+?)$", "\\1_\\2_\\3"))
+```
+
+So it colocalizes with a sQTL in TNFRSF1A (ENSG00000067182.8), but not eQTL. It could be that there really is a sQTL->eQTL->trait effect but the eQTL just doesn't pass statistical threshold for colocalization... I will want to check out the original signals. and also, is that sQTL an unproductive sQTL?
+
+Let's double check manually if I believe that this splicing event is truly unprotuctive. From browsing IGV, it looks like a skipping event of this 'basic exon':
+
+chr12:6,330,827-6,330,973
+
+```{r}
+IntronAnnotations <- read_tsv("../data/IntronAnnotationsFromYang.Updated.tsv.gz")
+
+IntronAnnotations %>%
+  filter(chrom=="chr12" & start ==6330711 & end ==6333069)
+```
+
+Ok so it is an unproductive sQTL, as the colocalizing sQTL intron is an unproductive intron... Why didn't the eQTL colocalize... Let's look a bit more at the coloc results at this locus.
 
 
-Gwas_SummaryStats <- fread("../code/gwas_summary_stats/StatsForColoc/IMSGC2019.standardized.txt.gz") %>%
-        mutate(phenotype = str_replace(loci, "(.+?)_(.+?)_N_N_(.+)$", "\\1_\\2_\\3")) %>%
-        dplyr::select(chrom, pos=start, phenotype, beta, beta_se=SE, A1, A2)
+```{r}
+hyprcoloc.results %>%
+  filter(GWAS.Loci == "chr12_6330843_IMSGC2019") %>%
+  arrange(desc(ColocalizedClusterContainsGWASTrait), TopCandidateSNP, PhenotypeClass) %>%
+  filter(str_detect(Phenotype, "ENSG00000067182"))
+```
 
-SummaryStats %>%
-  filter(phenotype== "ENSG00000067182.8")
+Ok, so the eQTL wasn't colocalized because it wasn't tested. It must've not been a significant eQTL at the significance level I was using... Let's plot the eQTL effect and sQTL effect of the gene and intron at the top colocalizing SNP...
+
+```{bash, eval=F}
+cd ../code/scripts/GenometracksByGenotype
+
+python ExtractPhenotypeBedByGenotype.py --Bed ../../QTLs/QTLTools/chRNA.Splicing/OnlyFirstReps.sorted.qqnorm.bed.gz --VCF ../../Genotypes/1KG_GRCh38/Autosomes.vcf.gz --FeatureName 12:6330711:6333069:clu_29526_- --SnpPos chr12:6330843 > ../../scratch/Boxplot.dat.MS_TNFRSF1A_locus.sQTL_chRNA.tsv
+
+python ExtractPhenotypeBedByGenotype.py --Bed ../../QTLs/QTLTools/polyA.Splicing/OnlyFirstReps.sorted.qqnorm.bed.gz --VCF ../../Genotypes/1KG_GRCh38/Autosomes.vcf.gz --FeatureName 12:6330711:6333069:clu_29526_- --SnpPos chr12:6330843 > ../../scratch/Boxplot.dat.MS_TNFRSF1A_locus.sQTL_polyA.tsv
 
 
-SummaryStats$phenotype %>% unique()
-  
+python ExtractPhenotypeBedByGenotype.py --Bed ../../QTLs/QTLTools/Expression.Splicing/OnlyFirstReps.sorted.qqnorm.bed.gz --VCF ../../Genotypes/1KG_GRCh38/Autosomes.vcf.gz --FeatureName ENSG00000067182.8 --SnpPos chr12:6330843 > ../../scratch/Boxplot.dat.MS_TNFRSF1A_locus.eQTL_chRNA.tsv
+
+python ExtractPhenotypeBedByGenotype.py --Bed ../../QTLs/QTLTools/chRNA.Expression.Splicing/OnlyFirstReps.sorted.qqnorm.bed.gz --VCF ../../Genotypes/1KG_GRCh38/Autosomes.vcf.gz --FeatureName ENSG00000067182.8 --SnpPos chr12:6330843 > ../../scratch/Boxplot.dat.MS_TNFRSF1A_locus.eQTL_polyA.tsv
+
+```
+
+And plot those boxplots
+```{r}
+dat.boxplot <- Sys.glob("../code/scratch/Boxplot.dat.MS_TNFRSF1A_locus.*.tsv") %>%
+  setNames(str_replace(., "../code/scratch/Boxplot.dat.MS_TNFRSF1A_locus.(.+?).tsv", "\\1")) %>%
+  lapply(fread, col.names=c("SampleID", "NormalizedExpression", "genotype", "Ref", "Alt", "ID")) %>%
+  bind_rows(.id="Phenotype") %>%
+  filter(!genotype==3)
+
+ggplot(dat.boxplot, aes(x=genotype, y=NormalizedExpression)) +
+  geom_hline(yintercept=0, linetype='dashed') +
+  geom_boxplot(outlier.shape=NA, alpha=1, aes(group=genotype)) +
+  geom_smooth(method='lm') +
+  scale_x_continuous(breaks=c(0,1,2)) +
+  geom_jitter(width=0.25, alpha=0.25) +
+  facet_wrap(~Phenotype) +
+  labs("TNFRSF1A eQTLs/sQTLs, SNP=chr12:6330843")
+```
+So conclusion about this locus:
+that MS locus is slightly confusing... I also see siginficant colocalization between the GWAS and the sQTL (specifically, splice junction chr12:6330711:6333069). And we classify that splice junction as unproductive, and manually inspecting it, I think I agree with that 'unprductive' classification since it skips an assymetric exon in the basic/productive transcript structure. However, the surprising thing is that I don't see eQTL signal. Like here is the boxplot for the sQTL and eQTL signal. Let me quickly look up the nominal P-value for the eQTL signal (when including PCs as covariates, which isn't accounted for in the boxplot I show).
+
+## Save plots
+
+```{r}
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_TissuePervasivenessBetas.pdf",P.TissuePervasiveness, width=15, height=8)
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_TissuePervasivenessAbsMedian.pdf",P.TissuePervasiveness.AbsMedian, width=1, height=8)
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_TissuePervasivenessNumTissues.pdf",P.TissuePervasiveness.NumTissues, width=1, height=8)
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_TissuePervasivenessSD.pdf",P.TissuePervasiveness.SD, width=1, height=8)
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_TissuePervasiveness_tests_01.pdf",P.TissuePervasiveness.TestResults , width=8, height=4)
+
+P.TissuePervasiveness.TestResults.Larger <- P.TissuePervasiveness.TestResults +
+  coord_cartesian(xlim=c(0,1))
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_TissuePervasiveness_tests_02.pdf",P.TissuePervasiveness.TestResults.Larger , width=8, height=4)
+
+
+P.TissuePervasiveness.TestResults.Larger <- P.TissuePervasiveness.TestResults +
+  coord_cartesian(xlim=c(0,0.4))
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_TissuePervasiveness_tests_03.pdf",P.TissuePervasiveness.TestResults.Larger, width=8, height=4)
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_PSI_sQTL_GWAS_tests.pdf",P.PSI.histogram.tests , width=5, height=7)
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_PSI_sQTL_GWAS.pdf",P.PSI.histogram , width=7, height=3)
+
 
 ```
 

@@ -410,10 +410,38 @@ rule BgzipAndTabixPsiTables:
         tabix -p bed {output.bed}
         """
 
+rule MakeMorePSI_Tables:
+    input:
+        juncs = "SplicingAnalysis/CombinedJuncTables/All.tsv.gz",
+        Annotations = "../data/IntronAnnotationsFromYang.Updated.tsv.gz",
+        clustered_juncs = "../code/SplicingAnalysis/leafcutter/clustering/autosomes/leafcutter_perind_numers.counts.gz"
+    output:
+        expand("SplicingAnalysis/NormalizedPsiTables/{PsiStat}_{Dataset}.bed", PsiStat = ["CountsOverClusterSum", "CountsOverClusterMax", "CountsOverMedianProductive", "CountsOverMedianProductiveCoercedRange"], Dataset = ["chRNA.Expression.Splicing", "Expression.Splicing", "MetabolicLabelled.30min", "MetabolicLabelled.60min"])
+    conda:
+        "../envs/r_2.yaml"
+    resources:
+        mem_mb = 48000
+    log:
+        "logs/MakeMorePSI_Tables.log"
+    shell:
+        """
+        (Rscript scripts/MakeNormalizedPSI.Tables.ManyWays.R SplicingAnalysis/NormalizedPsiTables/ {input.juncs} {input.Annotations} ) &> {log}
+        """
+
+use rule BgzipAndTabixPsiTables as BgzipAndTabixMorePsiTables with:
+    input:
+        "SplicingAnalysis/NormalizedPsiTables/{PsiStat}_{Dataset}.bed" 
+    log:
+        "logs/BgzipAndTabixMorePsiTables/{PsiStat}/{Dataset}.log"
+    output:
+        bed = "SplicingAnalysis/NormalizedPsiTables/{PsiStat}_{Dataset}.bed.gz",
+        tbi = "SplicingAnalysis/NormalizedPsiTables/{PsiStat}_{Dataset}.bed.gz.tbi"
+
 rule GatherBgzipedTabixPsiTables:
     input:
         expand("SplicingAnalysis/leafcutter/NormalizedPsiTables/PSI.JunctionCounts.{Phenotype}.bed.gz", Phenotype = ["Expression.Splicing", "MetabolicLabelled.30min", "MetabolicLabelled.60min", "chRNA.Expression.Splicing"]),
-        expand("SplicingAnalysis/leafcutter/NormalizedPsiTables/PSI.{Phenotype}.bed.gz", Phenotype = ["Expression.Splicing", "MetabolicLabelled.30min", "MetabolicLabelled.60min", "chRNA.Expression.Splicing"])
+        expand("SplicingAnalysis/leafcutter/NormalizedPsiTables/PSI.{Phenotype}.bed.gz", Phenotype = ["Expression.Splicing", "MetabolicLabelled.30min", "MetabolicLabelled.60min", "chRNA.Expression.Splicing"]),
+        expand("SplicingAnalysis/NormalizedPsiTables/{PsiStat}_{Dataset}.bed.gz.tbi", PsiStat = ["CountsOverClusterSum", "CountsOverClusterMax", "CountsOverMedianProductive", "CountsOverMedianProductiveCoercedRange"], Dataset = ["chRNA.Expression.Splicing", "Expression.Splicing", "MetabolicLabelled.30min", "MetabolicLabelled.60min"])
 
 rule SumJuncCountsAcrossYRISamples:
     input:
@@ -430,6 +458,28 @@ rule SumJuncCountsAcrossYRISamples:
         """
         Rscript scripts/SumJuncCountsAcrossYRISamples.R {output.Summarised} {output.LongTable} {input.juncs_list} {input.junc_tables} &> {log}
         """
+
+rule GetPSI_of_GWAS_sQTLs:
+    input:
+        Gwas_sQTLs = "../output/sQTLsThatColocWithGWAS.tsv.gz",
+        PSI = "SplicingAnalysis/NormalizedPsiTables/CountsOverClusterMax_{RNAseqDataset}.bed.gz",
+        tbi = "SplicingAnalysis/NormalizedPsiTables/CountsOverClusterMax_{RNAseqDataset}.bed.gz.tbi",
+        VCF = "Genotypes/1KG_GRCh38/Autosomes.vcf.gz",
+        VCF_tbi = "Genotypes/1KG_GRCh38/Autosomes.vcf.gz.tbi"
+    output:
+        "SplicingAnalysis/GWAS_sQTL_PSI/{RNAseqDataset}.tsv.gz"
+    log:
+        "logs/GetPSI_of_GWAS_sQTLs/{RNAseqDataset}.log"
+    conda:
+        "../scripts/GenometracksByGenotype/GenometracksByGenotype.conda_env.yml"
+    shell:
+        """
+        python scripts/GetPSI_For_Gwas_sQTLs.py {input.Gwas_sQTLs} {input.PSI} {input.VCF} {output} &> {log}
+        """
+
+rule GatherGetPSI_of_GWAS_sQTLs:
+    input:
+        expand("SplicingAnalysis/GWAS_sQTL_PSI/{RNAseqDataset}.tsv.gz", RNAseqDataset = ["Expression.Splicing", "chRNA.Expression.Splicing"])
 
 
 
