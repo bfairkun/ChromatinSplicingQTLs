@@ -77,6 +77,12 @@ rule MakeWindowsForIntrons_equalSized:
 #        "IntronSlopes/Annotation/GencodeHg38_all_introns.non_corrected.uniq.bed.IntronWindows_equalLength.bed"
 
 
+def GetBedByWindowsType(wildcards):
+    if wildcards.windowStyle == "IntronWindows_equalLength":
+        return "IntronSlopes/Annotation/GencodeHg38_all_introns.non_corrected.uniq.bed.IntronWindows_equalLength.bed"
+    else:
+        return "IntronSlopes/Annotation/GencodeHg38_all_introns.corrected.uniq.bed.IntronWindows.bed"
+
 rule CountReadsInIntronWindows:
     """
     Ignore alignments that are secondary or second read pair. Intersect reads
@@ -84,13 +90,13 @@ rule CountReadsInIntronWindows:
     library prep method)
     """
     input:
-        bed = "IntronSlopes/Annotation/GencodeHg38_all_introns.non_corrected.uniq.bed.IntronWindows_equalLength.bed",
+        bed = GetBedByWindowsType, #"IntronSlopes/Annotation/GencodeHg38_all_introns.non_corrected.uniq.bed.{windowStyle}.bed",
         faidx = "../data/Chrome.sizes",
         bam = 'Alignments/STAR_Align/chRNA.Expression.Splicing/{IndID}/1/Filtered.bam'
     log:
-        "logs/CountReadsInIntronWindows/{IndID}.IntronWindows_equalLength.log"
+        "logs/CountReadsInIntronWindows/{IndID}.{windowStyle}.log"
     output:
-        bed = "IntronSlopes/IntronWindowCounts/{IndID}.IntronWindows_equalLength.bed.gz"
+        bed = "IntronSlopes/IntronWindowCounts/{IndID}.{windowStyle}.bed.gz"
     wildcard_constraints:
         IndID = "|".join(chRNASeqSamples),
         windowStyle="IntronWindows_equalLength|IntronWindows"
@@ -113,6 +119,39 @@ rule CountReadsInIntronWindows:
 #        "logs/CountReadsInIntronWindows/{IndID}.IntronWindows_equalLength.log"
 #    output:
 #        bed = "IntronSlopes/IntronWindowCounts/{IndID}.IntronWindows_equalLength.bed.gz"
+
+rule GetUniqIntrons:
+    input:
+        bed = "IntronSlopes/Annotation/GencodeHg38_all_introns.expressedHostGenes.bed.gz",
+        elements = "IntronSlopes/Annotation/genome_exons.bed",
+        faidx = "../data/Chrome.sizes"
+    output:
+        "IntronSlopes/Annotation/GencodeHg38_all_introns.corrected.uniq.bed"
+    params:
+        max_overlap = 0,#0.01,
+    log: "logs/slopes.unique.log"
+    shell:
+        """
+        (zcat {input.bed} | awk -F'\\t' -v OFS='\\t' '($1 !~ "_") && ($3-$2>=200) {{ print $1, $2+1, $3-1,$7"_"$1"_"$2"_"$3"_"$6,".", $6 }}' | sort | uniq | bedtools sort -i - -faidx {input.faidx} | bedtools intersect -s -v -r -a - -b {input.elements} > {output}) &> {log}
+        """
+
+rule MakeWindowsForIntrons:
+    """
+    For calculating downward slope over introns. Like in Jonkers & Lis. Split
+    introns into equal number of bins
+    """
+    input:
+        bed = "IntronSlopes/Annotation/GencodeHg38_all_introns.corrected.uniq.bed",
+        faidx = "../data/Chrome.sizes"
+    params:
+        MinIntronLength = 500,
+    output:
+        "IntronSlopes/Annotation/GencodeHg38_all_introns.corrected.uniq.bed.IntronWindows.bed"
+    shell:
+        """
+        set +o pipefail;
+        bedtools intersect -a {input.bed} -b {input.bed} -c -s -sorted | awk -F '\\t' '$NF==1 && ($3-$2)>={params.MinIntronLength}' | bedtools makewindows -b - -n 100 -i srcwinnum | bedtools sort -i - -faidx {input.faidx} | awk -F'\\t' -v OFS='\\t' '{{ split($4,a,"_") }} a[5]=="+" {{print $1,$2,$3,$4,".",a[5]}} a[5]=="-" {{print $1,$2,$3, a[1]"_"a[2]"_"a[3]"_"a[4]"_"a[5]"_"101-a[6],".", a[5] }}' > {output}
+        """
         
 rule GetSlopes:
     input:

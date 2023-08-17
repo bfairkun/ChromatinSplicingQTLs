@@ -22,10 +22,10 @@ _, MyArg1, MyArg2 = sys.argv
 
 if 'FivePrime' in MyArg1:
     score_ = maxent.score5
-elif 'ThreePrime.ForMaxEntScan' in MyArg1:
+elif 'ThreePrime' in MyArg1:
     score_ = maxent.score3
 else:
-    raise Exception('Tab file must contain FivePrime or ThreePrime.ForMaxEntScan on its name.')
+    raise Exception('Tab file must contain FivePrime or ThreePrime on its name.')
 
 df_ss = pd.read_csv(MyArg1, sep='\t', names = ['name', 'sequence'])
 
@@ -34,7 +34,7 @@ maxent_score = []
 for idx, row in df_ss.iterrows():
     maxent_score.append(score_(row.sequence))
 
-df_ss['MaxEntScan_score'] = maxent_score
+df_ss['MaxEntScan'] = maxent_score
 
 df_ss.to_csv(MyArg2, sep='\t', header=False, index=False)
 

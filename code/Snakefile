@@ -43,7 +43,7 @@ include: "rules/BenDevelop.smk"
 include: "rules/FineMapping.smk"
 include: "rules/MetaplotsAssays.smk"
 include: "rules/GTEx.smk"
-
+include: "rules/MaxEntScan.smk"
 
 include: "rules/ProcessSmallMoleculeData.smk"
 

@@ -146,7 +146,7 @@ rule plotHeatmapCoverageMetaplots:
         "logs/Metaplots/PlotHeatmap.{Phenotype}.{IndID}.{metaplot}.{stat}.log"
     shell:
         """
-        plotHeatmap -m {input} -o {output} --averageTypeSummaryPlot {wildcards.stat} --regionsLabel {params} --heatmapHeight 14 &>> {log}
+        plotHeatmap -m {input} -o {output} --averageTypeSummaryPlot {wildcards.stat} --regionsLabel {params} --heatmapHeight 10 &>> {log}
         """
         
 use rule plotHeatmapCoverageMetaplots as plotHeatmapCoverageMetaplots_stranded with:
@@ -237,7 +237,7 @@ rule plotHeatmapCoverageMetaplotsQuartiles:
         "logs/Metaplots/PlotHeatmap.Quartiles.{Phenotype}.{IndID}.{quartiles}.{stat}.log"
     shell:
         """
-        plotHeatmap -m {input} -o {output} --averageTypeSummaryPlot {wildcards.stat} --regionsLabel {params} --heatmapHeight 14 &>> {log}
+        plotHeatmap -m {input} -o {output} --averageTypeSummaryPlot {wildcards.stat} --regionsLabel {params} --heatmapHeight 10 &>> {log}
         """
         
 use rule plotHeatmapCoverageMetaplotsQuartiles as plotHeatmapCoverageMetaplotsQuartiles_stranded with:
