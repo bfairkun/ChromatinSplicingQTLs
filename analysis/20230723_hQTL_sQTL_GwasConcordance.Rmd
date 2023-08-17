@@ -1,0 +1,115 @@
+---
+title: "20230723_hQTL_sQTL_GwasConcordance"
+output: html_document
+date: '2023-07-23'
+---
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+
+library(tidyverse)
+library(RColorBrewer)
+library(data.table)
+library(readxl)
+library(qvalue)
+library(knitr)
+
+
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family="Helvetica")))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+```
+
+## Premise
+
+if sQTLs-->GWAS effects are mediated through expression, then independent eQTL signals on the same gene should have similar gene-->GWAS effects. To do this
+
+```{r}
+GWAS.sQTLs <- read_tsv("../output/sQTLsThatColocWithGWAS.tsv.gz")
+
+PC1.PossibleValues <- c("polyA.Splicing")
+PC2.PossibleValues <-c("Expression.Splicing", "H3K4ME3", "H3K36ME3", "H3K27AC", "H3K4ME1", "chRNA.Expression.Splicing")
+PC2.SignificanceFilter <- c("H3K4ME3", "H3K27AC", "H3K36ME3")
+
+
+
+dat <- fread("../code/pi1/PairwisePi1Traits.P.all.txt.gz") %>%
+  filter((PC1 %in% PC1.PossibleValues) & (PC2 %in% PC2.PossibleValues))
+
+Intron.Annotations <- read_tsv("../data/IntronAnnotationsFromYang.tsv.gz") %>%
+  mutate(IntronName = paste(chrom, start, end, strand, sep=":"))
+
+dat.sQTLs.eQTLs.ForScatter$SuperAnnotation %>% unique()
+
+
+
+GWAS.sQTLs.No_Nominal_hQTLs <- dat %>%
+  group_by(P1) %>%
+  filter(!any((PC2 %in% PC2.SignificanceFilter) & (trait.x.p.in.y < 0.01))) %>%
+  ungroup() %>%
+  mutate(IntronName = str_replace(P1, "^(.+?:)clu_.+?([+-])$", "chr\\1\\2")) %>%
+  mutate(ClusterName =  str_replace(P1, "^(.+?:).+?(clu_.+?[+-])$", "chr\\1\\2")) %>%
+  left_join(Intron.Annotations) %>%
+  filter(!str_detect(SuperAnnotation, "NoncodingGene")) %>%
+  mutate(ProductiveOrUnproductive = recode(SuperAnnotation, "UnannotatedJunc_ProductiveCodingGene"="Productive", "UnannotatedJunc_UnproductiveCodingGene"="Unproductive", "AnnotatedJunc_ProductiveCodingGene"="Productive", "AnnotatedJunc_UnproductiveCodingGene"="Unproductive")) %>%
+  group_by(ClusterName, GeneLocus) %>%
+  mutate(sQTL.type = case_when(
+    any(ProductiveOrUnproductive=="Unproductive") ~ "u.sQTL",
+    all(ProductiveOrUnproductive=="Productive") ~ "p.sQTL",
+    TRUE ~ "Other"
+    )) %>%
+  ungroup() %>%
+  filter(PC2 == "Expression.Splicing" & P2 == GeneLocus) %>%
+  inner_join(GWAS.sQTLs) %>%
+  dplyr::select(P1, GeneLocus, beta.x, beta_se.x, singletrait_topvar.x, trait.x.p.in.y, x.beta.in.y, x.beta_se.in.y, chrom:strand, symbol, SuperAnnotation, SemiSupergroupAnnotations, ProductiveOrUnproductive, sQTL.type, GWAS.Loci, GWAS.accession, TopCandidateSNP, Category, gwas.trait)
+  
+
+GWAS.sQTLs.No_Nominal_hQTLs %>%
+  distinct(GeneLocus, .keep_all=T) %>%
+  count(Category)
+
+
+```
+
+So I'm dealing with about 110 genes (if I were to exclude the "Other" categorized loci)... a small sample to begin with to look for independent hQTL/eQTLs... But let's continue nonetheless by looking for hQTLs at those gene's TSS
+
+```{r}
+PeaksToTSS <- Sys.glob("../code/Misc/PeaksClosestToTSS/*_assigned.tsv.gz") %>%
+  setNames(str_replace(., "../code/Misc/PeaksClosestToTSS/(.+?)_assigned.tsv.gz", "\\1")) %>%
+  lapply(read_tsv) %>%
+  bind_rows(.id="ChromatinMark") %>%
+  mutate(GenePeakPair = paste(gene, peak, sep = ";")) %>%
+  distinct(ChromatinMark, peak, gene, .keep_all=T)
+
+dat.hQTLs <- fread("../code/pi1/PairwisePi1Traits.P.all.txt.gz", nrows = Inf) %>%
+  filter(PC2 == "Expression.Splicing" & PC1 %in% c("H3K27AC", "H3K4ME3", "H3K4ME1")) %>%
+  mutate(GenePeakPair = paste(P2, P1, sep=";")) %>%
+  inner_join(PeaksToTSS) %>%
+  filter(FDR.x < 0.1 & trait.x.p.in.y < 0.01 & GeneLocus == P2)
+
+dat.hQTLs.filtered <- dat.hQTLs %>%
+  filter(GeneLocus %in% GWAS.sQTLs.No_Nominal_hQTLs$GeneLocus) %>%
+  group_by(GeneLocus) %>%
+  filter(trait.x.p.in.y == min(trait.x.p.in.y)) %>%
+  ungroup() %>%
+  distinct(GeneLocus, singletrait_topvar.x, .keep_all=T)
+
+dat.hQTLs.filtered
+
+GWAS.Loci.With_sQTL_and_hQTL_eQTLs <- GWAS.sQTLs.No_Nominal_hQTLs %>%
+  dplyr::select(GeneLocus, sQTL.Top.Name=singletrait_topvar.x, sQTL.Top.eQTL.beta=x.beta.in.y, sQTL.Top.eQTL.beta_se=x.beta_se.in.y, sQTL.Top.eQTL.P=trait.x.p.in.y, chrom:GWAS.accession, gwas.trait, Colocalized.Top.Name = TopCandidateSNP,Category ) %>%
+  inner_join(
+    dat.hQTLs.filtered %>%
+      dplyr::select(hQTL.P = P1, GeneLocus, hQTL.Top.Name=singletrait_topvar.x, hQTL.Top.eQTL.beta=x.beta.in.y, hQTL.Top.eQTL.beta_se=x.beta_se.in.y, hQTL.Top.eQTL.P=trait.x.p.in.y)
+    ) %>%
+  filter(sQTL.Top.eQTL.P < 0.01) %>%
+  distinct(GeneLocus, GWAS.Loci, .keep_all=T)
+
+write_tsv(GWAS.Loci.With_sQTL_and_hQTL_eQTLs, "../output/GwasLoci_with_sQTL_and_hQTL_eQTLs.tsv")
+```
+

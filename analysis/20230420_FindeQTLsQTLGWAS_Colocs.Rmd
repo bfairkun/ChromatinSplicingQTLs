@@ -69,7 +69,7 @@ hyprcoloc.results %>%
   
 
 hyprcoloc.results.toplot <- hyprcoloc.results %>%
-  filter(!GWAS.accession=="IMSGC2019") %>%
+  # filter(!GWAS.accession=="IMSGC2019") %>%
   left_join(PhenotypeRecodes.df) %>%
   mutate(PhenotypeRecodes = if_else(is.na(PhenotypeRecodes), PhenotypeClass, PhenotypeRecodes)) %>%
   filter(!PhenotypeRecodes == "APA QTL") %>%
@@ -87,6 +87,10 @@ hyprcoloc.results.toplot <- hyprcoloc.results %>%
   )) %>%
   ungroup()
   # filter(Category=="Other")
+
+hyprcoloc.results.toplot %>%
+  filter(PhenotypeClass=="GWAS") %>%
+  pull(gwas.trait) %>% unique()
 
 Num.Gwas.loci <- hyprcoloc.results.toplot %>%
   distinct(GWAS.Loci, .keep_all=T) %>%

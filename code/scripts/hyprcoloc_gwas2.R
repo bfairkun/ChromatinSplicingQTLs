@@ -11,7 +11,7 @@
 #Use hard coded arguments in interactive R session, else use command line args
 if(interactive()){
     args <- scan(text=
-                 'hyprcoloc/LociWiseSummaryStatsInput/ForGWASColoc/TRANSETHNICRA.txt.gz gwas_summary_stats/StatsForColoc/TRANSETHNICRA.standardized.txt.gz hyprcoloc/Results/ForGWASColoc/GWASColoc_ChromatinAPAAndRNA/Chunks/4.txt.gz "Expression.Splicing polyA.Splicing H3K27AC H3K4ME3 H3K4ME1 H3K36ME3 MetabolicLabelled.30min.Splicing MetabolicLabelled.60min.Splicing chRNA.Expression.Splicing chRNA.Splicing APA_Total APA_Nuclear"',
+                 'hyprcoloc/LociWiseSummaryStatsInput/ForGWASColoc/GCST007799.txt.gz gwas_summary_stats/StatsForColoc/GCST007799.standardized.txt.gz hyprcoloc/Results/ForGWASColoc/GWASColoc_AllRNASeq/Chunks/1.txt.gz "chRNA.IER chRNA.Expression.Splicing H3K27AC CTCF H3K4ME3 chRNA.Splicing MetabolicLabelled.30min MetabolicLabelled.60min Expression.Splicing.Subset_YRI polyA.Splicing.Subset polyA.IER.Subset_YRI chRNA.Expression_ncRNA"',
 # 'hyprcoloc/LociWiseSummaryStatsInput/ForGWASColoc/GCST007800.txt.gz gwas_summary_stats/StatsForColoc/GCST007800.standardized.txt.gz hyprcoloc/Results/ForGWASColoc/GWASColocStandard/Chunks/2.txt.gz "Expression.Splicing Expression.Splicing.Subset_YRI chRNA.Expression.Splicing MetabolicLabelled.30min MetabolicLabelled.60min CTCF H3K27AC H3K4ME3 H3K4ME1 H3K36ME3 H3K36ME3_ncRNA ProCap polyA.Splicing polyA.Splicing.Subset_YRI chRNA.Splicing MetabolicLabelled.30min.Splicing MetabolicLabelled.60min.Splicing chRNA.Expression_ncRNA APA_Nuclear APA_Total polyA.IER polyA.IER.Subset_YRI chRNA.IER MetabolicLabelled.30min.IER MetabolicLabelled.60min.IER chRNA.Slopes chRNA.Splicing.Order"',
              what='character')
 } else{
@@ -52,7 +52,7 @@ main <- function(){
 
     for (i in seq_along(Loci)){
 
-        TestLocus <- Loci[2]
+        TestLocus <- Loci[16]
         TestLocus <- Loci[i]
         print(paste0("running loci", i, " : ", TestLocus))
 
@@ -90,7 +90,6 @@ main <- function(){
             as.matrix()
 
         colnames(betas)
-
 
         ## Consider computing LD matrix as optional input for hyprcoloc
         # snps <- betas %>%
@@ -143,7 +142,7 @@ main <- function(){
 
         traits <- colnames(betas)
         rsid <- rownames(betas)
-        if (length(traits)==1){
+        if (length(traits) %in% c(0, 1) ){
             print("Only one trait... skipping locus")
             next
         }

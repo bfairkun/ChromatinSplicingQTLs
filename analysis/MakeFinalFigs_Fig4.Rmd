@@ -175,7 +175,7 @@ volcano.dat <- bind_rows(
     dplyr::select(logFC, PValue, FDR, gene, symbol, dose.nM=risdiplam_conc) %>%
     mutate(dataset = "chRNA"),
   GeneEffects.Changes %>%
-    dplyr::select(logFC=Estimate.Expression.FC, PValue=polyA.P, gene, dose.nM, symbol=hgnc_symbol, FDR) %>%
+    dplyr::select(logFC=Estimate.Expression.FC, PValue=polyA.P, gene, dose.nM, symbol=hgnc_symbol, FDR, Estimate.expression.untreated) %>%
     mutate(dataset = "polyA")
 )
 
@@ -213,6 +213,37 @@ volcano.dat %>%
   coord_cartesian(xlim=c(-2,2)) +
   facet_wrap(dataset~dose.nM, scales = "free_y")
 
+volcano.dat %>%
+  filter(!is.na(FDR)) %>%
+ggplot( aes(x=logFC, y=-log10(PValue), color=FDR<0.1)) +
+  geom_point(alpha=0.5) +
+  facet_wrap(dataset~dose.nM, scales = "free_y")
+
+P.MA.count.labels <- volcano.dat %>%
+  filter(!is.na(FDR)) %>%
+  filter(dataset == "polyA") %>%
+  mutate(dose.nM = recode(dose.nM, `100`="100nM risdiplam", `3160`="3160nM risdiplam")) %>%
+  filter(FDR<0.01) %>%
+  mutate(sign = sign(logFC)) %>%
+  mutate(UpOrDown = recode(sign, `1`="Up", `-1`="Down")) %>%
+  count(dose.nM, sign, UpOrDown, .drop=F) %>%
+  mutate(y = Inf * sign) %>%
+  mutate(label = str_glue("{n} {UpOrDown}"))
+  
+
+P.MA <- volcano.dat %>%
+  filter(!is.na(FDR)) %>%
+  filter(dataset == "polyA") %>%
+  mutate(dose.nM = recode(dose.nM, `100`="100nM risdiplam", `3160`="3160nM risdiplam"))  %>%
+ggplot( aes(x=Estimate.expression.untreated, y=logFC, color=FDR<0.01)) +
+  geom_point(alpha=0.5) +
+  geom_hline(yintercept=0, linetype='dashed') +
+  scale_color_manual(values=c(`TRUE`="red", `FALSE`="gray")) +
+  geom_text(data=P.MA.count.labels, aes(y=y, label=label, vjust=sign), x=Inf, color="red", hjust=1) +
+  facet_wrap(~dose.nM, scales = "free_y") +
+  labs(x="Expression in DMSO control (log2CPM)", y="log2FoldChange,\nestimated from\ndose-response curve fit")
+P.MA
+
 ```
 
 ### bar plots of predicted effects
@@ -237,6 +268,10 @@ Now let's plot something that I would want to include in manuscript
 
 ```{r}
 Translated.GAGT_CassetteExons$Effect %>% unique()
+
+#Check MYB
+P.bar.dat %>%
+  filter(str_detect(gene, "ENSG00000118513"))
 
 P.bar.dat <- Translated.GAGT_CassetteExons %>%
    mutate(IsAnnotated = if_else(str_detect(SuperAnnotation,"Annotated"), "Annotated by Gencode", "Unannotated", missing="Unannotated")) %>%
@@ -501,7 +536,7 @@ Let's quickly check some genes of interest in this set of NMD-predicted cassette
 ```{r}
 P.boxplot.dat %>%
   filter(ColorEffect == "NMD") %>%
-  filter(hgnc_symbol %in% c("HTT", "SMN2", "GALC", "STAT1", "KCNT2", "FHOD3", "FOXM1", "FOS", "PIEZO2"))
+  filter(hgnc_symbol %in% c("HTT", "SMN2", "GALC", "STAT1", "KCNT2", "FHOD3", "FOXM1", "FOS", "PIEZO2", "MYB"))
 
 P.boxplot.dat %>%
   filter(ColorEffect == "NMD") %>%
@@ -587,9 +622,11 @@ P.scatter <- Scatter.dat %>%
   scale_color_manual(values=c('NMD targets predicted from splicing changes'="black"), labels=c("NMD targets predicted from splicing changes"=str_wrap("NMD targets predicted from splicing changes", 20)), name=NULL) +
   scale_x_continuous(limits=c(-3,3)) +
   scale_y_continuous(limits=c(-3,3)) +
-  labs(x=expression("chRNA "*log["2"]*"FC"), y=expression("polyA "*log["2"]*"FC"), caption=str_wrap(str_glue("post-txn down 14.0 fold enriched for set of NMD targets predicted from splicing, P<2x10-16, hypergeometric test"),40)) +
+  labs(x=expression("chRNA "*log["2"]*"FC"), y=expression("polyA "*log["2"]*"FC"), caption=str_wrap(str_glue("post-txn down 14.9 fold enriched for set of NMD targets predicted from splicing, P<2x10-16, hypergeometric test"),40)) +
   coord_fixed() +
   theme_bw()
+
+P.scatter
 ```
 
 ### Induction of GAGT introns plots
@@ -1090,6 +1127,8 @@ GPCRs <- GO.genes.of.interest %>%
 Now let's do the GO enrichment tests. I'll actually just do them "by hand" with the `fisher.test` (hypergeometric test) function rather than using a dedicated package to systematically look for enrichment across all GO categories, which I am less interested in.
 
 ```{r}
+library(broom)
+
 GO.genes.of.interest.totest <- 
   bind_rows(
     # filter out olfactor GPCRs from GPCR group
@@ -1158,7 +1197,7 @@ results %>%
   # pull(GO) %>% unique()
   # mutate(GO = factor(GO, levels=c("1-10kb", "10-50kb", "50-100kb", ">100kb", "GPCRs", "Nuc receptors", "Kinases", "Ion transporters", "TFs", "BrainEnriched_HumanProteinAtlas"))) %>%
   filter(Druggability %in% c("Tier 1", "SplicingPerturbed")) %>%
-  mutate(Druggability = recode(Druggability, "Tier 1"="1059 targets of approved small molecules", "SplicingPerturbed"="214 Risdiplam-induced NMD targets")) %>%
+  mutate(Druggability = recode(Druggability, "Tier 1"="1059 targets of approved small molecules", "SplicingPerturbed"="219 Risdiplam-induced NMD targets")) %>%
   ggplot(aes(x=GO, y=log2(estimate), fill=GO)) +
   geom_col() +
   geom_errorbar(aes(ymin=log2(conf.low), ymax=log2(conf.high)), width=.2) +
@@ -1300,7 +1339,7 @@ results %>%
   # pull(GO) %>% unique()
   # mutate(GO = factor(GO, levels=c("1-10kb", "10-50kb", "50-100kb", ">100kb", "GPCRs", "Nuc receptors", "Kinases", "Ion transporters", "TFs", "BrainEnriched_HumanProteinAtlas"))) %>%
   filter(Druggability %in% c("Tier 1", "SplicingPerturbed", "Larger set of risdiplam-effected", "OMIM_DomNegative")) %>%
-  mutate(Druggability = recode(Druggability, "Tier 1"="1059 targets of approved small molecules", "SplicingPerturbed"="214 Risdiplam-induced NMD targets", "Larger set of risdiplam-effected"="627 post-txn down genes")) %>%
+  mutate(Druggability = recode(Druggability, "Tier 1"="1059 targets of approved small molecules", "SplicingPerturbed"="219 Risdiplam-induced NMD targets", "Larger set of risdiplam-effected"="627 post-txn down genes")) %>%
   ggplot(aes(x=GO, y=log2(estimate), fill=GO)) +
   geom_col() +
   geom_errorbar(aes(ymin=log2(conf.low), ymax=log2(conf.high)), width=.2) +
@@ -1349,7 +1388,7 @@ P.genesetEnrichment <- results %>%
   # pull(GO) %>% unique()
   # mutate(GO = factor(GO, levels=c("1-10kb", "10-50kb", "50-100kb", ">100kb", "GPCRs", "Nuc receptors", "Kinases", "Ion transporters", "TFs", "BrainEnriched_HumanProteinAtlas"))) %>%
   filter(Druggability %in% c("Tier 1", "SplicingPerturbed", "Larger set of risdiplam-effected")) %>%
-  mutate(Druggability = recode(Druggability, "Tier 1"="1059 targets of approved small molecules", "SplicingPerturbed"="214 Risdiplam-induced NMD targets", "Larger set of risdiplam-effected"="627 post-txn down genes")) %>%
+  mutate(Druggability = recode(Druggability, "Tier 1"="1059 targets of approved small molecules", "SplicingPerturbed"="219 Risdiplam-induced NMD targets", "Larger set of risdiplam-effected"="627 post-txn down genes")) %>%
   filter(!GO %in% c("OMIM_DomNegative")) %>%
   ggplot(aes(x=GO, y=log2(estimate), fill=GO)) +
   geom_col() +
@@ -1406,7 +1445,7 @@ results %>%
 ```{r}
 DruggabilityCategories
 
-GroupLabels <- c("OMIM_DomNegative"="Disease genes", "Whole genome"="Whole genome", "Tier 1"="1059 targets of approved small molecules", "SplicingPerturbed"="214 Risdiplam-induced NMD targets", "Larger set of risdiplam-effected"="627 post-txn down genes")
+GroupLabels <- c("OMIM_DomNegative"="Disease genes", "Whole genome"="Whole genome", "Tier 1"="1059 targets of approved small molecules", "SplicingPerturbed"="219 Risdiplam-induced NMD targets", "Larger set of risdiplam-effected"="627 post-txn down genes")
 
 P.enrichmentByBarplot <- bind_rows(
   DruggabilityCategories.totest.df %>%
@@ -1424,7 +1463,7 @@ P.enrichmentByBarplot <- bind_rows(
   mutate(GO = recode(`GO_Name`, "GOMF_KINASE_ACTIVITY"="Kinases", "GOMF_NUCLEAR_RECEPTOR_ACTIVITY"="Nuc receptors", "GOMF_G_PROTEIN_COUPLED_RECEPTOR_ACTIVITY"="GPCRs", "GOMF_MONOATOMIC_ION_TRANSMEMBRANE_TRANSPORTER_ACTIVITY"="Ion transporters", "GOMF_DNA_BINDING_TRANSCRIPTION_FACTOR_ACTIVITY"="TFs")) %>%
   count(Group, GO) %>%
   mutate(Group = recode(Group, !!!GroupLabels)) %>%
-  mutate(Group = factor(Group, levels=c("1059 targets of approved small molecules", "214 Risdiplam-induced NMD targets", "627 post-txn down genes", "Whole genome", "Disease genes"))) %>%
+  mutate(Group = factor(Group, levels=c("1059 targets of approved small molecules", "219 Risdiplam-induced NMD targets", "627 post-txn down genes", "Whole genome", "Disease genes"))) %>%
   filter(!Group=="627 post-txn down genes") %>%
   ggplot(aes(x=Group, y=n, fill=GO)) +
   geom_col(position="fill") +
@@ -1496,7 +1535,7 @@ P.geneLength <- ggplot(GeneLength.dat, aes(x=GeneLength, color=Group)) +
   coord_cartesian(xlim=c(1, 500)) +
   scale_color_manual(
     labels=c(
-      "SplicingPerturbed"="214 Risdiplam-induced NMD targets",
+      "SplicingPerturbed"="219 Risdiplam-induced NMD targets",
       "SplicingUnperturbedControl"="389 expression-matched genes",
       "Whole protein coding genome"="Whole genome",
       "Tier 1"="1059 targets of approved small molecules"),
@@ -1652,6 +1691,30 @@ P.OMIM.expression.Effections <- Expression.tidyForDose_ActualDataForModel %>%
 P.OMIM.expression.Effections
 
 
+Expression.tidyForDose_ActualDataForModel %>%
+  dplyr::rename(libType = "LibraryType") %>%
+  # filter(ensembl_gene_id %in% OMIM.risdiplam.genes$gene) %>%
+  left_join(ensembl_to_symbols) %>%
+  filter(hgnc_symbol %in% c("HTT", "MYB", "STAT1")) %>%
+  left_join(DiffFactors) %>%
+  mutate(Log2CPM = case_when(
+    libType == "polyA" ~ Log2CPM,
+    libType == "chRNA" ~ Log2CPM + DiffFactor
+  )) %>%
+  # mutate(dose.nM = dose.nM + 0.1) %>%
+  ggplot(aes(x=dose.nM, y=Log2CPM, color=libType)) +
+  geom_point() +
+  scale_color_manual(values=c("chRNA"="#969696", "polyA"="#252525")) +
+  geom_smooth(
+    data = . %>%
+      filter(libType=="polyA"),
+    method = drm, method.args = list(fct = L.4(names=c("Steepness", "LowerLimit", "UpperLimit", "ED50"))), se = FALSE) +
+  scale_x_continuous(trans="log1p", limits=c(0, 10000), breaks=c(10000, 3160, 1000, 316, 100, 31.6, 10, 3.16, 0), labels=rev(c("0", "3.16","10","31.6","100", "316", "1000", "3160", "10000"))) +
+  facet_wrap(~hgnc_symbol, scales="free_y") +
+  Rotate_x_labels +
+  # scale_x_break(c(1,2)) +
+  labs(x="[risdiplam] (nanomolar)", y=expression("Expression; "*log["2"]*"CPM"))
+
 ```
 
 One more version with just log2FC on y axis so we don't have to artifiially/misleadingly set different CPM scale for chRNA.
@@ -1738,6 +1801,62 @@ P.stat1.splicing
 ```
 
 
+Get just myb data and save
+
+
+```{r}
+P.myb.expression <- Expression.tidyForDose_ActualDataForModel.Relative %>%
+  dplyr::rename(libType = "LibraryType") %>%
+  left_join(ensembl_to_symbols) %>%
+  filter(hgnc_symbol == "MYB") %>%
+  # mutate(dose.nM = dose.nM + 0.1) %>%
+  ggplot(aes(x=dose.nM, y=Log2CPM-MeanNormalCPM, color=libType)) +
+  geom_point() +
+  scale_color_manual(values=c("chRNA"="#969696", "polyA"="#252525")) +
+  geom_smooth(
+    data = . %>%
+      filter(libType=="polyA"),
+    method = drm, method.args = list(fct = L.4(names=c("Steepness", "LowerLimit", "UpperLimit", "ED50"))), se = FALSE) +
+  scale_x_continuous(trans="log1p", limits=c(0, 10000), breaks=c(10000, 3160, 1000, 316, 100, 31.6, 10, 3.16, 0), labels=rev(c("0", "3.16","10","31.6","100", "316", "1000", "3160", "10000"))) + 
+  # Rotate_x_labels +
+  scale_x_break(c(2,2)) +
+  theme(axis.text.x.top = element_blank(),
+        axis.ticks.x.top = element_blank(),
+        axis.line.x.top = element_blank(),
+        plot.background = element_blank()) +
+  Rotate_x_labels +
+  labs(x="[risdiplam] (nanomolar)", y=expression("MYB expression; "*log["2"]*"FC"))
+P.myb.expression
+
+P.myb.splicing <- Splicing.tidyForDose_ActualDataForModel %>%
+  left_join(ensembl_to_symbols, by=c("gene"="ensembl_gene_id")) %>%
+  filter(gene == "ENSG00000142599") %>%
+  # filter(hgnc_symbol == "MYB") %>%
+  mutate(chrom = str_extract(GAGTjunc, "^chr.+?:")) %>%
+  mutate(facet = str_glue("{hgnc_symbol}\n{chrom}{Exon}")) %>%
+  # filter(libType=="polyA") %>%
+  # mutate(dose.nM = dose.nM + 0.1) %>%
+  ggplot(aes(x=dose.nM, y=PSI, color=libType)) +
+  geom_point() +
+  scale_color_manual(values=c("chRNA"="#969696", "polyA"="#252525")) +
+  geom_smooth(
+    data = . %>%
+      filter(libType=="polyA"),
+    method = drm, method.args = list(fct = L.4(names=c("Steepness", "LowerLimit", "UpperLimit", "ED50"))), se = FALSE) +
+  labs(x="[risdiplam] (nanomolar)", y="Splicing of\nNMD-targeting exon; PSI") +
+  scale_x_continuous(trans="log1p", limits=c(0, 10000), breaks=c(10000, 3160, 1000, 316, 100, 31.6, 10, 3.16, 0), labels=rev(c("0", "3.16","10","31.6","100", "316", "1000", "3160", "10000"))) + 
+  # Rotate_x_labels +
+  scale_x_break(c(2,2)) +
+  theme(axis.text.x.top = element_blank(),
+        axis.ticks.x.top = element_blank(),
+        axis.line.x.top = element_blank(),
+        plot.background = element_blank()) +
+  Rotate_x_labels
+P.myb.splicing
+```
+```
+
+
 ```{r, eval=F}
 ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig4_Bar.pdf", P.bar, height=4, width=9)
 ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig4_BarSimpler.pdf", P.bar.simpler, height=3, width=8)
@@ -1768,8 +1887,15 @@ ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/202
 ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig4_stat1_SplicingDoseResponse.pdf",P.stat1.splicing, height=3.5, width=4.5)
 ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig4_stat1_ExpressionDoseResponse.pdf",P.stat1.expression, height=3.5, width=4.5)
 
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig4_myb_SplicingDoseResponse.pdf",P.myb.splicing, height=3.5, width=4.5)
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig4_myb_ExpressionDoseResponse.pdf",P.myb.expression, height=3.5, width=4.5)
+
 ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig4_OMIM_SplicingDoseResponse.pdf",P.OMIM.splicing.Effections, height=9, width=15)
 ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig4_OMIM_ExpresionDoseResponse.pdf",P.OMIM.expression.Effections, height=9, width=15)
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig4_MA.pdf",P.MA, height=3.5, width=6)
+
+
 
 ```
 

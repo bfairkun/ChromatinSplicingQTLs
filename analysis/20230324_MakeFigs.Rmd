@@ -1228,6 +1228,7 @@ hyprcoloc.results.toplot %>%
   labs(fill="Exclusive\nCategory", caption="Categories are exclusive; sQTL means no hQTL or eQTL\nsQTL + eQTL means no hQTLs\nhQTL + sQTL + eQTL would be Other\nTotal number GWAS loci marked at top", y="Fraction of colocalizations") +
   scale_y_continuous(expand=c(0,0))
 
+
 # ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/20230412_WIP_Colocs.png", height=6, width=12)
 
 ```
