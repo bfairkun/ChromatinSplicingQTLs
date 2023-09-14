@@ -31,7 +31,7 @@ theme_set(
 Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
 ```
 
-naRNA-seq metadata for carlos...
+naRNA-seq and H3K36me3 metadata for carlos for GEO upload...
 
 ```{r}
 samples <- fread("../code/config/samples.tsv") %>%
@@ -51,6 +51,24 @@ samples %>%
   # count(CollectionDate) %>%
   dplyr::select(CollectionDate, IndID, R1_local, R2_local, RepNumber) %>%
   write_tsv("../data/chRNA.BatchData.JoinableToSamplesTsv.tsv")
+
+samples <- fread("../code/config/samples.tsv") %>%
+  filter(Phenotype == "H3K36ME3")
+
+BatchData <- fread("../data/chRNA.BatchData.tsv") %>%
+  filter(!is.na(`CutAndTag plate ID`)) %>%
+  filter(str_detect(`CutAndTag plate ID`, "^[A-H]\\.\\d+$")) %>%
+  separate(`CutAndTag plate ID`, into=c("letter", "pos"), sep="\\.") %>%
+  mutate(pos = str_pad(pos, 2, "left", pad="0")) %>%
+  unite(well, letter, pos, sep="")
+
+samples %>%
+  mutate(well = str_replace(R1_local, "/cds/yangili1/bjf79/Fastq/20220422_CutAndTagH3K36me3_FullData_NovaS2/YLi-BF-1-(.+?)_S.+?.fastq.gz", "\\1")) %>%
+  inner_join(BatchData) %>%
+  mutate(CollectionDate = recode(Thawed, "1/12/21"="1/19/21")) %>%
+  # count(CollectionDate) %>%
+  dplyr::select(CollectionDate, IndID, R1_local, R2_local, RepNumber) %>%
+  write_tsv("../data/CutAndTag.BatchData.JoinableToSamplesTsv.tsv")
 
 
 ```
