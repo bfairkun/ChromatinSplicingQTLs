@@ -406,6 +406,10 @@ Actually a supplement related to fig1
 ```{r}
 juncs.long <- fread("../code/SplicingAnalysis/CombinedJuncTables/All.tsv.gz")
 
+dat.KD <- fread("/project2/yangili1/cfbuenabadn/ChromatinSplicingQTLs/code/SplicingAnalysis/CombinedJuncTables/NMD_KD.tsv.gz")
+
+juncs.long <- bind_rows(juncs.long, dat.KD)
+
 IntronAnnotations <- read_tsv("../data/IntronAnnotationsFromYang.Updated.tsv.gz") %>%
   mutate(stop = end-1) %>%
   mutate(SuperAnnotation = recode(SuperAnnotation, "UnannotatedJunc_NoncodingJunc"="UnannotatedJunc_NoncodingGene"))
@@ -433,10 +437,11 @@ P.PercentAnnotated <- juncs.long.summary %>%
   summarise(Percent=sum(TotalSum)/DatasetSum) %>%
   ungroup() %>%
   distinct() %>%
-  mutate(Dataset = factor(Dataset, levels=c("Expression.Splicing", "MetabolicLabelled.60min","MetabolicLabelled.30min","chRNA.Expression.Splicing"))) %>%
+  mutate(Dataset = factor(Dataset, levels=c("Expression.Splicing", "MetabolicLabelled.60min","MetabolicLabelled.30min","chRNA.Expression.Splicing", "HeLa.SMG6.KD", "HeLa.SMG7.KD", "HeLa.UPF1.KD", "HeLa.dKD", "HeLa.scr"))) %>%
+  filter(Dataset %in% c("Expression.Splicing", "MetabolicLabelled.60min","MetabolicLabelled.30min","chRNA.Expression.Splicing")) %>%
   ggplot(aes(x=Dataset, y=Percent*100, fill=PlotGroup)) +
   geom_col() +
-  scale_x_discrete(labels=c("Expression.Splicing"="steady-state\nRNA", "MetabolicLabelled.60min"="60m 4sU", "MetabolicLabelled.30min"="30m 4sU","chRNA.Expression.Splicing"="chRNA")) +
+  scale_x_discrete(labels=c("Expression.Splicing"="steady-state\nRNA", "MetabolicLabelled.60min"="60m 4sU", "MetabolicLabelled.30min"="30m 4sU","chRNA.Expression.Splicing"="naRNA")) +
   scale_y_continuous(expand=c(0,0)) +
   scale_fill_manual(values=c("Annotated productive (basic tag)"="#1f78b4", "Other"="#969696")) + 
   scale_y_break(c(3, 97), expand=F, space=0.5) +
@@ -458,7 +463,7 @@ juncs.long.summary.PerInd <- juncs.long %>%
   summarise(Sum=sum(Count))
 
 
-P.PercentAnnotated.PerSample <- juncs.long.summary.PerInd %>%
+P.PercentAnnotated.PerSample.dat <- juncs.long.summary.PerInd %>%
   ungroup() %>%
   filter(!str_detect(SuperAnnotation, "Noncoding")) %>%
   group_by(Dataset, SuperAnnotation, IndID) %>%
@@ -473,15 +478,64 @@ P.PercentAnnotated.PerSample <- juncs.long.summary.PerInd %>%
   ungroup() %>%
   filter(PlotGroup=="Annotated productive (basic tag)") %>%
   distinct(IndID, Dataset, .keep_all=T) %>%
-  mutate(Dataset = factor(Dataset, levels=c("Expression.Splicing", "MetabolicLabelled.60min","MetabolicLabelled.30min","chRNA.Expression.Splicing"))) %>%
+  mutate(Dataset = factor(Dataset, levels=c("Expression.Splicing", "MetabolicLabelled.60min","MetabolicLabelled.30min","chRNA.Expression.Splicing", "HeLa.SMG6.KD", "HeLa.SMG7.KD", "HeLa.UPF1.KD", "HeLa.dKD", "HeLa.scr"))) %>%
   arrange(Dataset, desc(Percent)) %>% 
   mutate(rn = row_number()) %>%
   mutate(Complement = 1-Percent) %>%
   dplyr::select(-PlotGroup) %>%
   gather(key="PlotGroup", value="NewPercent", Percent, Complement) %>%
   mutate(PlotGroup = relevel(factor(PlotGroup), "Percent")) %>%
-  mutate(Dataset = recode(Dataset, "Expression.Splicing"="steady-state\nRNA", "MetabolicLabelled.60min"="60m 4sU", "MetabolicLabelled.30min"="30m 4sU","chRNA.Expression.Splicing"="chRNA")) %>%
-  mutate(Dataset = factor(Dataset, levels=c("steady-state\nRNA", "60m 4sU","30m 4sU","chRNA"))) %>%
+  mutate(Dataset = recode(Dataset, "Expression.Splicing"="steady-state\nRNA", "MetabolicLabelled.60min"="60m 4sU", "MetabolicLabelled.30min"="30m 4sU","chRNA.Expression.Splicing"="naRNA")) %>%
+  mutate(Dataset = factor(Dataset, levels=c("steady-state\nRNA", "60m 4sU","30m 4sU","naRNA", "HeLa.SMG6.KD", "HeLa.SMG7.KD", "HeLa.UPF1.KD", "HeLa.dKD", "HeLa.scr")))
+
+P.PercentAnnotated.PerSample.dat %>%
+  filter(PlotGroup == "Complement") %>%
+                  group_by(Dataset) %>%
+                  summarise(Median = median(NewPercent)*100)
+
+P.PercentAnnotated.PerSample <- P.PercentAnnotated.PerSample.dat %>%
+  filter(Dataset %in% c("steady-state\nRNA", "60m 4sU","30m 4sU","naRNA")) %>%
+  ggplot(aes(x=rn, y=NewPercent*100, fill=PlotGroup)) +
+  geom_col() +
+  scale_x_discrete(labels=c("Expression.Splicing"="steady-state\nRNA", "MetabolicLabelled.60min"="60m 4sU", "MetabolicLabelled.30min"="30m 4sU","chRNA.Expression.Splicing"="chRNA")) +
+  geom_hline(data = . %>%
+                 filter(PlotGroup == "Complement") %>%
+                  group_by(Dataset) %>%
+                  summarise(Median = median(NewPercent)*100),
+             aes(yintercept = Median),
+             color="black", linetype='dashed', size=1.5
+             ) +
+  scale_y_continuous(expand=c(0,0)) +
+  scale_fill_manual(values=c("Percent"="#1f78b4", "Complement"="#969696"), labels=c("Percent"="Annotated productive (basic tag)","Complement"="Other")) + 
+  labs(y="Percent of splice junction reads", fill="Intron classification") +
+  theme(legend.position="none") +
+  facet_grid(~Dataset, scales = 'free', switch = "both") +
+  scale_y_break(c(4, 96), expand=F, scales="free", space=0.1) +
+  Rotate_x_labels +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  theme(
+    aspect.ratio = 1,
+    strip.background = element_blank(),
+    strip.placement = "outside"
+  )
+
+P.PercentAnnotated.PerSample <- ggplotify::as.ggplot(print(P.PercentAnnotated.PerSample))
+P.PercentAnnotated.PerSample
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_PercentAnnotatedPerSample.pdf",P.PercentAnnotated.PerSample, width=4, height=6)
+
+
+```
+
+Another plot of this style for the shRNA KD.
+
+```{r}
+P.PercentAnnotated.PerSample.NMD_KD <- P.PercentAnnotated.PerSample.dat %>%
+  filter(Dataset %in% c("HeLa.dKD", "HeLa.scr")) %>%
+  mutate(Dataset = recode(Dataset, "HeLa.scr"="shRNA ctl", "HeLa.dKD"="shRNA dKD")) %>%
+  mutate(Dataset = relevel(factor(Dataset), "shRNA ctl")) %>%
   ggplot(aes(x=rn, y=NewPercent*100, fill=PlotGroup)) +
   geom_col() +
   scale_x_discrete(labels=c("Expression.Splicing"="steady-state\nRNA", "MetabolicLabelled.60min"="60m 4sU", "MetabolicLabelled.30min"="30m 4sU","chRNA.Expression.Splicing"="chRNA")) +
@@ -508,13 +562,26 @@ P.PercentAnnotated.PerSample <- juncs.long.summary.PerInd %>%
     strip.placement = "outside"
   )
 
-P.PercentAnnotated.PerSample <- ggplotify::as.ggplot(print(P.PercentAnnotated.PerSample))
-P.PercentAnnotated.PerSample
+P.PercentAnnotated.PerSample.NMD_KD <- ggplotify::as.ggplot(print(P.PercentAnnotated.PerSample.NMD_KD))
+P.PercentAnnotated.PerSample.NMD_KD
 
-ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_PercentAnnotatedPerSample.pdf",P.PercentAnnotated.PerSample, width=4, height=6)
-
+# ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_PercentAnnotatedPerSample_NMDKD.pdf",P.PercentAnnotated.PerSample.NMD_KD, width=3, height=6)
 
 ```
+
+
+And lets print table of medians for custom labelling in illustrator...
+
+```{r}
+P.PercentAnnotated.PerSample.dat %>%
+  ungroup() %>%
+  filter(PlotGroup == "Complement") %>%
+  group_by(Dataset) %>%
+  summarise(Median = median(NewPercent*100, na.rm = T)) %>%
+  ungroup()
+
+```
+
 
 Plot to describe What are the unannoatted junctions
 
@@ -660,6 +727,19 @@ Figure supplement that goes along with this... chRNA vs polyA scatter for juncti
 
 
 ```{r}
+FixBugForDuplicateAnnotationClasses <- IntronAnnotations %>%
+  count(SuperAnnotation, SemiSupergroupAnnotations) %>%
+  arrange(SemiSupergroupAnnotations) %>%
+  add_count(SemiSupergroupAnnotations) %>%
+  filter(nn==2) %>%
+  distinct(SemiSupergroupAnnotations) %>%
+  pull(SemiSupergroupAnnotations)
+```
+
+scatter plots, 
+
+```{r}
+#Normal
 juncs.long.summary.ForReasonsPlot <- juncs.long %>%
   filter(Dataset %in% c("Expression.Splicing", "chRNA.Expression.Splicing")) %>%
   dplyr::select(chrom, start, stop, strand, Dataset, Count) %>%
@@ -672,13 +752,9 @@ juncs.long.summary.ForReasonsPlot <- juncs.long %>%
   mutate(RPM = Sum/TotalSum*1E6) %>%
   ungroup() %>%
   dplyr::select(-TotalSum) %>%
-  pivot_wider(names_from="Dataset", values_from=c("RPM", "Sum"), values_fill = 0)
+  pivot_wider(names_from="Dataset", values_from=c("RPM", "Sum"), values_fill = 0) %>%
+  filter(!(SemiSupergroupAnnotations %in% FixBugForDuplicateAnnotationClasses & SuperAnnotation=="UnannotatedJunc_NoncodingGene"))
 
-juncs.long.summary.ForReasonsPlot %>%
-  distinct(SuperAnnotation, SemiSupergroupAnnotations)
-
-juncs.long.summary.ForReasonsPlot %>%
-  distinct(SuperAnnotation)
 
 SupergroupLabels = c(
   "AnnotatedJunc_ProductiveCodingGene"="Annotated\nProductive",
@@ -698,9 +774,52 @@ Scatter.P.dat <- juncs.long.summary.ForReasonsPlot %>%
   add_count(SemiSupergroupAnnotations) %>%
   filter(n>100) %>%
   inner_join(Orders) %>%
+  mutate(SemiSupergroupAnnotations = recode(SemiSupergroupAnnotations, "basic tag"="protein_coding tag")) %>%
   mutate(SemiSupergroupAnnotations=fct_reorder(SemiSupergroupAnnotations, rn))
 
 
+#shRNA
+juncs.long.summary.ForReasonsPlot.shRNA <- juncs.long %>%
+  filter(Dataset %in% c("HeLa.scr", "HeLa.dKD")) %>%
+  dplyr::select(chrom, start, stop, strand, Dataset, Count) %>%
+  inner_join(IntronAnnotations) %>%
+  group_by(chrom, start, stop, strand, Dataset, SemiSupergroupAnnotations, SuperAnnotation) %>%
+  summarise(Sum=sum(Count)) %>%
+  ungroup() %>%
+  group_by(Dataset) %>%
+  mutate(TotalSum= sum(Sum)) %>%
+  mutate(RPM = Sum/TotalSum*1E6) %>%
+  ungroup() %>%
+  dplyr::select(-TotalSum) %>%
+  pivot_wider(names_from="Dataset", values_from=c("RPM", "Sum"), values_fill = 0) %>%
+  filter(!(SemiSupergroupAnnotations %in% FixBugForDuplicateAnnotationClasses & SuperAnnotation=="UnannotatedJunc_NoncodingGene"))
+
+
+
+Orders.shRNA <- juncs.long.summary.ForReasonsPlot.shRNA %>%
+  distinct(SuperAnnotation, SemiSupergroupAnnotations) %>%
+  mutate(SuperAnnotation = factor(SuperAnnotation, levels=names(SupergroupLabels))) %>%
+  arrange(SuperAnnotation, SemiSupergroupAnnotations) %>%
+  mutate(rn = row_number())
+
+Scatter.P.dat.shRNA <- juncs.long.summary.ForReasonsPlot.shRNA %>%
+  add_count(SemiSupergroupAnnotations) %>%
+  filter(n>100) %>%
+  inner_join(Orders.shRNA) %>%
+  mutate(SemiSupergroupAnnotations = recode(SemiSupergroupAnnotations, "basic tag"="protein_coding tag")) %>%
+  mutate(SemiSupergroupAnnotations=fct_reorder(SemiSupergroupAnnotations, rn))
+
+#Filter for facets that pass threshold in both
+FacetsToInclude <- intersect(
+  Scatter.P.dat.shRNA$SemiSupergroupAnnotations %>% unique(),
+  Scatter.P.dat$SemiSupergroupAnnotations %>% unique())
+
+Scatter.P.dat.shRNA <- Scatter.P.dat.shRNA %>%
+  filter(SemiSupergroupAnnotations %in% FacetsToInclude)
+Scatter.P.dat <- Scatter.P.dat %>%
+  filter(SemiSupergroupAnnotations %in% FacetsToInclude)
+
+# Summary
 Scatter.P.dat.summary <- Scatter.P.dat %>%
   filter(Sum_Expression.Splicing + Sum_chRNA.Expression.Splicing >= 10) %>%
   mutate(Ratio = RPM_chRNA.Expression.Splicing/RPM_Expression.Splicing) %>%
@@ -708,7 +827,28 @@ Scatter.P.dat.summary <- Scatter.P.dat %>%
   summarise(median=round(median(Ratio, na.rm=F), digits=2)) %>%
   mutate(label = str_glue("n:{n}\nmedian:{median}"))
 
+Scatter.P.dat.summary.shRNA <- Scatter.P.dat.shRNA %>%
+  filter(Sum_HeLa.dKD + Sum_HeLa.scr >= 10) %>%
+  mutate(Ratio = Sum_HeLa.dKD/Sum_HeLa.scr) %>%
+  group_by(SemiSupergroupAnnotations, SuperAnnotation, n) %>%
+  summarise(median=round(median(Ratio, na.rm=F), digits=2)) %>%
+  mutate(label = str_glue("n:{n}\nmedian:{median}"))
 
+Scatter.P.shRNA <- Scatter.P.dat.shRNA %>%
+  ggplot(aes(x=Sum_HeLa.dKD, y=Sum_HeLa.scr)) +
+  geom_point(alpha=0.1) +
+  geom_abline(color='red') +
+  geom_density_2d(aes(color=SuperAnnotation)) +
+  geom_text(data = Scatter.P.dat.summary.shRNA, aes(label=label),x=-Inf, y=Inf, size=3, hjust=0, vjust=1.1) +
+  scale_x_continuous(trans='log10') +
+  scale_y_continuous(trans='log10') +
+  scale_color_manual(values=AnnotationColors %>% dplyr::select(SuperAnnotation, Color) %>% deframe(), na.value="#fb9a99", labels=SupergroupLabels) +
+  facet_wrap(~SemiSupergroupAnnotations, labeller = label_wrap_gen(width=14), nrow=3) +
+  coord_fixed() +
+  theme(strip.text.x = element_text(size = 7), legend.position="none") +
+  guides(colour = guide_legend(nrow = 2)) +
+  labs(title="Reason for splice junction classification", x="shRNA dKD\nRPM across junctions", y="shRNA ctrlA\nRPM across junctions", color="Intron classification") +
+  Rotate_x_labels
 
 Scatter.P <- Scatter.P.dat %>%
   ggplot(aes(x=RPM_chRNA.Expression.Splicing, y=RPM_Expression.Splicing)) +
@@ -719,84 +859,31 @@ Scatter.P <- Scatter.P.dat %>%
   scale_x_continuous(trans='log10') +
   scale_y_continuous(trans='log10') +
   scale_color_manual(values=AnnotationColors %>% dplyr::select(SuperAnnotation, Color) %>% deframe(), na.value="#fb9a99", labels=SupergroupLabels) +
-  facet_wrap(~SemiSupergroupAnnotations, labeller = label_wrap_gen(width=14)) +
-  coord_fixed() +
-  theme(strip.text.x = element_text(size = 7), legend.position="bottom") +
-  guides(colour = guide_legend(nrow = 2)) +
-  labs(title="Reason for splice junction classification", x="chRNA\nRPM across junctions", y="steady-state RNA\nRPM across junctions", color="Intron classification") +
-  Rotate_x_labels
-
-
-
-Scatter.P
-
-Scatter.P.NoPoints <- Scatter.P.dat %>%
-  ggplot(aes(x=RPM_chRNA.Expression.Splicing, y=RPM_Expression.Splicing)) +
-  # geom_point(alpha=0.1) +
-  geom_abline(color='red') +
-  geom_density_2d(aes(color=SuperAnnotation)) +
-  geom_text(data = Scatter.P.dat.summary, aes(label=label),x=-Inf, y=Inf, size=3, hjust=0, vjust=1.1) +
-  scale_x_continuous(trans='log10') +
-  scale_y_continuous(trans='log10') +
-  scale_color_manual(values=AnnotationColors %>% dplyr::select(SuperAnnotation, Color) %>% deframe(), na.value="#fb9a99", labels=SupergroupLabels) +
-  facet_wrap(~SemiSupergroupAnnotations, labeller = label_wrap_gen(width=14)) +
-  coord_fixed() +
-  theme(strip.text.x = element_text(size = 7), legend.position="bottom") +
-  guides(colour = guide_legend(nrow = 2)) +
-  labs(title="Reason for splice junction classification", x="chRNA\nRPM across junctions", y="steady-state RNA\nRPM across junctions", color="Intron classification") +
-  Rotate_x_labels
-
-# ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_Final_Fig_S_ScatterReasonsForJuncClassificationNoPoints.pdf",Scatter.P.NoPoints, height=12, width=10)
-
-Scatter.P.dat %>%
-  filter(SemiSupergroupAnnotations=='basic tag') %>%
-  ggplot(aes(x=RPM_chRNA.Expression.Splicing, y=RPM_Expression.Splicing)) +
-  geom_point(alpha=0.1) +
-  geom_abline(color='red') +
-  geom_density_2d(aes(color=SuperAnnotation)) +
-  geom_text(data = Scatter.P.dat.summary %>%
-              filter(SemiSupergroupAnnotations=='basic tag'), aes(label=label),x=-Inf, y=Inf, size=3, hjust=0, vjust=1.1) +
-  scale_x_continuous(trans='log10') +
-  scale_y_continuous(trans='log10') +
-  scale_color_manual(values=AnnotationColors %>% dplyr::select(SuperAnnotation, Color) %>% deframe(), na.value="#fb9a99", labels=SupergroupLabels) +
-  # facet_wrap(~SemiSupergroupAnnotations, labeller = label_wrap_gen(width=14)) +
+  facet_wrap(~SemiSupergroupAnnotations, labeller = label_wrap_gen(width=14), nrow = 3) +
   coord_fixed() +
   theme(strip.text.x = element_text(size = 7), legend.position="none") +
   guides(colour = guide_legend(nrow = 2)) +
-  labs(x="chRNA\nRPM across junctions", y="steady-state RNA\nRPM across junctions", color="Intron classification") +
+  labs(title="Reason for splice junction classification", x="naRNA\nRPM across junctions", y="steady-state RNA\nRPM across junctions", color="Intron classification") +
   Rotate_x_labels
 
-# ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_Final_Fig_S_ScatterReasonsForJuncClassification_basicOnly.pdf", height=5, width=5)
-
-# ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_Final_Fig_S_ScatterReasonsForJuncClassification_basicOnly.png", height=5, width=5)
-
-Scatter.P.dat %>%
-  filter(SuperAnnotation%in% c("UnannotatedJunc_UnproductiveCodingGene", "AnnotatedJunc_UnproductiveCodingGene")) %>%
+DummyForLegend <- Scatter.P.dat %>%
   ggplot(aes(x=RPM_chRNA.Expression.Splicing, y=RPM_Expression.Splicing)) +
-  geom_point(alpha=0.05) +
-  # geom_hex(bins=100) +
-  geom_abline(color='red') +
-  scale_fill_viridis_c(trans = "log") +
-  # geom_density_2d(color='red') +
-  geom_text(data = . %>%
-              filter(Sum_Expression.Splicing + Sum_chRNA.Expression.Splicing >= 10) %>%
-              mutate(Ratio = RPM_chRNA.Expression.Splicing/RPM_Expression.Splicing) %>%
-              summarise(n=n(), median=round(median(Ratio, na.rm=F), digits=2)) %>%
-              mutate(label = str_glue("n:{n}\nmedian:{median}")),
-            aes(label=label),x=-Inf, y=Inf, size=3, hjust=0, vjust=1.1) +
-  scale_x_continuous(trans='log10') +
-  scale_y_continuous(trans='log10') +
-  coord_fixed() +
-  theme(strip.text.x = element_text(size = 7), legend.position="none") +
-  guides(colour = guide_legend(nrow = 2)) +
-  labs(x="chRNA\nRPM across junctions", y="steady-state RNA\nRPM across junctions", color="Intron classification") +
-  Rotate_x_labels
-
-ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_Final_Fig_S_ScatterReasonsForJuncClassification_UnproductiveOnlyPoints.pdf", height=5, width=5)
-
-
+  geom_density_2d(aes(color=SuperAnnotation)) +
+  scale_color_manual(values=AnnotationColors %>% dplyr::select(SuperAnnotation, Color) %>% deframe(), na.value="#fb9a99", labels=SupergroupLabels) +
+  theme(legend.position='bottom') +
+  labs(color="Intron classification")
 ```
 
+Save figures
+
+```{r, eval=F}
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_Final_Fig_S_ScatterReasonsForJuncClassification_Final.png", Scatter.P, height=7, width=12)
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_Final_Fig_S_ScatterReasonsForJuncClassification_shRNA_Final.png", Scatter.P.shRNA, height=7, width=12)
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_Final_Fig_S_ScatterReasonsForJuncClassification_Legend.pdf", DummyForLegend, height=4, width=12)
+
+  
+
+```
 
 
 Number eQTLs per gene, hQTLs, sQTLs
@@ -1202,7 +1289,7 @@ dat.SimplifiedNumberColocs <- bind_rows(
 
 P.SimplifiedNumberColocs <- ggplot(dat.SimplifiedNumberColocs, aes(x=name, y=n)) +
   geom_col(fill="#bdbdbd") +
-  scale_y_continuous(expand=c(0,0), breaks=c(0, 200, 400, 600, 800), labels=c(0, "", "", "", 800)) +
+  scale_y_continuous(expand=c(0,0), breaks=c(0, 200, 400, 600, 800), labels=c(0, "", "", "", 800), sec.axis = sec_axis( trans=~./(831/(831+518))*100, name="Percent eQTLs with a molQTLcolocalization")) +
   geom_text(aes(label=name), y=10, angle=90, y=-Inf, hjust=0, size=8) +
   labs(x=NULL, y="# eGenes coloc w/ molQTL") +
   theme(axis.title.x=element_blank(),
@@ -1239,7 +1326,7 @@ dat %>%
 
 Clusters.ThatColocWith_sQTL_not_hQTL <- coloc.dat %>%
   group_by(Locus, snp) %>%
-  filter(any(PC=="Expression.Splicing.Subset_YRI") & !any(PC %in% c("H3K4ME3", "H3K27AC", "H3K4ME1"))) %>%
+  filter(any(PC=="Expression.Splicing.Subset_YRI") & !any(PC %in% c("H3K4ME3", "H3K27AC", "H3K4ME1", "H3K36ME3"))) %>%
   ungroup() %>%
   filter(PC=="polyA.Splicing") %>%
   separate(P, into=c("chrom", "start", "end", "cluster"), remove=F, convert=T, sep=":") %>%
@@ -1282,6 +1369,34 @@ P.EnrichmentOfUnrpductiveClusters <- dat.EnrichmentOfUnrpductiveClusters %>%
   Rotate_x_labels
 P.EnrichmentOfUnrpductiveClusters
 ```
+
+redo above simpler...
+
+```{r}
+
+### LEFT HERE
+sQTL.type <- read_tsv("../code/SplicingAnalysis/sQTLs_p_and_u.Full.tsv.gz") %>%
+    mutate(ClusterName =  str_replace(P1, "^(.+?:).+?(clu_.+?[+-])$", "chr\\1\\2"))
+
+coloc.dat %>%
+  group_by(snp, Locus) %>%
+  filter(any(PC=="polyA.Splicing") & any(PC=="Expression.Splicing.Subset_YRI") & !any(PC %in% c("H3K4ME3", "H3K27AC", "H3K4ME1"))) %>%
+  ungroup() %>%
+  filter(PC=="polyA.Splicing") %>%
+  mutate(ClusterName =  str_replace(P, "^(.+?:).+?(clu_.+?[+-])$", "chr\\1\\2")) %>%
+  distinct(ClusterName, .keep_all=T) %>%
+  inner_join(
+    sQTL.type %>%
+      distinct(ClusterName, .keep_all=T)
+  ) %>%
+  count(sQTL.type)
+
+sQTL.type %>%
+      distinct(ClusterName, .keep_all=T) %>%
+  count(sQTL.type)
+
+```
+
 
 Plot about primary vs non primary sQTLs for productive vs unproductive
 
@@ -1410,13 +1525,18 @@ labels <- dat.foreQTLQQ.sQTLs %>%
   mutate(label=paste0("pi=", signif(pi1, digits=3)))
 
   
-dat.foreQTLQQ.sQTLs %>%
+eQTL.P.sQTLs.hist <- dat.foreQTLQQ.sQTLs %>%
   ggplot(aes(x=trait.x.p.in.y)) +
   geom_histogram() +
-  geom_text(data = labels, aes(label=label), x=Inf, y=Inf, vjust=1, hjust=1) +
+  geom_text(data = labels, aes(label=label), x=Inf, y=Inf, vjust=1.5, hjust=1) +
+  scale_x_continuous(breaks=c(0,0.25,0.5,0.75,1), labels=c(0,0.25, 0.5, 0.75, 1)) +
   facet_grid(SNP_group ~ PC2) +
   labs(x="P", title="eQTL P value historgram", caption="Vertical facets: eQTL dataset\nHorizontal facets: sQTL cluster type") +
-  theme(strip.text = element_text(size = 8))
+  theme(strip.text = element_text(size = 8)) +
+  Rotate_x_labels
+eQTL.P.sQTLs.hist
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/20230906_eQTL_histogram_bysQTLType.pdf", eQTL.P.sQTLs.hist, width=4, height=4)
 
 ```
 
@@ -1450,6 +1570,63 @@ eQTL.QQ
 
 
 ```
+
+Plot about enrichment of finemap signals over genomic features...
+
+```{r}
+dat.enrichment <- read_tsv("../code/QTL_SNP_Enrichment/ResultsFromColocFinemap/GeneSet_GenewiseColoc_ChromatinAPAAndRNA_Finemap_GenewiseColoc_ChromatinAPAAndRNA/dat.tsv.gz")
+
+dat.enrichment %>%
+  distinct(Annotation)
+
+P.SNPEnrichment <- dat.enrichment %>%
+  filter(!startsWith(Annotation, "ncRNA") ) %>%
+  filter(!Annotation==".") %>%
+  group_by(Annotation) %>%
+  summarise(Lower=quantile(Enrichment,probs=0.025, na.rm=T),
+            Upper=quantile(Enrichment,probs=0.975, na.rm=T),
+            Middle=quantile(Enrichment,probs=0.5, na.rm=T)) %>%
+  ungroup() %>%
+  mutate(IsSig = if_else(between(0, Lower, Upper), "Not significant", "Significant")) %>%
+  mutate(Color = case_when(
+    str_detect(Annotation, "^\\d.+Enhancer$") ~ "ChromHMM enhancer",
+    str_detect(Annotation, "^\\d.+Promoter$") ~ "ChromHMM promoter",
+    str_detect(Annotation, "^\\d.+Txn.*") ~ "ChromHMM transcribed region",
+    str_detect(Annotation, "^Splice") ~ "Splice sites",
+    # str_detect(Annotation, "miRNA_BS") ~ "miRNA binding sites",
+    TRUE ~ "Other"
+  )) %>%
+  mutate(Annotation = if_else(str_detect(Annotation, "^\\d"), paste0("ChromHMM_",Annotation), Annotation)) %>%
+  mutate(Annotation = recode(Annotation,
+                             "miRNA_BS"= "miRNA binding sites",
+                             "PAS_Region"="Polyadenylation site regions",
+                             "SpliceAcceptor_0"="Splice acceptors (unannotated)",
+                             "SpliceAcceptor_1"="Splice acceptors (annotated)",
+                             "SpliceBranchpointRegion_0"="Splice branchpoint region (unannotated acceptor)",
+                             "SpliceBranchpointRegion_1"="Splice branchpoint region (annotated acceptor)",
+                             "SpliceDonor_0"="Splice donors (unannotated)",
+                             "SpliceDonor_1"="Splice donors (annotated)"
+                             )) %>%
+  mutate(Annotation = fct_reorder(Annotation, Middle)) %>%
+  ggplot(aes(x=Annotation)) +
+  geom_col(aes(y=Middle, fill=Color)) +
+  geom_errorbar(aes(ymin=Lower, ymax=Upper)) +
+  scale_fill_brewer(palette = "Accent") +
+  facet_wrap(~IsSig, scales="free", nrow=2) +
+  theme_bw() +
+  Rotate_x_labels +
+  labs(y="log2 Fold Enrichment\nof PIP in genomic annotation class", fill="Type of\ngenomic annotation") +
+  coord_flip()
+
+P.SNPEnrichment
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/20230905_SNP_enrichment.pdf", P.SNPEnrichment, width=7, height=7)
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/20230905_EnrichmentOf_usQTLsInColocs.pdf", P.EnrichmentOfUnrpductiveClusters, width=5, height=6)
+
+
+
+```
+
 
 beta beta scatters
 
@@ -1927,11 +2104,179 @@ sQTL.vs.hQTLs.EffectOnEqtls.ForCarlos %>%
 
 Ok, Carlos ran QTLtools with log2CPM as units for expression matrix, so beta can be interpreted (across all tissues) as the log2FC per dose of alt allele.
 
-Let's read in those results and plot nicely...
+I've added that to "MakeFinalFigs_Fig3.Rmd"
+
+### stuff to plot Fig3A (Illustrative coloc examples)
+
+I'm going to filter for coloc examples like LTBP4, and plot them all, and then manually pick the one I visually like... The criteria I am filtering for are where there is an H3K27AC QTL that colocs with the eQTL, and a seperate cluster with at least two sQTLs that are all productive, so that the sQTL is a truly independent signal from the eQTL.
 
 ```{r}
+coloc.dat.ForIllustrativePlot <- read_tsv("../code/hyprcoloc/Results/ForColoc/GenewiseColoc_ChromatinAPAAndRNA/tidy_results_OnlyColocalized.txt.gz") %>%
+  separate(phenotype_full, into=c("PC", "P"), sep=";", remove=F) 
+
+IntronAnnotations <- read_tsv("../data/IntronAnnotationsFromYang.Updated.tsv.gz") %>%
+  filter(!str_detect(SuperAnnotation, "Noncoding")) %>%
+  mutate(ProductiveOrUnproductive = if_else(str_detect(SuperAnnotation, "Unproductive"), "Unproductive", "Productive")) %>%
+  unite(Int, chrom, start, end, strand, sep=":" )
+
+dat.CandidatesToPlot <- coloc.dat.ForIllustrativePlot %>%
+  group_by(Locus) %>%
+  mutate(NumColocClusters = n_distinct(snp)) %>%
+  filter(NumColocClusters > 1) %>%
+  ungroup() %>%
+  arrange(Locus, snp) %>%
+  group_by(Locus, snp) %>%
+  add_count(PC) %>%
+  mutate(
+    ClusterType = case_when(
+      (any(PC=="H3K27AC") & any(PC=="Expression.Splicing")) ~ "hQTL+eQTL",
+      any(PC=="polyA.Splicing" & n>1) & (all(!PC=="Expression.Splicing")) ~ "sQTL",
+       TRUE ~ "Other"
+    )) %>%
+  ungroup() %>%
+  group_by(Locus) %>%
+  filter(any(ClusterType=="hQTL+eQTL") & any(ClusterType=="sQTL")) %>%
+  ungroup() %>%
+  filter(ClusterType %in% c("hQTL+eQTL", "sQTL")) %>%
+  filter(PC %in% c("Expression.Splicing", "polyA.Splicing", "H3K27AC")) %>%
+  mutate(Int = case_when(
+    PC == "polyA.Splicing" ~ str_replace(P, "^(.+?):clu_.+?_([+-])$", "chr\\1:\\2"),
+    TRUE ~ NA_character_
+  )) %>%
+  left_join(
+    IntronAnnotations
+  ) %>%
+  group_by(Locus, snp) %>%
+  filter(all(ProductiveOrUnproductive=="Productive") | (ClusterType=="hQTL+eQTL" & !PC=="polyA.Splicing") ) %>%
+  ungroup() %>%
+  arrange(Locus, snp, PC, p) %>%
+  group_by(Locus) %>%
+  filter(any(ClusterType=="hQTL+eQTL") & any(ClusterType=="sQTL")) %>%
+  ungroup() %>%
+  # distinct(Locus)
+  group_by(Locus, snp, PC) %>%
+  mutate(rn = row_number()) %>%
+  filter((rn==1 & PC=="H3K27AC") | 
+           (rn==1 & PC=="Expression.Splicing") |
+           (rn <=2 & PC=="polyA.Splicing") ) %>%
+  ungroup() %>%
+  dplyr::select(-n, -rn) %>%
+  group_by(Locus, snp) %>%
+  add_count(PC) %>%
+  filter(! (PC=="polyA.Splicing" & n==1)) %>%
+  ungroup() %>%
+  group_by(Locus, PC) %>%
+  mutate(minP = min(p)) %>%
+  ungroup() %>%
+  group_by(Locus, snp) %>%
+  filter(any(PC=="polyA.Splicing" & p==minP) | (!PC=="polyA.Splicing")) %>%
+  ungroup() %>%
+  add_count(Locus)
+
+dat.CandidatesToPlot
+```
+
+For each of these, I need data for the boxplot, and for the coloc scatter plot
+
+```{r, eval=F}
+fn <- "../code/scratch/DatForColocExampleBoxplots.tsv.gz"
+#Check its existence
+if (file.exists(fn)) {
+  #Delete file if it exists
+  file.remove(fn)
+}
+
+
+dat.CandidatesToPlot %>%
+  mutate(SnpPos = str_replace(snp, "(^.+?:.+?):.+?:.+?$", "chr\\1")) %>%
+  mutate(cmd = str_glue("python ExtractPhenotypeBedByGenotype.py --Bed ../../QTLs/QTLTools/{PC}/OnlyFirstReps.sorted.qqnorm.bed.gz --VCF ../../Genotypes/1KG_GRCh38/Autosomes.vcf.gz --FeatureName {P} --SnpPos {SnpPos} --SnpName {snp} --Long --ReportBedAsColumn --NoHeader -v | gzip - >> ../../scratch/DatForColocExampleBoxplots.tsv.gz")) %>%
+    dplyr::select(cmd) %>%
+  write_tsv("../code/scratch/DatForColocExampleBoxplots.Commands.sh", col_names = F)
+```
+
+Boxplots
+
+```{r}
+dir.create("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/ColocExamples/")
+
+Coloc.exampleDat.Boxplots <- read_tsv("../code/scratch/DatForColocExampleBoxplots.tsv.gz", col_names=c("IndID", "genotype", "ref", "alt", "snp", "P", "value", "fn")) %>%
+  separate(P, into=c("chrom", "start", "stop", "P", "grp_name", "strand"), sep=";", convert=T) %>%
+  mutate(PC = str_replace(fn, "../../QTLs/QTLTools/(.+?)/OnlyFirstReps.sorted.qqnorm.bed.gz", "\\1"))
+
+dat.CandidatesToPlot.BoxPlotDatSplit <- dat.CandidatesToPlot %>%
+  group_by(Locus, snp, PC) %>%
+  filter(row_number()==1) %>%
+  ungroup() %>%
+  inner_join(Coloc.exampleDat.Boxplots) %>%
+  split(.$Locus)
+
+dat.CandidatesToPlot$PC %>% unique()
+
+library(ggnewscale)
+
+for (i in seq_along(dat.CandidatesToPlot.BoxPlotDatSplit)){
+  print(i)
+  if (i<=100){
+    dat.ToBoxplot <- 
+    dat.CandidatesToPlot.BoxPlotDatSplit[[i]] %>%
+      filter(!genotype==3) %>%
+      mutate(FacetGroup = recode(PC, "polyA.Splicing"="sQTL", "Expression.Splicing"="eQTL", "H3K27AC"="hQTL")) %>%
+      mutate(FacetGroup = factor(FacetGroup, levels=c("eQTL", "hQTL", "sQTL"))) %>%
+      mutate(genotype= factor(genotype, levels=c(0,1,2)))
+
+    Coloc.Box.P <- ggplot(dat.ToBoxplot, aes(x=genotype, y=value, group=genotype)) +
+      geom_boxplot(outlier.shape = NA, aes(color=genotype), size=1) +
+      scale_color_manual(values=c("0"="#000000","1"="#525252","2"="#d9d9d9")) +
+      new_scale_color() +
+      geom_rect(xmin=-Inf, xmax=Inf, ymin=-Inf, ymax=Inf, alpha=0, size=2, aes(color=FacetGroup)) +
+      scale_color_manual(values=c("eQTL"="#ff7f00", "hQTL"="#6a3d9a", "sQTL"="#1f78b4")) +
+      geom_smooth(method='lm', aes(group=1), se=F, color="gray") +
+      facet_wrap(~FacetGroup, nrow=1) +
+      theme(legend.position="none") +
+      labs(x="Genotype at top molQTL SNP", color=NULL, y="Normalized Phenotype")
+    ggsave(paste0("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/ColocExamples/", Locus, ".box.pdf"), Coloc.Box.P, height=3, width=5)
+
+    
+    Locus <- dat.CandidatesToPlot.BoxPlotDatSplit[[i]]$Locus %>% unique()
+    Contains_molQTLs <- dat.ToBoxplot %>% distinct(PC, P, FacetGroup, Locus) %>% 
+      filter(!FacetGroup=="eQTL") %>% nrow() >= 1
+    Contains_eQTL <- dat.ToBoxplot %>% distinct(PC, P, FacetGroup, Locus) %>%
+      filter(FacetGroup=="eQTL") %>% nrow() == 1
+
+    if (Contains_molQTLs & Contains_eQTL){
+          SummaryStats <- fread(paste0("../code/hyprcoloc/LociWiseSummaryStatsInput/ForColoc/", Locus, ".txt.gz")) %>%
+      mutate(PC=str_replace(source_file, "QTLs/QTLTools/(.+?)/NominalPassForColocChunks/.+$", "\\1")) %>%
+      dplyr::select(Locus = gwas_locus, P=phenotype, PC, p, snp  ) %>%
+      inner_join(
+        dat.ToBoxplot %>% distinct(PC, P, FacetGroup, Locus)
+      )
+    
+      Coloc.Scatter.P <- SummaryStats %>%
+        dplyr::select(-P, -PC) %>%
+        pivot_wider(names_from = "FacetGroup", values_from="p") %>%
+        drop_na() %>%
+        gather(key="molQTL", value="molQTL_p", -Locus, -snp, -eQTL) %>%
+        ggplot(aes(x=-log10(molQTL_p), y=-log10(eQTL))) +
+        geom_point(alpha=0.5, color='gray', shape=19) +
+        geom_rect(xmin=-Inf, xmax=-Inf, ymin=-Inf, ymax=Inf, color = '#ff7f00', size=2) +
+        geom_rect(data = . %>%
+                     distinct(molQTL, .keep_all=T), ymin = -Inf, ymax=-Inf, xmin=-Inf, xmax=Inf, size=3, aes(color=molQTL)) +
+        facet_wrap(~molQTL, scales="free") +
+        scale_color_manual(values=c("hQTL"="#6a3d9a", "sQTL"="#1f78b4")) +
+        theme(axis.line=element_blank(), legend.position='none') +
+        theme(
+          strip.background = element_blank(),
+          strip.text.x = element_blank()
+        )
+    ggsave(paste0("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/ColocExamples/", Locus, ".scatter.pdf"), Coloc.Scatter.P, height=3, width=5)
+    }
+  }
+}
+
 
 ```
+
+
 
 
 ```{r, eval=F}

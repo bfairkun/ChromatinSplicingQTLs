@@ -284,6 +284,63 @@ rule GatherGWAS_TestSNPs_AcrossMolQTLs:
     shell:
         "cat {input} > {output}"
 
+rule GatherGWAS_TestSNPs_AcrossMolQTLs_allTraits:
+    input:
+        expand("gwas_summary_stats/MolQTLIntersections_ControlSNPs/{accession}/ALL.txt.gz", accession=gwas_df.index)
+
+rule Classify_sQTLs:
+    """
+    as either p-sQTLs or u-sQTLs
+    """
+    input:
+        QTLs = "pi1/PairwisePi1Traits.P.all.txt.gz",
+        IntronAnnotations = "../data/IntronAnnotationsFromYang.Updated.tsv.gz"
+    output:
+        OneLinePer_Cluster = "SplicingAnalysis/sQTLs_p_and_u.tsv.gz",
+        OneLinePer_Intron = "SplicingAnalysis/sQTLs_p_and_u.Full.tsv.gz",
+    log:
+        "logs/Classify_sQTLs.log"
+    conda:
+        "../envs/r_2.yaml"
+    shell:
+        """
+        Rscript scripts/Clasify_sQTLs.R {input.QTLs} {output.OneLinePer_Cluster} {output.OneLinePer_Intron} &> {log}
+        """
+
+rule MolQTL_GWAS_QQ:
+    input:
+        sQTLs = "SplicingAnalysis/sQTLs_p_and_u.tsv.gz",
+        molQTLs = "gwas_summary_stats/MolQTLIntersections/{gwas}.bed.gz",
+        OtherControlSNPs = "gwas_summary_stats/MolQTLIntersections_ControlSNPs/{gwas}/ALL.txt.gz",
+        TestSNPS = "gwas_summary_stats/sorted_index_summarystat_hg38beds/{gwas}.bed.gz",
+        gwas_table = "config/gwas_table.tsv"
+    output:
+        pdf = "gwas_summary_stats/qqplots/{gwas}/QQ.pdf",
+        data = "gwas_summary_stats/qqplots/{gwas}/QQ.dat.tsv.gz"
+    log:
+        "logs/MolQTL_GWAS_QQ/{gwas}.log"
+    conda:
+        "../envs/r_scattermore.yml"
+    resources:
+        mem_mb = 48000
+    shell:
+        """
+        Rscript scripts/MolQTL_GWAS_QQ.R {output.pdf} {output.data} {input.sQTLs} {input.molQTLs} {input.OtherControlSNPs} {input.TestSNPS} {wildcards.gwas} &> {log}
+        """
+
+rule copy_GWAS_qq:
+    input:
+        "gwas_summary_stats/qqplots/{gwas}/QQ.pdf",
+    output:
+        "gwas_summary_stats/All_qq/{gwas}.pdf",
+    shell:
+        """
+        cp {input} {output}
+        """
+
+rule Gather_GWAS_QQ:
+    input:
+        expand("gwas_summary_stats/All_qq/{gwas}.pdf", gwas=gwas_df.index)
 
 # rule GetGWASSummaryStatsAtLeadSNPWindows:
 #     """

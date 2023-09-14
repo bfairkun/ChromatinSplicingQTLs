@@ -269,9 +269,7 @@ Now let's plot something that I would want to include in manuscript
 ```{r}
 Translated.GAGT_CassetteExons$Effect %>% unique()
 
-#Check MYB
-P.bar.dat %>%
-  filter(str_detect(gene, "ENSG00000118513"))
+
 
 P.bar.dat <- Translated.GAGT_CassetteExons %>%
    mutate(IsAnnotated = if_else(str_detect(SuperAnnotation,"Annotated"), "Annotated by Gencode", "Unannotated", missing="Unannotated")) %>%
@@ -281,7 +279,10 @@ P.bar.dat <- Translated.GAGT_CassetteExons %>%
     TRUE ~ Effect
   )) %>%
   mutate(ColorEffect = if_else(MergedEffect %in% c("Productive", "Preserves frame", "Cassette in UTR"), "Productive", "NMD") )
-  
+
+#Check MYB
+P.bar.dat %>%
+  filter(str_detect(gene, "ENSG00000118513"))
 
 P.bar <- P.bar.dat %>%
   count(MergedEffect, ColorEffect, IsAnnotated) %>%
@@ -1084,6 +1085,103 @@ GeneCategories %>%
   facet_wrap(~Feature, scales = "free", ncol=1) +
   labs(y="ecdf", color="Druggability gene group")
 
+GeneCategories %>%
+  left_join(NumExonsAndLength) %>%
+  gather(key="Feature", value="value", NumExons, GeneLength, medianTPM) %>%
+  filter(Feature == "NumExons") %>%
+  ggplot(aes(x=value, color=Group)) +
+  stat_ecdf() +
+  scale_x_continuous(trans='log10') +
+  annotation_logticks() +
+  facet_wrap(~Feature, scales = "free", ncol=1) +
+  labs(y="ecdf", color="Druggability gene group")
+```
+
+Save plots for number of exons and host intron length
+
+```{r}
+
+
+GeneCategories %>%
+  left_join(NumExonsAndLength) %>%
+  gather(key="Feature", value="value", NumExons, GeneLength, medianTPM) %>%
+  filter(Feature == "NumExons") %>%
+  group_by(Group, Feature) %>%
+  summarise(Med = median(value, na.rm=T))
+
+Introns.Annotated.Lengths <- read_tsv("../data/IntronAnnotationsFromYang.tsv.gz") %>%
+  mutate(gene = str_replace(gene, "^(.+?)\\..+$", "\\1")) %>%
+  filter(SemiSupergroupAnnotations == "basic tag") %>%
+  inner_join(
+    GeneCategories %>%
+      filter(Group == "SplicingPerturbed")) %>%
+  mutate(Len = end - start) %>%
+  mutate(Group = "AllOtherIntronInGenes") %>%
+  dplyr::select(Len, Group)
+
+
+HostIntrons <- read_tsv("../output/SmallMoleculeGAGT_CassetteExonclusters.bed", col_names=paste0("V", 1:9)) %>%
+  filter(str_detect(V4, "junc.skipping")) %>%
+  mutate(Len = V3-V2) %>%
+  mutate(Group = "Host introns") %>%
+  dplyr::select(Len, Group)
+
+bind_rows(
+  HostIntrons, Introns.Annotated.Lengths
+) %>%
+  wilcox.test(Len ~ Group, data=.)
+
+bind_rows(
+  HostIntrons, Introns.Annotated.Lengths
+) %>%
+  group_by(Group) %>%
+  summarise(medLen = median(Len))
+
+P.IntLen <- bind_rows(
+  HostIntrons, Introns.Annotated.Lengths
+) %>%
+  ggplot(aes(x=Len, color=Group)) +
+  stat_ecdf() +
+  scale_x_continuous(trans='log10') +
+  coord_cartesian(xlim=c(100, 1E5)) +
+  scale_color_manual(values=c("Host introns"="#e31a1c", "AllOtherIntronInGenes"="#969696")) +
+  labs(x="Intron length (bp)", y="Cumulative fraction", caption="2233 vs 6139bp medians, P<2.2E-16")
+P.IntLen
+
+GeneCategories$Group %>% unique()
+
+GeneCategories %>%
+  left_join(NumExonsAndLength) %>%
+  gather(key="Feature", value="value", NumExons, GeneLength, medianTPM) %>%
+  filter(Feature == "NumExons") %>%
+  filter(Group %in% c("SplicingPerturbed", "SplicingUnperturbedControl")) %>%
+  wilcox.test(value~Group, data=.)
+
+P.NumExons <- 
+  GeneCategories %>%
+  left_join(NumExonsAndLength) %>%
+  gather(key="Feature", value="value", NumExons, GeneLength, medianTPM) %>%
+  filter(Feature == "NumExons") %>%
+  filter(!Group %in% c("Tier 2", "Tier 3A", "Tier 3B", "Tier 1")) %>%
+  ggplot(aes(x=value, color=Group)) +
+  stat_ecdf() +
+  # scale_x_continuous(trans='log10') +
+  # annotation_logticks(sides='b') +
+  coord_cartesian(xlim=c(1, 30)) +
+  scale_color_manual(
+    labels=c(
+      "SplicingPerturbed"="219 Risdiplam-induced NMD targets",
+      "SplicingUnperturbedControl"="389 expression-matched genes",
+      "Whole protein coding genome"="Whole genome",
+      "Tier 1"="1059 targets of approved small molecules"),
+    values=c(
+      "SplicingPerturbed"="#e31a1c",
+      "SplicingUnperturbedControl"="#1f78b4",
+      "Whole protein coding genome"="#000000",
+      "Tier 1"="#737373")
+  ) +
+  labs(y="Cumulative fraction", color="Druggability gene group", x="Number exons in gene", caption="median 14 vs 9, P=5.2x10-12")
+P.NumExons
 ```
 
 Ok, that is one way to show that the risdiplam-perturbed genes tend to be in longer genes with more exons, compared to a matched set of control genes or compared to previously druggable genes. But for sake of compactness, since I already know I also want to do an enrichment analysis including GO categories (ie GPCRs, etc), let's also look make gene categories by length and present for enrichment alongside the GO enrichment analysis...
@@ -1812,14 +1910,14 @@ P.myb.expression <- Expression.tidyForDose_ActualDataForModel.Relative %>%
   # mutate(dose.nM = dose.nM + 0.1) %>%
   ggplot(aes(x=dose.nM, y=Log2CPM-MeanNormalCPM, color=libType)) +
   geom_point() +
-  scale_color_manual(values=c("chRNA"="#969696", "polyA"="#252525")) +
+  scale_color_manual(values=c("chRNA"="#969696", "polyA"="#252525"), labels=c("chRNA"="naRNA", "polyA"="steady-state")) +
   geom_smooth(
     data = . %>%
       filter(libType=="polyA"),
     method = drm, method.args = list(fct = L.4(names=c("Steepness", "LowerLimit", "UpperLimit", "ED50"))), se = FALSE) +
   scale_x_continuous(trans="log1p", limits=c(0, 10000), breaks=c(10000, 3160, 1000, 316, 100, 31.6, 10, 3.16, 0), labels=rev(c("0", "3.16","10","31.6","100", "316", "1000", "3160", "10000"))) + 
   # Rotate_x_labels +
-  scale_x_break(c(2,2)) +
+  # scale_x_break(c(2,2)) +
   theme(axis.text.x.top = element_blank(),
         axis.ticks.x.top = element_blank(),
         axis.line.x.top = element_blank(),
@@ -1838,7 +1936,7 @@ P.myb.splicing <- Splicing.tidyForDose_ActualDataForModel %>%
   # mutate(dose.nM = dose.nM + 0.1) %>%
   ggplot(aes(x=dose.nM, y=PSI, color=libType)) +
   geom_point() +
-  scale_color_manual(values=c("chRNA"="#969696", "polyA"="#252525")) +
+  scale_color_manual(values=c("chRNA"="#969696", "polyA"="#252525"), labels=c("chRNA"="naRNA", "polyA"="steady-state")) +
   geom_smooth(
     data = . %>%
       filter(libType=="polyA"),
@@ -1846,13 +1944,17 @@ P.myb.splicing <- Splicing.tidyForDose_ActualDataForModel %>%
   labs(x="[risdiplam] (nanomolar)", y="Splicing of\nNMD-targeting exon; PSI") +
   scale_x_continuous(trans="log1p", limits=c(0, 10000), breaks=c(10000, 3160, 1000, 316, 100, 31.6, 10, 3.16, 0), labels=rev(c("0", "3.16","10","31.6","100", "316", "1000", "3160", "10000"))) + 
   # Rotate_x_labels +
-  scale_x_break(c(2,2)) +
+  # scale_x_break(c(2,2)) +
   theme(axis.text.x.top = element_blank(),
         axis.ticks.x.top = element_blank(),
         axis.line.x.top = element_blank(),
         plot.background = element_blank()) +
   Rotate_x_labels
 P.myb.splicing
+
+P.myb.splicing <- ggplotify::as.ggplot(print(P.myb.splicing))
+P.myb.expression <- ggplotify::as.ggplot(print(P.myb.expression))
+
 ```
 ```
 
@@ -1861,12 +1963,12 @@ P.myb.splicing
 ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig4_Bar.pdf", P.bar, height=4, width=9)
 ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig4_BarSimpler.pdf", P.bar.simpler, height=3, width=8)
 
-ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig4_BarSimpler.Fixed.pdf", P.bar.simpler.fixed, height=3, width=8)
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig4_BarSimpler.Fixed.pdf", P.bar.simpler.fixed, height=1.5, width=4)
 
 
-ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig4_BoxLarge.pdf", P.box.small, height=4, width=4)
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig4_BoxLarge.pdf", P.box.small, height=3, width=4)
 
-ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig4_BoxSmall.pdf", P.box, height=4, width=4)
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig4_BoxSmall.pdf", P.box, height=3, width=4)
 ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig4_chRNA_polyA_DE_scatter.pdf",P.scatter, height=6, width=8)
 
 ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig4_MeanDeltaPSI.pdf",P.MeanDeltaPSI, height=3, width=6)
@@ -1881,6 +1983,11 @@ ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/202
 ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig4_GeneSetEnrichment_QualitativeBarplot.pdf",P.enrichmentByBarplot, height=4, width=6)
 
 ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig4_GeneLength.pdf",P.geneLength, height=3, width=7)
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig4_GeneLength_NumExons.pdf",P.NumExons, height=3, width=7)
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig4_GeneLength_LengthHostIntrons.pdf",P.IntLen, height=3, width=5)
+
+
 
 ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig4_GeneLength_FromPostTxnSet.pdf",P.geneLength.FromPostTxnSet, height=3, width=7)
 

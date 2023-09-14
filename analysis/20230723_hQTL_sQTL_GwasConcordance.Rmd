@@ -13,6 +13,7 @@ library(data.table)
 library(readxl)
 library(qvalue)
 library(knitr)
+library(ggbreak)
 
 
 
@@ -108,8 +109,415 @@ GWAS.Loci.With_sQTL_and_hQTL_eQTLs <- GWAS.sQTLs.No_Nominal_hQTLs %>%
       dplyr::select(hQTL.P = P1, GeneLocus, hQTL.Top.Name=singletrait_topvar.x, hQTL.Top.eQTL.beta=x.beta.in.y, hQTL.Top.eQTL.beta_se=x.beta_se.in.y, hQTL.Top.eQTL.P=trait.x.p.in.y)
     ) %>%
   filter(sQTL.Top.eQTL.P < 0.01) %>%
+  arrange(GeneLocus, GWAS.Loci, desc(ProductiveOrUnproductive)) %>%
   distinct(GeneLocus, GWAS.Loci, .keep_all=T)
+```
 
+```{r, eval=F}
+#To prevent snakemake from rerunning everytime i rerun this markdown, just manually call this line
 write_tsv(GWAS.Loci.With_sQTL_and_hQTL_eQTLs, "../output/GwasLoci_with_sQTL_and_hQTL_eQTLs.tsv")
 ```
 
+
+I then did some work in python to get the gwas betas underlying those top hQTL and sQTL SNPs... The signed gene:trait effect (assuming independence between SNPs) is just the eQTL_beta / GWAS_beta. Let's check the concordance of the gene:trait effects from these sQTLs and hQTLs...
+
+```{r}
+gene.trait.effects.dat <- read_tsv("../output/GwasLociConcordance.tsv") %>%
+  mutate(gene.trait.effect.From.sQTL = sQTL.Top.GWAS_beta/sQTL.Top.eQTL.beta,
+         gene.trait.effect.From.hQTL = hQTL.Top.GWAS_beta/hQTL.Top.eQTL.beta) %>%
+  mutate(LD = R**2)
+
+dim(gene.trait.effects.dat)
+
+gene.trait.effects.dat %>%
+  ggplot(aes(x=gene.trait.effect.From.sQTL, y=gene.trait.effect.From.hQTL, color=LD)) +
+  scale_color_viridis_c() +
+  geom_text(aes(label=symbol)) +
+  geom_abline() +
+  labs(caption="One point per trait:gene pair")
+
+
+gene.trait.effects.dat %>%
+  group_by(sQTL.Top.Name, hQTL.Top.Name, GeneLocus) %>%
+  mutate(Mean.gene.trait.effect.From.hQTL = mean(gene.trait.effect.From.hQTL),
+         Mean.gene.trait.effect.From.sQTL = mean(gene.trait.effect.From.sQTL)) %>%
+  ungroup() %>%
+  distinct(sQTL.Top.Name, hQTL.Top.Name, GeneLocus, .keep_all=T) %>%
+  ggplot(aes(x=Mean.gene.trait.effect.From.sQTL, y=Mean.gene.trait.effect.From.hQTL, color=LD)) +
+  scale_color_viridis_c() +
+  geom_text(aes(label=symbol)) +
+  geom_abline() +
+  labs(caption="One point per gene")
+
+
+
+
+gene.trait.effects.dat %>%
+  group_by(sQTL.Top.Name, hQTL.Top.Name, GeneLocus) %>%
+  mutate(Mean.gene.trait.effect.From.hQTL = mean(gene.trait.effect.From.hQTL),
+         Mean.gene.trait.effect.From.sQTL = mean(gene.trait.effect.From.sQTL)) %>%
+  ungroup() %>%
+  distinct(sQTL.Top.Name, hQTL.Top.Name, GeneLocus, .keep_all=T) %>%
+  filter(LD < 0.2) %>%
+  ggplot(aes(x=Mean.gene.trait.effect.From.sQTL, y=Mean.gene.trait.effect.From.hQTL, color=LD)) +
+  scale_color_viridis_c() +
+  geom_text(aes(label=symbol)) +
+  geom_abline() +
+  labs(caption="Examples where R^2 < 0.2\nOne point per gene")
+
+```
+
+Besides pruning data for LD less than some arbitraty threshold (of say R^2 < 0.2), I could also just filter for results where any LD effects would if anything bias towards discordant results. For example, if the hQTL and sQTL are in positive LD, but they have oppositte effects on gene expression and subsequent opposite effects on trait. Or conversely, if the hQTL and sQTL are in negative LD, but they have the same effect on gene expression and trait.
+
+```{r}
+
+gene.trait.effects.dat %>%
+  mutate(LD_Works_Against_Concordance = sign(sQTL.Top.eQTL.beta) * sign(hQTL.Top.eQTL.beta) * sign(R) == -1) %>%
+  filter(LD_Works_Against_Concordance==T) %>%
+  ggplot(aes(x=gene.trait.effect.From.sQTL, y=gene.trait.effect.From.hQTL, color=R)) +
+  scale_color_viridis_c() +
+  geom_text(aes(label=symbol)) +
+  theme_bw() +
+  geom_abline() +
+  labs(caption="Examples where sQTL/hQTL LD would theoretically bias gene:trait effects to be discordant")
+
+gene.trait.effects.dat$gwas.trait %>%
+  unique()
+
+gene.trait.effects.dat %>%
+  mutate(LD_Works_Against_Concordance = sign(sQTL.Top.eQTL.beta) * sign(hQTL.Top.eQTL.beta) * sign(R) == -1) %>%
+  group_by(sQTL.Top.Name, hQTL.Top.Name, GeneLocus) %>%
+  mutate(Mean.gene.trait.effect.From.hQTL = mean(gene.trait.effect.From.hQTL),
+         Mean.gene.trait.effect.From.sQTL = mean(gene.trait.effect.From.sQTL)) %>%
+  ungroup() %>%
+  distinct(sQTL.Top.Name, hQTL.Top.Name, GeneLocus, .keep_all=T) %>%
+  filter(!is.na(LD_Works_Against_Concordance)) %>%
+  ggplot(aes(x=Mean.gene.trait.effect.From.sQTL, y=Mean.gene.trait.effect.From.hQTL)) +
+  geom_vline(xintercept = 0) +
+  geom_hline(yintercept = 0) +
+  geom_abline(linetype='dashed') +
+  geom_point(shape=21, aes(color=LD_Works_Against_Concordance, fill=LD), size=3, stroke=3) +
+  scale_fill_viridis_c(option="B", end=0.75) +
+  scale_color_manual(values=c("TRUE"="black", "FALSE"="#f98e09"), labels = c("TRUE"=str_wrap("Any LD biases against concordance, 4/4 concordant", 15), "FALSE"=str_wrap("Strong LD biases towards concordance, 4/5 concordant", 15))) +
+  geom_text_repel(aes(label=symbol)) +
+  theme_bw() +
+  labs(fill="R^2", x="Gene:trait effect from sQTL", y="Gene:trait effect from hQTL", color=NULL)
+
+gene.trait.effects.dat %>%
+  filter(symbol=="TMBIM1")
+
+```
+
+Note that that some of these are productive sQTLs. There are two (mutually compatible) explanations: (1) our classification of productive vs unproductive sQTLs is not perfect. Or (2), even productive sQTLs often work through directions that are generally consistent with eQTL effects as measured by RNAseq... For example, a SNP may promote a productive junction that creates a down-regulating eQTL, and functions not through altering protein function in simple cassette exons, but rather, through creation of truncated proteins that are functionally similar to down-regulation at the level of transcription.
+
+Also, now that I think of it, I filtered for sQTL/eQTLs to make this plot but perhaps I should not have done that. After all, the question I'm looking to answer is 'to what extent are splicing:trait effects mediated by expression', so it is circular to only include sQTLs that I know to also have expression effects. Let me repeat some of these analyses without that filter...
+
+```{r}
+GWAS.Loci.With_sQTL_and_hQTL <- GWAS.sQTLs.No_Nominal_hQTLs %>%
+  dplyr::select(GeneLocus, sQTL.Top.Name=singletrait_topvar.x, sQTL.Top.eQTL.beta=x.beta.in.y, sQTL.Top.eQTL.beta_se=x.beta_se.in.y, sQTL.Top.eQTL.P=trait.x.p.in.y, chrom:GWAS.accession, gwas.trait, Colocalized.Top.Name = TopCandidateSNP,Category ) %>%
+  inner_join(
+    dat.hQTLs.filtered %>%
+      dplyr::select(hQTL.P = P1, GeneLocus, hQTL.Top.Name=singletrait_topvar.x, hQTL.Top.eQTL.beta=x.beta.in.y, hQTL.Top.eQTL.beta_se=x.beta_se.in.y, hQTL.Top.eQTL.P=trait.x.p.in.y)
+    ) %>%
+  # filter(sQTL.Top.eQTL.P < 0.01) %>%
+  distinct(GeneLocus, GWAS.Loci, .keep_all=T)
+  # distinct(GeneLocus, .keep_all=T)
+```
+
+
+```{r, eval=F}
+#To prevent snakemake from rerunning everytime i rerun this markdown, just manually call this line
+write_tsv(GWAS.Loci.With_sQTL_and_hQTL, "../output/GwasLoci_with_sQTL_and_hQTL.tsv")
+```
+
+```{r}
+gene.trait.effects.dat <- read_tsv("../output/GwasLociConcordanceWithNonEqtls.tsv") %>%
+  mutate(gene.trait.effect.From.sQTL = sQTL.Top.GWAS_beta/sQTL.Top.eQTL.beta,
+         gene.trait.effect.From.hQTL = hQTL.Top.GWAS_beta/hQTL.Top.eQTL.beta) %>%
+  mutate(LD = R**2)
+
+dim(gene.trait.effects.dat)
+
+gene.trait.effects.dat %>%
+  # filter(LD < 0.5) %>%
+  mutate(LD_Works_Against_Concordance = sign(sQTL.Top.eQTL.beta) * sign(hQTL.Top.eQTL.beta) * sign(R) == -1) %>%
+  group_by(sQTL.Top.Name, hQTL.Top.Name, GeneLocus) %>%
+  mutate(Mean.gene.trait.effect.From.hQTL = mean(gene.trait.effect.From.hQTL),
+         Mean.gene.trait.effect.From.sQTL = mean(gene.trait.effect.From.sQTL)) %>%
+  ungroup() %>%
+  distinct(sQTL.Top.Name, hQTL.Top.Name, GeneLocus, .keep_all=T) %>%
+  filter(!is.na(LD_Works_Against_Concordance)) %>%
+  ggplot(aes(x=Mean.gene.trait.effect.From.sQTL, y=Mean.gene.trait.effect.From.hQTL)) +
+  geom_vline(xintercept = 0) +
+  geom_hline(yintercept = 0) +
+  geom_abline(linetype='dashed') +
+  geom_point(shape=21, aes(color=LD_Works_Against_Concordance, fill=LD), size=3, stroke=3) +
+  scale_fill_viridis_c(option="B", end=0.75) +
+  scale_color_manual(values=c("TRUE"="black", "FALSE"="#f98e09"), labels = c("TRUE"=str_wrap("Any LD biases against concordance, 4/4 concordant", 15), "FALSE"=str_wrap("Strong LD biases towards concordance, 4/6 concordant", 15))) +
+  geom_text_repel(aes(label=symbol)) +
+  theme_bw() +
+  # coord_cartesian(xlim=c(-0.5, 0.5), ylim=c(-0.5, 0.5)) +
+  labs(fill="R^2", x="Gene:trait effect from sQTL", y="Gene:trait effect from hQTL", color=NULL)
+
+```
+
+Ok wow, that didn't change much. Just one sQTL that wasn't an eQTL that is now included, and even then the direction happens to be concordant.
+
+One thing that maybe I should do, similar to [Barbeira et al](https://static-content.springer.com/esm/art%3A10.1186%2Fs13059-020-02252-4/MediaObjects/13059_2020_2252_MOESM1_ESM.pdf), is standardize the eQTL and GWAS sizes before dividing them.
+
+```{r}
+Center = T
+Scale = T
+
+gene.trait.effects.dat <- read_tsv("../output/GwasLociConcordanceWithNonEqtls.tsv") %>%
+  mutate(gene.trait.effect.From.sQTL = scale(sQTL.Top.GWAS_beta, center=Center, scale=Scale)/scale(sQTL.Top.eQTL.beta, center=Center, scale=Scale),
+         gene.trait.effect.From.hQTL = scale(hQTL.Top.GWAS_beta, center=Center, scale=Scale)/scale(hQTL.Top.eQTL.beta, center=Center, scale=Scale)) %>%
+  mutate(LD = R**2)
+
+dim(gene.trait.effects.dat)
+
+gene.trait.effects.dat %>%
+  # filter(LD < 0.5) %>%
+  mutate(LD_Works_Against_Concordance = sign(sQTL.Top.eQTL.beta) * sign(hQTL.Top.eQTL.beta) * sign(R) == -1) %>%
+  group_by(sQTL.Top.Name, hQTL.Top.Name, GeneLocus) %>%
+  mutate(Mean.gene.trait.effect.From.hQTL = mean(gene.trait.effect.From.hQTL),
+         Mean.gene.trait.effect.From.sQTL = mean(gene.trait.effect.From.sQTL)) %>%
+  ungroup() %>%
+  distinct(sQTL.Top.Name, hQTL.Top.Name, GeneLocus, .keep_all=T) %>%
+  filter(!is.na(LD_Works_Against_Concordance)) %>%
+  ggplot(aes(x=Mean.gene.trait.effect.From.sQTL, y=Mean.gene.trait.effect.From.hQTL)) +
+  geom_vline(xintercept = 0) +
+  geom_hline(yintercept = 0) +
+  geom_abline(linetype='dashed') +
+  geom_point(shape=21, aes(color=LD_Works_Against_Concordance, fill=LD), size=3, stroke=3) +
+  scale_fill_viridis_c(option="B", end=0.75) +
+  scale_color_manual(values=c("TRUE"="black", "FALSE"="#f98e09"), labels = c("TRUE"=str_wrap("Any LD biases against concordance, 4/4 concordant", 15), "FALSE"=str_wrap("Strong LD biases towards concordance, 4/6 concordant", 15))) +
+  geom_text_repel(aes(label=symbol)) +
+  theme_bw() +
+  labs(fill="R^2", x="Gene:trait effect from sQTL", y="Gene:trait effect from hQTL", color=NULL)
+```
+
+Ok that changed things a bit and i don't think it actually makes sense to standardize the eQTLs and gwas in this case given the sample size is so low that the true effects may not retain their true sign after standardizing and centering.
+
+Let's go back to the unstandardized version and replot for publication... I think for clarity at this analysis is doing, I will also pick a nice example and plot coloc plots, manhattan plots, coverage plots relative to both the hQTL and an independent sQTL. Like S100A13 might be a good example.
+
+```{r}
+gene.trait.effects.dat <- read_tsv("../output/GwasLociConcordanceWithNonEqtls.tsv") %>%
+  mutate(gene.trait.effect.From.sQTL = sQTL.Top.GWAS_beta/sQTL.Top.eQTL.beta,
+         gene.trait.effect.From.hQTL = hQTL.Top.GWAS_beta/hQTL.Top.eQTL.beta) %>%
+  mutate(LD = R**2)
+
+dim(gene.trait.effects.dat)
+
+gene.trait.effects.dat %>%
+  # filter(LD < 0.5) %>%
+  mutate(LD_Works_Against_Concordance = sign(sQTL.Top.eQTL.beta) * sign(hQTL.Top.eQTL.beta) * sign(R) == -1) %>%
+  group_by(sQTL.Top.Name, hQTL.Top.Name, GeneLocus) %>%
+  mutate(Mean.gene.trait.effect.From.hQTL = mean(gene.trait.effect.From.hQTL),
+         Mean.gene.trait.effect.From.sQTL = mean(gene.trait.effect.From.sQTL)) %>%
+  ungroup() %>%
+  distinct(sQTL.Top.Name, hQTL.Top.Name, GeneLocus, .keep_all=T) %>%
+  filter(!is.na(LD_Works_Against_Concordance)) %>%
+  ggplot(aes(x=Mean.gene.trait.effect.From.sQTL, y=Mean.gene.trait.effect.From.hQTL)) +
+  geom_vline(xintercept = 0) +
+  geom_hline(yintercept = 0) +
+  geom_abline(linetype='dashed') +
+  geom_point(shape=21, aes(color=LD_Works_Against_Concordance, fill=LD), size=3, stroke=3) +
+  scale_fill_viridis_c(option="B", end=0.75) +
+  scale_color_manual(values=c("TRUE"="black", "FALSE"="#f98e09"), labels = c("TRUE"=str_wrap("Any LD biases against concordance, 4/4 concordant", 15), "FALSE"=str_wrap("Strong LD biases towards concordance, 4/6 concordant", 15))) +
+  geom_text_repel(aes(label=symbol)) +
+  theme_bw() +
+  scale_x_continuous(breaks=seq(-0.2, 2.3, 0.1)) +
+  ggbreak::scale_x_break(c(0.25,2.2), scales="fixed") +
+  labs(fill="R^2", x="Gene:trait effect from sQTL", y="Gene:trait effect from hQTL", color=NULL)
+
+gene.trait.effects.dat %>%
+  filter(LD < 0.2) %>%
+  mutate(LD_Works_Against_Concordance = sign(sQTL.Top.eQTL.beta) * sign(hQTL.Top.eQTL.beta) * sign(R) == -1) %>%
+  group_by(sQTL.Top.Name, hQTL.Top.Name, GeneLocus) %>%
+  mutate(Mean.gene.trait.effect.From.hQTL = mean(gene.trait.effect.From.hQTL),
+         Mean.gene.trait.effect.From.sQTL = mean(gene.trait.effect.From.sQTL)) %>%
+  ungroup() %>%
+  distinct(sQTL.Top.Name, hQTL.Top.Name, GeneLocus, .keep_all=T) %>%
+  filter(!is.na(LD_Works_Against_Concordance)) %>%
+  ggplot(aes(x=Mean.gene.trait.effect.From.sQTL, y=Mean.gene.trait.effect.From.hQTL)) +
+  geom_vline(xintercept = 0) +
+  geom_hline(yintercept = 0) +
+  geom_abline(linetype='dashed') +
+  geom_point(shape=21, aes(color=LD_Works_Against_Concordance, fill=LD), size=3, stroke=3) +
+  scale_fill_viridis_c(option="B", end=0.75) +
+  scale_color_manual(values=c("TRUE"="black", "FALSE"="#f98e09"), labels = c("TRUE"=str_wrap("Any LD biases against concordance, 4/4 concordant", 15), "FALSE"=str_wrap("Strong LD biases towards concordance, 4/6 concordant", 15))) +
+  geom_text_repel(aes(label=symbol)) +
+  theme_bw() +
+  scale_x_continuous(breaks=seq(-0.2, 2.3, 0.1)) +
+  labs(fill="R^2", x="Gene:trait effect from sQTL", y="Gene:trait effect from hQTL", color=NULL)
+
+gene.trait.effects.dat %>%
+  filter(LD < 0.2) %>%
+  # filter(!is.na(sQTL.Top.GWAS_beta * hQTL.Top.GWAS_beta)) %>%
+  distinct(symbol, .keep_all=T)
+
+```
+
+Let's take a more careful look at S100A13 or some other promising examples to make sure it makes sense
+
+```{r}
+gene.trait.effects.dat %>%
+  # count(ProductiveOrUnproductive)
+  filter(symbol %in% c("DENND3", "BLK", "S100A13")) %>%
+  mutate(Intron = str_glue("{chrom}:{start}-{end}"))
+
+gene.trait.effects.dat %>%
+  filter(!is.na(sQTL.Top.GWAS_beta) & !is.na(hQTL.Top.GWAS_beta)) %>%
+  # distinct(GeneLocus)
+  mutate(LD_Works_Against_Concordance = sign(sQTL.Top.eQTL.beta) * sign(hQTL.Top.GWAS_beta) * sign(R) == -1) %>%
+  filter(LD_Works_Against_Concordance) %>%
+  filter(ProductiveOrUnproductive == "Unproductive")
+```
+
+```{r}
+gene.trait.effects.dat %>%
+  # count(ProductiveOrUnproductive)
+  filter(symbol == "BLK") %>%
+  mutate(Intron = str_glue("{chrom}:{start}-{end}"))
+```
+
+Now let's plot BLK as coverage, relative to two snps
+
+```{bash, eval=F}
+python scripts/GenometracksByGenotype/AggregateBigwigsForPlotting.py --BigwigList PlotQTLs/bwList.WithFullGeuvadis.tsv --BigwigListType KeyFile --OutputPrefix /scratch/midway2/bjf79/PlotDatBLK_sQTL --VCF Genotypes/1KG_GRCh38/Autosomes.vcf.gz --SnpPos chr8:11544838  --Region chr8:11,491,991-11,566,599 --GroupSettingsFile <(cat PlotQTLs/bwList.Groups.4col.tsv | awk 'NR==1 || NR==2 || NR==3 || NR==8') --Bed12GenesToIni scripts/GenometracksByGenotype/PremadeTracks/gencode.v26.FromGTEx.genes.bed12.gz --GenotypeCustomPalette "#000000,#525252,#d9d9d9,#ffffff" --FilterJuncsByBed <(zcat QTLs/QTLTools/polyA.Splicing/PermutationPass.FDR_Added.txt.gz | grep 'clu_21851_+' | awk -v OFS='\t' '$NF < 0.1 {print $2, $3-1, $4, $1, $NF, $5}') -vv
+
+pyGenomeTracks --region chr8:11,491,991-11,566,599 -out scratch/BLK.sQTL_Sashimi.pdf --tracks /scratch/midway2/bjf79/PlotDatBLK_sQTLtracks.ini
+
+python scripts/GenometracksByGenotype/AggregateBigwigsForPlotting.py --BigwigList PlotQTLs/bwList.WithFullGeuvadis.tsv --BigwigListType KeyFile --OutputPrefix /scratch/midway2/bjf79/PlotDatBLK_hQTL --VCF Genotypes/1KG_GRCh38/Autosomes.vcf.gz --SnpPos chr8:11546260  --Region chr8:11,491,991-11,566,599 --GroupSettingsFile <(cat PlotQTLs/bwList.Groups.4col.tsv | awk 'NR==1 || NR==2 || NR==3 || NR==8') --Bed12GenesToIni scripts/GenometracksByGenotype/PremadeTracks/gencode.v26.FromGTEx.genes.bed12.gz --GenotypeCustomPalette "#000000,#525252,#d9d9d9,#ffffff" --FilterJuncsByBed <(zcat QTLs/QTLTools/polyA.Splicing/PermutationPass.FDR_Added.txt.gz | grep 'clu_21851_+' | awk -v OFS='\t' '$NF < 0.1 {print $2, $3-1, $4, $1, $NF, $5}') -vv --SnpName 8:11546260:C:G
+
+pyGenomeTracks --region chr8:11,491,991-11,566,599 -out scratch/BLK.hQTL_Sashimi.pdf --tracks /scratch/midway2/bjf79/PlotDatBLK_hQTLtracks.ini
+```
+
+The plots are just as expected, though it is hard to see the effects without really zooming and zooming out a lot... the poison exon PSI is like 2%, so its hard to see it compared to the other exons. When plotting relative to the sQTL SNP, the sQTL/eQTL effect is modest (but still convincing), and the hQTL effect is non-existant (as expected when plotting relative to sQTL genotypes, since these SNPs are unliked). When plotting relative to hQTL genotypes, everything is reversed as you would expect. Notably, even though the hQTL is in the middle of the gene and could be just functioning as an internal promoter to increase eQTL signal, looking at the first exon (at the real promoter), it is clear that this hQTL is also increasing transcription and the productive promoter to generate more full-length transcripts. Ok so now how to plot this for publication. The coverage plots are nice but they take some nuance and careful plotting to interpret well. I think I will just show boxplots relative to each of the two SNPs, as well as two Manhattan plots of the gwas signal, each one highlighting LD patterns relative to the two SNPs so that we can see how these are independent eQTLs generating independent GWAS signals.
+
+```{bash, eval=F}
+rm scratch/BLK.boxplot.dat.tsv
+
+## hQTL
+
+python scripts/GenometracksByGenotype/ExtractPhenotypeBedByGenotype.py --SnpPos chr8:11546260 --SnpName 8:11546260:C:G --VCF Genotypes/1KG_GRCh38/Autosomes.vcf.gz --Bed QTLs/QTLTools/polyA.Splicing/OnlyFirstReps.sorted.qqnorm.bed.gz --FeatureName 8:11539571:11543224:clu_21851_+ --Long --NoHeader --ReportBedAsColumn >> scratch/BLK.boxplot.dat.tsv
+
+python scripts/GenometracksByGenotype/ExtractPhenotypeBedByGenotype.py --SnpPos chr8:11546260 --SnpName 8:11546260:C:G --VCF Genotypes/1KG_GRCh38/Autosomes.vcf.gz --Bed QTLs/QTLTools/chRNA.Splicing/OnlyFirstReps.sorted.qqnorm.bed.gz --FeatureName 8:11539571:11543224:clu_21851_+ --Long --NoHeader --ReportBedAsColumn >> scratch/BLK.boxplot.dat.tsv
+
+python scripts/GenometracksByGenotype/ExtractPhenotypeBedByGenotype.py --SnpPos chr8:11546260 --SnpName 8:11546260:C:G --VCF Genotypes/1KG_GRCh38/Autosomes.vcf.gz --Bed QTLs/QTLTools/H3K27AC/OnlyFirstReps.sorted.qqnorm.bed.gz --FeatureName H3K27AC_peak_92803 --Long --NoHeader --ReportBedAsColumn >> scratch/BLK.boxplot.dat.tsv
+
+python scripts/GenometracksByGenotype/ExtractPhenotypeBedByGenotype.py --SnpPos chr8:11546260 --SnpName 8:11546260:C:G --VCF Genotypes/1KG_GRCh38/Autosomes.vcf.gz --Bed QTLs/QTLTools/Expression.Splicing/OnlyFirstReps.sorted.qqnorm.bed.gz --FeatureName ENSG00000136573.14 --Long --NoHeader --ReportBedAsColumn >> scratch/BLK.boxplot.dat.tsv
+
+python scripts/GenometracksByGenotype/ExtractPhenotypeBedByGenotype.py --SnpPos chr8:11546260 --SnpName 8:11546260:C:G --VCF Genotypes/1KG_GRCh38/Autosomes.vcf.gz --Bed QTLs/QTLTools/chRNA.Expression.Splicing/OnlyFirstReps.sorted.qqnorm.bed.gz --FeatureName ENSG00000136573.14 --Long --NoHeader --ReportBedAsColumn >> scratch/BLK.boxplot.dat.tsv
+
+
+## sQTL
+
+python scripts/GenometracksByGenotype/ExtractPhenotypeBedByGenotype.py --SnpPos chr8:11544838  --VCF Genotypes/1KG_GRCh38/Autosomes.vcf.gz --Bed QTLs/QTLTools/polyA.Splicing/OnlyFirstReps.sorted.qqnorm.bed.gz --FeatureName 8:11539571:11543224:clu_21851_+ --Long --NoHeader --ReportBedAsColumn >> scratch/BLK.boxplot.dat.tsv
+
+python scripts/GenometracksByGenotype/ExtractPhenotypeBedByGenotype.py --SnpPos chr8:11544838  --VCF Genotypes/1KG_GRCh38/Autosomes.vcf.gz --Bed QTLs/QTLTools/chRNA.Splicing/OnlyFirstReps.sorted.qqnorm.bed.gz --FeatureName 8:11539571:11543224:clu_21851_+ --Long --NoHeader --ReportBedAsColumn >> scratch/BLK.boxplot.dat.tsv
+
+python scripts/GenometracksByGenotype/ExtractPhenotypeBedByGenotype.py --SnpPos chr8:11544838  --VCF Genotypes/1KG_GRCh38/Autosomes.vcf.gz --Bed QTLs/QTLTools/H3K27AC/OnlyFirstReps.sorted.qqnorm.bed.gz --FeatureName H3K27AC_peak_92803 --Long --NoHeader --ReportBedAsColumn >> scratch/BLK.boxplot.dat.tsv
+
+python scripts/GenometracksByGenotype/ExtractPhenotypeBedByGenotype.py --SnpPos chr8:11544838  --VCF Genotypes/1KG_GRCh38/Autosomes.vcf.gz --Bed QTLs/QTLTools/Expression.Splicing/OnlyFirstReps.sorted.qqnorm.bed.gz --FeatureName ENSG00000136573.14 --Long --NoHeader --ReportBedAsColumn >> scratch/BLK.boxplot.dat.tsv
+
+python scripts/GenometracksByGenotype/ExtractPhenotypeBedByGenotype.py --SnpPos chr8:11544838  --VCF Genotypes/1KG_GRCh38/Autosomes.vcf.gz --Bed QTLs/QTLTools/chRNA.Expression.Splicing/OnlyFirstReps.sorted.qqnorm.bed.gz --FeatureName ENSG00000136573.14 --Long --NoHeader --ReportBedAsColumn >> scratch/BLK.boxplot.dat.tsv
+
+
+```
+
+Now read in data and plot
+
+```{r}
+BLK.boxplots.dat <- read_tsv("../code/scratch/BLK.boxplot.dat.tsv", col_names=c("SampleID", "genotype", "Ref", "Alt", "SNP", "Phenotype", "Value", "Bed")) %>%
+  mutate(PC = str_replace(Bed, "QTLs/QTLTools/(.+?)/OnlyFirstReps.sorted.qqnorm.bed.gz", "\\1")) %>%
+  mutate(PhenotypeFull = paste(PC, Phenotype, sep='\n'))
+
+BLK.boxplots.dat$SNP %>% unique()
+
+BLK.boxplots.dat %>%
+  filter(!genotype==3) %>%
+  mutate(SNP = recode(SNP, "8:11546260:C:G"="hQTL SNP", "8:11544838:G:A"="sQTL SNP")) %>%
+  mutate(genotype= factor(genotype, levels=c(0,1,2))) %>%
+  ggplot(aes(x=genotype, y=Value, group=genotype)) +
+  geom_boxplot(outlier.shape = NA, aes(color=genotype), size=2) +
+  geom_smooth(method='lm', aes(group=1), se=F, color="gray") +
+  scale_color_manual(values=c("0"="#000000", "1"="#525252", "2"="#d9d9d9")) +
+  theme(legend.position="none") +
+  Rotate_x_labels +
+  facet_grid(SNP~PhenotypeFull) +
+  labs(y="Standardized value")
+```
+
+Ok actually something is going on that i don't understand... Not sure I believe this anymore. There seems to be a weak sQTL effect in polyA (but not chRNA, possibly because of power issues), possibly due to LD between the hQTL and sQTL. That LD could even explain the polyA expression effect relative to the hQTL SNP. But why isn't the H3K27AC effect present relative to the sQTL SNP. And why is the chRNA expression effect in the chRNA (but not polyA) opposite direction from H3K27AC QTL.
+
+Let's check a different locus: SLC12A7
+
+```{r}
+gene.trait.effects.dat %>%
+  filter(!is.na(sQTL.Top.GWAS_beta) & !is.na(hQTL.Top.GWAS_beta)) %>%
+  # distinct(GeneLocus)
+  # filter(symbol=="SLC12A7") %>%
+  # mutate(S =  sign(hQTL.Top.GWAS_beta))
+  mutate(LD_Works_Against_Concordance = sign(sQTL.Top.eQTL.beta) * sign(hQTL.Top.eQTL.beta) * sign(R) == -1) %>%
+  filter(LD_Works_Against_Concordance) %>%
+  filter(ProductiveOrUnproductive == "Unproductive")
+```
+
+
+```{bash, eval=F}
+rm scratch/SLC12A7.boxplot.dat.tsv
+
+## hQTL 5:1104823:C:T
+
+python scripts/GenometracksByGenotype/ExtractPhenotypeBedByGenotype.py --SnpPos chr5:1104823 --SnpName 5:1104823:C:T --VCF Genotypes/1KG_GRCh38/Autosomes.vcf.gz --Bed QTLs/QTLTools/polyA.Splicing/OnlyFirstReps.sorted.qqnorm.bed.gz --FeatureName 5:1075490:1075891:clu_14700_- --Long --NoHeader --ReportBedAsColumn >> scratch/SLC12A7.boxplot.dat.tsv
+
+python scripts/GenometracksByGenotype/ExtractPhenotypeBedByGenotype.py --SnpPos chr5:1104823 --SnpName 5:1104823:C:T --VCF Genotypes/1KG_GRCh38/Autosomes.vcf.gz --Bed QTLs/QTLTools/chRNA.Splicing/OnlyFirstReps.sorted.qqnorm.bed.gz --FeatureName 5:1075490:1075891:clu_14700_- --Long --NoHeader --ReportBedAsColumn >> scratch/SLC12A7.boxplot.dat.tsv
+
+python scripts/GenometracksByGenotype/ExtractPhenotypeBedByGenotype.py --SnpPos chr5:1104823 --SnpName 5:1104823:C:T --VCF Genotypes/1KG_GRCh38/Autosomes.vcf.gz --Bed QTLs/QTLTools/H3K27AC/OnlyFirstReps.sorted.qqnorm.bed.gz --FeatureName H3K27AC_peak_73612 --Long --NoHeader --ReportBedAsColumn >> scratch/SLC12A7.boxplot.dat.tsv
+
+python scripts/GenometracksByGenotype/ExtractPhenotypeBedByGenotype.py --SnpPos chr5:1104823 --SnpName 5:1104823:C:T --VCF Genotypes/1KG_GRCh38/Autosomes.vcf.gz --Bed QTLs/QTLTools/Expression.Splicing/OnlyFirstReps.sorted.qqnorm.bed.gz --FeatureName ENSG00000113504.21 --Long --NoHeader --ReportBedAsColumn >> scratch/SLC12A7.boxplot.dat.tsv
+
+python scripts/GenometracksByGenotype/ExtractPhenotypeBedByGenotype.py --SnpPos chr5:1104823 --SnpName 5:1104823:C:T --VCF Genotypes/1KG_GRCh38/Autosomes.vcf.gz --Bed QTLs/QTLTools/chRNA.Expression.Splicing/OnlyFirstReps.sorted.qqnorm.bed.gz --FeatureName ENSG00000113504.21 --Long --NoHeader --ReportBedAsColumn >> scratch/SLC12A7.boxplot.dat.tsv
+
+
+## sQTL 5:1120839:C:T
+
+python scripts/GenometracksByGenotype/ExtractPhenotypeBedByGenotype.py --SnpPos chr5:1120839  --VCF Genotypes/1KG_GRCh38/Autosomes.vcf.gz --Bed QTLs/QTLTools/polyA.Splicing/OnlyFirstReps.sorted.qqnorm.bed.gz --FeatureName 5:1075490:1075891:clu_14700_- --Long --NoHeader --ReportBedAsColumn >> scratch/SLC12A7.boxplot.dat.tsv
+
+python scripts/GenometracksByGenotype/ExtractPhenotypeBedByGenotype.py --SnpPos chr5:1120839  --VCF Genotypes/1KG_GRCh38/Autosomes.vcf.gz --Bed QTLs/QTLTools/chRNA.Splicing/OnlyFirstReps.sorted.qqnorm.bed.gz --FeatureName 5:1075490:1075891:clu_14700_- --Long --NoHeader --ReportBedAsColumn >> scratch/SLC12A7.boxplot.dat.tsv
+
+python scripts/GenometracksByGenotype/ExtractPhenotypeBedByGenotype.py --SnpPos chr5:1120839  --VCF Genotypes/1KG_GRCh38/Autosomes.vcf.gz --Bed QTLs/QTLTools/H3K27AC/OnlyFirstReps.sorted.qqnorm.bed.gz --FeatureName H3K27AC_peak_73612 --Long --NoHeader --ReportBedAsColumn >> scratch/SLC12A7.boxplot.dat.tsv
+
+python scripts/GenometracksByGenotype/ExtractPhenotypeBedByGenotype.py --SnpPos chr5:1120839  --VCF Genotypes/1KG_GRCh38/Autosomes.vcf.gz --Bed QTLs/QTLTools/Expression.Splicing/OnlyFirstReps.sorted.qqnorm.bed.gz --FeatureName ENSG00000113504.21 --Long --NoHeader --ReportBedAsColumn >> scratch/SLC12A7.boxplot.dat.tsv
+
+python scripts/GenometracksByGenotype/ExtractPhenotypeBedByGenotype.py --SnpPos chr5:1120839  --VCF Genotypes/1KG_GRCh38/Autosomes.vcf.gz --Bed QTLs/QTLTools/chRNA.Expression.Splicing/OnlyFirstReps.sorted.qqnorm.bed.gz --FeatureName ENSG00000113504.21 --Long --NoHeader --ReportBedAsColumn >> scratch/SLC12A7.boxplot.dat.tsv
+
+```
+
+
+```{r}
+SLC12A7.boxplot.dat <- read_tsv("../code/scratch/SLC12A7.boxplot.dat.tsv", col_names=c("SampleID", "genotype", "Ref", "Alt", "SNP", "Phenotype", "Value", "Bed")) %>%
+  mutate(PC = str_replace(Bed, "QTLs/QTLTools/(.+?)/OnlyFirstReps.sorted.qqnorm.bed.gz", "\\1")) %>%
+  mutate(PhenotypeFull = paste(PC, Phenotype, sep='\n'))
+
+SLC12A7.boxplot.dat$SNP %>% unique()
+
+SLC12A7.boxplot.dat %>%
+  filter(!genotype==3) %>%
+  mutate(SNP = recode(SNP, "5:1104823:C:T"="hQTL SNP", "5:1120839:C:T"="sQTL SNP")) %>%
+  mutate(genotype= factor(genotype, levels=c(0,1,2))) %>%
+  ggplot(aes(x=genotype, y=Value, group=genotype)) +
+  geom_boxplot(outlier.shape = NA, aes(color=genotype), size=2) +
+  geom_smooth(method='lm', aes(group=1), se=F, color="gray") +
+  scale_color_manual(values=c("0"="#000000", "1"="#525252", "2"="#d9d9d9")) +
+  theme(legend.position="none") +
+  Rotate_x_labels +
+  facet_grid(SNP~PhenotypeFull) +
+  labs(y="Standardized value")
+```
+
+Ok, I think this is totally a case of just LD... I dunno why the R values are coming out negative between these SNPs. that may just be a bug..
+
+Correction... It was sort of a bug, and it was scattered throughout this markdown and i have since corrected it... Basically I think all these results are now just LD. This analysis is really hard to do... Even if you pick some low (but arbitrary) LD threshold (like R^2 < 0.2), I'm not sure I would really believe the results.

@@ -1,0 +1,397 @@
+---
+title: "20230907_ColocExamplePlotsWithLD"
+output: html_document
+date: '2023-09-08'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+
+library(tidyverse)
+library(RColorBrewer)
+library(data.table)
+library(edgeR)
+library(coloc)
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family="Helvetica")))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+```
+
+## Plots
+
+```{r}
+dat <- read_tsv("../code/Misc/HandpickedColocPlotsToHighlight.dat.WithLD.tsv.gz") %>%
+  dplyr::select(-"...1") %>%
+  mutate(rsID = recode(TopSNP, "2:241759225:G:A"="rs34290285", "2:241759875:C:T"="rs71430382", "14:105172594:T:C"="rs3825761")) %>%
+  mutate(IsFocus = snp==TopSNP)
+
+dat %>%
+  distinct(gene, TopSNP)
+
+dat %>%
+  filter(gene=="D2HGDH", TopSNP=="2:241759225:G:A") %>%
+  ggplot(aes(x=Signal_polyA.Splicing, y=Signal_gwas, color=R**2)) +
+  geom_point(aes(color=R**2)) +
+  geom_point(data = . %>%
+                    filter(IsFocus), color='black', shape=21, size=3) +
+  scale_color_viridis_c(option="C") +
+  geom_text_repel(data = . %>%
+                    filter(IsFocus), color='black', aes(label=rsID)) +
+  scale_x_continuous(expand=c(0,0.05)) +
+  scale_y_continuous(expand=c(0,0.05)) +
+  labs(x="sQTL, -log10(P)", y="GWAS, -log10(P)") +
+  theme(legend.position = "none")
+
+# ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/Final_FigS_ColocExample_D2HGDH_MainSignal_P1.pdf", height=2.5, width=2.5)
+
+dat %>%
+  filter(gene=="D2HGDH", TopSNP=="2:241759225:G:A") %>%
+  ggplot(aes(x=Signal_Expression.Splicing, y=Signal_gwas, color=R**2)) +
+  geom_point(aes(color=R**2)) +
+  geom_point(data = . %>%
+                    filter(IsFocus), color='black', shape=21, size=3) +
+  scale_color_viridis_c(option="C") +
+  geom_text_repel(data = . %>%
+                    filter(IsFocus), color='black', aes(label=rsID)) +
+  scale_x_continuous(expand=c(0,0.05)) +
+  scale_y_continuous(expand=c(0,0.05)) +
+  labs(x="eQTL, -log10(P)", y="GWAS, -log10(P)") +
+  theme(legend.position = "none")
+
+# ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/Final_FigS_ColocExample_D2HGDH_MainSignal_P2.pdf", height=2.5, width=2.5)
+
+
+dat %>%
+  filter(gene=="D2HGDH", TopSNP=="2:241759225:G:A") %>%
+  ggplot(aes(x=Signal_polyA.Splicing, y=Signal_Expression.Splicing, color=R**2)) +
+  geom_point(aes(color=R**2)) +
+  geom_point(data = . %>%
+                    filter(IsFocus), color='black', shape=21, size=3) +
+  scale_color_viridis_c(option="C") +
+  geom_text_repel(data = . %>%
+                    filter(IsFocus), color='black', aes(label=rsID)) +
+  scale_x_continuous(expand=c(0,0.05)) +
+  scale_y_continuous(expand=c(0,0.05)) +
+  labs(x="sQTL, -log10(P)", y="eQTL, -log10(P)") +
+  theme(legend.position = "none")
+
+# ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/Final_FigS_ColocExample_D2HGDH_MainSignal_P3.pdf", height=2.5, width=2.5)
+
+```
+
+Second signal
+
+```{r}
+dat %>%
+  filter(gene=="D2HGDH", TopSNP=="2:241759875:C:T") %>%
+  ggplot(aes(x=Signal_polyA.Splicing, y=Signal_gwas, color=R**2)) +
+  geom_point(aes(color=R**2)) +
+  geom_point(data = . %>%
+                    filter(IsFocus), color='black', shape=21, size=3) +
+  scale_color_viridis_c(option="C") +
+  geom_text_repel(data = . %>%
+                    filter(IsFocus), color='black', aes(label=rsID)) +
+  scale_x_continuous(expand=c(0,0.05)) +
+  scale_y_continuous(expand=c(0,0.05)) +
+  labs(x="sQTL, -log10(P)", y="GWAS, -log10(P)") +
+  theme(legend.position = "none")
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/Final_FigS_ColocExample_D2HGDH_SecondSignal_P1.pdf", height=2.5, width=2.5)
+
+
+dat %>%
+  filter(gene=="D2HGDH", TopSNP=="2:241759875:C:T") %>%
+  ggplot(aes(x=Signal_Expression.Splicing, y=Signal_gwas, color=R**2)) +
+  geom_point(aes(color=R**2)) +
+  geom_point(data = . %>%
+                    filter(IsFocus), color='black', shape=21, size=3) +
+  scale_color_viridis_c(option="C") +
+  geom_text_repel(data = . %>%
+                    filter(IsFocus), color='black', aes(label=rsID)) +
+  scale_x_continuous(expand=c(0,0.05)) +
+  scale_y_continuous(expand=c(0,0.05)) +
+  labs(x="eQTL, -log10(P)", y="GWAS, -log10(P)") +
+  theme(legend.position = "none")
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/Final_FigS_ColocExample_D2HGDH_SecondSignal_P2.pdf", height=2.5, width=2.5)
+
+
+dat %>%
+  filter(gene=="D2HGDH", TopSNP=="2:241759875:C:T") %>%
+  ggplot(aes(x=Signal_polyA.Splicing, y=Signal_Expression.Splicing, color=R**2)) +
+  geom_point(aes(color=R**2)) +
+  geom_point(data = . %>%
+                    filter(IsFocus), color='black', shape=21, size=3) +
+  scale_color_viridis_c(option="C") +
+  geom_text_repel(data = . %>%
+                    filter(IsFocus), color='black', aes(label=rsID)) +
+  scale_x_continuous(expand=c(0,0.05)) +
+  scale_y_continuous(expand=c(0,0.05)) +
+  labs(x="sQTL, -log10(P)", y="eQTL, -log10(P)") +
+  theme(legend.position = "none")
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/Final_FigS_ColocExample_D2HGDH_SecondSignal_P3.pdf", height=2.5, width=2.5)
+
+
+dat %>%
+  filter(gene=="D2HGDH", TopSNP=="2:241759875:C:T") %>%
+  filter(Signal_gwas>15) %>%
+  arrange(Signal_polyA.Splicing)
+```
+Now let's look at tissue pervasiveness of these two SNPs...
+
+
+```{r}
+
+SampleSizePerGTExTissue <- read_tsv("../code/scratch/GTExSampleSizePlus6.tsv", col_names=c("tissue", "NPlus6")) %>%
+  mutate(N = NPlus6-6) %>%
+  mutate(tissue = str_replace(tissue, "GTEx/QTLs/(.+?)/cpm.bed.gz", "\\1")) %>%
+  dplyr::select(tissue, N)
+
+tissues.to.keep <- SampleSizePerGTExTissue %>%
+  filter(N>=70) %>%
+  distinct(tissue) %>%
+  pull(tissue)
+
+GTEx.dat <- read_tsv("/project2/yangili1/cfbuenabadn/ChromatinSplicingQTLs/code/GTEx_D2HGDH_SNPs.tab.gz") %>%
+  filter(tissue %in% tissues.to.keep) %>%
+  pivot_longer(-tissue, names_to=c("Stat", "SNP"), names_pattern="(^.+)_(.+?$)")
+
+GTEx.dat %>%
+  filter(Stat=="pval") %>%
+  ggplot(aes(x=value, color=SNP)) +
+  scale_x_continuous(trans='log10') +
+  stat_ecdf() +
+  scale_color_manual(values=c("2:241759225:G:A"="red", "2:241759875:C:T"="black"), labels=c("2:241759225:G:A"="primary", "2:241759875:C:T"="secondary"))
+
+GTEx.dat %>%
+  filter(Stat=="slope") %>%
+  filter(!value==0) %>%
+  add_count(tissue) %>%
+  filter(n==2) %>%
+  ggplot(aes(x=value, color=SNP)) +
+  stat_ecdf() +
+  geom_vline(data = . %>%
+               filter(tissue=="cells_ebv-transformed_lymphocytes"),
+             aes(xintercept=value, color=SNP)) +
+  scale_color_manual(values=c("2:241759225:G:A"="red", "2:241759875:C:T"="black"), labels=c("2:241759225:G:A"="primary", "2:241759875:C:T"="secondary"))
+
+GTEx.dat %>%
+  filter(Stat %in% c("slope", "slope_se")) %>%
+  pivot_wider(names_from="Stat", values_from="value") %>%
+  filter(!slope==0) %>%
+  add_count(tissue) %>%
+  filter(n==2) %>%
+  group_by(tissue) %>%
+  mutate(mean = mean(slope)) %>%
+  ungroup() %>%
+  mutate(tissue = fct_reorder(tissue, mean)) %>%
+  ggplot(aes(x=tissue, y=slope, fill=SNP)) +
+    geom_col(position='dodge') +
+    geom_errorbar(aes(ymin=slope-slope_se, ymax=slope+slope_se), position = 'dodge') +
+    scale_fill_manual(values=c("2:241759225:G:A"="red", "2:241759875:C:T"="gray"), labels=c("2:241759225:G:A"="rs34290285 (sQTL/GWAS colocalized top SNP)", "2:241759875:C:T"="rs71430382 (Primary eQTL in Geuvadis LCLs)")) +
+  scale_y_reverse(expand=c(0,0)) +
+  # scale_y_continuous(expand=c(0,0)) +
+  Rotate_x_labels +
+  labs(y="eQTL beta") +
+  theme(legend.position = 'bottom') +
+  guides(fill=guide_legend(nrow=2,byrow=TRUE))
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/Final_FigS_ColocExample_TwoSNPs_AcrossTissues.pdf", height=5, width=10)
+
+
+
+OrderedTissues <- GTEx.dat %>%
+  filter(Stat %in% c("slope", "slope_se")) %>%
+  pivot_wider(names_from="Stat", values_from="value") %>%
+  filter(!slope==0) %>%
+  add_count(tissue) %>%
+  filter(n==2) %>%
+  pivot_wider(names_from=c("SNP"), values_from =c("slope", "slope_se")) %>%
+  mutate(Diff = `slope_2:241759225:G:A` - `slope_2:241759875:C:T`) %>%
+  arrange(Diff) %>%
+  pull(tissue)
+
+GTEx.dat %>%
+  filter(Stat %in% c("slope", "slope_se")) %>%
+  pivot_wider(names_from="Stat", values_from="value") %>%
+  filter(!slope==0) %>%
+  add_count(tissue) %>%
+  filter(n==2) %>%
+  group_by(tissue) %>%
+  mutate(mean = mean(slope)) %>%
+  ungroup() %>%
+  mutate(tissue = factor(tissue, levels=OrderedTissues)) %>%
+  ggplot(aes(x=tissue, y=slope, fill=SNP)) +
+    geom_col(position='dodge') +
+    geom_errorbar(aes(ymin=slope-slope_se, ymax=slope+slope_se), position = 'dodge') +
+    scale_fill_manual(values=c("2:241759225:G:A"="red", "2:241759875:C:T"="gray"), labels=c("2:241759225:G:A"="rs34290285 (sQTL/GWAS colocalized top SNP)", "2:241759875:C:T"="rs71430382 (Primary eQTL in Geuvadis LCLs)")) +
+  scale_y_reverse(expand=c(0,0)) +
+  # scale_y_continuous(expand=c(0,0)) +
+  Rotate_x_labels +
+  labs(y="eQTL beta") +
+  theme(legend.position = 'bottom') +
+  guides(fill=guide_legend(nrow=2,byrow=TRUE))
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/Final_FigS_ColocExample_TwoSNPs_AcrossTissuesReordered.pdf", height=5, width=10)
+
+
+
+
+```
+
+
+Now let's look at the locusCompare plots in GTEx LCLs and GTEx thyroid...
+
+```{r}
+GTEx.thyroid <- read_tsv("/project2/yangili1/cfbuenabadn/ChromatinSplicingQTLs/code/GTEx/QTLs/thyroid/NominalPass.qqnorm_D2HGDH.txt.tabix.gz") %>%
+  filter(`#phe_id`=="ENSG00000180902.18") %>%
+  mutate(tissue = "GTEx.thyroid")
+
+GTEx.LCLs <- read_tsv("/project2/yangili1/cfbuenabadn/ChromatinSplicingQTLs/code/GTEx/QTLs/cells_ebv-transformed_lymphocytes/NominalPass.qqnorm_D2HGDH.txt.tabix.gz") %>%
+  filter(`#phe_id`=="ENSG00000180902.18") %>%
+  mutate(tissue = "GTEx.LCLs")
+
+LocusCompare.GTEx <- bind_rows(
+  GTEx.thyroid, GTEx.LCLs
+) %>%
+  mutate(snp = str_replace(var_id, "^chr(.+?)_(.+?)_(.+?)_(.+?)_b38$", "\\1:\\2:\\3:\\4")) %>%
+  mutate(Signal = -log10(nom_pval)) %>%
+  dplyr::select(tissue, Signal, snp) %>%
+  pivot_wider(names_from="tissue", values_from = "Signal") %>%
+  inner_join(
+    dat %>%
+      filter(gene=="D2HGDH", TopSNP=="2:241759225:G:A") 
+  )
+
+LocusCompare.GTEx %>%
+  filter(snp %in% c("2:241759225:G:A", "2:241759875:C:T"))
+
+LocusCompare.GTEx %>%
+  ggplot(aes(x=GTEx.LCLs, y=Signal_gwas, color=R**2)) +
+  geom_point(aes(color=R**2)) +
+  geom_point(data = . %>%
+               filter(snp %in% c("2:241759225:G:A", "2:241759875:C:T")), color='black', shape=21, size=3) +
+  scale_color_viridis_c(option="C") +
+  geom_text_repel(data = . %>%
+                    filter(snp %in% c("2:241759225:G:A", "2:241759875:C:T")) %>%
+                    mutate(rsID = recode(snp, "2:241759225:G:A"="rs34290285", "2:241759875:C:T"="rs71430382")), color='black', aes(label=rsID)) +
+  scale_x_continuous(expand=c(0,0.05)) +
+  scale_y_continuous(expand=c(0,0.05)) +
+  labs(x="eQTL, -log10(P)\nGTEx cells_ebv-transformed_lymphocytes", y="GWAS, -log10(P)") +
+  theme(legend.position = "none")
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/Final_FigS_ColocExample_GTExLCL_eQTL_LocusCompare.pdf", height=2.5, width=2.5)
+
+
+LocusCompare.GTEx %>%
+  ggplot(aes(x=GTEx.thyroid, y=Signal_gwas, color=R**2)) +
+  geom_point(aes(color=R**2)) +
+  geom_point(data = . %>%
+               filter(snp %in% c("2:241759225:G:A", "2:241759875:C:T")), color='black', shape=21, size=3) +
+  scale_color_viridis_c(option="C") +
+  geom_text_repel(data = . %>%
+                    filter(snp %in% c("2:241759225:G:A", "2:241759875:C:T")) %>%
+                    mutate(rsID = recode(snp, "2:241759225:G:A"="rs34290285", "2:241759875:C:T"="rs71430382")), color='black', aes(label=rsID)) +
+  scale_x_continuous(expand=c(0,0.05)) +
+  scale_y_continuous(expand=c(0,0.05)) +
+  labs(x="eQTL, -log10(P)\nGTEx thryoid", y="GWAS, -log10(P)") +
+  theme(legend.position = "none")
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/Final_FigS_ColocExample_GTExthyroid_eQTL_LocusCompare.pdf", height=2.5, width=2.5)
+
+
+
+```
+
+
+## Second gene
+
+```{r}
+
+dat %>%
+  filter(gene=="NUDT14", TopSNP=="14:105172594:T:C") %>%
+  ggplot(aes(x=Signal_polyA.Splicing, y=Signal_gwas, color=R**2)) +
+  geom_point(aes(color=R**2)) +
+  geom_point(data = . %>%
+                    filter(IsFocus), color='black', shape=21, size=3) +
+  scale_color_viridis_c(option="C") +
+  geom_text_repel(data = . %>%
+                    filter(IsFocus), color='black', aes(label=rsID)) +
+  scale_x_continuous(expand=c(0,0.05)) +
+  scale_y_continuous(expand=c(0,0.05)) +
+  labs(x="sQTL, -log10(P)", y="GWAS, -log10(P)") +
+  theme(legend.position = "none")
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/Final_FigS_ColocExample_NUDT14_MainSignal_P1.pdf", height=2.5, width=2.5)
+
+
+dat %>%
+  filter(gene=="NUDT14", TopSNP=="14:105172594:T:C") %>%
+  ggplot(aes(x=Signal_Expression.Splicing, y=Signal_gwas, color=R**2)) +
+  geom_point(aes(color=R**2)) +
+  geom_point(data = . %>%
+                    filter(IsFocus), color='black', shape=21, size=3) +
+  scale_color_viridis_c(option="C") +
+  geom_text_repel(data = . %>%
+                    filter(IsFocus), color='black', aes(label=rsID)) +
+  scale_x_continuous(expand=c(0,0.05)) +
+  scale_y_continuous(expand=c(0,0.05)) +
+  labs(x="eQTL, -log10(P)", y="GWAS, -log10(P)") +
+  theme(legend.position = "none")
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/Final_FigS_ColocExample_NUDT14_MainSignal_P2.pdf", height=2.5, width=2.5)
+
+
+dat %>%
+  filter(gene=="NUDT14", TopSNP=="14:105172594:T:C") %>%
+  ggplot(aes(x=Signal_polyA.Splicing, y=Signal_Expression.Splicing, )) +
+  geom_point(aes(color=R**2)) +
+  geom_point(data = . %>%
+                    filter(IsFocus), color='black', shape=21, size=3) +
+  scale_color_viridis_c(option="C") +
+  geom_text_repel(data = . %>%
+                    filter(IsFocus), color='black', aes(label=rsID)) +
+  scale_x_continuous(expand=c(0,0.05)) +
+  scale_y_continuous(expand=c(0,0.05)) +
+  labs(x="sQTL, -log10(P)", y="eQTL, -log10(P)") +
+  theme(legend.position = "none")
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/Final_FigS_ColocExample_NUDT14_MainSignal_P3.pdf", height=2.5, width=2.5)
+
+dat %>%
+  filter(gene=="NUDT14", TopSNP=="14:105172594:T:C") %>%
+  ggplot(aes(x=Signal_polyA.Splicing, y=Signal_Expression.Splicing, )) +
+  geom_point(aes(color=R**2)) +
+  geom_point(data = . %>%
+                    filter(IsFocus), color='black', shape=21, size=3) +
+  scale_color_viridis_c(option="C") +
+  geom_text_repel(data = . %>%
+                    filter(IsFocus), color='black', aes(label=rsID)) +
+  scale_x_continuous(expand=c(0,0.05)) +
+  scale_y_continuous(expand=c(0,0.05)) +
+  labs(x="sQTL, -log10(P)", y="eQTL, -log10(P)")
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/Final_FigS_ColocExample_NUDT14_MainSignal_P3_WithLegend.pdf", height=2.5, width=2.5)
+
+```
+
+```{r}
+dat %>%
+  filter(gene=="NUDT14", TopSNP=="2:241759875:C:T") %>%
+  ggplot(aes(x=Signal_polyA.Splicing, y=Signal_gwas, color=R**2)) +
+  geom_point(alpha=1) +
+  scale_color_viridis_c()
+
+dat %>%
+  filter(gene=="NUDT14", TopSNP=="2:241759875:C:T") %>%
+  ggplot(aes(x=Signal_Expression.Splicing, y=Signal_gwas, color=R**2)) +
+  geom_point(alpha=1) +
+  scale_color_viridis_c()
+
+dat %>%
+  filter(gene=="NUDT14", TopSNP=="2:241759875:C:T") %>%
+  ggplot(aes(x=Signal_polyA.Splicing, y=Signal_Expression.Splicing, color=R**2)) +
+  geom_point(alpha=1)
+```
+

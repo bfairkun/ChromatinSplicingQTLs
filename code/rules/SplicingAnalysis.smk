@@ -564,4 +564,26 @@ rule QQnormRNAEditing:
         """
 
 
+rule GetTranscriptTypes:
+    input:
+        "ReferenceGenome/Annotations/gencode.v34.chromasomal.annotation.gtf"
+    output:
+        "Misc/Gencode.v34.transcriptTypeTags.txt.gz"
+    shell:
+        """
+        cat {input} | awk '$3=="transcript"' | perl -lne '$_ =~ m/.+transcript_type "(.+?)";.+?transcript_name "(.+?)";.+/; print "$2\\t$1"' | gzip - > {output}
+        """
 
+rule ConvertGencodeV37ToBed12:
+    input:
+        "ReferenceGenome/Annotations/gencode.v37.chromasomal.annotation.gtf.gz"
+    conda:
+        "../envs/bedparse.yml"
+    output:
+        bed = "ReferenceGenome/Annotations/gencode.v37.chromasomal.annotation.bed.gz",
+        tabix = "ReferenceGenome/Annotations/gencode.v37.chromasomal.annotation.bed.gz.tbi"
+    shell:
+        """
+        bedparse gtf2bed <(zcat {input}) --extraFields transcript_name,transcript_type | awk -F'\\t' -v OFS='\\t' '{{$4=$(NF-1); print $0}}' | bedtools sort -i - | bgzip /dev/stdin -c > {output.bed}
+        tabix -p bed {output.bed}
+        """

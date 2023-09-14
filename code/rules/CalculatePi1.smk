@@ -48,5 +48,41 @@ rule GatherPvalsForPi1AllTraitPairs:
         cat <(zcat {input[0]} | head -1) <(zcat {input} | grep -v -P '^PC1\\t') | gzip - > {output}
         """
 
+rule PlotPi1Heatmaps:
+    input:
+        QTLs = "pi1/PairwisePi1Traits.P.all.txt.gz",
+        Peaks = expand("Misc/PeaksClosestToTSS/{ChIP_Phenotype}_assigned.tsv.gz", ChIP_Phenotype = ["H3K27AC", "H3K4ME3", "H3K4ME1"])
+    output:
+        dat = "pi1/DatForHeatmapPlot.tsv.gz",
+        P = "pi1/DatForHeatmapPlot.pdf"
+    log:
+        "logs/PlotPi1Heatmaps.log"
+    conda:
+        "../envs/r_2.yaml"
+    shell:
+        """
+        Rscript scripts/CalculatePi1_PlotHeatmap.R {output.dat} {output.P} &> {log}
+        """
+
+rule Plot_eQTL_QQ:
+    input:
+        QTLs = "pi1/PairwisePi1Traits.P.all.txt.gz",
+        TestSNPs = "QTLs/QTLTools/Expression.Splicing/NominalPassForColoc.RandomSamplePvals.txt.gz",
+        sQTLs = "SplicingAnalysis/sQTLs_p_and_u.tsv.gz"
+    output:
+        dat = "Misc/eQTL_qq/dat.tsv.gz",
+        P = "Misc/eQTL_qq/Plot.pdf"
+    log:
+        "logs/Plot_eQTL_QQ.log"
+    conda:
+        "../envs/r_scattermore.yml"
+    shell:
+        """
+        Rscript scripts/Plot_eQTL_QQ.R {output.dat} {output.P} &> {log}
+        """
+
+
+# rule Plot
+
 # rule CalculatePi1:
 #     input:

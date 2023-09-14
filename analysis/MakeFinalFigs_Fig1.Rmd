@@ -31,6 +31,119 @@ theme_set(
 Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
 ```
 
+naRNA-seq metadata for carlos...
+
+```{r}
+samples <- fread("../code/config/samples.tsv") %>%
+  filter(Phenotype == "chRNA.Expression.Splicing")
+
+BatchData <- fread("../data/chRNA.BatchData.tsv") %>%
+  filter(!is.na(`chRNA plate ID`)) %>%
+  filter(str_detect(`chRNA plate ID`, "^[A-H]\\.\\d+$")) %>%
+  separate(`chRNA plate ID`, into=c("letter", "pos"), sep="\\.") %>%
+  mutate(pos = str_pad(pos, 2, "left", pad="0")) %>%
+  unite(well, letter, pos, sep="")
+
+samples %>%
+  mutate(well = str_replace(R1_local, "/cds/yangili1/bjf79/Fastq/20220218_chRNAseq_NovaSeq/YLi-BF1-(.+?)_.+?fastq.gz", "\\1")) %>%
+  inner_join(BatchData) %>%
+  mutate(CollectionDate = recode(Thawed, "1/12/21"="1/19/21")) %>%
+  # count(CollectionDate) %>%
+  dplyr::select(CollectionDate, IndID, R1_local, R2_local, RepNumber) %>%
+  write_tsv("../data/chRNA.BatchData.JoinableToSamplesTsv.tsv")
+
+
+```
+
+
+Example gene structures
+
+```{r}
+bed12 <- read_tsv("../code/ReferenceGenome/Annotations/gencode.v37.chromasomal.annotation.bed.gz", col_names = paste0("V", 1:14), col_types = list("V11"="c"))
+
+bed12 %>% count(V14) %>%
+  arrange(desc(n))
+
+bed12 <- bed12 %>%
+  mutate(Hex = case_when(
+    V14 == "protein_coding" ~ "#1b9e77",
+    V14 == "retained_intron" ~ "#d95f02",
+    V14 == "processed_transcript" ~ "#7570b3",
+    V14 == "nonsense_mediated_decay" ~ "#e7298a",
+    TRUE ~ "#66a61e"
+  )) %>%
+  mutate(Rgb = apply(col2rgb(Hex), 2, paste, collapse=','))
+
+bed12 %>%
+  count(V14, Hex) %>%
+  distinct(Hex, .keep_all=T) %>%
+  ggplot(aes(x=1, y=V14, fill=Hex)) +
+  geom_raster() +
+  scale_fill_identity()
+
+
+bed12 %>%
+  dplyr::select(V1:V8, Rgb, V10:V12) %>%
+  write_tsv("../code/scratch/Gencode.v34.6Colors.bed", col_names = F)
+
+juncs <- read_tsv("../data/IntronAnnotationsFromYang.Updated.tsv.gz") 
+
+juncs %>%
+  count(SuperAnnotation)
+
+juncFileOut <- "../code/scratch/juncs.bed"
+cat('#track name="junctions"',file=juncFileOut,sep="\n")
+
+juncs.out <- juncs %>%
+  mutate(Hex = recode(SuperAnnotation,
+                      "AnnotatedJunc_NoncodingGene"="#6a3d9a",
+                      "AnnotatedJunc_ProductiveCodingGene"="#1f78b4",
+                      "AnnotatedJunc_UnproductiveCodingGene"="#e31a1c",
+                      "UnannotatedJunc_NoncodingJunc"="#cab2d6",
+                      "UnannotatedJunc_ProductiveCodingGene"="#a6cee3",
+                      "UnannotatedJunc_UnproductiveCodingGene"="#fb9a99"
+                      )) %>%
+  mutate(Rgb = apply(col2rgb(Hex), 2, paste, collapse=',')) %>%
+  mutate(score = 1, blocks=2, start=start-1) %>%
+  mutate(thickStart=start, thickEnd=end, blockSizes = "1,1", blockStart=paste0("0,", end-1)) %>%
+  arrange(chrom, start, end) %>%
+  dplyr::select(chrom, start, end, SemiSupergroupAnnotations, score, strand, thickStart, thickEnd, Rgb, blocks, blockSizes, blockStart)
+
+write.table(juncs.out, juncFileOut, col.names = F, append=T, sep='\t', row.names = F, quote=F)
+
+juncs.out %>%
+  mutate(Length = end - start - 40) %>%
+  ggplot(aes(x=Length)) +
+  stat_ecdf() +
+  scale_x_continuous(trans='log10') +
+  coord_cartesian(xlim=c(100,1E5))
+
+
+## NUP42 example
+juncFileOut <- "../code/scratch/juncs_NUP42.bed"
+cat('#track name="junctions"',file=juncFileOut,sep="\n")
+
+juncs.out <- juncs %>%
+  filter(symbol=="NUP42") %>%
+  mutate(Hex = recode(SuperAnnotation,
+                      "AnnotatedJunc_NoncodingGene"="#6a3d9a",
+                      "AnnotatedJunc_ProductiveCodingGene"="#1f78b4",
+                      "AnnotatedJunc_UnproductiveCodingGene"="#e31a1c",
+                      "UnannotatedJunc_NoncodingJunc"="#cab2d6",
+                      "UnannotatedJunc_ProductiveCodingGene"="#a6cee3",
+                      "UnannotatedJunc_UnproductiveCodingGene"="#fb9a99"
+                      )) %>%
+  # count(SemiSupergroupAnnotations)
+  mutate(Rgb = apply(col2rgb(Hex), 2, paste, collapse=',')) %>%
+  mutate(score = 1, blocks=2, start=start-1) %>%
+  mutate(thickStart=start, thickEnd=end, blockSizes = "1,1", blockStart=paste0("0,", end-1)) %>%
+  arrange(chrom, start, end) %>%
+  dplyr::select(chrom, start, end, SemiSupergroupAnnotations, score, strand, thickStart, thickEnd, Rgb, blocks, blockSizes, blockStart)
+
+write.table(juncs.out, juncFileOut, col.names = F, append=T, sep='\t', row.names = F, quote=F)
+```
+
+
 Number reads per chRNA-seq dataset
 
 ```{r}
@@ -44,20 +157,22 @@ dat.reads$count %>% sum()
 Version of non-basic boxplots... similar to carlos but with jitter.
 
 ```{r}
-juncs.long <- fread("../code/SplicingAnalysis/CombinedJuncTables/YRI.tsv.gz")
+juncs.long <- fread("../code/SplicingAnalysis/CombinedJuncTables/All.tsv.gz")
 
-IntronAnnotations <- read_tsv("../data/IntronAnnotationsFromYang.tsv.gz") %>%
+IntronAnnotations <- read_tsv("../data/IntronAnnotationsFromYang.Updated.tsv.gz") %>%
   mutate(stop = end-1)
+
+IntronAnnotations$SuperAnnotation %>% unique()
 
 juncs.long.summary <- juncs.long %>%
   dplyr::select(chrom, start, stop, strand, Dataset, IndID, Count) %>%
   inner_join(IntronAnnotations) %>%
-  filter(!SuperAnnotation %in% c("AnnotatedJunc_NoncodingGene", "UnannotatedJunc_NoncodingGene")) %>%
+  filter(!SuperAnnotation %in% c("AnnotatedJunc_NoncodingGene", "UnannotatedJunc_NoncodingJunc")) %>%
   group_by(Dataset, IndID, SuperAnnotation) %>%
   summarise(Sum=sum(Count)) %>%
   ungroup()
 
-P.PercentProductive <- juncs.long.summary %>%
+P.PercentProductive.dat <- juncs.long.summary %>%
   mutate(PlotGroup = str_detect(SuperAnnotation, "Unproductive")) %>%
   group_by(Dataset, IndID, PlotGroup) %>%
   summarise(Sum=sum(Sum)) %>%
@@ -65,8 +180,15 @@ P.PercentProductive <- juncs.long.summary %>%
   group_by(Dataset, IndID) %>%
   mutate(Percent = Sum/sum(Sum) * 100) %>%
   ungroup() %>%
-  mutate(Dataset=recode(Dataset, "chRNA.Expression.Splicing"="chRNA",  "MetabolicLabelled.30min"="4sU 30min", "MetabolicLabelled.60min"="4sU 60min", "Expression.Splicing"="polyA"))  %>%
-  mutate(Dataset = factor(Dataset, levels=c("chRNA", "4sU 30min", "4sU 60min","polyA"))) %>%
+  mutate(Dataset=recode(Dataset, "chRNA.Expression.Splicing"="naRNA",  "MetabolicLabelled.30min"="4sU 30min", "MetabolicLabelled.60min"="4sU 60min", "Expression.Splicing"="steady-state"))  %>%
+  mutate(Dataset = factor(Dataset, levels=c("naRNA", "4sU 30min", "4sU 60min","steady-state")))
+
+P.PercentProductive.dat %>%
+  filter(PlotGroup) %>%
+  group_by(Dataset) %>%
+  summarise(med = median(Percent))
+
+P.PercentProductive <- P.PercentProductive.dat %>%
   ggplot(aes(x=Dataset, y=Percent, color=PlotGroup)) +
   geom_boxplot(outlier.shape = NA, position=position_identity()) +
   geom_jitter(alpha=0.5, width=0.25) +
@@ -77,7 +199,8 @@ P.PercentProductive <- juncs.long.summary %>%
   labs(y=str_wrap("percent of splice junction reads", 20), x=NULL)
 
 P.PercentProductive <- ggplotify::as.ggplot(print(P.PercentProductive))
-P.PercentProductive
+
+
 
 P.PercentUnproductive <- juncs.long.summary %>%
   mutate(PlotGroup = str_detect(SuperAnnotation, "Unproductive")) %>%
@@ -88,8 +211,8 @@ P.PercentUnproductive <- juncs.long.summary %>%
   mutate(Percent = Sum/sum(Sum) * 100) %>%
   ungroup() %>%
   filter(PlotGroup) %>%
-  mutate(Dataset=recode(Dataset, "chRNA.Expression.Splicing"="chRNA",  "MetabolicLabelled.30min"="4sU 30min", "MetabolicLabelled.60min"="4sU 60min", "Expression.Splicing"="polyA"))  %>%
-  mutate(Dataset = factor(Dataset, levels=c("chRNA", "4sU 30min", "4sU 60min","polyA"))) %>%
+  mutate(Dataset=recode(Dataset, "chRNA.Expression.Splicing"="naRNA",  "MetabolicLabelled.30min"="4sU 30min", "MetabolicLabelled.60min"="4sU 60min", "Expression.Splicing"="steady-state"))  %>%
+  mutate(Dataset = factor(Dataset, levels=c("naRNA", "4sU 30min", "4sU 60min","steady-state"))) %>%
   ggplot(aes(x=Dataset, y=Percent, color=PlotGroup)) +
   geom_boxplot(outlier.shape = NA, position=position_identity()) +
   geom_jitter(alpha=0.5, width=0.25) +
@@ -101,13 +224,102 @@ P.PercentUnproductive <- juncs.long.summary %>%
 P.PercentUnproductive
 ```
 
+Final version for supplement
+
+```{r}
+
+P.PercentProductive.dat %>%
+  filter(PlotGroup) %>%
+  group_by(Dataset) %>%
+  summarise(med = median(Percent))
+
+P.PercentUnproductive.final <- P.PercentProductive.dat %>%
+  filter(!PlotGroup) %>%
+  arrange(Dataset, desc(Percent)) %>% 
+  mutate(rn = row_number()) %>%
+  mutate(Complement = 100-Percent) %>%
+  dplyr::select(-PlotGroup) %>%
+  gather(key="PlotGroup", value="NewPercent", Percent, Complement) %>%
+  mutate(PlotGroup = relevel(factor(PlotGroup), "Percent")) %>%
+  ggplot(aes(x=rn, y=NewPercent, fill=PlotGroup)) +
+  geom_col() +
+  scale_x_discrete(labels=c("Expression.Splicing"="steady-state\nRNA", "MetabolicLabelled.60min"="60m 4sU", "MetabolicLabelled.30min"="30m 4sU","chRNA.Expression.Splicing"="chRNA")) +
+  geom_hline(data = . %>%
+                 filter(PlotGroup == "Complement") %>%
+                  group_by(Dataset) %>%
+                  summarise(Median = median(NewPercent)),
+             aes(yintercept = Median),
+             color="black", linetype='dashed', size=1.5
+             ) +
+  scale_y_continuous(expand=c(0,0)) +
+  scale_fill_manual(values=c("Percent"="#1f78b4", "Complement"="#e31a1c"), labels=c("Percent"="Annotated productive (basic tag)","Complement"="Other")) + 
+  labs(y="Percent of splice junction reads", fill="Intron classification") +
+  theme(legend.position="none") +
+  facet_grid(~Dataset, scales = 'free', switch = "both") +
+  scale_y_break(c(4, 96), expand=F, scales="free", space=0.1) +
+  Rotate_x_labels +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  theme(
+    aspect.ratio = 1,
+    strip.background = element_blank(),
+    strip.placement = "outside"
+  )
+
+P.PercentUnproductive.final <- ggplotify::as.ggplot(print(P.PercentUnproductive.final))
+P.PercentUnproductive.final
+
+```
+
+Total num juncs
+
+```{r}
+juncs.long.summary %>%
+  group_by(Dataset, IndID) %>%
+  summarise(Total = sum(Sum)) %>%
+  arrange(Dataset, desc(Total)) %>% 
+  mutate(rn = row_number()) %>%
+  ungroup() %>%
+  mutate(Dataset=recode(Dataset, !!!c("Expression.Splicing"="steady-state\nRNA", "MetabolicLabelled.60min"="60m 4sU", "MetabolicLabelled.30min"="30m 4sU","chRNA.Expression.Splicing"="naRNA")))  %>%
+  filter(Dataset %in% c("naRNA", "steady-state\nRNA", "30m 4sU")) %>%
+  mutate(Dataset = factor(Dataset, levels=c("naRNA", "30m 4sU", "steady-state\nRNA"))) %>%
+  ggplot(aes(x=rn, y=Total/1E6)) +
+  geom_col(aes(fill=Dataset)) +
+  geom_hline(data = . %>%
+               group_by(Dataset) %>%
+               summarise(Median = median(Total)/1E6),
+             aes(yintercept = Median), linetype='dashed') +
+  facet_wrap(~Dataset, scales="free_x") +
+  scale_y_continuous(expand=c(0,0)) +
+  scale_fill_manual(values=c("naRNA"="#377eb8", "30m 4sU"="#ff7f00", "steady-state\nRNA"="#4daf4a")) +
+  labs(y="Splice Junction Coverage\n(Millions of junctions)", x="ordered RNA-seq samples") +
+  theme(legend.position='none')
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S.NumJuncReads.pdf", width=8, height=3)
+
+juncs.long.summary %>%
+  group_by(Dataset, IndID) %>%
+  summarise(Total = sum(Sum)) %>%
+  arrange(Dataset, desc(Total)) %>% 
+  mutate(rn = row_number()) %>%
+  ungroup() %>%
+  mutate(Dataset=recode(Dataset, !!!c("Expression.Splicing"="steady-state\nRNA", "MetabolicLabelled.60min"="60m 4sU", "MetabolicLabelled.30min"="30m 4sU","chRNA.Expression.Splicing"="naRNA")))  %>%
+  filter(Dataset %in% c("naRNA", "steady-state\nRNA", "30m 4sU")) %>%
+  mutate(Dataset = factor(Dataset, levels=c("naRNA", "30m 4sU", "steady-state\nRNA")))  %>%
+  group_by(Dataset) %>%
+               summarise(Median = median(Total)/1E6)
+
+```
+
+
 Percent NMD
 
 ```{r}
 juncs.long.summary.semigroups <- juncs.long %>%
   dplyr::select(chrom, start, stop, strand, Dataset, IndID, Count) %>%
   inner_join(IntronAnnotations) %>%
-  filter(!SuperAnnotation %in% c("AnnotatedJunc_NoncodingGene", "UnannotatedJunc_NoncodingGene")) %>%
+  filter(!SuperAnnotation %in% c("AnnotatedJunc_NoncodingGene", "UnannotatedJunc_NoncodingJunc")) %>%
   group_by(Dataset, IndID, SemiSupergroupAnnotations, SuperAnnotation) %>%
   summarise(Sum=sum(Count)) %>%
   ungroup()
@@ -119,11 +331,18 @@ P.Percent.NMD <-
   mutate(Percent = Sum/sum(Sum) * 100) %>%
   ungroup() %>%
   filter(PlotGroup) %>%
-  mutate(Dataset=recode(Dataset, "chRNA.Expression.Splicing"="chRNA",  "MetabolicLabelled.30min"="4sU 30min", "MetabolicLabelled.60min"="4sU 60min", "Expression.Splicing"="polyA"))  %>%
-  mutate(Dataset = factor(Dataset, levels=c("chRNA", "4sU 30min", "4sU 60min","polyA"))) %>%
+  mutate(Dataset=recode(Dataset, "chRNA.Expression.Splicing"="naRNA",  "MetabolicLabelled.30min"="4sU 30min", "MetabolicLabelled.60min"="4sU 60min", "Expression.Splicing"="steady-state"))  %>%
+  mutate(Dataset = factor(Dataset, levels=c("naRNA", "4sU 30min", "4sU 60min","steady-state"))) %>%
   ggplot(aes(x=Dataset, y=Percent, color=PlotGroup)) +
   geom_boxplot(outlier.shape = NA, position=position_identity()) +
-  geom_jitter(alpha=0.5, width=0.25) +
+  geom_jitter(alpha=0.1, width=0.25) +
+  geom_text(
+    data = . %>%
+      group_by(Dataset) %>%
+      summarise(median = median(Percent)) %>%
+      ungroup(),
+    aes(y=median, label=signif(median, 2)), color='black', alpha=1, vjust=-0.5, size=8
+  ) +
   scale_color_manual(values=c("TRUE"="#e31a1c", "FALSE"="#1f78b4"), name="Splice junction type", labels=c("TRUE"="Unproductive", "FALSE"="Productive")) +
   scale_y_continuous(limits=c(0,0.75), expand=c(0,0)) +
   Rotate_x_labels +
@@ -136,7 +355,7 @@ P.Percent.NMD
 ```{r, eval=F}
 ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_1_PercentNMD.pdf",P.Percent.NMD, width=4, height=4)
 
-ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_1_PercentProductive.pdf",P.PercentProductive, width=6, height=4)
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_1_PercentProductive.pdf",P.PercentUnproductive.final, width=6, height=4)
 
 ```
 

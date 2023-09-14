@@ -298,6 +298,11 @@ PSI.summarised %>%
 Ok, so it seems all consistent with expectations... Let's think about exactly how to present for manuscript... For now let's just make some figures that I imagine may go best in supplemet:
 
 ```{r}
+dat.to.plot.PSI.Tests %>%
+  filter(Dataset == "Expression.Splicing" & Rank=="high/high") %>%
+  count(ProductiveOrUnproductive)
+  
+
 P.PSI.histogram <- dat.to.plot.PSI.Tests %>%
   filter(Dataset == "Expression.Splicing" & Rank=="high/high") %>%
   ggplot(aes(x=PSI, fill=ProductiveOrUnproductive)) +
@@ -331,6 +336,584 @@ P.PSI.histogram.tests <- ggplot(dat.to.plot.PSI.Tests, aes(x=SummaryPSI)) +
   theme(legend.position="bottom")
 P.PSI.histogram.tests
   
+```
+
+Version of histogram for main...
+
+```{r}
+
+sQTL.type <- read_tsv("../code/SplicingAnalysis/sQTLs_p_and_u.Full.tsv.gz") %>%
+  dplyr::select(P1, sQTL.type) %>%
+  mutate(cluster = str_replace(P1, "^.+?:(clu_.+?$)", "\\1")) %>%
+  distinct(sQTL.type, cluster)
+
+dat.to.plot.PSI.Tests %>%
+  filter(Dataset == "Expression.Splicing" & Rank=="high/high") %>%
+  distinct(Phenotype, .keep_all = T) %>%
+  mutate(cluster = str_replace(Phenotype, "^.+?:(clu_.+?$)", "\\1")) %>%
+  inner_join(sQTL.type) %>%
+  filter((ProductiveOrUnproductive=="Unproductive" & sQTL.type=="u-sQTL") | (ProductiveOrUnproductive=="Productive" & sQTL.type=="p-sQTL")) %>%
+  filter(symbol %in% c("NUDT14", "PTPN2")) %>%
+  distinct(Phenotype, .keep_all = T)
+
+
+P.hist.main <- dat.to.plot.PSI.Tests %>%
+  filter(Dataset == "Expression.Splicing" & Rank=="high/high") %>%
+  distinct(Phenotype, .keep_all = T) %>%
+  mutate(cluster = str_replace(Phenotype, "^.+?:(clu_.+?$)", "\\1")) %>%
+  inner_join(sQTL.type) %>%
+  filter((ProductiveOrUnproductive=="Unproductive" & sQTL.type=="u-sQTL") | (ProductiveOrUnproductive=="Productive" & sQTL.type=="p-sQTL")) %>%
+  add_count(ProductiveOrUnproductive, name="NumberJuncsInGroup") %>%
+  mutate(group = str_glue("{NumberJuncsInGroup} {sQTL.type}s")) %>%
+  mutate(group=fct_rev(group)) %>%
+  ggplot(aes(x=PSI, fill=ProductiveOrUnproductive)) +
+  geom_histogram(position='dodge', bins=30) +
+  scale_x_continuous(expand=c(0,1)) +
+  scale_y_continuous(expand=c(0,1)) +
+  # facet_wrap(sQTL.type~ProductiveOrUnproductive) +
+  facet_wrap(~group, ncol=1,scales='free') +
+  scale_fill_manual(name="Splice junction type", values=c("Productive"="#377eb8", "Unproductive"="#e41a1c")) +
+  labs(x="PSI in high/high genotype", y="Number unique sQTLs\ncolocalized with GWAS") +
+  theme(legend.position = "none")
+P.hist.main
+
+dat.to.plot.PSI.Tests %>%
+  filter(Dataset == "Expression.Splicing" & Rank=="high/high") %>%
+  distinct(Phenotype, .keep_all = T) %>%
+  mutate(cluster = str_replace(Phenotype, "^.+?:(clu_.+?$)", "\\1")) %>%
+  inner_join(sQTL.type) %>%
+  filter((ProductiveOrUnproductive=="Unproductive" & sQTL.type=="u-sQTL") | (ProductiveOrUnproductive=="Productive" & sQTL.type=="p-sQTL")) %>%
+  add_count(ProductiveOrUnproductive, name="NumberJuncsInGroup") %>%
+  mutate(group = str_glue("{NumberJuncsInGroup} {sQTL.type}s")) %>%
+  mutate(group=fct_rev(group)) %>%
+  mutate(UnderThreshold = SummaryPSI < 5) %>%
+  count(UnderThreshold)
+
+```
+So the for NUDT14, it's at PSI=2.04% in the histogram, and PTPN2 is at 1.28%
+
+beta beta scatter of gwas sQTL hits
+
+```{r}
+gwas.traits <- read_tsv("../code/config/gwas_table.tsv") %>%
+  dplyr::rename(GWAS.accession=gwas, gwas.trait=trait) %>%
+  mutate(gwas.trait = recode(gwas.trait, "rheumatoid arthritis"="Rheumatoid arthritis"))
+
+sQTLs <- read_tsv("../code/SplicingAnalysis/sQTLs_p_and_u.Full.tsv.gz")
+
+PhenotypeRecodes = c("H3K36ME3"="hQTL", "H3K27AC"="hQTL", "H3K4ME3"="hQTL", "H3K4ME1"="hQTL",
+                     "Expression.Splicing"="eQTL", "chRNA.Expression.Splicing"="chRNA eQTL",
+                     "APA_Nuclear"="APA QTL", "APA_Total"="APA QTL", "polyA.Splicing"="sQTL", "GWAS"="GWAS")
+
+PhenotypeRecodes.df <- data.frame(PhenotypeRecodes) %>%
+  rownames_to_column("PhenotypeClass")
+
+
+
+hyprcoloc.results <- read_tsv("../code/hyprcoloc/Results/ForGWASColoc/GWASColoc_ChromatinAPAAndRNA/results.txt.gz") %>%
+  dplyr::rename(GWAS.Loci = GWASLeadSnpChrom_Pos_RefAllele_AltAllele_rsID_trait) %>%
+  separate(GWAS.Loci, into=c("GWAS.LeadSNP.Chrom", "GWAS.LeadSNP.Pos", "GWAS.accession"), sep="_", remove=F) %>%
+  separate_rows(ColocalizedTraits, sep = ",") %>%
+  mutate(IsColocalizedWithSomething = !ColocalizedTraits == "None") %>%
+  mutate(Trait = if_else(IsColocalizedWithSomething, ColocalizedTraits, DroppedTrait)) %>%
+  dplyr::select(-DroppedTrait, -ColocalizedTraits) %>%
+  mutate(Trait = str_replace_all(Trait, " ", "")) %>%
+  mutate(GWAS.Loci = str_replace_all(GWAS.Loci, " ", "")) %>%
+  mutate(Trait = if_else(Trait == GWAS.Loci, paste("GWAS",GWAS.Loci,sep = ";"),Trait)) %>%
+  separate(Trait, into=c("PhenotypeClass", "Phenotype"), sep=";", remove=F) %>%
+  group_by(GWAS.Loci, HyprcolocIteration) %>%
+  mutate(ColocalizedClusterContainsGWASTrait = any(PhenotypeClass=="GWAS") & IsColocalizedWithSomething) %>%
+  ungroup() %>%
+  inner_join(gwas.traits %>%
+               dplyr::select(1:2)) %>%
+  left_join(PhenotypeRecodes.df) %>%
+  mutate(PhenotypeRecodes = if_else(is.na(PhenotypeRecodes), PhenotypeClass, PhenotypeRecodes)) %>%
+  filter(!PhenotypeRecodes == "APA QTL") %>%
+  group_by(GWAS.Loci, HyprcolocIteration) %>%
+  filter(any(ColocalizedClusterContainsGWASTrait) | PhenotypeClass=="GWAS") %>%
+  mutate(Category = case_when(
+    all(ColocalizedClusterContainsGWASTrait==FALSE) | all(is.na(HyprcolocIteration))  ~ "No molQTL colocs",
+    all(PhenotypeRecodes %in% c("GWAS", "hQTL")) ~ "Only hQTL colocs",
+    all(PhenotypeRecodes %in% c("GWAS", "eQTL")) ~ "Only eQTL colocs",
+    all(PhenotypeRecodes %in% c("GWAS", "eQTL", "hQTL", "chRNA eQTL")) ~ "hQTL+eQTL colocs",
+    all(PhenotypeRecodes %in% c("GWAS", "sQTL")) ~ "sQTL colocs",
+    all(PhenotypeRecodes %in% c("GWAS", "sQTL", "chRNA eQTL", "eQTL")) ~ "sQTL+eQTL colocs",
+    # all(PhenotypeRecodes %in% c("GWAS", "sQTL", "chRNA eQTL", "eQTL", "hQTL")) ~ "sQTL+eQTL+hQTL colocs",
+    TRUE ~ "Other"
+  )) %>%
+  ungroup()
+```
+
+```{r}
+hyprcoloc.results %>%
+  filter(ColocalizedClusterContainsGWASTrait) %>%
+  inner_join(
+    sQTLs %>%
+      dplyr::select(Phenotype=P1,PhenotypeClass=PC1, everything())
+  ) %>%
+  filter(!(sQTL.type=="u-sQTL" & SuperAnnotation.simplified=="Productive")) %>%
+  group_by(gene, SuperAnnotation.simplified, sQTL.type, Category) %>%
+  filter(abs(x.beta.in.y)==max(abs(x.beta.in.y))) %>%
+  ungroup() %>%
+  filter(symbol=="D2HGDH")
+```
+
+
+
+```{r}
+dat.for.scatter.P <- hyprcoloc.results %>%
+  filter(ColocalizedClusterContainsGWASTrait) %>%
+  inner_join(
+    sQTLs %>%
+      dplyr::select(Phenotype=P1,PhenotypeClass=PC1, everything())
+  ) %>%
+  filter(!(sQTL.type=="u-sQTL" & SuperAnnotation.simplified=="Productive")) %>%
+  filter(!(sQTL.type=="p-sQTL" & SuperAnnotation.simplified=="Unproductive")) %>%
+  group_by(gene, SuperAnnotation.simplified, sQTL.type, Category) %>%
+  filter(abs(x.beta.in.y)==max(abs(x.beta.in.y))) %>%
+  ungroup() %>%
+  distinct(gene, SuperAnnotation.simplified, sQTL.type, Category, .keep_all=T) %>%
+  # filter(symbol=="D2HGDH")
+  # count(sQTL.type)
+  mutate(label = case_when(
+    symbol == "PTPN2" ~ "PTPN2",
+    symbol == "NUDT14" ~"NUDT14",
+    symbol == "D2HGDH" & Category=="sQTL colocs" ~ "D2HGDH",
+    TRUE ~ NA_character_
+  ))
+
+Scatter.GWASLoci.eQTL.sQTL.Full <- dat.for.scatter.P %>%
+  nest(-sQTL.type, -Category) %>% 
+  mutate(cor=map(data,~cor.test(.x$beta.x, .x$x.beta.in.y, method = "sp"))) %>%
+  mutate(tidied = map(cor, tidy)) %>% 
+  unnest(tidied, .drop = T) %>%
+  unnest(data) %>%
+  ggplot(aes(x=beta.x, y=x.beta.in.y)) +
+  scale_y_continuous(breaks=c(-1,0,1)) +
+  geom_vline(xintercept = 0, linetype='dashed', color='gray') +
+  geom_hline(yintercept = 0, linetype='dashed', color='gray') +
+  geom_abline(data = . %>%
+                  distinct(sQTL.type,Category, .keep_all=T),
+                aes(slope=estimate, intercept=0), size=2) +
+  geom_point(aes(color=SuperAnnotation.simplified)) +
+    geom_text(
+    data = . %>%
+        distinct(sQTL.type, Category, .keep_all=T) %>%
+        mutate(R=signif(estimate, 3), P=format.pval(p.value, 3)) %>%
+      mutate(label = str_glue("rho:{R}\nP:{P}")),
+    aes(x=-Inf, y=-Inf, label=label),
+    hjust=-.1, vjust=-0.1, color='black', size=6
+    ) +
+  geom_text_repel(aes(label=label), min.segment.length = unit(0, 'lines'), nudge_x = 0.5,nudge_y=0.5, arrow=arrow(length = unit(0.015, "npc"))) +
+  scale_color_manual(name="Splice junction type", values=c("Productive"="#377eb8", "Unproductive"="#e41a1c")) +
+  facet_grid(sQTL.type~Category) +
+  labs(x="sQTL beta", y="eQTL beta") +
+  theme_bw() +
+  theme(legend.position='none')
+
+Scatter.GWASLoci.eQTL.sQTL.Short <- dat.for.scatter.P %>%
+  nest(-sQTL.type) %>% 
+  mutate(cor=map(data,~cor.test(.x$beta.x, .x$x.beta.in.y, method = "sp"))) %>%
+  mutate(tidied = map(cor, tidy)) %>% 
+  unnest(tidied, .drop = T) %>%
+  unnest(data) %>%
+  ggplot(aes(x=beta.x, y=x.beta.in.y)) +
+  scale_y_continuous(breaks=c(-1,0,1)) +
+  geom_vline(xintercept = 0, linetype='dashed', color='gray') +
+  geom_hline(yintercept = 0, linetype='dashed', color='gray') +
+  geom_abline(data = . %>%
+                  distinct(sQTL.type, .keep_all=T),
+                aes(slope=estimate, intercept=0), size=2) +
+  geom_point(aes(color=SuperAnnotation.simplified)) +
+    geom_text(
+    data = . %>%
+        distinct(sQTL.type, .keep_all=T) %>%
+        mutate(R=signif(estimate, 3), P=format.pval(p.value, 3)) %>%
+      mutate(label = str_glue("rho:{R}\nP:{P}")),
+    aes(x=-Inf, y=-Inf, label=label),
+    hjust=-.1, vjust=-0.1, color='black', size=3
+    ) +
+  geom_text_repel(aes(label=label), min.segment.length = unit(0, 'lines'), nudge_x = 0.5,nudge_y=0.5, arrow=arrow(length = unit(0.015, "npc"))) +
+  scale_color_manual(name="Splice junction type", values=c("Productive"="#377eb8", "Unproductive"="#e41a1c")) +
+  facet_wrap(~sQTL.type, nrow=1) +
+  labs(x="sQTL beta", y="eQTL beta") +
+  theme(legend.position='none')
+
+Scatter.GWASLoci.eQTL.sQTL.Full
+Scatter.GWASLoci.eQTL.sQTL.Short
+
+Scatter.GWASLoci.eQTL.sQTL.Shortest <- dat.for.scatter.P %>%
+  nest(-sQTL.type) %>% 
+  mutate(cor=map(data,~cor.test(.x$beta.x, .x$x.beta.in.y, method = "sp"))) %>%
+  mutate(tidied = map(cor, tidy)) %>% 
+  unnest(tidied, .drop = T) %>%
+  unnest(data) %>%
+  filter(sQTL.type == "u-sQTL") %>%
+  ggplot(aes(x=beta.x, y=x.beta.in.y)) +
+  scale_y_continuous(breaks=c(-1,0,1)) +
+  geom_vline(xintercept = 0, linetype='dashed', color='gray') +
+  geom_hline(yintercept = 0, linetype='dashed', color='gray') +
+  geom_abline(data = . %>%
+                  distinct(sQTL.type, .keep_all=T),
+                aes(slope=estimate, intercept=0), size=2) +
+  geom_point(aes(color=SuperAnnotation.simplified)) +
+    geom_text(
+    data = . %>%
+        distinct(sQTL.type, .keep_all=T) %>%
+        mutate(R=signif(estimate, 3), P=format.pval(p.value, 3)) %>%
+      mutate(label = str_glue("rho:{R}\nP:{P}")),
+    aes(x=-Inf, y=-Inf, label=label),
+    hjust=-.1, vjust=-0.1, color='black', size=3
+    ) +
+  # geom_text_repel(aes(label=symbol), max.overlaps = Inf) +
+  geom_text_repel(aes(label=label), min.segment.length = unit(0, 'lines'), nudge_x = 0.5,nudge_y=0.5, arrow=arrow(length = unit(0.015, "npc"))) +
+  scale_color_manual(name="Splice junction type", values=c("Productive"="#377eb8", "Unproductive"="#e41a1c")) +
+  labs(x="sQTL beta", y="eQTL beta") +
+  theme(legend.position='none')
+```
+
+Coloc plots for NUDT14 and PTPN2...
+
+First PTPN2.
+
+```{r}
+dat.for.scatter.P %>%
+  filter(symbol=="PTPN2")
+
+hyprcoloc.results %>%
+  filter(GWAS.Loci == "chr18_12881362_TRANSETHNICRA")
+
+phenotypes <- c("18:12817365:12818944:clu_42854_-", "ENSG00000175354.20")
+gwas.accession <- "TRANSETHNICRA"
+gwas_locus.ofinterest <- "chr18_12881362_N_N_TRANSETHNICRA"
+
+molQTL.dat <- fread(str_glue("../code/hyprcoloc/LociWiseSummaryStatsInput/ForGWASColoc/{gwas.accession}.txt.gz")) %>%
+  mutate()
+gwas.dat <- fread(str_glue("../code/gwas_summary_stats/StatsForColoc/{gwas.accession}.standardized.txt.gz"))
+
+molQTL.dat.atLocus <- molQTL.dat %>%
+  filter(phenotype %in%  phenotypes) %>%
+  # pull(phenotype) %>% unique()
+  mutate(PhenotypeClass = str_replace(source_file, "^QTLs/QTLTools/(.+?)/NominalPassForGWASColocChunks/.+$", "\\1"))
+
+molQTL.dat %>%
+  filter(gwas_locus==gwas_locus.ofinterest)  %>%
+  pull(phenotype) %>% unique()
+
+molQTL.dat.atLocus %>%
+  filter(gwas_locus==gwas_locus.ofinterest) %>%
+  pull(phenotype) %>% unique()
+
+
+coloc.plots.example.dat <- bind_rows(
+  molQTL.dat.atLocus %>%
+    filter(gwas_locus==gwas_locus.ofinterest) %>%
+    mutate(Signal = -log10(p)) %>%
+    dplyr::select(Signal, PhenotypeClass, snp ) %>%
+    separate(snp, into=c("chrom", "pos", "ref", "alt"), sep=":") %>%
+    mutate(pos = as.numeric(pos)),
+  gwas.dat %>%
+    filter(loci==gwas_locus.ofinterest) %>%
+    mutate(Signal = -log10(2*pnorm( abs(beta/SE), lower=F ))) %>%
+    mutate(PhenotypeClass = "gwas") %>%
+    dplyr::select(Signal, PhenotypeClass, chrom, pos=start, ref=A1, alt=A2) %>%
+    mutate(chrom = str_replace(chrom, "^chr(.+$)", "\\1")) %>%
+    mutate(pos= as.numeric(pos))
+) %>%
+  dplyr::select(-ref, -alt) %>%
+  pivot_wider(names_from = "PhenotypeClass", values_from = "Signal") %>%
+  mutate(TopCandidateSNP = if_else(pos == 12843138, T, NA)) %>%
+  mutate(label = "rs11875687")
+
+PTPN2.P1 <- coloc.plots.example.dat %>%
+  ggplot(aes(x=polyA.Splicing, y=Expression.Splicing)) +
+  geom_point(color='gray', alpha=0.5) +
+  scale_x_continuous(expand=c(0,0.1)) +
+  scale_y_continuous(expand=c(0,0.1)) +
+  geom_point(data = . %>%
+               filter(!is.na(TopCandidateSNP)),
+             color='black') +
+  geom_text_repel(data = . %>%
+               filter(!is.na(TopCandidateSNP)),
+             aes(label=label)) +
+  labs(x="sQTL, -log10(P)", y="eQTL, -log10(P)")
+
+PTPN2.P2 <- coloc.plots.example.dat %>%
+  ggplot(aes(x=Expression.Splicing, y=gwas)) +
+  geom_point(color='gray', alpha=0.5) +
+  scale_x_continuous(expand=c(0,0.1)) +
+  scale_y_continuous(expand=c(0,0.1)) +
+  geom_point(data = . %>%
+               filter(!is.na(TopCandidateSNP)),
+             color='black') +
+  geom_text_repel(data = . %>%
+               filter(!is.na(TopCandidateSNP)),
+             aes(label=label)) +
+  labs(x="eQTL, -log10(P)", y="GWAS, -log10(P)")
+
+
+PTPN2.P3 <- coloc.plots.example.dat %>%
+  ggplot(aes(x=polyA.Splicing, y=gwas)) +
+  geom_point(color='gray', alpha=0.5) +
+  scale_x_continuous(expand=c(0,0.1)) +
+  scale_y_continuous(expand=c(0,0.1)) +
+  geom_point(data = . %>%
+               filter(!is.na(TopCandidateSNP)),
+             color='black') +
+  geom_text_repel(data = . %>%
+               filter(!is.na(TopCandidateSNP)),
+             aes(label=label)) +
+  labs(x="sQTL, -log10(P)", y="GWAS, -log10(P)")
+
+PTPN2.P1
+PTPN2.P2
+PTPN2.P3
+```
+
+I made identical plots for NUDT14 in [20230420_FindGWASeQTLsQTLColocsToPlot.Rmd](20230420_FindGWASeQTLsQTLColocsToPlot.html)... no need to repeat that here... for now let's just save the PTPN2 plots
+
+```{r, eval=F}
+height=2.5
+width=2.5
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/20230426_Coloc_PTPN2_P1.pdf", PTPN2.P1, height=height, width=width)
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/20230426_Coloc_PTPN2_P2.pdf", PTPN2.P2, height=height, width=width)
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/20230426_Coloc_PTPN2_P3.pdf", PTPN2.P3, height=height, width=width)
+```
+
+And now make plots for D2HGDH example...
+
+```{r}
+phenotypes <- c("2:241743815:241750151:clu_8613_+", "ENSG00000180902.18")
+gwas.accession <- "GCST007799"
+gwas_locus.ofinterest <- "chr2_241759225_N_N_GCST007799"
+
+molQTL.dat <- fread(str_glue("../code/hyprcoloc/LociWiseSummaryStatsInput/ForGWASColoc/{gwas.accession}.txt.gz")) %>%
+  mutate()
+gwas.dat <- fread(str_glue("../code/gwas_summary_stats/StatsForColoc/{gwas.accession}.standardized.txt.gz"))
+
+molQTL.dat.atLocus <- molQTL.dat %>%
+  filter(phenotype %in%  phenotypes) %>%
+  # pull(phenotype) %>% unique()
+  mutate(PhenotypeClass = str_replace(source_file, "^QTLs/QTLTools/(.+?)/NominalPassForGWASColocChunks/.+$", "\\1"))
+
+molQTL.dat %>%
+  filter(gwas_locus==gwas_locus.ofinterest)  %>%
+  pull(phenotype) %>% unique()
+
+molQTL.dat.atLocus %>%
+  filter(gwas_locus==gwas_locus.ofinterest) %>%
+  pull(phenotype) %>% unique()
+
+coloc.plots.example.dat <- bind_rows(
+  molQTL.dat.atLocus %>%
+    filter(gwas_locus==gwas_locus.ofinterest) %>%
+    mutate(Signal = -log10(p)) %>%
+    dplyr::select(Signal, PhenotypeClass, snp ) %>%
+    separate(snp, into=c("chrom", "pos", "ref", "alt"), sep=":") %>%
+    mutate(pos = as.numeric(pos)),
+  gwas.dat %>%
+    filter(loci==gwas_locus.ofinterest) %>%
+    mutate(Signal = -log10(2*pnorm( abs(beta/SE), lower=F ))) %>%
+    mutate(PhenotypeClass = "gwas") %>%
+    dplyr::select(Signal, PhenotypeClass, chrom, pos=start, ref=A1, alt=A2) %>%
+    mutate(chrom = str_replace(chrom, "^chr(.+$)", "\\1")) %>%
+    mutate(pos= as.numeric(pos))
+) %>%
+  dplyr::select(-ref, -alt) %>%
+  pivot_wider(names_from = "PhenotypeClass", values_from = "Signal") %>%
+  mutate(TopCandidateSNP = if_else(pos == 241759225, T, NA)) %>%
+  mutate(label = "rs34290285")
+
+D2HGDH.P1 <- coloc.plots.example.dat %>%
+  ggplot(aes(x=polyA.Splicing, y=Expression.Splicing)) +
+  geom_point(color='gray', alpha=0.5) +
+  scale_x_continuous(expand=c(0,0.1)) +
+  scale_y_continuous(expand=c(0,0.1)) +
+  geom_point(data = . %>%
+               filter(!is.na(TopCandidateSNP)),
+             color='black') +
+  geom_text_repel(data = . %>%
+               filter(!is.na(TopCandidateSNP)),
+             aes(label=label)) +
+  labs(x="sQTL, -log10(P)", y="eQTL, -log10(P)")
+
+D2HGDH.P2 <- coloc.plots.example.dat %>%
+  ggplot(aes(x=Expression.Splicing, y=gwas)) +
+  geom_point(color='gray', alpha=0.5) +
+  scale_x_continuous(expand=c(0,0.1)) +
+  scale_y_continuous(expand=c(0,0.1)) +
+  geom_point(data = . %>%
+               filter(!is.na(TopCandidateSNP)),
+             color='black') +
+  geom_text_repel(data = . %>%
+               filter(!is.na(TopCandidateSNP)),
+             aes(label=label)) +
+  labs(x="eQTL, -log10(P)", y="GWAS, -log10(P)")
+
+
+D2HGDH.P3 <- coloc.plots.example.dat %>%
+  ggplot(aes(x=polyA.Splicing, y=gwas)) +
+  geom_point(color='gray', alpha=0.5) +
+  scale_x_continuous(expand=c(0,0.1)) +
+  scale_y_continuous(expand=c(0,0.1)) +
+  geom_point(data = . %>%
+               filter(!is.na(TopCandidateSNP)),
+             color='black') +
+  geom_text_repel(data = . %>%
+               filter(!is.na(TopCandidateSNP)),
+             aes(label=label)) +
+  labs(x="sQTL, -log10(P)", y="GWAS, -log10(P)")
+
+D2HGDH.P1
+D2HGDH.P2
+D2HGDH.P3
+```
+
+```{r, eval=F}
+height=2.5
+width=2.5
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/20230426_Coloc_D2HGDH_P1.pdf", D2HGDH.P1, height=height, width=width)
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/20230426_Coloc_D2HGDH_P2.pdf", D2HGDH.P2, height=height, width=width)
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/20230426_Coloc_D2HGDH_P3.pdf", D2HGDH.P3, height=height, width=width)
+```
+
+Some code for making the gene isoforms...
+
+```{bash, eval=F}
+
+# get bed for appris principal isoforms
+
+tabix scripts/GenometracksByGenotype/PremadeTracks/gencode.v34.transcripts.bed12.gz chr18:12,783,479-12,887,085 | grep 'PTPN2-201' > scratch/isoforms.bed
+
+tabix scripts/GenometracksByGenotype/PremadeTracks/gencode.v34.transcripts.bed12.gz chr14:105,172,534-105,181,700 | grep 'NUDT14-202' >> scratch/isoforms.bed
+
+## Then do some manual editing to scratch/isoforms.bed, such that it should look like this in the end:
+
+#chr18	12792151	12884237	PTPN2-201	0	-	12794277	12884141	0	9	2334,182,153,210,135,99,101,91,165,	0,9818,22051,25004,33658,38791,44639,67012,91921,	PTPN2-201
+#chr18	12792151	12884237	PTPN2-New	0	-	12840830	12884141	0	10	2334,182,153,210,135,99,101,250,91,165,	0,9818,22051,25004,33658,38791,44639,48562,67012,91921,	PTPN2-201
+#chr14	105172938	105181312	NUDT14-202	0	-	105173020	105181209	0	5	323,238,65,44,184,	0,3595,4024,4753,8190,	NUDT14-202
+#chr14	105172938	105181312	NUDT14-New	0	-	105175966	105181209	0	5	3049,238,65,44,184,	0,3595,4024,4753,8190,	NUDT14-202
+#chr18	12814196	12819000	PTPN2-205	0	-	12819000	12819000	117,112,179	3	159,210,57,	0,2959,4747,	PTPN2-205
+#chr14	105175487	105181323	NUDT14-206	0	-	105181323	105181323	217,95,2	5	500,238,65,44,195,	0,1046,1475,2204,5641,	NUDT14-206
+#chr2	241734629	241768811	D2HGDH-201	0	+	241735224	241767969	27,158,119	10	66,384,58,140,194,169,144,143,166,1102,	0,503,6403,7805,8992,10079,15521,16616,21219,33080,	D2HGDH-201
+#chr2	241734629	241768811	D2HGDH-New	0	+	241735224	241751348	27,158,119	9	66,384,58,140,194,144,143,166,1102,	0,503,6403,7805,8992,15521,16616,21219,33080,	D2HGDH-New
+
+
+
+pyGenomeTracks --region chr18:12,783,478-12,886,335 --decreasingXAxis -out scratch/PTPN2_structure.pdf --tracks scratch/isoforms.ini
+pyGenomeTracks --region chr14:105,172,534-105,181,700 --decreasingXAxis -out scratch/NUDT14_structure.pdf --tracks scratch/isoforms.ini
+
+
+```
+
+I want to know if we can find out what the main D2HGDH eQTL signal is driven by...
+
+```{r}
+dat.Pairwise <- fread("../code/pi1/PairwisePi1Traits.P.all.txt.gz") %>%
+  filter(PC1=="Expression.Splicing")
+
+dat.Pairwise %>%
+  filter(GeneLocus == "ENSG00000180902.18" & P1=="ENSG00000180902.18") %>%
+  filter(trait.x.p.in.y < 0.01)
+
+phenotypes <- c("H3K4ME3_peak_28843", "ENSG00000180902.18")
+
+
+
+
+```
+
+
+and some code for getting the PSI values by genotype at the NUDT14 splice event and the PTPN2 one...
+
+```{r}
+PSI %>%
+  filter(Phenotype %in% c("18:12817365:12818944:clu_42854_-", "14:105175987:105176534:clu_34934_-", "2:241743815:241750151:clu_8613_+"))  %>%
+  filter(genotype %in% c(0,1,2)) %>%
+  group_by(TopCandidateSNP, genotype, Dataset, Intron, GWAS.Loci) %>%
+  mutate(SummaryPSI = mean(PSI, na.rm=T)) %>%
+  ungroup() %>%
+  distinct(Dataset, Intron, TopCandidateSNP, genotype, .keep_all=T) %>%
+  add_count(TopCandidateSNP, Dataset, Intron, GWAS.Loci) %>%
+  group_by(TopCandidateSNP, Dataset, Intron, GWAS.Loci) %>%
+  mutate(Rank = dense_rank(SummaryPSI)) %>%
+  ungroup() %>%
+  filter(!str_detect(SuperAnnotation, "Noncoding")) %>%
+  mutate(ProductiveOrUnproductive = case_when(
+  str_detect(SuperAnnotation, "UnproductiveCodingGene") ~ "Unproductive",
+    TRUE ~ "Productive")) %>%
+  arrange(TopCandidateSNP, Phenotype, Dataset, genotype) %>%
+  dplyr::select(TopCandidateSNP, Phenotype, Dataset, genotype, symbol, SummaryPSI)
+
+```
+
+
+GWAS QQ plot...
+
+```{r}
+qq.ms.dat <- fread("../code/gwas_summary_stats/qqplots/IMSGC2019/QQ.dat.tsv.gz")
+
+
+QQ.P <- bind_rows(
+  qq.ms.dat %>%
+    filter(SNP_group %in% c("All SNPs")) %>%
+    filter(GWAS.P >= 0.001) %>%
+    sample_frac(0.001),
+  qq.ms.dat %>%
+    filter(SNP_group %in% c("All SNPs")) %>%
+    filter(GWAS.P < 0.001),
+  qq.ms.dat %>%
+    filter(SNP_group %in% c("p-sQTL", "u-sQTL"))
+  ) %>%
+  arrange(SNP_group) %>%
+  ggplot(aes(x=-log10(ExpectedP), y=-log10(GWAS.P), color=SNP_group)) +
+  geom_point() +
+  geom_abline(xintercept=0, slope=1) +
+  scale_color_manual(values=
+                         c("genic SNPs"="#969696", "All SNPs"="#bdbdbd", "u-sQTL"="#e31a1c", "p-sQTL"="#1f78b4", "H3K27AC"="#6a3d9a", "H3K27AC peak SNPs"="#cab2d6", "Expression.Splicing"="#ff7f00"),
+                       labels=c("genic SNPs"="genic SNPs", "All SNPs"="All SNPs", "u-sQTL"="u-sQTL", "p-sQTL"="p-sQTL", "H3K27AC"="H3K27AC QTL", "H3K27AC peak SNPs"="H3K27AC peak SNPs", "Expression.Splicing"="eQTL")) +
+    scale_y_continuous(breaks=c(0,5,10,15,20), labels=c(0,5,10,15,">20")) +
+    labs(y=NULL,x=NULL, fill="SNP category") +
+    coord_cartesian(ylim=c(0,20)) +
+    theme_classic() +
+    theme(legend.position='none')
+
+
+
+```
+Let's similarly replot the eQTL qqplot with subsampling...
+
+```{r}
+qq.eQTL.dat <- fread("../code/Misc/eQTL_qq/dat.tsv.gz")
+
+qq.eQTL.dat %>% count(SNP_group)
+
+QQ.eQTL.P <- bind_rows(
+  qq.eQTL.dat %>%
+    filter(SNP_group %in% c("Test SNPs")) %>%
+    filter(P >= 0.0001) %>%
+    sample_frac(0.001),
+  qq.eQTL.dat %>%
+    filter(SNP_group %in% c("Test SNPs")) %>%
+    filter(P < 0.0001),
+  qq.eQTL.dat %>%
+    filter(SNP_group %in% c("p-sQTL", "u-sQTL", "hQTL"))
+  ) %>%
+  arrange(SNP_group) %>%
+  ggplot(aes(x=-log10(ExpectedP), y=-log10(P), color=SNP_group)) +
+  geom_point() +
+  geom_abline(xintercept=0, slope=1) +
+  scale_color_manual(values=
+                         c("Test SNPs"="#bdbdbd", "u-sQTL"="#e31a1c", "p-sQTL"="#1f78b4", "hQTL"="#6a3d9a"),
+                       labels=c("Test SNPs"="Test SNPs", "u-sQTL"="u-sQTL", "p-sQTL"="p-sQTL", "hQTL"="hQTL" )) +
+    # scale_y_continuous(breaks=c(0,5,10,15,20), labels=c(0,5,10,15,">20")) +
+    labs(y=NULL,x=NULL, fill="SNP category") +
+    # coord_cartesian(ylim=c(0,20)) +
+    theme_classic() +
+    theme(legend.position='none')
+QQ.eQTL.P
 ```
 
 
@@ -904,6 +1487,8 @@ ggplot(dat.boxplot, aes(x=genotype, y=NormalizedExpression)) +
 So conclusion about this locus:
 that MS locus is slightly confusing... I also see siginficant colocalization between the GWAS and the sQTL (specifically, splice junction chr12:6330711:6333069). And we classify that splice junction as unproductive, and manually inspecting it, I think I agree with that 'unprductive' classification since it skips an assymetric exon in the basic/productive transcript structure. However, the surprising thing is that I don't see eQTL signal. Like here is the boxplot for the sQTL and eQTL signal. Let me quickly look up the nominal P-value for the eQTL signal (when including PCs as covariates, which isn't accounted for in the boxplot I show).
 
+
+
 ## Save plots
 
 ```{r}
@@ -931,6 +1516,16 @@ ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/202
 ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_PSI_sQTL_GWAS_tests.pdf",P.PSI.histogram.tests , width=5, height=7)
 
 ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_PSI_sQTL_GWAS.pdf",P.PSI.histogram , width=7, height=3)
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_GWAS_PSI.pdf",P.hist.main , width=3, height=3)
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_eQTL_MS_QQ.pdf",QQ.P , width=3, height=3)
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_eQTL_QQ.pdf",QQ.eQTL.P , width=3, height=3)
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_Scatter.GWASLoci.eQTL.sQTL.Full.pdf",Scatter.GWASLoci.eQTL.sQTL.Full , width=8, height=4)
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_Scatter.GWASLoci.eQTL.sQTL.Short.pdf",Scatter.GWASLoci.eQTL.sQTL.Short , width=4, height=2)
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_Scatter.GWASLoci.eQTL.sQTL.Shortest.pdf",Scatter.GWASLoci.eQTL.sQTL.Shortest , width=2.5, height=2.5)
+
 
 
 ```

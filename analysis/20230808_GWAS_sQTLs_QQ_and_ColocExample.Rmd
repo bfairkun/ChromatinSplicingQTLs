@@ -1,0 +1,842 @@
+---
+title: "20230808_GWAS_sQTLs_QQ_and_ColocExample"
+output: html_document
+date: '2023-08-08'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+
+library(tidyverse)
+library(RColorBrewer)
+library(data.table)
+library(qvalue)
+library(knitr)
+library(ggrepel)
+
+
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family="Helvetica")))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+```
+
+## Intro
+
+First write out u-sQTLs and p-sQTLs
+
+```{r}
+PC1.PossibleValues <- c("polyA.Splicing")
+PC2.PossibleValues <-c("Expression.Splicing",  "H3K4ME3", "H3K36ME3", "H3K27AC", "H3K4ME1")
+
+
+dat <- fread("../code/pi1/PairwisePi1Traits.P.all.txt.gz") %>%
+  filter((PC1 %in% PC1.PossibleValues) & (PC2 %in% PC2.PossibleValues))
+
+Intron.Annotations <- read_tsv("../data/IntronAnnotationsFromYang.Updated.tsv.gz") %>%
+  mutate(IntronName = paste(chrom, start, end, strand, sep=":"))
+
+dat.sQTLs.eQTLs.ForScatter <- dat %>%
+  mutate(IntronName = str_replace(P1, "^(.+?:)clu_.+?([+-])$", "chr\\1\\2")) %>%
+  mutate(ClusterName =  str_replace(P1, "^(.+?:).+?(clu_.+?[+-])$", "chr\\1\\2")) %>%
+  left_join(Intron.Annotations)
+
+PC1.filter = c("polyA.Splicing")
+PC2.filter = c( "Expression.Splicing")
+PC2.SignificanceFilter <- c("H3K4ME3", "H3K27AC", "H3K36ME3")
+```
+
+Now as before for the beta/beta scatter plots, filter out sQTLs for which there are nominally significant hQTLs. Then classify sQTLs as u-sQTL and p-sQTL..
+
+```{r}
+Intron.Annotations$SuperAnnotation %>% unique()
+  
+sQTLs.ByType <- dat.sQTLs.eQTLs.ForScatter %>%
+  filter(PC1 %in% PC1.filter) %>%
+  group_by(P1) %>%
+  filter(!any((PC2 %in% PC2.SignificanceFilter) & (trait.x.p.in.y < 0.01))) %>%
+  ungroup() %>%
+  filter(PC2 %in% PC2.filter) %>%
+  mutate(SuperAnnotation.simplified = recode(SuperAnnotation, "UnannotatedJunc_UnproductiveCodingGene"="Unproductive", "AnnotatedJunc_ProductiveCodingGene"="Productive", "AnnotatedJunc_UnproductiveCodingGene"="Unproductive", "UnannotatedJunc_ProductiveCodingGene"="Productive")) %>%
+  group_by(ClusterName) %>%
+  mutate(sQTL.type = case_when(
+    any(SuperAnnotation.simplified == "Unproductive")  ~ "u-sQTL",
+    all(SuperAnnotation.simplified == "Productive") ~ "p-sQTL",
+    TRUE ~ "Other"
+    )) %>%
+  slice(which.min(p_permutation.x)) %>%
+  ungroup() %>%
+  filter(!sQTL.type=="Other")
+
+
+```
+
+Some sanity checking...
+
+```{r}
+  
+count(sQTLs.ByType, sQTL.type)
+
+
+sQTLs.ByType %>%
+ggplot(aes(x=beta.x, y=x.beta.in.y, color=SuperAnnotation)) +
+    geom_point(alpha=0.1) +
+    geom_vline(xintercept=0, linetype='dashed') +
+    geom_hline(yintercept=0, linetype='dashed') +
+    scale_color_manual(values=c("Productive"="#1f78b4", "Unproductive"="#e31a1c")) +
+    theme(strip.text = element_text(size = 12), legend.position='none') +
+  labs(caption = "FDR<10% sQTLs. sQTLs with nominal P<0.01 for H3K36me3, H3K27Ac, or H3K4me3 removed\nOnly top sQTL per cluster plotted", y="host gene eQTL beta", x="sQTL beta") +
+  facet_grid(sQTL.type~SuperAnnotation.simplified)
+
+```
+
+Now let's also get some top SNPs for eQTLs and H3K27Ac QTLs...
+
+```{r}
+gwas.trait.accession <- "IMSGC2019"
+
+molQTL.gwas.P <- fread(paste0("../code/gwas_summary_stats/MolQTLIntersections/", gwas.trait.accession, ".bed.gz"), col.names = c("chrom", "varPos", "GWAS.P", "molQTL.name", "molQTL.P", "strand", "molQTL.beta", "molQTL.se", "molQTL.q", "varID", "overlap")) %>%
+  separate(molQTL.name, into=c("PhenotypeClass", "MolPhenotypeName"), sep = ";")
+
+gwas.P <- fread(paste0("../code/gwas_summary_stats/sorted_index_summarystat_hg38beds/", gwas.trait.accession, ".bed.gz"), select = 4, col.names = "GWAS.P") %>%
+  mutate(PhenotypeClass = "All SNPs")
+
+molQTL.gwas.P$PhenotypeClass %>% unique()
+
+PhenotypeClass.filter <- c("Expression.Splicing.Subset_YRI", "Expression.Splicing", "polyA.Splicing", "H3K27AC")
+
+
+
+QQ.gwas <- bind_rows(
+  molQTL.gwas.P %>%
+    filter(PhenotypeClass %in% PhenotypeClass.filter) %>%
+    filter(molQTL.q < 0.1) %>%
+    dplyr::select(PhenotypeClass, GWAS.P),
+  gwas.P %>%
+    sample_n(1E5)
+) %>%
+dplyr::select(SNP_group = PhenotypeClass, GWAS.P) %>%
+group_by(SNP_group) %>%
+  mutate(MyRank = rank(GWAS.P, ties.method='random')) %>%
+  mutate(ExpectedP = MyRank/(max(MyRank) + 1)) %>%
+  ungroup() %>%
+  mutate(SNP_group = relevel(factor(SNP_group), "All SNPs")) %>%
+  arrange(SNP_group) %>%
+  ggplot(aes(x=-log10(ExpectedP), y=-log10(GWAS.P), color=SNP_group)) +
+  geom_abline(slope=1, intercept=0) +
+  geom_point() +
+  labs(y="-log10(ObservedP)", title="GWAS QQ plot", caption="GWAS SNPs sub-sampled to 100K for plotting speed")
+QQ.gwas
+
+QQ.gwas +
+  coord_cartesian(ylim=c(0,20))
+```
+
+Add some more control SNPs
+
+```{r}
+ControlSNPs <- fread(paste0("../code/gwas_summary_stats/MolQTLIntersections_ControlSNPs/", gwas.trait.accession, "/ALL.txt.gz"), col.names=c("GWAS.P", "PhenotypeClassControl"))
+
+
+ControlSNPs$PhenotypeClassControl %>% unique()
+
+QQ.gwas.dat <- bind_rows(
+  molQTL.gwas.P %>%
+      filter(PhenotypeClass %in% PhenotypeClass.filter) %>%
+      filter(molQTL.q < 0.1) %>%
+      left_join(
+        sQTLs.ByType %>%
+          dplyr::select(MolPhenotypeName=P1, sQTL.type, PhenotypeClass = PC1)
+      ) %>%
+    mutate(PhenotypeClass = case_when(
+      !is.na(sQTL.type) ~ sQTL.type,
+      TRUE ~ PhenotypeClass
+    )),
+  ControlSNPs %>%
+    filter(PhenotypeClassControl %in% c("polyA.Splicing", "H3K27AC", "Expression.Splicing")) %>%
+    mutate(PhenotypeClass = recode(PhenotypeClassControl, "polyA.Splicing"="Intronic SNPS", "H3K27AC"="H3K27AC peak SNPs", "Expression.Splicing"="genic SNPs")) %>%
+    filter(!PhenotypeClass=="Intronic SNPS") %>%
+    dplyr::select(-PhenotypeClassControl),
+  gwas.P %>%
+    sample_n(1E5)
+) %>%
+dplyr::select(SNP_group = PhenotypeClass, GWAS.P) %>%
+  # pull(SNP_group) %>% unique()
+group_by(SNP_group) %>%
+  mutate(MyRank = rank(GWAS.P, ties.method='random')) %>%
+  mutate(ExpectedP = MyRank/(max(MyRank) + 1)) %>%
+  ungroup() %>%
+  mutate(SNP_group = relevel(factor(SNP_group), "All SNPs")) %>%
+  arrange(SNP_group)
+
+QQ.gwas.dat %>%
+  count(SNP_group)
+
+QQ.gwas <- 
+  QQ.gwas.dat %>%
+  filter(!SNP_group=="polyA.Splicing") %>%
+  ggplot(aes(x=-log10(ExpectedP), y=-log10(GWAS.P), color=SNP_group)) +
+  geom_abline(slope=1, intercept=0) +
+  geom_point() +
+  scale_color_brewer(palette = "Set3") +
+  # scale_color_manual(values=
+  #                      c("genic SNPs"="#969696", "All SNPs"="#000000", "Unproductive sQTL cluster"="#e31a1c", "Productive sQTL cluster"="#1f78b4", "H3K27AC"="#6a3d9a", "H3K27AC peak SNPs"="#cab2d6", "Expression.Splicing"="#ff7f00"),
+  #                    labels=c("genic SNPs"="genic SNPs", "All SNPs"="All SNPs", "Unproductive sQTL cluster"="Unproductive sQTL", "Productive sQTL cluster"="Productive sQTL", "H3K27AC"="H3K27AC QTL", "H3K27AC peak SNPs"="H3K27AC peak SNPs", "Expression.Splicing"="eQTL")) +
+  labs(y="-log10(ObservedP)", title="MS GWAS QQ plot", caption="GWAS SNPs sub-sampled to 100K for plotting speed", fill="SNP category")
+QQ.gwas
+
+QQ.gwas +
+  coord_cartesian(ylim=c(0,20))
+
+```
+In the snakemake I added rules to make all these qq-plots...
+
+Now let's move on.
+
+### Example u-sQTL gwas colocalization
+
+### beta beta for sQTL/eQTL among Scatter
+
+```{r}
+gwas.traits <- read_tsv("../code/config/gwas_table.tsv") %>%
+  dplyr::rename(GWAS.accession=gwas, gwas.trait=trait) %>%
+  mutate(gwas.trait = recode(gwas.trait, "rheumatoid arthritis"="Rheumatoid arthritis"))
+
+PhenotypeRecodes = c("H3K36ME3"="hQTL", "H3K27AC"="hQTL", "H3K4ME3"="hQTL", "H3K4ME1"="hQTL",
+                     "Expression.Splicing"="eQTL", "chRNA.Expression.Splicing"="chRNA eQTL",
+                     "APA_Nuclear"="APA QTL", "APA_Total"="APA QTL", "polyA.Splicing"="sQTL", "GWAS"="GWAS")
+
+PhenotypeRecodes.df <- data.frame(PhenotypeRecodes) %>%
+  rownames_to_column("PhenotypeClass")
+
+
+
+hyprcoloc.results <- read_tsv("../code/hyprcoloc/Results/ForGWASColoc/GWASColoc_ChromatinAPAAndRNA/results.txt.gz") %>%
+  dplyr::rename(GWAS.Loci = GWASLeadSnpChrom_Pos_RefAllele_AltAllele_rsID_trait) %>%
+  separate(GWAS.Loci, into=c("GWAS.LeadSNP.Chrom", "GWAS.LeadSNP.Pos", "GWAS.accession"), sep="_", remove=F) %>%
+  separate_rows(ColocalizedTraits, sep = ",") %>%
+  mutate(IsColocalizedWithSomething = !ColocalizedTraits == "None") %>%
+  mutate(Trait = if_else(IsColocalizedWithSomething, ColocalizedTraits, DroppedTrait)) %>%
+  dplyr::select(-DroppedTrait, -ColocalizedTraits) %>%
+  mutate(Trait = str_replace_all(Trait, " ", "")) %>%
+  mutate(GWAS.Loci = str_replace_all(GWAS.Loci, " ", "")) %>%
+  mutate(Trait = if_else(Trait == GWAS.Loci, paste("GWAS",GWAS.Loci,sep = ";"),Trait)) %>%
+  separate(Trait, into=c("PhenotypeClass", "Phenotype"), sep=";", remove=F) %>%
+  group_by(GWAS.Loci, HyprcolocIteration) %>%
+  mutate(ColocalizedClusterContainsGWASTrait = any(PhenotypeClass=="GWAS") & IsColocalizedWithSomething) %>%
+  ungroup() %>%
+  inner_join(gwas.traits %>%
+               dplyr::select(1:2)) %>%
+  left_join(PhenotypeRecodes.df) %>%
+  mutate(PhenotypeRecodes = if_else(is.na(PhenotypeRecodes), PhenotypeClass, PhenotypeRecodes)) %>%
+  filter(!PhenotypeRecodes == "APA QTL") %>%
+  group_by(GWAS.Loci, HyprcolocIteration) %>%
+  filter(any(ColocalizedClusterContainsGWASTrait) | PhenotypeClass=="GWAS") %>%
+  mutate(Category = case_when(
+    all(ColocalizedClusterContainsGWASTrait==FALSE) | all(is.na(HyprcolocIteration))  ~ "No molQTL colocs",
+    all(PhenotypeRecodes %in% c("GWAS", "hQTL")) ~ "Only hQTL colocs",
+    all(PhenotypeRecodes %in% c("GWAS", "eQTL")) ~ "Only eQTL colocs",
+    all(PhenotypeRecodes %in% c("GWAS", "eQTL", "hQTL", "chRNA eQTL")) ~ "hQTL+eQTL colocs",
+    all(PhenotypeRecodes %in% c("GWAS", "sQTL")) ~ "sQTL colocs",
+    all(PhenotypeRecodes %in% c("GWAS", "sQTL", "chRNA eQTL", "eQTL")) ~ "sQTL+eQTL colocs",
+    # all(PhenotypeRecodes %in% c("GWAS", "sQTL", "chRNA eQTL", "eQTL", "hQTL")) ~ "sQTL+eQTL+hQTL colocs",
+    TRUE ~ "Other"
+  )) %>%
+  ungroup()
+
+sQTLs <- read_tsv("../code/SplicingAnalysis/sQTLs_p_and_u.Full.tsv.gz")
+
+hyprcoloc.results %>%
+  filter(ColocalizedClusterContainsGWASTrait) %>%
+  inner_join(
+    sQTLs %>%
+      dplyr::select(Phenotype=P1,PhenotypeClass=PC1)
+  ) %>%
+  pull(gwas.trait) %>% unique() %>% sort()
+
+
+DiseaseTraits <- c("Multiple sclerosis", "Ulcerative colitis", "Inflammatory bowel disease", "Rheumatoid arthritis", "Asthma (adult onset)", "Asthma (childhood onset)")
+
+ColocsToConsiderPlotting <- hyprcoloc.results %>%
+  filter(ColocalizedClusterContainsGWASTrait) %>%
+  inner_join(
+    sQTLs %>%
+      dplyr::select(Phenotype=P1,PhenotypeClass=PC1, everything())
+  ) %>%
+  filter(sQTL.type=="u-sQTL") %>%
+  filter(Category=="sQTL+eQTL colocs") %>%
+  filter(gwas.trait %in%  DiseaseTraits)
+
+hyprcoloc.results %>%
+  filter(ColocalizedClusterContainsGWASTrait) %>%
+  inner_join(
+    sQTLs %>%
+      dplyr::select(Phenotype=P1,PhenotypeClass=PC1, everything())
+  ) %>%
+  filter(sQTL.type=="u-sQTL")
+
+
+```
+
+First let's make plot to show fisher test enrichment for u-sQTLs among eQTL/sQTL/GWAS colocs
+
+```{r}
+dat.forOddsRatioTest <- hyprcoloc.results %>%
+  filter(Category %in% c("sQTL+eQTL colocs", "sQTL colocs") & PhenotypeClass=="polyA.Splicing") %>%
+  mutate(ClusterName =  str_replace(Phenotype, "^(.+?:).+?(clu_.+?[+-])$", "chr\\1\\2")) %>%
+  inner_join(
+    sQTLs %>%
+      mutate(ClusterName =  str_replace(P1, "^(.+?:).+?(clu_.+?[+-])$", "chr\\1\\2")) %>%
+      dplyr::select(ClusterName, sQTL.type)) %>%
+      # dplyr::select(Phenotype=P1, sQTL.type)) %>%
+  distinct(GWAS.Loci, ClusterName, sQTL.type, .keep_all = T) %>%
+  count(Category, sQTL.type)
+  
+dat.forOddsRatioTest %>%
+  pivot_wider(names_from="sQTL.type", values_from="n") %>%
+  column_to_rownames("Category") %>%
+  fisher.test(alternative='greater')
+
+OddsRatioTest.P <- dat.forOddsRatioTest %>%
+  ggplot(aes(x=Category, y=n, fill=sQTL.type)) +
+  geom_col() +
+  scale_y_continuous(expand=c(0,0)) +
+  scale_fill_manual(name=NULL, values=c("p-sQTL"="#1f78b4", "u-sQTL"="#e31a1c")) +
+  Rotate_x_labels +
+  labs(y="Number of\nGWAS/sQTL colocalizations", caption="OR=1.74, P=0.0056")
+
+OddsRatioTest.P
+
+```
+
+```{r, eval=F}
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/Final_FigS_uSQTL_Enrichment.pdf",OddsRatioTest.P,  width=3.5, height=4.5)
+```
+
+
+Now let's check out the beta beta scatter for these gwas/eQTL/u-sQTL colocs.
+
+```{r}
+
+hyprcoloc.results %>%
+  filter(ColocalizedClusterContainsGWASTrait) %>%
+  inner_join(
+    sQTLs %>%
+      dplyr::select(Phenotype=P1,PhenotypeClass=PC1, everything())
+  ) %>%
+  filter(sQTL.type=="u-sQTL") %>%
+  # filter(Category=="sQTL+eQTL colocs")
+  group_by(gene, SuperAnnotation.simplified, sQTL.type) %>%
+  filter(abs(x.beta.in.y)==max(abs(x.beta.in.y))) %>%
+  ungroup() %>%
+  distinct(gene, SuperAnnotation.simplified, sQTL.type, .keep_all=T) %>%
+  ggplot(aes(x=beta.x, y=x.beta.in.y)) +
+  # geom_point() +
+  geom_abline(slope=-1, intercept = 0) +
+  geom_text(aes(label=symbol)) +
+  facet_grid(sQTL.type~SuperAnnotation.simplified~Category) +
+  theme_bw() +
+  labs(x="sQTL beta", y="eQTL beta")
+
+hyprcoloc.results %>%
+  filter(ColocalizedClusterContainsGWASTrait) %>%
+  filter(gwas.trait %in%  DiseaseTraits) %>%
+  inner_join(
+    sQTLs %>%
+      dplyr::select(Phenotype=P1,PhenotypeClass=PC1, everything())
+  ) %>%
+  filter(sQTL.type=="u-sQTL") %>%
+  # filter(Category=="sQTL+eQTL colocs")
+  group_by(gene, SuperAnnotation.simplified, sQTL.type) %>%
+  filter(abs(x.beta.in.y)==max(abs(x.beta.in.y))) %>%
+  ungroup() %>%
+  distinct(gene, SuperAnnotation.simplified, sQTL.type, .keep_all=T) %>%
+  ggplot(aes(x=beta.x, y=x.beta.in.y)) +
+  geom_abline(slope=-1, intercept = 0) +
+  geom_point() +
+  geom_text(aes(label=symbol)) +
+  facet_grid(sQTL.type~SuperAnnotation.simplified~Category) +
+  theme_bw() +
+  labs(x="sQTL beta", y="eQTL beta")
+
+
+
+```
+
+Let's look a but more closely at PTPN2 which was reported in [Garwany et al](https://www.biorxiv.org/content/10.1101/2023.05.29.542728v1) and which is unproductive splicing, though does not coloc with eQTL... Firstly let's see if the eQTL signal is significant.
+
+```{r}
+
+hyprcoloc.results %>%
+  filter(ColocalizedClusterContainsGWASTrait) %>%
+  inner_join(
+    sQTLs %>%
+      dplyr::select(Phenotype=P1,PhenotypeClass=PC1, everything())
+  ) %>%
+  filter(sQTL.type=="u-sQTL") %>%
+  filter(symbol=="PTPN2")
+
+hyprcoloc.results %>%
+  filter(ColocalizedClusterContainsGWASTrait) %>%
+  filter(GWAS.Loci == "chr18_12881362_TRANSETHNICRA")
+```
+I'm kinda surprised the eQTL and sQTL doesn't coloc... Let's look at this one closer...
+
+```{r}
+hyprcoloc.results %>%
+  filter(ColocalizedClusterContainsGWASTrait) %>%
+  inner_join(
+    sQTLs %>%
+      dplyr::select(Phenotype=P1,PhenotypeClass=PC1, everything())
+  ) %>%
+  # filter(sQTL.type=="u-sQTL") %>%
+  filter(Category!="Other") %>%
+  group_by(gene, SuperAnnotation.simplified, sQTL.type) %>%
+  filter(abs(x.beta.in.y)==max(abs(x.beta.in.y))) %>%
+  ungroup() %>%
+  distinct(gene, SuperAnnotation.simplified, sQTL.type, .keep_all=T) %>%
+  mutate(Color = if_else(symbol=="PTPN2", "red", "black")) %>%
+  arrange(Color) %>%
+  ggplot(aes(x=beta.x, y=x.beta.in.y, color=Color)) +
+  # geom_point() +
+  geom_vline(xintercept = 0) +
+  geom_hline(yintercept = 0) +
+  geom_abline(slope=-1, intercept = 0) +
+  geom_text(aes(label=symbol)) +
+  scale_color_identity() +
+  facet_grid(sQTL.type~SuperAnnotation.simplified~Category) +
+  theme_bw() +
+  labs(x="sQTL beta", y="eQTL beta", title="many sQTL colocalizations have\neQTL effects consistent w/ NMD")
+```
+Let's make some more final versions of this plot the the paper... one version with many facets, and highlighting PTPN2 for the supplement... And one version that is more dense for the main...
+
+First a version for the main...
+
+```{r}
+hyprcoloc.results %>%
+  filter(ColocalizedClusterContainsGWASTrait) %>%
+  inner_join(
+    sQTLs %>%
+      dplyr::select(Phenotype=P1,PhenotypeClass=PC1, everything())
+  ) %>%
+  group_by(gene, SuperAnnotation.simplified, sQTL.type) %>%
+  filter(abs(x.beta.in.y)==max(abs(x.beta.in.y))) %>%
+  ungroup() %>%
+  distinct(gene, SuperAnnotation.simplified, sQTL.type, .keep_all=T) %>%
+  mutate(Color = if_else(symbol=="PTPN2", "red", "black")) %>%
+  arrange(Color) %>%
+  ggplot(aes(x=beta.x, y=x.beta.in.y, color=Color)) +
+  # geom_point() +
+  geom_vline(xintercept = 0) +
+  geom_hline(yintercept = 0) +
+  geom_abline(slope=-1, intercept = 0) +
+  geom_text(aes(label=symbol)) +
+  scale_color_identity() +
+  facet_grid(sQTL.type~SuperAnnotation.simplified~Category) +
+  theme_bw() +
+  labs(x="sQTL beta", y="eQTL beta", title="many sQTL colocalizations have\neQTL effects consistent w/ NMD")
+```
+
+
+```{r}
+hyprcoloc.results %>%
+  filter(ColocalizedClusterContainsGWASTrait) %>%
+  inner_join(
+    sQTLs %>%
+      dplyr::select(Phenotype=P1,PhenotypeClass=PC1, everything())
+  ) %>%
+  # filter(sQTL.type=="u-sQTL") %>%
+  filter(Category!="Other") %>%
+  group_by(gene, SuperAnnotation.simplified, sQTL.type) %>%
+  filter(abs(x.beta.in.y)==max(abs(x.beta.in.y))) %>%
+  ungroup() %>%
+  distinct(gene, SuperAnnotation.simplified, sQTL.type, .keep_all=T) %>%
+  mutate(Color = if_else(symbol=="PTPN2", "red", "black")) %>%
+  arrange(Color) %>%
+  ggplot(aes(x=beta.x, y=x.beta.in.y, color=Color)) +
+  # geom_point() +
+  geom_vline(xintercept = 0) +
+  geom_hline(yintercept = 0) +
+  geom_abline(slope=-1, intercept = 0) +
+  geom_text(aes(label=symbol)) +
+  scale_color_identity() +
+  facet_grid(sQTL.type~SuperAnnotation.simplified~Category) +
+  theme_bw() +
+  labs(x="sQTL beta", y="eQTL beta", title="many sQTL colocalizations have\neQTL effects consistent w/ NMD")
+```
+
+
+```{r}
+phenotypes <- c("18:12817365:12818944:clu_42854_-", "ENSG00000175354.20")
+gwas.accession <- "TRANSETHNICRA"
+gwas_locus.ofinterest <- "chr18_12881362_N_N_TRANSETHNICRA"
+
+molQTL.dat <- fread(str_glue("../code/hyprcoloc/LociWiseSummaryStatsInput/ForGWASColoc/{gwas.accession}.txt.gz")) %>%
+  mutate()
+gwas.dat <- fread(str_glue("../code/gwas_summary_stats/StatsForColoc/{gwas.accession}.standardized.txt.gz"))
+
+molQTL.dat.atLocus <- molQTL.dat %>%
+  filter(phenotype %in%  phenotypes) %>%
+  # pull(phenotype) %>% unique()
+  mutate(PhenotypeClass = str_replace(source_file, "^QTLs/QTLTools/(.+?)/NominalPassForGWASColocChunks/.+$", "\\1")) %>%
+  left_join(ColocsToConsiderPlotting, by=c("phenotype"="Phenotype", "PhenotypeClass"))
+
+molQTL.dat %>%
+  filter(gwas_locus==gwas_locus.ofinterest)  %>%
+  pull(phenotype) %>% unique()
+
+molQTL.dat.atLocus %>%
+  filter(gwas_locus==gwas_locus.ofinterest) %>%
+  pull(phenotype) %>% unique()
+
+
+coloc.plots.example.dat <- bind_rows(
+  molQTL.dat.atLocus %>%
+    filter(gwas_locus==gwas_locus.ofinterest) %>%
+    mutate(Signal = -log10(p)) %>%
+    dplyr::select(Signal, PhenotypeClass, snp ) %>%
+    separate(snp, into=c("chrom", "pos", "ref", "alt"), sep=":") %>%
+    mutate(pos = as.numeric(pos)),
+  gwas.dat %>%
+    filter(loci==gwas_locus.ofinterest) %>%
+    mutate(Signal = -log10(2*pnorm( abs(beta/SE), lower=F ))) %>%
+    mutate(PhenotypeClass = "gwas") %>%
+    dplyr::select(Signal, PhenotypeClass, chrom, pos=start, ref=A1, alt=A2) %>%
+    mutate(chrom = str_replace(chrom, "^chr(.+$)", "\\1")) %>%
+    mutate(pos= as.numeric(pos))
+) %>%
+  dplyr::select(-ref, -alt) %>%
+  pivot_wider(names_from = "PhenotypeClass", values_from = "Signal")
+
+coloc.plots.example.dat %>%
+  ggplot(aes(x=polyA.Splicing, y=Expression.Splicing)) +
+  geom_point(alpha=0.5) +
+  labs(x="sQTL association signal, -log10(P)", y="eQTL association signal, -log10(P)")
+
+coloc.plots.example.dat %>%
+  ggplot(aes(x=Expression.Splicing, y=gwas)) +
+  geom_point(alpha=0.5) +
+  labs(x="eQTL association signal, -log10(P)", y="gwas (RA) association signal, -log10(P)")
+
+
+coloc.plots.example.dat %>%
+  ggplot(aes(x=polyA.Splicing, y=gwas)) +
+  geom_point(alpha=0.5) +
+  labs(x="sQTL association signal, -log10(P)", y="gwas (RA) association signal, -log10(P)")
+
+eQTL.test.dat <- c(1,2,10,30,20,2,1,0.5)
+blue.test.dat1 <- rep(0, 8)
+blue.test.dat3 <- c(0.5,1,1.5,2,0.5,5,20,2)
+blue.test.dat4 <- pmax(0.01, jitter(eQTL.test.dat-0.75))
+IllustrateColocDat <- data.frame(
+  Case = c(rep("H1/H2; Only one signal", 8), rep("H3; Distinct signals", 8), rep("H4; Colocalization of signals", 8)),
+  eQTL = rep(eQTL.test.dat, 3),
+  gwas = c(blue.test.dat1, blue.test.dat3, blue.test.dat4),
+  genomic_position=rep(1:8, 3)
+)
+
+IllustrateColocDat %>%
+  gather(key="dataset", value="AssociationSignal", eQTL, gwas) %>%
+  ggplot(aes(x=genomic_position, y=AssociationSignal, color=dataset)) +
+  geom_point() +
+  geom_line() +
+  scale_color_manual(values=c("eQTL"="red", "gwas"="blue")) +
+  facet_wrap(~Case, ncol=1) +
+  scale_y_continuous(limits=c(0,35)) +
+  labs(y="-log10(p)", x="genomic position") +
+  theme(
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+# ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/IllustrativeColocProcedure_Manhattan.pdf", width=6, height=8)
+
+IllustrateColocDat %>%
+  ggplot(aes(x=eQTL, y=gwas)) +
+  geom_vline(xintercept=-Inf, color='blue', size=3) +
+  geom_hline(yintercept = -Inf, color='red', size=3) +
+  geom_point() +
+  facet_wrap(~Case, ncol=1) +
+  labs(y="gwas association signal\n-log10(p)", x="eQTL association signal\n-log10(p)")
+# ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/IllustrativeColocProcedure_Scatter.pdf", width=4, height=8)
+  
+
+
+```
+Ok, similar to Garwany et al, I dunno what is going on but it could be that the sQTL is the driving effect that creates an eQTL, though in this particular tissue there is a different eQTL that is stronger, but not the gwas signal because that eQTL does not have an effect in the relevant tissue.
+
+Let's check out the colocalization plots for ADAM15
+
+```{r}
+phenotypes <- c(ColocsToConsiderPlotting$GeneLocus, ColocsToConsiderPlotting$Phenotype)
+gwas.accession <- "GCST004131"
+gwas_locus.ofinterest <- "chr1_155194689_N_N_GCST004131"
+
+molQTL.dat <- fread(str_glue("../code/hyprcoloc/LociWiseSummaryStatsInput/ForGWASColoc/{gwas.accession}.txt.gz")) %>%
+  mutate()
+gwas.dat <- fread(str_glue("../code/gwas_summary_stats/StatsForColoc/{gwas.accession}.standardized.txt.gz"))
+
+molQTL.dat.atLocus <- molQTL.dat %>%
+  filter(phenotype %in%  phenotypes) %>%
+  # pull(phenotype) %>% unique()
+  mutate(PhenotypeClass = str_replace(source_file, "^QTLs/QTLTools/(.+?)/NominalPassForGWASColocChunks/.+$", "\\1")) %>%
+  left_join(ColocsToConsiderPlotting, by=c("phenotype"="Phenotype", "PhenotypeClass"))
+
+molQTL.dat %>%
+  filter(gwas_locus==gwas_locus.ofinterest)  %>%
+  pull(phenotype) %>% unique()
+
+molQTL.dat.atLocus %>%
+  filter(gwas_locus==gwas_locus.ofinterest) %>%
+  pull(phenotype) %>% unique()
+
+
+coloc.plots.example.dat <- bind_rows(
+  molQTL.dat.atLocus %>%
+    filter(gwas_locus==gwas_locus.ofinterest) %>%
+    mutate(Signal = -log10(p)) %>%
+    dplyr::select(Signal, PhenotypeClass, snp ) %>%
+    separate(snp, into=c("chrom", "pos", "ref", "alt"), sep=":") %>%
+    mutate(pos = as.numeric(pos)),
+  gwas.dat %>%
+    filter(loci==gwas_locus.ofinterest) %>%
+    mutate(Signal = -log10(2*pnorm( abs(beta/SE), lower=F ))) %>%
+    mutate(PhenotypeClass = "gwas") %>%
+    dplyr::select(Signal, PhenotypeClass, chrom, pos=start, ref=A1, alt=A2) %>%
+    mutate(chrom = str_replace(chrom, "^chr(.+$)", "\\1")) %>%
+    mutate(pos= as.numeric(pos))
+) %>%
+  dplyr::select(-ref, -alt) %>%
+  pivot_wider(names_from = "PhenotypeClass", values_from = "Signal") %>%
+  mutate(IsTopSNP = chrom=="1" & pos==155062156)
+
+coloc.plots.example.dat %>%
+  ggplot(aes(x=polyA.Splicing, y=Expression.Splicing, color=IsTopSNP)) +
+  geom_point(alpha=0.5)
+
+coloc.plots.example.dat %>%
+  ggplot(aes(x=Expression.Splicing, y=gwas, color=IsTopSNP)) +
+  geom_point(alpha=0.5)
+
+coloc.plots.example.dat %>%
+  ggplot(aes(x=polyA.Splicing, y=gwas, color=IsTopSNP)) +
+  geom_point(alpha=0.5)
+
+coloc.plots.example.dat %>%
+  filter(Expression.Splicing>30)
+
+```
+
+Hmm, the colocalization isn't quite as pretty. But maybe I should check a few other plots to make sure the effect is cytoplasmic (not present in chRNA), and remake the coloc plots with LD for colors, using european populations since that is the GWAS population.
+
+Ok, now let's look at another gene that was sQTL/GWAS coloc but not eQTL:
+```{r}
+hyprcoloc.results %>%
+  filter(ColocalizedClusterContainsGWASTrait) %>%
+  inner_join(
+    sQTLs %>%
+      dplyr::select(Phenotype=P1,PhenotypeClass=PC1, everything())
+  ) %>%
+  filter(sQTL.type=="u-sQTL") %>%
+  filter(symbol=="D2HGDH")
+
+
+
+phenotypes <- c("2:241743815:241750151:clu_8613_+", "ENSG00000180902.18")
+gwas.accession <- "GCST007799"
+gwas_locus.ofinterest <- "chr2_241759225_N_N_GCST007799"
+
+molQTL.dat <- fread(str_glue("../code/hyprcoloc/LociWiseSummaryStatsInput/ForGWASColoc/{gwas.accession}.txt.gz")) %>%
+  mutate()
+gwas.dat <- fread(str_glue("../code/gwas_summary_stats/StatsForColoc/{gwas.accession}.standardized.txt.gz"))
+
+molQTL.dat.atLocus <- molQTL.dat %>%
+  filter(phenotype %in%  phenotypes) %>%
+  # pull(phenotype) %>% unique()
+  mutate(PhenotypeClass = str_replace(source_file, "^QTLs/QTLTools/(.+?)/NominalPassForGWASColocChunks/.+$", "\\1"))
+
+molQTL.dat %>%
+  filter(gwas_locus==gwas_locus.ofinterest)  %>%
+  pull(phenotype) %>% unique()
+
+molQTL.dat.atLocus %>%
+  filter(gwas_locus==gwas_locus.ofinterest) %>%
+  pull(phenotype) %>% unique()
+
+coloc.plots.example.dat <- bind_rows(
+  molQTL.dat.atLocus %>%
+    filter(gwas_locus==gwas_locus.ofinterest) %>%
+    mutate(Signal = -log10(p)) %>%
+    dplyr::select(Signal, PhenotypeClass, snp ) %>%
+    separate(snp, into=c("chrom", "pos", "ref", "alt"), sep=":") %>%
+    mutate(pos = as.numeric(pos)),
+  gwas.dat %>%
+    filter(loci==gwas_locus.ofinterest) %>%
+    mutate(Signal = -log10(2*pnorm( abs(beta/SE), lower=F ))) %>%
+    mutate(PhenotypeClass = "gwas") %>%
+    dplyr::select(Signal, PhenotypeClass, chrom, pos=start, ref=A1, alt=A2) %>%
+    mutate(chrom = str_replace(chrom, "^chr(.+$)", "\\1")) %>%
+    mutate(pos= as.numeric(pos))
+) %>%
+  dplyr::select(-ref, -alt) %>%
+  pivot_wider(names_from = "PhenotypeClass", values_from = "Signal") %>%
+  mutate(IsTopSNP = chrom=="2" & pos==241759225)
+
+coloc.plots.example.dat %>%
+  ggplot(aes(x=polyA.Splicing, y=Expression.Splicing, color=IsTopSNP)) +
+  geom_point(alpha=0.5)
+
+coloc.plots.example.dat %>%
+  ggplot(aes(x=Expression.Splicing, y=gwas, color=IsTopSNP)) +
+  geom_point(alpha=0.5)
+
+coloc.plots.example.dat %>%
+  ggplot(aes(x=polyA.Splicing, y=gwas, color=IsTopSNP)) +
+  geom_point(alpha=0.5)
+
+
+```
+
+This one is interesting example of maybe the sQTL driving because it is cell type pervasive? Let's check the top eQTL, does it coloc with any other molQTL?
+
+```{r}
+genewise.colocs <- read_tsv("../code/hyprcoloc/Results/ForColoc/GenewiseColoc_ChromatinAPAAndRNA/tidy_results_OnlyColocalized.txt.gz")
+
+genewise.colocs %>%
+  filter(Locus == "ENSG00000180902.18") %>%
+  group_by(snp) %>%
+  filter(any(phenotype_full=="Expression.Splicing;ENSG00000180902.18")) %>%
+  ungroup()
+
+genewise.colocs %>%
+  filter(Locus == "ENSG00000180902.18") %>%
+  arrange(snp)
+```
+
+
+Ok, now let's check out TSFM...
+
+```{r}
+phenotypes <- c(ColocsToConsiderPlotting$GeneLocus, ColocsToConsiderPlotting$Phenotype)
+gwas.accession <- "IMSGC2019"
+gwas_locus.ofinterest <- "chr12_57713053_N_N_IMSGC2019"
+
+molQTL.dat <- fread(str_glue("../code/hyprcoloc/LociWiseSummaryStatsInput/ForGWASColoc/{gwas.accession}.txt.gz")) %>%
+  mutate()
+gwas.dat <- fread(str_glue("../code/gwas_summary_stats/StatsForColoc/{gwas.accession}.standardized.txt.gz"))
+
+molQTL.dat.atLocus <- molQTL.dat %>%
+  filter(phenotype %in%  phenotypes) %>%
+  # pull(phenotype) %>% unique()
+  mutate(PhenotypeClass = str_replace(source_file, "^QTLs/QTLTools/(.+?)/NominalPassForGWASColocChunks/.+$", "\\1")) %>%
+  left_join(ColocsToConsiderPlotting, by=c("phenotype"="Phenotype", "PhenotypeClass"))
+
+molQTL.dat %>%
+  filter(gwas_locus==gwas_locus.ofinterest)  %>%
+  pull(phenotype) %>% unique()
+
+molQTL.dat.atLocus %>%
+  filter(gwas_locus==gwas_locus.ofinterest) %>%
+  pull(phenotype) %>% unique()
+
+# 
+# coloc.plots.example.dat <- bind_rows(
+#   molQTL.dat.atLocus %>%
+#     filter(gwas_locus==gwas_locus.ofinterest) %>%
+#     mutate(Signal = -log10(p)) %>%
+#     dplyr::select(Signal, PhenotypeClass, snp ) %>%
+#     separate(snp, into=c("chrom", "pos", "ref", "alt"), sep=":") %>%
+#     mutate(pos = as.numeric(pos)),
+#   gwas.dat %>%
+#     filter(loci==gwas_locus.ofinterest) %>%
+#     mutate(Signal = -log10(2*pnorm( abs(beta/SE), lower=F ))) %>%
+#     mutate(PhenotypeClass = "gwas") %>%
+#     dplyr::select(Signal, PhenotypeClass, chrom, pos=start, ref=A1, alt=A2) %>%
+#     mutate(chrom = str_replace(chrom, "^chr(.+$)", "\\1")) %>%
+#     mutate(pos= as.numeric(pos))
+# ) %>%
+#   dplyr::select(-ref, -alt) %>%
+#   pivot_wider(names_from = "PhenotypeClass", values_from = "Signal") %>%
+#   mutate(IsTopSNP = chrom=="1" & pos==155062156)
+# 
+# coloc.plots.example.dat %>%
+#   ggplot(aes(x=polyA.Splicing, y=Expression.Splicing, color=IsTopSNP)) +
+#   geom_point(alpha=0.5)
+# 
+# coloc.plots.example.dat %>%
+#   ggplot(aes(x=Expression.Splicing, y=gwas, color=IsTopSNP)) +
+#   geom_point(alpha=0.5)
+# 
+# coloc.plots.example.dat %>%
+#   ggplot(aes(x=polyA.Splicing, y=gwas, color=IsTopSNP)) +
+#   geom_point(alpha=0.5)
+# 
+# coloc.plots.example.dat %>%
+#   filter(Expression.Splicing>30)
+```
+Ok, so that gene is weird because the colocalizing eGene (EEF1AKMT3) is different than the sQTL (TSFM), though the sQTL is a nominally significant TSFM eQTL with effect size direction consistent with NMD, though the EEF1AKMT3 is much stronger.
+
+Let's also check the YPEL1 example.
+
+```{r}
+phenotypes <- c(ColocsToConsiderPlotting$GeneLocus, ColocsToConsiderPlotting$Phenotype)
+gwas.accession <- "IMSGC2019"
+gwas_locus.ofinterest <- "chr22_21851064_N_N_IMSGC2019"
+
+molQTL.dat <- fread(str_glue("../code/hyprcoloc/LociWiseSummaryStatsInput/ForGWASColoc/{gwas.accession}.txt.gz")) %>%
+  mutate()
+gwas.dat <- fread(str_glue("../code/gwas_summary_stats/StatsForColoc/{gwas.accession}.standardized.txt.gz"))
+
+molQTL.dat.atLocus <- molQTL.dat %>%
+  filter(phenotype %in%  phenotypes) %>%
+  # pull(phenotype) %>% unique()
+  mutate(PhenotypeClass = str_replace(source_file, "^QTLs/QTLTools/(.+?)/NominalPassForGWASColocChunks/.+$", "\\1")) %>%
+  left_join(ColocsToConsiderPlotting, by=c("phenotype"="Phenotype", "PhenotypeClass"))
+
+molQTL.dat %>%
+  filter(gwas_locus==gwas_locus.ofinterest)  %>%
+  pull(phenotype) %>% unique()
+
+molQTL.dat.atLocus %>%
+  filter(gwas_locus==gwas_locus.ofinterest) %>%
+  pull(phenotype) %>% unique()
+
+```
+
+Ok, this is non-ideal case... The eQTL signal for this gene at the unproductive sQTL is nominally significant, and direction consistent with NMD, though the gene doesn't pass FDR threshold so was not tested for GWAS coloc. The reason it is in the eQTL+sQTL category is because of the colocalization with...
+
+```{r}
+hyprcoloc.results %>%
+  filter(ColocalizedClusterContainsGWASTrait) %>%
+  filter(GWAS.Loci == "chr22_21851064_IMSGC2019")
+```
+...MAP1K, a neighboring gene.
+
+Maybe we should just stick with NUDT14 and see if it was in any other more recognizeable blood trait...
+
+
+```{r}
+hyprcoloc.results %>%
+  filter(ColocalizedClusterContainsGWASTrait) %>%
+  inner_join(
+    sQTLs %>%
+      dplyr::select(Phenotype=P1,PhenotypeClass=PC1, everything())
+  ) %>%
+  filter(sQTL.type=="u-sQTL") %>%
+  filter(Category=="sQTL+eQTL colocs") %>%
+  filter(symbol=="MVP")
+
+hyprcoloc.results %>%
+  filter(ColocalizedClusterContainsGWASTrait) %>%
+  inner_join(
+    sQTLs %>%
+      dplyr::select(Phenotype=P1,PhenotypeClass=PC1, everything())
+  ) %>%
+  filter(sQTL.type=="u-sQTL") %>%
+  filter(Category=="sQTL+eQTL colocs") %>%
+  filter(symbol=="NUDT14")
+```
+
+Ok conclusion from all of this, is that I rather like NUDT14 the most to show in the main text.

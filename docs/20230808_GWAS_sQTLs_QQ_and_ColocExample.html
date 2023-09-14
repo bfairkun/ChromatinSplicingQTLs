@@ -1,0 +1,1704 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+<meta name="date" content="2023-08-08" />
+
+<title>20230808_GWAS_sQTLs_QQ_and_ColocExample</title>
+
+<script src="site_libs/header-attrs-2.14/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.tab('show');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">myproject</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">20230808_GWAS_sQTLs_QQ_and_ColocExample</h1>
+<h4 class="date">2023-08-08</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span
+class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2023-08-28
+</p>
+<p>
+<strong>Checks:</strong> <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> 1
+</p>
+<p>
+<strong>Knit directory:</strong>
+<code>ChromatinSplicingQTLs/analysis/</code> <span
+class="glyphicon glyphicon-question-sign" aria-hidden="true"
+title="This is the local directory in which the code in this file was executed.">
+</span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a>
+analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version
+1.7.0). The <em>Checks</em> tab describes the reproducibility checks
+that were applied when the results were created. The <em>Past
+versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges">
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted
+changes </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguncommittedchanges"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The R Markdown is untracked by Git. To know which version of the R
+Markdown file created these results, you’ll want to first commit it to
+the Git repo. If you’re still working on the analysis, you can ignore
+this warning. When you’re finished, you can run
+<code>wflow_publish</code> to commit the R Markdown file and build the
+HTML.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the
+global environment can affect the analysis in your R Markdown file in
+unknown ways. For reproduciblity it’s best to always run the code in an
+empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20191126code">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Seed:</strong>
+<code>set.seed(20191126)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20191126code"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20191126)</code> was run prior to running
+the code in the R Markdown file. Setting a seed ensures that any results
+that rely on randomness, e.g. subsampling or permutations, are
+reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Session information:</strong>
+recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package
+versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be
+confident that you successfully produced the results during this
+run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr
+project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstreea4ceb39fe800d08a0ec696329d078015edbcf6d2targetblanka4ceb39a">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Repository version:</strong>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/a4ceb39fe800d08a0ec696329d078015edbcf6d2" target="_blank">a4ceb39</a>
+</a>
+</p>
+</div>
+<div
+id="strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstreea4ceb39fe800d08a0ec696329d078015edbcf6d2targetblanka4ceb39a"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development
+and connecting the code version to the results is critical for
+reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/a4ceb39fe800d08a0ec696329d078015edbcf6d2" target="_blank">a4ceb39</a>.
+See the <em>Past versions</em> tab to see a history of the changes made
+to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for
+the analysis have been committed to Git prior to generating the results
+(you can use <code>wflow_publish</code> or
+<code>wflow_git_commit</code>). workflowr only checks the R Markdown
+file, but you know if there are other scripts or data files that it
+depends on. Below is the status of the Git repository when the results
+were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    analysis/.Rhistory
+    Ignored:    code/-
+    Ignored:    code/.DS_Store
+    Ignored:    code/.MYB.tracks.ini.swp
+    Ignored:    code/.RData
+    Ignored:    code/._report.html
+    Ignored:    code/.ipynb_checkpoints/
+    Ignored:    code/.snakemake/
+    Ignored:    code/APA_Processing/
+    Ignored:    code/Alignments/
+    Ignored:    code/ChromHMM/
+    Ignored:    code/ENCODE/
+    Ignored:    code/ExpressionAnalysis/
+    Ignored:    code/ExtractPhenotypeBedByGenotype.py
+    Ignored:    code/FastqFastp/
+    Ignored:    code/FastqFastpSE/
+    Ignored:    code/FastqSE/
+    Ignored:    code/FineMapping/
+    Ignored:    code/GTEx/
+    Ignored:    code/Genotypes/
+    Ignored:    code/H3K36me3_CutAndTag.pdf
+    Ignored:    code/IntronSlopes/
+    Ignored:    code/LR.bed
+    Ignored:    code/LR.seq.bed
+    Ignored:    code/LongReads/
+    Ignored:    code/MYB.tracks.ini
+    Ignored:    code/Metaplots/
+    Ignored:    code/Misc/
+    Ignored:    code/MiscCountTables/
+    Ignored:    code/Multiqc/
+    Ignored:    code/Multiqc_chRNA/
+    Ignored:    code/NonCodingRNA/
+    Ignored:    code/NonCodingRNA_annotation/
+    Ignored:    code/PairwisePi1Traits.P.all.txt.gz
+    Ignored:    code/PeakCalling/
+    Ignored:    code/Phenotypes/
+    Ignored:    code/PlotGruberQTLs/
+    Ignored:    code/PlotQTLs/
+    Ignored:    code/ProCapAnalysis/
+    Ignored:    code/QC/
+    Ignored:    code/QTL_SNP_Enrichment/
+    Ignored:    code/QTLs/
+    Ignored:    code/RPKM_tables/
+    Ignored:    code/ReadLengthMapExperiment/
+    Ignored:    code/ReadLengthMapExperimentResults/
+    Ignored:    code/ReadLengthMapExperimentSpliceCounts/
+    Ignored:    code/ReferenceGenome/
+    Ignored:    code/Rplots.pdf
+    Ignored:    code/Session.vim
+    Ignored:    code/SmallMolecule/
+    Ignored:    code/SplicingAnalysis/
+    Ignored:    code/TODO
+    Ignored:    code/Tehranchi/
+    Ignored:    code/alias/
+    Ignored:    code/bigwigs/
+    Ignored:    code/bigwigs_FromNonWASPFilteredReads/
+    Ignored:    code/config/.DS_Store
+    Ignored:    code/config/._.DS_Store
+    Ignored:    code/config/.ipynb_checkpoints/
+    Ignored:    code/config/config.local.yaml
+    Ignored:    code/dag.pdf
+    Ignored:    code/dag.png
+    Ignored:    code/dag.svg
+    Ignored:    code/data/
+    Ignored:    code/debug.ipynb
+    Ignored:    code/debug_python.ipynb
+    Ignored:    code/deepTools/
+    Ignored:    code/featureCounts/
+    Ignored:    code/featureCountsBasicGtf/
+    Ignored:    code/genome_config.yaml
+    Ignored:    code/gwas_summary_stats/
+    Ignored:    code/hyprcoloc/
+    Ignored:    code/igv_session.xml
+    Ignored:    code/isoseqbams/
+    Ignored:    code/log
+    Ignored:    code/logs/
+    Ignored:    code/notebooks/.ipynb_checkpoints/
+    Ignored:    code/pi1/
+    Ignored:    code/polyA.Splicing.Subset_YRI.NominalPassForColoc.bed.bgz
+    Ignored:    code/rules/.ipynb_checkpoints/
+    Ignored:    code/rules/OldRules/
+    Ignored:    code/rules/notebooks/
+    Ignored:    code/salmontest/
+    Ignored:    code/scratch/
+    Ignored:    code/scripts/.ipynb_checkpoints/
+    Ignored:    code/scripts/GTFtools_0.8.0/
+    Ignored:    code/scripts/__pycache__/
+    Ignored:    code/scripts/liftOverBedpe/liftOverBedpe.py
+    Ignored:    code/snakemake.dryrun.log
+    Ignored:    code/snakemake.log
+    Ignored:    code/snakemake.sbatch.log
+    Ignored:    code/snakemake_profiles/slurm/__pycache__/
+    Ignored:    code/test.introns.bed
+    Ignored:    code/test.introns2.bed
+    Ignored:    code/test.log
+    Ignored:    code/tracks.xml
+    Ignored:    data/.DS_Store
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-10.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-11.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-2.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-3.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-4.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-5.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-6.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-7.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-8.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022.csv
+    Ignored:    data/Metaplots/.DS_Store
+
+Untracked files:
+    Untracked:  analysis/20230808_GWAS_sQTLs_QQ_and_ColocExample.Rmd
+    Untracked:  code/envs/r_scattermore.yml
+    Untracked:  code/scripts/CalculatePi1_PlotHeatmap.R
+    Untracked:  code/scripts/Clasify_sQTLs.R
+    Untracked:  code/scripts/MolQTL_GWAS_QQ.R
+    Untracked:  code/scripts/Plot_eQTL_QQ.R
+    Untracked:  output/GwasLociConcordance.tsv
+    Untracked:  output/GwasLociConcordanceWithNonEqtls.tsv
+    Untracked:  output/GwasLoci_with_sQTL_and_hQTL.tsv
+
+Unstaged changes:
+    Modified:   analysis/20230723_hQTL_sQTL_GwasConcordance.Rmd
+    Modified:   analysis/MakeFinalFigs_Fig2.Rmd
+    Modified:   analysis/MakeFinalFigs_Fig3.Rmd
+    Modified:   analysis/MakeFinalFigs_Fig4.Rmd
+    Modified:   code/rules/CalculatePi1.smk
+    Modified:   code/rules/GWAS_PrepForColoc.smk
+    Modified:   code/scripts/CheckConcordanceOfGeneTraitEffects.py
+    Modified:   code/scripts/GenometracksByGenotype
+    Modified:   output/GwasLoci_with_sQTL_and_hQTL_eQTLs.tsv
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not
+included in this status report because it is ok for generated content to
+have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+<p>
+There are no past versions. Publish this analysis with
+<code>wflow_publish()</code> to start tracking its development.
+</p>
+<hr>
+</div>
+</div>
+</div>
+<div id="intro" class="section level2">
+<h2>Intro</h2>
+<p>First write out u-sQTLs and p-sQTLs</p>
+<pre class="r"><code>PC1.PossibleValues &lt;- c(&quot;polyA.Splicing&quot;)
+PC2.PossibleValues &lt;-c(&quot;Expression.Splicing&quot;,  &quot;H3K4ME3&quot;, &quot;H3K36ME3&quot;, &quot;H3K27AC&quot;, &quot;H3K4ME1&quot;)
+
+
+dat &lt;- fread(&quot;../code/pi1/PairwisePi1Traits.P.all.txt.gz&quot;) %&gt;%
+  filter((PC1 %in% PC1.PossibleValues) &amp; (PC2 %in% PC2.PossibleValues))
+
+Intron.Annotations &lt;- read_tsv(&quot;../data/IntronAnnotationsFromYang.Updated.tsv.gz&quot;) %&gt;%
+  mutate(IntronName = paste(chrom, start, end, strand, sep=&quot;:&quot;))
+
+dat.sQTLs.eQTLs.ForScatter &lt;- dat %&gt;%
+  mutate(IntronName = str_replace(P1, &quot;^(.+?:)clu_.+?([+-])$&quot;, &quot;chr\\1\\2&quot;)) %&gt;%
+  mutate(ClusterName =  str_replace(P1, &quot;^(.+?:).+?(clu_.+?[+-])$&quot;, &quot;chr\\1\\2&quot;)) %&gt;%
+  left_join(Intron.Annotations)
+
+PC1.filter = c(&quot;polyA.Splicing&quot;)
+PC2.filter = c( &quot;Expression.Splicing&quot;)
+PC2.SignificanceFilter &lt;- c(&quot;H3K4ME3&quot;, &quot;H3K27AC&quot;, &quot;H3K36ME3&quot;)</code></pre>
+<p>Now as before for the beta/beta scatter plots, filter out sQTLs for
+which there are nominally significant hQTLs. Then classify sQTLs as
+u-sQTL and p-sQTL..</p>
+<pre class="r"><code>Intron.Annotations$SuperAnnotation %&gt;% unique()</code></pre>
+<pre><code>[1] &quot;AnnotatedJunc_NoncodingGene&quot;           
+[2] &quot;UnannotatedJunc_NoncodingJunc&quot;         
+[3] &quot;AnnotatedJunc_UnproductiveCodingGene&quot;  
+[4] &quot;AnnotatedJunc_ProductiveCodingGene&quot;    
+[5] &quot;UnannotatedJunc_UnproductiveCodingGene&quot;
+[6] &quot;UnannotatedJunc_ProductiveCodingGene&quot;  </code></pre>
+<pre class="r"><code>sQTLs.ByType &lt;- dat.sQTLs.eQTLs.ForScatter %&gt;%
+  filter(PC1 %in% PC1.filter) %&gt;%
+  group_by(P1) %&gt;%
+  filter(!any((PC2 %in% PC2.SignificanceFilter) &amp; (trait.x.p.in.y &lt; 0.01))) %&gt;%
+  ungroup() %&gt;%
+  filter(PC2 %in% PC2.filter) %&gt;%
+  mutate(SuperAnnotation.simplified = recode(SuperAnnotation, &quot;UnannotatedJunc_UnproductiveCodingGene&quot;=&quot;Unproductive&quot;, &quot;AnnotatedJunc_ProductiveCodingGene&quot;=&quot;Productive&quot;, &quot;AnnotatedJunc_UnproductiveCodingGene&quot;=&quot;Unproductive&quot;, &quot;UnannotatedJunc_ProductiveCodingGene&quot;=&quot;Productive&quot;)) %&gt;%
+  group_by(ClusterName) %&gt;%
+  mutate(sQTL.type = case_when(
+    any(SuperAnnotation.simplified == &quot;Unproductive&quot;)  ~ &quot;u-sQTL&quot;,
+    all(SuperAnnotation.simplified == &quot;Productive&quot;) ~ &quot;p-sQTL&quot;,
+    TRUE ~ &quot;Other&quot;
+    )) %&gt;%
+  slice(which.min(p_permutation.x)) %&gt;%
+  ungroup() %&gt;%
+  filter(!sQTL.type==&quot;Other&quot;)</code></pre>
+<p>Some sanity checking…</p>
+<pre class="r"><code>count(sQTLs.ByType, sQTL.type)</code></pre>
+<pre><code># A tibble: 2 × 2
+  sQTL.type     n
+  &lt;chr&gt;     &lt;int&gt;
+1 p-sQTL     1469
+2 u-sQTL     1783</code></pre>
+<pre class="r"><code>sQTLs.ByType %&gt;%
+ggplot(aes(x=beta.x, y=x.beta.in.y, color=SuperAnnotation)) +
+    geom_point(alpha=0.1) +
+    geom_vline(xintercept=0, linetype=&#39;dashed&#39;) +
+    geom_hline(yintercept=0, linetype=&#39;dashed&#39;) +
+    scale_color_manual(values=c(&quot;Productive&quot;=&quot;#1f78b4&quot;, &quot;Unproductive&quot;=&quot;#e31a1c&quot;)) +
+    theme(strip.text = element_text(size = 12), legend.position=&#39;none&#39;) +
+  labs(caption = &quot;FDR&lt;10% sQTLs. sQTLs with nominal P&lt;0.01 for H3K36me3, H3K27Ac, or H3K4me3 removed\nOnly top sQTL per cluster plotted&quot;, y=&quot;host gene eQTL beta&quot;, x=&quot;sQTL beta&quot;) +
+  facet_grid(sQTL.type~SuperAnnotation.simplified)</code></pre>
+<p><img src="figure/20230808_GWAS_sQTLs_QQ_and_ColocExample.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Now let’s also get some top SNPs for eQTLs and H3K27Ac QTLs…</p>
+<pre class="r"><code>gwas.trait.accession &lt;- &quot;IMSGC2019&quot;
+
+molQTL.gwas.P &lt;- fread(paste0(&quot;../code/gwas_summary_stats/MolQTLIntersections/&quot;, gwas.trait.accession, &quot;.bed.gz&quot;), col.names = c(&quot;chrom&quot;, &quot;varPos&quot;, &quot;GWAS.P&quot;, &quot;molQTL.name&quot;, &quot;molQTL.P&quot;, &quot;strand&quot;, &quot;molQTL.beta&quot;, &quot;molQTL.se&quot;, &quot;molQTL.q&quot;, &quot;varID&quot;, &quot;overlap&quot;)) %&gt;%
+  separate(molQTL.name, into=c(&quot;PhenotypeClass&quot;, &quot;MolPhenotypeName&quot;), sep = &quot;;&quot;)
+
+gwas.P &lt;- fread(paste0(&quot;../code/gwas_summary_stats/sorted_index_summarystat_hg38beds/&quot;, gwas.trait.accession, &quot;.bed.gz&quot;), select = 4, col.names = &quot;GWAS.P&quot;) %&gt;%
+  mutate(PhenotypeClass = &quot;All SNPs&quot;)
+
+molQTL.gwas.P$PhenotypeClass %&gt;% unique()</code></pre>
+<pre><code> [1] &quot;APA_Nuclear&quot;                      &quot;H3K27AC&quot;                         
+ [3] &quot;MetabolicLabelled.30min.Splicing&quot; &quot;H3K4ME1&quot;                         
+ [5] &quot;polyA.Splicing&quot;                   &quot;polyA.Splicing.Subset_YRI&quot;       
+ [7] &quot;MetabolicLabelled.60min.Splicing&quot; &quot;chRNA.Splicing&quot;                  
+ [9] &quot;chRNA.Splicing.Order&quot;             &quot;CTCF&quot;                            
+[11] &quot;APA_Total&quot;                        &quot;chRNA.Expression_ncRNA&quot;          
+[13] &quot;DNaseISensitivity&quot;                &quot;H3K36ME3_ncRNA&quot;                  
+[15] &quot;chRNA.IER&quot;                        &quot;polyA.IER&quot;                       
+[17] &quot;H3K36ME3&quot;                         &quot;Expression.Splicing&quot;             
+[19] &quot;MetabolicLabelled.30min&quot;          &quot;polyA.IER.Subset_YRI&quot;            
+[21] &quot;ProCap&quot;                           &quot;H3K4ME3&quot;                         
+[23] &quot;MetabolicLabelled.60min&quot;          &quot;chRNA.Expression.Splicing&quot;       
+[25] &quot;Expression.Splicing.Subset_YRI&quot;   &quot;MetabolicLabelled.60min.IER&quot;     
+[27] &quot;chRNA.Slopes&quot;                     &quot;MetabolicLabelled.30min.IER&quot;     </code></pre>
+<pre class="r"><code>PhenotypeClass.filter &lt;- c(&quot;Expression.Splicing.Subset_YRI&quot;, &quot;Expression.Splicing&quot;, &quot;polyA.Splicing&quot;, &quot;H3K27AC&quot;)
+
+
+
+QQ.gwas &lt;- bind_rows(
+  molQTL.gwas.P %&gt;%
+    filter(PhenotypeClass %in% PhenotypeClass.filter) %&gt;%
+    filter(molQTL.q &lt; 0.1) %&gt;%
+    dplyr::select(PhenotypeClass, GWAS.P),
+  gwas.P %&gt;%
+    sample_n(1E5)
+) %&gt;%
+dplyr::select(SNP_group = PhenotypeClass, GWAS.P) %&gt;%
+group_by(SNP_group) %&gt;%
+  mutate(MyRank = rank(GWAS.P, ties.method=&#39;random&#39;)) %&gt;%
+  mutate(ExpectedP = MyRank/(max(MyRank) + 1)) %&gt;%
+  ungroup() %&gt;%
+  mutate(SNP_group = relevel(factor(SNP_group), &quot;All SNPs&quot;)) %&gt;%
+  arrange(SNP_group) %&gt;%
+  ggplot(aes(x=-log10(ExpectedP), y=-log10(GWAS.P), color=SNP_group)) +
+  geom_abline(slope=1, intercept=0) +
+  geom_point() +
+  labs(y=&quot;-log10(ObservedP)&quot;, title=&quot;GWAS QQ plot&quot;, caption=&quot;GWAS SNPs sub-sampled to 100K for plotting speed&quot;)
+QQ.gwas</code></pre>
+<p><img src="figure/20230808_GWAS_sQTLs_QQ_and_ColocExample.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>QQ.gwas +
+  coord_cartesian(ylim=c(0,20))</code></pre>
+<p><img src="figure/20230808_GWAS_sQTLs_QQ_and_ColocExample.Rmd/unnamed-chunk-4-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Add some more control SNPs</p>
+<pre class="r"><code>ControlSNPs &lt;- fread(paste0(&quot;../code/gwas_summary_stats/MolQTLIntersections_ControlSNPs/&quot;, gwas.trait.accession, &quot;/ALL.txt.gz&quot;), col.names=c(&quot;GWAS.P&quot;, &quot;PhenotypeClassControl&quot;))
+
+
+ControlSNPs$PhenotypeClassControl %&gt;% unique()</code></pre>
+<pre><code> [1] &quot;Expression.Splicing&quot;              &quot;Expression.Splicing.Subset_YRI&quot;  
+ [3] &quot;chRNA.Expression.Splicing&quot;        &quot;MetabolicLabelled.30min&quot;         
+ [5] &quot;MetabolicLabelled.60min&quot;          &quot;CTCF&quot;                            
+ [7] &quot;H3K27AC&quot;                          &quot;H3K4ME3&quot;                         
+ [9] &quot;H3K4ME1&quot;                          &quot;H3K36ME3&quot;                        
+[11] &quot;H3K36ME3_ncRNA&quot;                   &quot;ProCap&quot;                          
+[13] &quot;polyA.Splicing&quot;                   &quot;polyA.Splicing.Subset_YRI&quot;       
+[15] &quot;chRNA.Splicing&quot;                   &quot;MetabolicLabelled.30min.Splicing&quot;
+[17] &quot;MetabolicLabelled.60min.Splicing&quot; &quot;chRNA.Expression_ncRNA&quot;          
+[19] &quot;APA_Nuclear&quot;                      &quot;APA_Total&quot;                       
+[21] &quot;polyA.IER&quot;                        &quot;polyA.IER.Subset_YRI&quot;            
+[23] &quot;chRNA.IER&quot;                        &quot;MetabolicLabelled.30min.IER&quot;     
+[25] &quot;MetabolicLabelled.60min.IER&quot;      &quot;chRNA.Slopes&quot;                    
+[27] &quot;chRNA.Splicing.Order&quot;             &quot;DNaseISensitivity&quot;               </code></pre>
+<pre class="r"><code>QQ.gwas.dat &lt;- bind_rows(
+  molQTL.gwas.P %&gt;%
+      filter(PhenotypeClass %in% PhenotypeClass.filter) %&gt;%
+      filter(molQTL.q &lt; 0.1) %&gt;%
+      left_join(
+        sQTLs.ByType %&gt;%
+          dplyr::select(MolPhenotypeName=P1, sQTL.type, PhenotypeClass = PC1)
+      ) %&gt;%
+    mutate(PhenotypeClass = case_when(
+      !is.na(sQTL.type) ~ sQTL.type,
+      TRUE ~ PhenotypeClass
+    )),
+  ControlSNPs %&gt;%
+    filter(PhenotypeClassControl %in% c(&quot;polyA.Splicing&quot;, &quot;H3K27AC&quot;, &quot;Expression.Splicing&quot;)) %&gt;%
+    mutate(PhenotypeClass = recode(PhenotypeClassControl, &quot;polyA.Splicing&quot;=&quot;Intronic SNPS&quot;, &quot;H3K27AC&quot;=&quot;H3K27AC peak SNPs&quot;, &quot;Expression.Splicing&quot;=&quot;genic SNPs&quot;)) %&gt;%
+    filter(!PhenotypeClass==&quot;Intronic SNPS&quot;) %&gt;%
+    dplyr::select(-PhenotypeClassControl),
+  gwas.P %&gt;%
+    sample_n(1E5)
+) %&gt;%
+dplyr::select(SNP_group = PhenotypeClass, GWAS.P) %&gt;%
+  # pull(SNP_group) %&gt;% unique()
+group_by(SNP_group) %&gt;%
+  mutate(MyRank = rank(GWAS.P, ties.method=&#39;random&#39;)) %&gt;%
+  mutate(ExpectedP = MyRank/(max(MyRank) + 1)) %&gt;%
+  ungroup() %&gt;%
+  mutate(SNP_group = relevel(factor(SNP_group), &quot;All SNPs&quot;)) %&gt;%
+  arrange(SNP_group)
+
+QQ.gwas.dat %&gt;%
+  count(SNP_group)</code></pre>
+<pre><code># A tibble: 9 × 2
+  SNP_group                           n
+  &lt;fct&gt;                           &lt;int&gt;
+1 All SNPs                       100000
+2 Expression.Splicing              6936
+3 Expression.Splicing.Subset_YRI   1641
+4 H3K27AC                          4947
+5 H3K27AC peak SNPs              100000
+6 genic SNPs                     100000
+7 p-sQTL                            866
+8 polyA.Splicing                  14921
+9 u-sQTL                           1089</code></pre>
+<pre class="r"><code>QQ.gwas &lt;- 
+  QQ.gwas.dat %&gt;%
+  filter(!SNP_group==&quot;polyA.Splicing&quot;) %&gt;%
+  ggplot(aes(x=-log10(ExpectedP), y=-log10(GWAS.P), color=SNP_group)) +
+  geom_abline(slope=1, intercept=0) +
+  geom_point() +
+  scale_color_brewer(palette = &quot;Set3&quot;) +
+  # scale_color_manual(values=
+  #                      c(&quot;genic SNPs&quot;=&quot;#969696&quot;, &quot;All SNPs&quot;=&quot;#000000&quot;, &quot;Unproductive sQTL cluster&quot;=&quot;#e31a1c&quot;, &quot;Productive sQTL cluster&quot;=&quot;#1f78b4&quot;, &quot;H3K27AC&quot;=&quot;#6a3d9a&quot;, &quot;H3K27AC peak SNPs&quot;=&quot;#cab2d6&quot;, &quot;Expression.Splicing&quot;=&quot;#ff7f00&quot;),
+  #                    labels=c(&quot;genic SNPs&quot;=&quot;genic SNPs&quot;, &quot;All SNPs&quot;=&quot;All SNPs&quot;, &quot;Unproductive sQTL cluster&quot;=&quot;Unproductive sQTL&quot;, &quot;Productive sQTL cluster&quot;=&quot;Productive sQTL&quot;, &quot;H3K27AC&quot;=&quot;H3K27AC QTL&quot;, &quot;H3K27AC peak SNPs&quot;=&quot;H3K27AC peak SNPs&quot;, &quot;Expression.Splicing&quot;=&quot;eQTL&quot;)) +
+  labs(y=&quot;-log10(ObservedP)&quot;, title=&quot;MS GWAS QQ plot&quot;, caption=&quot;GWAS SNPs sub-sampled to 100K for plotting speed&quot;, fill=&quot;SNP category&quot;)
+QQ.gwas</code></pre>
+<p><img src="figure/20230808_GWAS_sQTLs_QQ_and_ColocExample.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>QQ.gwas +
+  coord_cartesian(ylim=c(0,20))</code></pre>
+<p><img src="figure/20230808_GWAS_sQTLs_QQ_and_ColocExample.Rmd/unnamed-chunk-5-2.png" width="672" style="display: block; margin: auto;" />
+In the snakemake I added rules to make all these qq-plots…</p>
+<p>Now let’s move on.</p>
+<div id="example-u-sqtl-gwas-colocalization" class="section level3">
+<h3>Example u-sQTL gwas colocalization</h3>
+</div>
+<div id="beta-beta-for-sqtleqtl-among-scatter" class="section level3">
+<h3>beta beta for sQTL/eQTL among Scatter</h3>
+<pre class="r"><code>gwas.traits &lt;- read_tsv(&quot;../code/config/gwas_table.tsv&quot;) %&gt;%
+  dplyr::rename(GWAS.accession=gwas, gwas.trait=trait) %&gt;%
+  mutate(gwas.trait = recode(gwas.trait, &quot;rheumatoid arthritis&quot;=&quot;Rheumatoid arthritis&quot;))
+
+PhenotypeRecodes = c(&quot;H3K36ME3&quot;=&quot;hQTL&quot;, &quot;H3K27AC&quot;=&quot;hQTL&quot;, &quot;H3K4ME3&quot;=&quot;hQTL&quot;, &quot;H3K4ME1&quot;=&quot;hQTL&quot;,
+                     &quot;Expression.Splicing&quot;=&quot;eQTL&quot;, &quot;chRNA.Expression.Splicing&quot;=&quot;chRNA eQTL&quot;,
+                     &quot;APA_Nuclear&quot;=&quot;APA QTL&quot;, &quot;APA_Total&quot;=&quot;APA QTL&quot;, &quot;polyA.Splicing&quot;=&quot;sQTL&quot;, &quot;GWAS&quot;=&quot;GWAS&quot;)
+
+PhenotypeRecodes.df &lt;- data.frame(PhenotypeRecodes) %&gt;%
+  rownames_to_column(&quot;PhenotypeClass&quot;)
+
+
+
+hyprcoloc.results &lt;- read_tsv(&quot;../code/hyprcoloc/Results/ForGWASColoc/GWASColoc_ChromatinAPAAndRNA/results.txt.gz&quot;) %&gt;%
+  dplyr::rename(GWAS.Loci = GWASLeadSnpChrom_Pos_RefAllele_AltAllele_rsID_trait) %&gt;%
+  separate(GWAS.Loci, into=c(&quot;GWAS.LeadSNP.Chrom&quot;, &quot;GWAS.LeadSNP.Pos&quot;, &quot;GWAS.accession&quot;), sep=&quot;_&quot;, remove=F) %&gt;%
+  separate_rows(ColocalizedTraits, sep = &quot;,&quot;) %&gt;%
+  mutate(IsColocalizedWithSomething = !ColocalizedTraits == &quot;None&quot;) %&gt;%
+  mutate(Trait = if_else(IsColocalizedWithSomething, ColocalizedTraits, DroppedTrait)) %&gt;%
+  dplyr::select(-DroppedTrait, -ColocalizedTraits) %&gt;%
+  mutate(Trait = str_replace_all(Trait, &quot; &quot;, &quot;&quot;)) %&gt;%
+  mutate(GWAS.Loci = str_replace_all(GWAS.Loci, &quot; &quot;, &quot;&quot;)) %&gt;%
+  mutate(Trait = if_else(Trait == GWAS.Loci, paste(&quot;GWAS&quot;,GWAS.Loci,sep = &quot;;&quot;),Trait)) %&gt;%
+  separate(Trait, into=c(&quot;PhenotypeClass&quot;, &quot;Phenotype&quot;), sep=&quot;;&quot;, remove=F) %&gt;%
+  group_by(GWAS.Loci, HyprcolocIteration) %&gt;%
+  mutate(ColocalizedClusterContainsGWASTrait = any(PhenotypeClass==&quot;GWAS&quot;) &amp; IsColocalizedWithSomething) %&gt;%
+  ungroup() %&gt;%
+  inner_join(gwas.traits %&gt;%
+               dplyr::select(1:2)) %&gt;%
+  left_join(PhenotypeRecodes.df) %&gt;%
+  mutate(PhenotypeRecodes = if_else(is.na(PhenotypeRecodes), PhenotypeClass, PhenotypeRecodes)) %&gt;%
+  filter(!PhenotypeRecodes == &quot;APA QTL&quot;) %&gt;%
+  group_by(GWAS.Loci, HyprcolocIteration) %&gt;%
+  filter(any(ColocalizedClusterContainsGWASTrait) | PhenotypeClass==&quot;GWAS&quot;) %&gt;%
+  mutate(Category = case_when(
+    all(ColocalizedClusterContainsGWASTrait==FALSE) | all(is.na(HyprcolocIteration))  ~ &quot;No molQTL colocs&quot;,
+    all(PhenotypeRecodes %in% c(&quot;GWAS&quot;, &quot;hQTL&quot;)) ~ &quot;Only hQTL colocs&quot;,
+    all(PhenotypeRecodes %in% c(&quot;GWAS&quot;, &quot;eQTL&quot;)) ~ &quot;Only eQTL colocs&quot;,
+    all(PhenotypeRecodes %in% c(&quot;GWAS&quot;, &quot;eQTL&quot;, &quot;hQTL&quot;, &quot;chRNA eQTL&quot;)) ~ &quot;hQTL+eQTL colocs&quot;,
+    all(PhenotypeRecodes %in% c(&quot;GWAS&quot;, &quot;sQTL&quot;)) ~ &quot;sQTL colocs&quot;,
+    all(PhenotypeRecodes %in% c(&quot;GWAS&quot;, &quot;sQTL&quot;, &quot;chRNA eQTL&quot;, &quot;eQTL&quot;)) ~ &quot;sQTL+eQTL colocs&quot;,
+    # all(PhenotypeRecodes %in% c(&quot;GWAS&quot;, &quot;sQTL&quot;, &quot;chRNA eQTL&quot;, &quot;eQTL&quot;, &quot;hQTL&quot;)) ~ &quot;sQTL+eQTL+hQTL colocs&quot;,
+    TRUE ~ &quot;Other&quot;
+  )) %&gt;%
+  ungroup()
+
+sQTLs &lt;- read_tsv(&quot;../code/SplicingAnalysis/sQTLs_p_and_u.Full.tsv.gz&quot;)
+
+hyprcoloc.results %&gt;%
+  filter(ColocalizedClusterContainsGWASTrait) %&gt;%
+  inner_join(
+    sQTLs %&gt;%
+      dplyr::select(Phenotype=P1,PhenotypeClass=PC1)
+  ) %&gt;%
+  pull(gwas.trait) %&gt;% unique() %&gt;% sort()</code></pre>
+<pre><code> [1] &quot;Asthma (adult onset)&quot;                                   
+ [2] &quot;Asthma (childhood onset)&quot;                               
+ [3] &quot;Basophil percentage of granulocytes&quot;                    
+ [4] &quot;Basophil percentage of white cells&quot;                     
+ [5] &quot;Breast cancer&quot;                                          
+ [6] &quot;Crohn&#39;s disease&quot;                                        
+ [7] &quot;Eosinophil counts&quot;                                      
+ [8] &quot;Eosinophil percentage of granulocytes&quot;                  
+ [9] &quot;Eosinophil percentage of white cells&quot;                   
+[10] &quot;Granulocyte count&quot;                                      
+[11] &quot;Granulocyte percentage of myeloid white cells&quot;          
+[12] &quot;Hematocrit&quot;                                             
+[13] &quot;Hemoglobin concentration&quot;                               
+[14] &quot;High light scatter reticulocyte count&quot;                  
+[15] &quot;High light scatter reticulocyte percentage of red cells&quot;
+[16] &quot;Immature fraction of reticulocytes&quot;                     
+[17] &quot;Inflammatory bowel disease&quot;                             
+[18] &quot;Lymphocyte counts&quot;                                      
+[19] &quot;Lymphocyte percentage of white cells&quot;                   
+[20] &quot;Mean corpuscular hemoglobin&quot;                            
+[21] &quot;Mean corpuscular hemoglobin concentration&quot;              
+[22] &quot;Mean corpuscular volume&quot;                                
+[23] &quot;Mean platelet volume&quot;                                   
+[24] &quot;Monocyte count&quot;                                         
+[25] &quot;Monocyte percentage of white cells&quot;                     
+[26] &quot;Multiple sclerosis&quot;                                     
+[27] &quot;Myeloid white cell count&quot;                               
+[28] &quot;Neutrophil count&quot;                                       
+[29] &quot;Neutrophil percentage of granulocytes&quot;                  
+[30] &quot;Neutrophil percentage of white cells&quot;                   
+[31] &quot;Platelet count&quot;                                         
+[32] &quot;Platelet distribution width&quot;                            
+[33] &quot;Plateletcrit&quot;                                           
+[34] &quot;Red blood cell count&quot;                                   
+[35] &quot;Red cell distribution width&quot;                            
+[36] &quot;Reticulocyte count&quot;                                     
+[37] &quot;Reticulocyte fraction of red cells&quot;                     
+[38] &quot;Rheumatoid arthritis&quot;                                   
+[39] &quot;Sum basophil neutrophil counts&quot;                         
+[40] &quot;Sum eosinophil basophil counts&quot;                         
+[41] &quot;Sum neutrophil eosinophil counts&quot;                       
+[42] &quot;Ulcerative colitis&quot;                                     
+[43] &quot;White blood cell count&quot;                                 
+[44] &quot;White blood cell count (basophil)&quot;                      </code></pre>
+<pre class="r"><code>DiseaseTraits &lt;- c(&quot;Multiple sclerosis&quot;, &quot;Ulcerative colitis&quot;, &quot;Inflammatory bowel disease&quot;, &quot;Rheumatoid arthritis&quot;, &quot;Asthma (adult onset)&quot;, &quot;Asthma (childhood onset)&quot;)
+
+ColocsToConsiderPlotting &lt;- hyprcoloc.results %&gt;%
+  filter(ColocalizedClusterContainsGWASTrait) %&gt;%
+  inner_join(
+    sQTLs %&gt;%
+      dplyr::select(Phenotype=P1,PhenotypeClass=PC1, everything())
+  ) %&gt;%
+  filter(sQTL.type==&quot;u-sQTL&quot;) %&gt;%
+  filter(Category==&quot;sQTL+eQTL colocs&quot;) %&gt;%
+  filter(gwas.trait %in%  DiseaseTraits)
+
+hyprcoloc.results %&gt;%
+  filter(ColocalizedClusterContainsGWASTrait) %&gt;%
+  inner_join(
+    sQTLs %&gt;%
+      dplyr::select(Phenotype=P1,PhenotypeClass=PC1, everything())
+  ) %&gt;%
+  filter(sQTL.type==&quot;u-sQTL&quot;)</code></pre>
+<pre><code># A tibble: 408 × 51
+   GWAS.Loci   GWAS.LeadSNP.Ch… GWAS.LeadSNP.Pos GWAS.accession HyprcolocIterat…
+   &lt;chr&gt;       &lt;chr&gt;            &lt;chr&gt;            &lt;chr&gt;                     &lt;dbl&gt;
+ 1 chr1_15519… chr1             155194689        GCST004131                    3
+ 2 chr10_3040… chr10            30401447         GCST004131                    2
+ 3 chr16_3009… chr16            30091839         GCST004606                    6
+ 4 chr17_4609… chr17            46096136         GCST004606                    3
+ 5 chr17_4667… chr17            46676279         GCST004606                    2
+ 6 chr17_4667… chr17            46676279         GCST004606                    2
+ 7 chr17_4667… chr17            46676279         GCST004606                    2
+ 8 chr2_24175… chr2             241759225        GCST004606                    7
+ 9 chr9_13643… chr9             136432610        GCST004606                    1
+10 chr1_95235… chr1             95235667         GCST004616                    1
+# … with 398 more rows, and 46 more variables: PosteriorColocalizationPr &lt;dbl&gt;,
+#   RegionalAssociationPr &lt;dbl&gt;, TopCandidateSNP &lt;chr&gt;,
+#   ProportionPosteriorPrExplainedByTopSNP &lt;dbl&gt;,
+#   IsColocalizedWithSomething &lt;lgl&gt;, Trait &lt;chr&gt;, PhenotypeClass &lt;chr&gt;,
+#   Phenotype &lt;chr&gt;, ColocalizedClusterContainsGWASTrait &lt;lgl&gt;,
+#   gwas.trait &lt;chr&gt;, PhenotypeRecodes &lt;chr&gt;, Category &lt;chr&gt;, GeneLocus &lt;chr&gt;,
+#   p_permutation.x &lt;dbl&gt;, beta.x &lt;dbl&gt;, beta_se.x &lt;dbl&gt;, …</code></pre>
+<p>First let’s check out the beta beta scatter for these
+gwas/eQTL/u-sQTL colocs.</p>
+<pre class="r"><code>hyprcoloc.results %&gt;%
+  filter(ColocalizedClusterContainsGWASTrait) %&gt;%
+  inner_join(
+    sQTLs %&gt;%
+      dplyr::select(Phenotype=P1,PhenotypeClass=PC1, everything())
+  ) %&gt;%
+  filter(sQTL.type==&quot;u-sQTL&quot;) %&gt;%
+  # filter(Category==&quot;sQTL+eQTL colocs&quot;)
+  group_by(gene, SuperAnnotation.simplified, sQTL.type) %&gt;%
+  filter(abs(x.beta.in.y)==max(abs(x.beta.in.y))) %&gt;%
+  ungroup() %&gt;%
+  distinct(gene, SuperAnnotation.simplified, sQTL.type, .keep_all=T) %&gt;%
+  ggplot(aes(x=beta.x, y=x.beta.in.y)) +
+  # geom_point() +
+  geom_abline(slope=-1, intercept = 0) +
+  geom_text(aes(label=symbol)) +
+  facet_grid(sQTL.type~SuperAnnotation.simplified~Category) +
+  theme_bw() +
+  labs(x=&quot;sQTL beta&quot;, y=&quot;eQTL beta&quot;)</code></pre>
+<p><img src="figure/20230808_GWAS_sQTLs_QQ_and_ColocExample.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>hyprcoloc.results %&gt;%
+  filter(ColocalizedClusterContainsGWASTrait) %&gt;%
+  filter(gwas.trait %in%  DiseaseTraits) %&gt;%
+  inner_join(
+    sQTLs %&gt;%
+      dplyr::select(Phenotype=P1,PhenotypeClass=PC1, everything())
+  ) %&gt;%
+  filter(sQTL.type==&quot;u-sQTL&quot;) %&gt;%
+  # filter(Category==&quot;sQTL+eQTL colocs&quot;)
+  group_by(gene, SuperAnnotation.simplified, sQTL.type) %&gt;%
+  filter(abs(x.beta.in.y)==max(abs(x.beta.in.y))) %&gt;%
+  ungroup() %&gt;%
+  distinct(gene, SuperAnnotation.simplified, sQTL.type, .keep_all=T) %&gt;%
+  ggplot(aes(x=beta.x, y=x.beta.in.y)) +
+  geom_abline(slope=-1, intercept = 0) +
+  # geom_point() +
+  geom_text(aes(label=symbol)) +
+  facet_grid(sQTL.type~SuperAnnotation.simplified~Category) +
+  theme_bw() +
+  labs(x=&quot;sQTL beta&quot;, y=&quot;eQTL beta&quot;)</code></pre>
+<p><img src="figure/20230808_GWAS_sQTLs_QQ_and_ColocExample.Rmd/unnamed-chunk-7-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Let’s look a but more closely at PTPN2 which was reported in <a
+href="https://www.biorxiv.org/content/10.1101/2023.05.29.542728v1">Garwany
+et al</a> and which is unproductive splicing, though does not coloc with
+eQTL… Firstly let’s see if the eQTL signal is significant.</p>
+<pre class="r"><code>hyprcoloc.results %&gt;%
+  filter(ColocalizedClusterContainsGWASTrait) %&gt;%
+  inner_join(
+    sQTLs %&gt;%
+      dplyr::select(Phenotype=P1,PhenotypeClass=PC1, everything())
+  ) %&gt;%
+  filter(sQTL.type==&quot;u-sQTL&quot;) %&gt;%
+  filter(symbol==&quot;PTPN2&quot;)</code></pre>
+<pre><code># A tibble: 1 × 51
+  GWAS.Loci    GWAS.LeadSNP.Ch… GWAS.LeadSNP.Pos GWAS.accession HyprcolocIterat…
+  &lt;chr&gt;        &lt;chr&gt;            &lt;chr&gt;            &lt;chr&gt;                     &lt;dbl&gt;
+1 chr18_12881… chr18            12881362         TRANSETHNICRA                 4
+# … with 46 more variables: PosteriorColocalizationPr &lt;dbl&gt;,
+#   RegionalAssociationPr &lt;dbl&gt;, TopCandidateSNP &lt;chr&gt;,
+#   ProportionPosteriorPrExplainedByTopSNP &lt;dbl&gt;,
+#   IsColocalizedWithSomething &lt;lgl&gt;, Trait &lt;chr&gt;, PhenotypeClass &lt;chr&gt;,
+#   Phenotype &lt;chr&gt;, ColocalizedClusterContainsGWASTrait &lt;lgl&gt;,
+#   gwas.trait &lt;chr&gt;, PhenotypeRecodes &lt;chr&gt;, Category &lt;chr&gt;, GeneLocus &lt;chr&gt;,
+#   p_permutation.x &lt;dbl&gt;, beta.x &lt;dbl&gt;, beta_se.x &lt;dbl&gt;, …</code></pre>
+<p>I’m kinda surprised the eQTL and sQTL doesn’t coloc… Let’s look at
+this one closer…</p>
+<pre class="r"><code>hyprcoloc.results %&gt;%
+  filter(ColocalizedClusterContainsGWASTrait) %&gt;%
+  inner_join(
+    sQTLs %&gt;%
+      dplyr::select(Phenotype=P1,PhenotypeClass=PC1, everything())
+  ) %&gt;%
+  filter(sQTL.type==&quot;u-sQTL&quot;) %&gt;%
+  filter(Category!=&quot;Other&quot;) %&gt;%
+  group_by(gene, SuperAnnotation.simplified, sQTL.type) %&gt;%
+  filter(abs(x.beta.in.y)==max(abs(x.beta.in.y))) %&gt;%
+  ungroup() %&gt;%
+  distinct(gene, SuperAnnotation.simplified, sQTL.type, .keep_all=T) %&gt;%
+  mutate(Color = if_else(symbol==&quot;PTPN2&quot;, &quot;red&quot;, &quot;black&quot;)) %&gt;%
+  arrange(Color) %&gt;%
+  ggplot(aes(x=beta.x, y=x.beta.in.y, color=Color)) +
+  # geom_point() +
+  geom_vline(xintercept = 0) +
+  geom_hline(yintercept = 0) +
+  geom_abline(slope=-1, intercept = 0) +
+  geom_text(aes(label=symbol)) +
+  scale_color_identity() +
+  facet_grid(sQTL.type~SuperAnnotation.simplified~Category) +
+  theme_bw() +
+  labs(x=&quot;sQTL beta&quot;, y=&quot;eQTL beta&quot;, title=&quot;many sQTL colocalizations have\neQTL effects consistent w/ NMD&quot;)</code></pre>
+<p><img src="figure/20230808_GWAS_sQTLs_QQ_and_ColocExample.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>phenotypes &lt;- c(&quot;18:12817365:12818944:clu_42854_-&quot;, &quot;ENSG00000175354.20&quot;)
+gwas.accession &lt;- &quot;TRANSETHNICRA&quot;
+gwas_locus.ofinterest &lt;- &quot;chr18_12881362_N_N_TRANSETHNICRA&quot;
+
+molQTL.dat &lt;- fread(str_glue(&quot;../code/hyprcoloc/LociWiseSummaryStatsInput/ForGWASColoc/{gwas.accession}.txt.gz&quot;)) %&gt;%
+  mutate()
+gwas.dat &lt;- fread(str_glue(&quot;../code/gwas_summary_stats/StatsForColoc/{gwas.accession}.standardized.txt.gz&quot;))
+
+molQTL.dat.atLocus &lt;- molQTL.dat %&gt;%
+  filter(phenotype %in%  phenotypes) %&gt;%
+  # pull(phenotype) %&gt;% unique()
+  mutate(PhenotypeClass = str_replace(source_file, &quot;^QTLs/QTLTools/(.+?)/NominalPassForGWASColocChunks/.+$&quot;, &quot;\\1&quot;)) %&gt;%
+  left_join(ColocsToConsiderPlotting, by=c(&quot;phenotype&quot;=&quot;Phenotype&quot;, &quot;PhenotypeClass&quot;))
+
+molQTL.dat %&gt;%
+  filter(gwas_locus==gwas_locus.ofinterest)  %&gt;%
+  pull(phenotype) %&gt;% unique()</code></pre>
+<pre><code> [1] &quot;ENSG00000141391.14&quot;               &quot;ENSG00000175354.20&quot;              
+ [3] &quot;ENSG00000134278.15&quot;               &quot;ENSG00000085415.16&quot;              
+ [5] &quot;ENSG00000101624.11&quot;               &quot;ENSG00000101639.18&quot;              
+ [7] &quot;ENSG00000128789.21&quot;               &quot;H3K27AC_peak_42195&quot;              
+ [9] &quot;H3K27AC_peak_42223&quot;               &quot;H3K27AC_peak_42217&quot;              
+[11] &quot;H3K4ME3_peak_21111&quot;               &quot;H3K4ME1_peak_75602&quot;              
+[13] &quot;PTPN2_utr3_peak60181&quot;             &quot;18:12817365:12818944:clu_42854_-&quot;
+[15] &quot;18:13113705:13116374:clu_42406_+&quot; &quot;18:12951905:12955463:clu_42397_+&quot;
+[17] &quot;18:12695351:12698979:clu_42850_-&quot; &quot;18:12814355:12817156:clu_42854_-&quot;
+[19] &quot;18:12978892:12982518:clu_42399_+&quot; &quot;18:13030608:13048859:clu_42402_+&quot;
+[21] &quot;18:12971251:12978752:clu_42399_+&quot; &quot;distal_enhancer_chr18_12777630&quot;  
+[23] &quot;promoter_chr18_12420229&quot;          &quot;proximal_enhancer_chr18_12420560&quot;</code></pre>
+<pre class="r"><code>molQTL.dat.atLocus %&gt;%
+  filter(gwas_locus==gwas_locus.ofinterest) %&gt;%
+  pull(phenotype) %&gt;% unique()</code></pre>
+<pre><code>[1] &quot;ENSG00000175354.20&quot;               &quot;18:12817365:12818944:clu_42854_-&quot;</code></pre>
+<pre class="r"><code>coloc.plots.example.dat &lt;- bind_rows(
+  molQTL.dat.atLocus %&gt;%
+    filter(gwas_locus==gwas_locus.ofinterest) %&gt;%
+    mutate(Signal = -log10(p)) %&gt;%
+    dplyr::select(Signal, PhenotypeClass, snp ) %&gt;%
+    separate(snp, into=c(&quot;chrom&quot;, &quot;pos&quot;, &quot;ref&quot;, &quot;alt&quot;), sep=&quot;:&quot;) %&gt;%
+    mutate(pos = as.numeric(pos)),
+  gwas.dat %&gt;%
+    filter(loci==gwas_locus.ofinterest) %&gt;%
+    mutate(Signal = -log10(2*pnorm( abs(beta/SE), lower=F ))) %&gt;%
+    mutate(PhenotypeClass = &quot;gwas&quot;) %&gt;%
+    dplyr::select(Signal, PhenotypeClass, chrom, pos=start, ref=A1, alt=A2) %&gt;%
+    mutate(chrom = str_replace(chrom, &quot;^chr(.+$)&quot;, &quot;\\1&quot;)) %&gt;%
+    mutate(pos= as.numeric(pos))
+) %&gt;%
+  dplyr::select(-ref, -alt) %&gt;%
+  pivot_wider(names_from = &quot;PhenotypeClass&quot;, values_from = &quot;Signal&quot;)
+
+coloc.plots.example.dat %&gt;%
+  ggplot(aes(x=polyA.Splicing, y=Expression.Splicing)) +
+  geom_point(alpha=0.5) +
+  labs(x=&quot;sQTL association signal, -log10(P)&quot;, y=&quot;eQTL association signal, -log10(P)&quot;)</code></pre>
+<p><img src="figure/20230808_GWAS_sQTLs_QQ_and_ColocExample.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>coloc.plots.example.dat %&gt;%
+  ggplot(aes(x=Expression.Splicing, y=gwas)) +
+  geom_point(alpha=0.5) +
+  labs(x=&quot;eQTL association signal, -log10(P)&quot;, y=&quot;gwas (RA) association signal, -log10(P)&quot;)</code></pre>
+<p><img src="figure/20230808_GWAS_sQTLs_QQ_and_ColocExample.Rmd/unnamed-chunk-10-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>coloc.plots.example.dat %&gt;%
+  ggplot(aes(x=polyA.Splicing, y=gwas)) +
+  geom_point(alpha=0.5) +
+  labs(x=&quot;sQTL association signal, -log10(P)&quot;, y=&quot;gwas (RA) association signal, -log10(P)&quot;)</code></pre>
+<p><img src="figure/20230808_GWAS_sQTLs_QQ_and_ColocExample.Rmd/unnamed-chunk-10-3.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>eQTL.test.dat &lt;- c(1,2,10,30,20,2,1,0.5)
+blue.test.dat1 &lt;- rep(0, 8)
+blue.test.dat3 &lt;- c(0.5,1,1.5,2,0.5,5,20,2)
+blue.test.dat4 &lt;- pmax(0.01, jitter(eQTL.test.dat-0.75))
+IllustrateColocDat &lt;- data.frame(
+  Case = c(rep(&quot;H1/H2; Only one signal&quot;, 8), rep(&quot;H3; Distinct signals&quot;, 8), rep(&quot;H4; Colocalization of signals&quot;, 8)),
+  eQTL = rep(eQTL.test.dat, 3),
+  gwas = c(blue.test.dat1, blue.test.dat3, blue.test.dat4),
+  genomic_position=rep(1:8, 3)
+)
+
+IllustrateColocDat %&gt;%
+  gather(key=&quot;dataset&quot;, value=&quot;AssociationSignal&quot;, eQTL, gwas) %&gt;%
+  ggplot(aes(x=genomic_position, y=AssociationSignal, color=dataset)) +
+  geom_point() +
+  geom_line() +
+  scale_color_manual(values=c(&quot;eQTL&quot;=&quot;red&quot;, &quot;gwas&quot;=&quot;blue&quot;)) +
+  facet_wrap(~Case, ncol=1) +
+  scale_y_continuous(limits=c(0,35)) +
+  labs(y=&quot;-log10(p)&quot;, x=&quot;genomic position&quot;) +
+  theme(
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())</code></pre>
+<p><img src="figure/20230808_GWAS_sQTLs_QQ_and_ColocExample.Rmd/unnamed-chunk-10-4.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># ggsave(&quot;/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/IllustrativeColocProcedure_Manhattan.pdf&quot;, width=6, height=8)
+
+IllustrateColocDat %&gt;%
+  ggplot(aes(x=eQTL, y=gwas)) +
+  geom_vline(xintercept=-Inf, color=&#39;blue&#39;, size=3) +
+  geom_hline(yintercept = -Inf, color=&#39;red&#39;, size=3) +
+  geom_point() +
+  facet_wrap(~Case, ncol=1) +
+  labs(y=&quot;gwas association signal\n-log10(p)&quot;, x=&quot;eQTL association signal\n-log10(p)&quot;)</code></pre>
+<p><img src="figure/20230808_GWAS_sQTLs_QQ_and_ColocExample.Rmd/unnamed-chunk-10-5.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># ggsave(&quot;/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/IllustrativeColocProcedure_Scatter.pdf&quot;, width=4, height=8)</code></pre>
+<p>Ok, similar to Garwany et al, I dunno what is going on but it could
+be that the sQTL is the driving effect that creates an eQTL, though in
+this particular tissue there is a different eQTL that is stronger, but
+not the gwas signal because that eQTL does not have an effect in the
+relevant tissue.</p>
+<p>Let’s check out the colocalization plots for ADAM15</p>
+<pre class="r"><code>phenotypes &lt;- c(ColocsToConsiderPlotting$GeneLocus, ColocsToConsiderPlotting$Phenotype)
+gwas.accession &lt;- &quot;GCST004131&quot;
+gwas_locus.ofinterest &lt;- &quot;chr1_155194689_N_N_GCST004131&quot;
+
+molQTL.dat &lt;- fread(str_glue(&quot;../code/hyprcoloc/LociWiseSummaryStatsInput/ForGWASColoc/{gwas.accession}.txt.gz&quot;)) %&gt;%
+  mutate()
+gwas.dat &lt;- fread(str_glue(&quot;../code/gwas_summary_stats/StatsForColoc/{gwas.accession}.standardized.txt.gz&quot;))
+
+molQTL.dat.atLocus &lt;- molQTL.dat %&gt;%
+  filter(phenotype %in%  phenotypes) %&gt;%
+  # pull(phenotype) %&gt;% unique()
+  mutate(PhenotypeClass = str_replace(source_file, &quot;^QTLs/QTLTools/(.+?)/NominalPassForGWASColocChunks/.+$&quot;, &quot;\\1&quot;)) %&gt;%
+  left_join(ColocsToConsiderPlotting, by=c(&quot;phenotype&quot;=&quot;Phenotype&quot;, &quot;PhenotypeClass&quot;))
+
+molQTL.dat %&gt;%
+  filter(gwas_locus==gwas_locus.ofinterest)  %&gt;%
+  pull(phenotype) %&gt;% unique()</code></pre>
+<pre><code> [1] &quot;GBA_end_peak8534&quot;                 &quot;1:155205263:155206200:clu_1614_-&quot;
+ [3] &quot;1:155319688:155320409:clu_4132_+&quot; &quot;1:155205316:155205518:clu_1614_-&quot;
+ [5] &quot;1:155210627:155212385:clu_4125_+&quot; &quot;1:155205316:155206193:clu_1614_-&quot;
+ [7] &quot;1:155319688:155319794:clu_4132_+&quot; &quot;1:155060343:155060763:clu_4111_+&quot;
+ [9] &quot;1:155611355:155611549:clu_4143_+&quot; &quot;1:155198737:155199804:clu_1607_-&quot;
+[11] &quot;1:155060343:155062245:clu_4111_+&quot; &quot;1:155056000:155056386:clu_4110_+&quot;
+[13] &quot;1:155061489:155061904:clu_4111_+&quot; &quot;1:155060832:155062245:clu_4111_+&quot;
+[15] &quot;1:155062117:155062245:clu_4111_+&quot; &quot;1:155061975:155062245:clu_4111_+&quot;
+[17] &quot;1:155060832:155061415:clu_4111_+&quot; &quot;1:155203539:155205060:clu_1613_-&quot;
+[19] &quot;1:155611291:155611427:clu_4143_+&quot; &quot;1:155053988:155054314:clu_4108_+&quot;
+[21] &quot;1:155611291:155611411:clu_4143_+&quot; &quot;1:155218049:155218456:clu_1618_-&quot;
+[23] &quot;1:154941193:154945564:clu_4097_+&quot; &quot;1:154932415:154936591:clu_1591_-&quot;
+[25] &quot;1:154945091:154945564:clu_4097_+&quot; &quot;1:155260659:155262086:clu_1631_-&quot;
+[27] &quot;1:154932415:154942576:clu_1591_-&quot; &quot;1:155689174:155709033:clu_4149_+&quot;
+[29] &quot;1:155261734:155262086:clu_1631_-&quot; &quot;1:155218923:155227382:clu_1618_-&quot;
+[31] &quot;1:155309076:155310064:clu_4130_+&quot; &quot;1:154945755:154949187:clu_4098_+&quot;
+[33] &quot;1:155689243:155709773:clu_4149_+&quot; &quot;1:154947222:154949191:clu_4098_+&quot;
+[35] &quot;1:154947195:154948247:clu_4098_+&quot; &quot;1:155256791:155258826:clu_1629_-&quot;
+[37] &quot;1:155216621:155217240:clu_1624_-&quot; &quot;1:154947195:154949191:clu_4098_+&quot;
+[39] &quot;1:155309965:155310043:clu_4130_+&quot; &quot;1:154945755:154946893:clu_4098_+&quot;
+[41] &quot;1:155260659:155261657:clu_1631_-&quot; &quot;1:155308965:155310064:clu_4130_+&quot;
+[43] &quot;1:155308965:155310043:clu_4130_+&quot; &quot;1:155689174:155709773:clu_4149_+&quot;
+[45] &quot;1:155199852:155199982:clu_1608_-&quot; &quot;1:155610560:155611039:clu_4142_+&quot;
+[47] &quot;1:155324943:155325102:clu_4134_+&quot; &quot;1:155622636:155637394:clu_1648_-&quot;
+[49] &quot;1:155235311:155235463:clu_1619_-&quot; &quot;1:155236082:155236245:clu_1626_-&quot;
+[51] &quot;1:155235844:155236245:clu_1626_-&quot; &quot;1:155235311:155235681:clu_1619_-&quot;
+[53] &quot;1:155319688:155319857:clu_4132_+&quot; &quot;1:155201204:155201417:clu_1610_-&quot;
+[55] &quot;1:155192310:155192786:clu_1602_-&quot; &quot;1:155192283:155192786:clu_1602_-&quot;
+[57] &quot;1:155178255:155178492:clu_4121_+&quot; &quot;1:155324809:155325102:clu_4134_+&quot;
+[59] &quot;1:154755930:154756185:clu_4094_+&quot; &quot;1:154989707:154990159:clu_4102_+&quot;
+[61] &quot;1:155634846:155637394:clu_1648_-&quot; &quot;ENSG00000160752.14&quot;              
+[63] &quot;ENSG00000143537.13&quot;               &quot;ENSG00000116539.13&quot;              
+[65] &quot;ENSG00000185499.16&quot;               &quot;ENSG00000163344.6&quot;               
+[67] &quot;ENSG00000163374.19&quot;               &quot;ENSG00000143603.19&quot;              
+[69] &quot;ENSG00000177628.16&quot;               &quot;ENSG00000169231.13&quot;              
+[71] &quot;ENSG00000160753.16&quot;               &quot;ENSG00000169242.12&quot;              
+[73] &quot;ENSG00000116521.11&quot;               &quot;proximal_enhancer_chr1_155050925&quot;
+[75] &quot;proximal_enhancer_chr1_154940933&quot; &quot;proximal_enhancer_chr1_154936266&quot;
+[77] &quot;H3K27AC_peak_6326&quot;                &quot;H3K27AC_peak_6271&quot;               
+[79] &quot;H3K27AC_peak_6332&quot;                &quot;H3K4ME1_peak_11546&quot;              
+[81] &quot;H3K4ME1_peak_11547&quot;               &quot;H3K4ME1_peak_11477&quot;              
+[83] &quot;H3K4ME1_peak_11531&quot;               &quot;H3K4ME1_peak_11462&quot;              
+[85] &quot;H3K4ME1_peak_11461&quot;               &quot;H3K4ME1_peak_11611&quot;              
+[87] &quot;H3K4ME1_peak_11604&quot;              </code></pre>
+<pre class="r"><code>molQTL.dat.atLocus %&gt;%
+  filter(gwas_locus==gwas_locus.ofinterest) %&gt;%
+  pull(phenotype) %&gt;% unique()</code></pre>
+<pre><code>[1] &quot;1:155053988:155054314:clu_4108_+&quot; &quot;ENSG00000143537.13&quot;              </code></pre>
+<pre class="r"><code>coloc.plots.example.dat &lt;- bind_rows(
+  molQTL.dat.atLocus %&gt;%
+    filter(gwas_locus==gwas_locus.ofinterest) %&gt;%
+    mutate(Signal = -log10(p)) %&gt;%
+    dplyr::select(Signal, PhenotypeClass, snp ) %&gt;%
+    separate(snp, into=c(&quot;chrom&quot;, &quot;pos&quot;, &quot;ref&quot;, &quot;alt&quot;), sep=&quot;:&quot;) %&gt;%
+    mutate(pos = as.numeric(pos)),
+  gwas.dat %&gt;%
+    filter(loci==gwas_locus.ofinterest) %&gt;%
+    mutate(Signal = -log10(2*pnorm( abs(beta/SE), lower=F ))) %&gt;%
+    mutate(PhenotypeClass = &quot;gwas&quot;) %&gt;%
+    dplyr::select(Signal, PhenotypeClass, chrom, pos=start, ref=A1, alt=A2) %&gt;%
+    mutate(chrom = str_replace(chrom, &quot;^chr(.+$)&quot;, &quot;\\1&quot;)) %&gt;%
+    mutate(pos= as.numeric(pos))
+) %&gt;%
+  dplyr::select(-ref, -alt) %&gt;%
+  pivot_wider(names_from = &quot;PhenotypeClass&quot;, values_from = &quot;Signal&quot;) %&gt;%
+  mutate(IsTopSNP = chrom==&quot;1&quot; &amp; pos==155062156)
+
+coloc.plots.example.dat %&gt;%
+  ggplot(aes(x=polyA.Splicing, y=Expression.Splicing, color=IsTopSNP)) +
+  geom_point(alpha=0.5)</code></pre>
+<p><img src="figure/20230808_GWAS_sQTLs_QQ_and_ColocExample.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>coloc.plots.example.dat %&gt;%
+  ggplot(aes(x=Expression.Splicing, y=gwas, color=IsTopSNP)) +
+  geom_point(alpha=0.5)</code></pre>
+<p><img src="figure/20230808_GWAS_sQTLs_QQ_and_ColocExample.Rmd/unnamed-chunk-11-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>coloc.plots.example.dat %&gt;%
+  ggplot(aes(x=polyA.Splicing, y=gwas, color=IsTopSNP)) +
+  geom_point(alpha=0.5)</code></pre>
+<p><img src="figure/20230808_GWAS_sQTLs_QQ_and_ColocExample.Rmd/unnamed-chunk-11-3.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>coloc.plots.example.dat %&gt;%
+  filter(Expression.Splicing&gt;30)</code></pre>
+<pre><code># A tibble: 2 × 6
+  chrom       pos polyA.Splicing Expression.Splicing  gwas IsTopSNP
+  &lt;chr&gt;     &lt;dbl&gt;          &lt;dbl&gt;               &lt;dbl&gt; &lt;dbl&gt; &lt;lgl&gt;   
+1 1     155061442           8.18                34.7  7.85 FALSE   
+2 1     155062156           9.77                36.5  7.58 TRUE    </code></pre>
+<p>Hmm, the colocalization isn’t quite as pretty. But maybe I should
+check a few other plots to make sure the effect is cytoplasmic (not
+present in chRNA), and remake the coloc plots with LD for colors, using
+european populations since that is the GWAS population.</p>
+<p>Ok, now let’s check out TSFM…</p>
+<pre class="r"><code>phenotypes &lt;- c(ColocsToConsiderPlotting$GeneLocus, ColocsToConsiderPlotting$Phenotype)
+gwas.accession &lt;- &quot;IMSGC2019&quot;
+gwas_locus.ofinterest &lt;- &quot;chr12_57713053_N_N_IMSGC2019&quot;
+
+molQTL.dat &lt;- fread(str_glue(&quot;../code/hyprcoloc/LociWiseSummaryStatsInput/ForGWASColoc/{gwas.accession}.txt.gz&quot;)) %&gt;%
+  mutate()
+gwas.dat &lt;- fread(str_glue(&quot;../code/gwas_summary_stats/StatsForColoc/{gwas.accession}.standardized.txt.gz&quot;))
+
+molQTL.dat.atLocus &lt;- molQTL.dat %&gt;%
+  filter(phenotype %in%  phenotypes) %&gt;%
+  # pull(phenotype) %&gt;% unique()
+  mutate(PhenotypeClass = str_replace(source_file, &quot;^QTLs/QTLTools/(.+?)/NominalPassForGWASColocChunks/.+$&quot;, &quot;\\1&quot;)) %&gt;%
+  left_join(ColocsToConsiderPlotting, by=c(&quot;phenotype&quot;=&quot;Phenotype&quot;, &quot;PhenotypeClass&quot;))
+
+molQTL.dat %&gt;%
+  filter(gwas_locus==gwas_locus.ofinterest)  %&gt;%
+  pull(phenotype) %&gt;% unique()</code></pre>
+<pre><code> [1] &quot;H3K4ME1_peak_40253&quot;               &quot;12:57694926:57695780:clu_31628_+&quot;
+ [3] &quot;12:57694926:57695543:clu_31628_+&quot; &quot;12:57695677:57695780:clu_31628_+&quot;
+ [5] &quot;12:57474176:57474423:clu_30189_-&quot; &quot;12:57718421:57718993:clu_31631_+&quot;
+ [7] &quot;12:57718376:57718993:clu_31631_+&quot; &quot;12:57529674:57531155:clu_31606_+&quot;
+ [9] &quot;12:57512103:57512303:clu_31599_+&quot; &quot;12:57489558:57490207:clu_31597_+&quot;
+[11] &quot;12:57504299:57506017:clu_31598_+&quot; &quot;12:57512103:57512236:clu_31599_+&quot;
+[13] &quot;12:57395818:57430720:clu_30185_-&quot; &quot;12:57476651:57476871:clu_30193_-&quot;
+[15] &quot;12:57474176:57474452:clu_30189_-&quot; &quot;12:57476963:57477156:clu_30193_-&quot;
+[17] &quot;TSFM_utr3_peak30173&quot;              &quot;ENSG00000166896.9&quot;               
+[19] &quot;ENSG00000135452.10&quot;               &quot;ENSG00000123427.17&quot;              
+[21] &quot;ENSG00000135506.16&quot;               &quot;ENSG00000135446.17&quot;              
+[23] &quot;ENSG00000155980.12&quot;               &quot;distal_enhancer_chr12_57764804&quot;  
+[25] &quot;distal_enhancer_chr12_57459303&quot;   &quot;12:57773128:57780255:clu_31636_+&quot;
+[27] &quot;12:57783283:57783615:clu_31637_+&quot; &quot;12:57772397:57773017:clu_31635_+&quot;
+[29] &quot;12:57772901:57773017:clu_31635_+&quot; &quot;12:57784170:57786163:clu_31637_+&quot;
+[31] &quot;12:57783652:57786163:clu_31637_+&quot; &quot;12:57783283:57786163:clu_31637_+&quot;
+[33] &quot;12:57395818:57398057:clu_30185_-&quot; &quot;12:57475615:57475776:clu_30191_-&quot;
+[35] &quot;12:57475615:57475833:clu_30191_-&quot; &quot;12:57472688:57474042:clu_30188_-&quot;
+[37] &quot;12:57340034:57341386:clu_30184_-&quot; &quot;12:57310463:57341386:clu_30184_-&quot;
+[39] &quot;12:57477676:57477785:clu_30194_-&quot; &quot;H3K4ME3_peak_11978&quot;              </code></pre>
+<pre class="r"><code>molQTL.dat.atLocus %&gt;%
+  filter(gwas_locus==gwas_locus.ofinterest) %&gt;%
+  pull(phenotype) %&gt;% unique()</code></pre>
+<pre><code>[1] &quot;ENSG00000123427.17&quot;               &quot;12:57773128:57780255:clu_31636_+&quot;
+[3] &quot;12:57784170:57786163:clu_31637_+&quot; &quot;12:57783283:57786163:clu_31637_+&quot;</code></pre>
+<pre class="r"><code># 
+# coloc.plots.example.dat &lt;- bind_rows(
+#   molQTL.dat.atLocus %&gt;%
+#     filter(gwas_locus==gwas_locus.ofinterest) %&gt;%
+#     mutate(Signal = -log10(p)) %&gt;%
+#     dplyr::select(Signal, PhenotypeClass, snp ) %&gt;%
+#     separate(snp, into=c(&quot;chrom&quot;, &quot;pos&quot;, &quot;ref&quot;, &quot;alt&quot;), sep=&quot;:&quot;) %&gt;%
+#     mutate(pos = as.numeric(pos)),
+#   gwas.dat %&gt;%
+#     filter(loci==gwas_locus.ofinterest) %&gt;%
+#     mutate(Signal = -log10(2*pnorm( abs(beta/SE), lower=F ))) %&gt;%
+#     mutate(PhenotypeClass = &quot;gwas&quot;) %&gt;%
+#     dplyr::select(Signal, PhenotypeClass, chrom, pos=start, ref=A1, alt=A2) %&gt;%
+#     mutate(chrom = str_replace(chrom, &quot;^chr(.+$)&quot;, &quot;\\1&quot;)) %&gt;%
+#     mutate(pos= as.numeric(pos))
+# ) %&gt;%
+#   dplyr::select(-ref, -alt) %&gt;%
+#   pivot_wider(names_from = &quot;PhenotypeClass&quot;, values_from = &quot;Signal&quot;) %&gt;%
+#   mutate(IsTopSNP = chrom==&quot;1&quot; &amp; pos==155062156)
+# 
+# coloc.plots.example.dat %&gt;%
+#   ggplot(aes(x=polyA.Splicing, y=Expression.Splicing, color=IsTopSNP)) +
+#   geom_point(alpha=0.5)
+# 
+# coloc.plots.example.dat %&gt;%
+#   ggplot(aes(x=Expression.Splicing, y=gwas, color=IsTopSNP)) +
+#   geom_point(alpha=0.5)
+# 
+# coloc.plots.example.dat %&gt;%
+#   ggplot(aes(x=polyA.Splicing, y=gwas, color=IsTopSNP)) +
+#   geom_point(alpha=0.5)
+# 
+# coloc.plots.example.dat %&gt;%
+#   filter(Expression.Splicing&gt;30)</code></pre>
+<p>Ok, so that gene is weird because the colocalizing eGene (EEF1AKMT3)
+is different than the sQTL (TSFM), though the sQTL is a nominally
+significant TSFM eQTL with effect size direction consistent with NMD,
+though the EEF1AKMT3 is much stronger.</p>
+<p>Let’s also check the YPEL1 example.</p>
+<pre class="r"><code>phenotypes &lt;- c(ColocsToConsiderPlotting$GeneLocus, ColocsToConsiderPlotting$Phenotype)
+gwas.accession &lt;- &quot;IMSGC2019&quot;
+gwas_locus.ofinterest &lt;- &quot;chr22_21851064_N_N_IMSGC2019&quot;
+
+molQTL.dat &lt;- fread(str_glue(&quot;../code/hyprcoloc/LociWiseSummaryStatsInput/ForGWASColoc/{gwas.accession}.txt.gz&quot;)) %&gt;%
+  mutate()
+gwas.dat &lt;- fread(str_glue(&quot;../code/gwas_summary_stats/StatsForColoc/{gwas.accession}.standardized.txt.gz&quot;))
+
+molQTL.dat.atLocus &lt;- molQTL.dat %&gt;%
+  filter(phenotype %in%  phenotypes) %&gt;%
+  # pull(phenotype) %&gt;% unique()
+  mutate(PhenotypeClass = str_replace(source_file, &quot;^QTLs/QTLTools/(.+?)/NominalPassForGWASColocChunks/.+$&quot;, &quot;\\1&quot;)) %&gt;%
+  left_join(ColocsToConsiderPlotting, by=c(&quot;phenotype&quot;=&quot;Phenotype&quot;, &quot;PhenotypeClass&quot;))
+
+molQTL.dat %&gt;%
+  filter(gwas_locus==gwas_locus.ofinterest)  %&gt;%
+  pull(phenotype) %&gt;% unique()</code></pre>
+<pre><code> [1] &quot;ENSG00000100023.19&quot;               &quot;ENSG00000100030.15&quot;              
+ [3] &quot;ENSG00000100034.14&quot;               &quot;ENSG00000185651.15&quot;              
+ [5] &quot;ENSG00000161179.14&quot;               &quot;ENSG00000206140.11&quot;              
+ [7] &quot;H3K27AC_peak_59331&quot;               &quot;H3K27AC_peak_59332&quot;              
+ [9] &quot;H3K27AC_peak_59333&quot;               &quot;H3K27AC_peak_59341&quot;              
+[11] &quot;H3K27AC_peak_59340&quot;               &quot;H3K27AC_peak_59330&quot;              
+[13] &quot;H3K27AC_peak_59339&quot;               &quot;H3K27AC_peak_59288&quot;              
+[15] &quot;H3K4ME3_peak_30542&quot;               &quot;H3K4ME3_peak_30563&quot;              
+[17] &quot;H3K4ME3_peak_30541&quot;               &quot;H3K4ME1_peak_106203&quot;             
+[19] &quot;H3K4ME1_peak_106211&quot;              &quot;H3K4ME1_peak_106195&quot;             
+[21] &quot;ENSG00000183246.6&quot;                &quot;ENSG00000274600.1&quot;               
+[23] &quot;ENSG00000169635.10&quot;               &quot;HIC2_utr3_peak84183&quot;             
+[25] &quot;UBE2L3_utr3_peak84202&quot;            &quot;UBE2L3_utr3_peak84204&quot;           
+[27] &quot;22:21484134:21491994:clu_48718_-&quot; &quot;22:22306903:22307106:clu_48084_+&quot;
+[29] &quot;22:22298211:22303104:clu_48083_+&quot; &quot;22:22298211:22303224:clu_48083_+&quot;
+[31] &quot;22:22304114:22307106:clu_48084_+&quot; &quot;22:22304114:22306790:clu_48084_+&quot;
+[33] &quot;22:22304114:22306833:clu_48084_+&quot; &quot;22:21484134:21486800:clu_48718_-&quot;
+[35] &quot;22:21479829:21479930:clu_48717_-&quot; &quot;22:21478694:21479930:clu_48717_-&quot;
+[37] &quot;22:21478694:21479759:clu_48717_-&quot; &quot;22:21960449:21962128:clu_48730_-&quot;
+[39] &quot;22:21695496:21695867:clu_48078_+&quot; &quot;22:21475300:21476002:clu_48716_-&quot;
+[41] &quot;22:21695486:21696885:clu_48078_+&quot; &quot;22:21475300:21475992:clu_48716_-&quot;
+[43] &quot;22:21703882:21710487:clu_48723_-&quot; &quot;22:21695496:21696757:clu_48078_+&quot;
+[45] &quot;22:21695496:21696803:clu_48078_+&quot; &quot;22:21695496:21696885:clu_48078_+&quot;
+[47] &quot;22:21695496:21696747:clu_48078_+&quot; &quot;22:21695496:21696031:clu_48078_+&quot;
+[49] &quot;22:21488023:21491994:clu_48718_-&quot; &quot;22:21488023:21488224:clu_48718_-&quot;
+[51] &quot;22:21488381:21491994:clu_48718_-&quot; &quot;22:22309883:22318899:clu_48085_+&quot;
+[53] &quot;22:22307021:22307106:clu_48084_+&quot; &quot;22:21772982:21788257:clu_48724_-&quot;
+[55] &quot;distal_enhancer_chr22_22201305&quot;   &quot;distal_enhancer_chr22_22098635&quot;  
+[57] &quot;distal_enhancer_chr22_22099256&quot;   &quot;proximal_enhancer_chr22_21666257&quot;</code></pre>
+<pre class="r"><code>molQTL.dat.atLocus %&gt;%
+  filter(gwas_locus==gwas_locus.ofinterest) %&gt;%
+  pull(phenotype) %&gt;% unique()</code></pre>
+<pre><code>[1] &quot;22:21703882:21710487:clu_48723_-&quot;</code></pre>
+<p>Ok, this is non-ideal case… The eQTL signal for this gene at the
+unproductive sQTL is nominally significant, and direction consistent
+with NMD, though the gene doesn’t pass FDR threshold so was not tested
+for GWAS coloc. The reason it is in the eQTL+sQTL category is because of
+the colocalization with…</p>
+<pre class="r"><code>hyprcoloc.results %&gt;%
+  filter(ColocalizedClusterContainsGWASTrait) %&gt;%
+  filter(GWAS.Loci == &quot;chr22_21851064_IMSGC2019&quot;)</code></pre>
+<pre><code># A tibble: 3 × 17
+  GWAS.Loci    GWAS.LeadSNP.Ch… GWAS.LeadSNP.Pos GWAS.accession HyprcolocIterat…
+  &lt;chr&gt;        &lt;chr&gt;            &lt;chr&gt;            &lt;chr&gt;                     &lt;dbl&gt;
+1 chr22_21851… chr22            21851064         IMSGC2019                     4
+2 chr22_21851… chr22            21851064         IMSGC2019                     4
+3 chr22_21851… chr22            21851064         IMSGC2019                     4
+# … with 12 more variables: PosteriorColocalizationPr &lt;dbl&gt;,
+#   RegionalAssociationPr &lt;dbl&gt;, TopCandidateSNP &lt;chr&gt;,
+#   ProportionPosteriorPrExplainedByTopSNP &lt;dbl&gt;,
+#   IsColocalizedWithSomething &lt;lgl&gt;, Trait &lt;chr&gt;, PhenotypeClass &lt;chr&gt;,
+#   Phenotype &lt;chr&gt;, ColocalizedClusterContainsGWASTrait &lt;lgl&gt;,
+#   gwas.trait &lt;chr&gt;, PhenotypeRecodes &lt;chr&gt;, Category &lt;chr&gt;</code></pre>
+<p>…MAP1K, a neighboring gene.</p>
+<p>Maybe we should just stick with NUDT14 and see if it was in any other
+more recognizeable blood trait…</p>
+<pre class="r"><code>hyprcoloc.results %&gt;%
+  filter(ColocalizedClusterContainsGWASTrait) %&gt;%
+  inner_join(
+    sQTLs %&gt;%
+      dplyr::select(Phenotype=P1,PhenotypeClass=PC1, everything())
+  ) %&gt;%
+  filter(sQTL.type==&quot;u-sQTL&quot;) %&gt;%
+  filter(Category==&quot;sQTL+eQTL colocs&quot;) %&gt;%
+  filter(symbol==&quot;MVP&quot;)</code></pre>
+<pre><code># A tibble: 2 × 51
+  GWAS.Loci    GWAS.LeadSNP.Ch… GWAS.LeadSNP.Pos GWAS.accession HyprcolocIterat…
+  &lt;chr&gt;        &lt;chr&gt;            &lt;chr&gt;            &lt;chr&gt;                     &lt;dbl&gt;
+1 chr16_29855… chr16            29855474         GCST004599                    2
+2 chr16_29855… chr16            29855474         GCST004599                    2
+# … with 46 more variables: PosteriorColocalizationPr &lt;dbl&gt;,
+#   RegionalAssociationPr &lt;dbl&gt;, TopCandidateSNP &lt;chr&gt;,
+#   ProportionPosteriorPrExplainedByTopSNP &lt;dbl&gt;,
+#   IsColocalizedWithSomething &lt;lgl&gt;, Trait &lt;chr&gt;, PhenotypeClass &lt;chr&gt;,
+#   Phenotype &lt;chr&gt;, ColocalizedClusterContainsGWASTrait &lt;lgl&gt;,
+#   gwas.trait &lt;chr&gt;, PhenotypeRecodes &lt;chr&gt;, Category &lt;chr&gt;, GeneLocus &lt;chr&gt;,
+#   p_permutation.x &lt;dbl&gt;, beta.x &lt;dbl&gt;, beta_se.x &lt;dbl&gt;, …</code></pre>
+<pre class="r"><code>hyprcoloc.results %&gt;%
+  filter(ColocalizedClusterContainsGWASTrait) %&gt;%
+  inner_join(
+    sQTLs %&gt;%
+      dplyr::select(Phenotype=P1,PhenotypeClass=PC1, everything())
+  ) %&gt;%
+  filter(sQTL.type==&quot;u-sQTL&quot;) %&gt;%
+  filter(Category==&quot;sQTL+eQTL colocs&quot;) %&gt;%
+  filter(symbol==&quot;NUDT14&quot;)</code></pre>
+<pre><code># A tibble: 6 × 51
+  GWAS.Loci    GWAS.LeadSNP.Ch… GWAS.LeadSNP.Pos GWAS.accession HyprcolocIterat…
+  &lt;chr&gt;        &lt;chr&gt;            &lt;chr&gt;            &lt;chr&gt;                     &lt;dbl&gt;
+1 chr14_10517… chr14            105178084        GCST004611                    1
+2 chr14_10517… chr14            105178084        GCST004611                    1
+3 chr14_10517… chr14            105178084        GCST004611                    1
+4 chr14_10517… chr14            105178084        GCST004612                    1
+5 chr14_10517… chr14            105178084        GCST004612                    1
+6 chr14_10517… chr14            105178084        GCST004612                    1
+# … with 46 more variables: PosteriorColocalizationPr &lt;dbl&gt;,
+#   RegionalAssociationPr &lt;dbl&gt;, TopCandidateSNP &lt;chr&gt;,
+#   ProportionPosteriorPrExplainedByTopSNP &lt;dbl&gt;,
+#   IsColocalizedWithSomething &lt;lgl&gt;, Trait &lt;chr&gt;, PhenotypeClass &lt;chr&gt;,
+#   Phenotype &lt;chr&gt;, ColocalizedClusterContainsGWASTrait &lt;lgl&gt;,
+#   gwas.trait &lt;chr&gt;, PhenotypeRecodes &lt;chr&gt;, Category &lt;chr&gt;, GeneLocus &lt;chr&gt;,
+#   p_permutation.x &lt;dbl&gt;, beta.x &lt;dbl&gt;, beta_se.x &lt;dbl&gt;, …</code></pre>
+<p>Ok conclusion from all of this, is that I rather like NUDT14 the most
+to show in the main text.</p>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.2.0 (2022-04-22)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: CentOS Linux 7 (Core)
+
+Matrix products: default
+BLAS/LAPACK: /software/openblas-0.3.13-el7-x86_64/lib/libopenblas_haswellp-r0.3.13.so
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8 LC_NUMERIC=C         LC_TIME=C           
+ [4] LC_COLLATE=C         LC_MONETARY=C        LC_MESSAGES=C       
+ [7] LC_PAPER=C           LC_NAME=C            LC_ADDRESS=C        
+[10] LC_TELEPHONE=C       LC_MEASUREMENT=C     LC_IDENTIFICATION=C 
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] ggrepel_0.9.1      knitr_1.39         qvalue_2.28.0      data.table_1.14.2 
+ [5] RColorBrewer_1.1-3 forcats_0.5.1      stringr_1.4.0      dplyr_1.0.9       
+ [9] purrr_0.3.4        readr_2.1.2        tidyr_1.2.0        tibble_3.1.7      
+[13] ggplot2_3.3.6      tidyverse_1.3.1   
+
+loaded via a namespace (and not attached):
+ [1] httr_1.4.3        sass_0.4.1        bit64_4.0.5       vroom_1.5.7      
+ [5] jsonlite_1.8.0    splines_4.2.0     R.utils_2.11.0    modelr_0.1.8     
+ [9] bslib_0.3.1       assertthat_0.2.1  highr_0.9         cellranger_1.1.0 
+[13] yaml_2.3.5        pillar_1.7.0      backports_1.4.1   glue_1.6.2       
+[17] digest_0.6.29     promises_1.2.0.1  rvest_1.0.2       colorspace_2.0-3 
+[21] htmltools_0.5.2   httpuv_1.6.5      R.oo_1.24.0       plyr_1.8.7       
+[25] pkgconfig_2.0.3   broom_0.8.0       haven_2.5.0       scales_1.2.0     
+[29] later_1.3.0       tzdb_0.3.0        git2r_0.30.1      farver_2.1.0     
+[33] generics_0.1.2    ellipsis_0.3.2    withr_2.5.0       cli_3.3.0        
+[37] magrittr_2.0.3    crayon_1.5.1      readxl_1.4.0      evaluate_0.15    
+[41] R.methodsS3_1.8.1 fs_1.5.2          fansi_1.0.3       xml2_1.3.3       
+[45] tools_4.2.0       hms_1.1.1         lifecycle_1.0.1   munsell_0.5.0    
+[49] reprex_2.0.1      compiler_4.2.0    jquerylib_0.1.4   rlang_1.0.2      
+[53] grid_4.2.0        rstudioapi_0.13   labeling_0.4.2    rmarkdown_2.14   
+[57] gtable_0.3.0      DBI_1.1.2         reshape2_1.4.4    R6_2.5.1         
+[61] lubridate_1.8.0   fastmap_1.1.0     bit_4.0.4         utf8_1.2.2       
+[65] workflowr_1.7.0   rprojroot_2.0.3   stringi_1.7.6     parallel_4.2.0   
+[69] Rcpp_1.0.8.3      vctrs_0.4.1       dbplyr_2.1.1      tidyselect_1.1.2 
+[73] xfun_0.30        </code></pre>
+</div>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
