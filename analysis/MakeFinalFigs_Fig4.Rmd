@@ -152,7 +152,7 @@ SigLowDoseGenes <- GeneEffects.Changes %>%
   arrange(polyA.P) %>% pull(gene)
 
 Expression.tidyForDoseResponse %>%
-  filter(gene %in% SigLowDoseGenes | hgnc_symbol %in% c("HTT", "SMN2", "GALC", "STAT1", "KCNT2", "FHOD3")) %>%
+  filter(gene %in% SigLowDoseGenes | hgnc_symbol %in% c("HTT", "SMN2", "GALC", "STAT1", "KCNT2", "FHOD3", "SRSF10")) %>%
   ggplot(aes(x=dose.nM, y=CPM, color=treatment)) +
   geom_line() +
   scale_y_continuous(trans="log2") +
@@ -324,6 +324,9 @@ P.bar <- P.bar.dat %>%
   labs(title="Predicted transcript effects of induced cassete exons", x="Number risdiplam-induced cassette exons", fill="Reason", y=NULL, color="Transcript effect")
 
 P.bar
+
+P.bar.dat %>%
+  filter(str_detect(gene, "ENSG00000188529"))
 ```
 
 I want to make one more version of the bar plot because it might more compact to manually annotate labels over the sub-bars instead of using fill colors
@@ -537,7 +540,7 @@ Let's quickly check some genes of interest in this set of NMD-predicted cassette
 ```{r}
 P.boxplot.dat %>%
   filter(ColorEffect == "NMD") %>%
-  filter(hgnc_symbol %in% c("HTT", "SMN2", "GALC", "STAT1", "KCNT2", "FHOD3", "FOXM1", "FOS", "PIEZO2", "MYB"))
+  filter(hgnc_symbol %in% c("HTT", "SMN2", "GALC", "STAT1", "KCNT2", "FHOD3", "FOXM1", "FOS", "PIEZO2", "MYB", "SRSF10"))
 
 P.boxplot.dat %>%
   filter(ColorEffect == "NMD") %>%
@@ -628,6 +631,9 @@ P.scatter <- Scatter.dat %>%
   theme_bw()
 
 P.scatter
+
+Scatter.dat %>%
+  filter(gene == "ENSG00000188529")
 ```
 
 ### Induction of GAGT introns plots
@@ -1956,6 +1962,43 @@ P.myb.splicing <- ggplotify::as.ggplot(print(P.myb.splicing))
 P.myb.expression <- ggplotify::as.ggplot(print(P.myb.expression))
 
 ```
+
+Check SRSF10 for Jon
+
+```{r}
+
+SpearmanCorr %>%
+  distinct(Intron, .keep_all=T) %>%
+  filter(substr(DonorSeq, 3,4)=="GA") %>%
+  filter(q<0.1) 
+
+SpearmanCorr %>%
+  distinct(Intron, .keep_all=T) %>%
+  filter(substr(DonorSeq, 3,4)=="GA") %>%
+  separate(Intron, into=c("chrom", "start", "stop", "strand"), sep=":") %>%
+  dplyr::select(chrom, start, stop, strand, Leafcutter.ID, spearman, strand) %>%
+  arrange(chrom, start, stop) %>%
+  write_tsv("../code/scratch/AllGAGTInts.bed", col_names = F)
+
+Expression.tidyForDose_ActualDataForModel %>%
+  filter(ensembl_gene_id == "ENSG00000188529") %>%
+  dplyr::rename(libType=LibraryType) %>%
+  ggplot(aes(x=dose.nM, y=Log2CPM, color=libType)) +
+  geom_point() +
+  scale_color_manual(values=c("chRNA"="#969696", "polyA"="#252525"), labels=c("chRNA"="naRNA", "polyA"="steady-state")) +
+  geom_smooth(
+    data = . %>%
+      filter(libType=="polyA"),
+    method = drm, method.args = list(fct = L.4(names=c("Steepness", "LowerLimit", "UpperLimit", "ED50"))), se = FALSE) +
+  labs(x="[risdiplam] (nanomolar)", y="Splicing of\nNMD-targeting exon; PSI") +
+  scale_x_continuous(trans="log1p", limits=c(0, 10000), breaks=c(10000, 3160, 1000, 316, 100, 31.6, 10, 3.16, 0), labels=rev(c("0", "3.16","10","31.6","100", "316", "1000", "3160", "10000"))) + 
+  # Rotate_x_labels +
+  # scale_x_break(c(2,2)) +
+  theme(axis.text.x.top = element_blank(),
+        axis.ticks.x.top = element_blank(),
+        axis.line.x.top = element_blank(),
+        plot.background = element_blank()) +
+  Rotate_x_labels
 ```
 
 

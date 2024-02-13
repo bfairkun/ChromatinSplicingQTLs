@@ -1,0 +1,599 @@
+---
+title: "2024-01-17_CheckYangsJunctionAnnotator"
+output: html_document
+date: '2024-01-17'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message=F)
+```
+
+## Intro
+
+Yang wrote a new script to annotate junctions. basically, as I understand it, for each gene he first selects a single functional stop and start codon. Then he considers every set of observed junctions (that are mutually compatible that is) to create every possible transcript and annotates whether each junction creates a PTC in any of those transcripts. I ran the script, using all the junctions oberseved in our sets of experiments (steady state RNA-seq, metabolic labelled, and naRNA-seq), and now I will explore the output.
+
+```{r}
+library(tidyverse)
+library(data.table)
+library(scattermore)
+
+
+Annotations <- read_tsv("/project/yangili1/bjf79/2024_NMD_Junction_Classifier/Leaf2_junction_classifications.txt") %>%
+  separate(Intron_coord, into=c("chrom", "start", "end"), sep="[:-]", convert=T, remove = F) %>%
+  add_count(Intron_coord, name="NumberOfEntriesWithSameCoords")
+```
+
+Let's quickly explore some things about this data frame...
+
+Yang mentioned some introns are duplicated if they overlap multiple genes... He suggested just filtering these out of analysis for simplicity. Let's count these
+
+```{r}
+Annotations %>%
+  count(NumberOfEntriesWithSameCoords)
+```
+
+The vast majority of introns are listed just once. But as he suggested, let's filter out the other ones for simplicity.
+
+```{r}
+
+Annotations.filtered <- Annotations %>%
+  filter(NumberOfEntriesWithSameCoords==1)
+
+
+Annotations.filtered %>%
+  dplyr::select(Intron_coord, Annot, Coding, UTR) %>%
+  pivot_longer(names_to = "Column", values_to = "BooleanValue", -Intron_coord) %>%
+  count(Column, BooleanValue) %>%
+  ggplot(aes(x=Column, y=n, fill=BooleanValue)) +
+  geom_col(position='fill') +
+  labs(y="fraction")
+  
+```
+
+And reminder to self that all UTR junctions (UTR==TRUE) are considered non-coding. Not sure if this is the precise terminology we want in the end... Like UTR junctions are non-coding, but don't necessarily imply they create a NMD-targeted transcript.
+
+```{r}
+Annotations.filtered %>%
+  filter(Coding==F) %>%
+  count(UTR)
+
+Annotations.filtered %>%
+  filter(Coding) %>%
+  count(UTR)
+
+Annotations.filtered %>%
+  filter(UTR) %>%
+  count(Coding)
+```
+
+
+Ok, let's read in our previous intron annotations and compare...
+
+```{r, fig.width=8, fig.height=8}
+Previous.Annotations <- read_tsv("../data/IntronAnnotationsFromYang.Updated.tsv.gz")
+
+Annotations.filtered.joined <- Annotations.filtered %>%
+  inner_join(Previous.Annotations)
+
+Annotations.filtered.joined %>%
+  distinct(NewAnnotation)
+
+Annotations.filtered.joined %>%
+  distinct(SuperAnnotation)
+
+Annotations.filtered.joined %>%
+  count(NewAnnotation, SuperAnnotation,  Annot, Coding, UTR) %>%
+  group_by(NewAnnotation) %>%
+  mutate(Group_n = sum(n)) %>%
+  ungroup() %>%
+  mutate(Color = recode(SuperAnnotation, AnnotatedJunc_NoncodingGene="#6a3d9a", UnannotatedJunc_NoncodingJunc="#cab2d6", AnnotatedJunc_UnproductiveCodingGene="#e31a1c", UnannotatedJunc_UnproductiveCodingGene="#fb9a99", AnnotatedJunc_ProductiveCodingGene="#1f78b4", UnannotatedJunc_ProductiveCodingGene="#a6cee3")) %>%
+  mutate(groupName = str_glue("n={Group_n}\n{NewAnnotation}")) %>%
+  filter(Group_n>50) %>%
+  arrange(SuperAnnotation, Group_n) %>%
+  pivot_longer(names_to = "Column", values_to = "BooleanValue",  c("Annot", "Coding", "UTR")) %>%
+  ggplot() +
+    geom_col(aes(x=Column, y=n, fill=BooleanValue), position='fill') +
+    geom_rect(data = . %>%
+                distinct(groupName, Color,.keep_all=T), alpha=0,
+              xmin=-Inf, xmax=Inf, ymin=-Inf, ymax=Inf, size=3, aes(color=Color)) +
+   scale_color_identity() +
+    labs(y="fraction") +
+    facet_wrap(~groupName, scales="free")
+```
+
+Ok I think those make sense generally. Let's also look at relative junction usage in naRNA vs steady-state, similar to what we did in a supplement figure with scatter plots of junction RPM.
+
+
+```{r}
+juncs.long <- fread("../code/SplicingAnalysis/CombinedJuncTables/All.tsv.gz")
+dat.KD <- fread("/project2/yangili1/cfbuenabadn/ChromatinSplicingQTLs/code/SplicingAnalysis/CombinedJuncTables/NMD_KD.tsv.gz")
+
+
+juncs.long.summary <- 
+  bind_rows(
+    juncs.long,
+    dat.KD) %>%
+  dplyr::select(chrom, start, stop, strand, Dataset, Count) %>%
+  group_by(Dataset, chrom, start, stop) %>%
+  summarise(Sum=sum(Count)) %>%
+  ungroup()
+
+juncs.long.summary.joined <- juncs.long.summary %>%
+  group_by(Dataset) %>%
+  mutate(DatasetSum = sum(Sum)) %>%
+  ungroup() %>%
+  mutate(RPM = Sum/DatasetSum*1E6) %>%
+  mutate(stop = stop+1) %>%
+  inner_join(Annotations.filtered.joined, by=c("chrom", "start", "stop"="end"))
+
+juncs.long.summary.joined %>%
+  distinct(Dataset)
+
+juncs.long.summary.joined %>%
+  filter(!UTR) %>%
+  filter(Dataset %in% c("Expression.Splicing", "chRNA.Expression.Splicing")) %>%
+  dplyr::select(-DatasetSum, -Sum) %>%
+  pivot_wider(names_from="Dataset", values_from="RPM") %>%
+  mutate(Color = recode(SuperAnnotation, AnnotatedJunc_NoncodingGene="#6a3d9a", UnannotatedJunc_NoncodingJunc="#cab2d6", AnnotatedJunc_UnproductiveCodingGene="#e31a1c", UnannotatedJunc_UnproductiveCodingGene="#fb9a99", AnnotatedJunc_ProductiveCodingGene="#1f78b4", UnannotatedJunc_ProductiveCodingGene="#a6cee3")) %>%
+  mutate(SuperAnnotation = factor(SuperAnnotation, levels=c("AnnotatedJunc_ProductiveCodingGene", "UnannotatedJunc_ProductiveCodingGene", "AnnotatedJunc_UnproductiveCodingGene", "UnannotatedJunc_UnproductiveCodingGene", "AnnotatedJunc_NoncodingGene", "UnannotatedJunc_NoncodingJunc"))) %>%
+  ggplot(aes(x=Expression.Splicing, y=chRNA.Expression.Splicing)) +
+  geom_point(alpha=0.01, color='black') +
+  geom_density2d(aes(color=Color)) +
+  geom_text(data = . %>%
+              replace_na(list(Expression.Splicing=1E-5, chRNA.Expression.Splicing=1E-5)) %>%
+              group_by(Coding, SuperAnnotation) %>%
+              summarise(med = round(median(chRNA.Expression.Splicing/Expression.Splicing, na.rm=F), 3),
+                        n = n()) %>%
+              ungroup(),
+            aes(label=str_glue("med={med}\nn={n}")),
+            x=-Inf, y=Inf, vjust=1, hjust=0.) +
+  scale_color_identity() +
+  scale_x_continuous(trans="log10", breaks=c(1E-1, 10, 1000), labels=c("0.1", "10", "1000")) +
+  scale_y_continuous(trans="log10", breaks=c(1E-1, 10, 1000), labels=c("0.1", "10", "1000")) +
+  geom_abline(slope = 1, color='red') +
+  facet_grid(Coding~SuperAnnotation) +
+  theme_bw() +
+  labs(x="Junction RPM, steady-state", y="Junction RPM, chRNA", caption="Filtered out UTR juncs.\nHorizontal facets are 'Coding' value")
+
+juncs.long.summary.joined %>%
+  filter(!UTR) %>%
+  filter(Dataset %in% c("HeLa.scr", "HeLa.dKD")) %>%
+  dplyr::select(-DatasetSum, -Sum) %>%
+  pivot_wider(names_from="Dataset", values_from="RPM") %>%
+  mutate(Color = recode(SuperAnnotation, AnnotatedJunc_NoncodingGene="#6a3d9a", UnannotatedJunc_NoncodingJunc="#cab2d6", AnnotatedJunc_UnproductiveCodingGene="#e31a1c", UnannotatedJunc_UnproductiveCodingGene="#fb9a99", AnnotatedJunc_ProductiveCodingGene="#1f78b4", UnannotatedJunc_ProductiveCodingGene="#a6cee3")) %>%
+  mutate(SuperAnnotation = factor(SuperAnnotation, levels=c("AnnotatedJunc_ProductiveCodingGene", "UnannotatedJunc_ProductiveCodingGene", "AnnotatedJunc_UnproductiveCodingGene", "UnannotatedJunc_UnproductiveCodingGene", "AnnotatedJunc_NoncodingGene", "UnannotatedJunc_NoncodingJunc"))) %>%
+  ggplot(aes(x=HeLa.scr, y=HeLa.dKD)) +
+  geom_point(alpha=0.01, color='black') +
+  geom_density2d(aes(color=Color)) +
+  geom_text(data = . %>%
+              replace_na(list(HeLa.scr=1E-5, HeLa.dKD=1E-5)) %>%
+              group_by(Coding, SuperAnnotation) %>%
+              summarise(med = round(median(HeLa.dKD/HeLa.scr, na.rm=F), 3),
+                        n = n()) %>%
+              ungroup(),
+            aes(label=str_glue("med={med}\nn={n}")),
+            x=-Inf, y=Inf, vjust=1, hjust=0.) +
+  scale_color_identity() +
+  scale_x_continuous(trans="log10", breaks=c(1E-1, 10, 1000), labels=c("0.1", "10", "1000")) +
+  scale_y_continuous(trans="log10", breaks=c(1E-1, 10, 1000), labels=c("0.1", "10", "1000")) +
+  geom_abline(slope = 1, color='red') +
+  facet_grid(Coding~SuperAnnotation) +
+  theme_bw() +
+  labs(x="Junction RPM, control", y="Junction RPM, dKD", caption="Filtered out UTR juncs.\nHorizontal facets are 'Coding' value")
+
+```
+
+### Head to head plots
+
+Let's more directly plot the old annotations vs the new annotations to see which method is better (has more enrichment in dKD or chRNA)
+
+
+```{r}
+juncs.long.summary.joined.toplot <- juncs.long.summary.joined %>%
+  filter(!UTR) %>%
+  filter(Dataset %in% c("HeLa.scr", "HeLa.dKD")) %>%
+  dplyr::select(-DatasetSum, -Sum) %>%
+  pivot_wider(names_from="Dataset", values_from="RPM") %>%
+  mutate(Color = recode(SuperAnnotation, AnnotatedJunc_NoncodingGene="#6a3d9a", UnannotatedJunc_NoncodingJunc="#cab2d6", AnnotatedJunc_UnproductiveCodingGene="#e31a1c", UnannotatedJunc_UnproductiveCodingGene="#fb9a99", AnnotatedJunc_ProductiveCodingGene="#1f78b4", UnannotatedJunc_ProductiveCodingGene="#a6cee3")) %>%
+  mutate(SuperAnnotation = factor(SuperAnnotation, levels=c("AnnotatedJunc_ProductiveCodingGene", "UnannotatedJunc_ProductiveCodingGene", "AnnotatedJunc_UnproductiveCodingGene", "UnannotatedJunc_UnproductiveCodingGene", "AnnotatedJunc_NoncodingGene", "UnannotatedJunc_NoncodingJunc"))) %>%
+  filter(!SuperAnnotation %in% c("AnnotatedJunc_NoncodingGene", "UnannotatedJunc_NoncodingJunc"))
+
+bind_rows(
+  juncs.long.summary.joined.toplot %>%
+    mutate(method="Old"),
+  juncs.long.summary.joined.toplot %>%
+    mutate(method="New"), 
+) %>%
+  mutate(ProductiveOrUnproductive = case_when(
+    method == "New" ~ Coding,
+    method == "Old" & SuperAnnotation %in% c("AnnotatedJunc_ProductiveCodingGene", "UnannotatedJunc_ProductiveCodingGene") ~ TRUE,
+    method == "Old" & SuperAnnotation %in% c("AnnotatedJunc_UnproductiveCodingGene", "UnannotatedJunc_UnproductiveCodingGene") ~ FALSE
+  )) %>%
+  ggplot(aes(x=HeLa.scr, y=HeLa.dKD)) +
+  geom_point(alpha=0.01, color='black') +
+  geom_density2d(color='red') +
+  geom_text(data = . %>%
+              replace_na(list(HeLa.scr=1E-5, HeLa.dKD=1E-5)) %>%
+              group_by(method, ProductiveOrUnproductive) %>%
+              summarise(med = round(median(HeLa.dKD/HeLa.scr, na.rm=F), 3),
+                        n = n()) %>%
+              ungroup(),
+            aes(label=str_glue("med={med}\nn={n}")),
+            x=-Inf, y=Inf, vjust=1, hjust=0.) +
+  scale_color_identity() +
+  scale_x_continuous(trans="log10", breaks=c(1E-1, 10, 1000), labels=c("0.1", "10", "1000")) +
+  scale_y_continuous(trans="log10", breaks=c(1E-1, 10, 1000), labels=c("0.1", "10", "1000")) +
+  geom_abline(slope = 1, color='red') +
+  facet_grid(method~ProductiveOrUnproductive) +
+  theme_bw() +
+  labs(x="Junction RPM, control", y="Junction RPM, dKD", caption="Filtered out UTR juncs.\nVertical facets are 'Coding' value")
+```
+
+Same plot but steady state vs chRNA...
+
+
+```{r}
+juncs.long.summary.joined.toplot <- juncs.long.summary.joined %>%
+  filter(!UTR) %>%
+  filter(Dataset %in% c("Expression.Splicing", "chRNA.Expression.Splicing")) %>%
+  dplyr::select(-DatasetSum, -Sum) %>%
+  pivot_wider(names_from="Dataset", values_from="RPM") %>%
+  mutate(Color = recode(SuperAnnotation, AnnotatedJunc_NoncodingGene="#6a3d9a", UnannotatedJunc_NoncodingJunc="#cab2d6", AnnotatedJunc_UnproductiveCodingGene="#e31a1c", UnannotatedJunc_UnproductiveCodingGene="#fb9a99", AnnotatedJunc_ProductiveCodingGene="#1f78b4", UnannotatedJunc_ProductiveCodingGene="#a6cee3")) %>%
+  mutate(SuperAnnotation = factor(SuperAnnotation, levels=c("AnnotatedJunc_ProductiveCodingGene", "UnannotatedJunc_ProductiveCodingGene", "AnnotatedJunc_UnproductiveCodingGene", "UnannotatedJunc_UnproductiveCodingGene", "AnnotatedJunc_NoncodingGene", "UnannotatedJunc_NoncodingJunc"))) %>%
+  filter(!SuperAnnotation %in% c("AnnotatedJunc_NoncodingGene", "UnannotatedJunc_NoncodingJunc"))
+
+bind_rows(
+  juncs.long.summary.joined.toplot %>%
+    mutate(method="Old"),
+  juncs.long.summary.joined.toplot %>%
+    mutate(method="New"), 
+) %>%
+  mutate(ProductiveOrUnproductive = case_when(
+    method == "New" ~ Coding,
+    method == "Old" & SuperAnnotation %in% c("AnnotatedJunc_ProductiveCodingGene", "UnannotatedJunc_ProductiveCodingGene") ~ TRUE,
+    method == "Old" & SuperAnnotation %in% c("AnnotatedJunc_UnproductiveCodingGene", "UnannotatedJunc_UnproductiveCodingGene") ~ FALSE
+  )) %>%
+  ggplot(aes(x=Expression.Splicing, y=chRNA.Expression.Splicing)) +
+  geom_point(alpha=0.01, color='black') +
+  geom_density2d(color='red') +
+  geom_text(data = . %>%
+              replace_na(list(Expression.Splicing=1E-5, chRNA.Expression.Splicing=1E-5)) %>%
+              group_by(method, ProductiveOrUnproductive) %>%
+              summarise(med = round(median(chRNA.Expression.Splicing/Expression.Splicing, na.rm=F), 3),
+                        n = n()) %>%
+              ungroup(),
+            aes(label=str_glue("med={med}\nn={n}")),
+            x=-Inf, y=Inf, vjust=1, hjust=0.) +
+  scale_color_identity() +
+  scale_x_continuous(trans="log10", breaks=c(1E-1, 10, 1000), labels=c("0.1", "10", "1000")) +
+  scale_y_continuous(trans="log10", breaks=c(1E-1, 10, 1000), labels=c("0.1", "10", "1000")) +
+  geom_abline(slope = 1, color='red') +
+  facet_grid(method~ProductiveOrUnproductive) +
+  theme_bw() +
+  labs(x="Junction RPM, steady-state", y="Junction RPM, chRNA", caption="Filtered out UTR juncs.\nVertical facets are 'Coding' value")
+
+```
+
+### Head to head, with more inclusive for new coding method
+
+Yang suggested tweaking the New classification to also include all annotated productive juncs and productive. So an or statement... here is pseudocode: IsProductiveInNewMethod = (Coding==True OR AnnotatedProductive==TRUE). Now let's remake those head to head plots...
+
+```{r}
+juncs.long.summary.joined.toplot <- juncs.long.summary.joined %>%
+  filter(!UTR) %>%
+  filter(Dataset %in% c("HeLa.scr", "HeLa.dKD")) %>%
+  dplyr::select(-DatasetSum, -Sum) %>%
+  pivot_wider(names_from="Dataset", values_from="RPM") %>%
+  mutate(Color = recode(SuperAnnotation, AnnotatedJunc_NoncodingGene="#6a3d9a", UnannotatedJunc_NoncodingJunc="#cab2d6", AnnotatedJunc_UnproductiveCodingGene="#e31a1c", UnannotatedJunc_UnproductiveCodingGene="#fb9a99", AnnotatedJunc_ProductiveCodingGene="#1f78b4", UnannotatedJunc_ProductiveCodingGene="#a6cee3")) %>%
+  mutate(SuperAnnotation = factor(SuperAnnotation, levels=c("AnnotatedJunc_ProductiveCodingGene", "UnannotatedJunc_ProductiveCodingGene", "AnnotatedJunc_UnproductiveCodingGene", "UnannotatedJunc_UnproductiveCodingGene", "AnnotatedJunc_NoncodingGene", "UnannotatedJunc_NoncodingJunc"))) %>%
+  filter(!SuperAnnotation %in% c("AnnotatedJunc_NoncodingGene", "UnannotatedJunc_NoncodingJunc"))
+
+bind_rows(
+  juncs.long.summary.joined.toplot %>%
+    mutate(method="Old"),
+  juncs.long.summary.joined.toplot %>%
+    mutate(method="New"), 
+) %>%
+  mutate(ProductiveOrUnproductive = case_when(
+    method == "New" & (Coding | SuperAnnotation=="AnnotatedJunc_ProductiveCodingGene") ~ TRUE,
+    method == "New" & !(Coding | SuperAnnotation=="AnnotatedJunc_ProductiveCodingGene") ~ FALSE,
+    method == "Old" & SuperAnnotation %in% c("AnnotatedJunc_ProductiveCodingGene", "UnannotatedJunc_ProductiveCodingGene") ~ TRUE,
+    method == "Old" & SuperAnnotation %in% c("AnnotatedJunc_UnproductiveCodingGene", "UnannotatedJunc_UnproductiveCodingGene") ~ FALSE
+  )) %>%
+  ggplot(aes(x=HeLa.scr, y=HeLa.dKD)) +
+  geom_point(alpha=0.01, color='black') +
+  geom_density2d(color='red') +
+  geom_text(data = . %>%
+              replace_na(list(HeLa.scr=1E-5, HeLa.dKD=1E-5)) %>%
+              group_by(method, ProductiveOrUnproductive) %>%
+              summarise(med = round(median(HeLa.dKD/HeLa.scr, na.rm=F), 3),
+                        n = n()) %>%
+              ungroup(),
+            aes(label=str_glue("med={med}\nn={n}")),
+            x=-Inf, y=Inf, vjust=1, hjust=0.) +
+  scale_color_identity() +
+  scale_x_continuous(trans="log10", breaks=c(1E-1, 10, 1000), labels=c("0.1", "10", "1000")) +
+  scale_y_continuous(trans="log10", breaks=c(1E-1, 10, 1000), labels=c("0.1", "10", "1000")) +
+  geom_abline(slope = 1, color='red') +
+  facet_grid(method~ProductiveOrUnproductive) +
+  theme_bw() +
+  labs(x="Junction RPM, control", y="Junction RPM, dKD", caption="Filtered out UTR juncs.\nVertical facets are 'Coding' value")
+```
+
+Same plot but steady state vs chRNA...
+
+
+```{r}
+juncs.long.summary.joined.toplot <- juncs.long.summary.joined %>%
+  filter(!UTR) %>%
+  filter(Dataset %in% c("Expression.Splicing", "chRNA.Expression.Splicing")) %>%
+  dplyr::select(-DatasetSum, -Sum) %>%
+  pivot_wider(names_from="Dataset", values_from="RPM") %>%
+  mutate(Color = recode(SuperAnnotation, AnnotatedJunc_NoncodingGene="#6a3d9a", UnannotatedJunc_NoncodingJunc="#cab2d6", AnnotatedJunc_UnproductiveCodingGene="#e31a1c", UnannotatedJunc_UnproductiveCodingGene="#fb9a99", AnnotatedJunc_ProductiveCodingGene="#1f78b4", UnannotatedJunc_ProductiveCodingGene="#a6cee3")) %>%
+  mutate(SuperAnnotation = factor(SuperAnnotation, levels=c("AnnotatedJunc_ProductiveCodingGene", "UnannotatedJunc_ProductiveCodingGene", "AnnotatedJunc_UnproductiveCodingGene", "UnannotatedJunc_UnproductiveCodingGene", "AnnotatedJunc_NoncodingGene", "UnannotatedJunc_NoncodingJunc"))) %>%
+  filter(!SuperAnnotation %in% c("AnnotatedJunc_NoncodingGene", "UnannotatedJunc_NoncodingJunc"))
+
+bind_rows(
+  juncs.long.summary.joined.toplot %>%
+    mutate(method="Old"),
+  juncs.long.summary.joined.toplot %>%
+    mutate(method="New"), 
+) %>%
+  mutate(ProductiveOrUnproductive = case_when(
+    method == "New" & (Coding | SuperAnnotation=="AnnotatedJunc_ProductiveCodingGene") ~ TRUE,
+    method == "New" & !(Coding | SuperAnnotation=="AnnotatedJunc_ProductiveCodingGene") ~ FALSE,
+    method == "Old" & SuperAnnotation %in% c("AnnotatedJunc_ProductiveCodingGene", "UnannotatedJunc_ProductiveCodingGene") ~ TRUE,
+    method == "Old" & SuperAnnotation %in% c("AnnotatedJunc_UnproductiveCodingGene", "UnannotatedJunc_UnproductiveCodingGene") ~ FALSE
+  )) %>%
+  ggplot(aes(x=Expression.Splicing, y=chRNA.Expression.Splicing)) +
+  geom_point(alpha=0.01, color='black') +
+  geom_density2d(color='red') +
+  geom_text(data = . %>%
+              replace_na(list(Expression.Splicing=1E-5, chRNA.Expression.Splicing=1E-5)) %>%
+              group_by(method, ProductiveOrUnproductive) %>%
+              summarise(med = round(median(chRNA.Expression.Splicing/Expression.Splicing, na.rm=F), 3),
+                        n = n()) %>%
+              ungroup(),
+            aes(label=str_glue("med={med}\nn={n}")),
+            x=-Inf, y=Inf, vjust=1, hjust=0.) +
+  scale_color_identity() +
+  scale_x_continuous(trans="log10", breaks=c(1E-1, 10, 1000), labels=c("0.1", "10", "1000")) +
+  scale_y_continuous(trans="log10", breaks=c(1E-1, 10, 1000), labels=c("0.1", "10", "1000")) +
+  geom_abline(slope = 1, color='red') +
+  facet_grid(method~ProductiveOrUnproductive) +
+  theme_bw() +
+  labs(x="Junction RPM, steady-state", y="Junction RPM, chRNA", caption="Filtered out UTR juncs.\nVertical facets are 'Coding' value")
+
+```
+
+Plots for Yang's grant.
+
+```{r, eval=F}
+juncs.long.summary.joined.toplot <- juncs.long.summary.joined %>%
+  filter(!UTR) %>%
+  filter(Dataset %in% c("HeLa.scr", "HeLa.dKD")) %>%
+  dplyr::select(-DatasetSum, -Sum) %>%
+  pivot_wider(names_from="Dataset", values_from="RPM") %>%
+  mutate(Color = recode(SuperAnnotation, AnnotatedJunc_NoncodingGene="#6a3d9a", UnannotatedJunc_NoncodingJunc="#cab2d6", AnnotatedJunc_UnproductiveCodingGene="#e31a1c", UnannotatedJunc_UnproductiveCodingGene="#fb9a99", AnnotatedJunc_ProductiveCodingGene="#1f78b4", UnannotatedJunc_ProductiveCodingGene="#a6cee3")) %>%
+  mutate(SuperAnnotation = factor(SuperAnnotation, levels=c("AnnotatedJunc_ProductiveCodingGene", "UnannotatedJunc_ProductiveCodingGene", "AnnotatedJunc_UnproductiveCodingGene", "UnannotatedJunc_UnproductiveCodingGene", "AnnotatedJunc_NoncodingGene", "UnannotatedJunc_NoncodingJunc"))) %>%
+  filter(!SuperAnnotation %in% c("AnnotatedJunc_NoncodingGene", "UnannotatedJunc_NoncodingJunc"))
+
+bind_rows(
+  juncs.long.summary.joined.toplot %>%
+    mutate(method="Old"),
+  juncs.long.summary.joined.toplot %>%
+    mutate(method="New"), 
+) %>%
+  mutate(ProductiveOrUnproductive = case_when(
+    method == "New" & (Coding | SuperAnnotation=="AnnotatedJunc_ProductiveCodingGene") ~ TRUE,
+    method == "New" & !(Coding | SuperAnnotation=="AnnotatedJunc_ProductiveCodingGene") ~ FALSE,
+    method == "Old" & SuperAnnotation %in% c("AnnotatedJunc_ProductiveCodingGene", "UnannotatedJunc_ProductiveCodingGene") ~ TRUE,
+    method == "Old" & SuperAnnotation %in% c("AnnotatedJunc_UnproductiveCodingGene", "UnannotatedJunc_UnproductiveCodingGene") ~ FALSE
+  )) %>%
+  mutate(ProductiveOrUnproductive = if_else(ProductiveOrUnproductive, "Productive", "Unproductive")) %>%
+  ggplot(aes(x=HeLa.scr, y=HeLa.dKD)) +
+  # geom_scattermore(alpha=0.01, color='black') +
+  # geom_hex() +
+  # scale_fill_viridis_c()
+  geom_point(alpha=0.01, color='black') +
+  geom_density2d(color='red') +
+  geom_text(data = . %>%
+              replace_na(list(HeLa.scr=1E-5, HeLa.dKD=1E-5)) %>%
+              group_by(method, ProductiveOrUnproductive) %>%
+              summarise(med = round(median(HeLa.dKD/HeLa.scr, na.rm=F), 3),
+                        n = n()) %>%
+              ungroup(),
+            aes(label=str_glue("Med={med}\nn={n}")),
+            x=-Inf, y=Inf, vjust=1, hjust=0.) +
+  scale_color_identity() +
+  scale_x_continuous(trans="log10", breaks=c(1E-1, 10, 1000), labels=c("0.1", "10", "1000")) +
+  scale_y_continuous(trans="log10", breaks=c(1E-1, 10, 1000), labels=c("0.1", "10", "1000")) +
+  geom_abline(slope = 1, color='red') +
+  facet_grid(method~ProductiveOrUnproductive) +
+  theme_classic() +
+  labs(x="Junction RPM, control", y="Junction RPM, dKD", caption="Filtered out UTR juncs.\nVertical facets are 'Coding' value")
+ggsave("/project2/yangili1/bjf79/scratch/EvaluateJuncClassification.shRNAKD.pdf", height=6, width=3)
+
+bind_rows(
+  juncs.long.summary.joined.toplot %>%
+    mutate(method="Old"),
+  juncs.long.summary.joined.toplot %>%
+    mutate(method="New"), 
+) %>%
+  mutate(ProductiveOrUnproductive = case_when(
+    method == "New" & (Coding | SuperAnnotation=="AnnotatedJunc_ProductiveCodingGene") ~ TRUE,
+    method == "New" & !(Coding | SuperAnnotation=="AnnotatedJunc_ProductiveCodingGene") ~ FALSE,
+    method == "Old" & SuperAnnotation %in% c("AnnotatedJunc_ProductiveCodingGene", "UnannotatedJunc_ProductiveCodingGene") ~ TRUE,
+    method == "Old" & SuperAnnotation %in% c("AnnotatedJunc_UnproductiveCodingGene", "UnannotatedJunc_UnproductiveCodingGene") ~ FALSE
+  )) %>%
+  mutate(ProductiveOrUnproductive = if_else(ProductiveOrUnproductive, "Productive", "Unproductive")) %>%
+  filter(method == "New") %>%
+  ggplot(aes(x=HeLa.scr, y=HeLa.dKD)) +
+  geom_point(alpha=0.01, color='black') +
+  geom_density2d(color='red') +
+  geom_text(data = . %>%
+              replace_na(list(HeLa.scr=1E-5, HeLa.dKD=1E-5)) %>%
+              group_by(ProductiveOrUnproductive) %>%
+              summarise(med = round(median(HeLa.dKD/HeLa.scr, na.rm=F), 3),
+                        n = n()) %>%
+              ungroup(),
+            aes(label=str_glue("Med={med}\nn={n}")),
+            x=-Inf, y=Inf, vjust=1, hjust=0.) +
+  scale_color_identity() +
+  scale_x_continuous(trans="log10", breaks=c(1E-1, 10, 1000), labels=c("0.1", "10", "1000")) +
+  scale_y_continuous(trans="log10", breaks=c(1E-1, 10, 1000), labels=c("0.1", "10", "1000")) +
+  geom_abline(slope = 1, color='red') +
+  facet_wrap(~ProductiveOrUnproductive) +
+  theme_classic() +
+  labs(x="Junction RPM, control", y="Junction RPM, dKD", caption="Filtered out UTR juncs.\nVertical facets are 'Coding' value")
+ggsave("/project2/yangili1/bjf79/scratch/EvaluateJuncClassification.shRNAKD.NoOld.pdf", height=3, width=3)
+
+
+
+
+
+juncs.long.summary.joined.toplot <- juncs.long.summary.joined %>%
+  filter(!UTR) %>%
+  filter(Dataset %in% c("Expression.Splicing", "chRNA.Expression.Splicing")) %>%
+  dplyr::select(-DatasetSum, -Sum) %>%
+  pivot_wider(names_from="Dataset", values_from="RPM") %>%
+  mutate(Color = recode(SuperAnnotation, AnnotatedJunc_NoncodingGene="#6a3d9a", UnannotatedJunc_NoncodingJunc="#cab2d6", AnnotatedJunc_UnproductiveCodingGene="#e31a1c", UnannotatedJunc_UnproductiveCodingGene="#fb9a99", AnnotatedJunc_ProductiveCodingGene="#1f78b4", UnannotatedJunc_ProductiveCodingGene="#a6cee3")) %>%
+  mutate(SuperAnnotation = factor(SuperAnnotation, levels=c("AnnotatedJunc_ProductiveCodingGene", "UnannotatedJunc_ProductiveCodingGene", "AnnotatedJunc_UnproductiveCodingGene", "UnannotatedJunc_UnproductiveCodingGene", "AnnotatedJunc_NoncodingGene", "UnannotatedJunc_NoncodingJunc"))) %>%
+  filter(!SuperAnnotation %in% c("AnnotatedJunc_NoncodingGene", "UnannotatedJunc_NoncodingJunc"))
+
+bind_rows(
+  juncs.long.summary.joined.toplot %>%
+    mutate(method="Old"),
+  juncs.long.summary.joined.toplot %>%
+    mutate(method="New"), 
+) %>%
+  mutate(ProductiveOrUnproductive = case_when(
+    method == "New" & (Coding | SuperAnnotation=="AnnotatedJunc_ProductiveCodingGene") ~ TRUE,
+    method == "New" & !(Coding | SuperAnnotation=="AnnotatedJunc_ProductiveCodingGene") ~ FALSE,
+    method == "Old" & SuperAnnotation %in% c("AnnotatedJunc_ProductiveCodingGene", "UnannotatedJunc_ProductiveCodingGene") ~ TRUE,
+    method == "Old" & SuperAnnotation %in% c("AnnotatedJunc_UnproductiveCodingGene", "UnannotatedJunc_UnproductiveCodingGene") ~ FALSE
+  )) %>%
+  mutate(ProductiveOrUnproductive = if_else(ProductiveOrUnproductive, "Productive", "Unproductive")) %>%
+  ggplot(aes(x=Expression.Splicing, y=chRNA.Expression.Splicing)) +
+  geom_point(alpha=0.01, color='black') +
+  geom_density2d(color='red') +
+  geom_text(data = . %>%
+              replace_na(list(Expression.Splicing=1E-5, chRNA.Expression.Splicing=1E-5)) %>%
+              group_by(method, ProductiveOrUnproductive) %>%
+              summarise(med = round(median(chRNA.Expression.Splicing/Expression.Splicing, na.rm=F), 3),
+                        n = n()) %>%
+              ungroup(),
+            aes(label=str_glue("Med={med}\nn={n}")),
+            x=-Inf, y=Inf, vjust=1, hjust=0.) +
+  scale_color_identity() +
+  scale_x_continuous(trans="log10", breaks=c(1E-1, 10, 1000), labels=c("0.1", "10", "1000")) +
+  scale_y_continuous(trans="log10", breaks=c(1E-1, 10, 1000), labels=c("0.1", "10", "1000")) +
+  geom_abline(slope = 1, color='red') +
+  facet_grid(method~ProductiveOrUnproductive) +
+  theme_classic() +
+  labs(x="Junction RPM, steady-state", y="Junction RPM, naRNA", caption="Filtered out UTR juncs.\nVertical facets are 'Coding' value")
+ggsave("/project2/yangili1/bjf79/scratch/EvaluateJuncClassification.naRNA.pdf", height=6, width=3)
+
+bind_rows(
+  juncs.long.summary.joined.toplot %>%
+    mutate(method="Old"),
+  juncs.long.summary.joined.toplot %>%
+    mutate(method="New"), 
+) %>%
+  mutate(ProductiveOrUnproductive = case_when(
+    method == "New" & (Coding | SuperAnnotation=="AnnotatedJunc_ProductiveCodingGene") ~ TRUE,
+    method == "New" & !(Coding | SuperAnnotation=="AnnotatedJunc_ProductiveCodingGene") ~ FALSE,
+    method == "Old" & SuperAnnotation %in% c("AnnotatedJunc_ProductiveCodingGene", "UnannotatedJunc_ProductiveCodingGene") ~ TRUE,
+    method == "Old" & SuperAnnotation %in% c("AnnotatedJunc_UnproductiveCodingGene", "UnannotatedJunc_UnproductiveCodingGene") ~ FALSE
+  )) %>%
+  mutate(ProductiveOrUnproductive = if_else(ProductiveOrUnproductive, "Productive", "Unproductive")) %>%
+  filter(method == "New") %>%
+  ggplot(aes(x=Expression.Splicing, y=chRNA.Expression.Splicing)) +
+  geom_point(alpha=0.01, color='black') +
+  geom_density2d(color='red') +
+  geom_text(data = . %>%
+              replace_na(list(Expression.Splicing=1E-5, chRNA.Expression.Splicing=1E-5)) %>%
+              group_by(ProductiveOrUnproductive) %>%
+              summarise(med = round(median(chRNA.Expression.Splicing/Expression.Splicing, na.rm=F), 3),
+                        n = n()) %>%
+              ungroup(),
+            aes(label=str_glue("Med={med}\nn={n}")),
+            x=-Inf, y=Inf, vjust=1, hjust=0.) +
+  scale_color_identity() +
+  scale_x_continuous(trans="log10", breaks=c(1E-1, 10, 1000), labels=c("0.1", "10", "1000")) +
+  scale_y_continuous(trans="log10", breaks=c(1E-1, 10, 1000), labels=c("0.1", "10", "1000")) +
+  geom_abline(slope = 1, color='red') +
+  facet_wrap(~ProductiveOrUnproductive) +
+  theme_classic() +
+  labs(x="Junction RPM, steady-state", y="Junction RPM, naRNA", caption="Filtered out UTR juncs.\nVertical facets are 'Coding' value")
+ggsave("/project2/yangili1/bjf79/scratch/EvaluateJuncClassification.naRNA.NoOld.pdf", height=3, width=3)
+
+
+
+```
+
+### Test updated script
+
+Yang updated his script to reflect this new change... I reran the script and now let's verify the new annotations.
+
+```{r}
+NewScript.Annotations <- read_tsv("/project/yangili1/bjf79/2024_NMD_Junction_Classifier/Leaf2_updated_junction_classifications.txt") %>%
+  separate(Intron_coord, into=c("chrom", "start", "end"), sep="[:-]", convert=T, remove = F) %>%
+  add_count(Intron_coord, name="NumberOfEntriesWithSameCoords")
+
+juncs.long.summary.joined.toplot %>%
+  inner_join(
+    NewScript.Annotations %>%
+      dplyr::select(Intron_coord, CodingUpdated = Coding)
+  ) %>%
+  mutate(ProductiveOrUnproductiveMyTest = case_when(
+    Coding | SuperAnnotation=="AnnotatedJunc_ProductiveCodingGene" ~ TRUE,
+    TRUE ~ FALSE)) %>%
+  count(CodingUpdated, ProductiveOrUnproductiveMyTest)
+```
+
+The script is correctly updated, such that the Coding column in the new srcipt output is true if it can create a transcript that reaches a stop codon, *OR* if it is already in an annotated functional transcript.
+
+### Unrelated code
+
+...To make new metadata file for different project with new sequencing data.
+
+```{r, eval=F}
+Metadata <- read_tsv("/project2/yangili1/bjf79/sm_splicingmodulators/code/config/samples.tsv")
+
+NewFastq <- read_tsv("/project2/yangili1/bjf79/sm_splicingmodulators/code/scratch/NewSamples.tsv", col_names=c("R1", "R2")) %>%
+  mutate(old.sample.name = str_replace(R1, "/cds/yangili1/bjf79/Fastq/20240118_AdditionalSMSM74Replicates/Sample_(.+?)_L00.+$", "\\1")) %>%
+  mutate(old.sample.name = case_when(
+    old.sample.name == "DMSO-3_101823" ~ "DMSO-1_101823",
+    old.sample.name == "DMSO-4_101823" ~ "DMSO-2_101823",
+    TRUE ~ str_replace(old.sample.name, "^(.+?)-2$", "\\1-1")
+  ))
+
+bind_rows(
+  Metadata,
+  Metadata %>%
+    filter(Experiment == 6) %>%
+    dplyr::select(-R1, -R2) %>%
+    distinct(sample, .keep_all=T) %>%
+    inner_join(NewFastq)
+) %>%
+  arrange(sample) %>%
+  write_tsv("/project2/yangili1/bjf79/sm_splicingmodulators/code/config/samples.tsv")
+
+# also another samples.tsv file for a snakemake to confirm similarity between batches and proper sample matching
+bind_rows(
+  Metadata %>%
+    filter(Experiment == 6),
+  Metadata %>%
+    filter(Experiment == 6) %>%
+    dplyr::select(-R1, -R2) %>%
+    distinct(sample, .keep_all=T) %>%
+    inner_join(NewFastq) %>%
+    mutate(old.sample.name = str_replace(R1, "/cds/yangili1/bjf79/Fastq/20240118_AdditionalSMSM74Replicates/Sample_(.+?)_L00.+$", "\\1"))
+) %>%
+  mutate(sample = old.sample.name) %>%
+  write_tsv("/project2/yangili1/bjf79/20240118_CheckNewSMSM74_SeqLane_/code/config/samples.tsv")
+  
+
+```
+

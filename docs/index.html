@@ -305,7 +305,7 @@ class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2023-06-26
+<strong>Last updated:</strong> 2024-02-13
 </p>
 <p>
 <strong>Checks:</strong> <span
@@ -437,15 +437,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstree4ffc2bc2961e4eabb1eabf27c3a9c8d61ce8944dtargetblank4ffc2bca">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstreec56b87de8f928faf3146c93e34a4289b8e07d271targetblankc56b87da">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/4ffc2bc2961e4eabb1eabf27c3a9c8d61ce8944d" target="_blank">4ffc2bc</a>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/c56b87de8f928faf3146c93e34a4289b8e07d271" target="_blank">c56b87d</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstree4ffc2bc2961e4eabb1eabf27c3a9c8d61ce8944dtargetblank4ffc2bca"
+id="strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstreec56b87de8f928faf3146c93e34a4289b8e07d271targetblankc56b87da"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -455,7 +455,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/4ffc2bc2961e4eabb1eabf27c3a9c8d61ce8944d" target="_blank">4ffc2bc</a>.
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/c56b87de8f928faf3146c93e34a4289b8e07d271" target="_blank">c56b87d</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -474,6 +474,7 @@ Ignored files:
     Ignored:    .Rhistory
     Ignored:    .Rproj.user/
     Ignored:    analysis/.Rhistory
+    Ignored:    code/-
     Ignored:    code/.DS_Store
     Ignored:    code/.RData
     Ignored:    code/._report.html
@@ -490,12 +491,14 @@ Ignored files:
     Ignored:    code/FastqSE/
     Ignored:    code/FineMapping/
     Ignored:    code/GTEx/
+    Ignored:    code/Gencode.v34.6Colors.bed.gz
     Ignored:    code/Genotypes/
     Ignored:    code/H3K36me3_CutAndTag.pdf
     Ignored:    code/IntronSlopes/
     Ignored:    code/LR.bed
     Ignored:    code/LR.seq.bed
     Ignored:    code/LongReads/
+    Ignored:    code/MYB.tracks.ini
     Ignored:    code/Metaplots/
     Ignored:    code/Misc/
     Ignored:    code/MiscCountTables/
@@ -528,7 +531,6 @@ Ignored files:
     Ignored:    code/bigwigs_FromNonWASPFilteredReads/
     Ignored:    code/config/.DS_Store
     Ignored:    code/config/._.DS_Store
-    Ignored:    code/config/.gwas_table.tsv.swp
     Ignored:    code/config/.ipynb_checkpoints/
     Ignored:    code/config/config.local.yaml
     Ignored:    code/dag.pdf
@@ -581,15 +583,12 @@ Ignored files:
     Ignored:    data/Metaplots/.DS_Store
 
 Untracked files:
-    Untracked:  analysis/20230622_LookupCarolsSNP.Rmd
-    Untracked:  analysis/20230623_BetaBetaScatterForChao.Rmd
-    Untracked:  code/scripts/Tidy_GTEx_SummaryStats.py
+    Untracked:  analysis/2024-01-17_CheckYangsJunctionAnnotator.Rmd
 
 Unstaged changes:
     Modified:   analysis/MakeFinalFigs_Fig2.Rmd
-    Modified:   analysis/MakeFinalFigs_Fig3.Rmd
-    Modified:   code/config/gwas_table.tsv
-    Modified:   code/scripts/hyprcoloc_gwas2.R
+    Modified:   analysis/MakeFinalFigs_Fig4.Rmd
+    Modified:   code/scripts/GenometracksByGenotype
 
 </code></pre>
 <p>
@@ -634,6 +633,23 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/bfairkun/ChromatinSplicingQTLs/c6e8be3f584002a3eccefe5c2fd7d7975276eb1f/docs/index.html" target="_blank">c6e8be3</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2023-06-26
+</td>
+<td>
+added nb for chao
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -1345,8 +1361,6 @@ for(i in rmd_htmls){
   cat(&quot;[&quot;, i, &quot;](&quot;, i,&quot;)\n\n&quot;, sep=&quot;&quot;)
 }</code></pre>
 <p><a
-href="04032023_Fig1_splice_junctions_R.ipynb">04032023_Fig1_splice_junctions_R.ipynb</a></p>
-<p><a
 href="20121206_Explore_sQTLs_AndAttemptAnnotation.html">20121206_Explore_sQTLs_AndAttemptAnnotation.html</a></p>
 <p><a
 href="20200110_PickSamplesForGrowth.html">20200110_PickSamplesForGrowth.html</a></p>
@@ -1362,8 +1376,6 @@ href="20211217_GenewiseColocFirstLook.html">20211217_GenewiseColocFirstLook.html
 href="20220114_ColocalizationEffectSizeCorrelations.html">20220114_ColocalizationEffectSizeCorrelations.html</a></p>
 <p><a
 href="20220228_PickCutAndTagSamples.html">20220228_PickCutAndTagSamples.html</a></p>
-<p><a
-href="20220310_Slope_Analysis.ipynb">20220310_Slope_Analysis.ipynb</a></p>
 <p><a
 href="202204012_Cluster_TestGwasHarmonisation.html">202204012_Cluster_TestGwasHarmonisation.html</a></p>
 <p><a
@@ -1447,20 +1459,12 @@ href="20230210_CheckOldNMDIntrons.html">20230210_CheckOldNMDIntrons.html</a></p>
 <p><a
 href="20230214_PlotsWithNewAnnotations.html">20230214_PlotsWithNewAnnotations.html</a></p>
 <p><a
-href="20230216_SupFig_NMD_effects_in_gene_expression.ipynb">20230216_SupFig_NMD_effects_in_gene_expression.ipynb</a></p>
-<p><a
-href="20230221_CorrelationStructureBetweenAssays.ipynb">20230221_CorrelationStructureBetweenAssays.ipynb</a></p>
-<p><a
 href="20230314_ProcessSM_ForInterpretableSplicingEffectSizes.html">20230314_ProcessSM_ForInterpretableSplicingEffectSizes.html</a></p>
 <p><a
 href="20230320_RemakeEffectSizeScatters_UpdatedAnnotations.html">20230320_RemakeEffectSizeScatters_UpdatedAnnotations.html</a></p>
 <p><a href="20230324_MakeFigs.html">20230324_MakeFigs.html</a></p>
 <p><a
 href="20230413_CheckSplicingTimingOfSM_sensitiveIntrons.html">20230413_CheckSplicingTimingOfSM_sensitiveIntrons.html</a></p>
-<p><a
-href="20230413_Fig1_long_reads.ipynb">20230413_Fig1_long_reads.ipynb</a></p>
-<p><a
-href="20230417_Fig1_boxplots.ipynb">20230417_Fig1_boxplots.ipynb</a></p>
 <p><a
 href="20230417_SusieFinemapEnrichment.html">20230417_SusieFinemapEnrichment.html</a></p>
 <p><a
@@ -1471,8 +1475,6 @@ href="20230502_GetColocsForCarlos.html">20230502_GetColocsForCarlos.html</a></p>
 href="20230504_SmallMoleculeFig.html">20230504_SmallMoleculeFig.html</a></p>
 <p><a
 href="20230511_coloc_sQTLs_hQTLs_eQTLs_GWAS.ipynb">20230511_coloc_sQTLs_hQTLs_eQTLs_GWAS.ipynb</a></p>
-<p><a
-href="20230515_boxplots_longtable.ipynb">20230515_boxplots_longtable.ipynb</a></p>
 <p><a
 href="20230516_ExploreChaosAnnotations.html">20230516_ExploreChaosAnnotations.html</a></p>
 <p><a
@@ -1487,6 +1489,19 @@ href="20230528_IdentifyBrianaPacBio.html">20230528_IdentifyBrianaPacBio.html</a>
 href="20230622_LookupCarolsSNP.html">20230622_LookupCarolsSNP.html</a></p>
 <p><a
 href="20230623_BetaBetaScatterForChao.html">20230623_BetaBetaScatterForChao.html</a></p>
+<p><a href="20230627_Regression.ipynb">20230627_Regression.ipynb</a></p>
+<p><a
+href="20230707_MostAbundantUnrproductiveJuncPerGene.html">20230707_MostAbundantUnrproductiveJuncPerGene.html</a></p>
+<p><a
+href="20230723_hQTL_sQTL_GwasConcordance.html">20230723_hQTL_sQTL_GwasConcordance.html</a></p>
+<p><a
+href="20230808_GWAS_sQTLs_QQ_and_ColocExample.html">20230808_GWAS_sQTLs_QQ_and_ColocExample.html</a></p>
+<p><a
+href="20230907_ColocExamplePlotsWithLD.html">20230907_ColocExamplePlotsWithLD.html</a></p>
+<p><a
+href="20237003_ExplorePSIMethods.html">20237003_ExplorePSIMethods.html</a></p>
+<p><a
+href="2024-01-17_CheckYangsJunctionAnnotator.html">2024-01-17_CheckYangsJunctionAnnotator.html</a></p>
 <p>Also, a list of links to ipynb files that were incorporated into the
 snakemake. Since github renders ipynbs directly, this is not a relative
 link from the site folder, but rather links directly to the file to view
@@ -1513,7 +1528,12 @@ href="Figures_BensTasksFromOutline.html">Figures_BensTasksFromOutline.html</a></
 <p><a
 href="Figures_sQTL_eQTL_effects.html">Figures_sQTL_eQTL_effects.html</a></p>
 <p><a href="MakeFinalFigs_Fig1.html">MakeFinalFigs_Fig1.html</a></p>
+<p><a href="MakeFinalFigs_Fig1.ipynb">MakeFinalFigs_Fig1.ipynb</a></p>
+<p><a href="MakeFinalFigs_Fig1A.ipynb">MakeFinalFigs_Fig1A.ipynb</a></p>
 <p><a href="MakeFinalFigs_Fig2.html">MakeFinalFigs_Fig2.html</a></p>
+<p><a href="MakeFinalFigs_Fig2.ipynb">MakeFinalFigs_Fig2.ipynb</a></p>
+<p><a
+href="MakeFinalFigs_Fig2D_long_reads.ipynb">MakeFinalFigs_Fig2D_long_reads.ipynb</a></p>
 <p><a href="MakeFinalFigs_Fig3.html">MakeFinalFigs_Fig3.html</a></p>
 <p><a href="MakeFinalFigs_Fig4.html">MakeFinalFigs_Fig4.html</a></p>
 <br>

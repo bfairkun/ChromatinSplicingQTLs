@@ -567,6 +567,50 @@ P.PercentAnnotated.PerSample.NMD_KD
 
 # ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_PercentAnnotatedPerSample_NMDKD.pdf",P.PercentAnnotated.PerSample.NMD_KD, width=3, height=6)
 
+
+P.PercentAnnotated.PerSample.NMD_KD_full <- P.PercentAnnotated.PerSample.dat %>%
+  filter(str_detect(Dataset, "HeLa")) %>%
+  mutate(Dataset = recode(Dataset, "HeLa.scr"="shRNA ctl", "HeLa.dKD"="shRNA dKD")) %>%
+  mutate(Dataset = relevel(factor(Dataset), "shRNA ctl")) %>%
+  ggplot(aes(x=rn, y=NewPercent*100, fill=PlotGroup)) +
+  geom_col() +
+  scale_x_discrete(labels=c("Expression.Splicing"="steady-state\nRNA", "MetabolicLabelled.60min"="60m 4sU", "MetabolicLabelled.30min"="30m 4sU","chRNA.Expression.Splicing"="chRNA")) +
+  geom_hline(data = . %>%
+                 filter(PlotGroup == "Complement") %>%
+                  group_by(Dataset) %>%
+                  summarise(Median = median(NewPercent)*100),
+             aes(yintercept = Median),
+             color="black", linetype='dashed', size=1.5
+             ) +
+  scale_y_continuous(expand=c(0,0)) +
+  scale_fill_manual(values=c("Percent"="#1f78b4", "Complement"="#969696"), labels=c("Percent"="Annotated productive (basic tag)","Complement"="Other")) + 
+  scale_y_break(c(4, 96), expand=F, space=0.1) +
+  labs(y="Percent of splice junction reads", fill="Intron classification") +
+  theme(legend.position="none") +
+  facet_grid(~Dataset, scales = 'free', switch = "both") +
+  Rotate_x_labels +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  theme(
+    aspect.ratio = 1,
+    strip.background = element_blank(),
+    strip.placement = "outside"
+  )
+
+P.PercentAnnotated.PerSample.NMD_KD_full <- ggplotify::as.ggplot(print(P.PercentAnnotated.PerSample.NMD_KD_full))
+P.PercentAnnotated.PerSample.NMD_KD_full
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig_S_PercentAnnotatedPerSample_NMDKD_All.pdf",P.PercentAnnotated.PerSample.NMD_KD_full, width=4, height=6)
+
+
+P.PercentAnnotated.PerSample.dat %>%
+  # distinct(PlotGroup)
+  filter(PlotGroup == "Complement") %>%
+  group_by(Dataset) %>%
+  summarise(Median = median(NewPercent)*100)
+
+
 ```
 
 
