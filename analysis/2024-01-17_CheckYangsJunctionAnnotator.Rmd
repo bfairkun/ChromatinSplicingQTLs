@@ -362,9 +362,65 @@ bind_rows(
   geom_abline(slope = 1, color='red') +
   facet_grid(method~ProductiveOrUnproductive) +
   theme_bw() +
-  labs(x="Junction RPM, steady-state", y="Junction RPM, chRNA", caption="Filtered out UTR juncs.\nVertical facets are 'Coding' value")
+  labs(x="Junction RPM, steady-state", y="Junction RPM, naRNA")
 
 ```
+
+...same plot but just new method
+
+```{r}
+dat.to.Plot <- juncs.long.summary.joined.toplot %>%
+  mutate(ProductiveOrUnproductive = case_when(
+    (Coding | SuperAnnotation=="AnnotatedJunc_ProductiveCodingGene") ~ "Productive\nSplice juncs",
+    !(Coding | SuperAnnotation=="AnnotatedJunc_ProductiveCodingGene") ~ "Unproductive\nSplice juncs",
+  ))
+
+ggplot(dat.to.Plot, aes(x=Expression.Splicing, y=chRNA.Expression.Splicing)) +
+  geom_point(alpha=0.01, color='black') +
+  geom_density2d(color='red') +
+  geom_abline(slope = 1, color='red') +
+  geom_text(data = . %>%
+              replace_na(list(Expression.Splicing=1E-5, chRNA.Expression.Splicing=1E-5)) %>%
+              group_by(ProductiveOrUnproductive) %>%
+              summarise(med = round(median(chRNA.Expression.Splicing/Expression.Splicing, na.rm=F), 3),
+                        n = n()) %>%
+              ungroup(),
+            aes(label=str_glue("median FC={med}\nn={n}")),
+            x=-Inf, y=Inf, vjust=1.1, hjust=0.) +
+  scale_color_identity() +
+  scale_x_continuous(trans="log10", breaks=c(1E-1, 10, 1000), labels=c("0.1", "10", "1000")) +
+  scale_y_continuous(trans="log10", breaks=c(1E-1, 10, 1000), labels=c("0.1", "10", "1000")) +
+  facet_wrap(~ProductiveOrUnproductive) +
+  theme_bw() +
+  coord_fixed() +
+  labs(x="Junction RPM, steady-state", y="Junction RPM, naRNA")
+ggsave("../code/scratch/PlotsForYangGrant.JunctionScatter.Points.pdf", height=3, width=7)
+
+ggplot(dat.to.Plot, aes(x=Expression.Splicing, y=chRNA.Expression.Splicing)) +
+  # geom_point(alpha=0.01, color='black') +
+  # geom_density2d(color='red') +
+  geom_hex(bins=70) +
+  geom_abline(slope = 1, color='red') +
+  geom_text(data = . %>%
+              replace_na(list(Expression.Splicing=1E-5, chRNA.Expression.Splicing=1E-5)) %>%
+              group_by(ProductiveOrUnproductive) %>%
+              summarise(med = round(median(chRNA.Expression.Splicing/Expression.Splicing, na.rm=F), 3),
+                        n = n()) %>%
+              ungroup(),
+            aes(label=str_glue(" median FC={med}\n n={n}")),
+            x=-Inf, y=Inf, vjust=1.1, hjust=0.) +
+  scale_color_identity() +
+  scale_fill_viridis_c(trans='log10', option = 'B') + 
+  scale_x_continuous(trans="log10", breaks=c(1E-1, 10, 1000), labels=c("0.1", "10", "1000")) +
+  scale_y_continuous(trans="log10", breaks=c(1E-1, 10, 1000), labels=c("0.1", "10", "1000")) +
+  facet_wrap(~ProductiveOrUnproductive) +
+  theme_bw() +
+  coord_fixed() +
+  labs(x="Junction RPM, steady-state", y="Junction RPM, naRNA")
+ggsave("../code/scratch/PlotsForYangGrant.JunctionScatter.Hexbin.pdf", height=2, width=4.25)
+
+```
+
 
 Plots for Yang's grant.
 
@@ -595,5 +651,19 @@ bind_rows(
   write_tsv("/project2/yangili1/bjf79/20240118_CheckNewSMSM74_SeqLane_/code/config/samples.tsv")
   
 
+```
+
+
+```{r}
+Metadata <- read_tsv("../code/config/samples.tsv")
+
+Metadata %>%
+  filter(Phenotype == "H3K36ME3") %>%
+  distinct(IndID) %>%
+  inner_join(
+    read_tsv("/project2/yangili1/bjf79/ChromatinSplicingQTLs/data/igsr_samples.tsv.gz"),
+    by=c("IndID"="Sample name")
+  ) %>%
+  count(Sex)
 ```
 

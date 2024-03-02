@@ -1,6 +1,6 @@
 rule CollectLR_Bed12:
     input:
-        expand("LongReads/TerminiBeds5/{sample}.bed.gz", sample=long_read_samples),
+        expand("LongReads/FullLengthReadsBed12/{sample}.bed.gz", sample=long_read_samples),
         expand("LongReads/ClosestAnnotatedTermini/{GTFType}_{TES_or_TSS}/{sample}.bed.gz", GTFType = ["GTFTools", "GTFTools_BasicAnnotations"], TES_or_TSS = ["TSS", "TES"], sample=long_read_samples)
 
 rule Bam2Bed12:
@@ -77,3 +77,19 @@ rule ClosestTES_TSS:
         """
         bedtools closest -s -D a -t first -a {input.bed_reads_termini} -b {input.bed_annotated} | gzip - > {output}
         """
+
+rule FilterBam12ForFullLength:
+    """
+    read start within 25bp of annotated TSS, and within 50bp of annotated TES
+    """
+    input:
+        bed = "LongReads/bed12/{sample}.bed.gz",
+        TSS = "LongReads/ReferenceFeatures/GTFTools/gencode.v34.chromasomal.SingleNt_TSS.bed",
+        TES = "LongReads/ReferenceFeatures/GTFTools/gencode.v34.chromasomal.SingleNt_TES.bed"
+    output:
+        bed = "LongReads/FullLengthReadsBed12/{sample}.bed.gz"
+    shell:
+        """
+        zcat {input.bed} | awk -F'\\t' -v OFS='\\t' '$6 == "+" {{ print $1, $2, $2+1, $4, $5, $6, $0  }} $6 == "-" {{ print $1, $3-1, $3, $4, $5, $6, $0  }}' | bedtools sort -i - | bedtools closest -s -D a -t first -b {input.TSS} -a - | awk -F'\\t' -v OFS='\\t' '$NF>-25 && $NF<25' | cut -d$'\\t' --complement -f1-6 | awk -F'\\t' -v OFS='\\t' '$6 == "+" {{ print $1, $3-1, $3, $4, $5, $6, $0  }} $6 == "-" {{ print $1, $2, $2+1, $4, $5, $6, $0  }}'| bedtools sort -i - | bedtools closest -s -D a -t first -b {input.TES} -a - | awk -F'\\t' -v OFS='\\t' '$NF>-50 && $NF<50' | cut -d$'\\t' --complement -f1-6 | cut -d$'\\t' -f1-13 | gzip - > {output.bed}
+        """
+

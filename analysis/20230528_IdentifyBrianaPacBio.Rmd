@@ -58,3 +58,22 @@ NA18504
 NA19144
 NA19239
 
+Now let's look at the long read data to see how many long reads start at an annotated TSS and end at an annotated TES
+
+```{r}
+Closest.dat <- Sys.glob("../code/LongReads/ClosestAnnotatedTermini/GTFTools_T[ES]S/*.bed.gz") %>%
+  setNames(str_replace(., "../code/LongReads/ClosestAnnotatedTermini/GTFTools_(.+?)/(.+?).bed.gz", "\\1_\\2")) %>%
+  lapply(fread, col.names=c("readChrom", "readStart", "readStop", "readName", "readScore", "readStrand", "featChrom", "featStart", "featStop", "featName", "featScore", "featStrand", "D")) %>%
+  bind_rows(.id="featType_Sample") %>%
+  separate(featType_Sample, into=c("Type", "Sample"), sep="_")
+
+Closest.dat %>%
+  distinct(readName, Type, Sample, .keep_all=T) %>%
+  dplyr::select(Type, Sample, readName, D) %>%
+  ggplot(aes(x=D, color=Sample)) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(-50, 50)) +
+  facet_wrap(~Type)
+```
+
+

@@ -146,8 +146,31 @@ rule STAR_Align_WASP:
     shell:
         """
         # module load STAR/2.7.7a
+        # run ulimit -v 40577602264
         STAR --readMapNumber {params.readMapNumber} {params.JunctionScore} --outFileNamePrefix {params.PrefixPrefix}{wildcards.Phenotype}/{wildcards.IndID}/{wildcards.Rep}/ --genomeDir ReferenceGenome/STARIndex/ --readFilesIn {input.R1} {input.R2} --outSAMtype BAM SortedByCoordinate --readFilesCommand zcat --runThreadN {threads} --outSAMmultNmax 1 {params.WASP_params} {input.vcf} --limitBAMsortRAM 16000000000 {params.ENCODE_params} --outSAMstrandField intronMotif  &> {log}
         """
+
+use rule STAR_Align_WASP as STAR_Align_CIRC with:
+    output:
+        bam = "Alignments/STAR_Align_CIRC/{Phenotype}/{IndID}/{Rep}/Aligned.sortedByCoord.out.bam"
+    params:
+        readMapNumber = -1,
+        ENCODE_params = "--outFilterType BySJout --outFilterMultimapNmax 20  --alignSJoverhangMin 8 --alignSJDBoverhangMin 1 --outFilterMismatchNmax 999 --outFilterMismatchNoverReadLmax 0.04 --alignIntronMin 20 --alignIntronMax 1000000 --alignMatesGapMax 1000000 --chimSegmentMin 10",
+        WASP_params = "--waspOutputMode SAMtag --outSAMattributes NH HI AS nM XS vW --varVCFfile",
+        JunctionScore = GetSTARJunctionScoreParams,
+        PrefixPrefix =  "Alignments/STAR_Align_CIRC/"
+
+rule index_STAR_Align_CIRC:
+    input:
+        bam = "Alignments/STAR_Align_CIRC/{Phenotype}/{IndID}/{Rep}/Aligned.sortedByCoord.out.bam"
+    output:
+        bam = "Alignments/STAR_Align_CIRC/{Phenotype}/{IndID}/{Rep}/Aligned.sortedByCoord.out.bam.bai"
+    resources:
+        cpus_per_node = 9,
+        mem = 58000,
+    shell:
+        "samtools index {input.bam}"
+
 
 use rule STAR_Align_WASP as STAR_Align_WASP_SE with:
     input:

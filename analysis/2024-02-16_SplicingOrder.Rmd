@@ -1,0 +1,387 @@
+---
+title: "2024-02-16_SplicingOrder"
+output: html_document
+date: '2024-02-16'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message=F)
+```
+
+## Intro
+
+some analysis for Yang's grant about splicing order and backsplicing...
+
+```{r}
+library(tidyverse)
+library(data.table)
+```
+
+Splicing order qtltools run...
+
+```{r}
+splicing.order.qtls <- read_delim("/project2/yangili1/cfbuenabadn/ChromatinSplicingQTLs/code/QTLs/QTLTools/chRNA.Splicing.Order/PermutationPass.FDR_Added.txt.gz", delim=' ')
+
+hist(splicing.order.qtls$adj_beta_pval)
+
+splicing.order.qtls %>%
+  filter(q < 0.1)
+
+splicing.order.qtls %>%
+  mutate(expected.P = dense_rank(adj_beta_pval)/n()) %>%
+  ggplot(aes(x=-log10(expected.P), y=-log10(adj_beta_pval))) +
+  geom_abline() +
+  geom_point() +
+  theme_bw() +
+  labs(y="-log10(Observed.P)", x="-log10(Expected.P)")
+
+
+naRNA.IR.qtls <- read_delim("../code/QTLs/QTLTools/chRNA.IRjunctions/PermutationPass.FDR_Added.txt.gz", delim=' ')
+
+naRNA.IR.qtls %>%
+  filter(q < 0.1)
+
+polyA.IR.qtls <- read_delim("..//code/QTLs/QTLTools/polyA.IRjunctions/PermutationPass.FDR_Added.txt.gz", delim=' ')
+
+polyA.IR.qtls %>%
+  filter(q < 0.1)
+
+```
+
+
+Ok, cool. so P values seem to be reasonably calibrated. And there are 498 chRNA splice order QTLs... 7787 polyA intron retention QTLs. 7847 chRNA intron retention QTLs
+
+
+Let's write a bash script to help me plot all of these...
+
+```{r}
+setwd("/project2/yangili1/bjf79/ChromatinSplicingQTLs/code/")
+
+IR.qtls.ToGenes <- read_tsv("../code/QTLs/QTLTools/chRNA.IR/OnlyFirstRepsForColoc.sorted.qqnorm.bed.gz", col_select = 4) %>%
+  separate(pid, into=c("phe_id", "gene"), sep=":")
+
+IR.qtls <- read_delim("../code/QTLs/QTLTools/chRNA.IR/PermutationPass.FDR_Added.txt.gz", delim=' ') %>%
+  inner_join(IR.qtls.ToGenes)
+
+
+
+ToPlot <- splicing.order.qtls %>%
+  filter(q < 0.1) %>%
+  separate(grp_id, into=c("chrom", "I1Start", "I1End", "I2Start", "I2End", "strand"),  sep=":", convert=T) %>%
+  mutate(I1End = I1End) %>%
+  inner_join(
+    IR.qtls %>%
+      mutate(phe_from = phe_from-3, phe_to=phe_to+3) %>%
+      dplyr::select(chrom=phe_chr, I1Start=phe_from, I1End=phe_to, I1.id=phe_id),
+  ) %>%
+  inner_join(
+    IR.qtls %>%
+      mutate(phe_from = phe_from-3, phe_to=phe_to+3) %>%
+      dplyr::select(chrom=phe_chr, I2Start=phe_from, I2End=phe_to, I2.id=phe_id, gene),
+  ) %>%
+  dplyr::select(chrom, phe_id, I1.id, I2.id, gene, I1Start, I2End, strand, var_id, var_from) %>%
+  mutate(rn = str_pad(row_number(), width=3, side="left", pad="0"))
+
+ToPlot %>%
+  mutate(LeftPlotBoundary = I1Start - 1000, RightPlotBoundary = I2End + 1000) %>%
+  mutate(scriptCall = str_glue("python scripts/GenometracksByGenotype/AggregateBigwigsForPlotting.py --VCF Genotypes/1KG_GRCh38/Autosomes.vcf.gz --SnpPos {chrom}:{var_from} --GroupSettingsFile PlotQTLs/bwList.Groups.4col.RNA.tsv --BigwigList PlotQTLs/bwList.AllPolyAAndchRNA.tsv --Normalization WholeGenome --Region {chrom}:{LeftPlotBoundary}-{RightPlotBoundary} --BigwigListType KeyFile --OutputPrefix scratch/Plot_spliceOrderQTlLs/dat.  --Bed12GenesToIni /project2/yangili1/bjf79/ChromatinSplicingQTLs/code/scripts/GenometracksByGenotype/PremadeTracks/gencode.v26.FromGTEx.genes.bed12.gz  --NoSashimi --SnpName {var_id} -v")) %>%
+  mutate(pyGenometracksCall = str_glue("pyGenomeTracks --region {chrom}:{LeftPlotBoundary}-{RightPlotBoundary}  -out scratch/Plot_spliceOrderQTlLs/Plots/{rn}_Coverage.pdf --tracks scratch/Plot_spliceOrderQTlLs/dat.tracks.ini")) %>%
+  mutate(ExtractPhenotypes = str_glue(
+  "
+  #I1 naRNA
+  python scripts/GenometracksByGenotype/ExtractPhenotypeBedByGenotype.py --VCF Genotypes/1KG_GRCh38/Autosomes.vcf.gz --SnpPos {chrom}:{var_from} --SnpName {var_id} --Bed QTLs/QTLTools/chRNA.IR/OnlyFirstReps.sorted.qqnorm.bed.gz --FeatureName {I1.id} --Long --ReportBedAsColumn -v | gzip - > scratch/Plot_spliceOrderQTlLs/dat.ForPlot.{rn}.tsv.gz
+  #I2 naRNA
+  python scripts/GenometracksByGenotype/ExtractPhenotypeBedByGenotype.py --VCF Genotypes/1KG_GRCh38/Autosomes.vcf.gz --SnpPos {chrom}:{var_from} --SnpName {var_id} --Bed QTLs/QTLTools/chRNA.IR/OnlyFirstReps.sorted.qqnorm.bed.gz --FeatureName {I2.id} --Long --ReportBedAsColumn -v --NoHeader | gzip - >> scratch/Plot_spliceOrderQTlLs/dat.ForPlot.{rn}.tsv.gz
+  #I1 steady state
+  python scripts/GenometracksByGenotype/ExtractPhenotypeBedByGenotype.py --VCF Genotypes/1KG_GRCh38/Autosomes.vcf.gz --SnpPos {chrom}:{var_from} --SnpName {var_id} --Bed QTLs/QTLTools/polyA.IR/OnlyFirstReps.sorted.qqnorm.bed.gz --FeatureName {I1.id} --Long --ReportBedAsColumn -v --NoHeader | gzip - >> scratch/Plot_spliceOrderQTlLs/dat.ForPlot.{rn}.tsv.gz
+  #I2 steady state
+  python scripts/GenometracksByGenotype/ExtractPhenotypeBedByGenotype.py --VCF Genotypes/1KG_GRCh38/Autosomes.vcf.gz --SnpPos {chrom}:{var_from} --SnpName {var_id} --Bed QTLs/QTLTools/polyA.IR/OnlyFirstReps.sorted.qqnorm.bed.gz --FeatureName {I2.id} --Long --ReportBedAsColumn -v --NoHeader | gzip - >> scratch/Plot_spliceOrderQTlLs/dat.ForPlot.{rn}.tsv.gz
+  #splice order
+  python scripts/GenometracksByGenotype/ExtractPhenotypeBedByGenotype.py --VCF Genotypes/1KG_GRCh38/Autosomes.vcf.gz --SnpPos {chrom}:{var_from} --SnpName {var_id} --Bed QTLs/QTLTools/chRNA.Splicing.Order/OnlyFirstReps.sorted.qqnorm.bed.gz --FeatureName {phe_id} --Long --ReportBedAsColumn -v --NoHeader | gzip - >> scratch/Plot_spliceOrderQTlLs/dat.ForPlot.{rn}.tsv.gz
+  #naRNA expression
+  python scripts/GenometracksByGenotype/ExtractPhenotypeBedByGenotype.py --VCF Genotypes/1KG_GRCh38/Autosomes.vcf.gz --SnpPos {chrom}:{var_from} --SnpName {var_id} --Bed QTLs/QTLTools/chRNA.Expression.Splicing/OnlyFirstReps.sorted.qqnorm.bed.gz --FeatureName {gene} --Long --ReportBedAsColumn -v --NoHeader | gzip - >> scratch/Plot_spliceOrderQTlLs/dat.ForPlot.{rn}.tsv.gz
+  #steady state expression
+  python scripts/GenometracksByGenotype/ExtractPhenotypeBedByGenotype.py --VCF Genotypes/1KG_GRCh38/Autosomes.vcf.gz --SnpPos {chrom}:{var_from} --SnpName {var_id} --Bed QTLs/QTLTools/Expression.Splicing/OnlyFirstReps.sorted.qqnorm.bed.gz --FeatureName {gene} --Long --ReportBedAsColumn -v --NoHeader | gzip - >> scratch/Plot_spliceOrderQTlLs/dat.ForPlot.{rn}.tsv.gz
+\n\n
+  "
+  )) %>%
+  # # pull(scriptCall) 
+  # # pull(pyGenometracksCall)
+  # pull(ExtractPhenotypes)
+  dplyr::select(rn, scriptCall, pyGenometracksCall, ExtractPhenotypes) %>%
+  pivot_longer(names_to = "CommandType", values_to = "Command", -rn) %>%
+  dplyr::select(Command) %>%
+  write_tsv("../code/scratch/Plot_spliceOrderQTlLs/MakePlots.sh", col_names = F)
+```
+
+```{r}
+dat.BoxPlots <- read_tsv("../code/scratch/Plot_spliceOrderQTlLs/dat.ForPlot.074.tsv.gz") %>%
+  separate(Feature, into=c("chrom", "start", "stop", "name"), sep=";")
+
+dat.BoxPlots %>%
+  filter(!genotype==3) %>%
+  mutate(genotype = factor(genotype)) %>%
+  mutate(PhenotypeClass = str_replace(Bed, "QTLs/QTLTools/(.+?)/OnlyFirstReps.sorted.qqnorm.bed.gz", "\\1")) %>%
+  mutate(facet = paste(name, PhenotypeClass, sep="\n")) %>%
+ggplot(aes(x=genotype, y=value)) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_jitter(alpha=0.1) +
+  theme_bw() +
+  facet_wrap(~facet)
+
+dat.BoxPlots %>%
+  separate(Feature, into=c("chrom", "start", "stop", "name"), sep=";")
+```
+
+Ok, let's more systematically output all the boxplots...
+```{r}
+dat.BoxPlots <- Sys.glob("../code/scratch/Plot_spliceOrderQTlLs/dat.ForPlot.*.tsv.gz") %>%
+  setNames(str_replace(., "../code/scratch/Plot_spliceOrderQTlLs/dat.ForPlot.(.+?).tsv.gz", "\\1")) %>%
+  lapply(fread) %>%
+  bind_rows(.id="rn") %>%
+  separate(Feature, into=c("chrom", "start", "stop", "name"), sep=";") %>%
+  filter(!genotype==3) %>%
+  mutate(genotype = factor(genotype)) %>%
+  mutate(PhenotypeClass = str_replace(Bed, "QTLs/QTLTools/(.+?)/OnlyFirstReps.sorted.qqnorm.bed.gz", "\\1")) %>%
+  inner_join(ToPlot)
+
+rns.to.Plot <- dat.BoxPlots %>%
+  pull(rn) %>% unique()
+
+for (i in seq_along(rns.to.Plot)){
+  print(rns.to.Plot[i])
+  dat.BoxPlots.filtered <- dat.BoxPlots %>%
+      filter(rn == rns.to.Plot[i])
+    genotype_labels <- dat.BoxPlots.filtered %>%
+    mutate(genotype_letters = case_when(
+      genotype == "0" ~ paste0(Ref,Ref),
+      genotype == "1" ~ paste0(Ref,Alt),
+      genotype == "2" ~ paste0(Alt,Alt),
+    )) %>%
+    distinct(genotype, genotype_letters) %>%
+    deframe()
+  P <- dat.BoxPlots.filtered %>%
+    mutate(name = case_when(
+      name == I1.id & strand == "+" ~ paste(name, "(Upstream)", sep='\n'),
+      name == I1.id & strand == "-" ~ paste(name, "(Downstream)", sep='\n'),
+      name == I2.id & strand == "+" ~ paste(name, "(Downstream)", sep='\n'),
+      name == I2.id & strand == "-" ~ paste(name, "(Upstream)", sep='\n'),
+      TRUE ~ name
+    )) %>%
+  mutate(facet = paste(name, PhenotypeClass, sep="\n")) %>%
+  ggplot(aes(x=genotype, y=value)) +
+    geom_boxplot(outlier.shape = NA) +
+    geom_jitter(alpha=0.1) +
+    scale_x_discrete(labels=genotype_labels) +
+    theme_bw() +
+    facet_wrap(~facet)
+  ggsave(paste0("../code/scratch/Plot_spliceOrderQTlLs/Plots/", rns.to.Plot[i], "_boxplots.pdf"), P)
+}
+
+
+```
+
+
+Yang particularly likes highlighting 021 and 026 in his grant... let me plot those ones a tad nicer...
+
+
+```{r}
+ToPlot %>%
+  filter(rn %in% c("026", "021")) %>%
+  mutate(LeftPlotBoundary = I1Start - 1000, RightPlotBoundary = I2End + 1000) %>%
+  mutate(scriptCall = str_glue("python scripts/GenometracksByGenotype/AggregateBigwigsForPlotting.py --VCF Genotypes/1KG_GRCh38/Autosomes.vcf.gz --SnpPos {chrom}:{var_from} --GroupSettingsFile PlotQTLs/bwList.Groups.4col.chRNA_and_polyARNA.tsv --BigwigList PlotQTLs/bwList.AllPolyAAndUnstrandedchRNA.tsv --Normalization WholeGenome --Region {chrom}:{LeftPlotBoundary}-{RightPlotBoundary} --BigwigListType KeyFile --OutputPrefix scratch/Plot_spliceOrderQTlLs/Plots/NicePlots/dat/dat.Example{rn}.  --Bed12GenesToIni /project2/yangili1/bjf79/ChromatinSplicingQTLs/code/scripts/GenometracksByGenotype/PremadeTracks/gencode.v26.FromGTEx.genes.bed12.gz  --NoSashimi --SnpName {var_id} -v")) %>%
+  mutate(pyGenometracksCall = str_glue("pyGenomeTracks --region {chrom}:{LeftPlotBoundary}-{RightPlotBoundary}  -out scratch/Plot_spliceOrderQTlLs/Plots/{rn}_Coverage.pdf --tracks scratch/Plot_spliceOrderQTlLs/dat.Example{rn}.tracks.ini")) %>%
+  dplyr::select(rn, scriptCall, pyGenometracksCall) %>%
+  pivot_longer(names_to = "CommandType", values_to = "Command", -rn) %>%
+  pull(Command)
+
+bwList <- read_tsv("../code/PlotQTLs/bwList.AllPolyAAndchRNA.tsv")
+
+bind_rows(
+  bwList %>%
+    filter(Group_label == "polyA.RNA"),
+  data.frame(BigwigFilepath = Sys.glob("../code/bigwigs/chRNA.Expression.Splicing/*.1.bw"), Strand=".", Group_label="chRNA") %>%
+    mutate(BigwigFilepath = str_replace(BigwigFilepath, "../code/(bigwigs/chRNA.Expression.Splicing/.+?.1.bw)", "\\1")) %>%
+    mutate(SampleID = str_replace(BigwigFilepath, "bigwigs/chRNA.Expression.Splicing/(.+?).1.bw", "\\1"))
+) %>%
+  write_tsv("../code/PlotQTLs/bwList.AllPolyAAndUnstrandedchRNA.tsv")
+
+read_tsv("../code/PlotQTLs/bwList.Groups.4col.RNA.tsv") %>%
+  filter(!Group_label=="MetabolicLabelled.30min") %>%
+  arrange(Group_label) %>%
+  write_tsv("../code/PlotQTLs/bwList.Groups.4col.chRNA_and_polyARNA.tsv")
+
+```
+...now maually Fine tune the plotting range to look nice
+
+```{bash, eval=F}
+python scripts/GenometracksByGenotype/AggregateBigwigsForPlotting.py --VCF Genotypes/1KG_GRCh38/Autosomes.vcf.gz --SnpPos chr21:32321947 --GroupSettingsFile PlotQTLs/bwList.Groups.4col.chRNA_and_polyARNA.tsv --BigwigList PlotQTLs/bwList.AllPolyAAndUnstrandedchRNA.tsv --Normalization WholeGenome --Region chr21:32,320,000-32,324,617 --BigwigListType KeyFile --OutputPrefix scratch/Plot_spliceOrderQTlLs/Plots/NicePlots/dat/dat.Example021.    --NoSashimi --SnpName 21:32321947:A:T -v
+
+#--Bed12GenesToIni /project2/yangili1/bjf79/ChromatinSplicingQTLs/code/scripts/GenometracksByGenotype/PremadeTracks/gencode.v26.FromGTEx.genes.bed12.gz
+
+pyGenomeTracks --region chr21:32,320,000-32,324,617  -out scratch/Plot_spliceOrderQTlLs/Plots/NicePlots/021_Coverage.pdf --tracks scratch/Plot_spliceOrderQTlLs/Plots/NicePlots/dat/dat.Example021.tracks.ini --decreasingXAxis --width 15 --height 10
+
+python scripts/GenometracksByGenotype/AggregateBigwigsForPlotting.py --VCF Genotypes/1KG_GRCh38/Autosomes.vcf.gz --SnpPos chr3:45719623 --GroupSettingsFile PlotQTLs/bwList.Groups.4col.chRNA_and_polyARNA.tsv --BigwigList PlotQTLs/bwList.AllPolyAAndUnstrandedchRNA.tsv --Normalization WholeGenome --Region chr3:45,719,461-45,723,218 --BigwigListType KeyFile --OutputPrefix scratch/Plot_spliceOrderQTlLs/Plots/NicePlots/dat/dat.Example026.  --NoSashimi --SnpName 3:45719623:G:C -v
+
+pyGenomeTracks --region chr3:45,719,461-45,723,218  -out scratch/Plot_spliceOrderQTlLs/Plots/NicePlots/026_Coverage.pdf --tracks scratch/Plot_spliceOrderQTlLs/Plots/NicePlots/dat/dat.Example026.tracks.ini --width 15 --height 10
+```
+
+aand plot the boxplots...
+
+```{r}
+
+dat.BoxPlots.filtered <- dat.BoxPlots %>%
+    filter(rn == "026")
+genotype_labels <- dat.BoxPlots.filtered %>%
+    mutate(genotype_letters = case_when(
+      genotype == "0" ~ paste0(Ref,Ref),
+      genotype == "1" ~ paste0(Ref,Alt),
+      genotype == "2" ~ paste0(Alt,Alt),
+    )) %>%
+    distinct(genotype, genotype_letters) %>%
+    deframe()
+P <- dat.BoxPlots.filtered %>%
+  mutate(name = case_when(
+    name == I1.id & strand == "+" ~ "UpstreamIntron",
+    name == I1.id & strand == "-" ~ "DownstreamIntron",
+    name == I2.id & strand == "+" ~ "DownstreamIntron",
+    name == I2.id & strand == "-" ~ "UpstreamIntron",
+    TRUE ~ name
+  )) %>%
+  mutate(facet = paste(name, PhenotypeClass, sep="\n")) %>%
+  filter(!str_detect(facet,"^ENS")) %>%
+  # filter(!str_detect(facet,"Order")) %>%
+  mutate(PhenotypeClass = recode(PhenotypeClass, "chRNA.IR"="naRNA", "polyA.IR"="SteadyStateRNA")) %>%
+  mutate(PhenotypeClass = factor(PhenotypeClass, levels=c("naRNA", "SteadyStateRNA"))) %>%
+  mutate(facet = paste(name, PhenotypeClass, sep="\n")) %>%
+ggplot(aes(x=genotype, y=value)) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_jitter(alpha=0.1) +
+  scale_x_discrete(labels=genotype_labels) +
+  theme_classic() +
+  annotate("segment", x=-Inf, xend=Inf, y=-Inf, yend=-Inf)+
+  annotate("segment", x=-Inf, xend=-Inf, y=-Inf, yend=Inf) +
+  facet_wrap(~facet, nrow=1) +
+  labs(y="Normalized\nIntron\nRetention")
+print(P)
+ggsave("../code/scratch/Plot_spliceOrderQTlLs/Plots/NicePlots/026.Boxplots.pdf", height=2, width=5)
+
+
+dat.BoxPlots.filtered <- dat.BoxPlots %>%
+    filter(rn == "021")
+genotype_labels <- dat.BoxPlots.filtered %>%
+    mutate(genotype_letters = case_when(
+      genotype == "0" ~ paste0(Ref,Ref),
+      genotype == "1" ~ paste0(Ref,Alt),
+      genotype == "2" ~ paste0(Alt,Alt),
+    )) %>%
+    distinct(genotype, genotype_letters) %>%
+    deframe()
+P <- dat.BoxPlots.filtered %>%
+  mutate(name = case_when(
+    name == I1.id & strand == "+" ~ "UpstreamIntron",
+    name == I1.id & strand == "-" ~ "DownstreamIntron",
+    name == I2.id & strand == "+" ~ "DownstreamIntron",
+    name == I2.id & strand == "-" ~ "UpstreamIntron",
+    TRUE ~ name
+  )) %>%
+  mutate(facet = paste(name, PhenotypeClass, sep="\n")) %>%
+  filter(!str_detect(facet,"^ENS")) %>%
+  # filter(!str_detect(facet,"Order")) %>%
+  mutate(PhenotypeClass = recode(PhenotypeClass, "chRNA.IR"="naRNA", "polyA.IR"="SteadyStateRNA")) %>%
+  mutate(PhenotypeClass = factor(PhenotypeClass, levels=c("naRNA", "SteadyStateRNA"))) %>%
+  mutate(facet = paste(name, PhenotypeClass, sep="\n")) %>%
+ggplot(aes(x=genotype, y=value)) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_jitter(alpha=0.1) +
+  scale_x_discrete(labels=genotype_labels) +
+  theme_classic() +
+  annotate("segment", x=-Inf, xend=Inf, y=-Inf, yend=-Inf)+
+  annotate("segment", x=-Inf, xend=-Inf, y=-Inf, yend=Inf) +
+  facet_wrap(~facet, nrow=1) +
+  labs(y="Normalized\nIntron\nRetention")
+print(P)
+ggsave("../code/scratch/Plot_spliceOrderQTlLs/Plots/NicePlots/021.Boxplots.pdf", height=2, width=5)
+
+
+```
+
+
+Let's explore the other table that has the more raw splice order metrics...
+
+```{r}
+setwd("/project2/yangili1/bjf79/ChromatinSplicingQTLs/analysis/")
+
+splice.order <- read_tsv("/project2/yangili1/yangili/chRNA_order/splicing_order/splice_order/table.txt")
+
+Splice.order.tidy <- splice.order %>%
+  # head() %>%
+  pivot_longer(names_to = "sample", values_to = "I1.I2", -exonid) %>%
+  separate(I1.I2, into=c("I1First", "I2First"), sep="/", convert=T)
+
+splice.order.I1 <- Splice.order.tidy %>%
+  dplyr::select(-I2First) %>%
+  pivot_wider(names_from="sample", values_from="I1First") %>%
+  column_to_rownames("exonid")
+
+splice.order.I2 <- Splice.order.tidy %>%
+  dplyr::select(-I1First) %>%
+  pivot_wider(names_from="sample", values_from="I2First") %>%
+  column_to_rownames("exonid")
+
+
+Sums <- (splice.order.I1 + splice.order.I2) %>%
+  apply(1, sum) %>%
+  as.data.frame() %>%
+  rownames_to_column("exonid") %>%
+  rename(Sum=".")
+
+ggplot(Sums, aes(x=Sum)) +
+  geom_histogram() +
+  scale_x_continuous(trans='log10')
+
+Splice.order.tidy %>%
+  inner_join(Sums %>%
+               filter(Sum > 1000)) %>%
+  group_by(exonid) %>%
+  summarise(Ratio = sum(I1First)/sum(I2First)) %>%
+  ungroup() %>%
+  separate(exonid, into=c("chrom", "I1Start", "I1End", "I2Start", "I2End", "strand"), sep=":", convert=T) %>%
+  mutate(UpstreamStart = case_when(
+    strand == "+" ~ I1Start,
+    strand == "-" ~ I2Start,
+  )) %>%
+  mutate(DownstreamStart = case_when(
+    strand == "+" ~ I2Start,
+    strand == "-" ~ I1Start,
+  )) %>%
+  mutate(UpstreamEnd = case_when(
+    strand == "+" ~ I1End,
+    strand == "-" ~ I2End,
+  )) %>%
+  mutate(DownstreamEnd = case_when(
+    strand == "+" ~ I2End,
+    strand == "-" ~ I1End,
+  )) %>%
+  mutate(UpstreamLen = UpstreamEnd-UpstreamStart, DownstreamLen = DownstreamEnd-DownstreamStart) %>%
+  mutate(UpstreamLen_ntile = ntile(UpstreamLen, 5), DownstreamLen_ntile = ntile(DownstreamLen, 5)) %>%
+  mutate(LenRatio = UpstreamLen/DownstreamLen) %>%
+  mutate(LenRatio_ntile = cut_number(LenRatio, 5)) %>%
+  ggplot(aes(x=Ratio, color=LenRatio_ntile)) +
+    stat_ecdf() +
+    scale_x_continuous(trans='log10') +
+    scale_color_brewer() +
+    geom_vline(xintercept = 1) +
+  coord_cartesian(xlim=c(0.01, 100)) +
+  theme_bw() +
+  facet_wrap(~strand) +
+  labs(y="ecdf", x="Intron1SplicedFirst / Intron2SplicedFirst Ratio", color="UpstreamLen/DownstreamLen Ratio", caption="32249 introns with >1000 reads used to estimate order")
+
+
+```
+
+Ok that makes sense sort of... Adjacent Intron pairs where the first intron is relatively shorter are more likely to be spliced in order.
+
+
+
+

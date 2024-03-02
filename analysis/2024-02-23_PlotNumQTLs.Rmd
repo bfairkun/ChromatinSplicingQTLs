@@ -1,0 +1,87 @@
+---
+title: "2024-02-23_PlotNumQTLs"
+output: html_document
+date: '2024-02-23'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message=F)
+```
+
+```{r}
+library(tidyverse)
+library(data.table)
+```
+
+
+## Intro
+
+For a grant Yang wants a plot of number of QTLs
+
+```{r}
+
+dat <- Sys.glob("../code/QTLs/QTLTools/*/PermutationPass.FDR_Added.txt.gz") %>%
+  grep("Order", ., value=T, invert=T) %>%
+  setNames(str_replace(., "../code/QTLs/QTLTools/(.+?)/PermutationPass.FDR_Added.txt.gz", "\\1")) %>%
+  lapply(fread) %>%
+  bind_rows(.id="PC") %>%
+  mutate(testType = "ungrouped")
+
+grouped.dat <- Sys.glob("../code/QTLs/QTLTools/*/GroupedPermutationPass.FDR_Added.txt.gz") %>%
+  # grep("Order", ., value=T, invert=T) %>%
+  # grep("YRI", ., value=T, invert=T) %>%
+  setNames(str_replace(., "../code/QTLs/QTLTools/(.+?)/GroupedPermutationPass.FDR_Added.txt.gz", "\\1")) %>%
+  lapply(fread) %>%
+  bind_rows(.id="PC") %>%
+  mutate(testType = "grouped")
+
+bind_rows(
+  dat %>%
+    dplyr::select(PC, phe_id, q, testType),
+  grouped.dat %>%
+    dplyr::select(PC, phe_id, q, testType)
+) %>%
+  mutate(Sig = q < 0.1) %>%
+  count(Sig, testType, PC) %>%
+  group_by(testType, PC) %>%
+  mutate(nTests = sum(n)) %>%
+  ungroup() %>%
+  filter(Sig==T) %>%
+  write_tsv("../output/20240223_NumQTLs.tsv")
+
+
+```
+
+Did some manual editing in excel to rename phenotypes and assays ...
+
+```{r}
+dat.edited <- readxl::read_excel("../output/20240223_NumQTLs_edited.xlsx")
+
+dat.edited.ToPlot <- dat.edited %>%
+  filter(!is.na(Order)) %>%
+  mutate(x = paste(RenamedPC, Assay)) %>%
+  mutate(x = fct_reorder(x, desc(Order))) %>%
+  mutate(Assay = fct_reorder(Assay, Order))
+
+labels <- dat.edited.ToPlot %>%
+  dplyr::select(x, RenamedPC) %>% deframe()
+
+dat.edited.ToPlot %>%
+  filter(!PC=="DNaseISensitivity") %>%
+ggplot(aes(y=x, x=nTests, fill=Assay)) +
+  geom_col(color='black') +
+  geom_col(aes(x=n), alpha=0, color='black') +
+  geom_text(aes(x=n, label=n, hjust=1.1)) +
+  geom_text(aes(x=nTests, label=nTests, hjust=0)) +
+  scale_fill_brewer(type="qual", palette="Set3") +
+  scale_y_discrete(labels = labels) +
+  scale_x_continuous(trans='log10', expand=c(0, 0), breaks=c(1,100, 10000, 1E6), labels=c(1, 100, "10K", "1M")) +
+  coord_cartesian(xlim = c(1, 7000000)) +
+  labs(x="# QTLs | # Test features", y=NULL, fill=NULL) +
+  theme_classic() +
+  theme(legend.position='bottom') +
+  guides(fill=guide_legend(nrow=3,byrow=TRUE))
+
+ggsave("../output/NumQTLs.FDR10.pdf", height=4.5, width=4.5)
+```
+

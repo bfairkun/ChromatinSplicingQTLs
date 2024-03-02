@@ -206,8 +206,10 @@ rule fastp:
         R1 = "Fastq/{Phenotype}/{IndID}/{Rep}.R1.fastq.gz",
         R2 = "Fastq/{Phenotype}/{IndID}/{Rep}.R2.fastq.gz"
     output:
-        R1 = temp("FastqFastp/{Phenotype}/{IndID}/{Rep}.R1.fastq.gz"),
-        R2 = temp("FastqFastp/{Phenotype}/{IndID}/{Rep}.R2.fastq.gz"),
+        # R1 = temp("FastqFastp/{Phenotype}/{IndID}/{Rep}.R1.fastq.gz"),
+        # R2 = temp("FastqFastp/{Phenotype}/{IndID}/{Rep}.R2.fastq.gz"),
+        R1 = "FastqFastp/{Phenotype}/{IndID}/{Rep}.R1.fastq.gz",
+        R2 = "FastqFastp/{Phenotype}/{IndID}/{Rep}.R2.fastq.gz",
         html = "FastqFastp/{Phenotype}/{IndID}/{Rep}.fastp.html",
         json = "FastqFastp/{Phenotype}/{IndID}/{Rep}.fastp.json"
     params:

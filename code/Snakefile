@@ -155,3 +155,13 @@ rule CollectDownloadGWAS_SummaryStats:
     input:
         # expand("gwas_summary_stats/full_data/{accession}.tsv.gz", accession=gwas_df.index)
         expand("hyprcoloc/Results/ForGWASColoc/{ColocName}/results.txt.gz", ColocName = colocs_gwas.index )
+
+rule Collect_STAR_Chim_bam:
+    input:
+        "Alignments/STAR_Align_CIRC/chRNA.Expression.Splicing/NA18486/1/Aligned.sortedByCoord.out.bam.bai",
+        "Alignments/STAR_Align_CIRC/chRNA.Expression.Splicing/NA18497/1/Aligned.sortedByCoord.out.bam.bai",
+        "Alignments/STAR_Align_CIRC/chRNA.Expression.Splicing/NA18498/1/Aligned.sortedByCoord.out.bam.bai",
+        "Alignments/STAR_Align_CIRC/Expression.Splicing/HG00096/1/Aligned.sortedByCoord.out.bam.bai",
+        "Alignments/STAR_Align_CIRC/Expression.Splicing/HG00097/1/Aligned.sortedByCoord.out.bam.bai",
+        "Alignments/STAR_Align_CIRC/Expression.Splicing/HG00099/1/Aligned.sortedByCoord.out.bam.bai",
+
