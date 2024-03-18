@@ -453,3 +453,8 @@ rule CountPCs_and_SampleSize:
             wc -l $fn | awk '{{print $1-1}}' >> {output.PCs}
         done
         """
+
+rule Gather_NominalPassTabixForUnstandardizedScatters:
+    input:
+        expand("QTLs/QTLTools/{Phenotype}/NominalPassForColocUnstandardized.txt.tabix.gz.tbi", Phenotype=["chRNA.Expression.Splicing", "Expression.Splicing", "polyA.Splicing", "MetabolicLabelled.30min", "MetabolicLabelled.60min"]),
+        expand("QTLs/QTLTools/{Phenotype}/NominalPassForColocUnstandardized.txt.tabix.gz", Phenotype=["chRNA.Expression.Splicing", "Expression.Splicing", "polyA.Splicing", "MetabolicLabelled.30min", "MetabolicLabelled.60min"])

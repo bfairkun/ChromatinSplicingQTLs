@@ -634,6 +634,31 @@ P.scatter
 
 Scatter.dat %>%
   filter(gene == "ENSG00000188529")
+
+Scatter.dat %>%
+      full_join(
+        P.boxplot.dat %>%
+          # filter(ColorEffect == "NMD") %>%
+          dplyr::distinct(GAGTInt, ExonStart_Cassette, ExonStop_Cassette, gene, hgnc_symbol, ColorEffect, MergedEffect, IsAnnotated, dataset, .keep_all=T) %>%
+          pivot_wider(names_from="dataset", values_from="log2FC"),
+      by="gene"
+      ) %>%
+  dplyr::select(-chRNA, -polyA, -hgnc_symbol) %>%
+  mutate(Category = case_when(
+      !is.na(logFC_polyA) & !is.na(logFC_chRNA) & Category == "Other" ~ "Unchanged",
+      Category == "Other" ~ "Filtered out of analysis",
+      is.na(Category) ~ "Filtered out of analysis",
+      TRUE ~ Category
+  )) %>%
+  left_join(ensembl_to_symbols, by=c("gene"="ensembl_gene_id")) %>%
+  dplyr::select(gene, hgnc_symbol, Risdiplam.dose.nM=dose.nM,everything()) %>%
+  arrange(ColorEffect, Category) %>%
+  # filter(ColorEffect=="NMD") %>% distinct(gene )
+  write_tsv("../data/FigS23_Join_Fig5DE.dat.tsv.gz")
+  
+  P.boxplot.dat %>%
+    filter(ColorEffect=="NMD") %>%
+    distinct(gene)
 ```
 
 ### Induction of GAGT introns plots

@@ -1070,6 +1070,13 @@ P.Number_sQTLsForColoc
 
 
 ```{r}
+Labels.df <- read_tsv("../data/Phenotypes_recode_for_Plotting.txt")
+
+MolQTL_Labels <- Labels.df %>% dplyr::select(PC, Shortest) %>% deframe()
+MolQTL_AssayLabels <- Labels.df %>% dplyr::select(PC, Assay) %>% deframe()
+Factor_Order <- Labels.df %>% dplyr::select(PC, OrderFactor) %>% deframe()
+
+
 coloc.dat <- read_tsv("../code/hyprcoloc/Results/ForColoc/MolColocNonRedundantFullSplicing/tidy_results_OnlyColocalized.txt.gz") %>%
   separate(phenotype_full, into=c("PC", "P"), sep=";")
 
@@ -1672,6 +1679,69 @@ ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/202
 ```
 
 
+### Update for reviews...
+
+The reviewer noticed that APA has stronger enrichment than splicing, so was left wondering what to think since in the text we note that there are more u-sQTL post-txn eQTL colocalizations than APA-QTL post-txn eQTL colocalizations... I think this is natural since there are just more splice sites than APA sites, which get's lost when we calculate the enrichment as the PIP mass over the total feature set bp space. So for the reviewer, let's make another version of this plot without the normalization by total feature space.
+
+```{r}
+featureSets <- fread("../code/QTL_SNP_Enrichment/FinemapIntersections/GenewiseColoc_ChromatinAPAAndRNA.bed.gz", col.names=c("chrom", "start", "stop", "name", "score", "featChrom", "featStart", "featStop", "Annotation", "Overlap"))
+
+featureSets %>%
+  group_by(Annotation) %>%
+  summarise(featLen = sum(featStop - featStart)) %>%
+  ungroup() %>%
+  ggplot(aes(y=Annotation, x=featLen)) +
+  geom_col() +
+  scale_x_continuous(trans='log10')
+
+dat.enrichment.forreview <- dat.enrichment %>%
+  filter(!startsWith(Annotation, "ncRNA") ) %>%
+  filter(!Annotation==".") %>%
+  pivot_longer(names_to = "eQTLType", values_to = "PIP_mass", c("hQTL_eGenes", "Other_eGenes")) %>%
+  group_by(eQTLType, BootstrapRep) %>%
+  mutate(TotalPIPMass = sum(PIP_mass)) %>%
+  ungroup() %>%
+  group_by(Annotation, eQTLType) %>%
+  summarise(Lower=quantile(PIP_mass/TotalPIPMass*100,probs=0.025, na.rm=T),
+            Upper=quantile(PIP_mass/TotalPIPMass*100,probs=0.975, na.rm=T),
+            Middle=quantile(PIP_mass/TotalPIPMass*100,probs=0.5, na.rm=T)) %>%
+  ungroup() %>%
+   mutate(Color = case_when(
+    str_detect(Annotation, "^\\d.+Enhancer$") ~ "ChromHMM enhancer",
+    str_detect(Annotation, "^\\d.+Promoter$") ~ "ChromHMM promoter",
+    str_detect(Annotation, "^\\d.+Txn.*") ~ "ChromHMM transcribed region",
+    str_detect(Annotation, "^Splice") ~ "Splice sites",
+    # str_detect(Annotation, "miRNA_BS") ~ "miRNA binding sites",
+    TRUE ~ "Other"
+  )) %>%
+  mutate(Annotation = if_else(str_detect(Annotation, "^\\d"), paste0("ChromHMM_",Annotation), Annotation)) %>%
+  mutate(Annotation = recode(Annotation,
+                             "miRNA_BS"= "miRNA binding sites",
+                             "PAS_Region"="Polyadenylation site regions",
+                             "SpliceAcceptor_0"="Splice acceptors (unannotated)",
+                             "SpliceAcceptor_1"="Splice acceptors (annotated)",
+                             "SpliceBranchpointRegion_0"="Splice branchpoint region (unannotated acceptor)",
+                             "SpliceBranchpointRegion_1"="Splice branchpoint region (annotated acceptor)",
+                             "SpliceDonor_0"="Splice donors (unannotated)",
+                             "SpliceDonor_1"="Splice donors (annotated)"
+                             )) %>%
+  mutate(eQTLType = factor(eQTLType, levels=c("hQTL_eGenes", "Other_eGenes"))) %>%
+  mutate(Annotation = fct_reorder(Annotation, Middle))
+
+P.PIP_Mass <- ggplot(dat.enrichment.forreview, aes(x=Annotation, fill=Color, group=eQTLType)) +
+  geom_col(aes(y=Middle, color=eQTLType), position=position_dodge(), width=0.8) +
+  geom_errorbar(aes(ymin=Lower, ymax=Upper, fill=Color, color=eQTLType),position=position_dodge(0.9), color='black', width=.4) +
+  scale_fill_brewer(palette = "Accent") +
+  theme_bw() +
+  Rotate_x_labels +
+  labs(y="sum of PIP mass in genomic annotation class", fill="Type of\ngenomic annotation") +
+  coord_flip()
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/20240605_PIP_Mass.pdf", P.PIP_Mass, width=7, height=7.5)
+
+```
+
+
 beta beta scatters
 
 ```{r}
@@ -1820,6 +1890,7 @@ ggplot(aes(x=beta.x, y=x.beta.in.y, color=SuperAnnotation)) +
     geom_abline(data = . %>%
                   distinct(SuperAnnotationLabel, PC2, .keep_all=T),
                 aes(slope=estimate, intercept=0), size=2) +
+    # geom_smooth(method = deming, se = FALSE, color = "black",size=2) +
     geom_text(
     data = . %>%
         distinct(SuperAnnotationLabel, PC2, .keep_all=T) %>%
@@ -1836,7 +1907,271 @@ sQTL.eQTL.beta.beta
 
 ```
 
+### uodate for reviewer...
 
+In lieu of two reviewer comments:
+
+ > (paraphrasing) Why wouldn't some u-sQTLs coloc with eQTLs if you accounted for independent signals?
+ 
+ ...one reason is power, especially when the eQTL effects are very small. True small eQTL effects can be biologically explained by small sQTL effects in terms of deltaPSI (eg, a 1%PSI to 2%PSI u-sQTL will have a weak effect on expression). Other biological reasons exist, (eg transcriptional adaptation)... but for purposes of addressing reviewers, I would like to make a plot of these scatter plots with eQTL effect in (log2FC) and PSI effect in (DeltaPSI).
+ 
+ Furthermore, we are considering doing targeted nanopore sequencing on some genes. I'll use these plots to pick some good candidates to sequence... Looking for strong effects to validate, in well expressed genes.
+ 
+```{r}
+dat.sQTLs.eQTLs.ForScatter %>%
+  inner_join(
+      dat.sQTLs.eQTLs.ForScatter.ToPlot %>%
+        dplyr::select(PC1, P1, GeneLocus, P2 )
+  ) %>%
+  dplyr::select(PC1:FDR.y) %>%
+  filter(PC2 %in% c("Expression.Splicing", "chRNA.Expression.Splicing", "MetabolicLabelled.30min", "MetabolicLabelled.60min")) %>%
+  bind_rows(
+    dat.sQTLs.eQTLs.ForScatter.ToPlot %>%
+      dplyr::select(PC1:FDR.x) %>%
+      distinct() %>%
+      mutate(PC2 = PC1, P2=P1)
+  ) %>%
+  write_tsv("../output/TraitPairsForUnnormalizedScatter.ForReviewer.tsv.gz")
+
+
+```
+ 
+ ...run python script to get betas in unnormalized units
+ 
+```{bash, eval=F}
+#run python script to get betas in unnormalized units
+```
+
+```{r}
+deming.fit <- function(x, y, noise_ratio = sd(y)/sd(x)) {
+  if(missing(noise_ratio) || is.null(noise_ratio)) noise_ratio <- eval(formals(sys.function(0))$noise_ratio) # this is just a complicated way to write `sd(y)/sd(x)`
+  delta <-  noise_ratio^2
+  x_name <- deparse(substitute(x))
+
+  s_yy <- var(y)
+  s_xx <- var(x)
+  s_xy <- cov(x, y)
+  beta1 <- (s_yy - delta*s_xx + sqrt((s_yy - delta*s_xx)^2 + 4*delta*s_xy^2)) / (2*s_xy)
+  beta0 <- mean(y) - beta1 * mean(x) 
+
+  res <- c(beta0 = beta0, beta1 = beta1)
+  names(res) <- c("(Intercept)", x_name)
+  class(res) <- "Deming"
+  res
+}
+
+deming <- function(formula, data, R = 100, noise_ratio = NULL, ...){
+  ret <- boot::boot(
+    data = model.frame(formula, data), 
+    statistic = function(data, ind) {
+      data <- data[ind, ]
+      args <- rlang::parse_exprs(colnames(data))
+      names(args) <- c("y", "x")
+      rlang::eval_tidy(rlang::expr(deming.fit(!!!args, noise_ratio = noise_ratio)), data, env = rlang::current_env())
+    },
+    R=R
+  )
+  class(ret) <- c("Deming", class(ret))
+  ret  
+}
+
+predictdf.Deming <- function(model, xseq, se, level) {
+  pred <- as.vector(tcrossprod(model$t0, cbind(1, xseq)))
+  if(se) {
+    preds <- tcrossprod(model$t, cbind(1, xseq))
+    data.frame(
+      x = xseq,
+      y = pred,
+      ymin = apply(preds, 2, function(x) quantile(x, probs = (1-level)/2)),
+      ymax = apply(preds, 2, function(x) quantile(x, probs = 1-((1-level)/2)))
+    )
+  } else {
+    return(data.frame(x = xseq, y = pred))
+  }
+}
+```
+
+
+```{r}
+dat.unnormalized <- read_tsv("../output/TraitPairsBetasForUnnormalizedScatter.ForReviewer.tsv.gz")
+
+dat.unnormalized %>%
+  filter(P1==P2) %>%
+  distinct(PC1, P1, .keep_all=T) %>%
+  ggplot(aes(x=beta.x, y=x.beta.in.y)) +
+  geom_point() +
+  labs(x="Effect size,\nStandardized splicing units", y="Effect size,\nDeltaPSI")
+
+dat.unnormalized %>%
+  filter(!P1==P2) %>%
+  dplyr::select(GeneLocus, singletrait_topvar.x, PC2, P2, log2FC=x.beta.in.y) %>%
+  distinct() %>%
+  inner_join(
+    dat.sQTLs.eQTLs.ForScatter.ToPlot %>%
+      dplyr::select(GeneLocus, singletrait_topvar.x, PC2, P2, NormalizedExpressionChange=x.beta.in.y) %>%
+      distinct() %>%
+      mutate(PC2 = recode(PC2, "polyA"="Expression.Splicing", "chRNA"="chRNA.Expression.Splicing", "30min 4sU"="MetabolicLabelled.30min", "60min 4sU"="MetabolicLabelled.60min"))
+  ) %>%
+  ggplot(aes(x=NormalizedExpressionChange, y=log2FC)) +
+  geom_point(alpha=0.1) +
+  facet_wrap(~PC2)
+
+dat.sQTLs.eQTLs.ForScatter.ToPlot.unnormalized <- dat.unnormalized %>%
+  filter(!P1==P2) %>%
+  dplyr::rename(log2FC = x.beta.in.y) %>%
+  inner_join(
+    dat.unnormalized %>%
+      filter(P1==P2) %>%
+      dplyr::select(PC1, P1, GeneLocus, singletrait_topvar.x, deltaPSI=x.beta.in.y)
+  ) %>%
+  inner_join(
+    dat.sQTLs.eQTLs.ForScatter.ToPlot %>%
+      dplyr::select(P1, IntronName:SemiSupergroupAnnotations)
+  ) %>%
+  mutate(PC2 = recode(PC2, "Expression.Splicing"="steady-state", "chRNA.Expression.Splicing"="naRNA", "MetabolicLabelled.30min"="30min 4sU", "MetabolicLabelled.60min"="60min 4sU")) %>%
+  mutate(PC2 = factor(PC2, levels=c("naRNA", "30min 4sU", "60min 4sU", "steady-state"))) %>%
+  distinct(P1, P2, PC1, PC2, singletrait_topvar.x, .keep_all=T)
+
+  
+dat.sQTLs.eQTLs.ForScatter.ToPlot.labels.unnormalized <- dat.sQTLs.eQTLs.ForScatter.ToPlot.unnormalized %>%
+  count(SuperAnnotation, PC2) %>%
+  distinct(SuperAnnotation, .keep_all=T) %>%
+  dplyr::select(n, SuperAnnotation) %>%
+  mutate(SuperAnnotationLabel = paste0(SuperAnnotation, " (n=", n, ")"))
+
+sQTL.eQTL.beta.beta.unnormalized <- dat.sQTLs.eQTLs.ForScatter.ToPlot.unnormalized %>%
+  left_join(dat.sQTLs.eQTLs.ForScatter.ToPlot.labels, by="SuperAnnotation") %>%
+  nest(-SuperAnnotationLabel, -PC2) %>% 
+  mutate(cor=map(data,~cor.test(.x$deltaPSI, .x$log2FC, method = "sp"))) %>%
+  mutate(tidied = map(cor, tidy)) %>% 
+  unnest(tidied, .drop = T) %>%
+  unnest(data) %>%
+ggplot(aes(x=deltaPSI, y=log2FC, color=SuperAnnotation)) +
+    geom_point(alpha=0.1) +
+    # geom_smooth(method = deming, se = FALSE, color = "black",size=2) +
+    # geom_smooth(method='lm', color='black') +
+    geom_vline(xintercept=0, linetype='dashed') +
+    geom_hline(yintercept=0, linetype='dashed') +
+    scale_color_manual(values=c("Productive"="#1f78b4", "Unproductive"="#e31a1c")) +
+    geom_abline(data = . %>%
+                  distinct(SuperAnnotationLabel, PC2, .keep_all=T),
+                aes(slope=estimate, intercept=0), size=2) +
+    # geom_smooth(method='lm') +
+    # geom_smooth(method = deming, se = FALSE, color = "black",size=2) +
+    geom_text(
+    data = . %>%
+        distinct(SuperAnnotationLabel, PC2, .keep_all=T) %>%
+        mutate(R=signif(estimate, 3), P=format.pval(p.value, 3)) %>%
+      mutate(label = str_glue("rho:{R}\nP:{P}")),
+    aes(x=-Inf, y=-Inf, label=label),
+    hjust=-.1, vjust=-0.1, color='black', size=6
+    ) +
+    facet_grid(SuperAnnotationLabel ~ PC2, labeller = label_wrap_gen(10)) +
+    theme(strip.text = element_text(size = 12), legend.position='none') +
+  labs(caption = "FDR<10% sQTLs. sQTLs with nominal P<0.01 for H3K36me3, H3K27Ac, or H3K4me3 removed\nOnly top sQTL per cluster plotted", y="host gene eQTL beta\nlog2FC", x="sQTL beta, intronic deltaPSI") +
+  coord_cartesian(xlim=c(-10,10), ylim=c(-2.5,2.5))
+
+sQTL.eQTL.beta.beta.unnormalized
+
+sQTL.eQTL.beta.beta.unnormalized.PlusDeming <- sQTL.eQTL.beta.beta.unnormalized +
+    geom_smooth(method = deming, se = FALSE, color = "purple", method.args = list(noise_ratio=NULL))
+sQTL.eQTL.beta.beta.unnormalized.PlusDeming
+
+```
+On second thought, I don't know why I plot the rho coefficient as a slope... That doesn't even make sense. Well maybe as a visual aid to highlight the change in rho across facets, and when both the x and y are on a standardized scale then maybe it looks alright, but not on this plot with unstandardized units. A better visual and more appropriate would be to plot the orthogonal regression slope... But actually I tried that above (purple line), and it's not as nice as I thought, I think partly because the orthogonal regression is still susceptible to outliers. Since this is going in the supplement or just to the reviewer, it doesn't bother me to just present this with the spearman slope as plotted above.
+
+Ok, now let's pick some u-sQTL/eQTLs for Dylan's targeted sequencing experiment... Just pick some with a deltaPSI and log2FC effect above some threshold. Maybe I'll manually inspect the eQTL/sQTL effect on pygenometracks to confirm... Also want ones where the topSNP is in an exon that can be sequenced
+
+```{r}
+GenePos <- read_tsv("../code/QTLs/QTLTools/Expression.Splicing.Subset_YRI/OnlyFirstReps.sorted.qqnorm.bed.gz") %>%
+  dplyr::select(1:4) %>%
+  inner_join(
+    read_tsv("../data/")
+  )
+
+# Subset exonic SNPs
+dat.sQTLs.eQTLs.ForScatter.ToPlot.unnormalized %>%
+  dplyr::select(chrom=singletrait_topvar_chr.x, start=singletrait_topvar_pos.x, name=singletrait_topvar.x) %>%
+  mutate(end = start+1) %>%
+  arrange(chrom, start, end) %>%
+  distinct() %>%
+  dplyr::select(chrom, start, end, name) %>%
+  write_tsv("../code/scratch/PlotsToPickTargetedGenes/AllPotentialSNPs.bed")
+
+```
+
+```{bash, eval=F}
+bedtools intersect -a scratch/PlotsToPickTargetedGenes/AllPotentialSNPs.bed -b ReferenceGenome/Annotations/GTFTools_BasicAnnotations/gencode.v34.chromasomal.exons.sorted.bed -u -sorted > scratch/PlotsToPickTargetedGenes/ExonicSNPs.bed
+
+#Example code to look for exonic SNPs in a range that might be significant eQTL for NUDT14
+tabix -h QTLs/QTLTools/Expression.Splicing/NominalPassForColoc.txt.tabix.gz  chr14:105,176,477-105,181,383 | grep -e '^#' -e 'ENSG00000183828.15' | awk -v OFS='\t' 'NR>1 {print $9, $10, $11, $8, $12}' | bedtools intersect -a - -b ReferenceGenome/Annotations/GTFTools_BasicAnnotations/gencode.v34.chromasomal.exons.sorted.bed -u
+
+#returns 'chr14   105181225       105181243       14:105181225:GGCGGGGGCC:G       7.27844e-21', a SNP
+
+#Example code to look for exonic SNPs in a range that might be significant eQTL for D2HGDH
+tabix -h QTLs/QTLTools/Expression.Splicing/NominalPassForColoc.txt.tabix.gz  chr2:241,734,766-241,768,131 | grep -e '^#' -e 'ENSG00000180902.18' | awk -v OFS='\t' 'NR>1 {print $9, $10, $11, $8, $12}' | bedtools intersect -a - -b ReferenceGenome/Annotations/GTFTools_BasicAnnotations/gencode.v34.chromasomal.exons.sorted.bed -u
+
+#that returns this:
+```
+
+chr2    241735134       241735134       2:241735134:C:G 0.118969
+chr2    241735388       241735388       2:241735388:G:A 3.79959e-06
+chr2    241751260       241751260       2:241751260:G:A 1.32053e-13
+chr2    241751314       241751314       2:241751314:C:T 0.0619802
+chr2    241751330       241751330       2:241751330:C:T 0.531458
+chr2    241751355       241751355       2:241751355:T:C 0.000118949
+chr2    241755192       241755192       2:241755192:C:T 0.163042
+chr2    241755223       241755254       2:241755223:GTGTCCTTCC:G        4.23574e-07
+chr2    241755234       241755234       2:241755234:T:A 0.367674
+chr2    241755500       241755500       2:241755500:A:G 0.265307
+chr2    241767780       241767780       2:241767780:C:A 0.0398028
+chr2    241767798       241767798       2:241767798:G:A 0.576106
+chr2    241768062       241768062       2:241768062:T:C 7.62866e-08
+
+Manually checking those significant eQTLs, I see that 
+
+2:241735388 and 2:241755223 are not a good choice (not consitutive exon),
+
+2:241768062 and 2:241751260 ARE good choices (in constitutive exon)...
+
+
+
+```{r}
+
+ExonicSNPs <- read_tsv("../code/scratch/PlotsToPickTargetedGenes/ExonicSNPs.bed", col_names=c("chrom", "start", "stop", "name"))
+
+dat.sQTLs.eQTLs.ForScatter.ToPlot.unnormalized %>%
+  filter(SuperAnnotation == "Unproductive") %>%
+  filter(PC2=="steady-state") %>%
+  filter(abs(deltaPSI)>5) %>%
+  filter(abs(log2FC) > 0.2) %>%
+  filter(!sign(deltaPSI)==sign(log2FC)) %>%
+  mutate(SNPPos = str_glue("{singletrait_topvar_chr.x}:{singletrait_topvar_pos.x}")) %>%
+  dplyr::select(P1, SNPPos, GeneLocus, singletrait_topvar.x, symbol, singletrait_topvar_pos.x) %>%
+  inner_join(GenePos, by=c("GeneLocus"="pid")) %>%
+  filter(singletrait_topvar_pos.x < end & singletrait_topvar_pos.x > start) %>%
+  filter(singletrait_topvar.x %in% ExonicSNPs$name) %>%
+  mutate(ScriptCommand = str_glue(
+    "python scripts/GenometracksByGenotype/AggregateBigwigsForPlotting.py --VCF Genotypes/1KG_GRCh38/Autosomes.vcf.gz --SnpPos {SNPPos} --GroupSettingsFile PlotQTLs/bwList.Groups.4col.chRNA_and_polyARNA.tsv --BigwigList PlotQTLs/bwList.AllPolyAAndUnstrandedchRNA.tsv --Normalization WholeGenome --Region {`#Chr`}:{start}-{end} --BigwigListType KeyFile --OutputPrefix scratch/PlotsToPickTargetedGenes/dat. --SnpName {singletrait_topvar.x}  --Bed12GenesToIni scripts/GenometracksByGenotype/PremadeTracks/gencode.v34.transcripts.bed12.gz --FilterJuncsByBed  <(tabix -h SplicingAnalysis/leafcutter/NormalizedPsiTables/PSI.Expression.Splicing.bed.gz {`#Chr`}:{start}-{end} | grep -e '^#' -e '{P1}') -v
+    pyGenomeTracks --region {`#Chr`}:{start}-{end}  -out scratch/PlotsToPickTargetedGenes/Plots/{symbol}.pdf --tracks scratch/PlotsToPickTargetedGenes/dat.tracks.ini
+    "
+  )) %>%
+  # pull(ScriptCommand)
+  dplyr::select(ScriptCommand) %>%
+  write_tsv("../code/scratch/PlotsToPickTargetedGenes/PlotGenes.sh", col_names = F)
+```
+
+```{bash, eval=F}
+bash scratch/PlotsToPickTargetedGenes/PlotGenes.sh
+```
+
+...So after including GBP3, NAAA, NUDT14, and D2HGDH... these are the (hopefully causal or tightly linked SNPs) to look for in strains to grow:
+
+2:241768062, D2HGDH
+2:241751260, D2HGDH
+14:105181225:GGCGGGGGCC:G, NUDT14
+4:75920950:C:T, NAAA
+1:89009452:C:T, GBP3
 
 hQTL eQTL beta
 
@@ -2356,6 +2691,10 @@ ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/202
 ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/20230412_WIP_eQTLQQ.pdf",eQTL.QQ, height=5, width=7)
 
 ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_Final_Fig2_sQTLeQTLBetas.pdf",sQTL.eQTL.beta.beta, height=4, width=10)
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/20240506_eQTL_sQTL_UnnormalizedUnitsScatter.pdf",sQTL.eQTL.beta.beta.unnormalized, height=4, width=10)
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/20240506_eQTL_sQTL_UnnormalizedUnitsScatterOrthogonalRegression.pdf",sQTL.eQTL.beta.beta.unnormalized.PlusDeming, height=4, width=10)
+
 
 ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_Final_Fig2_hQTLeQTLBetas.pdf",eQTL.H3k27ac.beta, height=2.5, width=10)
 

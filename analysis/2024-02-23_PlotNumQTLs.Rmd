@@ -11,6 +11,14 @@ knitr::opts_chunk$set(echo = TRUE, warning = F, message=F)
 ```{r}
 library(tidyverse)
 library(data.table)
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family="Helvetica")))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
 ```
 
 

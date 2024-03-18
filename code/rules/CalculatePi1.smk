@@ -37,6 +37,12 @@ rule GetPvalsForPi1AllTraitPairs:
         python scripts/CalculatePi1_GetAscertainmentP_AllPairs.py {input.TraitsToCompare} {output} {input.tabix_QTLsOut} &> {log}
         """
 
+# use rule GetPvalsForPi1AllTraitPairs as GetPvalsForPi1AllTraitPairs_Unstandardized with:
+#     input:
+#         TraitsToCompare = "pi1/PairwiseTraitsToCompare/{chunk}.txt.gz",
+#         tabix_QTLsOut = ["QTLs/QTLTools/polyA.Splicing/NominalPassForColocUnstandardized.txt.tabix.gz", "QTLs/QTLTools/polyA.Splicing/NominalPassForColocUnstandardized.txt.tabix.gz"
+
+
 rule GatherPvalsForPi1AllTraitPairs:
     input:
         # expand("scratch/PairwisePi1Traits.P.{chunk}.txt.gz", chunk=range(1, NumPvalsForPi1Chunks+1))

@@ -1,0 +1,500 @@
+---
+title: "2024-03-07_InvestigateTranslatedLongReads"
+output: html_document
+date: '2024-03-07'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message=F)
+```
+
+## Intro
+
+```{r}
+library(data.table)
+library(tidyverse)
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family="Helvetica")))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+
+sample_n_of <- function(data, size, ...) {
+  dots <- quos(...)
+  
+  group_ids <- data %>% 
+    group_by(!!! dots) %>% 
+    group_indices()
+  
+  sampled_groups <- sample(unique(group_ids), size)
+  
+  data %>% 
+    filter(group_ids %in% sampled_groups)
+}
+
+```
+
+```{r}
+dat <- c(Sys.glob("../code/LongReads/bed12translated/*/CTRL*_shRNA.*.bed.gz"),
+  Sys.glob("../code/LongReads/bed12translated/*/GM[1234].bed.gz"),
+  Sys.glob("../code/LongReads/bed12translated/*/SMG6_SMG7_shRNA.SAMEA8691113.bed.gz")) %>%
+  setNames(str_replace(., "../code/LongReads/bed12translated/(.+?)/(.+?).bed.gz", "\\1;\\2")) %>%
+  lapply(fread, col.names=c("chrom", "start", "stop", "ReadName", "score", "strand", "thickStart", "thickEnd", "Color", "blocks","blockSizes", "blockStarts", "sequence", "NMDFinderB", "AllJuncsIdentifiable", "Introns")) %>%
+  bind_rows(.id="approach_sample") %>%
+  separate(approach_sample, into=c("ORF.translation.approach", "sample"), sep=";")
+
+```
+
+
+```{r}
+dat %>%
+  filter(str_detect(chrom, "^chr[1-9]")) %>%
+  count(NMDFinderB, ORF.translation.approach, sample, AllJuncsIdentifiable) %>%
+  filter(!NMDFinderB=="No CDS") %>%
+  mutate(sample = str_replace(sample, "(.+?)\\..+$", "\\1")) %>%
+  mutate(sample = if_else(str_detect(sample, "shRNA"), paste0("Nanopore_", sample), paste0("PacBio_", sample))) %>%
+  ggplot(aes(x=sample, fill=NMDFinderB, y=n)) +
+  geom_col(position="fill") +
+  # geom_col(position="stack") +
+  facet_grid(AllJuncsIdentifiable~ORF.translation.approach) +
+  Rotate_x_labels +
+  labs(y="fractionReads", fill="Lindeboom\ncategory")
+
+dat %>%
+  filter(str_detect(chrom, "^chr[1-9]")) %>%
+  count(NMDFinderB, ORF.translation.approach, sample, AllJuncsIdentifiable) %>%
+  filter(!NMDFinderB=="No CDS") %>%
+  mutate(sample = str_replace(sample, "(.+?)\\..+$", "\\1")) %>%
+  mutate(sample = if_else(str_detect(sample, "shRNA"), paste0("Nanopore_", sample), paste0("PacBio_", sample))) %>%
+  ggplot(aes(x=sample, fill=NMDFinderB, y=n)) +
+  # geom_col(position="fill") +
+  geom_col(position="stack") +
+  facet_grid(AllJuncsIdentifiable~ORF.translation.approach) +
+  Rotate_x_labels +
+  labs(y="NumberReads", fill="Lindeboom\ncategory")
+```
+
+Replot now, just including transcripts with all identifiable juncs
+
+```{r}
+dat %>%
+  filter(str_detect(chrom, "^chr[1-9]")) %>%
+  count(NMDFinderB, ORF.translation.approach, sample, AllJuncsIdentifiable) %>%
+  filter(!NMDFinderB=="No CDS") %>%
+  filter(AllJuncsIdentifiable) %>%
+  mutate(sample = str_replace(sample, "(.+?)\\..+$", "\\1")) %>%
+  mutate(sample = if_else(str_detect(sample, "shRNA"), paste0("Nanopore_", sample), paste0("PacBio_", sample))) %>%
+  ggplot(aes(x=sample, fill=NMDFinderB, y=n)) +
+  geom_col(position="fill") +
+  # geom_col(position="stack") +
+  scale_y_continuous(breaks=seq(0,1,0.1)) +
+  facet_grid(AllJuncsIdentifiable~ORF.translation.approach) +
+  Rotate_x_labels +
+  labs(y="fractionReads", fill="Lindeboom\ncategory")
+
+```
+
+Replot again, without excluding those...
+
+```{r}
+dat %>%
+  distinct(sample)
+
+dat %>%
+  filter(str_detect(chrom, "^chr[1-9]")) %>%
+  count(NMDFinderB, ORF.translation.approach, sample) %>%
+  filter(!NMDFinderB=="No CDS") %>%
+  mutate(sample = str_replace(sample, "(.+?)\\..+$", "\\1")) %>%
+  mutate(sample = if_else(str_detect(sample, "shRNA"), paste0("Nanopore_", sample), paste0("PacBio_", sample))) %>%
+  ggplot(aes(x=sample, fill=NMDFinderB, y=n)) +
+  geom_col(position="fill") +
+  # geom_col(position="stack") +
+  scale_y_continuous(breaks=seq(0,1,0.1)) +
+  facet_wrap(~ORF.translation.approach) +
+  Rotate_x_labels +
+  labs(y="fractionReads", fill="Lindeboom\ncategory")
+```
+
+Let's replot by intron counts...
+
+```{r}
+dat %>%
+  filter(AllJuncsIdentifiable) %>%
+  filter(str_detect(chrom, "^chr[1-9]")) %>%
+  filter(str_detect(sample, "shRNA")) %>%
+  mutate(NumJuncs = str_count(sequence, "\\|")) %>%
+  mutate(NumJuncs.condensed = case_when(
+    NumJuncs < 12 ~ as.numeric(NumJuncs),
+    NumJuncs >= 12 ~ as.numeric(13),
+    TRUE ~ NA_real_
+  )) %>%
+  count(NMDFinderB, ORF.translation.approach, sample, NumJuncs.condensed) %>%
+  group_by(ORF.translation.approach, sample, NumJuncs.condensed) %>%
+  mutate(Percent = n/sum(n)*100) %>%
+  ungroup() %>%
+  filter(!NMDFinderB=="Last exon") %>%
+  ggplot(aes(x=NumJuncs.condensed, color=NMDFinderB, y=Percent)) +
+  geom_line() +
+  facet_grid(sample~ORF.translation.approach) +
+  scale_x_continuous(breaks=c(0:13), labels=c(0:12, ">12")) +
+  theme_bw() +
+  Rotate_x_labels +
+  labs(y="fractionReads", color="Lindeboom\ncategory") +
+  coord_cartesian(xlim=c(0,13))
+```
+
+
+Now let's see how these annotations compare to our our junction annotatoins... Of course there needs to be some method to map transcript annotations to junctions... Perhaps the approach is to just take the most common Lindeboom annotation for each transcript that contains the junction..
+
+```{r}
+JunctionAnnotations <- read_tsv("../data/IntronAnnotationsFromYang.Updated.tsv.gz") %>%
+  mutate(Introns = paste(chrom, start, end, strand, sep="_"))
+
+Mode <- function(x) {
+  ux <- unique(x)
+  ux[which.max(tabulate(match(x, ux)))]
+}
+
+dat %>%
+  filter(AllJuncsIdentifiable) %>%
+  filter(str_detect(chrom, "^chr[1-9]")) %>%
+  # filter(str_detect(sample, "shRNA")) %>%
+  filter(ORF.translation.approach == "firstORF") %>%
+  separate_rows(Introns, sep=",") %>%
+  inner_join(
+    JunctionAnnotations %>%
+      dplyr::select(-chrom, -start, -strand, -end)) %>%
+  add_count(Introns) %>%
+  filter(n>3) %>%
+  group_by(Introns) %>%
+  mutate(ModeNMDFinder = Mode(NMDFinderB)) %>%
+  ungroup() %>%
+  dplyr::select(-n) %>%
+  distinct(Introns, .keep_all=T) %>%
+  count(ModeNMDFinder, SuperAnnotation) %>%
+  group_by(SuperAnnotation) %>%
+  mutate(TotalIntsInSuperAnnotation = sum(n)) %>%
+  ungroup() %>%
+  filter(!str_detect(SuperAnnotation, "Noncoding")) %>%
+  ggplot(aes(x=SuperAnnotation, y=n, fill=ModeNMDFinder)) +
+  geom_col(position='fill') +
+  Rotate_x_labels +
+  labs(x="Our intron classes", fill="Most common transcript context,\nLindeboom transcript categories", y="fraction")
+
+dat %>%
+  filter(AllJuncsIdentifiable) %>%
+  filter(str_detect(chrom, "^chr[1-9]")) %>%
+  # filter(str_detect(sample, "shRNA")) %>%
+  filter(ORF.translation.approach == "firstORF") %>%
+  separate_rows(Introns, sep=",") %>%
+  inner_join(
+    JunctionAnnotations %>%
+      dplyr::select(-chrom, -start, -strand, -end)) %>%
+  add_count(Introns) %>%
+  filter(n>3) %>%
+  group_by(Introns) %>%
+  mutate(ModeNMDFinder = Mode(NMDFinderB)) %>%
+  ungroup() %>%
+  dplyr::select(-n) %>%
+  distinct(Introns, .keep_all=T) %>%
+  count(ModeNMDFinder, SuperAnnotation) %>%
+  group_by(SuperAnnotation) %>%
+  mutate(TotalIntsInSuperAnnotation = sum(n)) %>%
+  ungroup() %>%
+  filter(!str_detect(SuperAnnotation, "Noncoding")) %>%
+  ggplot(aes(x=ModeNMDFinder, y=n, fill=SuperAnnotation)) +
+  geom_col(position='fill') +
+  Rotate_x_labels +
+  labs(fill="Our intron classes", x="Most common transcript context,\nLindeboom transcript categories", y="fraction")
+```
+
+The other version of the plot is more informative and easier to interpret. But of note is the small subset of juncs that are NMD-targets and annotated_productive. I think this happens because some genes are majority NMD-targets, which means even consitutive productive junctions will get mis-classified as NMD targets. Carlos had the suggestion to just classify the juncs that are in at least one "Last exon" read as Last exon, then I can use the mode for the other categories. Let's try that, and/or this similar idea: classify juncs as "Last exon" if at least 10% (or some low threshold) of transcript contexts are "Lats exon".
+
+```{r}
+dat %>%
+  filter(AllJuncsIdentifiable) %>%
+  filter(str_detect(chrom, "^chr[1-9]")) %>%
+  # filter(str_detect(sample, "shRNA")) %>%
+  filter(ORF.translation.approach == "firstORF") %>%
+  separate_rows(Introns, sep=",") %>%
+  inner_join(
+    JunctionAnnotations %>%
+      dplyr::select(-chrom, -start, -strand, -end)) %>%
+  add_count(Introns) %>%
+  filter(n>3) %>%
+  add_count(Introns, NMDFinderB, name="NumNMDFinderContexts") %>%
+  group_by(Introns) %>%
+  mutate(FractionNMDFinderBContexts = NumNMDFinderContexts/sum(NumNMDFinderContexts)) %>%
+  mutate(NMDFinderB = case_when(
+    any(NMDFinderB == "Last exon") & FractionNMDFinderBContexts >=0.1 ~ "Last exon",
+    TRUE ~ NMDFinderB
+  )) %>%
+  mutate(ModeNMDFinder = Mode(NMDFinderB)) %>%
+  ungroup() %>%
+  dplyr::select(-n) %>%
+  distinct(Introns, .keep_all=T) %>%
+  count(ModeNMDFinder, SuperAnnotation) %>%
+  group_by(SuperAnnotation) %>%
+  mutate(TotalIntsInSuperAnnotation = sum(n)) %>%
+  ungroup() %>%
+  filter(!str_detect(SuperAnnotation, "Noncoding")) %>%
+  ggplot(aes(x=SuperAnnotation, y=n, fill=ModeNMDFinder)) +
+  geom_col(position='fill') +
+  Rotate_x_labels +
+  labs(x="Our intron classes", fill="Most common transcript context,\nLindeboom transcript categories", y="fraction", caption="If >10% of context is Last exon, then most common context is Last exon, otherwise, use the mode")
+
+```
+
+That helps, but there are still some "Trigger NMD" introns in the annoteted productive junctions... Will have to manually inspect those to see what is going on... But overall I think this is pretty satisfactory for addressing reviewer concerns...
+
+Now let's reexamine a few more things with this data:
+
+How many isoforms are responsible for the majority of NMD transcripts for each gene?
+
+First I think I need to identify the gene for each transcript. I can do this by finding the mode of those gene after joining by intron annotations
+
+```{r}
+dat %>%
+  count(NMDFinderB)
+
+dat.temp.readattributed <- dat %>%
+  filter(AllJuncsIdentifiable) %>%
+  filter(str_detect(chrom, "^chr[1-9]")) %>%
+  filter(ORF.translation.approach == "firstORF") %>%
+  separate_rows(Introns, sep=",") %>%
+  inner_join(
+    JunctionAnnotations %>%
+      dplyr::select(-chrom, -start, -strand, -end)) %>%
+  group_by(ReadName, sample) %>%
+  mutate(GeneAttributedToRead = Mode(symbol)) %>%
+  ungroup() %>%
+  distinct(sample, ReadName, GeneAttributedToRead, ORF.translation.approach) %>%
+  inner_join(dat) %>%
+  filter(!NMDFinderB %in% c("Last exon", "50 nt rule", "No CDS")) %>%
+  add_count(sample, GeneAttributedToRead, name="GeneCounts") %>%
+  filter(GeneCounts > 10)
+  
+dat.temp <- dat.temp.readattributed %>%
+  count(Introns, sample, GeneAttributedToRead, GeneCounts, name="IsoformCounts") %>%
+  mutate(PercentIsoform =  IsoformCounts/GeneCounts) %>%
+  # filter(GeneAttributedToRead=="SRSF5") %>%
+  # filter(GeneAttributedToRead=="RPL12") %>%
+  group_by(sample, GeneAttributedToRead) %>%
+  mutate(IsoformRank = rank(desc(PercentIsoform), ties.method = "random")) %>%
+  mutate(IsoformRank = case_when(
+    IsoformRank < 6 ~ as.numeric(IsoformRank),
+    TRUE ~ as.numeric(6)
+  )) %>%
+  mutate(IsoformRank = factor(IsoformRank)) %>%
+  ungroup() %>%
+  mutate(EntropyPart = PercentIsoform * log2(PercentIsoform)) %>%
+  group_by(sample, GeneAttributedToRead) %>%
+  mutate(Entropy = sum(EntropyPart)) %>%
+  ungroup() %>%
+  # arrange(sample, GeneAttributedToRead, IsoformRank, PercentIsoform)
+  group_by(sample, GeneAttributedToRead, IsoformRank) %>%
+  mutate(PercentIsoform = sum(PercentIsoform)) %>%
+  ungroup() %>%
+  distinct(sample, GeneAttributedToRead, IsoformRank, .keep_all=T)
+
+dat.temp.entropy.ordered.genes <- dat.temp %>%
+  distinct(sample, GeneAttributedToRead, .keep_all=T) %>%
+  arrange(sample, Entropy) %>%
+  mutate(GeneAttributedToRead.DummyByEntropy = row_number())
+
+dat.temp %>%
+  inner_join(dat.temp.entropy.ordered.genes %>%
+               dplyr::select(sample, GeneAttributedToRead, GeneAttributedToRead.DummyByEntropy)) %>%
+  mutate(GeneAttributedToRead.DummyByEntropy = factor(GeneAttributedToRead.DummyByEntropy)) %>%
+  ggplot(aes(x=GeneAttributedToRead.DummyByEntropy, y=PercentIsoform, fill=IsoformRank)) +
+  geom_col() +
+  facet_wrap(~sample, scales="free") +
+  scale_fill_brewer(palette = "Dark2", labels=c(1:5, "Sum of other\nminor isoforms")) +
+  theme(
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  labs(fill="Unproductive\nIsoform\nRank", x="Genes, ranked by entropy of unproductive isoforms", y="Fraction of\nunproductive isoforms")
+  
+dat.temp %>%
+  filter(str_detect(sample, "SMG6")) %>%
+  filter(GeneCounts > 10 & GeneCounts < 20) %>%
+  inner_join(dat.temp.entropy.ordered.genes %>%
+               dplyr::select(sample, GeneAttributedToRead, GeneAttributedToRead.DummyByEntropy)) %>%
+  mutate(GeneAttributedToRead.DummyByEntropy = factor(GeneAttributedToRead.DummyByEntropy)) %>%
+  ggplot(aes(x=GeneAttributedToRead, y=PercentIsoform, fill=IsoformRank)) +
+  geom_col() +
+  facet_wrap(~sample, scales="free") +
+  scale_fill_brewer(palette = "Dark2", labels=c(1:5, "Sum of other\nminor isoforms")) +
+  labs(fill="Unproductive\nIsoform\nRank", x="Genes, ranked by entropy of unproductive isoforms", y="Fraction of\nunproductive isoforms") +
+  Rotate_x_labels
+
+dat.temp %>%
+  distinct(GeneAttributedToRead, sample) %>%
+  count(sample)
+
+dat.temp %>%
+  filter(str_detect(sample, "SMG6")) %>%
+  filter(GeneAttributedToRead == "RPS12")
+
+dat %>%
+  filter(AllJuncsIdentifiable) %>%
+  filter(str_detect(chrom, "^chr[1-9]")) %>%
+  # filter(str_detect(sample, "shRNA")) %>%
+  filter(ORF.translation.approach == "firstORF") %>%
+  filter(!NMDFinderB %in% c("Last exon", "50 nt rule", "No CDS"))
+
+dat %>%
+  filter(ReadName == "ERR5880584.761855")
+
+```
+Ok, so similar to the conclusion we suggest from short read, many of the unproductive transcript molecules come from a wide variety of unproductive transcript structures. Manually inspecting some of these, I don't think there is a bug persay, but this could be misleading because each of these is a full length isoform, when a lot of them have the same posion splice site. One solution to this is to categorize reads by their PTC position, rather than their full set of junctions.
+
+
+Let's do that...
+
+```{r}
+dat.temp <- dat.temp.readattributed %>%
+  mutate(STOP = case_when(
+    thickEnd == thickStart ~ "No ORF",
+    strand == "+" ~ as.character(thickEnd),
+    strand == "-" ~ as.character(thickStart),
+    TRUE ~ NA_character_
+  )) %>%
+  count(STOP, sample, GeneAttributedToRead, GeneCounts, name="IsoformCounts") %>%
+  mutate(PercentIsoform =  IsoformCounts/GeneCounts) %>%
+  # filter(GeneAttributedToRead=="SRSF5") %>%
+  # filter(GeneAttributedToRead=="RPL12") %>%
+  group_by(sample, GeneAttributedToRead) %>%
+  mutate(IsoformRank = rank(desc(PercentIsoform), ties.method = "random")) %>%
+  mutate(IsoformRank = case_when(
+    IsoformRank < 6 ~ as.numeric(IsoformRank),
+    TRUE ~ as.numeric(6)
+  )) %>%
+  mutate(IsoformRank = factor(IsoformRank)) %>%
+  ungroup() %>%
+  mutate(EntropyPart = PercentIsoform * log2(PercentIsoform)) %>%
+  group_by(sample, GeneAttributedToRead) %>%
+  mutate(Entropy = sum(EntropyPart)) %>%
+  ungroup() %>%
+  # arrange(sample, GeneAttributedToRead, IsoformRank, PercentIsoform)
+  group_by(sample, GeneAttributedToRead, IsoformRank) %>%
+  mutate(PercentIsoform = sum(PercentIsoform)) %>%
+  ungroup() %>%
+  distinct(sample, GeneAttributedToRead, IsoformRank, .keep_all=T)
+
+dat.temp.entropy.ordered.genes <- dat.temp %>%
+  distinct(sample, GeneAttributedToRead, .keep_all=T) %>%
+  arrange(sample, Entropy) %>%
+  mutate(GeneAttributedToRead.DummyByEntropy = row_number())
+
+dat.temp %>%
+  inner_join(dat.temp.entropy.ordered.genes %>%
+               dplyr::select(sample, GeneAttributedToRead, GeneAttributedToRead.DummyByEntropy)) %>%
+  mutate(GeneAttributedToRead.DummyByEntropy = factor(GeneAttributedToRead.DummyByEntropy)) %>%
+  ggplot(aes(x=GeneAttributedToRead.DummyByEntropy, y=PercentIsoform, fill=IsoformRank)) +
+  geom_col() +
+  facet_wrap(~sample, scales="free") +
+  scale_fill_brewer(palette = "Dark2", labels=c(1:5, "Sum of other\nminor PTCs")) +
+  theme(
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  labs(fill="PTC\nRank", x="Genes, ranked by entropy of PTC usage", y="Relative PTC usage", caption="NMD-inducing isoforms collapsed by PTC")
+
+
+```
+
+Ok this I think is a more accurate view of the diversity of unproductive splice isoforms.
+
+Now let's plot the fraction of productive/unproductive isoforms across genes... I'll also add a colored rug for gene expression.
+
+```{r}
+NMDFinderBCategoriesToColors <- dat %>%
+  count(NMDFinderB) %>%
+  mutate(Color = recode(NMDFinderB, "50 nt rule"="#deebf7", "Last exon"="#3182bd", "Start proximal"="#9ecae1","Long exon"="#fc9272", "Trigger NMD"="#de2d26", "No stop"="#fee0d2", "No CDS"="#bdbdbd")) %>%
+  mutate(NMDFinderB = factor(NMDFinderB, levels=c("Last exon", "Start proximal", "50 nt rule", "Trigger NMD", "Long exon", "No stop", "No CDS")))
+
+dat.temp.readattributed <- dat %>%
+  filter(AllJuncsIdentifiable) %>%
+  filter(str_detect(chrom, "^chr[1-9]")) %>%
+  filter(ORF.translation.approach == "firstORF") %>%
+  separate_rows(Introns, sep=",") %>%
+  inner_join(
+    JunctionAnnotations %>%
+      dplyr::select(-chrom, -start, -strand, -end)) %>%
+  group_by(ReadName, sample) %>%
+  mutate(GeneAttributedToRead = Mode(symbol)) %>%
+  ungroup() %>%
+  distinct(sample, ReadName, GeneAttributedToRead, ORF.translation.approach) %>%
+  inner_join(dat) %>%
+  # filter(!NMDFinderB %in% c("Last exon", "50 nt rule", "No CDS")) %>%
+  add_count(sample, GeneAttributedToRead, name="GeneCounts") %>%
+  filter(GeneCounts > 20)
+
+dat.temp <- dat.temp.readattributed %>%
+  count(NMDFinderB, sample, GeneAttributedToRead, GeneCounts, name="IsoformCounts") %>%
+  mutate(PercentIsoform =  IsoformCounts/GeneCounts) %>%
+  # filter(GeneAttributedToRead=="SRSF5") %>%
+  # filter(GeneAttributedToRead=="RPL12") %>%
+  mutate(EntropyPart = PercentIsoform * log2(PercentIsoform)) %>%
+  group_by(sample, GeneAttributedToRead) %>%
+  mutate(Entropy = sum(EntropyPart)) %>%
+  ungroup() %>%
+  # arrange(sample, GeneAttributedToRead, IsoformRank, PercentIsoform)
+  group_by(sample, GeneAttributedToRead) %>%
+  mutate(PercentIsoform = PercentIsoform/sum(PercentIsoform)) %>%
+  ungroup()
+
+dat.temp.entropy.ordered.genes <- dat.temp %>%
+  mutate(ProductiveOrUnproductive = case_when(
+    NMDFinderB %in% c("Last exon", "Start proximal", "50 nt rule") ~ "Productive",
+    TRUE ~ "Unproductive"
+  )) %>%
+  filter(ProductiveOrUnproductive == "Productive") %>%
+  group_by(sample, GeneAttributedToRead, ProductiveOrUnproductive) %>%
+  summarise(FractionProductive = sum(PercentIsoform)) %>%
+  ungroup %>%
+  arrange(sample, FractionProductive) %>%
+  mutate(GeneAttributedToRead.DummyByEntropy = row_number())
+
+dat.temp %>%
+  inner_join(dat.temp.entropy.ordered.genes %>%
+               dplyr::select(sample, GeneAttributedToRead, GeneAttributedToRead.DummyByEntropy)) %>%
+  mutate(GeneAttributedToRead.DummyByEntropy = factor(GeneAttributedToRead.DummyByEntropy)) %>%
+  mutate(NMDFinderB = factor(NMDFinderB, levels=c( "50 nt rule", "Start proximal","Last exon", "Trigger NMD", "Long exon", "No stop", "No CDS"))) %>%
+   # distinct(sample, GeneCounts, GeneAttributedToRead.DummyByEntropy, .keep_all=T) %>%
+   #    group_by(sample) %>%
+   #    mutate(TPM = GeneCounts/sum(GeneCounts, na.rm = T)*1E6) %>%
+   #    ungroup()
+  ggplot() +
+  # geom_bar(position = position_fill(reverse = F), stat="identity") + 
+  geom_col(aes(x=GeneAttributedToRead.DummyByEntropy, y=PercentIsoform, fill=NMDFinderB)) +
+  # geom_hline(data = dat.temp.entropy.ordered.genes %>%
+  #              group_by(sample) %>%
+  #              summarise(med = median(FractionProductive)) %>%
+  #              ungroup(),
+  #            aes(yintercept=1 - med),
+  #            linetype='dashed') +
+  geom_rug(
+    data = . %>%
+      distinct(sample, GeneCounts, GeneAttributedToRead.DummyByEntropy, .keep_all=T) %>%
+      group_by(sample) %>%
+      mutate(TPM = GeneCounts/sum(GeneCounts, na.rm=T)*1E6) %>%
+      ungroup(),
+    aes(color=TPM, x=GeneAttributedToRead.DummyByEntropy)
+  ) +
+  scale_color_viridis_c(trans='log10') +
+  facet_wrap(~sample, scales="free") +
+  scale_fill_manual(values=NMDFinderBCategoriesToColors %>% dplyr::select(NMDFinderB, Color) %>% deframe()) +
+  theme(
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  labs(fill="NMDFinderB", x="Genes, ranked by fraction unproductive", y="Fraction of transcript molecules")
+
+
+```
+
+
+

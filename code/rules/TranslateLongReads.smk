@@ -1,7 +1,8 @@
 rule CollectLR_Bed12:
     input:
-        expand("LongReads/FullLengthReadsBed12/{sample}.bed.gz", sample=long_read_samples),
-        expand("LongReads/ClosestAnnotatedTermini/{GTFType}_{TES_or_TSS}/{sample}.bed.gz", GTFType = ["GTFTools", "GTFTools_BasicAnnotations"], TES_or_TSS = ["TSS", "TES"], sample=long_read_samples)
+        expand("LongReads/bed12translated/longestORF/{sample}.bed.gz.tbi", sample=long_read_samples + long_read_samples_ONT),
+        expand("LongReads/bed12translated/firstORF/{sample}.bed.gz.tbi", sample=long_read_samples + long_read_samples_ONT),
+        # expand("LongReads/ClosestAnnotatedTermini/{GTFType}_{TES_or_TSS}/{sample}.bed.gz", GTFType = ["GTFTools", "GTFTools_BasicAnnotations"], TES_or_TSS = ["TSS", "TES"], sample=long_read_samples)
 
 rule Bam2Bed12:
     input:
@@ -86,6 +87,8 @@ rule FilterBam12ForFullLength:
         bed = "LongReads/bed12/{sample}.bed.gz",
         TSS = "LongReads/ReferenceFeatures/GTFTools/gencode.v34.chromasomal.SingleNt_TSS.bed",
         TES = "LongReads/ReferenceFeatures/GTFTools/gencode.v34.chromasomal.SingleNt_TES.bed"
+    resources:
+        mem_mb = 16000
     output:
         bed = "LongReads/FullLengthReadsBed12/{sample}.bed.gz"
     shell:
@@ -93,3 +96,37 @@ rule FilterBam12ForFullLength:
         zcat {input.bed} | awk -F'\\t' -v OFS='\\t' '$6 == "+" {{ print $1, $2, $2+1, $4, $5, $6, $0  }} $6 == "-" {{ print $1, $3-1, $3, $4, $5, $6, $0  }}' | bedtools sort -i - | bedtools closest -s -D a -t first -b {input.TSS} -a - | awk -F'\\t' -v OFS='\\t' '$NF>-25 && $NF<25' | cut -d$'\\t' --complement -f1-6 | awk -F'\\t' -v OFS='\\t' '$6 == "+" {{ print $1, $3-1, $3, $4, $5, $6, $0  }} $6 == "-" {{ print $1, $2, $2+1, $4, $5, $6, $0  }}'| bedtools sort -i - | bedtools closest -s -D a -t first -b {input.TES} -a - | awk -F'\\t' -v OFS='\\t' '$NF>-50 && $NF<50' | cut -d$'\\t' --complement -f1-6 | cut -d$'\\t' -f1-13 | gzip - > {output.bed}
         """
 
+
+rule TranslateLongReads:
+    input:
+        bed = "LongReads/FullLengthReadsBed12/{sample}.bed.gz",
+        gtf = "ReferenceGenome/Annotations/gencode.v34.primary_assembly.annotation.gtf",
+        fa = "ReferenceGenome/Fasta/GRCh38.primary_assembly.genome.fa",
+        introns = "SplicingAnalysis/regtools_annotate_combined/comprehensive.bed.gz"
+    output:
+        longestORF = temp("LongReads/bed12translated/longestORF/{sample}.bed"),
+        firstORF = temp("LongReads/bed12translated/firstORF/{sample}.bed")
+    resources:
+        mem_mb = 32000
+    log:
+        "logs/TranslateLongReads/{sample}.log"
+    conda:
+        "../envs/py_tools.yml"
+    shell:
+        """
+        python scripts/TranslateLongReads.py {input.fa} {input.bed} {input.gtf} {input.introns} {output.firstORF} {output.longestORF} &> {log}
+        """
+
+rule Compress_TranslatedReads:
+    input:
+        bed = "LongReads/bed12translated/{TranslationAppraoch}/{sample}.bed",
+    output:
+        bedgz = "LongReads/bed12translated/{TranslationAppraoch}/{sample}.bed.gz",
+        tbi = "LongReads/bed12translated/{TranslationAppraoch}/{sample}.bed.gz.tbi",
+    resources:
+        mem_mb = 12000
+    shell:
+        """
+        bedtools sort -i {input.bed} | bgzip -c /dev/stdin > {output.bedgz}
+        tabix -p bed {output.bedgz}
+        """

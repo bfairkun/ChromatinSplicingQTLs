@@ -1,0 +1,199 @@
+---
+title: "2024-03-05_CheckTranslatedReads"
+output: html_document
+date: '2024-03-05'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message=F)
+```
+
+I have identified long reads that are full length transcripts and translated them. I took two approaches to translate them: (1) using 5' most annotated start codon, or (2) using longest ORF. Now I can apply NMD rules to investigate the fraction of reads that are NMD targeted or not and for which reason (eg the 55nt rule, PTC close to the START codon may is not efficiently targeted for NMD due to downstream reinitioation (Lindeboom 2016))...
+
+```{r}
+library(data.table)
+library(tidyverse)
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family="Helvetica")))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+```
+
+```{r}
+dat <- c(Sys.glob("../code/LongReads/bed12translated/*/CTRL*_shRNA.*.bed.gz"),
+  Sys.glob("../code/LongReads/bed12translated/*/GM[1234].bed.gz"),
+  Sys.glob("../code/LongReads/bed12translated/*/SMG6_SMG7_shRNA.SAMEA8691113.bed.gz")) %>%
+  setNames(str_replace(., "../code/LongReads/bed12translated/(.+?)/(.+?).bed.gz", "\\1;\\2")) %>%
+  lapply(fread, col.names=paste0("Col", 1:13), select=1:13) %>%
+  bind_rows(.id="approach_sample") %>%
+  separate(approach_sample, into=c("ORF.translation.approach", "sample"), sep=";") %>%
+  mutate(SeqNoBars = str_replace_all(Col13, "|", "")) %>%
+  mutate(CDS=str_extract(SeqNoBars,"\\^.+?(\\*|$)")) %>%
+  unite(Read, Col1:Col6)
+
+```
+
+Tester code to forumalte regex to match conditions in lindeboom
+
+```{r, eval=F}
+
+test_str <- "GCGGATCCCAGCGGCGGTCGTGTAGCTGAGCAGCCCTGGGGCTTGGTTCTATGTCCCTGTGG|CT^ATGTTTCCAGTGTCCTCTGGGTGTTTCCAAGAGCAACAAGAAACGAATAAATCTCTG|ACCCTTCTCAGGTGCAGCCAGAGAGACACTAGCCCACTGATGGATGGACAGACGTGGGCAGGGTCCGTGTCACTAAACCACCCACCACTGCCACAGCTGCCTACAACAGACACATCAGATGACACTCCGGGCAAATAA*ATGATTTTCA"
+
+test_str2 <- "GCGGATCCCAGCGGCGGTCGTGTAGCTGAGCAGCCCTGGGGCTTGGTTCTATGTCCCTGTGG|CT^ATGTTTCCAGTGTCCTCTGGGTGTTTCCAAGAGCAACAAGAAACGAATAAATCTCTG|ACCCTTCTCAGGTGCAGCCAGAGAGACACTAGCCCACTGATGGATGGACAGACGTGGGCAGGGTCCGTGTCACTAAACCACCCACCACTGCCACAGCTGCCTACAACAGACACATCAGATGACACTCCGGGCAAATAAATGATTTTCA"
+
+test_str3 <- "GCGGATCCCAGCGGCGGTCGTGTAGCTGAGCAGCCCTGGGGCTTGGTTCTATGTCCCTGTGG|CTATGTTTCCAGTGTCCTCTGGGTGTTTCCAAGAGCAACAAGAAACGAATAAATCTCTG|ACCCTTCTCAGGTGCAGCCAGAGAGACACTAGCCCACTGATGGATGGACAGACGTGGGCAGGGTCCGTGTCACTAAACCACCCACCACTGCCACAGCTGCCTACAACAGACACATCAGATGACACTCCGGGCAAATAAATGATTTTCA"
+
+test_str4 <- "GCGGATCCCAGCGGCGGTCGTGTAGCTGAGCAGCCCTGGGGCTTGGTTCTATGTCCCTGTGG|CTATGTTTCCAGTGTCCTCTGGGTGT*TTCCAAGAGCAACAAGAAACGAATAAATCTCTG|ACCCTTCTCAGGTGCAGCCAGAGAGACACTAGCCCACTGATGGATGGACAGACGTGGGCAGGGTCCGTGTCACTAAACCACCCACCACTGCCACAGCTGCCTACAACAGACACATCAGA*TGACACTCCGGGCAAATAAATGATTTTCA"
+
+test_str5 <- "GATC*CA|GT"
+
+test_str6 <- "GCGGATCCCAGCGGCGGTCGTGTAGCTGAGCAGCCCTGGGGCTTGGTTCTATGTCCCTGTGG|CTATGTTTCCAGTGTCCTCTGGGTGT*TTCCAAGAGCAACAAGAAACGAATAAATCTCTGACCCTTCTCAGGTGCAGCCAGAGAGACACTAGCCCACTGATGGATGGACAGACGTGGGCAGGGTCCGTGTCACTAAACCACCCACCACTGCCACAGCTGCCTACAACAGACACATCAGTTCCAAGAGCAACAAGAAACGAATAAATCCAAGAGCAACAAGAAACGAATAAATCTCTGACCCTTCTCAGGTGCAGCCAGAGAGACACTAGCCCACTGATGGATGGACAGACGTGGGCAGGGTCCGTGTCACTAAACCACCCACCACTGCCACAGCTGCCTACAACAGACACATCAGTTCCAAGAGCAACAAGAAACGAATAAACAGGGTCCGTGTCACTAAACCACCCACCACTGCCACAGCTGCCTACAACAGACACATCAGTTCCAAGAGCAACAAGAAACGAAT|AAA"
+
+test_str7 <- "GCGGATCCCAGCGGCGGTCGTGTAGCTGAGCAGCCCTGGGGCTTGGTTCTATGTCCCTGTGG|CTATGTTTCCAGTGTCCTCTGGGTGT*TTCCAAGAGCAACAAGAAACGAATAAATCTCTGACCCTTCTCAGGTGCAGCCAGAGAGACACTAGCCCACTGATGGATGGACAGACGTGGGCAGGGTCCGTGTCACTAAACCACCCACCACTGCCACAGCTGCCTACAACAGACACATCAGTTCCAAGAGCAACAAGAAACGAATAAATCCAAGAGCAACAAGAAACGAATAAATCTCTGACCCTTCTCAGGTGCAGCCAGAGAGACACTAGCCCACTGATGGATGGACAGACGTGGGCAGGGTCCGTGTCACTAAACCACCCACCACTGCCACAGCTGCCTACAACAGACACATCAGTTCCAAGAGCAACAAGAAACGAATAAACAGGGTCCGTGTCACTAAACCACCCACCACTGCCACAGCTGCCTACAACAGACACATCAGTTCCAAGA*GCAACAAGAAACGAAT|AAA"
+
+
+str_extract(test_str3, "\\^.+?(\\*|$)")
+
+# Is in last exon
+str_detect(test_str5, "(^|\\|)[ACGTacgt]*+\\*[ACGTacgt]*+$")
+
+# Get length of exon
+str_length(str_extract(test_str6, "(^|\\|)[ACGTacgt]*+\\*[ACGTacgt]*+\\|"))
+
+str_detect(test_str7, "\\*[ACGTNacgtn]{0,50}\\|[ACGTNacgtn]*+$")
+```
+
+Check read counts and read lengths by sample... Keep in mind these are already filtered for "full length" reads meaning anchored at annotated TSS and TES.
+
+```{r}
+dat %>%
+  mutate(ReadLen = str_length(SeqNoBars)) %>%
+  ggplot(aes(x=ReadLen, color=sample)) +
+  stat_ecdf() +
+  scale_x_continuous(trans='log10') +
+  labs(x="ReadLen", y="ecdf")
+
+dat %>%
+  count(sample) %>%
+  ggplot(aes(x=sample, y=n)) +
+  geom_col() +
+  Rotate_x_labels +
+  labs(y="ReadCount")
+  
+```
+
+
+Check ORF length
+
+```{r}
+
+dat %>%
+  filter(sample=="GM3")
+
+dat %>%
+  # filter(str_detect(sample, "^GM")) %>%
+  mutate(lenCDS = str_length(CDS)/3) %>%
+  dplyr::select(ORF.translation.approach, sample, Read, lenCDS) %>%
+  distinct() %>%
+  pivot_wider(names_from = "ORF.translation.approach", values_from="lenCDS") %>%
+  ggplot(aes(x=firstORF, y=longestORF)) +
+  # geom_point(alpha=0.1) +
+  geom_hex(bins=100) +
+  scale_fill_viridis_c(trans='log10') +
+  # scale_x_continuous(trans='log10') +
+  # scale_y_continuous(trans='log10') +
+  facet_wrap(~sample) +
+  labs(x="first ORF len (AA)", "longest ORF len (AA)")
+
+dat %>%
+  mutate(lenCDS = str_length(CDS)/3) %>%
+  dplyr::select(ORF.translation.approach, sample, Read, lenCDS) %>%
+  distinct() %>%
+  pivot_wider(names_from = "ORF.translation.approach", values_from="lenCDS") %>%
+  ggplot(aes(x=firstORF, y=longestORF)) +
+  # geom_point(alpha=0.1) +
+  geom_hex(bins=100) +
+  scale_fill_viridis_c(trans='log10') +
+  scale_x_continuous(trans='log10') +
+  scale_y_continuous(trans='log10') +
+  facet_wrap(~sample) +
+  labs(x="first ORF len (AA)", "longest ORF len (AA)")
+
+```
+Ok I think that generally makes sense... Often the firstORF is the same length as the longest ORF... Other times the longest ORF is longer than the first ORF... In a smaller minority of cases, the first ORF is longer than the longest ORF (because when translating from the first ORF, I allowed no-stop translations, while I did not allow for that when identifying the longest ORF).
+
+Next let's try classifying reads by different critera...
+```{r}
+dat %>%
+  filter(!is.na(CDS)) %>%
+  count(ORF.translation.approach, sample)
+
+dat.PlotPieChart <- dat %>%
+  # sample_n(1000) %>%
+  # filter(!is.na(CDS)) %>%
+  mutate(InLastExon = str_detect(Col13, "(^|\\|)[ACGTNacgtn]*+\\*[ACGTNacgtn]*+$")) %>%
+  mutate(DistanceToStartUnder150 = str_length(CDS) < 150) %>%
+  mutate(ExonLengthOver407 = str_length(str_extract(Col13, "(^|\\|)[ACGTNacgtn]*+\\*[ACGTNacgtn]*+\\|")) > 407) %>%
+  mutate(Is50NtUpstreamOfLastEJC = str_detect(Col13, "\\*[ACGTNacgtn]{0,50}\\|[ACGTNacgtn]*+$")) %>%
+  mutate(NoStop = str_detect(Col13, "\\^") & str_detect(Col13, "\\*", negate = T)) %>%
+  mutate(Category = case_when(
+    NoStop ~ "No stop",
+    InLastExon ~ "Last exon",
+    DistanceToStartUnder150 ~ "Start proximal",
+    ExonLengthOver407 ~ "Long exon",
+    Is50NtUpstreamOfLastEJC ~ "50 nt rule",
+    is.na(CDS) ~ "No CDS",
+    TRUE ~ "Trigger NMD"
+  ))
+
+
+```
+
+Some tester code to help me manually inspect some reads from each category on IGV to ensure the categorization was done right.
+
+```{r, eval=F}
+set.seed(0)
+dat.PlotPieChart %>%
+  filter(sample=="CTRL1_shRNA.SAMEA8691110" & ORF.translation.approach=="firstORF") %>%
+  group_by(Category) %>%
+  sample_n(5) %>%
+  ungroup() %>%
+  dplyr::select(Read, Category, Col7, Col8) %>%
+  mutate(location = str_replace(Read, "^(.+?)_(.+?)_(.+?)_.+$", "\\1:\\2-\\3"))
+
+dat.PlotPieChart %>%
+  filter(sample=="CTRL1_shRNA.SAMEA8691110" & ORF.translation.approach=="firstORF") %>%
+  filter(str_detect(Read, "ERR5880581.1269884")) %>%
+  dplyr::select(Read, Category, Col7, Col8)
+```
+
+Now plot fraction in each category... Only include chromosomal reads
+
+```{r}
+
+dat.PlotPieChart %>%
+  filter(str_detect(Read, "^chr[1-9]")) %>%
+  # filter(sample == "CTRL1_shRNA.SAMEA8691110")
+  count(Category, ORF.translation.approach, sample) %>%
+  filter(!Category=="No CDS") %>%
+  mutate(sample = str_replace(sample, "(.+?)\\..+$", "\\1")) %>%
+  ggplot(aes(x=sample, fill=Category, y=n)) +
+  geom_col(position="fill") +
+  # geom_col(position="stack") +
+  facet_wrap(~ORF.translation.approach) +
+  Rotate_x_labels +
+  labs(y="fractionReads", fill="Lindeboom\ncategory")
+  
+
+  
+```
+
+Cool... Sort of makes sense, but let's also plot by number of introns...
+
+### Update
+
+I will continue this analysis in another notebook... I updated the snakemake to include the Lindeboom logic in creating the bed files that I read in here, so in the next notebook I will do that stuff in R
