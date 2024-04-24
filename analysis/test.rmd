@@ -34,7 +34,7 @@ This is your R Markdown document. Markdown is a simple formatting syntax for aut
 ```
 
 ```{r}
-
+library(edgeR)
 
 data(mtcars)
 plot(mtcars)

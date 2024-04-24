@@ -1,0 +1,2286 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+<meta name="date" content="2024-03-07" />
+
+<title>2024-03-07_InvestigateTranslatedLongReads</title>
+
+<script src="site_libs/header-attrs-2.14/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.tab('show');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">myproject</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">2024-03-07_InvestigateTranslatedLongReads</h1>
+<h4 class="date">2024-03-07</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+workflowr <span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2024-04-24
+</p>
+<p>
+<strong>Checks:</strong> <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> 0
+</p>
+<p>
+<strong>Knit directory:</strong>
+<code>ChromatinSplicingQTLs/analysis/</code> <span
+class="glyphicon glyphicon-question-sign" aria-hidden="true"
+title="This is the local directory in which the code in this file was executed.">
+</span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a>
+analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version
+1.7.0). The <em>Checks</em> tab describes the reproducibility checks
+that were applied when the results were created. The <em>Past
+versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date
+</a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git
+repository, you know the exact version of the code that produced these
+results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the
+global environment can affect the analysis in your R Markdown file in
+unknown ways. For reproduciblity it’s best to always run the code in an
+empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20191126code">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Seed:</strong>
+<code>set.seed(20191126)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20191126code"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20191126)</code> was run prior to running
+the code in the R Markdown file. Setting a seed ensures that any results
+that rely on randomness, e.g. subsampling or permutations, are
+reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Session information:</strong>
+recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package
+versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be
+confident that you successfully produced the results during this
+run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr
+project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstree2eb27cddb069557b9f1c5c7dcad4627d4128976etargetblank2eb27cda">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Repository version:</strong>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/2eb27cddb069557b9f1c5c7dcad4627d4128976e" target="_blank">2eb27cd</a>
+</a>
+</p>
+</div>
+<div
+id="strongRepositoryversionstrongahrefhttpsgithubcombfairkunChromatinSplicingQTLstree2eb27cddb069557b9f1c5c7dcad4627d4128976etargetblank2eb27cda"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development
+and connecting the code version to the results is critical for
+reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/tree/2eb27cddb069557b9f1c5c7dcad4627d4128976e" target="_blank">2eb27cd</a>.
+See the <em>Past versions</em> tab to see a history of the changes made
+to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for
+the analysis have been committed to Git prior to generating the results
+(you can use <code>wflow_publish</code> or
+<code>wflow_git_commit</code>). workflowr only checks the R Markdown
+file, but you know if there are other scripts or data files that it
+depends on. Below is the status of the Git repository when the results
+were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    analysis/.Rhistory
+    Ignored:    code/.DS_Store
+    Ignored:    code/.RData
+    Ignored:    code/._report.html
+    Ignored:    code/.ipynb_checkpoints/
+    Ignored:    code/.snakemake/
+    Ignored:    code/APA_Processing/
+    Ignored:    code/Alignments/
+    Ignored:    code/ChromHMM/
+    Ignored:    code/ENCODE/
+    Ignored:    code/ExpressionAnalysis/
+    Ignored:    code/ExtractPhenotypeBedByGenotype.py
+    Ignored:    code/FastqFastp/
+    Ignored:    code/FastqFastpSE/
+    Ignored:    code/FastqSE/
+    Ignored:    code/FineMapping/
+    Ignored:    code/GTEx/
+    Ignored:    code/Gencode.v34.6Colors.bed.gz
+    Ignored:    code/Genotypes/
+    Ignored:    code/H3K36me3_CutAndTag.pdf
+    Ignored:    code/IntronSlopes/
+    Ignored:    code/LR.bed
+    Ignored:    code/LR.seq.bed
+    Ignored:    code/LongReads/
+    Ignored:    code/MYB.tracks.ini
+    Ignored:    code/Metaplots/
+    Ignored:    code/Misc/
+    Ignored:    code/MiscCountTables/
+    Ignored:    code/Multiqc/
+    Ignored:    code/Multiqc_chRNA/
+    Ignored:    code/NonCodingRNA/
+    Ignored:    code/NonCodingRNA_annotation/
+    Ignored:    code/PairwisePi1Traits.P.all.txt.gz
+    Ignored:    code/PeakCalling/
+    Ignored:    code/Phenotypes/
+    Ignored:    code/PlotGruberQTLs/
+    Ignored:    code/PlotQTLs/
+    Ignored:    code/ProCapAnalysis/
+    Ignored:    code/QC/
+    Ignored:    code/QTL_SNP_Enrichment/
+    Ignored:    code/QTLs/
+    Ignored:    code/RPKM_tables/
+    Ignored:    code/ReadLengthMapExperiment/
+    Ignored:    code/ReadLengthMapExperimentResults/
+    Ignored:    code/ReadLengthMapExperimentSpliceCounts/
+    Ignored:    code/ReferenceGenome/
+    Ignored:    code/Rplots.pdf
+    Ignored:    code/Session.vim
+    Ignored:    code/SmallMolecule/
+    Ignored:    code/SplicingAnalysis/
+    Ignored:    code/TODO
+    Ignored:    code/Tehranchi/
+    Ignored:    code/alias/
+    Ignored:    code/bigwigs/
+    Ignored:    code/bigwigs_FromNonWASPFilteredReads/
+    Ignored:    code/config/.DS_Store
+    Ignored:    code/config/._.DS_Store
+    Ignored:    code/config/.ipynb_checkpoints/
+    Ignored:    code/config/config.local.yaml
+    Ignored:    code/dag.pdf
+    Ignored:    code/dag.png
+    Ignored:    code/dag.svg
+    Ignored:    code/data/
+    Ignored:    code/debug.ipynb
+    Ignored:    code/debug_python.ipynb
+    Ignored:    code/deepTools/
+    Ignored:    code/featureCounts/
+    Ignored:    code/featureCountsBasicGtf/
+    Ignored:    code/genome_config.yaml
+    Ignored:    code/gwas_summary_stats/
+    Ignored:    code/hyprcoloc/
+    Ignored:    code/igv_session.xml
+    Ignored:    code/isoseqbams/
+    Ignored:    code/log
+    Ignored:    code/logs/
+    Ignored:    code/notebooks/.ipynb_checkpoints/
+    Ignored:    code/pi1/
+    Ignored:    code/polyA.Splicing.Subset_YRI.NominalPassForColoc.bed.bgz
+    Ignored:    code/rules/.ipynb_checkpoints/
+    Ignored:    code/rules/OldRules/
+    Ignored:    code/rules/notebooks/
+    Ignored:    code/salmontest/
+    Ignored:    code/scratch/
+    Ignored:    code/scripts/.ipynb_checkpoints/
+    Ignored:    code/scripts/GTFtools_0.8.0/
+    Ignored:    code/scripts/__pycache__/
+    Ignored:    code/scripts/liftOverBedpe/liftOverBedpe.py
+    Ignored:    code/snakemake.dryrun.log
+    Ignored:    code/snakemake.log
+    Ignored:    code/snakemake.sbatch.log
+    Ignored:    code/snakemake_profiles/slurm/__pycache__/
+    Ignored:    code/test.introns.bed
+    Ignored:    code/test.introns2.bed
+    Ignored:    code/test.log
+    Ignored:    code/tracks.xml
+    Ignored:    data/.DS_Store
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-10.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-11.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-2.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-3.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-4.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-5.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-6.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-7.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022-8.csv
+    Ignored:    data/GWAS_catalog_summary_stats_sources/._list_gwas_summary_statistics_6_Apr_2022.csv
+    Ignored:    data/Metaplots/.DS_Store
+    Ignored:    output/~$20240223_NumQTLs_edited.xlsx
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not
+included in this status report because it is ok for generated content to
+have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+
+<p>
+These are the previous versions of the repository in which changes were
+made to the R Markdown
+(<code>analysis/2024-03-07_InvestigateTranslatedLongReads.Rmd</code>)
+and HTML
+(<code>docs/2024-03-07_InvestigateTranslatedLongReads.html</code>)
+files. If you’ve configured a remote Git repository (see
+<code>?wflow_git_remote</code>), click on the hyperlinks in the table
+below to view the files as they were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/2eb27cddb069557b9f1c5c7dcad4627d4128976e/analysis/2024-03-07_InvestigateTranslatedLongReads.Rmd" target="_blank">2eb27cd</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2024-04-24
+</td>
+<td>
+Update nb after revisions
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/bfairkun/ChromatinSplicingQTLs/blob/420d8ddd276030bf2ad083d2f68a8fd22981956c/analysis/2024-03-07_InvestigateTranslatedLongReads.Rmd" target="_blank">420d8dd</a>
+</td>
+<td>
+Benjmain Fair
+</td>
+<td>
+2024-03-18
+</td>
+<td>
+updates for review response
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div id="intro" class="section level2">
+<h2>Intro</h2>
+<pre class="r"><code>library(data.table)
+library(tidyverse)
+library(ggbreak)
+
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family=&quot;Helvetica&quot;)))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels &lt;- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+
+sample_n_of &lt;- function(data, size, ...) {
+  dots &lt;- quos(...)
+  
+  group_ids &lt;- data %&gt;% 
+    group_by(!!! dots) %&gt;% 
+    group_indices()
+  
+  sampled_groups &lt;- sample(unique(group_ids), size)
+  
+  data %&gt;% 
+    filter(group_ids %in% sampled_groups)
+}</code></pre>
+<pre class="r"><code>dat &lt;- c(Sys.glob(&quot;../code/LongReads/bed12translated/*/CTRL*_shRNA.*.bed.gz&quot;),
+  Sys.glob(&quot;../code/LongReads/bed12translated/*/GM[1234].bed.gz&quot;),
+  Sys.glob(&quot;../code/LongReads/bed12translated/*/SMG6_SMG7_shRNA.SAMEA8691113.bed.gz&quot;)) %&gt;%
+  setNames(str_replace(., &quot;../code/LongReads/bed12translated/(.+?)/(.+?).bed.gz&quot;, &quot;\\1;\\2&quot;)) %&gt;%
+  lapply(fread, col.names=c(&quot;chrom&quot;, &quot;start&quot;, &quot;stop&quot;, &quot;ReadName&quot;, &quot;score&quot;, &quot;strand&quot;, &quot;thickStart&quot;, &quot;thickEnd&quot;, &quot;Color&quot;, &quot;blocks&quot;,&quot;blockSizes&quot;, &quot;blockStarts&quot;, &quot;sequence&quot;, &quot;NMDFinderB&quot;, &quot;AllJuncsIdentifiable&quot;, &quot;Introns&quot;)) %&gt;%
+  bind_rows(.id=&quot;approach_sample&quot;) %&gt;%
+  separate(approach_sample, into=c(&quot;ORF.translation.approach&quot;, &quot;sample&quot;), sep=&quot;;&quot;)</code></pre>
+<pre class="r"><code>dat %&gt;%
+  filter(str_detect(chrom, &quot;^chr[1-9]&quot;)) %&gt;%
+  count(NMDFinderB, ORF.translation.approach, sample, AllJuncsIdentifiable) %&gt;%
+  filter(!NMDFinderB==&quot;No CDS&quot;) %&gt;%
+  mutate(sample = str_replace(sample, &quot;(.+?)\\..+$&quot;, &quot;\\1&quot;)) %&gt;%
+  mutate(sample = if_else(str_detect(sample, &quot;shRNA&quot;), paste0(&quot;Nanopore_&quot;, sample), paste0(&quot;PacBio_&quot;, sample))) %&gt;%
+  ggplot(aes(x=sample, fill=NMDFinderB, y=n)) +
+  geom_col(position=&quot;fill&quot;) +
+  # geom_col(position=&quot;stack&quot;) +
+  facet_grid(AllJuncsIdentifiable~ORF.translation.approach) +
+  Rotate_x_labels +
+  labs(y=&quot;fractionReads&quot;, fill=&quot;Lindeboom\ncategory&quot;)</code></pre>
+<p><img src="figure/2024-03-07_InvestigateTranslatedLongReads.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>dat %&gt;%
+  filter(str_detect(chrom, &quot;^chr[1-9]&quot;)) %&gt;%
+  count(NMDFinderB, ORF.translation.approach, sample, AllJuncsIdentifiable) %&gt;%
+  filter(!NMDFinderB==&quot;No CDS&quot;) %&gt;%
+  mutate(sample = str_replace(sample, &quot;(.+?)\\..+$&quot;, &quot;\\1&quot;)) %&gt;%
+  mutate(sample = if_else(str_detect(sample, &quot;shRNA&quot;), paste0(&quot;Nanopore_&quot;, sample), paste0(&quot;PacBio_&quot;, sample))) %&gt;%
+  ggplot(aes(x=sample, fill=NMDFinderB, y=n)) +
+  # geom_col(position=&quot;fill&quot;) +
+  geom_col(position=&quot;stack&quot;) +
+  facet_grid(AllJuncsIdentifiable~ORF.translation.approach) +
+  Rotate_x_labels +
+  labs(y=&quot;NumberReads&quot;, fill=&quot;Lindeboom\ncategory&quot;)</code></pre>
+<p><img src="figure/2024-03-07_InvestigateTranslatedLongReads.Rmd/unnamed-chunk-3-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Replot now, just including transcripts with all identifiable
+juncs</p>
+<pre class="r"><code>dat %&gt;%
+  filter(str_detect(chrom, &quot;^chr[1-9]&quot;)) %&gt;%
+  count(NMDFinderB, ORF.translation.approach, sample, AllJuncsIdentifiable) %&gt;%
+  filter(!NMDFinderB==&quot;No CDS&quot;) %&gt;%
+  filter(AllJuncsIdentifiable) %&gt;%
+  mutate(sample = str_replace(sample, &quot;(.+?)\\..+$&quot;, &quot;\\1&quot;)) %&gt;%
+  mutate(sample = if_else(str_detect(sample, &quot;shRNA&quot;), paste0(&quot;Nanopore_&quot;, sample), paste0(&quot;PacBio_&quot;, sample))) %&gt;%
+  ggplot(aes(x=sample, fill=NMDFinderB, y=n)) +
+  geom_col(position=&quot;fill&quot;) +
+  # geom_col(position=&quot;stack&quot;) +
+  scale_y_continuous(breaks=seq(0,1,0.1)) +
+  facet_grid(AllJuncsIdentifiable~ORF.translation.approach) +
+  Rotate_x_labels +
+  labs(y=&quot;fractionReads&quot;, fill=&quot;Lindeboom\ncategory&quot;)</code></pre>
+<p><img src="figure/2024-03-07_InvestigateTranslatedLongReads.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Replot again, without excluding those…</p>
+<pre class="r"><code>dat %&gt;%
+  distinct(sample)</code></pre>
+<pre><code>                         sample
+1:     CTRL1_shRNA.SAMEA8691110
+2:     CTRL2_shRNA.SAMEA8691111
+3:                          GM1
+4:                          GM2
+5:                          GM3
+6:                          GM4
+7: SMG6_SMG7_shRNA.SAMEA8691113</code></pre>
+<pre class="r"><code>dat %&gt;%
+  filter(str_detect(chrom, &quot;^chr[1-9]&quot;)) %&gt;%
+  count(NMDFinderB, ORF.translation.approach, sample) %&gt;%
+  filter(!NMDFinderB==&quot;No CDS&quot;) %&gt;%
+  mutate(sample = str_replace(sample, &quot;(.+?)\\..+$&quot;, &quot;\\1&quot;)) %&gt;%
+  mutate(sample = if_else(str_detect(sample, &quot;shRNA&quot;), paste0(&quot;Nanopore_&quot;, sample), paste0(&quot;PacBio_&quot;, sample))) %&gt;%
+  ggplot(aes(x=sample, fill=NMDFinderB, y=n)) +
+  geom_col(position=&quot;fill&quot;) +
+  # geom_col(position=&quot;stack&quot;) +
+  scale_y_continuous(breaks=seq(0,1,0.1)) +
+  facet_wrap(~ORF.translation.approach) +
+  Rotate_x_labels +
+  labs(y=&quot;fractionReads&quot;, fill=&quot;Lindeboom\ncategory&quot;)</code></pre>
+<p><img src="figure/2024-03-07_InvestigateTranslatedLongReads.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Let’s replot by intron counts…</p>
+<pre class="r"><code>dat %&gt;%
+  filter(AllJuncsIdentifiable) %&gt;%
+  filter(str_detect(chrom, &quot;^chr[1-9]&quot;)) %&gt;%
+  filter(str_detect(sample, &quot;shRNA&quot;)) %&gt;%
+  mutate(NumJuncs = str_count(sequence, &quot;\\|&quot;)) %&gt;%
+  mutate(NumJuncs.condensed = case_when(
+    NumJuncs &lt; 12 ~ as.numeric(NumJuncs),
+    NumJuncs &gt;= 12 ~ as.numeric(13),
+    TRUE ~ NA_real_
+  )) %&gt;%
+  count(NMDFinderB, ORF.translation.approach, sample, NumJuncs.condensed) %&gt;%
+  group_by(ORF.translation.approach, sample, NumJuncs.condensed) %&gt;%
+  mutate(Percent = n/sum(n)*100) %&gt;%
+  ungroup() %&gt;%
+  filter(!NMDFinderB==&quot;Last exon&quot;) %&gt;%
+  ggplot(aes(x=NumJuncs.condensed, color=NMDFinderB, y=Percent)) +
+  geom_line() +
+  facet_grid(sample~ORF.translation.approach) +
+  scale_x_continuous(breaks=c(0:13), labels=c(0:12, &quot;&gt;12&quot;)) +
+  theme_bw() +
+  Rotate_x_labels +
+  labs(y=&quot;fractionReads&quot;, color=&quot;Lindeboom\ncategory&quot;) +
+  coord_cartesian(xlim=c(0,13))</code></pre>
+<p><img src="figure/2024-03-07_InvestigateTranslatedLongReads.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Now let’s see how these annotations compare to our our junction
+annotatoins… Of course there needs to be some method to map transcript
+annotations to junctions… Perhaps the approach is to just take the most
+common Lindeboom annotation for each transcript that contains the
+junction..</p>
+<pre class="r"><code>JunctionAnnotations &lt;- read_tsv(&quot;../data/IntronAnnotationsFromYang.Updated.tsv.gz&quot;) %&gt;%
+  mutate(Introns = paste(chrom, start, end, strand, sep=&quot;_&quot;))
+
+Mode &lt;- function(x) {
+  ux &lt;- unique(x)
+  ux[which.max(tabulate(match(x, ux)))]
+}
+
+dat %&gt;%
+  filter(AllJuncsIdentifiable) %&gt;%
+  filter(str_detect(chrom, &quot;^chr[1-9]&quot;)) %&gt;%
+  # filter(str_detect(sample, &quot;shRNA&quot;)) %&gt;%
+  filter(ORF.translation.approach == &quot;firstORF&quot;) %&gt;%
+  separate_rows(Introns, sep=&quot;,&quot;) %&gt;%
+  inner_join(
+    JunctionAnnotations %&gt;%
+      dplyr::select(-chrom, -start, -strand, -end)) %&gt;%
+  add_count(Introns) %&gt;%
+  filter(n&gt;3) %&gt;%
+  group_by(Introns) %&gt;%
+  mutate(ModeNMDFinder = Mode(NMDFinderB)) %&gt;%
+  ungroup() %&gt;%
+  dplyr::select(-n) %&gt;%
+  distinct(Introns, .keep_all=T) %&gt;%
+  count(ModeNMDFinder, SuperAnnotation) %&gt;%
+  group_by(SuperAnnotation) %&gt;%
+  mutate(TotalIntsInSuperAnnotation = sum(n)) %&gt;%
+  ungroup() %&gt;%
+  filter(!str_detect(SuperAnnotation, &quot;Noncoding&quot;)) %&gt;%
+  ggplot(aes(x=SuperAnnotation, y=n, fill=ModeNMDFinder)) +
+  geom_col(position=&#39;fill&#39;) +
+  Rotate_x_labels +
+  labs(x=&quot;Our intron classes&quot;, fill=&quot;Most common transcript context,\nLindeboom transcript categories&quot;, y=&quot;fraction&quot;)</code></pre>
+<p><img src="figure/2024-03-07_InvestigateTranslatedLongReads.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>dat %&gt;%
+  filter(AllJuncsIdentifiable) %&gt;%
+  filter(str_detect(chrom, &quot;^chr[1-9]&quot;)) %&gt;%
+  # filter(str_detect(sample, &quot;shRNA&quot;)) %&gt;%
+  filter(ORF.translation.approach == &quot;firstORF&quot;) %&gt;%
+  separate_rows(Introns, sep=&quot;,&quot;) %&gt;%
+  inner_join(
+    JunctionAnnotations %&gt;%
+      dplyr::select(-chrom, -start, -strand, -end)) %&gt;%
+  add_count(Introns) %&gt;%
+  filter(n&gt;3) %&gt;%
+  group_by(Introns) %&gt;%
+  mutate(ModeNMDFinder = Mode(NMDFinderB)) %&gt;%
+  ungroup() %&gt;%
+  dplyr::select(-n) %&gt;%
+  distinct(Introns, .keep_all=T) %&gt;%
+  count(ModeNMDFinder, SuperAnnotation) %&gt;%
+  group_by(SuperAnnotation) %&gt;%
+  mutate(TotalIntsInSuperAnnotation = sum(n)) %&gt;%
+  ungroup() %&gt;%
+  filter(!str_detect(SuperAnnotation, &quot;Noncoding&quot;)) %&gt;%
+  ggplot(aes(x=ModeNMDFinder, y=n, fill=SuperAnnotation)) +
+  geom_col(position=&#39;fill&#39;) +
+  Rotate_x_labels +
+  labs(fill=&quot;Our intron classes&quot;, x=&quot;Most common transcript context,\nLindeboom transcript categories&quot;, y=&quot;fraction&quot;)</code></pre>
+<p><img src="figure/2024-03-07_InvestigateTranslatedLongReads.Rmd/unnamed-chunk-7-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>The other version of the plot is more informative and easier to
+interpret. But of note is the small subset of juncs that are NMD-targets
+and annotated_productive. I think this happens because some genes are
+majority NMD-targets, which means even consitutive productive junctions
+will get mis-classified as NMD targets. Carlos had the suggestion to
+just classify the juncs that are in at least one “Last exon” read as
+Last exon, then I can use the mode for the other categories. Let’s try
+that, and/or this similar idea: classify juncs as “Last exon” if at
+least 10% (or some low threshold) of transcript contexts are “Lats
+exon”.</p>
+<pre class="r"><code>dat %&gt;%
+  filter(AllJuncsIdentifiable) %&gt;%
+  filter(str_detect(chrom, &quot;^chr[1-9]&quot;)) %&gt;%
+  # filter(str_detect(sample, &quot;shRNA&quot;)) %&gt;%
+  filter(ORF.translation.approach == &quot;firstORF&quot;) %&gt;%
+  separate_rows(Introns, sep=&quot;,&quot;) %&gt;%
+  inner_join(
+    JunctionAnnotations %&gt;%
+      dplyr::select(-chrom, -start, -strand, -end)) %&gt;%
+  add_count(Introns) %&gt;%
+  filter(n&gt;3) %&gt;%
+  add_count(Introns, NMDFinderB, name=&quot;NumNMDFinderContexts&quot;) %&gt;%
+  group_by(Introns) %&gt;%
+  mutate(FractionNMDFinderBContexts = NumNMDFinderContexts/sum(NumNMDFinderContexts)) %&gt;%
+  mutate(NMDFinderB = case_when(
+    any(NMDFinderB == &quot;Last exon&quot;) &amp; FractionNMDFinderBContexts &gt;=0.1 ~ &quot;Last exon&quot;,
+    TRUE ~ NMDFinderB
+  )) %&gt;%
+  mutate(ModeNMDFinder = Mode(NMDFinderB)) %&gt;%
+  ungroup() %&gt;%
+  dplyr::select(-n) %&gt;%
+  distinct(Introns, .keep_all=T) %&gt;%
+  count(ModeNMDFinder, SuperAnnotation) %&gt;%
+  group_by(SuperAnnotation) %&gt;%
+  mutate(TotalIntsInSuperAnnotation = sum(n)) %&gt;%
+  ungroup() %&gt;%
+  filter(!str_detect(SuperAnnotation, &quot;Noncoding&quot;)) %&gt;%
+  ggplot(aes(x=SuperAnnotation, y=n, fill=ModeNMDFinder)) +
+  geom_col(position=&#39;fill&#39;) +
+  Rotate_x_labels +
+  labs(x=&quot;Our intron classes&quot;, fill=&quot;Most common transcript context,\nLindeboom transcript categories&quot;, y=&quot;fraction&quot;, caption=&quot;If &gt;10% of context is Last exon, then most common context is Last exon, otherwise, use the mode&quot;)</code></pre>
+<p><img src="figure/2024-03-07_InvestigateTranslatedLongReads.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>That helps, but there are still some “Trigger NMD” introns in the
+annoteted productive junctions… Will have to manually inspect those to
+see what is going on… But overall I think this is pretty satisfactory
+for addressing reviewer concerns…</p>
+<p>Now let’s reexamine a few more things with this data:</p>
+<p>How many isoforms are responsible for the majority of NMD transcripts
+for each gene?</p>
+<p>First I think I need to identify the gene for each transcript. I can
+do this by finding the mode of those gene after joining by intron
+annotations</p>
+<pre class="r"><code>dat %&gt;%
+  count(NMDFinderB)</code></pre>
+<pre><code>       NMDFinderB       n
+1:     50 nt rule   58165
+2:      Last exon 1132206
+3:      Long exon   30098
+4:         No CDS  448760
+5:        No stop    4241
+6: Start proximal   23402
+7:    Trigger NMD   68252</code></pre>
+<pre class="r"><code>dat.temp.readattributed &lt;- dat %&gt;%
+  filter(AllJuncsIdentifiable) %&gt;%
+  filter(str_detect(chrom, &quot;^chr[1-9]&quot;)) %&gt;%
+  filter(ORF.translation.approach == &quot;firstORF&quot;) %&gt;%
+  separate_rows(Introns, sep=&quot;,&quot;) %&gt;%
+  inner_join(
+    JunctionAnnotations %&gt;%
+      dplyr::select(-chrom, -start, -strand, -end)) %&gt;%
+  group_by(ReadName, sample) %&gt;%
+  mutate(GeneAttributedToRead = Mode(symbol)) %&gt;%
+  ungroup() %&gt;%
+  distinct(sample, ReadName, GeneAttributedToRead, ORF.translation.approach) %&gt;%
+  inner_join(dat) %&gt;%
+  filter(!NMDFinderB %in% c(&quot;Last exon&quot;, &quot;50 nt rule&quot;, &quot;No CDS&quot;)) %&gt;%
+  add_count(sample, GeneAttributedToRead, name=&quot;GeneCounts&quot;) %&gt;%
+  filter(GeneCounts &gt; 10)
+  
+dat.temp &lt;- dat.temp.readattributed %&gt;%
+  count(Introns, sample, GeneAttributedToRead, GeneCounts, name=&quot;IsoformCounts&quot;) %&gt;%
+  mutate(PercentIsoform =  IsoformCounts/GeneCounts) %&gt;%
+  # filter(GeneAttributedToRead==&quot;SRSF5&quot;) %&gt;%
+  # filter(GeneAttributedToRead==&quot;RPL12&quot;) %&gt;%
+  group_by(sample, GeneAttributedToRead) %&gt;%
+  mutate(IsoformRank = rank(desc(PercentIsoform), ties.method = &quot;random&quot;)) %&gt;%
+  mutate(IsoformRank = case_when(
+    IsoformRank &lt; 6 ~ as.numeric(IsoformRank),
+    TRUE ~ as.numeric(6)
+  )) %&gt;%
+  mutate(IsoformRank = factor(IsoformRank)) %&gt;%
+  ungroup() %&gt;%
+  mutate(EntropyPart = PercentIsoform * log2(PercentIsoform)) %&gt;%
+  group_by(sample, GeneAttributedToRead) %&gt;%
+  mutate(Entropy = sum(EntropyPart)) %&gt;%
+  ungroup() %&gt;%
+  # arrange(sample, GeneAttributedToRead, IsoformRank, PercentIsoform)
+  group_by(sample, GeneAttributedToRead, IsoformRank) %&gt;%
+  mutate(PercentIsoform = sum(PercentIsoform)) %&gt;%
+  ungroup() %&gt;%
+  distinct(sample, GeneAttributedToRead, IsoformRank, .keep_all=T)
+
+dat.temp.entropy.ordered.genes &lt;- dat.temp %&gt;%
+  distinct(sample, GeneAttributedToRead, .keep_all=T) %&gt;%
+  arrange(sample, Entropy) %&gt;%
+  mutate(GeneAttributedToRead.DummyByEntropy = row_number())
+
+dat.temp %&gt;%
+  inner_join(dat.temp.entropy.ordered.genes %&gt;%
+               dplyr::select(sample, GeneAttributedToRead, GeneAttributedToRead.DummyByEntropy)) %&gt;%
+  mutate(GeneAttributedToRead.DummyByEntropy = factor(GeneAttributedToRead.DummyByEntropy)) %&gt;%
+  ggplot(aes(x=GeneAttributedToRead.DummyByEntropy, y=PercentIsoform, fill=IsoformRank)) +
+  geom_col() +
+  facet_wrap(~sample, scales=&quot;free&quot;) +
+  scale_fill_brewer(palette = &quot;Dark2&quot;, labels=c(1:5, &quot;Sum of other\nminor isoforms&quot;)) +
+  theme(
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  labs(fill=&quot;Unproductive\nIsoform\nRank&quot;, x=&quot;Genes, ranked by entropy of unproductive isoforms&quot;, y=&quot;Fraction of\nunproductive isoforms&quot;)</code></pre>
+<p><img src="figure/2024-03-07_InvestigateTranslatedLongReads.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>dat.temp %&gt;%
+  filter(str_detect(sample, &quot;SMG6&quot;)) %&gt;%
+  filter(GeneCounts &gt; 10 &amp; GeneCounts &lt; 20) %&gt;%
+  inner_join(dat.temp.entropy.ordered.genes %&gt;%
+               dplyr::select(sample, GeneAttributedToRead, GeneAttributedToRead.DummyByEntropy)) %&gt;%
+  mutate(GeneAttributedToRead.DummyByEntropy = factor(GeneAttributedToRead.DummyByEntropy)) %&gt;%
+  ggplot(aes(x=GeneAttributedToRead, y=PercentIsoform, fill=IsoformRank)) +
+  geom_col() +
+  facet_wrap(~sample, scales=&quot;free&quot;) +
+  scale_fill_brewer(palette = &quot;Dark2&quot;, labels=c(1:5, &quot;Sum of other\nminor isoforms&quot;)) +
+  labs(fill=&quot;Unproductive\nIsoform\nRank&quot;, x=&quot;Genes, ranked by entropy of unproductive isoforms&quot;, y=&quot;Fraction of\nunproductive isoforms&quot;) +
+  Rotate_x_labels</code></pre>
+<p><img src="figure/2024-03-07_InvestigateTranslatedLongReads.Rmd/unnamed-chunk-9-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>dat.temp %&gt;%
+  distinct(GeneAttributedToRead, sample) %&gt;%
+  count(sample)</code></pre>
+<pre><code># A tibble: 7 × 2
+  sample                           n
+  &lt;chr&gt;                        &lt;int&gt;
+1 CTRL1_shRNA.SAMEA8691110        57
+2 CTRL2_shRNA.SAMEA8691111       111
+3 GM1                            112
+4 GM2                             74
+5 GM3                             73
+6 GM4                             73
+7 SMG6_SMG7_shRNA.SAMEA8691113    40</code></pre>
+<pre class="r"><code>dat.temp %&gt;%
+  filter(str_detect(sample, &quot;SMG6&quot;)) %&gt;%
+  filter(GeneAttributedToRead == &quot;RPS12&quot;)</code></pre>
+<pre><code># A tibble: 2 × 9
+  Introns        sample GeneAttributedT… GeneCounts IsoformCounts PercentIsoform
+  &lt;chr&gt;          &lt;chr&gt;  &lt;chr&gt;                 &lt;int&gt;         &lt;int&gt;          &lt;dbl&gt;
+1 chr6_13281461… SMG6_… RPS12                    15             2          0.133
+2 chr6_13281461… SMG6_… RPS12                    15            13          0.867
+# … with 3 more variables: IsoformRank &lt;fct&gt;, EntropyPart &lt;dbl&gt;, Entropy &lt;dbl&gt;</code></pre>
+<pre class="r"><code>dat %&gt;%
+  filter(AllJuncsIdentifiable) %&gt;%
+  filter(str_detect(chrom, &quot;^chr[1-9]&quot;)) %&gt;%
+  # filter(str_detect(sample, &quot;shRNA&quot;)) %&gt;%
+  filter(ORF.translation.approach == &quot;firstORF&quot;) %&gt;%
+  filter(!NMDFinderB %in% c(&quot;Last exon&quot;, &quot;50 nt rule&quot;, &quot;No CDS&quot;))</code></pre>
+<pre><code>       ORF.translation.approach                       sample chrom     start
+    1:                 firstORF     CTRL1_shRNA.SAMEA8691110  chr1   1373771
+    2:                 firstORF     CTRL1_shRNA.SAMEA8691110  chr1   1386702
+    3:                 firstORF     CTRL1_shRNA.SAMEA8691110  chr1   1386714
+    4:                 firstORF     CTRL1_shRNA.SAMEA8691110  chr1   1386719
+    5:                 firstORF     CTRL1_shRNA.SAMEA8691110  chr1   6186614
+   ---                                                                      
+36605:                 firstORF SMG6_SMG7_shRNA.SAMEA8691113  chr9 136992443
+36606:                 firstORF SMG6_SMG7_shRNA.SAMEA8691113  chr9 137086990
+36607:                 firstORF SMG6_SMG7_shRNA.SAMEA8691113  chr9 137110543
+36608:                 firstORF SMG6_SMG7_shRNA.SAMEA8691113  chr9 137110549
+36609:                 firstORF SMG6_SMG7_shRNA.SAMEA8691113  chr9 137110567
+            stop           ReadName score strand thickStart  thickEnd
+    1:   1375172 ERR5880581.2074895    60      -    1374170   1374756
+    2:   1399322 ERR5880581.1291885    60      -    1392779   1399306
+    3:   1399305 ERR5880581.2158516    60      -    1392779   1398665
+    4:   1399314 ERR5880581.1144155    60      -    1395468   1399306
+    5:   6199593  ERR5880581.770321    60      -    6197695   6199573
+   ---                                                               
+36605: 136993973  ERR5880584.601978    60      +  136992447 136992590
+36606: 137109180  ERR5880584.617848    60      +  137086999 137107363
+36607: 137114716  ERR5880584.845587    60      -  137113054 137114713
+36608: 137114729  ERR5880584.451624    60      -  137113277 137114713
+36609: 137114716  ERR5880584.822699    60      -  137113277 137114713
+            Color blocks                                          blockSizes
+    1: 255,255,51      4                                      131,446,73,176
+    2: 255,255,51     11           880,95,112,142,105,2038,65,121,110,75,304
+    3:  228,26,28     12        868,95,112,142,105,100,125,65,121,110,75,287
+    4:  228,26,28     11            863,93,112,142,105,100,65,117,110,75,296
+    5:  255,127,0      4                                      202,125,105,36
+   ---                                                                      
+36605: 255,255,51      5                                   531,191,69,85,208
+36606:  228,26,28     13 228,109,137,155,110,186,149,189,191,121,173,132,793
+36607:  228,26,28     12          240,71,65,154,119,61,167,82,164,140,114,70
+36608:  228,26,28     12         234,71,65,157,119,61,167,82,136,164,140,267
+36609:  228,26,28     12         216,71,65,157,119,61,167,82,136,164,140,254
+                                                                  blockStarts
+    1:                                                         0,228,946,1225
+    2:                 0,1072,1251,3527,3756,4063,6693,8691,11530,11894,12316
+    3:            0,1060,1239,3515,3744,4051,5964,6681,8679,11518,11882,12304
+    4:                 0,1057,1234,3510,3739,4046,6676,8674,11513,11877,12299
+    5:                                                     0,6315,11037,12943
+   ---                                                                       
+36605:                                                    0,609,899,1136,1322
+36606: 0,1084,1878,9246,10837,12705,14014,14493,19134,19698,20284,20540,21397
+36607:                0,336,1146,1332,1568,2201,2409,2662,3321,3699,3919,4103
+36608:                0,330,1140,1323,1562,2195,2403,2656,2811,3315,3693,3913
+36609:                0,312,1122,1305,1544,2177,2385,2638,2793,3297,3675,3895
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          sequence
+    1:                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             CAATTTGAGCCGCGTCGAGGTCGGGCTTGGGAAGGGTCAGCGGGAGGCCTGAGGGCGCCGGGCGCTGCGGCAGGCGGGCCCGGGGTCCAGCCGAGAGGGTCCGGGCGCCAGGCAACGCGATTCGCGCGGGGGTGAACCCGGGGAGGGGGCCGGCCTCCCCGTTCTGGGACCTTTCG|CTCCCCTGGGACCTGTGGCCGCCGCCCACAGACC^ATGCTCCTGGGGCGCCTGACTTCCCAGCTGTTGAGGGCC|GCGGCCGCCCGCCTTGGCCCGTCTCTGGAGTGCTGGGCAGCCGGGTCTGCGGGCCCCTTTACAGCACATCGCCGGCCGGCCCAGGTAGGGCGGCCTCTCTCCCTCGCAAGGGGGCCCAGCTGGAGCTGGAGGAGATGCTGGTCCCCAGGAAGATGTCCGTCAGCCCCCTGGAGAGCTGGCTCACGGCCCGCTGCTTCCTGCCCAGACTGGATACCGGGACCGCAGGGACTGTGGCTCCACCGCAATCCTACCAGTGTCCGCCCAGCCAGATAG*GGGAAGGGGCCGAGCAGGGGGATGAAGGCGTCGCGGATGCGCCTCAAATTCAGTGCAAAAACGTGCTGAAGATCCGCCGGCGGAAGATGAACCACCACAAGTACCGGAAGCTGGTGAAGAAGACGCGGTTCCTGCGGAGGAAGGTCCAGGAGGGACGCCTGAGACGCAAGCAG|ATCAAGTTCGAGAAAGACCTGAGGCGCATCTGGCTGAAGGCGGGGCTAAAGGAAGCCCCCGAAGGCTGGCAGACCCCCAAGATCTACCTGCGGGGCAAATGAGTCTGGCGCCGCCCTTCCCGCCCGTTGCT
+    2: GAGTCGGCGGCACAAA^ATGGCGGCGGCGGCGGCGGCGGCTGGTGCTGCAGGGTCGGCAGCTCCCGCGGCAGCGGCCGGCGCCCCGGGATCTGGGGGCGCACCCTCAGGGTCGCAGGGGGTGCTGATCGGGGACAGGCTGTACTCCGGGGTGCTCATCACCTTGGAGAACTGCCTCCTGCCTGACGACAAGCTCCGTTTCACGCCGTCCATGTCGAGCGGCCTCGACACCGACACAGAGACCGACCTCCGCGTGGTGGGCTGCGAGCTCATCCAGGCGGCCGGTATCCTGCTCCGCCTGCCGCAG|GTGGCCATGGCTACCGGGCAGGTGTTGTTCCAGCGGTTCTTTTATACCAAGTCCTTCGTGAAGCACTCCATGGAG|CATGTGTCAATGGCCTGTGTCCACCTGGCTTCCAAGATAGAAGAGGCCCCAAGACGCATACGGGACGTCATCAATGTGTTTCACCGCCTTCGACAGCTGAGAGACAAAAA|GAAGCCCGTGCCTCTACTACTGGATCAAGATTATGTTAATTTAAAGAACCAAATTATAAAGGCGGAAAGACGAGTTCTCAAAGAGTTGGGTTTCTGCGTCCATGTGAAGCATCCTCATAAG|ATAATCGTTATGTACCTTCAGGTGTTAGAGTGTGAGCGTAACCAACACCTGGTCCAGACCTCATG|GGTAGCCTCTGAGGGTAAGTGA*CTAAGACTTCTCCTCTGCTGTCCAAGCGCTTTGGTGCAGGGACAGCGGCATCTTCAGCCAATCCAGTGCAGGCTCTCCACCGAAGGCTGGCTCTAGACTGGTGGTACGCACATAGCATAGCCATGGCCGACTCCTGCTGTGGTTCTCTGACGATTGTGCTTCTTGTTAATCCTCTGTCGTGCTTTGGTAATCGTATTGATTAGAGTTGGTAACTGTCTTGACTTGAATTTTGTCCCTTTAAAACTGCTGTACCTGTATGATAAAGATGCAGTACCTTTCTCTTAAAAAAAAATGCTATGGAAAGCTGTGAGAATTGAAGAGACAAATTGGCTGTGTCAGTGTGGGGTTATGTCATGATTTCTAGAAGCCCTGAAGTTGCTCTTTTGAGCAGCTTTGCATGACACGCTCTGGTAAAAGGTGTGCATCTTTAAATTATTTCATGGATACTTTGAAAAATATTGTATCACTTCAAATACAGCAATAAGTTTATATGTTCTCAAGATTTCATTTGTTTTTAAGAATTTTAAGTTCGTGGATTAATATCACTACTTGAATACTGACAGTTGTTGATTAGACACCGAAAGGTTACTGATTGTTGAATGTATCTGTGTTAGAGCTGTGCACTGGCACGCTTGCATCAGGGGCTGGGGCCACACGGCCGCCACACAGATTCCCCCGTGATGCCTGGAGCTGCTTCCAGAGCCGGGTGTCTCCAAGAGGCACCTGTAGGACTTCCCATTTAGAAATCTCTTGAGTGGGTTTGTATGTTACCTTCTCCAAGGTTTATTTAGGACAGAGATATTGCTGGAAGGTCATGGGTCAGATTCCCTCACAACCCACCTCGTCTGCGGGTGCAGCCCCACTCCAAGGCTCCCCGTTATTGGGGTATGTGAGGAGCAGTAAATATAAAACCAGTTCAACTGTCCTCATGGAATCACCCTTTCTGTTTTTGCAGTATTCATAAAGCTAGTGTAAGGTCTGGTTTTAGTCTATTAAATCTTAGAGATCTAAAGGAAATGCTCAAAATGTAGCCAGGTTTTAAATGCTTTAACTTTTAAAAAATGTAAATTTTTGTATGTTTATAGCTTCTAAATATGAAAGTTAAAGAATGTACTGTGATGAAATGTTCAGTATTATGTTGCTTCTCAGTATCATGTTGCTTCTCAGTATTGTGTTGCTTCTGATTCTATGAATGTTCATTTTAAGACCCCTTGTTGAAATGGGACAGTTGGCAGCGGCTCTGATGAGCCCGAGAAGAGGCCTGCCCTTGGGTGCGGAGTCTCCCTCCGCACGATGCTCCCACGCGTCCAACTTGCACCCAAGGGGCTTTTCCCTCTTCCAAGTGGACTCCTTCAAGGAAGCTGCAGCTCGGTCAGCAGAGAAGGGGCCTGCCGCCAGCGCCCTGGAGGAAGAGGAAGAGGAACCCAAGAGGATGGCTTGTCTCCCAGCAGCCACACCGGCTTTGTGCTCAGCCAGTTCATTTGAGTTTGCATGTTTCTCTGCACTATGGATTTTGAGCATTTAGATTTCTTTAATCAAAAGCGTTTTAGTGACTCCAGTAGACATTTTCTTTCTGAGGCATCGTGCTTTGCATGAGAGCAGGCCAAGGTTGAGGGGAAAAGTAAAGTTAAAGTCGGTTCTCTTTCATAGCAACACGTATTGTCTGACATTCAGCCAGCTTTTTTTTTTTCTAATAATTTCTGTGCCTTTCTGTCCTGTATTTACTGTATTTAGAAAAAGCAGCTAGAATATTTCTCCATTAACTCTTGAGATTCACAGGACTGTCTAGCTCTGAGTCCTAGCAATAGACTCCTTAGAGGAGTAGTACGTTTATCTAGATTTTCTCTAGATAATGCAGGCGGAAGACCTGGGTTCCCGGGTGGGGCATTGCAGTTCTTCCTGTGTTTGGCTTCCAGGAATTACATGAACGACAGCCTTCGCACCGACGTCTTCGTGCGGTTCCAGCCAGAGAGCATCGCCTGTGCCTGCATTTATCTTGCTGCCCGGACGCTGGAG|ATCCCTTTGCCCAATCGTCCCCATTGGTTTCTTTTGTTTGGAGCAACTGAAGAAGAAATTCAGGAAATCTGCTTAAAGATCTTGCAGCTTTATGCTCGGAAAAAG|GTTGATCTCACACACCTGGAGGGTGAAGTGGAAAAAAGAAAGCACGCTATCGAAGAGGCAAAGGCCCAAGCCCGGGGCCTGTTGCCTGGGGGCACACAGGTGCTGGATGGTACCTCGGGGTTCTCTCCTGCCCCCAAGCTGG|TGGAATCCCCCAAAGAAGGTAAAGGGAGCAAGCCTTCCCCACTGTCTGTGAAGAACACCAAGAGGAGGCTGGAGGGCGCCAAGAAAGCCAAGGCGGACAGCCCCGTGAACGG|CTTGCCAAAGGGGCGAGAGAGTCGGAGTCGGAGCCGGAGCCGTGAGCAGAGCTACTCGAGGTCCCCATCCCGATCAGCGTCTCCTAAGAGGAGGT|GAAAAGTGACAGCGGCTCCACATCTGGTGGGTCCAAGTCGCAGAGCCGCTCCCGGAGCAGGAGTGACTCCCCACCGAGACAGGCCCCCCGCAGCGCTCCCTACAAAGGCTCTGAGATTCGGGGCTCCCGGAAGTCCAAGGACTGCAAGTACCCCCAGAAGCCACACAAGTCTCGGAGCCGGAGTTCTTCCCGTTCTCGAAGCAGGTCACGGGAGCGGGCGGATAATCCGGGAAAATACAAGAAGAAAAGTCATTACTACAGAGATCAGCGACGAGAGCGCTCGAGGTCGTATGAACGCACAGGCCGTCGCTATGAGCGGGACCACCCTGGGCACAGCAGGCATCGGAGGTGAGGCGGGGTTGCAGTGACTGGTGGCCGCAAGCCCTTCCCTGGGGAGTACCTGATGGCTGCCCTTTGACCCCCGGTGGCTGCCCTTTGACCCCCGGGTGTGCTCTCAGCGCAAGTGGTCCTAGAACAGGATTCTTTTTGGAAATGTCTGTCGACTGGACCTTGGTGGATTTGGAAATGGAACTGAGGGACCGGTGACACGTGCTTCAGACCGGTCTGGGGTGCGGCGCACACCTGGGCCCGTGCAGGGCTCAGCTCGGCAGCAGCTCTGAGGGCAGCTCAATGAAAAAGTGAATGCACACGCCCTTGTTGGCGTGGCCTGGCATGGCCTGGTGCTATCGGCAGCCGCTCTCCACTCCCCGACTGATACTCAATTACGTGAAGCCAAGAAAGATGATTTTTAGAACCTTTGCCTATATTAGGTTGTACTTATGTACATATTTTGCAGTGTTTCACAGGAGAAAGTGGCCTTAACTGCCCCTTATTCTCTCTCCACGTTGTAAATAAACATGTGTTTAATACAAGTTAAAGC
+    3:                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  TGGCGGCGGCGGCGGCGGCGGCTGGTGCTGCAGGGTCGGCAGCTCCCGCGGCAGCGGCCGGCGCCCCGGGATCTGGGGGCGCACCCTCAGGGTCGCAGGGGGTGCTGATCGGGGACAGGCTGTACTCCGGGGTGCTCATCACCTTGGAGAACTGCCTCCTGCCTGACGACAAGCTCCGTTTCACGCCGTCCATGTCGAGCGGCCTCGACACCGACACAGAGACCGACCTCCGCGTGGTGGGCTGCGAGCTCATCCAGGCGGCCGGTATCCTGCTCCGCCTGCCGCAG|GTGGCC^ATGGCTACCGGGCAGGTGTTGTTCCAGCGGTTCTTTTATACCAAGTCCTTCGTGAAGCACTCCATGGAG|CATGTGTCAATGGCCTGTGTCCACCTGGCTTCCAAGATAGAAGAGGCCCCAAGACGCATACGGGACGTCATCAATGTGTTTCACCGCCTTCGACAGCTGAGAGACAAAAA|GAAGCCCGTGCCTCTACTACTGGATCAAGATTATGTTAATTTAAAGAACCAAATTATAAAGGCGGAAAGACGAGTTCTCAAAGAGTTGGGTTTCTGCGTCCATGTGAAGCATCCTCATAAG|ATAATCGTTATGTACCTTCAGGTGTTAGAGTGTGAGCGTAACCAACACCTGGTCCAGACCTCATG|GGTAGCCTCTGAGGGTAAGTGA*CTAAGACTTCTCCTCTGCTGTCCAAGCGCTTTGGTGCAGGGACAGCGGCATCTTCAGCCAATCCAGTGCAGGCTCTCCACCGAAGGCTGGCTCTAGACTGGTG|GAATTACATGAACGACAGCCTTCGCACCGACGTCTTCGTGCGGTTCCAGCCAGAGAGCATCGCCTGTGCCTGCATTTATCTTGCTGCCCGGACGCTGGAG|ATCCCTTTGCCCAATCGTCCCCATTGGTTTCTTTTGTTTGGAGCAACTGAAGAAGAAATTCAGGAAATCTGCTTAAAGATCTTGCAGCTTTATGCTCGGAAAAAG|GTTGATCTCACACACCTGGAGGGTGAAGTGGAAAAAAGAAAGCACGCTATCGAAGAGGCAAAGGCCCAAGCCCGGGGCCTGTTGCCTGGGGGCACACAGGTGCTGGATGGTACCTCGGGGTTCTCTCCTGCCCCCAAGCTGG|TGGAATCCCCCAAAGAAGGTAAAGGGAGCAAGCCTTCCCCACTGTCTGTGAAGAACACCAAGAGGAGGCTGGAGGGCGCCAAGAAAGCCAAGGCGGACAGCCCCGTGAACGG|CTTGCCAAAGGGGCGAGAGAGTCGGAGTCGGAGCCGGAGCCGTGAGCAGAGCTACTCGAGGTCCCCATCCCGATCAGCGTCTCCTAAGAGGAGGT|GAAAAGTGACAGCGGCTCCACATCTGGTGGGTCCAAGTCGCAGAGCCGCTCCCGGAGCAGGAGTGACTCCCCACCGAGACAGGCCCCCCGCAGCGCTCCCTACAAAGGCTCTGAGATTCGGGGCTCCCGGAAGTCCAAGGACTGCAAGTACCCCCAGAAGCCACACAAGTCTCGGAGCCGGAGTTCTTCCCGTTCTCGAAGCAGGTCACGGGAGCGGGCGGATAATCCGGGAAAATACAAGAAGAAAAGTCATTACTACAGAGATCAGCGACGAGAGCGCTCGAGGTCGTATGAACGCACAGGCCGTCGCTATGAGCGGGACCACCCTGGGCACAGCAGGCATCGGAGGTGAGGCGGGGTTGCAGTGACTGGTGGCCGCAAGCCCTTCCCTGGGGAGTACCTGATGGCTGCCCTTTGACCCCCGGTGGCTGCCCTTTGACCCCCGGGTGTGCTCTCAGCGCAAGTGGTCCTAGAACAGGATTCTTTTTGGAAATGTCTGTCGACTGGACCTTGGTGGATTTGGAAATGGAACTGAGGGACCGGTGACACGTGCTTCAGACCGGTCTGGGGTGCGGCGCACACCTGGGCCCGTGCAGGGCTCAGCTCGGCAGCAGCTCTGAGGGCAGCTCAATGAAAAAGTGAATGCACACGCCCTTGTTGGCGTGGCCTGGCATGGCCTGGTGCTATCGGCAGCCGCTCTCCACTCCCCGACTGATACTCAATTACGTGAAGCCAAGAAAGATGATTTTTAGAACCTTTGCCTATATTAGGTTGTACTTATGTACATATTTTGCAGTGTTTCACAGGAGAAAGTGGCCTTAACTGCCCCTTATTCTCTCTCCACGTTGTAAATAAACATGTGTTTAAT
+    4:                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  GGCACAAA^ATGGCGGCGGCGGCGGCGGCGGCTGGTGCTGCAGGGTCGGCAGCTCCCGCGGCAGCGGCCGGCGCCCCGGGATCTGGGGGCGCACCCTCAGGGTCGCAGGGGGTGCTGATCGGGGACAGGCTGTACTCCGGGGTGCTCATCACCTTGGAGAACTGCCTCCTGCCTGACGACAAGCTCCGTTTCACGCCGTCCATGTCGAGCGGCCTCGACACCGACACAGAGACCGACCTCCGCGTGGTGGGCTGCGAGCTCATCCAGGCGGCCGGTATCCTGCTCCGCCTGCCGCAG|GTGGCCATGGCTACCGGGCAGGTGTTGTTCCAGCGGTTCTTTTATACCAAGTCCTTCGTGAAGCACTCCATGGAG|CATGTGTCAATGGCCTGTGTCCACCTGGCTTCCAAGATAGAAGAGGCCCCAAGACGCATACGGGACGTCATCAATGTGTTTCACCGCCTTCGACAGCTGAGAGACAAAAA|CCCGTGCCTCTACTACTGGATCAAGATTATGTTAATTTAA*AGAACCAAATTATAAAGGCGGAAAGACGAGTTCTCAAAGAGTTGGGTTTCTGCGTCCATGTGAAGCATCCTCATAAG|ATAATCGTTATGTACCTTCAGGTGTTAGAGTGTGAGCGTAACCAACACCTGGTCCAGACCTCATG|GAATTACATGAACGACAGCCTTCGCACCGACGTCTTCGTGCGGTTCCAGCCAGAGAGCATCGCCTGTGCCTGCATTTATCTTGCTGCCCGGACGCTGGAG|ATCCCTTTGCCCAATCGTCCCCATTGGTTTCTTTTGTTTGGAGCAACTGAAGAAGAAATTCAGGAAATCTGCTTAAAGATCTTGCAGCTTTATGCTCGGAAAAAG|GTTGATCTCACACACCTGGAGGGTGAAGTGGAAAAAAGAAAGCACGCTATCGAAGAGGCAAAGGCCCAAGCCCGGGGCCTGTTGCCTGGGGGCACACAGGTGCTGGATGGTACCTCGGGGTTCTCTCCTGCCCCCAAGCTGG|TGGAATCCCCCAAAGAAGGTAAAGGGAGCAAGCCTTCCCCACTGTCTGTGAAGAACACCAAGAGGAGGCTGGAGGGCGCCAAGAAAGCCAAGGCGGACAGCCCCGTGAACGG|CTTGCCAAAGGGGCGAGAGAGTCGGAGTCGGAGCCGGAGCCGTGAGCAGAGCTACTCGAGGTCCCCATCCCGATCAGCGTCTCCTAAGAGGAG|GAAAAGTGACAGCGGCTCCACATCTGGTGGGTCCAAGTCGCAGAGCCGCTCCCGGAGCAGGAGTGACTCCCCACCGAGACAGGCCCCCCGCAGCGCTCCCTACAAAGGCTCTGAGATTCGGGGCTCCCGGAAGTCCAAGGACTGCAAGTACCCCCAGAAGCCACACAAGTCTCGGAGCCGGAGTTCTTCCCGTTCTCGAAGCAGGTCACGGGAGCGGGCGGATAATCCGGGAAAATACAAGAAGAAAAGTCATTACTACAGAGATCAGCGACGAGAGCGCTCGAGGTCGTATGAACGCACAGGCCGTCGCTATGAGCGGGACCACCCTGGGCACAGCAGGCATCGGAGGTGAGGCGGGGTTGCAGTGACTGGTGGCCGCAAGCCCTTCCCTGGGGAGTACCTGATGGCTGCCCTTTGACCCCCGGTGGCTGCCCTTTGACCCCCGGGTGTGCTCTCAGCGCAAGTGGTCCTAGAACAGGATTCTTTTTGGAAATGTCTGTCGACTGGACCTTGGTGGATTTGGAAATGGAACTGAGGGACCGGTGACACGTGCTTCAGACCGGTCTGGGGTGCGGCGCACACCTGGGCCCGTGCAGGGCTCAGCTCGGCAGCAGCTCTGAGGGCAGCTCAATGAAAAAGTGAATGCACACGCCCTTGTTGGCGTGGCCTGGCATGGCCTGGTGCTATCGGCAGCCGCTCTCCACTCCCCGACTGATACTCAATTACGTGAAGCCAAGAAAGATGATTTTTAGAACCTTTGCCTATATTAGGTTGTACTTATGTACATATTTTGCAGTGTTTCACAGGAGAAAGTGGCCTTAACTGCCCCTTATTCTCTCTCCACGTTGTAAATAAACATGTGT
+    5:                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   TTTCTAACTCCGCTGCCGCC^ATGGCTCCTGTGGTTA|AAAAAGCTTGTGGTGAAGGGGGGCAAAAAAAAGAAGCAAGTTCTGAAGTTCACTCTTGA*TTGCACCCACCCTGTAGAAGATGGAATCATGGATGCTGCCAATTTT|GAGCAGTTTTTGCAAGAAAGGATCAAAGTGAACGGAAAAGCTGGGAACCTTGGTGGAGGGGTGGTGACCATCGAAAGGAGCAAGAGCAAGATCACCGTGACATCCGAGGTGCCTTTCTCCAAAAG|GTATTTGAAATATCTCACCAAAAAATATTTGAAGAAGAATAATCTACGTGACTGGTTGCGCGTAGTTGCTAACAGCAAAGAGAGTTACGAATTACGTTACTTCCAGATTAACCAGGACGAAGAAGAGGAGGAAGACGAGGATTAAATTTCATTTATCTGGAAAATTTTGTATGAGTTCTTGAATAAAACTTGGGAACCAAAA
+   ---                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+36605:                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          ATGG^ATCCGCTGTCGCCGCCGCTCTGCACGCTGCCGCCGGGCCCCGAGCCGCCCCGCTTCGTGTGCTACTGCGAAGGGGAGGAAAGCGGGGAGGGGGACCGCGGCGGCTTCAACCTCTAGTGAGTGGGGGTCCGCGGGGAGGTAG*GGGTGCAGGGAGCTCCGCGGGCGGCCCCGCCTGACAGGCCTTCTCCCCCAGCGTGACCGACGCCGCGGAGCTTTGGAGCACCTGCTTCACGCCGGACAGCCTGGCGGCCCTCGTGGGTAACTGGGCGGGTCTGGGAGCCGCCACACCCCTCCTTGCAGTGCAGATCGTCTATGGGGCGACAGACATCTGGGATTCCCCAGAAGGCTCTGACACCCTCTGCCCGCCCTGTAGCTGTAGTCCTCCCATTGGCTAGGGCTCTGGGGTCGGGCAGGTTTCGGGTGCCCCCAGTGGGCCTCGGGTTCCAGGCAGCTCGTGACAAGCCCCTGTGCTCTCTAGAAAGCCCGTTTTGGCCTGAGTGCGGCTGAGGACATCACCCCCCGGTTCAG|GGCAGCCTGTGAGCAGCAAGCTGTGGCTCTGACTCTGCAGGAGGACAGAGCATCCCTGACGCTTTCAGGGGGGCCCTCGGCACTGGCCTTTGACCTCTCCAAGGTACCAGGCCCAGAGGCAGCCCCCAGGCTGCGGGCGCTGACACTGGGCCTGGCAAAACGCGTGTGGAGCCTGGAGCGGCGACTGGCAG|CTGCAGAAGAGACAGCTGTCAGCCCGAGGAAGAGCCCCCGGCCTGCAGGGCCTCAGCTCTTCTTACCAG|ACCCAGATCCCCAGAGAGGTGGCCCTGGACCTGGAGTCAGGAGGCGGTGTCCAGGAGAGTCGCTCATCAACCCCGGGTTCAAGAG|TAAGAAACCAGCTGGTGGCGTGGACTTCGATGAGACCTGAAGGTGCAGCACAAGCGTGGCCCCGCGGGGAGTCCGCCTATGAGGGGAGAGGCAGTCTTTGAGGCCCCCATCAGAGACCCCCCGCCACCACCTCCACCTGCCTGTCCTGGGCCAGGACTAACACGGCTCCTCAAATTCCTTCCCTGTCAAATAAACAGCTCCCTTGGTT
+36606:                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             GGCGCTGCG^ATGGCTGCCTGCGAGGGCAGGAGAAGCGGAGCTCTCGGTTCCTCTCAGTCGGACTTCCTGACGCCGCCAGTGGGCGGGGCCCCTTGGGCCGTCGCCACCACTGTAGTCATGTACCCACCGCCGCCGCCGCCGCCTCATCGGGACTTCATCTCGGTGACGCTGAGCTTTGGCGAGAACTATGACAACAGCAAGAGTTGGCGGCGGCGCTCGTGCTGGAGG|AAATGGAAGCAACTGTCGAGATTGCAGCGGAATATGATTCTCTTCCTCCTTGCCTTTCTGCTTTTCTGTGGACTCCTCTTCTACATCAACTTGGCTGACCATTGGAAAG|CTCTGGCTTTCAGGCTAGAGGAAGAGCAGAAGATGAGGCCAGAAATTGCTGGGTTAAAACCAGCAAATCCACCCGTCTTACCAGCTCCTCAGAAGGCGGACACCGACCCTGAGAACTTACCTGAGATTTCGTCACAG|AAGACACAAAGACACATCCAGCGGGGACCACCTCACCTGCAGATTAGACCCCCAAGCCAAGACCTGAAGGATGGGACCCAGGAGGAGGCCACAAAAAGGCAAGAAGCCCCTGTGGATCCCCGCCCGGAAGGAGATCCGCAGAGGACAGTCATCAG|CTGGAGGGGAGCGGTGATCGAGCCTGAGCAGGGCACCGAGCTCCCTTCAAGAAGAGCAGAAGTGCCCACCAAGCCTCCCCTGCCACCGGCCAGGACACAGGGCACACCAG|TGCATCTGAACTATCGCCAGAAGGGCGTGATTGACGTCTTCCTGCATGCATGGAAAGGATACCGCAAGTTTGCATGGGGCCATGACGAGCTGAAGCCTGTGTCCAGGTCCTTCAGTGAGTGGTTTGGCCTCGGTCTCACACTGATCGACGCGCTGGACACCATGTGGATCTTGGGTCTGAGGAAAG|AATTTGAGGAAGCCAGGAAGTGGGTGTCGAAGAAGTTACACTTTGAAAAGGACGTGGACGTCAACCTGTTTGAGAGCACGATCCGCATCCTGGGGGGGCTCCTGAGTGCCTACCACCTGTCTGGGGACAGCCTCTTCCTGAGGAAAGCT|GAGGATTTTGGAAATCGGCTAATGCCTGCCTTCAGAACACCATCCAAGATTCCTTACTCGGATGTGAACATCGGTACTGGAGTTGCCCACCCGCCACGGTGGACCTCCGACAGCACTGTGGCCGAGGTGACCAGCATTCAGCTGGAGTTCCGGGAGCTCTCCCGTCTCACAGGGGATAAGAAGTTTCAG|GAGGCAGTGGAGAAGGTGACACAGCACATCCACGGCCTGTCTGGGAAGAAGGATGGGCTGGTGCCCATGTTCATCAATACCCACAGTGGCCTCTTCACCCACCTGGGCGTATTCACGCTGGGCGCCAGGGCCGACAGCTACTATGAGTACCTGCTGAAGCAGTGGATCCAGGGCGGGAAGCAGGAGACACA|GCTGCTGGAAGACTACGTGGAAGCCATCGAGGGTGTCAGAACGCACCTGCTGCGGCACTCCGAGCCCAGTAAGCTCACCTTTGTGGGGGAGCTTGCCCACGGCCGCTTCAGTGCCAAGATG|GGACGCTGGCTCTGGGCGTCTACCACGGCCTGCCCGCCAGCCACATGGAGCTGGCCCAGGAGCTCATGGAGACTTGTTACCAGATGA*ACCGGCAGATGGAGACGGGGCTGAGTCCCGAGATCGTGCACTTCAACCTTTACCCCCAGCCGGGCCGTCGGGACGTGGAGGTCAAG|CCAGCAGACAGGCACAACCTGCTGCGGCCAGAGACCGTGGAGAGCCTGTTCTACCTGTACCGCGTCACAGGGGACCGCAAATACCAGGACTGGGGCTGGGAGATTCTGCAGAGCTTCAGCCGATTCACACGG|GTCCCCTCGGGTGGCTATTCTTCCATCAACAATGTCCAGGATCCTCAGAAGCCCGAGCCTAGGGACAAGATGGAGAGCTTCTTCCTGGGGGAGACGCTCAAGTATCTGTTCTTGCTCTTCTCCGATGACCCAAACCTGCTCAGCCTGGATGCCTACGTGTTCAACACCGAAGCCCACCCTCTGCCTATCTGGACCCCTGCCTAGGGTGGATGGCTGCTGGTGTGGGGACTTCGGGTGGGCAGAGGCACCTTGCTGGGTCTGTGGCATTTTCCAAGGGCCCACGTAGCACCGGCAACCGCCAAGTGGCCCAGGCTCTGAACTGGCTCTGGGCTCCTCCTCGTCTCTGCTTTAATCAGGACACCGTGAGGACAAGTGAGGCCGTCAGTCTTGGTGTGATGCGGGGTGGGCTGGGCCGCTGGAGCCTCCGCCTGCTTCCTCCAGAAGACACGAATCATGACTCACGATTGCTGAAGCCTGAGCAGGTCTCTGTGGGCCGACCAGAGGGGGGCTTCGAGGTGGTCCCTGGTACTGGGGTGACCGAGTGGACAGCCCAGGGTGCAGCTCTGCCCGGGCTCGTGAAGCCTCAGATGTCCCCAATCCAAGGGTCTGGAGGGGCTGCCGTGACTCCAGAGGCCTGAGGCTCCAGGGCTGGCTCTGGTGTTTACAAGCTGGACTCAGGGATCCTCCTGGCCGCCCCGCAGGGGGCTTGGAGGGCTGGACGGCAAGTCCGTCTAGCTCACGGGCCCCTCCAGTGGAATGGGTCTTTTCGGTGGAGATAAAAGTTGATTTGCTC
+36607:                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        GAC^ATGGGCTCCGCTCCCTGGGCCCCGGTCCTGCTGCTGGCGCTCGGGCTGCGCGGCCTCCAGGCGGGGG|CCCGCAGGGCCCCGGACCCCGGCTTCCAGGAGCGCTTCTTCCAGCAGCGTCTGGACCACTTCAACTTCGAGCGCTTCGGCAACAAGACCTTCCCTCAGCGCTTCCTGGTGTCGG|ACAGGTTCTGGGTCCGGGGCGAGGGGCCCATCTTCTTCTACACTGGGAACGAGGGCGACGTGTGGGCCTTCGCCAACAACTCGGCCTTCGTCGCGGAGCTGGCGGCCGAGCGGGGGGCTCTACTGGTCTTCGCGGAGCAC|CGCTACTACGGGAAGTCGCTGCCGTTCGGTGCGCAGTCCACGCAGCGCGGGCACACGGAGCTGCTGACGGTGGAGCAGGCCCTGGCCGACTTCGCAGAGCTGCTCCGCGCGCTACGACGCGACCTCGGGGCCCAGGATGCCCCCGCCATCGCCTTCGGTGGAAG|GACTTTGAGGGCCAGAGTCCCAAATGCACCCAGGGTGTGCGGGAAGCGTTCCGACAGATCAAGGACTTGTTCCTACAGGGAG|CCTACGACACGGTCCGCTGGGAGTTCGGCACCTGCCAGCCGCTGTCAGACGAGAAGGACCTGA*CCCAGCTCTTCATGTTCGCCCGGAATGCCTTCACCGTGCTGGCCATGATGGACTACCCCTACCCCACTGACTTCCTGGGTCCCCTCCCTGCCAACCCCGTCAAG|GTGGGCTGTGATCGGCTGCTGAGTGAGGCCCAGAGGATCACGGGGCTGCGAGCACTGGCAG|GGCTGGTCTACAACGCCTCGGGCTCCGAGCACTGCTACGACATCTACCGGCTCTACCACAGCTGTGCTGACCCCACTGGCTGCGGCACCGGCCCCGACGCCAGGGCCTGGGACTACCAG|GCCTGCACCGAGATCAACCTGACCTTCGCCAGCAACAATGTGACCGATATGTTCCCGGACCTGCCCTTCACTGACGAGCTCCGCCAGCGGTACTGCCTGGACACCTGGGGCGTGTGGCCCCGGCCCGACTGGCTGCTGACCAGCTTCTGGGGGG|ATCTCAGAGCCGCCAGCAACATCATCTTCTCCAACGGGAACCTGGACCCCTGGGCAGGGGGCGGG|ATTCGGAGGAACCTGAGTGCCTCAGTCATCGCCGTCACCATCCAGGGGGGAGCGCACCACCTCGACCTCAG|AGCCTCCCACCCAGAAGATCCTGCTTCCGTGGTTGAGGCGCGGAAGCTGGAGGCCACCATCATCGGCGAGTGGGTAAAGGCAGCCAGGCGTGAGCAGCAGCCAGCTCTGCGTGGGGGGCCCAGACTCAGCCTCTGAGCACAGGACTGGAGGGGTCTCAAGGCTCCTCATGGAGTGGGGGCTTCACTCAAGCAGCTGGCGGCAGAGGGAAGGGGCTGAATAAACGCCTGGAGGCCTGGCCA
+36608:                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                GCCCGCGGAAGGCGAC^ATGGGCTCCGCTCCCTGGGCCCCGGTCCTGCTGCTGGCGCTCGGGCTGCGCGGCCTCCAGGCGGGGGGTGAGTGGCGGCGCCCCCCGGCCCATTCCCCGGTCCCGGCCCCGCCTCTGAGGTTCGCGTCCCCCCACAGCCCGCAGGGCCCCGGACCCCGGCTTCCAGGAGCGCTTCTTCCAGCAGCGTCTGGACCACTTCAACTTCGAGCGCTTCGGCAACAAGACCTTCCCTCAGCGCTTCCTGGTGTCGG|ACAGGTTCTGGGTCCGGGGCGAGGGGCCCATCTTCTTCTACACTGGGAACGAGGGCGACGTGTGGGCCTTCGCCAACAACTCGGCCTTCGTCGCGGAGCTGGCGGCCGAGCGGGGGGCTCTACTGGTCTTCGCGGAGCAC|CGCTACTACGGGAAGTCGCTGCCGTTCGGTGCGCAGTCCACGCAGCGCGGGCACACGGAGCTGCTGACGGTGGAGCAGGCCCTGGCCGACTTCGCAGAGCTGCTCCGCGCGCTACGACGCGACCTCGGGGCCCAGGATGCCCCCGCCATCGCCTTCGGTGGAAG|TTATGGGGGGATGCTCAGTGCCTACCTGAGGATGAAGTATCCCCACCTGGTGGCGGGGGCGCTGGCGGCCAGCGCGCCCGTTCTAGCTGTGGCAGGCCTCGGCGACTCCAACCAGTTCTTCCGGGACGTCACGGCG|GACTTTGA*GGGCCAGAGTCCCAAATGCACCCAGGGTGTGCGGGAAGCGTTCCGACAGATCAAGGACTTGTTCCTACAGGGAG|CCTACGACACGGTCCGCTGGGAGTTCGGCACCTGCCAGCCGCTGTCAGACGAGAAGGACCTGACCCAGCTCTTCATGTTCGCCCGGAATGCCTTCACCGTGCTGGCCATGATGGACTACCCCTACCCCACTGACTTCCTGGGTCCCCTCCCTGCCAACCCCGTCAAG|GTGGGCTGTGATCGGCTGCTGAGTGAGGCCCAGAGGATCACGGGGCTGCGAGCACTGGCAG|GGCTGGTCTACAACGCCTCGGGCTCCGAGCACTGCTACGACATCTACCGGCTCTACCACAGCTGTGCTGACCCCACTGGCTGCGGCACCGGCCCCGACGCCAGGGCCTGGGACTACCAG|GCCTGCACCGAGATCAACCTGACCTTCGCCAGCAACAATGTGACCGATATGTTCCCGGACCTGCCCTTCACTGACGAGCTCCGCCAGCGGTACTGCCTGGACACCTGGGGCGTGTGGCCCCGGCCCGACTGGCTGCTGACCAGCTTCTGGGGGGGTG|ATCTCAGAGCCGCCAGCAACATCATCTTCTCCAACGGGAACCTGGACCCCTGGGCAGGGGGCGGG|ATTCGGAGGAACCTGAGTGCCTCAGTCATCGCCGTCACCATCCAGGGGGGAGCGCACCACCTCGACCTCAG|AGCCTCCCACCCAGAAGATCCTGCTTCCGTGGTTGAGGCGCGGAAGCTGGAGGCCACCATCATCGGCGAGTGGGTAAAGGCAGCCAGGCGTGAGCAGCAGCCAGCTCTGCGTGGGGGGCCCAGACTCAGCCTCTGAGCACAGGACTGGAGGGGTCTCAAGGCTCCTCATGGAGTGGGGGCTTCACTCAAGCAGCTGGCGGCAGAGGGAAGGGGCTGAATAAACGCCTGGAGGCC
+36609:                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               GAC^ATGGGCTCCGCTCCCTGGGCCCCGGTCCTGCTGCTGGCGCTCGGGCTGCGCGGCCTCCAGGCGGGGGGTGAGTGGCGGCGCCCCCCGGCCCATTCCCCGGTCCCGGCCCCGCCTCTGAGGTTCGCGTCCCCCCACAGCCCGCAGGGCCCCGGACCCCGGCTTCCAGGAGCGCTTCTTCCAGCAGCGTCTGGACCACTTCAACTTCGAGCGCTTCGGCAACAAGACCTTCCCTCAGCGCTTCCTGGTGTCGG|ACAGGTTCTGGGTCCGGGGCGAGGGGCCCATCTTCTTCTACACTGGGAACGAGGGCGACGTGTGGGCCTTCGCCAACAACTCGGCCTTCGTCGCGGAGCTGGCGGCCGAGCGGGGGGCTCTACTGGTCTTCGCGGAGCAC|CGCTACTACGGGAAGTCGCTGCCGTTCGGTGCGCAGTCCACGCAGCGCGGGCACACGGAGCTGCTGACGGTGGAGCAGGCCCTGGCCGACTTCGCAGAGCTGCTCCGCGCGCTACGACGCGACCTCGGGGCCCAGGATGCCCCCGCCATCGCCTTCGGTGGAAG|TTATGGGGGGATGCTCAGTGCCTACCTGAGGATGAAGTATCCCCACCTGGTGGCGGGGGCGCTGGCGGCCAGCGCGCCCGTTCTAGCTGTGGCAGGCCTCGGCGACTCCAACCAGTTCTTCCGGGACGTCACGGCG|GACTTTGA*GGGCCAGAGTCCCAAATGCACCCAGGGTGTGCGGGAAGCGTTCCGACAGATCAAGGACTTGTTCCTACAGGGAG|CCTACGACACGGTCCGCTGGGAGTTCGGCACCTGCCAGCCGCTGTCAGACGAGAAGGACCTGACCCAGCTCTTCATGTTCGCCCGGAATGCCTTCACCGTGCTGGCCATGATGGACTACCCCTACCCCACTGACTTCCTGGGTCCCCTCCCTGCCAACCCCGTCAAG|GTGGGCTGTGATCGGCTGCTGAGTGAGGCCCAGAGGATCACGGGGCTGCGAGCACTGGCAG|GGCTGGTCTACAACGCCTCGGGCTCCGAGCACTGCTACGACATCTACCGGCTCTACCACAGCTGTGCTGACCCCACTGGCTGCGGCACCGGCCCCGACGCCAGGGCCTGGGACTACCAG|GCCTGCACCGAGATCAACCTGACCTTCGCCAGCAACAATGTGACCGATATGTTCCCGGACCTGCCCTTCACTGACGAGCTCCGCCAGCGGTACTGCCTGGACACCTGGGGCGTGTGGCCCCGGCCCGACTGGCTGCTGACCAGCTTCTGGGGGGGTG|ATCTCAGAGCCGCCAGCAACATCATCTTCTCCAACGGGAACCTGGACCCCTGGGCAGGGGGCGGG|ATTCGGAGGAACCTGAGTGCCTCAGTCATCGCCGTCACCATCCAGGGGGGAGCGCACCACCTCGACCTCAG|AGCCTCCCACCCAGAAGATCCTGCTTCCGTGGTTGAGGCGCGGAAGCTGGAGGCCACCATCATCGGCGAGTGGGTAAAGGCAGCCAGGCGTGAGCAGCAGCCAGCTCTGCGTGGGGGGCCCAGACTCAGCCTCTGAGCACAGGACTGGAGGGGTCTCAAGGCTCCTCATGGAGTGGGGGCTTCACTCAAGCAGCTGGCGGCAGAGGGAAGGGGCTG
+           NMDFinderB AllJuncsIdentifiable
+    1:      Long exon                 TRUE
+    2:      Long exon                 TRUE
+    3:    Trigger NMD                 TRUE
+    4:    Trigger NMD                 TRUE
+    5: Start proximal                 TRUE
+   ---                                    
+36605:      Long exon                 TRUE
+36606:    Trigger NMD                 TRUE
+36607:    Trigger NMD                 TRUE
+36608:    Trigger NMD                 TRUE
+36609:    Trigger NMD                 TRUE
+                                                                                                                                                                                                                                                                                                                                   Introns
+    1:                                                                                                                                                                                                                                                                chr1_1374790_1374997_-,chr1_1374445_1374718_-,chr1_1373902_1374000_-
+    2:                                                                                               chr1_1398671_1399019_-,chr1_1398342_1398597_-,chr1_1395514_1398233_-,chr1_1393460_1395394_-,chr1_1392803_1393396_-,chr1_1390563_1390766_-,chr1_1390371_1390459_-,chr1_1388065_1390230_-,chr1_1387869_1387954_-,chr1_1387582_1387775_-
+    3:                                                                        chr1_1398671_1399019_-,chr1_1398342_1398597_-,chr1_1395514_1398233_-,chr1_1393460_1395394_-,chr1_1392803_1393396_-,chr1_1390865_1392679_-,chr1_1390563_1390766_-,chr1_1390371_1390459_-,chr1_1388065_1390230_-,chr1_1387869_1387954_-,chr1_1387582_1387775_-
+    4:                                                                                               chr1_1398671_1399019_-,chr1_1398342_1398597_-,chr1_1395510_1398233_-,chr1_1393460_1395394_-,chr1_1390865_1393396_-,chr1_1390563_1390766_-,chr1_1390371_1390459_-,chr1_1388065_1390230_-,chr1_1387869_1387954_-,chr1_1387582_1387777_-
+    5:                                                                                                                                                                                                                                                                chr1_6197756_6199558_-,chr1_6193054_6197652_-,chr1_6186816_6192930_-
+   ---                                                                                                                                                                                                                                                                                                                                    
+36605:                                                                                                                                                                                                                         chr9_136992974_136993053_+,chr9_136993243_136993343_+,chr9_136993411_136993580_+,chr9_136993664_136993766_+
+36606: chr9_137087218_137088075_+,chr9_137088183_137088869_+,chr9_137089005_137096237_+,chr9_137096391_137097828_+,chr9_137097937_137099696_+,chr9_137099881_137101005_+,chr9_137101153_137101484_+,chr9_137101672_137106125_+,chr9_137106315_137106689_+,chr9_137106809_137107275_+,chr9_137107447_137107531_+,chr9_137107662_137108388_+
+36607:                            chr9_137114576_137114647_-,chr9_137114382_137114463_-,chr9_137114028_137114243_-,chr9_137113287_137113865_-,chr9_137113119_137113206_-,chr9_137112805_137112953_-,chr9_137112230_137112745_-,chr9_137112029_137112112_-,chr9_137111754_137111876_-,chr9_137110950_137111690_-,chr9_137110783_137110880_-
+36608:                            chr9_137114382_137114463_-,chr9_137114028_137114243_-,chr9_137113496_137113865_-,chr9_137113287_137113361_-,chr9_137113119_137113206_-,chr9_137112805_137112953_-,chr9_137112230_137112745_-,chr9_137112029_137112112_-,chr9_137111754_137111873_-,chr9_137110950_137111690_-,chr9_137110783_137110880_-
+36609:                            chr9_137114382_137114463_-,chr9_137114028_137114243_-,chr9_137113496_137113865_-,chr9_137113287_137113361_-,chr9_137113119_137113206_-,chr9_137112805_137112953_-,chr9_137112230_137112745_-,chr9_137112029_137112112_-,chr9_137111754_137111873_-,chr9_137110950_137111690_-,chr9_137110783_137110880_-</code></pre>
+<pre class="r"><code>dat %&gt;%
+  filter(ReadName == &quot;ERR5880584.761855&quot;)</code></pre>
+<pre><code>   ORF.translation.approach                       sample chrom    start
+1:                 firstORF SMG6_SMG7_shRNA.SAMEA8691113  chr9 33255024
+2:               longestORF SMG6_SMG7_shRNA.SAMEA8691113  chr9 33255024
+       stop          ReadName score strand thickStart thickEnd      Color
+1: 33264713 ERR5880584.761855    60      -   33255216 33264674 55,126,184
+2: 33264713 ERR5880584.761855    60      -   33255216 33264461 55,126,184
+   blocks                blockSizes                    blockStarts
+1:      7 284,63,108,114,83,129,490 0,840,1776,3895,6062,7677,9199
+2:      7 284,63,108,114,83,129,490 0,840,1776,3895,6062,7677,9199
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          sequence
+1: CGCTCAGCTTCCATCGCTGGGCGGTCAACAAGTGCGGGC^CTGGCTCAGCGCGGGGGGGCGCGGAGACCGCGAGGCGACCGGGAGCGGCTGGGTTCCCGGCTGCGCGCCCTTCGGCCAGGCCGGGAGCCGCGCCAGTCGGAGCCCCCGGCCCAGCGTGGTCCGCCTCCCTCTGGGCGTCCACCTGCCCGGAGTACTGCCAGCGGGCATGACCGACCCACCAGGGGCGCCGCCGCCGGCGCTCGCAGGCCGCGGATGAAGAAGAAAACCCGGCGCCGCTCGACCCGGAGCGAGGAGTTGACCCGGAGCGAGGAGTTGACCCTGAGTGAGGAAGCGACCTGGAGTGAAGAGGCGACCCAGAGTGAGGAGGCGACCCAGGGCGAAGAGATGAATCGGAGCCAGGAGGTGACCCGGGACGAGGAGTCGACCCGGAGCGAGGAGGTGACCAGGGAGGAAATGGCGGCAGCTGGGCTCACCGTGACTGTCACCCACA|GCAATGAGAAGCACGACCTTCATGTTACCTCCCAGCAGGGCAGCAGTGAACCAGTTGTCCAAGACCTGGCCCAGGTTGTTGAAGAGGTCATAGGGGTTCCACAGTCTTTTCAGAAACTCATATTTAAGG|GAAAATCTCTGAAGGAAATGGAAACACCGTTGTCAGCACTTGGAATACAAGATGGTTGCCGGGTCATGTTAATTGGGAAAAAG|AACAGTCCACAGGAAGAGGTTGAACTAAAGAAGTTGAAACATTTGGAGAAGTCTGTGGAGAAGATAGCTGACCAGCTGGAAGAGTTGAATAAAGAGCTTACTGGAATCCAGCAG|GGTTTTCTGCCCAAGGATTTGCAAGCTGAAGCTCTCTGCAAACTTGATAGGAGAGTAAAAGCCACAATAGAGCAGTTTATGAAGATCTTGGAGGAGATTGACACACTG|ATCCTGCCAGAAAATTTCAAAGACAGTAGATTGAAAAGGAAAGGCTTGGTAAAAAAGGTTCAG|GCATTCCTAGCCGAGTGTGACACAGTGGAGCAGAACATCTGCCAGGAGACTGAGCGGCTGCAGTCTACAAACTTTGCCCTGGCCGAGTGA*GGTGTAGCAGAAAAAGGCTGTGCTGCCCTGAAGAATGGCGCCACCAGCTCTGCCGTCTCTGGAGCGGAATTTACCTGATTTCTTCAGGGCTGCTGGGGGCAACTGGCCATTTGCCAATTTTCCTACTCTCACACTGGTTCTCAATGAAAAATAGTGTCTTTGTGATTTTGAGTAAAGCTCCTATCTGTTTTCTC
+2: CGCTCAGCTTCCATCGCTGGGCGGTCAACAAGTGCGGGCCTGGCTCAGCGCGGGGGGGCGCGGAGACCGCGAGGCGACCGGGAGCGGCTGGGTTCCCGGCTGCGCGCCCTTCGGCCAGGCCGGGAGCCGCGCCAGTCGGAGCCCCCGGCCCAGCGTGGTCCGCCTCCCTCTGGGCGTCCACCTGCCCGGAGTACTGCCAGCGGGCATGACCGACCCACCAGGGGCGCCGCCGCCGGCGCTCGCAGGCCGCGG^ATGAAGAAGAAAACCCGGCGCCGCTCGACCCGGAGCGAGGAGTTGACCCGGAGCGAGGAGTTGACCCTGAGTGAGGAAGCGACCTGGAGTGAAGAGGCGACCCAGAGTGAGGAGGCGACCCAGGGCGAAGAGATGAATCGGAGCCAGGAGGTGACCCGGGACGAGGAGTCGACCCGGAGCGAGGAGGTGACCAGGGAGGAAATGGCGGCAGCTGGGCTCACCGTGACTGTCACCCACA|GCAATGAGAAGCACGACCTTCATGTTACCTCCCAGCAGGGCAGCAGTGAACCAGTTGTCCAAGACCTGGCCCAGGTTGTTGAAGAGGTCATAGGGGTTCCACAGTCTTTTCAGAAACTCATATTTAAGG|GAAAATCTCTGAAGGAAATGGAAACACCGTTGTCAGCACTTGGAATACAAGATGGTTGCCGGGTCATGTTAATTGGGAAAAAG|AACAGTCCACAGGAAGAGGTTGAACTAAAGAAGTTGAAACATTTGGAGAAGTCTGTGGAGAAGATAGCTGACCAGCTGGAAGAGTTGAATAAAGAGCTTACTGGAATCCAGCAG|GGTTTTCTGCCCAAGGATTTGCAAGCTGAAGCTCTCTGCAAACTTGATAGGAGAGTAAAAGCCACAATAGAGCAGTTTATGAAGATCTTGGAGGAGATTGACACACTG|ATCCTGCCAGAAAATTTCAAAGACAGTAGATTGAAAAGGAAAGGCTTGGTAAAAAAGGTTCAG|GCATTCCTAGCCGAGTGTGACACAGTGGAGCAGAACATCTGCCAGGAGACTGAGCGGCTGCAGTCTACAAACTTTGCCCTGGCCGAGTGA*GGTGTAGCAGAAAAAGGCTGTGCTGCCCTGAAGAATGGCGCCACCAGCTCTGCCGTCTCTGGAGCGGAATTTACCTGATTTCTTCAGGGCTGCTGGGGGCAACTGGCCATTTGCCAATTTTCCTACTCTCACACTGGTTCTCAATGAAAAATAGTGTCTTTGTGATTTTGAGTAAAGCTCCTATCTGTTTTCTC
+   NMDFinderB AllJuncsIdentifiable
+1:  Last exon                 TRUE
+2:  Last exon                 TRUE
+                                                                                                                                                 Introns
+1: chr9_33262830_33264224_-,chr9_33261169_33262702_-,chr9_33259033_33261087_-,chr9_33256908_33258920_-,chr9_33255927_33256801_-,chr9_33255308_33255865_-
+2: chr9_33262830_33264224_-,chr9_33261169_33262702_-,chr9_33259033_33261087_-,chr9_33256908_33258920_-,chr9_33255927_33256801_-,chr9_33255308_33255865_-</code></pre>
+<p>Ok, so similar to the conclusion we suggest from short read, many of
+the unproductive transcript molecules come from a wide variety of
+unproductive transcript structures. Manually inspecting some of these, I
+don’t think there is a bug persay, but this could be misleading because
+each of these is a full length isoform, when a lot of them have the same
+posion splice site. One solution to this is to categorize reads by their
+PTC position, rather than their full set of junctions.</p>
+<p>Let’s do that…</p>
+<pre class="r"><code>dat.temp &lt;- dat.temp.readattributed %&gt;%
+  mutate(STOP = case_when(
+    thickEnd == thickStart ~ &quot;No ORF&quot;,
+    strand == &quot;+&quot; ~ as.character(thickEnd),
+    strand == &quot;-&quot; ~ as.character(thickStart),
+    TRUE ~ NA_character_
+  )) %&gt;%
+  count(STOP, sample, GeneAttributedToRead, GeneCounts, name=&quot;IsoformCounts&quot;) %&gt;%
+  mutate(PercentIsoform =  IsoformCounts/GeneCounts) %&gt;%
+  # filter(GeneAttributedToRead==&quot;SRSF5&quot;) %&gt;%
+  # filter(GeneAttributedToRead==&quot;RPL12&quot;) %&gt;%
+  group_by(sample, GeneAttributedToRead) %&gt;%
+  mutate(IsoformRank = rank(desc(PercentIsoform), ties.method = &quot;random&quot;)) %&gt;%
+  mutate(IsoformRank = case_when(
+    IsoformRank &lt; 6 ~ as.numeric(IsoformRank),
+    TRUE ~ as.numeric(6)
+  )) %&gt;%
+  mutate(IsoformRank = factor(IsoformRank)) %&gt;%
+  ungroup() %&gt;%
+  mutate(EntropyPart = PercentIsoform * log2(PercentIsoform)) %&gt;%
+  group_by(sample, GeneAttributedToRead) %&gt;%
+  mutate(Entropy = sum(EntropyPart)) %&gt;%
+  ungroup() %&gt;%
+  # arrange(sample, GeneAttributedToRead, IsoformRank, PercentIsoform)
+  group_by(sample, GeneAttributedToRead, IsoformRank) %&gt;%
+  mutate(PercentIsoform = sum(PercentIsoform)) %&gt;%
+  ungroup() %&gt;%
+  distinct(sample, GeneAttributedToRead, IsoformRank, .keep_all=T)
+
+dat.temp.entropy.ordered.genes &lt;- dat.temp %&gt;%
+  distinct(sample, GeneAttributedToRead, .keep_all=T) %&gt;%
+  arrange(sample, Entropy) %&gt;%
+  mutate(GeneAttributedToRead.DummyByEntropy = row_number())
+
+dat.temp %&gt;%
+  inner_join(dat.temp.entropy.ordered.genes %&gt;%
+               dplyr::select(sample, GeneAttributedToRead, GeneAttributedToRead.DummyByEntropy)) %&gt;%
+  mutate(GeneAttributedToRead.DummyByEntropy = factor(GeneAttributedToRead.DummyByEntropy)) %&gt;%
+  ggplot(aes(x=GeneAttributedToRead.DummyByEntropy, y=PercentIsoform, fill=IsoformRank)) +
+  geom_col() +
+  facet_wrap(~sample, scales=&quot;free&quot;) +
+  scale_fill_brewer(palette = &quot;Dark2&quot;, labels=c(1:5, &quot;Sum of other\nminor PTCs&quot;)) +
+  theme(
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  labs(fill=&quot;PTC\nRank&quot;, x=&quot;Genes, ranked by entropy of PTC usage&quot;, y=&quot;Relative PTC usage&quot;, caption=&quot;NMD-inducing isoforms collapsed by PTC&quot;)</code></pre>
+<p><img src="figure/2024-03-07_InvestigateTranslatedLongReads.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Ok this I think is a more accurate view of the diversity of
+unproductive splice isoforms.</p>
+<p>Now let’s plot the fraction of productive/unproductive isoforms
+across genes… I’ll also add a colored rug for gene expression.</p>
+<pre class="r"><code>NMDFinderBCategoriesToColors &lt;- dat %&gt;%
+  count(NMDFinderB) %&gt;%
+  mutate(Color = recode(NMDFinderB, &quot;50 nt rule&quot;=&quot;#c6dbef&quot;, &quot;Last exon&quot;=&quot;#08306b&quot;, &quot;Start proximal&quot;=&quot;#4292c6&quot;,&quot;Long exon&quot;=&quot;#ef6548&quot;, &quot;Trigger NMD&quot;=&quot;#7f0000&quot;, &quot;No stop&quot;=&quot;#fee8c8&quot;, &quot;No CDS&quot;=&quot;#bdbdbd&quot;)) %&gt;%
+  mutate(NMDFinderB = factor(NMDFinderB, levels=c(&quot;Last exon&quot;, &quot;Start proximal&quot;, &quot;50 nt rule&quot;,  &quot;No stop&quot;,&quot;Long exon&quot;, &quot;Trigger NMD&quot;, &quot;No CDS&quot;))) %&gt;%
+  arrange(NMDFinderB)
+
+dat.temp.readattributed &lt;- dat %&gt;%
+  filter(AllJuncsIdentifiable) %&gt;%
+  filter(str_detect(chrom, &quot;^chr[1-9]&quot;)) %&gt;%
+  filter(ORF.translation.approach == &quot;firstORF&quot;) %&gt;%
+  separate_rows(Introns, sep=&quot;,&quot;) %&gt;%
+  inner_join(
+    JunctionAnnotations %&gt;%
+      dplyr::select(-chrom, -start, -strand, -end)) %&gt;%
+  group_by(ReadName, sample) %&gt;%
+  mutate(GeneAttributedToRead = Mode(symbol)) %&gt;%
+  ungroup() %&gt;%
+  distinct(sample, ReadName, GeneAttributedToRead, ORF.translation.approach) %&gt;%
+  inner_join(dat) %&gt;%
+  # filter(!NMDFinderB %in% c(&quot;Last exon&quot;, &quot;50 nt rule&quot;, &quot;No CDS&quot;)) %&gt;%
+  add_count(sample, GeneAttributedToRead, name=&quot;GeneCounts&quot;) %&gt;%
+  filter(GeneCounts &gt; 20)
+
+dat.temp &lt;- dat.temp.readattributed %&gt;%
+  count(NMDFinderB, sample, GeneAttributedToRead, GeneCounts, name=&quot;IsoformCounts&quot;) %&gt;%
+  mutate(PercentIsoform =  IsoformCounts/GeneCounts) %&gt;%
+  # filter(GeneAttributedToRead==&quot;SRSF5&quot;) %&gt;%
+  # filter(GeneAttributedToRead==&quot;RPL12&quot;) %&gt;%
+  mutate(EntropyPart = PercentIsoform * log2(PercentIsoform)) %&gt;%
+  group_by(sample, GeneAttributedToRead) %&gt;%
+  mutate(Entropy = sum(EntropyPart)) %&gt;%
+  ungroup() %&gt;%
+  # arrange(sample, GeneAttributedToRead, IsoformRank, PercentIsoform)
+  group_by(sample, GeneAttributedToRead) %&gt;%
+  mutate(PercentIsoform = PercentIsoform/sum(PercentIsoform)) %&gt;%
+  ungroup()
+
+dat.temp.entropy.ordered.genes &lt;- dat.temp %&gt;%
+  mutate(ProductiveOrUnproductive = case_when(
+    NMDFinderB %in% c(&quot;Last exon&quot;, &quot;Start proximal&quot;, &quot;50 nt rule&quot;) ~ &quot;Productive&quot;,
+    TRUE ~ &quot;Unproductive&quot;
+  )) %&gt;%
+  filter(ProductiveOrUnproductive == &quot;Productive&quot;) %&gt;%
+  group_by(sample, GeneAttributedToRead, ProductiveOrUnproductive) %&gt;%
+  summarise(FractionProductive = sum(PercentIsoform)) %&gt;%
+  ungroup %&gt;%
+  arrange(sample, FractionProductive) %&gt;%
+  mutate(GeneAttributedToRead.DummyByEntropy = row_number())
+
+dat.temp %&gt;%
+  inner_join(dat.temp.entropy.ordered.genes %&gt;%
+               dplyr::select(sample, GeneAttributedToRead, GeneAttributedToRead.DummyByEntropy)) %&gt;%
+  mutate(GeneAttributedToRead.DummyByEntropy = factor(GeneAttributedToRead.DummyByEntropy)) %&gt;%
+  mutate(NMDFinderB = factor(NMDFinderB, levels=c( &quot;50 nt rule&quot;, &quot;Start proximal&quot;,&quot;Last exon&quot;, &quot;Trigger NMD&quot;, &quot;Long exon&quot;, &quot;No stop&quot;, &quot;No CDS&quot;))) %&gt;%
+   # distinct(sample, GeneCounts, GeneAttributedToRead.DummyByEntropy, .keep_all=T) %&gt;%
+   #    group_by(sample) %&gt;%
+   #    mutate(TPM = GeneCounts/sum(GeneCounts, na.rm = T)*1E6) %&gt;%
+   #    ungroup()
+  ggplot() +
+  # geom_bar(position = position_fill(reverse = F), stat=&quot;identity&quot;) + 
+  geom_col(aes(x=GeneAttributedToRead.DummyByEntropy, y=PercentIsoform, fill=NMDFinderB)) +
+  # geom_hline(data = dat.temp.entropy.ordered.genes %&gt;%
+  #              group_by(sample) %&gt;%
+  #              summarise(med = median(FractionProductive)) %&gt;%
+  #              ungroup(),
+  #            aes(yintercept=1 - med),
+  #            linetype=&#39;dashed&#39;) +
+  geom_rug(
+    data = . %&gt;%
+      distinct(sample, GeneCounts, GeneAttributedToRead.DummyByEntropy, .keep_all=T) %&gt;%
+      group_by(sample) %&gt;%
+      mutate(TPM = GeneCounts/sum(GeneCounts, na.rm=T)*1E6) %&gt;%
+      ungroup(),
+    aes(color=TPM, x=GeneAttributedToRead.DummyByEntropy)
+  ) +
+  scale_color_viridis_c(trans=&#39;log10&#39;) +
+  facet_wrap(~sample, scales=&quot;free&quot;) +
+  scale_fill_manual(values=NMDFinderBCategoriesToColors %&gt;% dplyr::select(NMDFinderB, Color) %&gt;% deframe()) +
+  theme(
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  labs(fill=&quot;NMDFinderB&quot;, x=&quot;Genes, ranked by fraction unproductive&quot;, y=&quot;Fraction of transcript molecules&quot;)</code></pre>
+<p><img src="figure/2024-03-07_InvestigateTranslatedLongReads.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="make-final-figures-for-revisions" class="section level2">
+<h2>Make final figures for revisions</h2>
+<p>I imagine the final figures I want to include for revision are much
+like the ones I produced above, but using only a certain subset of the
+data… Like just the shRNA controls and the double knockdown. I am
+imagining a whole new figure about the insights gained from the
+full-length read analyses with Lindeboom rules… That will include (A) a
+figure describing the methods of the analysis. (B) A figure to show that
+our productive/unproductive categories generally match with what we
+would get by applying most common context from long read data and
+Lindeboom rules (though with that approach, we don’t have the coverage
+to determine the unproductive status of most junctions we observe in
+short read data)… For this I would probably combine the dKD and the
+shRNA control data. (C) A figure showing that NMD targets rise to about
+25% for transcripts with 10 junctions, and the other Lindeboom
+categories are almost negligible… For this I would have seperate panels
+or linetypes for the controls (replicate controls combined, as we do in
+other analyses in the intiail submission), and the dKD. (D) A figure
+showing the fraction of unproductive transcripts across genes, and that
+it is correlated with expression level (stacked blue/red barplot with a
+colored rug for TPM expression level). For this I think it makes sense
+to just look at dKD, to be closer to the amount of unproductive splicing
+before NMD perturbation. (E) A figure showing the fraction of
+unproductive isoforms belonging to the 1st rank, 2nd rank, 3rd rank,
+etc, unproductive isoforms… Highlighting that for some genes, most of
+the unproductive isoforms come from a single splice event, while others
+are more like the ‘noisy splicing’ model. For this I think it is
+reasonable to combine all shRNA and dKD samples.</p>
+<div
+id="new-figure-panel-b-most-common-lindeboom-context-for-our-productiveunproductive-categories."
+class="section level3">
+<h3>New Figure, panel B: Most common Lindeboom context for our
+productive/unproductive categories.</h3>
+<pre class="r"><code>dat %&gt;%
+  distinct(sample)</code></pre>
+<pre><code>                         sample
+1:     CTRL1_shRNA.SAMEA8691110
+2:     CTRL2_shRNA.SAMEA8691111
+3:                          GM1
+4:                          GM2
+5:                          GM3
+6:                          GM4
+7: SMG6_SMG7_shRNA.SAMEA8691113</code></pre>
+<pre class="r"><code>dat %&gt;%
+  filter(AllJuncsIdentifiable) %&gt;%
+  filter(str_detect(chrom, &quot;^chr[1-9]&quot;)) %&gt;%
+  filter(str_detect(sample, &quot;shRNA&quot;)) %&gt;%
+  filter(ORF.translation.approach == &quot;firstORF&quot;) %&gt;%
+  separate_rows(Introns, sep=&quot;,&quot;) %&gt;%
+  inner_join(
+    JunctionAnnotations %&gt;%
+      dplyr::select(-chrom, -start, -strand, -end)) %&gt;%
+  add_count(Introns) %&gt;%
+  filter(n&gt;3) %&gt;%
+  add_count(Introns, NMDFinderB, name=&quot;NumNMDFinderContexts&quot;) %&gt;%
+  group_by(Introns) %&gt;%
+  mutate(FractionNMDFinderBContexts = NumNMDFinderContexts/sum(NumNMDFinderContexts)) %&gt;%
+  mutate(NMDFinderB = case_when(
+    any(NMDFinderB == &quot;Last exon&quot;) &amp; FractionNMDFinderBContexts &gt;=0.1 ~ &quot;Last exon&quot;,
+    TRUE ~ NMDFinderB
+  )) %&gt;%
+  mutate(ModeNMDFinder = Mode(NMDFinderB)) %&gt;%
+  ungroup() %&gt;%
+  dplyr::select(-n) %&gt;%
+  distinct(Introns, .keep_all=T) %&gt;%
+  count(ModeNMDFinder, SuperAnnotation) %&gt;%
+  group_by(SuperAnnotation) %&gt;%
+  mutate(TotalIntsInSuperAnnotation = sum(n)) %&gt;%
+  ungroup() %&gt;%
+  filter(!str_detect(SuperAnnotation, &quot;Noncoding&quot;)) %&gt;%
+  mutate(ModeNMDFinder = factor(ModeNMDFinder, levels=c(&quot;Last exon&quot;, &quot;Start proximal&quot;, &quot;50 nt rule&quot;,  &quot;No stop&quot;,&quot;Long exon&quot;, &quot;Trigger NMD&quot;, &quot;No CDS&quot;))) %&gt;%
+  ggplot(aes(x=SuperAnnotation, y=n, fill=ModeNMDFinder)) +
+  geom_col(position=&#39;fill&#39;) +
+  scale_fill_manual(values=NMDFinderBCategoriesToColors %&gt;% dplyr::select(NMDFinderB, Color) %&gt;% deframe()) +
+  Rotate_x_labels +
+  labs(x=&quot;Our intron classes&quot;, fill=&quot;Most common transcript context,\nLindeboom transcript categories&quot;, y=&quot;fraction&quot;, caption=&quot;If &gt;10% of context is Last exon, then most common context is Last exon, otherwise, use the mode&quot;)</code></pre>
+<p><img src="figure/2024-03-07_InvestigateTranslatedLongReads.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>P.B &lt;- dat %&gt;%
+  filter(AllJuncsIdentifiable) %&gt;%
+  filter(str_detect(chrom, &quot;^chr[1-9]&quot;)) %&gt;%
+  filter(str_detect(sample, &quot;shRNA&quot;)) %&gt;%
+  filter(ORF.translation.approach == &quot;firstORF&quot;) %&gt;%
+  separate_rows(Introns, sep=&quot;,&quot;) %&gt;%
+  inner_join(
+    JunctionAnnotations %&gt;%
+      dplyr::select(-chrom, -start, -strand, -end)) %&gt;%
+  add_count(Introns) %&gt;%
+  filter(n&gt;1) %&gt;%
+  add_count(Introns, NMDFinderB, name=&quot;NumNMDFinderContexts&quot;) %&gt;%
+  group_by(Introns) %&gt;%
+  mutate(FractionNMDFinderBContexts = NumNMDFinderContexts/sum(NumNMDFinderContexts)) %&gt;%
+  # mutate(NMDFinderB = case_when(
+  #   any(NMDFinderB == &quot;Last exon&quot;) &amp; FractionNMDFinderBContexts &gt;=0.2 ~ &quot;Last exon&quot;,
+  #   TRUE ~ NMDFinderB
+  # )) %&gt;%
+  mutate(ModeNMDFinder = Mode(NMDFinderB)) %&gt;%
+  ungroup() %&gt;%
+  dplyr::select(-n) %&gt;%
+  distinct(Introns, .keep_all=T) %&gt;%
+  count(ModeNMDFinder, SuperAnnotation) %&gt;%
+  group_by(SuperAnnotation) %&gt;%
+  mutate(TotalIntsInSuperAnnotation = sum(n)) %&gt;%
+  ungroup() %&gt;%
+  filter(!str_detect(SuperAnnotation, &quot;Noncoding&quot;)) %&gt;%
+  mutate(ModeNMDFinder = factor(ModeNMDFinder, levels=c(&quot;Last exon&quot;, &quot;Start proximal&quot;, &quot;50 nt rule&quot;,  &quot;No stop&quot;,&quot;Long exon&quot;, &quot;Trigger NMD&quot;, &quot;No CDS&quot;))) %&gt;%
+  inner_join(
+    JunctionAnnotations %&gt;%
+    count(SuperAnnotation, name=&quot;n.FromShortReads&quot;)) %&gt;%
+  mutate(PercentOfJuncsThatContextCouldBeDeterimined = round(TotalIntsInSuperAnnotation/n.FromShortReads*100, 2)) %&gt;%
+  mutate(SuperAnnotation = recode(SuperAnnotation, &quot;AnnotatedJunc_ProductiveCodingGene&quot;=&quot;Annotated productive&quot;, &quot;AnnotatedJunc_UnproductiveCodingGene&quot;=&quot;Annotated unproductive&quot;, &quot;UnannotatedJunc_ProductiveCodingGene&quot;=&quot;Unannotated productive&quot;, &quot;UnannotatedJunc_UnproductiveCodingGene&quot;=&quot;Unannotated unproductive&quot;)) %&gt;%
+  mutate(SuperAnnotation = str_glue(&quot;{SuperAnnotation}\n(n={TotalIntsInSuperAnnotation}; {PercentOfJuncsThatContextCouldBeDeterimined}%)&quot;)) %&gt;%
+  ggplot(aes(x=SuperAnnotation, y=n, fill=ModeNMDFinder)) +
+  geom_col(position=&#39;fill&#39;) +
+  scale_fill_manual(values=NMDFinderBCategoriesToColors %&gt;% dplyr::select(NMDFinderB, Color) %&gt;% deframe()) +
+  Rotate_x_labels +
+  scale_y_continuous(expand=c(0,0)) +
+  labs(x=&quot;junction classification&quot;, fill=&quot;Most common full\ntranscript context&quot;, y=&quot;fraction of junctions&quot;)
+P.B</code></pre>
+<p><img src="figure/2024-03-07_InvestigateTranslatedLongReads.Rmd/unnamed-chunk-12-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#Also write out these new most common contexts to a file
+dat %&gt;%
+  filter(AllJuncsIdentifiable) %&gt;%
+  filter(str_detect(chrom, &quot;^chr[1-9]&quot;)) %&gt;%
+  filter(str_detect(sample, &quot;shRNA&quot;)) %&gt;%
+  filter(ORF.translation.approach == &quot;firstORF&quot;) %&gt;%
+  separate_rows(Introns, sep=&quot;,&quot;) %&gt;%
+  inner_join(
+    JunctionAnnotations %&gt;%
+      dplyr::select(-chrom, -start, -strand, -end)) %&gt;%
+  add_count(Introns) %&gt;%
+  filter(n&gt;1) %&gt;%
+  add_count(Introns, NMDFinderB, name=&quot;NumNMDFinderContexts&quot;) %&gt;%
+  group_by(Introns) %&gt;%
+  mutate(FractionNMDFinderBContexts = NumNMDFinderContexts/sum(NumNMDFinderContexts)) %&gt;%
+  # mutate(NMDFinderB = case_when(
+  #   any(NMDFinderB == &quot;Last exon&quot;) &amp; FractionNMDFinderBContexts &gt;=0.2 ~ &quot;Last exon&quot;,
+  #   TRUE ~ NMDFinderB
+  # )) %&gt;%
+  mutate(ModeNMDFinder = Mode(NMDFinderB)) %&gt;%
+  ungroup() %&gt;%
+  dplyr::select(-n) %&gt;%
+  distinct(Introns, .keep_all=T) %&gt;%
+  dplyr::select(Introns:gene_type, ModeNMDFinder) %&gt;%
+  write_tsv(&quot;../output/20240322_ResponseToReviewerMostCommonJuncContexts.tsv.gz&quot;)</code></pre>
+</div>
+<div id="new-figure-panel-c-unproductive-categories-by-num-juncs"
+class="section level3">
+<h3>New Figure, panel C: %Unproductive categories by num juncs</h3>
+<pre class="r"><code>dat %&gt;% distinct(ORF.translation.approach)</code></pre>
+<pre><code>   ORF.translation.approach
+1:                 firstORF
+2:               longestORF</code></pre>
+<pre class="r"><code>P.C &lt;- dat %&gt;%
+  filter(AllJuncsIdentifiable) %&gt;%
+  filter(str_detect(chrom, &quot;^chr[1-9]&quot;)) %&gt;%
+  filter(str_detect(sample, &quot;shRNA&quot;)) %&gt;%
+  filter(ORF.translation.approach == &quot;firstORF&quot;) %&gt;%
+  mutate(sample = recode(sample, &quot;SMG6_SMG7_shRNA.SAMEA8691113&quot;=&quot;shRNA dKD NMD factors&quot;, &quot;CTRL1_shRNA.SAMEA8691110&quot;=&quot;shRNA control&quot;, &quot;CTRL2_shRNA.SAMEA8691111&quot;=&quot;shRNA control&quot;)) %&gt;%
+  mutate(NumJuncs = str_count(sequence, &quot;\\|&quot;)) %&gt;%
+  mutate(NumJuncs.condensed = case_when(
+    NumJuncs &lt; 15 ~ as.numeric(NumJuncs),
+    NumJuncs &gt;= 15 ~ as.numeric(15),
+    TRUE ~ NA_real_
+  )) %&gt;%
+  count(NMDFinderB, ORF.translation.approach, sample, NumJuncs.condensed) %&gt;%
+  group_by(ORF.translation.approach, sample, NumJuncs.condensed) %&gt;%
+  mutate(Percent = n/sum(n)*100) %&gt;%
+  ungroup() %&gt;%
+  # filter(!NMDFinderB==&quot;Last exon&quot;) %&gt;%
+  mutate(NMDFinderB = factor(NMDFinderB, levels=c(&quot;Last exon&quot;, &quot;Start proximal&quot;, &quot;50 nt rule&quot;,  &quot;No stop&quot;,&quot;Long exon&quot;, &quot;Trigger NMD&quot;, &quot;No CDS&quot;))) %&gt;%
+  ggplot(aes(x=NumJuncs.condensed, color=NMDFinderB, y=Percent)) +
+  geom_line(aes(linetype=sample)) +
+  scale_x_continuous(breaks=c(0:15), labels=c(0:14, &quot;&gt;14&quot;), expand=c(0,0)) +
+  scale_y_continuous(expand=c(0,0)) +
+  # scale_y_break(c(40,60), scales=&quot;fixed&quot;, expand=F, space=0.4) +
+  scale_color_manual(values=NMDFinderBCategoriesToColors %&gt;% dplyr::select(NMDFinderB, Color) %&gt;% deframe(), name=NULL) +
+  theme_classic() +
+  Rotate_x_labels +
+  labs(color=&quot;trancsript category&quot;, y=&quot;Percent among full length reads&quot;, x=&quot;Number of junctions in read&quot;) +
+  coord_cartesian(xlim=c(0,15))
+P.C</code></pre>
+<p><img src="figure/2024-03-07_InvestigateTranslatedLongReads.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" />
+### New Figure, panel D: %Unproductive reads across genes</p>
+<pre class="r"><code>dat.temp.readattributed &lt;- dat %&gt;%
+  filter(str_detect(sample, &quot;shRNA&quot;)) %&gt;%
+  # filter(sample == &quot;SMG6_SMG7_shRNA.SAMEA8691113&quot;) %&gt;%
+  mutate(sample = recode(sample, &quot;SMG6_SMG7_shRNA.SAMEA8691113&quot;=&quot;shRNA dKD NMD factors&quot;, &quot;CTRL1_shRNA.SAMEA8691110&quot;=&quot;shRNA control&quot;, &quot;CTRL2_shRNA.SAMEA8691111&quot;=&quot;shRNA control&quot;)) %&gt;%
+  filter(AllJuncsIdentifiable) %&gt;%
+  filter(str_detect(chrom, &quot;^chr[1-9]&quot;)) %&gt;%
+  filter(ORF.translation.approach == &quot;firstORF&quot;) %&gt;%
+  separate_rows(Introns, sep=&quot;,&quot;) %&gt;%
+  inner_join(
+    JunctionAnnotations %&gt;%
+      dplyr::select(-chrom, -start, -strand, -end)) %&gt;%
+  group_by(ReadName, sample) %&gt;%
+  mutate(GeneAttributedToRead = Mode(symbol)) %&gt;%
+  ungroup() %&gt;%
+  distinct(sample, ReadName, GeneAttributedToRead, ORF.translation.approach) %&gt;%
+  inner_join(dat %&gt;%
+                 mutate(sample = recode(sample, &quot;SMG6_SMG7_shRNA.SAMEA8691113&quot;=&quot;shRNA dKD NMD factors&quot;, &quot;CTRL1_shRNA.SAMEA8691110&quot;=&quot;shRNA control&quot;, &quot;CTRL2_shRNA.SAMEA8691111&quot;=&quot;shRNA control&quot;))
+               ) %&gt;%
+  # filter(!NMDFinderB %in% c(&quot;Last exon&quot;, &quot;50 nt rule&quot;, &quot;No CDS&quot;)) %&gt;%
+  add_count(sample, GeneAttributedToRead, name=&quot;GeneCounts&quot;) %&gt;%
+  filter(GeneCounts &gt; 20)
+
+dat.temp &lt;- dat.temp.readattributed %&gt;%
+  count(NMDFinderB, sample, GeneAttributedToRead, GeneCounts, name=&quot;IsoformCounts&quot;) %&gt;%
+  mutate(PercentIsoform =  IsoformCounts/GeneCounts) %&gt;%
+  # filter(GeneAttributedToRead==&quot;SRSF5&quot;) %&gt;%
+  # filter(GeneAttributedToRead==&quot;RPL12&quot;) %&gt;%
+  mutate(EntropyPart = PercentIsoform * log2(PercentIsoform)) %&gt;%
+  group_by(sample, GeneAttributedToRead) %&gt;%
+  mutate(Entropy = sum(EntropyPart)) %&gt;%
+  ungroup() %&gt;%
+  # arrange(sample, GeneAttributedToRead, IsoformRank, PercentIsoform)
+  group_by(sample, GeneAttributedToRead) %&gt;%
+  mutate(PercentIsoform = PercentIsoform/sum(PercentIsoform)) %&gt;%
+  ungroup()
+
+dat.temp.entropy.ordered.genes &lt;- dat.temp %&gt;%
+  mutate(ProductiveOrUnproductive = case_when(
+    NMDFinderB %in% c(&quot;Last exon&quot;, &quot;Start proximal&quot;, &quot;50 nt rule&quot;) ~ &quot;Productive&quot;,
+    TRUE ~ &quot;Unproductive&quot;
+  )) %&gt;%
+  filter(ProductiveOrUnproductive == &quot;Productive&quot;) %&gt;%
+  group_by(sample, GeneAttributedToRead, ProductiveOrUnproductive) %&gt;%
+  summarise(FractionProductive = sum(PercentIsoform)) %&gt;%
+  ungroup %&gt;%
+  arrange(sample, FractionProductive) %&gt;%
+  mutate(GeneAttributedToRead.DummyByEntropy = row_number())
+
+TPM &lt;- dat %&gt;%
+  filter(str_detect(sample, &quot;shRNA&quot;)) %&gt;%
+  # filter(sample == &quot;SMG6_SMG7_shRNA.SAMEA8691113&quot;) %&gt;%
+  mutate(sample = recode(sample, &quot;SMG6_SMG7_shRNA.SAMEA8691113&quot;=&quot;shRNA dKD NMD factors&quot;, &quot;CTRL1_shRNA.SAMEA8691110&quot;=&quot;shRNA control&quot;, &quot;CTRL2_shRNA.SAMEA8691111&quot;=&quot;shRNA control&quot;)) %&gt;%
+  filter(AllJuncsIdentifiable) %&gt;%
+  filter(str_detect(chrom, &quot;^chr[1-9]&quot;)) %&gt;%
+  filter(ORF.translation.approach == &quot;firstORF&quot;) %&gt;%
+  separate_rows(Introns, sep=&quot;,&quot;) %&gt;%
+  inner_join(
+    JunctionAnnotations %&gt;%
+      dplyr::select(-chrom, -start, -strand, -end)) %&gt;%
+  group_by(ReadName, sample) %&gt;%
+  mutate(GeneAttributedToRead = Mode(symbol)) %&gt;%
+  ungroup() %&gt;%
+  distinct(sample, ReadName, GeneAttributedToRead, ORF.translation.approach) %&gt;%
+  inner_join(dat %&gt;%
+                 mutate(sample = recode(sample, &quot;SMG6_SMG7_shRNA.SAMEA8691113&quot;=&quot;shRNA dKD NMD factors&quot;, &quot;CTRL1_shRNA.SAMEA8691110&quot;=&quot;shRNA control&quot;, &quot;CTRL2_shRNA.SAMEA8691111&quot;=&quot;shRNA control&quot;))
+               ) %&gt;%
+  # filter(!NMDFinderB %in% c(&quot;Last exon&quot;, &quot;50 nt rule&quot;, &quot;No CDS&quot;)) %&gt;%
+  count(sample, GeneAttributedToRead, name=&quot;GeneCounts&quot;) %&gt;%
+  group_by(sample) %&gt;%
+  mutate(TPM = GeneCounts/sum(GeneCounts, na.rm=T)*1E6) %&gt;%
+  ungroup() %&gt;%
+  inner_join(dat.temp.entropy.ordered.genes) %&gt;%
+  mutate(GeneAttributedToRead.DummyByEntropy = factor(GeneAttributedToRead.DummyByEntropy)) %&gt;%
+  arrange(GeneAttributedToRead.DummyByEntropy) %&gt;%
+  add_count(sample) %&gt;%
+  mutate(FacetTitle = str_glue(&quot;{sample},\n{n} genes&quot;))
+
+TPM %&gt;%
+  filter(FractionProductive &lt; 1) %&gt;%
+  group_by(sample) %&gt;%
+  summarize(COR = stats::cor.test(TPM, FractionProductive, method=&#39;s&#39;)$estimate,
+                  pval = stats::cor.test(TPM, FractionProductive, method=&#39;s&#39;)$p.value
+                  ) %&gt;%
+        ungroup()</code></pre>
+<pre><code># A tibble: 2 × 3
+  sample                  COR     pval
+  &lt;chr&gt;                 &lt;dbl&gt;    &lt;dbl&gt;
+1 shRNA control         0.321 1.18e-14
+2 shRNA dKD NMD factors 0.191 4.75e- 2</code></pre>
+<pre class="r"><code>TPM %&gt;%
+  ggplot(aes(x=1-FractionProductive, y=TPM)) +
+  geom_point() +
+  scale_y_continuous(trans=&#39;log10&#39;) +
+  scale_x_continuous(trans=&#39;log10&#39;) +
+  facet_wrap(~sample)</code></pre>
+<p><img src="figure/2024-03-07_InvestigateTranslatedLongReads.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>P.D &lt;- dat.temp %&gt;%
+  inner_join(dat.temp.entropy.ordered.genes %&gt;%
+               dplyr::select(sample, GeneAttributedToRead, GeneAttributedToRead.DummyByEntropy)) %&gt;%
+  mutate(GeneAttributedToRead.DummyByEntropy = factor(GeneAttributedToRead.DummyByEntropy)) %&gt;%
+  mutate(NMDFinderB = factor(NMDFinderB, levels=c( &quot;50 nt rule&quot;, &quot;Start proximal&quot;,&quot;Last exon&quot;, &quot;Trigger NMD&quot;, &quot;Long exon&quot;, &quot;No stop&quot;, &quot;No CDS&quot;))) %&gt;%
+   # distinct(sample, GeneCounts, GeneAttributedToRead.DummyByEntropy, .keep_all=T) %&gt;%
+   #    group_by(sample) %&gt;%
+   #    mutate(TPM = GeneCounts/sum(GeneCounts, na.rm = T)*1E6) %&gt;%
+   #    ungroup()
+  inner_join(TPM) %&gt;%
+  ggplot() +
+  geom_rug(
+    data = . %&gt;% distinct(GeneAttributedToRead.DummyByEntropy, .keep_all=T),
+    aes(color=TPM, x=GeneAttributedToRead.DummyByEntropy),
+    size=1, outside=F, y=-0.05
+  ) +
+  scale_color_viridis_c(trans=&#39;log10&#39;) +
+  ggnewscale::new_scale_color() +
+  geom_col(aes(x=GeneAttributedToRead.DummyByEntropy, y=PercentIsoform, fill=NMDFinderB), width=1.1) +
+  geom_hline(yintercept = 0) +
+  facet_grid(~FacetTitle, scales=&quot;free&quot;) +
+  scale_y_continuous(expand=c(0,0), limits=c(-0.03,1)) +
+  scale_fill_manual(values=NMDFinderBCategoriesToColors %&gt;% dplyr::select(NMDFinderB, Color) %&gt;% deframe()) +
+  scale_color_manual(values=NMDFinderBCategoriesToColors %&gt;% dplyr::select(NMDFinderB, Color) %&gt;% deframe(), guide=F) +
+  theme(
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  labs(fill=&quot;Transcript\ncategory&quot;, x=&quot;Genes, ranked by fraction unproductive&quot;, y=&quot;Fraction of transcript molecules&quot;)
+P.D</code></pre>
+<p><img src="figure/2024-03-07_InvestigateTranslatedLongReads.Rmd/unnamed-chunk-14-2.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div
+id="new-figure-panel-d-unproductive-reads-coming-from-1st-2nd-etc-most-common-unproductive-ptcs-across-genes"
+class="section level3">
+<h3>New Figure, panel D: %Unproductive reads coming from 1st, 2nd, etc
+most common unproductive PTCs, across genes</h3>
+<pre class="r"><code>dat.temp.readattributed &lt;- dat %&gt;%
+  filter(str_detect(sample, &quot;shRNA&quot;)) %&gt;%
+  mutate(sample = recode(sample, &quot;SMG6_SMG7_shRNA.SAMEA8691113&quot;=&quot;shRNA dKD NMD factors&quot;, &quot;CTRL1_shRNA.SAMEA8691110&quot;=&quot;shRNA control&quot;, &quot;CTRL2_shRNA.SAMEA8691111&quot;=&quot;shRNA control&quot;)) %&gt;%
+  filter(AllJuncsIdentifiable) %&gt;%
+  filter(str_detect(chrom, &quot;^chr[1-9]&quot;)) %&gt;%
+  filter(ORF.translation.approach == &quot;firstORF&quot;) %&gt;%
+  separate_rows(Introns, sep=&quot;,&quot;) %&gt;%
+  inner_join(
+    JunctionAnnotations %&gt;%
+      dplyr::select(-chrom, -start, -strand, -end)) %&gt;%
+  group_by(ReadName, sample) %&gt;%
+  mutate(GeneAttributedToRead = Mode(symbol)) %&gt;%
+  ungroup() %&gt;%
+  distinct(sample, ReadName, GeneAttributedToRead, ORF.translation.approach) %&gt;%
+  inner_join(dat %&gt;%
+                 mutate(sample = recode(sample, &quot;SMG6_SMG7_shRNA.SAMEA8691113&quot;=&quot;shRNA dKD NMD factors&quot;, &quot;CTRL1_shRNA.SAMEA8691110&quot;=&quot;shRNA control&quot;, &quot;CTRL2_shRNA.SAMEA8691111&quot;=&quot;shRNA control&quot;))
+               ) %&gt;%
+  filter(!NMDFinderB %in% c(&quot;Last exon&quot;, &quot;50 nt rule&quot;, &quot;Start proximal&quot;, &quot;No CDS&quot;)) %&gt;%
+  add_count(sample, GeneAttributedToRead, name=&quot;GeneCounts&quot;) %&gt;%
+  filter(GeneCounts &gt; 10)
+
+dat.temp &lt;- dat.temp.readattributed %&gt;%
+  mutate(STOP = case_when(
+    thickEnd == thickStart ~ &quot;No ORF&quot;,
+    NMDFinderB == &quot;No stop&quot; ~ &quot;No stop&quot;,
+    strand == &quot;+&quot; ~ as.character(thickEnd),
+    strand == &quot;-&quot; ~ as.character(thickStart),
+    TRUE ~ NA_character_
+  )) %&gt;%
+  count(STOP, sample, GeneAttributedToRead, GeneCounts, name=&quot;IsoformCounts&quot;) %&gt;%
+  mutate(PercentIsoform =  IsoformCounts/GeneCounts) %&gt;%
+  # filter(GeneAttributedToRead==&quot;SRSF5&quot;) %&gt;%
+  # filter(GeneAttributedToRead==&quot;RPL12&quot;) %&gt;%
+  group_by(sample, GeneAttributedToRead) %&gt;%
+  mutate(IsoformRank = rank(desc(PercentIsoform), ties.method = &quot;random&quot;)) %&gt;%
+  mutate(IsoformRank = case_when(
+    IsoformRank &lt; 5 ~ as.numeric(IsoformRank),
+    TRUE ~ as.numeric(5)
+  )) %&gt;%
+  mutate(IsoformRank = factor(IsoformRank)) %&gt;%
+  ungroup() %&gt;%
+  mutate(EntropyPart = PercentIsoform * log2(PercentIsoform)) %&gt;%
+  group_by(sample, GeneAttributedToRead) %&gt;%
+  mutate(Entropy = sum(EntropyPart)) %&gt;%
+  ungroup() %&gt;%
+  # arrange(sample, GeneAttributedToRead, IsoformRank, PercentIsoform)
+  group_by(sample, GeneAttributedToRead, IsoformRank) %&gt;%
+  mutate(PercentIsoform = sum(PercentIsoform)) %&gt;%
+  ungroup() %&gt;%
+  distinct(sample, GeneAttributedToRead, IsoformRank, .keep_all=T)
+
+dat.temp.entropy.ordered.genes &lt;- dat.temp %&gt;%
+  distinct(sample, GeneAttributedToRead, .keep_all=T) %&gt;%
+  arrange(sample, Entropy) %&gt;%
+  mutate(GeneAttributedToRead.DummyByEntropy = row_number())
+
+Set1RecodedColors &lt;- c(&quot;1&quot;=&quot;#377eb8&quot;, &quot;2&quot;=&quot;#ff7f00&quot;, &quot;3&quot;=&quot;#4daf4a&quot;, &quot;4&quot;=&quot;#984ea3&quot;, &quot;5&quot;=&quot;#e41a1c&quot;)
+
+P.E &lt;- dat.temp %&gt;%
+  inner_join(dat.temp.entropy.ordered.genes %&gt;%
+               dplyr::select(sample, GeneAttributedToRead, GeneAttributedToRead.DummyByEntropy)) %&gt;%
+  mutate(GeneAttributedToRead.DummyByEntropy = factor(GeneAttributedToRead.DummyByEntropy)) %&gt;%
+  group_by(sample) %&gt;%
+  mutate(n.genes = n_distinct(GeneAttributedToRead)) %&gt;%
+  ungroup() %&gt;%
+  mutate(sample = str_glue(&quot;{sample},\n{n.genes} genes&quot;)) %&gt;%
+  arrange(sample, desc(GeneAttributedToRead.DummyByEntropy)) %&gt;%
+  ggplot(aes(x=GeneAttributedToRead.DummyByEntropy, y=PercentIsoform, fill=IsoformRank)) +
+  geom_col(position = position_fill(reverse = TRUE)) +
+  facet_wrap(~sample, scales=&quot;free_x&quot;) +
+  # scale_fill_brewer(palette = &quot;Set1&quot;, labels=c(1:4, &quot;Sum of other\nminor PTCs&quot;)) +
+  scale_fill_manual( values=Set1RecodedColors,labels=c(1:4, &quot;Sum of other\nminor PTCs&quot;)) +
+  theme(
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  scale_y_continuous(expand=c(0,0)) +
+  scale_x_discrete(limits=rev) +
+  labs(fill=&quot;PTC Rank\namongst\nunproductive\ntranscripts&quot;, x=&quot;Genes, ranked by entropy of PTC usage&quot;, y=&quot;Relative PTC usage&quot;)
+P.E</code></pre>
+<p><img src="figure/2024-03-07_InvestigateTranslatedLongReads.Rmd/unnamed-chunk-15-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="visual-aid-for-p.e-bed-file-with-unique-stop-codons."
+class="section level3">
+<h3>Visual aid for P.E… bed file with unique stop codons.</h3>
+<pre class="r"><code>dat.reads &lt;- dat.temp.readattributed %&gt;%
+  filter(sample == &quot;shRNA control&quot;) %&gt;%
+  mutate(STOP = case_when(
+    thickEnd == thickStart ~ &quot;No ORF&quot;,
+    strand == &quot;+&quot; ~ as.character(thickEnd),
+    strand == &quot;-&quot; ~ as.character(thickStart),
+    TRUE ~ NA_character_
+  ))
+
+dat.reads %&gt;%
+  count(STOP, sample, GeneAttributedToRead, GeneCounts, name=&quot;IsoformCounts&quot;) %&gt;%
+  mutate(PercentIsoform =  IsoformCounts/GeneCounts) %&gt;%
+  # filter(GeneAttributedToRead==&quot;SRSF5&quot;) %&gt;%
+  # filter(GeneAttributedToRead==&quot;RPL12&quot;) %&gt;%
+  group_by(sample, GeneAttributedToRead) %&gt;%
+  mutate(IsoformRank = rank(desc(PercentIsoform), ties.method = &quot;random&quot;)) %&gt;%
+  mutate(IsoformRank = case_when(
+    IsoformRank &lt; 5 ~ as.numeric(IsoformRank),
+    TRUE ~ as.numeric(5)
+  )) %&gt;%
+  ungroup() %&gt;%
+  inner_join(dat.reads) %&gt;%
+  distinct(GeneAttributedToRead, STOP, .keep_all=T) %&gt;%
+  dplyr::select(chrom:stop, ReadName, score:blockStarts, IsoformRank) %&gt;%
+  mutate(Color = recode(IsoformRank, !!!Set1RecodedColors)) %&gt;%
+  mutate(Color = apply(col2rgb(Color), 2, paste, collapse=&#39;,&#39;)) %&gt;%
+  arrange(IsoformRank) %&gt;%
+  write_tsv(&quot;../code/scratch/ExampleLongReadPTCsColored.bed&quot;, col_names = F)
+  
+ # %&gt;%
+ #  write_tsv(&quot;../code/scratch/ExampleLongReadPTCsColored.bed&quot;, col_names = F)
+  
+dat.ForPyGenomePlots &lt;- bind_rows(
+  dat %&gt;%
+    filter(str_detect(sample, &quot;shRNA&quot;)) %&gt;%
+    mutate(sample = recode(sample, &quot;SMG6_SMG7_shRNA.SAMEA8691113&quot;=&quot;shRNA dKD NMD factors&quot;, &quot;CTRL1_shRNA.SAMEA8691110&quot;=&quot;shRNA control&quot;, &quot;CTRL2_shRNA.SAMEA8691111&quot;=&quot;shRNA control&quot;)) %&gt;%
+    filter(AllJuncsIdentifiable) %&gt;%
+    filter(str_detect(chrom, &quot;^chr[1-9]&quot;)) %&gt;%
+    filter(ORF.translation.approach == &quot;firstORF&quot;) %&gt;%
+    separate_rows(Introns, sep=&quot;,&quot;) %&gt;%
+    inner_join(
+      JunctionAnnotations %&gt;%
+        dplyr::select(-chrom, -start, -strand, -end)) %&gt;%
+    group_by(ReadName, sample) %&gt;%
+    mutate(GeneAttributedToRead = Mode(symbol)) %&gt;%
+    ungroup() %&gt;%
+    filter(GeneAttributedToRead %in% c(&quot;PRDX2&quot;, &quot;PSMB4&quot;) &amp; NMDFinderB == &quot;Last exon&quot;) %&gt;%
+    group_by(GeneAttributedToRead) %&gt;%
+    filter(Introns == Mode(Introns)) %&gt;%
+    ungroup() %&gt;%
+    distinct(Introns, GeneAttributedToRead, .keep_all=T) %&gt;%
+    mutate(Color = &quot;#252525&quot;, UTRColor = &quot;#969696&quot;) %&gt;%
+    mutate(IsoformRank = 0),
+  dat.reads %&gt;%
+    count(STOP, sample, GeneAttributedToRead, GeneCounts, name=&quot;IsoformCounts&quot;) %&gt;%
+    mutate(PercentIsoform =  IsoformCounts/GeneCounts) %&gt;%
+    # filter(GeneAttributedToRead==&quot;SRSF5&quot;) %&gt;%
+    # filter(GeneAttributedToRead==&quot;RPL12&quot;) %&gt;%
+    group_by(sample, GeneAttributedToRead) %&gt;%
+    mutate(IsoformRank = rank(desc(PercentIsoform), ties.method = &quot;random&quot;)) %&gt;%
+    mutate(IsoformRank = case_when(
+      IsoformRank &lt; 5 ~ as.numeric(IsoformRank),
+      TRUE ~ as.numeric(5)
+    )) %&gt;%
+    ungroup() %&gt;%
+    inner_join(dat.reads) %&gt;%
+    distinct(GeneAttributedToRead, STOP, .keep_all=T) %&gt;%
+    filter(GeneAttributedToRead %in% c(&quot;PRDX2&quot;, &quot;PSMB4&quot;)) %&gt;%
+    mutate(Color = recode(IsoformRank, !!!Set1RecodedColors)) %&gt;%
+    mutate(UTRColor = recode(Color, &quot;#1f78b4&quot;=&quot;#a6cee3&quot;, &quot;#33a02c&quot;=&quot;#b2df8a&quot;, &quot;#e31a1c&quot;=&quot;#fb9a99&quot;, &quot;#ff7f00&quot;=&quot;#fdbf6f&quot;, &quot;#6a3d9a&quot;=&quot;#cab2d6&quot;))
+) %&gt;%
+    mutate(UTRColor = Color) %&gt;%
+    dplyr::select(chrom:stop, ReadName, score:blockStarts, IsoformRank, GeneAttributedToRead, PercentIsoform, Color, UTRColor, IsoformCounts) %&gt;%
+  arrange(GeneAttributedToRead, IsoformRank, desc(PercentIsoform)) %&gt;%
+  group_by(GeneAttributedToRead) %&gt;%
+  mutate(rn = row_number()) %&gt;%
+  ungroup()
+
+dat.ForPyGenomePlots %&gt;%
+  arrange(GeneAttributedToRead, IsoformRank, desc(PercentIsoform)) %&gt;%
+  group_by(GeneAttributedToRead, rn) %&gt;%
+    dplyr::select(chrom:blockStarts) %&gt;%
+    mutate(Color = &quot;0,0,0&quot;) %&gt;%
+    group_walk(~ write_tsv(.x, paste0(&quot;../code/scratch/&quot;, .y$GeneAttributedToRead, &quot;.&quot;, .y$rn, &quot;.bed12&quot;), col_names = F)) %&gt;%
+    ungroup()</code></pre>
+<pre><code># A tibble: 11 × 14
+   GeneAttributedToR…    rn chrom  start   stop ReadName score strand thickStart
+   &lt;chr&gt;              &lt;int&gt; &lt;chr&gt;  &lt;int&gt;  &lt;int&gt; &lt;chr&gt;    &lt;int&gt; &lt;chr&gt;       &lt;int&gt;
+ 1 PRDX2                  1 chr19 1.28e7 1.28e7 ERR5880…    60 -        12797078
+ 2 PRDX2                  2 chr19 1.28e7 1.28e7 ERR5880…    60 -        12800958
+ 3 PRDX2                  3 chr19 1.28e7 1.28e7 ERR5880…    60 -        12800741
+ 4 PRDX2                  4 chr19 1.28e7 1.28e7 ERR5880…    60 -        12800256
+ 5 PSMB4                  1 chr1  1.51e8 1.51e8 ERR5880…    60 +       151399587
+ 6 PSMB4                  2 chr1  1.51e8 1.51e8 ERR5880…    60 +       151399587
+ 7 PSMB4                  3 chr1  1.51e8 1.51e8 ERR5880…    60 +       151399587
+ 8 PSMB4                  4 chr1  1.51e8 1.51e8 ERR5880…    60 +       151399587
+ 9 PSMB4                  5 chr1  1.51e8 1.51e8 ERR5880…    60 +       151399587
+10 PSMB4                  6 chr1  1.51e8 1.51e8 ERR5880…    60 +       151399587
+11 PSMB4                  7 chr1  1.51e8 1.51e8 ERR5880…    60 +       151399587
+# … with 5 more variables: thickEnd &lt;int&gt;, Color &lt;chr&gt;, blocks &lt;int&gt;,
+#   blockSizes &lt;chr&gt;, blockStarts &lt;chr&gt;</code></pre>
+<pre class="r"><code>dat.ForPyGenomePlots %&gt;%
+  mutate(diff = stop - start)</code></pre>
+<pre><code># A tibble: 11 × 19
+   chrom     start   stop ReadName score strand thickStart thickEnd Color blocks
+   &lt;chr&gt;     &lt;int&gt;  &lt;int&gt; &lt;chr&gt;    &lt;int&gt; &lt;chr&gt;       &lt;int&gt;    &lt;int&gt; &lt;chr&gt;  &lt;int&gt;
+ 1 chr19  12796819 1.28e7 ERR5880…    60 -        12797078   1.28e7 #252…      6
+ 2 chr19  12796822 1.28e7 ERR5880…    60 -        12800958   1.28e7 #377…      6
+ 3 chr19  12796848 1.28e7 ERR5880…    60 -        12800741   1.28e7 #ff7…      5
+ 4 chr19  12796853 1.28e7 ERR5880…    60 -        12800256   1.28e7 #4da…      6
+ 5 chr1  151399557 1.51e8 ERR5880…    60 +       151399587   1.51e8 #252…      7
+ 6 chr1  151399564 1.51e8 ERR5880…    60 +       151399587   1.51e8 #377…      7
+ 7 chr1  151399567 1.51e8 ERR5880…    60 +       151399587   1.51e8 #ff7…      7
+ 8 chr1  151399564 1.51e8 ERR5880…    60 +       151399587   1.51e8 #4da…      4
+ 9 chr1  151399565 1.51e8 ERR5880…    60 +       151399587   1.51e8 #984…      6
+10 chr1  151399564 1.51e8 ERR5880…    60 +       151399587   1.51e8 #e41…      4
+11 chr1  151399570 1.51e8 ERR5880…    60 +       151399587   1.51e8 #e41…      6
+# … with 9 more variables: blockSizes &lt;chr&gt;, blockStarts &lt;chr&gt;,
+#   IsoformRank &lt;dbl&gt;, GeneAttributedToRead &lt;chr&gt;, PercentIsoform &lt;dbl&gt;,
+#   UTRColor &lt;chr&gt;, IsoformCounts &lt;int&gt;, rn &lt;int&gt;, diff &lt;int&gt;</code></pre>
+<pre class="r"><code>dat.ForPyGenomePlots %&gt;%
+  mutate(PercentIsoform = round(PercentIsoform*100, 1)) %&gt;%
+  mutate(title = case_when(
+    IsoformRank == 0 ~ str_glue(&quot;{GeneAttributedToRead} Productive isoform\n\n[spacer]\n[spacer]\ntitle=Unproductive isoforms\n\n&quot;),
+    TRUE ~ str_glue(&quot;{IsoformCounts} read(s); ({PercentIsoform}%%)&quot;)
+  )) %&gt;%
+  mutate(track = str_glue(
+  &quot;
+  
+  [{GeneAttributedToRead}_{rn}]
+  height = 1
+  color = {Color}
+  style = flybase
+  file_type = bed
+  height_utr = 0.5
+  color_utr = {UTRColor}
+  labels = false
+  labels_in_margin = true
+  file = ../code/scratch/{GeneAttributedToRead}.{rn}.bed12
+  title = {title}
+  &quot;
+  )) %&gt;%
+  group_by(GeneAttributedToRead) %&gt;%
+    dplyr::select(track) %&gt;%
+    group_walk(~ write_tsv(.x, paste0(&quot;../code/scratch/&quot;, .y$GeneAttributedToRead, &quot;.tracks.ini&quot;), col_names = F)) %&gt;%
+    ungroup()</code></pre>
+<pre><code># A tibble: 11 × 2
+   GeneAttributedToRead track                                                   
+   &lt;chr&gt;                &lt;glue&gt;                                                  
+ 1 PRDX2                [PRDX2_1]
+height = 1
+color = #252525
+style = flybase
+file_t…
+ 2 PRDX2                [PRDX2_2]
+height = 1
+color = #377eb8
+style = flybase
+file_t…
+ 3 PRDX2                [PRDX2_3]
+height = 1
+color = #ff7f00
+style = flybase
+file_t…
+ 4 PRDX2                [PRDX2_4]
+height = 1
+color = #4daf4a
+style = flybase
+file_t…
+ 5 PSMB4                [PSMB4_1]
+height = 1
+color = #252525
+style = flybase
+file_t…
+ 6 PSMB4                [PSMB4_2]
+height = 1
+color = #377eb8
+style = flybase
+file_t…
+ 7 PSMB4                [PSMB4_3]
+height = 1
+color = #ff7f00
+style = flybase
+file_t…
+ 8 PSMB4                [PSMB4_4]
+height = 1
+color = #4daf4a
+style = flybase
+file_t…
+ 9 PSMB4                [PSMB4_5]
+height = 1
+color = #984ea3
+style = flybase
+file_t…
+10 PSMB4                [PSMB4_6]
+height = 1
+color = #e41a1c
+style = flybase
+file_t…
+11 PSMB4                [PSMB4_7]
+height = 1
+color = #e41a1c
+style = flybase
+file_t…</code></pre>
+<p>PRDX2 is one where most all juncs explained by one… PSMB4 is
+explained by many…</p>
+</div>
+<div id="get-stats-for-figa" class="section level3">
+<h3>get stats for FigA</h3>
+<pre class="r"><code>dat %&gt;%
+  filter(str_detect(sample, &quot;shRNA&quot;)) %&gt;%
+  filter(ORF.translation.approach==&quot;firstORF&quot; &amp; str_detect(chrom, &quot;^chr[1-9]&quot;)) %&gt;%
+  mutate(sample = recode(sample, &quot;SMG6_SMG7_shRNA.SAMEA8691113&quot;=&quot;shRNA dKD NMD factors&quot;, &quot;CTRL1_shRNA.SAMEA8691110&quot;=&quot;shRNA control&quot;, &quot;CTRL2_shRNA.SAMEA8691111&quot;=&quot;shRNA control&quot;)) %&gt;%
+  count(NMDFinderB) %&gt;%
+  mutate(sum = sum(n))</code></pre>
+<pre><code>       NMDFinderB      n    sum
+1:     50 nt rule   7726 151710
+2:      Last exon 106307 151710
+3:      Long exon   1147 151710
+4:         No CDS   4209 151710
+5:        No stop   2196 151710
+6: Start proximal   6886 151710
+7:    Trigger NMD  23239 151710</code></pre>
+<pre class="r"><code>dat %&gt;%
+  filter(sample == &quot;SMG6_SMG7_shRNA.SAMEA8691113&quot;) %&gt;%
+  filter(ORF.translation.approach==&quot;firstORF&quot;) %&gt;%
+  filter( str_detect(chrom, &quot;^chr[1-9]&quot;))</code></pre>
+<pre><code>       ORF.translation.approach                       sample chrom     start
+    1:                 firstORF SMG6_SMG7_shRNA.SAMEA8691113  chr1    944203
+    2:                 firstORF SMG6_SMG7_shRNA.SAMEA8691113  chr1    944214
+    3:                 firstORF SMG6_SMG7_shRNA.SAMEA8691113  chr1    944214
+    4:                 firstORF SMG6_SMG7_shRNA.SAMEA8691113  chr1    944224
+    5:                 firstORF SMG6_SMG7_shRNA.SAMEA8691113  chr1   1013499
+   ---                                                                      
+21827:                 firstORF SMG6_SMG7_shRNA.SAMEA8691113  chr9 137241301
+21828:                 firstORF SMG6_SMG7_shRNA.SAMEA8691113  chr9 137391807
+21829:                 firstORF SMG6_SMG7_shRNA.SAMEA8691113  chr9 137551872
+21830:                 firstORF SMG6_SMG7_shRNA.SAMEA8691113  chr9 137551872
+21831:                 firstORF SMG6_SMG7_shRNA.SAMEA8691113  chr9 137605690
+            stop          ReadName score strand thickStart  thickEnd
+    1:    959264 ERR5880584.319212    60      -     956956    959240
+    2:    959256 ERR5880584.820112    60      -     944666    959240
+    3:    959251 ERR5880584.287451    60      -     944543    959240
+    4:    959256 ERR5880584.815154    60      -     957262    959240
+    5:   1014528 ERR5880584.274511    60      +    1013573   1014480
+   ---                                                              
+21827: 137243705 ERR5880584.601707    60      +  137241360 137243558
+21828: 137423160 ERR5880584.295969    60      -  137423160 137423160
+21829: 137552543 ERR5880584.599798    60      +  137552081 137552497
+21830: 137552551 ERR5880584.608091    60      +  137552081 137552497
+21831: 137615340 ERR5880584.468381    60      +  137605717 137614963
+             Color blocks
+    1:   228,26,28     18
+    2:  55,126,184     17
+    3:  55,126,184     18
+    4:   228,26,28     19
+    5:  55,126,184      2
+   ---                   
+21827:  55,126,184      4
+21828: 150,150,150      4
+21829:  55,126,184      2
+21830:  55,126,184      2
+21831:   77,175,74      8
+                                                                    blockSizes
+    1:    597,167,114,144,102,114,112,140,189,114,111,79,91,121,132,183,153,50
+    2:         586,90,144,102,114,112,140,189,114,111,79,91,121,132,175,153,42
+    3:     384,90,136,114,144,102,114,112,140,189,114,79,91,121,132,175,153,37
+    4: 576,90,136,114,144,102,114,112,140,189,114,111,79,91,121,132,175,157,42
+    5:                                                                  77,545
+   ---                                                                        
+21827:                                                        116,109,111,1210
+21828:                                                         1120,152,128,47
+21829:                                                                 106,470
+21830:                                                                 106,478
+21831:                                          145,111,51,155,183,177,102,267
+                                                                                            blockStarts
+    1:     0,1283,1969,2198,3927,4286,6923,7796,8208,8971,9578,9800,11719,11891,12690,12887,14725,15011
+    2:          0,1982,2187,3916,4275,6912,7785,8197,8960,9567,9789,11708,11880,12679,12884,14714,15000
+    3:      0,842,1303,1958,2187,3916,4275,6912,7785,8197,8960,9789,11708,11880,12679,12884,14714,15000
+    4: 0,832,1293,1948,2177,3906,4265,6902,7775,8187,8950,9557,9779,11698,11870,12669,12874,14700,14990
+    5:                                                                                            0,484
+   ---                                                                                                 
+21827:                                                                                   0,419,609,1194
+21828:                                                                               0,1205,17426,31306
+21829:                                                                                            0,201
+21830:                                                                                            0,201
+21831:                                                             0,7205,7769,7924,8341,8608,9208,9383
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      sequence
+    1:                            GGGTGCACGCTTCGGGTTGGTGTC^ATGGCAGCTGCGGGGAGCCGCAAGAG|GCGCCTGGCGGAGCTGACGGTGGACGAGTTCCTAGCTTCGGGCTTTGACTCCGAGTCCGAATCCGAGTCCGAAAATTCTCCACAAGCGGAGACACGGGAAGCACGCGAGGCTGCCCGGAGTCCGGATAAGCCGGGCGGGAGCCCCTCGGCCAG|CCGGCGTAAAGGCCGTGCCTCTGAGCACAAAGACCAGCTCTCTCGGCTGAAGGACAGAGACCCCGAGTTCTACAAGTTCCTGCAGGAGAATGACCAGAGCCTGCTAAACTTCAGCGACTCGGACAGCTCTGAGGAGGAAGAGGGGCCGTTCCACTCCCTGCCAGATGTGCTGGAGGTGAGGGC|GAAGCCAGTGAGGAGGAGGATGGAGCGGAGGAAGGAGAAGATGGGGACAGAGTCCCCAGAGGGCTGA*AGGGGAAGAAGAATTCTGTTCCTGTGACCGTCGCCATGGTTGAGAGATGGAAGCAGGCAGCAAAG|CAACGCCTCACTCCAAAGCTGTTCCATGAAGTGGTACAGGCGTTCCGAGCAGCTGTGGCCACCACCCGAGGGGACCAGGAAAGTGCTGAGGCCAACAAATTCCAGGTCACGGACAGTGCTG|CATTCAATGCTCTGGTTACCTTCTGCATCAGAGACCTCATTGGCTGTCTCCAGAAGCTGCTGTTTGGAAAGGTGGCAAAGGATAGCAGCAG|GATGCTGCAGCCGTCCAGCAGCCCGCTCTGGGGGAAGCTTCGTGTGGACATCAAGGCTTACCTGGGCTCGGCCATACAG|CTGGTGTCCTGTCTGTCGGAGACGACGGTGTTGGCGGCCGTGCTGCGGCACATCAGCGTGCTGGTGCCCTGCTTCCTGACCTTCCCCAAGCAGTGCCGCATGCTGCTCAAG|AGAATGGTGATCGTATGGAGCACTGGGGAAGAGTCTCTGCGGGTGCTGGCTTTCCTGGTCCTCAGCAGAGTCTGCCGGCACAAGAAGGACACTTTCCTTGGCCCCGTCCTCAAG|CAAATGTACATCACGTATGTGAGGAACTGCAAGTTCACCTCGCCTGGTGCCCTCCCCTTCATCAGTTTCATGCAGTGGACCTTGACGGAGCTGCTGGCCCTGGAGCCGGGTGTGGCCTACCAGCACGCCTTCCTCTACATCCGCCAGCTCGCCATACACCTGCGCAACGCCATGACCACTCGCAAGAAG|GAAACATACCAGTCTGTGTACAACTGGCAGTATGTGCACTGCCTCTTCCTGTGGTGCCGGGTCCTGAGCACTGCGGGCCCCAGCGAAGCCCTCCAGCCCTTGGTCTACCCCCTTGCCCAAGTCATCATTGGCTGTATCAA|GCTCATCCCCACTGCCCGCTTCTACCCGCTGCGAATGCACTGCATCCGTGCCCTGACGCTGCTCTCGGGGAGCTCGGGGGCCTTCATCCCGGTGCTGCCTTTCATCCTGGAG|ATGTTCCAGCAGGTCGACTTCAACAGGAAGCCAGGGCGCATGAGCTCCAAGCCCATCAACTTCTCCGTGATCCTGAAGCTGTCCAATGTCAACCTGCAGGAGAAGGCGTACCGG|GACGGCCTGGTGGAGCAGCTGTACGACCTCACCCTGGAGTACCTGCACAGCCAGGCACACTGCATCGGCTTCCCGGAGCTGGTGCTGCCTGTGGTCCTGCAG|CTGAAGTCGTTCCTCCGGGAGTGCAAGGTGGCCAACTACTGCCGGCAGGTGCAGCAGCTGCTTGGGAAGGTTCAGGAGAACTCGGCATACATCTGCAGCCGCCGCCAGAGGGTTTCCTTCGGCGTCTCTGAGCAGCAGGCAGTG|GAAGCCTGGGAGAAGCTGACCCGGGAAGAGGGGACACCCCTGACCTTGTACTACAGCCACTGGCGCAAGCTGCGTGACCGGGAGATCCAGCTGGAGATCAGTGGCAAAGAGCGG|CTGGAAGACCTGAACTTCCCTGAGATCAAACGAAGGAAGATGGCTGACAGGAAGGATGAGGACAGGAAGCAATTTAAAGACCTCTTTGACCTGAACAGCTCTGAAGAGGACGACACCGAGGGATTCTCGGAGAGAGGTGGGGCCTGCGTGGTGCTCCCAGGGGAAGG|ATGGAGACCCAGACGCAGAGGCGGGGCTGGCCCCTGGGGAGCTGCAGCAGCTGGCCCAGGGGCCGGAGGACGAGCTGGAGGATCTGCAGCTCTCAGAGGACGACTGAGGCAGCCCATCTGGGGGGCCTGTAGGGGCTGCCGGGCTGGTGGCCAGTGTTTCCACCTCCCTGGCAGTCAGGCCTAGAGGCTGGCGTCTGTGCAGTTGGGGGAGGCAGTAGACACGGGACAGGCTTTATTATTTATTTTTCAGCATGAAAGACCAAACGTATCGAGAGCTGGGCTGGGCTGGGCTGGTGTGGCTGCTGAAGCCCCACAGCTGTGGGCTGCTGAAGTCAGCTCCGCGGGGGAGCTGACCCTGACGTCAGCAGACCGAGACCAGTCCCAGTTCCAGGGGGAGGCCTGCAGGCCCCTGGCCCCTTCCACCACCTCTGCCCTCCGTCTGCAGACCTCGTCCATCTGCACCAGGCTCTGCCTTCACTCCCCCAAGTCTTTGAAAATTTGTTCCTTTCCTTTGAAGTCACATTTTCTTTTAAAATTTTTTGTTTTGCATCCGAAACCGAAAGAAATAAAGCGGTGGGAGGCAGGGCCATTGTGTTG
+    2:                                                                                                                                                                                                                                                       GCTTCGGGTTGGTGTC^ATGGCAGCTGCGGGGAGCCGCAAGAG|GCGCCTGGCGGAGCTGACGGTGGACGAGTTCCTAGCTTCGGGCTTTGACTCCGAGTCCGAATCCGAGTCCGAAAATTCTCCACAAGCGGAGACACGGGAAGCACGCGAGGCTGCCCGGAGTCCGGATAAGCCGGGCGGGAGCCCCTCGGCCAG|CCGGCGTAAAGGCCGTGCCTCTGAGCACAAAGACCAGCTCTCTCGGCTGAAGGACAGAGACCCCGAGTTCTACAAGTTCCTGCAGGAGAATGACCAGAGCCTGCTAAACTTCAGCGACTCGGACAGCTCTGAGGAGGAAGAGGGGCCGTTCCACTCCCTGCCAGATGTGCTGGAG|GAAGCCAGTGAGGAGGAGGATGGAGCGGAGGAAGGAGAAGATGGGGACAGAGTCCCCAGAGGGCTGAAGGGGAAGAAGAATTCTGTTCCTGTGACCGTCGCCATGGTTGAGAGATGGAAGCAGGCAGCAAAG|CAACGCCTCACTCCAAAGCTGTTCCATGAAGTGGTACAGGCGTTCCGAGCAGCTGTGGCCACCACCCGAGGGGACCAGGAAAGTGCTGAGGCCAACAAATTCCAGGTCACGGACAGTGCTG|CATTCAATGCTCTGGTTACCTTCTGCATCAGAGACCTCATTGGCTGTCTCCAGAAGCTGCTGTTTGGAAAGGTGGCAAAGGATAGCAGCAG|GATGCTGCAGCCGTCCAGCAGCCCGCTCTGGGGGAAGCTTCGTGTGGACATCAAGGCTTACCTGGGCTCGGCCATACAG|CTGGTGTCCTGTCTGTCGGAGACGACGGTGTTGGCGGCCGTGCTGCGGCACATCAGCGTGCTGGTGCCCTGCTTCCTGACCTTCCCCAAGCAGTGCCGCATGCTGCTCAAG|AGAATGGTGATCGTATGGAGCACTGGGGAAGAGTCTCTGCGGGTGCTGGCTTTCCTGGTCCTCAGCAGAGTCTGCCGGCACAAGAAGGACACTTTCCTTGGCCCCGTCCTCAAG|CAAATGTACATCACGTATGTGAGGAACTGCAAGTTCACCTCGCCTGGTGCCCTCCCCTTCATCAGTTTCATGCAGTGGACCTTGACGGAGCTGCTGGCCCTGGAGCCGGGTGTGGCCTACCAGCACGCCTTCCTCTACATCCGCCAGCTCGCCATACACCTGCGCAACGCCATGACCACTCGCAAGAAG|GAAACATACCAGTCTGTGTACAACTGGCAGTATGTGCACTGCCTCTTCCTGTGGTGCCGGGTCCTGAGCACTGCGGGCCCCAGCGAAGCCCTCCAGCCCTTGGTCTACCCCCTTGCCCAAGTCATCATTGGCTGTATCAA|GCTCATCCCCACTGCCCGCTTCTACCCGCTGCGAATGCACTGCATCCGTGCCCTGACGCTGCTCTCGGGGAGCTCGGGGGCCTTCATCCCGGTGCTGCCTTTCATCCTGGAG|ATGTTCCAGCAGGTCGACTTCAACAGGAAGCCAGGGCGCATGAGCTCCAAGCCCATCAACTTCTCCGTGATCCTGAAGCTGTCCAATGTCAACCTGCAGGAGAAGGCGTACCGG|GACGGCCTGGTGGAGCAGCTGTACGACCTCACCCTGGAGTACCTGCACAGCCAGGCACACTGCATCGGCTTCCCGGAGCTGGTGCTGCCTGTGGTCCTGCAG|CTGAAGTCGTTCCTCCGGGAGTGCAAGGTGGCCAACTACTGCCGGCAGGTGCAGCAGCTGCTTGGGAAGGTTCAGGAGAACTCGGCATACATCTGCAGCCGCCGCCAGAGGGTTTCCTTCGGCGTCTCTGAGCAGCAGGCAGTG|GAAGCCTGGGAGAAGCTGACCCGGGAAGAGGGGACACCCCTGACCTTGTACTACAGCCACTGGCGCAAGCTGCGTGACCGGGAGATCCAG|ATGGAGACCCAGACGCAGAGGCGGGGCTGGCCCCTGGGGAGCTGCAGCAGCTGGCCCAGGGGCCGGAGGACGAGCTGGAGGATCTGCAGCTCTCAGAGGACGACTGAGGCAGCCCATCTGGGGGGCCTGTAG*GGGCTGCCGGGCTGGTGGCCAGTGTTTCCACCTCCCTGGCAGTCAGGCCTAGAGGCTGGCGTCTGTGCAGTTGGGGGAGGCAGTAGACACGGGACAGGCTTTATTATTTATTTTTCAGCATGAAAGACCAAACGTATCGAGAGCTGGGCTGGGCTGGGCTGGTGTGGCTGCTGAAGCCCCACAGCTGTGGGCTGCTGAAGTCAGCTCCGCGGGGGAGCTGACCCTGACGTCAGCAGACCGAGACCAGTCCCAGTTCCAGGGGGAGGCCTGCAGGCCCCTGGCCCCTTCCACCACCTCTGCCCTCCGTCTGCAGACCTCGTCCATCTGCACCAGGCTCTGCCTTCACTCCCCCAAGTCTTTGAAAATTTGTTCCTTTCCTTTGAAGTCACATTTTCTTTTAAAATTTTTTGTTTTGCATCCGAAACCGAAAGAAATAAAGCGGTGGGAGGCAGGG
+    3:                                                                                                                                                                                                                                                                                                                          GGGTTGGTGTC^ATGGCAGCTGCGGGGAGCCGCAAGAG|GCGCCTGGCGGAGCTGACGGTGGACGAGTTCCTAGCTTCGGGCTTTGACTCCGAGTCCGAATCCGAGTCCGAAAATTCTCCACAAGCGGAGACACGGGAAGCACGCGAGGCTGCCCGGAGTCCGGATAAGCCGGGCGGGAGCCCCTCGGCCAG|CCGGCGTAAAGGCCGTGCCTCTGAGCACAAAGACCAGCTCTCTCGGCTGAAGGACAGAGACCCCGAGTTCTACAAGTTCCTGCAGGAGAATGACCAGAGCCTGCTAAACTTCAGCGACTCGGACAGCTCTGAGGAGGAAGAGGGGCCGTTCCACTCCCTGCCAGATGTGCTGGAG|GAAGCCAGTGAGGAGGAGGATGGAGCGGAGGAAGGAGAAGATGGGGACAGAGTCCCCAGAGGGCTGAAGGGGAAGAAGAATTCTGTTCCTGTGACCGTCGCCATGGTTGAGAGATGGAAGCAGGCAGCAAAG|CAACGCCTCACTCCAAAGCTGTTCCATGAAGTGGTACAGGCGTTCCGAGCAGCTGTGGCCACCACCCGAGGGGACCAGGAAAGTGCTGAGGCCAACAAATTCCAGGTCACGGACAGTGCTG|CATTCAATGCTCTGGTTACCTTCTGCATCAGAGACCTCATTGGCTGTCTCCAGAAGCTGCTGTTTGGAAAGGTGGCAAAGGATAGCAGCAG|GATGCTGCAGCCGTCCAGCAGCCCGCTCTGGGGGAAGCTTCGTGTGGACATCAAGGCTTACCTGGGCTCGGCCATACAG|AGAATGGTGATCGTATGGAGCACTGGGGAAGAGTCTCTGCGGGTGCTGGCTTTCCTGGTCCTCAGCAGAGTCTGCCGGCACAAGAAGGACACTTTCCTTGGCCCCGTCCTCAAG|CAAATGTACATCACGTATGTGAGGAACTGCAAGTTCACCTCGCCTGGTGCCCTCCCCTTCATCAGTTTCATGCAGTGGACCTTGACGGAGCTGCTGGCCCTGGAGCCGGGTGTGGCCTACCAGCACGCCTTCCTCTACATCCGCCAGCTCGCCATACACCTGCGCAACGCCATGACCACTCGCAAGAAG|GAAACATACCAGTCTGTGTACAACTGGCAGTATGTGCACTGCCTCTTCCTGTGGTGCCGGGTCCTGAGCACTGCGGGCCCCAGCGAAGCCCTCCAGCCCTTGGTCTACCCCCTTGCCCAAGTCATCATTGGCTGTATCAA|GCTCATCCCCACTGCCCGCTTCTACCCGCTGCGAATGCACTGCATCCGTGCCCTGACGCTGCTCTCGGGGAGCTCGGGGGCCTTCATCCCGGTGCTGCCTTTCATCCTGGAG|ATGTTCCAGCAGGTCGACTTCAACAGGAAGCCAGGGCGCATGAGCTCCAAGCCCATCAACTTCTCCGTGATCCTGAAGCTGTCCAATGTCAACCTGCAGGAGAAGGCGTACCGG|GACGGCCTGGTGGAGCAGCTGTACGACCTCACCCTGGAGTACCTGCACAGCCAGGCACACTGCATCGGCTTCCCGGAGCTGGTGCTGCCTGTGGTCCTGCAG|CTGAAGTCGTTCCTCCGGGAGTGCAAGGTGGCCAACTACTGCCGGCAGGTGCAGCAGCTGCTTGGGAAGGTTCAGGAGAACTCGGCATACATCTGCAGCCGCCGCCAGAGGGTTTCCTTCGGCGTCTCTGAGCAGCAGGCAGTG|GAAGCCTGGGAGAAGCTGACCCGGGAAGAGGGGACACCCCTGACCTTGTACTACAGCCACTGGCGCAAGCTGCGTGACCGGGAGATCCAGCTGGAGATCAGTGGCAAAGAGCGG|CTGGAAGACCTGAACTTCCCTGAGATCAAACGAAGGAAGATGGCTGACAGGAAGGATGAGGACAGGAAGCAATTTAAAGACCTCTTTGACCTGAACAGCTCTGAAGAGGACGACACCGAGGGATTCTCGGAGAGAG|GGATACTGAGGCCCCTGAGCACTCGGCATGGGGTGGAAGACGATGAAGAGGACGAGGAGGAGGGCGAGGAGGACAGCAGCAACTCGGAGG|TTGGGGGAGGCAGTAGACACGGGACAGGCTTTATTATTTATTTTTCAGCATGA*AAGACCAAACGTATCGAGAGCTGGGCTGGGCTGGGCTGGTGTGGCTGCTGAAGCCCCACAGCTGTGGGCTGCTGAAGTCAGCTCCGCGGGGGAGCTGACCCTGACGTCAGCAGACCGAGACCAGTCCCAGTTCCAGGGGGAGGCCTGCAGGCCCCTGGCCCCTTCCACCACCTCTGCCCTCCGTCTGCAGACCTCGTCCATCTGCACCAGGCTCTGCCTTCACTCCCCCAAGTCTTTGAAAATTTGTTCCTTTCCTTTGAAGTCACATTTTCTTTTAAAATTTTTTGTTTTGCATCCGAAACCGAAAGAAATAAAGCGGTGGGAGGCAGGG
+    4: GCTTCGGGTTGGTGTC^ATGGCAGCTGCGGGGAGCCGCAAGAG|GCGCCTGGCGGAGCTGACGGTGGACGAGTTCCTAGCTTCGGGCTTTGACTCCGAGTCCGAATCCGAGTCCGAAAATTCTCCACAAGCGGAGACACGGGAAGCACGCGAGGCTGCCCGGAGTCCGGATAAGCCGGGCGGGAGCCCCTCGGCCAGGTTA|CCGGCGTAA*AGGCCGTGCCTCTGAGCACAAAGACCAGCTCTCTCGGCTGAAGGACAGAGACCCCGAGTTCTACAAGTTCCTGCAGGAGAATGACCAGAGCCTGCTAAACTTCAGCGACTCGGACAGCTCTGAGGAGGAAGAGGGGCCGTTCCACTCCCTGCCAGATGTGCTGGAG|GAAGCCAGTGAGGAGGAGGATGGAGCGGAGGAAGGAGAAGATGGGGACAGAGTCCCCAGAGGGCTGAAGGGGAAGAAGAATTCTGTTCCTGTGACCGTCGCCATGGTTGAGAGATGGAAGCAGGCAGCAAAG|CAACGCCTCACTCCAAAGCTGTTCCATGAAGTGGTACAGGCGTTCCGAGCAGCTGTGGCCACCACCCGAGGGGACCAGGAAAGTGCTGAGGCCAACAAATTCCAGGTCACGGACAGTGCTG|CATTCAATGCTCTGGTTACCTTCTGCATCAGAGACCTCATTGGCTGTCTCCAGAAGCTGCTGTTTGGAAAGGTGGCAAAGGATAGCAGCAG|GATGCTGCAGCCGTCCAGCAGCCCGCTCTGGGGGAAGCTTCGTGTGGACATCAAGGCTTACCTGGGCTCGGCCATACAG|CTGGTGTCCTGTCTGTCGGAGACGACGGTGTTGGCGGCCGTGCTGCGGCACATCAGCGTGCTGGTGCCCTGCTTCCTGACCTTCCCCAAGCAGTGCCGCATGCTGCTCAAG|AGAATGGTGATCGTATGGAGCACTGGGGAAGAGTCTCTGCGGGTGCTGGCTTTCCTGGTCCTCAGCAGAGTCTGCCGGCACAAGAAGGACACTTTCCTTGGCCCCGTCCTCAAG|CAAATGTACATCACGTATGTGAGGAACTGCAAGTTCACCTCGCCTGGTGCCCTCCCCTTCATCAGTTTCATGCAGTGGACCTTGACGGAGCTGCTGGCCCTGGAGCCGGGTGTGGCCTACCAGCACGCCTTCCTCTACATCCGCCAGCTCGCCATACACCTGCGCAACGCCATGACCACTCGCAAGAAG|GAAACATACCAGTCTGTGTACAACTGGCAGTATGTGCACTGCCTCTTCCTGTGGTGCCGGGTCCTGAGCACTGCGGGCCCCAGCGAAGCCCTCCAGCCCTTGGTCTACCCCCTTGCCCAAGTCATCATTGGCTGTATCAA|GCTCATCCCCACTGCCCGCTTCTACCCGCTGCGAATGCACTGCATCCGTGCCCTGACGCTGCTCTCGGGGAGCTCGGGGGCCTTCATCCCGGTGCTGCCTTTCATCCTGGAG|ATGTTCCAGCAGGTCGACTTCAACAGGAAGCCAGGGCGCATGAGCTCCAAGCCCATCAACTTCTCCGTGATCCTGAAGCTGTCCAATGTCAACCTGCAGGAGAAGGCGTACCGG|GACGGCCTGGTGGAGCAGCTGTACGACCTCACCCTGGAGTACCTGCACAGCCAGGCACACTGCATCGGCTTCCCGGAGCTGGTGCTGCCTGTGGTCCTGCAG|CTGAAGTCGTTCCTCCGGGAGTGCAAGGTGGCCAACTACTGCCGGCAGGTGCAGCAGCTGCTTGGGAAGGTTCAGGAGAACTCGGCATACATCTGCAGCCGCCGCCAGAGGGTTTCCTTCGGCGTCTCTGAGCAGCAGGCAGTG|GAAGCCTGGGAGAAGCTGACCCGGGAAGAGGGGACACCCCTGACCTTGTACTACAGCCACTGGCGCAAGCTGCGTGACCGGGAGATCCAGCTGGAGATCAGTGGCAAAGAGCGG|CTGGAAGACCTGAACTTCCCTGAGATCAAACGAAGGAAGATGGCTGACAGGAAGGATGAGGACAGGAAGCAATTTAAAGACCTCTTTGACCTGAACAGCTCTGAAGAGGACGACACCGAGGGATTCTCGGAGAGAG|GGATACTGAGGCCCCTGAGCACTCGGCATGGGGTGGAAGACGATGAAGAGGACGAGGAGGAGGGCGAGGAGGACAGCAGCAACTCGGAGG|ATGGAGACCCAGACGCAGAGGCGGGGCTGGCCCCTGGGGAGCTGCAGCAGCTGGCCCAGGGGCCGGAGGACGAGCTGGAGGATCTGCAGCTCTCAGAGGACGACTGAGGCAGCCCATCTGGGGGGCCTGTAGGGGCTGCCGGGCTGGTGGCCAGTGTTTCCACCTCCCTGGCAGTCAGGCCTAGAGGCTGGCGTCTGTGCAGTTGGGGGAGGCAGTAGACACGGGACAGGCTTTATTATTTATTTTTCAGCATGAAAGACCAAACGTATCGAGAGCTGGGCTGGGCTGGGCTGGTGTGGCTGCTGAAGCCCCACAGCTGTGGGCTGCTGAAGTCAGCTCCGCGGGGGAGCTGACCCTGACGTCAGCAGACCGAGACCAGTCCCAGTTCCAGGGGGAGGCCTGCAGGCCCCTGGCCCCTTCCACCACCTCTGCCCTCCGTCTGCAGACCTCGTCCATCTGCACCAGGCTCTGCCTTCACTCCCCCAAGTCTTTGAAAATTTGTTCCTTTCCTTTGAAGTCACATTTTCTTTTAAAATTTTTTGTTTTGCATCCGAAACCGAAAGAAATAAAGCGGTG
+    5:                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       GGCTGAGAGGCAGCGAACTCATCTTTGCCAGTACAGGAGCTTGTGCCGTGGCCCACAGCCCACAGCCCACAGCC^ATG|GGCTGGGACCTGACGGTGAAGATGCTGGCGGGCAACGAATTCCAGGTGTCCCTGAGCAGCTCCATGTCGGTGTCAGAGCTGAAGGCGCAGATCACCCAGAAGATCGGCGTGCACGCCTTCCAGCAGCGTCTGGCTGTCCACCCGAGCGGTGTGGCGCTGCAGGACAGGGTCCCCCTTGCCAGCCAGGGCCTGGGCCCCGGCAGCACGGTCCTGCTGGTGGTGGACAAATGCGACGAACCTCTGAGCATCCTGGTGAGGAATAACAAGGGCCGCAGCAGCACCTACGAGGTACGGCTGACGCAGACCGTGGCCCACCTGAAGCAGCAAGTGAGCGGGCTGGAGGGTGTGCAGGACGACCTGTTCTGGCTGACCTTCGAGGGGAAGCCCCTGGAGGACCAGCTCCCGCTGGGGGAGTACGGCCTCAAGCCCCTGAGCACCGTGTTCATGAATCTGCGCCTGCGGGGAGGCGGCACAGAGCCTGGCGGGCGGAGCTAA*GGGCCTCCACCAGCATCCGAGCAGGATCAAGGGCCGGAAATAAAGGCTGT
+   ---                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
+21827:                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         CGCTCTTCTGCTGCTGTTTGTCTACTTCCTCCTGCTTCCCCGCCGCCGCCGCCGCCATC^ATGAGGGAAATCGTGCACTTGCAGGCCGGGCAGTGCGGCAACCAAATCGGCGCCAAG|TTTTGGGAGGTGATCAGCGATGAGCACGGCATCGACCCCACGGGCACCTACCACGGGGACAGCGACCTGCAGCTGGAACGCATCAACGTGTACTACAATGAGGCCACCG|GCGGCAAGTACGTGCCCCGCGCCGTGCTCGTGGATCTGGAGCCCGGCACCATGGACTCCGTGCGCTCGGGGCCCTTCGGGCAGATCTTCCGGCCGGACAACTTCGTTTTCG|GTCAGAGTGGTGCTGGGAACAACTGGGCCAAGGGGCACTACACAGAAGGCGCGGAGCTGGTGGACTCGGTGCTGGATGTTGTGAGAAAGGAGGCTGAGAGCTGTGACTGCCTGCAGGGTTTCCAGCTGACCCACTCCCTGGGTGGGGGGACTGGGTCTGGGATGGGTACCCTCCTCATCAGCAAGATCCGGGAGGAGTACCCAGACAGGATCATGAACACGTTTAGTGTGGTGCCTTCGCCCAAAGTGTCAGACACAGTGGTGGAGCCCTACAACGCCACCCTCTCAGTCCACCAGCTCGTAGAAAACACAGACGAGACCTACTGCATTGATAACGAAGCTCTCTACGACATTTGCTTCAGAACCCTAAAGCTGACCACGCCCACCTATGGTGACCTGAACCACCTGGTGTCTGCTACCATGAGTGGGGTCACCACCTGCCTGCGCTTCCCAGGCCAGCTCAATGCTGACCTGCGGAAGCTGGCTGTGAACATGGTCCCGTTTCCCCGGCTGCACTTCTTCATGCCCGGCTTTGCCCCACTGACCAGCCGGGGCAGCCAGCAGTACCGGGCGCTGACCGTGCCCGAGCTCACCCAGCAGATGTTTGATGCCAAGAACATGATGGCTGCCTGCGACCCCCGCCATGGCCGCTACCTGACGGTTGCCGCCGTGTTCAGGGGCCGCATGTCCATGAAGGAGGTGGATGAGCAAATGCTTAATGTCCAAAACAAAAACAGCAGCTATTTTGTTGAGTGGATCCCCAACAATGTGAAAACGGCTGTCTGTGACATCCCACCTCGGGGGCTAAAAATGTCCGCCACCTTCATTGGCAACAGCACGGCCATCCAGGAGCTGTTCAAGCGCATCTCCGAGCAGTTCACGGCCATGTTCCGGCGCAAGGCCTTCCTGCACTGGTACACGGGCGAGGGCATGGACGAGATGGAGTTCACCGAGGCCGAGAGCAACATGAATGACCTGGTGTCCGAGTACCAGCAGTACCAGGATGCCACAGCCGAGGAGGAGGGCGAGTTCGAGGAGGAGGCTGAGGAGGAGGTGGCCTAG*AGCCTTCAGTCACTGGGGAAAGCAGGGAAGCAGTGTGAACTCTTTATTCACTCCCAGCCTGTCCTGTGGCCTGTCCCACTGTGTGCACTTGCTGTTTTCCCTGTCCACATCCATGCTGTACAGACACCACCATTAAAGCATTTTCATAG
+21828:                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              GGTTCCGCGCCGGGCGTGGACGGTGTGGGGCGGTCCCGGCCCCGCAG|CTCTGGAGGCTAAGTCTAAGGGTGAGGGGAGCATCCGAGGAGGCGTTCATGCTGGCGGGATTCTGAATGAGGAGGTATTCATGCTGGTGGGACTCCGAAGGGTCCTGAGGCGGCTCGGGGCAGCCATG|CTAGCAGGGCCCCTGGAACAGCCTCGGCGCCCCCTGGAACACTAATGGCCCTCCCTGGAACAGACACGGCACCCCCACCGAGAACAGCCTCGGTGCCCCCTGGAACAGCCTCAGCACCCCCTGGAACACTAATGGCCCTCCCTGGAACAGAC|ATACGGCCCCCCGCCAGAACAGACATGGTGCCCGCTGGAACACTAATGGTCCTCCCTGGAACAGCCTCGGTGCCCCCTGGAACACTAATGGCCCTCCCTGGAACAGACACGGCGCCCCCCCACAGAACAGCCTCGATGCCCCCTGGAACAGCCTCGGTGCCCCCTGGAACAGCCTCGGTGCCCCCTGGAACAGCCTGGTGCTCCTGGAACAGACACAGCCCCCCCAGAACAGACACAGCACCCCCTGGAACAGCCTGGCGCTTCCTGGAATGGCCACATCCCCCCATCCTTTCTGTGCTGCTTTAGGCATCTGCCCTTACATGGTTCGTGTCCAGCTCTGTCAACAAGGCCAGCTCCACAAGAGGCCCCAGCTCAGCCCTCCCCAGTGGGCTCCCCTACTCAGGCTCTGGGTCAGCTTCTTCCCAGGAGGTGTCCTGGCCCCTGTGCTGGCCCCGCCTCGCTGCCTGGACACCTGTCCGTGCCACCCTGGTCACTGAGCAGGACATCCGCGTCTGTGGCCCCTGGGACCCTGCCCCCGACAGCCAGGCCTGGGTTTGTCCTTTTAGGTAGAGTGCCTGGTCCAGGTCATTGGAGGAGAGTCCACATGGCCACCTCTGGCGTGTTCTAGAGAGGCCCTCCCGCGCTGGGTCAGGAGGCATCATCGGGACAGGAGAAGGGGGCTGAGCTCCTGTTCCTCTCTCCCTCCCCCGAGGCCAAGAAACATTCCCATCCGAATGTCCACTGCGCTCACAGATTCCTTTCCTCCTAAAACTTCAGCCTTGGCCAGGCTCACGGCCAGGATTATGGTGGCTCACGCCTGTAATCCCAGTACTGTGGGAGGCCGAGGCAGGAGGATCACGAGGTCAGAAGATCGAGACCATCCTGGCCAACATGGTGAAACCCCGTCTCTACTAAAAATACAAAAATTAGCTGGACATGGTGGCGGGCGCCTGTATTCCCAGCTACTGGGGAGGCTGAGGCAGGAGAATGGCTTGGAGGCAGTAGAACTGCTTGAACCCTGGAGGCGGAGGTTACAGTTATCCGAGGTTGTGTCATTGCACTCCAGCCTGGGGAACAGAGCGAGACTCCATCTCAAAAAAAATAAAAAACTTCAGCTTTT
+21829:                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     GGAGCCGCTCTTGCTGCGACGCAGCGGTCGGAAGCGGAGCAAGGTCGAGGCCGGGTTGGCGCCGGAGCCGGGGCCGCTTGGAGCTCGTGTGGGGTCTCCGGTCCAG|GGCGCGGC^ATGGGCGTCCTGGCCGCAGCGGCGCGCTGCCTGGTCCGGGGTGCGGACCGAATGAGCAAGTGGACGAGCAAGCGGGGCCCGCGCAGCTTCAGGGGCCGCAAGGGCCGGGGCGCCAAGGGCATCGGCTTCCTCACCTCGGGCTGGAGGTTCGTGCAGATCAAGGAGATGGTCCCGGAGTTCGTCGTCCCGGATCTGACCGGCTTCAAGCTCAAGCCCTACGTGAGCTACCTCGCCCCTGAGAGCGAGGAGACGCCCCTGACGGCCGCGCAGCTCTTCAGCGAAGCCGTGGCGCCTGCCATCGAAAAGGACTTCAAGGACGGTACCTTCGACCCTGACAACCTGGAAAAGTACGGCTTCGAGCCCACACAGGAGGGAAAGCTCTTCCAGCTCTACCCCAGGAACTTCCTGCGCTAG*CTGGGCGGGGGAGGGGCGGCCTGCCCTCATCTCATTTCTATTAAACGC
+21830:                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             GGAGCCGCTCTTGCTGCGACGCAGCGGTCGGAAGCGGAGCAAGGTCGAGGCCGGGTTGGCGCCGGAGCCGGGGCCGCTTGGAGCTCGTGTGGGGTCTCCGGTCCAG|GGCGCGGC^ATGGGCGTCCTGGCCGCAGCGGCGCGCTGCCTGGTCCGGGGTGCGGACCGAATGAGCAAGTGGACGAGCAAGCGGGGCCCGCGCAGCTTCAGGGGCCGCAAGGGCCGGGGCGCCAAGGGCATCGGCTTCCTCACCTCGGGCTGGAGGTTCGTGCAGATCAAGGAGATGGTCCCGGAGTTCGTCGTCCCGGATCTGACCGGCTTCAAGCTCAAGCCCTACGTGAGCTACCTCGCCCCTGAGAGCGAGGAGACGCCCCTGACGGCCGCGCAGCTCTTCAGCGAAGCCGTGGCGCCTGCCATCGAAAAGGACTTCAAGGACGGTACCTTCGACCCTGACAACCTGGAAAAGTACGGCTTCGAGCCCACACAGGAGGGAAAGCTCTTCCAGCTCTACCCCAGGAACTTCCTGCGCTAG*CTGGGCGGGGGAGGGGCGGCCTGCCCTCATCTCATTTCTATTAAACGCCTTTGCCA
+21831:                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        TGCGCGGCTGGCCGGTGAGGCCGCGGC^ATGGGGCGAGTGCAGCTCTTCGAGATCAGCCTGAGCCACGGCCGCGTCGTCTACAGCCCCGGGGAGCCGTTGGCTGGGACCGTGCGCGTGCGCCTGGGGGCACCGCTGCCGTTCCGAG|CCATCCGGGTGACCTGCATAGGTTCCTGCGGGGTCTCCAACAAGGCTAATGACACAGCGTGGGTAGTGGAGGAGGGTTACTTCAACAGTTCCCTGTCGCTGGCAGACAAGG|GGAGCCTGCCCGCTGGAGAGCACAGCTTCCCCTTCCAGTTCCTGCTTCCTG|CCACTGCACCCACGTCCTTTGAGGGTCCTTTCGGGAAGATCGTGCACCAGGTGAGGGCCGCCATCCACACGCCACGGTTTTCCAAGGATCACAAGTGCAGCCTCGTGTTCTATATCTTGAGCCCCTTGAACCTGAACAGCATCCCAGACATTGAG|CAACCCAACGTGGCCTCTGCCACCAAGAAGTTCTCCTACAAGCTGGTGAAGACGGGCAGCGTGGTCCTCACAGCCAGCACTGATCTCCGCGGCTATGTGGTGGGGCAGGCACTGCAGCTGCATGCCGACGTTGAGAACCAGTCAGGCAAGGACACCAGCCCTGTGGTGGCCAGTCTGCTGCAG|AAAGTGTCCTATAAGGCCAAGCGCTGGATCCACGACGTACGGACCATTGCGGAGGTGGAGGGTGCGGGCGTCAAGGCCTGGCGGCGGGCGCAGTGGCACGAGCAGATCCTGGTGCCTGCCTTGCCCCAGTCGGCCCTGCCGGGCTGCAGCCTCATCCACATCGACTACTACTTACAG|GTGCCACTGTCCCCTACTTTGCAGAGGGCTCCGGGGGGCCAGTGCCCACTACCAGCACCTTGA*TTCTTCCTCCAGAGTACAGTTCTTGGGGCTACCCCTATG|AGGCCCCACCGTCTTATGAGCAGAGCTGCGGCGGCGTGGAACCCAGCCTGACCCCTGAGAGCTGACCCCGTGCTGCCTTCTCCAGGCAGGCCTGGCCTCTGCCCTGGGACTGGGGCGCCCAGGGCCTCGTGCCTTCTCTCTTGGCCTAGCCTGGCCCACTCAGGACCTGCCCAGCCTCTGCCAGCTCCTCTGGCATCCGCCCTCTTCTCCCTGGGGCTGGGGTGGGGGTGGCAGGGAGCTGGGACCTGGAGAGACAACTCCTGTAAA
+        NMDFinderB AllJuncsIdentifiable
+    1: Trigger NMD                FALSE
+    2:   Last exon                FALSE
+    3:   Last exon                FALSE
+    4: Trigger NMD                 TRUE
+    5:   Last exon                 TRUE
+   ---                                 
+21827:   Last exon                 TRUE
+21828:      No CDS                FALSE
+21829:   Last exon                 TRUE
+21830:   Last exon                 TRUE
+21831:  50 nt rule                 TRUE
+                                                                                                                                                                                                                                                                                                                                                                                         Introns
+    1:                      chr1_959081_959215_-,chr1_957273_958929_-,chr1_957025_957091_-,chr1_956215_956894_-,chr1_956013_956095_-,chr1_954082_955923_-,chr1_953892_954004_-,chr1_953288_953782_-,chr1_952600_953175_-,chr1_952139_952412_-,chr1_951238_952000_-,chr1_948603_951127_-,chr1_948232_948490_-,chr1_946545_948131_-,chr1_946286_946402_-,chr1_945653_946173_-,chr1_944800_945487_-
+    2:                                           chr1_959081_959215_-,chr1_957273_958929_-,chr1_957025_957099_-,chr1_956215_956894_-,chr1_956013_956095_-,chr1_954082_955923_-,chr1_953892_954004_-,chr1_953288_953782_-,chr1_952600_953175_-,chr1_952139_952412_-,chr1_951238_952000_-,chr1_948603_951127_-,chr1_948232_948490_-,chr1_946545_948131_-,chr1_946286_946402_-,chr1_944800_946197_-
+    3:                      chr1_959081_959215_-,chr1_957273_958929_-,chr1_957025_957099_-,chr1_956215_956894_-,chr1_956013_956095_-,chr1_954082_955923_-,chr1_953288_954004_-,chr1_952600_953175_-,chr1_952139_952412_-,chr1_951238_952000_-,chr1_948603_951127_-,chr1_948232_948490_-,chr1_946545_948131_-,chr1_946286_946402_-,chr1_945653_946173_-,chr1_945146_945518_-,chr1_944598_945057_-
+    4: chr1_959081_959215_-,chr1_957273_958925_-,chr1_957025_957099_-,chr1_956215_956894_-,chr1_956013_956095_-,chr1_954082_955923_-,chr1_953892_954004_-,chr1_953288_953782_-,chr1_952600_953175_-,chr1_952139_952412_-,chr1_951238_952000_-,chr1_948603_951127_-,chr1_948232_948490_-,chr1_946545_948131_-,chr1_946286_946402_-,chr1_945653_946173_-,chr1_945146_945518_-,chr1_944800_945057_-
+    5:                                                                                                                                                                                                                                                                                                                                                                    chr1_1013576_1013984_+
+   ---                                                                                                                                                                                                                                                                                                                                                                                          
+21827:                                                                                                                                                                                                                                                                                                          chr9_137241417_137241721_+,chr9_137241829_137241911_+,chr9_137242021_137242496_+
+21828:                                                                                                                                                                                                                                                                                                          chr9_137409361_137423114_-,chr9_137393164_137409234_-,chr9_137392927_137393013_-
+21829:                                                                                                                                                                                                                                                                                                                                                                chr9_137551978_137552074_+
+21830:                                                                                                                                                                                                                                                                                                                                                                chr9_137551978_137552074_+
+21831:                                                                                                                                                                                              chr9_137605835_137612896_+,chr9_137613006_137613460_+,chr9_137613510_137613615_+,chr9_137613769_137614032_+,chr9_137614214_137614299_+,chr9_137614475_137614899_+,chr9_137615000_137615074_+</code></pre>
+<pre class="r"><code>SampleGenotypesAtSNPsOfInterest &lt;- read_tsv(&quot;../code/scratch/GenotypesAtSNPsOfInterest.tsv&quot;)
+
+dat.to.plot &lt;- SampleGenotypesAtSNPsOfInterest %&gt;%
+  pivot_longer(names_to = &quot;sample&quot;, values_to = &quot;Genotype&quot;, -c(1:3)) %&gt;%
+  mutate(IsHet = Genotype %in% c(&quot;1/0&quot;, &quot;0\1&quot;, &quot;1|0&quot;, &quot;0|1&quot;)) %&gt;%
+  group_by(sample) %&gt;%
+  summarise(NumHetSites = sum(IsHet)) %&gt;%
+  ungroup() %&gt;%
+  arrange(desc(NumHetSites))
+ggplot(dat.to.plot, aes(x=sample, y=NumHetSites)) +
+  geom_col() +
+  Rotate_x_labels
+
+dat.to.plot %&gt;% head(8)
+
+SampleGenotypesAtSNPsOfInterest %&gt;%
+  dplyr::select(1:3, c(dat.to.plot %&gt;% head(6) %&gt;% pull(sample)))
+
+SampleGenotypesAtSNPsOfInterest %&gt;%
+  pivot_longer(names_to = &quot;sample&quot;, values_to = &quot;Genotype&quot;, -c(1:3)) %&gt;%
+  mutate(IsHet = Genotype %in% c(&quot;1/0&quot;, &quot;0\1&quot;, &quot;1|0&quot;, &quot;0|1&quot;)) %&gt;%
+  group_by(sample) %&gt;%
+  mutate(NumHetSites = sum(IsHet)) %&gt;%
+  filter(IsHet &amp; ID %in% c(&quot;1:89009452:C:T&quot;, &quot;4:75920950:C:T&quot;))
+
+SampleGenotypesAtSNPsOfInterest %&gt;%
+  dplyr::select(1:3, c(&quot;NA19092&quot;, &quot;NA19152&quot;, &quot;NA19200&quot;, &quot;NA18504&quot;, &quot;NA18508&quot;, &quot;NA19137&quot;, &quot;NA19127&quot;))</code></pre>
+<pre class="r"><code>ggsave(&quot;/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/Revision_LongReadJunctionContext.pdf&quot;,P.B, height = 4.3, width=5)
+ggsave(&quot;/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/Revision_LongReadFractionInCategoriesByNumJuncs.pdf&quot;,P.C, height = 2.5, width=5)
+ggsave(&quot;/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/Revision_LongReadFractionUnproductive.pdf&quot;,P.D, height = 4.3, width=8)
+ggsave(&quot;/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/Revision_LongReadFractionUnproductiveRanks.pdf&quot;,P.E, height = 4.3, width=8)</code></pre>
+<p>random analysis for Jonathan, looking at chRNA-seq juncs in DDX41
+gene</p>
+<pre class="r"><code>DDX41.chRNA &lt;- read_tsv(&quot;../code/scratch/DDX41.chRNA.seq.juncs.tsv&quot;) %&gt;%
+  pivot_longer(names_to = &quot;sample&quot;, values_to = &quot;PSI&quot;, -c(1:6)) %&gt;%
+  group_by(name) %&gt;%
+  mutate(PSI = mean(PSI)) %&gt;%
+  ungroup() %&gt;%
+  distinct(name, .keep_all=T) %&gt;%
+  mutate(name = PSI) %&gt;%
+  dplyr::select(1:6) %&gt;%
+  write_tsv(&quot;../code/scratch/DDX41.chRNA.seq.juncs.tsv.bed&quot;, col_names=F)
+
+DDX41.polyA &lt;- read_tsv(&quot;../code/scratch/DDX41.polyARNA.seq.juncs.tsv&quot;) %&gt;%
+  pivot_longer(names_to = &quot;sample&quot;, values_to = &quot;PSI&quot;, -c(1:6)) %&gt;%
+  group_by(name) %&gt;%
+  mutate(PSI = mean(PSI)) %&gt;%
+  ungroup() %&gt;%
+  distinct(name, .keep_all=T) %&gt;%
+  mutate(name = PSI) %&gt;%
+  dplyr::select(1:6) %&gt;%
+  write_tsv(&quot;../code/scratch/DDX41.polyA.seq.juncs.tsv.bed&quot;, col_names=F)
+
+LongReads &lt;- read_tsv(&quot;../code/scratch/GGX41.LongReads.bed&quot;, col_names=paste0(&quot;Col&quot;, 1:17), col_types = cols(.default = &quot;c&quot;))
+
+LongReads %&gt;%
+  filter(str_detect(Col4, &quot;/GM\\d+.bed.gz&quot;)) %&gt;%
+  mutate(sample = as.numeric(str_replace(Col4, &quot;LongReads/bed12translated/firstORF/GM(.+?).bed.gz&quot;, &quot;\\1&quot;))) %&gt;%
+  mutate(NuclearOrTotal = if_else(sample%%2==0, &quot;Total&quot;, &quot;Nuclear&quot;)) %&gt;%
+  add_count(Col17, NuclearOrTotal) %&gt;%
+  distinct(Col17, NuclearOrTotal, .keep_all=T) %&gt;%
+  group_by(NuclearOrTotal) %&gt;%
+  mutate(PercentIsoform = n/sum(n)*100) %&gt;%
+  ungroup() %&gt;%
+  mutate(Col4 = str_glue(&quot;{NuclearOrTotal};{PercentIsoform}&quot;)) %&gt;%
+  group_by(NuclearOrTotal) %&gt;%
+  group_walk(~ write_tsv(.x, paste0(&quot;../code/scratch/DDX41.LongReads.Summarised.&quot;, .y$NuclearOrTotal, &quot;.bed&quot;), col_names=F))</code></pre>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.2.0 (2022-04-22)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: CentOS Linux 7 (Core)
+
+Matrix products: default
+BLAS/LAPACK: /software/openblas-0.3.13-el7-x86_64/lib/libopenblas_haswellp-r0.3.13.so
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8 LC_NUMERIC=C         LC_TIME=C           
+ [4] LC_COLLATE=C         LC_MONETARY=C        LC_MESSAGES=C       
+ [7] LC_PAPER=C           LC_NAME=C            LC_ADDRESS=C        
+[10] LC_TELEPHONE=C       LC_MEASUREMENT=C     LC_IDENTIFICATION=C 
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] ggbreak_0.1.1     forcats_0.5.1     stringr_1.4.0     dplyr_1.0.9      
+ [5] purrr_0.3.4       readr_2.1.2       tidyr_1.2.0       tibble_3.1.7     
+ [9] ggplot2_3.3.6     tidyverse_1.3.1   data.table_1.14.2
+
+loaded via a namespace (and not attached):
+ [1] fs_1.5.2           lubridate_1.8.0    bit64_4.0.5        RColorBrewer_1.1-3
+ [5] httr_1.4.3         rprojroot_2.0.3    tools_4.2.0        backports_1.4.1   
+ [9] bslib_0.3.1        utf8_1.2.2         R6_2.5.1           DBI_1.1.2         
+[13] colorspace_2.0-3   withr_2.5.0        tidyselect_1.1.2   bit_4.0.4         
+[17] compiler_4.2.0     git2r_0.30.1       cli_3.3.0          rvest_1.0.2       
+[21] xml2_1.3.3         labeling_0.4.2     sass_0.4.1         scales_1.2.0      
+[25] digest_0.6.29      yulab.utils_0.0.6  rmarkdown_2.14     R.utils_2.11.0    
+[29] pkgconfig_2.0.3    htmltools_0.5.2    dbplyr_2.1.1       fastmap_1.1.0     
+[33] highr_0.9          rlang_1.0.2        readxl_1.4.0       rstudioapi_0.13   
+[37] gridGraphics_0.5-1 jquerylib_0.1.4    farver_2.1.0       generics_0.1.2    
+[41] jsonlite_1.8.0     vroom_1.5.7        R.oo_1.24.0        magrittr_2.0.3    
+[45] ggplotify_0.1.0    patchwork_1.1.1    Rcpp_1.0.8.3       munsell_0.5.0     
+[49] fansi_1.0.3        ggnewscale_0.4.8   lifecycle_1.0.1    R.methodsS3_1.8.1 
+[53] stringi_1.7.6      whisker_0.4        yaml_2.3.5         grid_4.2.0        
+[57] parallel_4.2.0     promises_1.2.0.1   crayon_1.5.1       haven_2.5.0       
+[61] hms_1.1.1          knitr_1.39         pillar_1.7.0       reprex_2.0.1      
+[65] glue_1.6.2         evaluate_0.15      ggfun_0.0.9        modelr_0.1.8      
+[69] vctrs_0.4.1        tzdb_0.3.0         httpuv_1.6.5       cellranger_1.1.0  
+[73] gtable_0.3.0       assertthat_0.2.1   xfun_0.30          broom_0.8.0       
+[77] later_1.3.0        viridisLite_0.4.0  aplot_0.1.10       workflowr_1.7.0   
+[81] ellipsis_0.3.2    </code></pre>
+</div>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
