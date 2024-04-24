@@ -424,6 +424,8 @@ PositionStackAndNudge <- ggproto("PositionStackAndNudge", PositionStack,
       ggproto_parent(PositionStack, self)$compute_panel(data, params, scales)
   }
 )
+
+
 ```
 
 ```{r}

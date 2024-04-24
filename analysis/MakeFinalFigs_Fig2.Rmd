@@ -1638,7 +1638,7 @@ P.SNPEnrichment <- dat.enrichment %>%
             Upper=quantile(Enrichment,probs=0.975, na.rm=T),
             Middle=quantile(Enrichment,probs=0.5, na.rm=T)) %>%
   ungroup() %>%
-  mutate(IsSig = if_else(between(0, Lower, Upper), "Not significant", "Significant")) %>%
+  mutate(IsSig = if_else(data.table::between(0, Lower, Upper), "Not significant", "Significant")) %>%
   mutate(Color = case_when(
     str_detect(Annotation, "^\\d.+Enhancer$") ~ "ChromHMM enhancer",
     str_detect(Annotation, "^\\d.+Promoter$") ~ "ChromHMM promoter",
@@ -1736,8 +1736,27 @@ P.PIP_Mass <- ggplot(dat.enrichment.forreview, aes(x=Annotation, fill=Color, gro
   Rotate_x_labels +
   labs(y="sum of PIP mass in genomic annotation class", fill="Type of\ngenomic annotation") +
   coord_flip()
+P.PIP_Mass
 
 ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/20240605_PIP_Mass.pdf", P.PIP_Mass, width=7, height=7.5)
+
+P.PIP_Mass.subset <- dat.enrichment.forreview %>%
+  filter(Color == "Splice sites" | Annotation=="Polyadenylation site regions") %>%
+  ggplot(aes(x=Annotation, fill=Color, group=eQTLType)) +
+  geom_col(aes(y=Middle, fill=eQTLType), position=position_dodge(), width=0.8) +
+  geom_errorbar(aes(ymin=Lower, ymax=Upper, fill=eQTLType),position=position_dodge(0.9), color='black', width=.4) +
+  scale_fill_manual(values=c("hQTL_eGenes"="#6a3d9a", "Other_eGenes"="#969696"), labels=c("hQTL_eGenes"="transcriptionally-regulated eQTLs", "Other_eGenes"="post-transcriptional\neQTLs"), name=NULL) +
+  theme_bw() +
+  Rotate_x_labels +
+  labs(y="percent of PIP mass in genomic annotation class", fill="Type of\ngenomic annotation") +
+  coord_flip()
+P.PIP_Mass.subset
+```
+
+```{r, eval=F}
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/20240605_PIP_Mass.Subset.pdf", P.PIP_Mass, width=8, height=3)
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/20240605_PIP_Mass.Subset.pdf", P.PIP_Mass.subset, width=8, height=3)
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/20240605_PIP_Mass.Subset.png", P.PIP_Mass.subset, width=8, height=3)
 
 ```
 
@@ -1830,6 +1849,15 @@ ggplot(aes(x=beta.x, y=x.beta.in.y, color=SuperAnnotation)) +
 
 sQTL.eQTL.beta.beta
 
+IntronAnnotations.regtoolsbasic <- read_tsv("../code/SplicingAnalysis/regtools_annotate_combined/basic.bed.gz")
+
+ dat.sQTLs.eQTLs.ForScatter.ToPlot %>%
+  dplyr::filter(SuperAnnotation == "Unproductive" & PC2 == "chRNA") %>%
+  distinct(P1, .keep_all=T) %>%
+  inner_join(IntronAnnotations.regtoolsbasic) %>%
+  count(anchor) %>%
+  mutate(sum= sum(n))
+
 ```
 
 Again but classify cluster as unproductive if any are unproductive
@@ -1904,6 +1932,12 @@ ggplot(aes(x=beta.x, y=x.beta.in.y, color=SuperAnnotation)) +
   labs(caption = "FDR<10% sQTLs. sQTLs with nominal P<0.01 for H3K36me3, H3K27Ac, or H3K4me3 removed\nOnly top sQTL per cluster plotted", y="host gene eQTL beta", x="sQTL beta")
 
 sQTL.eQTL.beta.beta
+
+
+
+
+
+
 
 ```
 
@@ -2077,6 +2111,34 @@ sQTL.eQTL.beta.beta.unnormalized.PlusDeming <- sQTL.eQTL.beta.beta.unnormalized 
     geom_smooth(method = deming, se = FALSE, color = "purple", method.args = list(noise_ratio=NULL))
 sQTL.eQTL.beta.beta.unnormalized.PlusDeming
 
+sQTL.eQTL.beta.beta.unnormalized.nolines <- dat.sQTLs.eQTLs.ForScatter.ToPlot.unnormalized %>%
+  left_join(dat.sQTLs.eQTLs.ForScatter.ToPlot.labels, by="SuperAnnotation") %>%
+  nest(-SuperAnnotationLabel, -PC2) %>% 
+  mutate(cor=map(data,~cor.test(.x$deltaPSI, .x$log2FC, method = "sp"))) %>%
+  mutate(tidied = map(cor, tidy)) %>% 
+  unnest(tidied, .drop = T) %>%
+  unnest(data) %>%
+ggplot(aes(x=deltaPSI, y=log2FC, color=SuperAnnotation)) +
+    geom_point(alpha=0.1) +
+    # geom_smooth(method = deming, se = FALSE, color = "black",size=2) +
+    # geom_smooth(method='lm', color='black') +
+    geom_vline(xintercept=0, linetype='dashed') +
+    geom_hline(yintercept=0, linetype='dashed') +
+    scale_color_manual(values=c("Productive"="#1f78b4", "Unproductive"="#e31a1c")) +
+    geom_text(
+    data = . %>%
+        distinct(SuperAnnotationLabel, PC2, .keep_all=T) %>%
+        mutate(R=signif(estimate, 3), P=format.pval(p.value, 3)) %>%
+      mutate(label = str_glue("rho:{R}\nP:{P}")),
+    aes(x=-Inf, y=-Inf, label=label),
+    hjust=-.1, vjust=-0.1, color='black', size=6
+    ) +
+    facet_grid(SuperAnnotationLabel ~ PC2, labeller = label_wrap_gen(10)) +
+    theme(strip.text = element_text(size = 12), legend.position='none') +
+  labs(caption = "FDR<10% sQTLs. sQTLs with nominal P<0.01 for H3K36me3, H3K27Ac, or H3K4me3 removed\nOnly top sQTL per cluster plotted", y="host gene eQTL beta\nlog2FC", x="sQTL beta, intronic deltaPSI") +
+  coord_cartesian(xlim=c(-10,10), ylim=c(-1,1))
+sQTL.eQTL.beta.beta.unnormalized.nolines
+
 ```
 On second thought, I don't know why I plot the rho coefficient as a slope... That doesn't even make sense. Well maybe as a visual aid to highlight the change in rho across facets, and when both the x and y are on a standardized scale then maybe it looks alright, but not on this plot with unstandardized units. A better visual and more appropriate would be to plot the orthogonal regression slope... But actually I tried that above (purple line), and it's not as nice as I thought, I think partly because the orthogonal regression is still susceptible to outliers. Since this is going in the supplement or just to the reviewer, it doesn't bother me to just present this with the spearman slope as plotted above.
 
@@ -2174,6 +2236,89 @@ bash scratch/PlotsToPickTargetedGenes/PlotGenes.sh
 1:89009452:C:T, GBP3
 
 hQTL eQTL beta
+
+#### Reviewer point about susie
+
+```{r}
+susie <- read_tsv("../code/FineMapping/susie_runs_Geuvadis/susie_output.tab.gz")
+
+susie %>%
+  distinct(cs_names)
+
+susie %>%
+  distinct(cs_gene, cs_names) %>%
+  count(cs_gene) %>%
+  count(n) %>%
+  ggplot(aes(x=n, y=nn)) +
+  geom_col()
+
+susie %>%
+  distinct(cs_gene, cs_names) %>%
+  filter(str_detect(cs_gene, "ENSG00000180902"))
+```
+
+
+#### Sex balanced of dataset
+
+```{r}
+new.samples <- read_tsv("../code/config/samples.tsv")
+
+
+
+all.1KG.samples <-read_tsv("../data/igsr_samples.tsv.gz")
+
+new.samples %>%
+  filter(Phenotype %in% c("chRNA.Expression.Splicing", "H3K36ME3")) %>%
+  distinct(Phenotype, IndID, .keep_all=T) %>%
+  inner_join(all.1KG.samples, by=c("IndID"="Sample name")) %>%
+  count(Phenotype, Sex)
+```
+
+
+#### Reviewer point about how would things change if using Lindeboom rules
+
+Remake scatter but categorizing unproductive based on Lindeboom context
+
+```{r}
+LindeboomContextAnnotations <- read_tsv("../output/20240322_ResponseToReviewerMostCommonJuncContexts.tsv.gz") %>%
+  mutate(IntronName = str_replace_all(Introns, "_", ":"))
+
+dat.sQTLs.eQTLs.ForScatter.ToPlot %>%
+  inner_join(
+    LindeboomContextAnnotations %>% dplyr::select(IntronName,ModeNMDFinder)
+  ) %>%
+  ggplot(aes(x=beta.x, y=x.beta.in.y, color=ModeNMDFinder)) +
+  geom_point() +
+  # geom_smooth(method='lm') +
+  facet_grid(SuperAnnotation ~ PC2) +
+  theme_bw()
+
+dat.sQTLs.eQTLs.ForScatter.ToPlot %>%
+  inner_join(
+    LindeboomContextAnnotations %>% dplyr::select(IntronName,ModeNMDFinder)
+  ) %>%
+  ggplot(aes(x=beta.x, y=x.beta.in.y, color=ModeNMDFinder)) +
+  geom_point() +
+  # geom_smooth(method='lm') +
+  facet_grid(ModeNMDFinder ~ PC2) +
+  theme_bw()
+
+# Write out spearman correlations, to possibly include to reviewer response
+dat.sQTLs.eQTLs.ForScatter.ToPlot %>%
+  inner_join(
+    LindeboomContextAnnotations %>% dplyr::select(IntronName,ModeNMDFinder)
+  ) %>%
+  group_by(ModeNMDFinder, PC2) %>%
+  filter(n() > 1) %>%
+  summarize(COR = stats::cor.test(beta.x, x.beta.in.y, method='s')$estimate,
+            pval = stats::cor.test(beta.x, x.beta.in.y, method='s')$p.value,
+            n = n()
+                  ) %>%
+  ungroup() %>%
+  dplyr::select(sQTLJunctionClassificationFromLongReadContextAndLindeboomDecisionTree=ModeNMDFinder, ExpressionEffectDataset=PC2, SpearmanCoef.SteadyStateSplicingVsExpression=COR, pval, n) %>%
+  write_tsv("../code/scratch/ResponseToReviewerTable.eQTLsQTLEffectSizes.JuncsReclassified.tsv")
+
+```
 
 ```{r}
 
@@ -2695,6 +2840,7 @@ ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/202
 ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/20240506_eQTL_sQTL_UnnormalizedUnitsScatter.pdf",sQTL.eQTL.beta.beta.unnormalized, height=4, width=10)
 ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/20240506_eQTL_sQTL_UnnormalizedUnitsScatterOrthogonalRegression.pdf",sQTL.eQTL.beta.beta.unnormalized.PlusDeming, height=4, width=10)
 
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/20240506_eQTL_sQTL_UnnormalizedUnitsScatterNoLines.pdf",sQTL.eQTL.beta.beta.unnormalized.nolines, height=4, width=10)
 
 ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_Final_Fig2_hQTLeQTLBetas.pdf",eQTL.H3k27ac.beta, height=2.5, width=10)
 

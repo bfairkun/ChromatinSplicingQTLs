@@ -1,0 +1,53 @@
+---
+title: "20240423_title"
+author: "Benjamin Fair"
+date: "`r format(Sys.time(), '%Y-%m-%d')`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+# Introduction
+
+This is your R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown, see [R Markdown: The Definitive Guide](https://bookdown.org/yihui/rmarkdown/).
+
+## R Code Chunk
+
+```{r}
+# source(file.path(Sys.getenv(if (.Platform$OS.type == "windows") "USERPROFILE" else "HOME"), ".vscode-R", "init.R"))
+# if (interactive() && Sys.getenv("TERM_PROGRAM") == "vscode") {
+#   if (requireNamespace("httpgd", quietly = TRUE)) {
+#     options(vsc.plot = FALSE)
+#     options(device = function(...) {
+#       httpgd::hgd(silent = TRUE)
+#       .vsc.browser(httpgd::hgd_url(history = FALSE), viewer = "Beside")
+#     })
+#   }
+# }
+# 
+# options(vsc.plot = "Beside")
+# options(vsc.dev.args = list(width = 800, height = 600))
+# options(vsc.viewer = "Beside")
+
+```
+
+```{r}
+
+
+data(mtcars)
+plot(mtcars)
+
+A <- c(1,2,3)
+B <- c(2,3,4)
+
+plot(A, B)
+
+```
+
+## More Information
+
+For more information on customizing the behavior of the `rmarkdown` output format, see the [documentation](https://rmarkdown.rstudio.com/html_document_format.html).
+
+For more details on using R Markdown, see [R Markdown: The Definitive Guide](https://bookdown.org/yihui/rmarkdown/).

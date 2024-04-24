@@ -1,0 +1,449 @@
+---
+title: "2024-04-18_RelativeNMDEfficiency"
+output: html_document
+date: '2024-04-18'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Intro
+
+Similar to Lindeboom 2019, I see some groups of unproductive junctions are more unstable than others as assessed by (naRNA/steady-state) or (dKD/control)... Here I want to reproduce that analysis, but also incorporate some significance filters to not consider the juncs with fold changes that are not significant based on just a couple counts.
+
+## Analysis
+
+```{r loadlibs}
+library(data.table)
+library(tidyverse)
+library(edgeR)
+
+MostCommonContexts <- read_tsv("../output/20240322_ResponseToReviewerMostCommonJuncContexts.tsv.gz") %>%
+    separate(Introns, into=c("chrom", "start", "stop", "strand"), sep="_", convert=T, remove=F)
+
+juncs.long <- fread("../code/SplicingAnalysis/CombinedJuncTables/All.tsv.gz")
+
+dat.KD <- fread("/project2/yangili1/cfbuenabadn/ChromatinSplicingQTLs/code/SplicingAnalysis/CombinedJuncTables/NMD_KD.tsv.gz")
+
+juncs.long <- bind_rows(juncs.long, dat.KD)
+
+juncs.long %>%
+    distinct(Dataset, IndID)
+
+
+```
+
+To differential junction count analysis for NMD vs dKD... I will use edgeR, just like a differential expression analysis... I think this makes sense (as opposed to testing PSI or something like leafcutter does) because I want to capture differences due to host transcript degredation.
+
+Let's start with the NMD vs dKD contrast
+
+```{r}
+dat.mat <- dat.KD %>%
+    # distinct(Dataset)
+    filter(Dataset %in% c("HeLa.scr", "HeLa.dKD")) %>%
+    unite(Introns, chrom, start, stop, strand, sep="_") %>%
+    unite(sample, Dataset, IndID, sep="_") %>%
+    dplyr::select(Introns, sample, Count) %>%
+    pivot_wider(names_from = "sample", values_from="Count", values_fill=0) %>%
+    column_to_rownames("Introns") %>%
+    DGEList(group = relevel(factor(str_extract(colnames(.), "^.+_")), "HeLa.scr_"))
+
+keep <- filterByExpr(dat.mat)
+y <- dat.mat[keep,] %>%
+    calcNormFactors() %>%
+    estimateDisp()
+
+fit <- y %>%
+    glmQLFit()
+qlf <- glmQLFTest(fit)
+results <- topTags(qlf,   n=Inf) %>%
+    as.data.frame() %>%
+    rownames_to_column("Intron")
+
+results %>%
+    sample_n(10000) %>%
+ggplot(aes(x=logFC, y=-log10(PValue))) +
+    geom_point(alpha=0.1)
+
+SidePoints <- results %>%
+    filter(logFC > 6 & -log10(PValue)>4 & -log10(PValue)<7) 
+
+results %>%
+    sample_n(10000) %>%
+    mutate(SidePoints = Intron %in% SidePoints$Intron) %>%
+ggplot(aes(x=logFC, y=-log10(PValue), color=SidePoints)) +
+    geom_point(alpha=0.1)
+
+cpm <- cpm(y, log=T, prior.count=0.001)
+
+Mean.Junc.CPM <- cpm %>%
+    as.data.frame() %>%
+    rownames_to_column("Intron") %>%
+    pivot_longer(names_to="sample", -Intron) %>%
+    mutate(group = if_else(str_detect(sample, "dKD"), "dKD", "control")) %>%
+    group_by(Intron, group) %>%
+    summarise(MeanJuncCPM = mean(value)) %>%
+    ungroup() %>%
+    distinct() 
+
+Mean.Junc.CPM %>%
+    mutate(SidePoints = Intron %in% SidePoints$Intron) %>%
+    ggplot(aes(x=MeanJuncCPM)) +
+    geom_histogram() +
+    facet_grid(SidePoints~group, scales="free")
+
+```
+
+Ok, so I have a differential junction expression analysis, and even though the volcano plot looks a bit weird, I think it makes sense... The streak of points off to the side are the junctions that are basically non-existent in the control dataset but exist in the dKD dataset.
+
+Now let's just select for significant junctions, and then group them by my annotations categories for different susceptibilities to NMD.
+
+```{r}
+results %>%
+    inner_join(
+        MostCommonContexts %>%
+            mutate(Intron = str_glue("{chrom}_{start}_{stop-1}_{strand}"))
+    ) %>%
+    mutate(Signif = FDR<0.1) %>%
+    ggplot(aes(x=logFC, color=ModeNMDFinder)) +
+    stat_ecdf() +
+    facet_wrap(~Signif, nrow=2) +
+    coord_cartesian(xlim=c(-2,2))
+
+results %>%
+    inner_join(
+        MostCommonContexts %>%
+            mutate(Intron = str_glue("{chrom}_{start}_{stop-1}_{strand}"))
+    ) %>%
+    mutate(Signif = FDR<0.1) %>%
+    ggplot(aes(x=logFC, color=ModeNMDFinder)) +
+    stat_ecdf() +
+    coord_cartesian(xlim=c(-2,2)) +
+    theme_bw()
+
+results %>%
+    filter(logCPM>0) %>%
+    inner_join(
+        MostCommonContexts %>%
+            mutate(Intron = str_glue("{chrom}_{start}_{stop-1}_{strand}"))
+    ) %>%
+    mutate(Signif = FDR<0.1) %>%
+    ggplot(aes(x=logFC, color=ModeNMDFinder)) +
+    stat_ecdf() +
+    coord_cartesian(xlim=c(-2,2)) +
+    theme_bw()
+
+Mean.Junc.CPM %>%
+    pivot_wider(names_from = "group", values_from = "MeanJuncCPM") %>%
+    inner_join(
+        MostCommonContexts %>%
+            mutate(Intron = str_glue("{chrom}_{start}_{stop-1}_{strand}"))
+    ) %>%
+    ggplot(aes(x=dKD, y=control)) +
+        geom_point(alpha=0.1) +
+        geom_abline(slope=1, intercept=0, color='#760d0d') +
+        geom_text( data = . %>%
+            group_by(ModeNMDFinder) %>%
+                summarise(med = str_glue(round(2**median(dKD-control),3 )), n=n()) %>%
+                ungroup() %>%
+                mutate(label = str_glue("med={med}\nn={n}")),
+            aes(label=label),
+            x=-Inf, y=Inf, hjust=0, vjust=1
+            ) +
+        facet_wrap(~ModeNMDFinder) +
+        theme_bw()
+
+Mean.Junc.CPM %>%
+    pivot_wider(names_from = "group", values_from = "MeanJuncCPM") %>%
+    inner_join(
+        MostCommonContexts %>%
+            mutate(Intron = str_glue("{chrom}_{start}_{stop-1}_{strand}"))) %>%
+    group_by(ModeNMDFinder) %>%
+    summarise(med = round(2**median(dKD-control), 3)) %>%
+    ungroup()
+
+results %>%
+    inner_join(
+        MostCommonContexts %>%
+            mutate(Intron = str_glue("{chrom}_{start}_{stop-1}_{strand}"))
+    ) %>%
+    mutate(Signif = FDR<0.1) %>%
+    ggplot(aes(x=logFC, y=-log10(FDR), color=Signif)) +
+    geom_point(alpha=0.2) +
+    geom_vline(data = . %>%
+        group_by(Signif, ModeNMDFinder) %>%
+        summarise(med = median(logFC)) %>%
+        ungroup(),
+        aes(xintercept = med, color=Signif)
+        ) +
+    coord_cartesian(xlim=c(-2,2)) +
+    theme_bw() +
+    facet_wrap(~ModeNMDFinder) +
+    labs(x="logFC (dKD/control)", caption="vertical lines is median affect by group color\nSignf means FDR<10%")
+
+```
+
+I want to next check out the scatter plot of junc RPM but while distinguishing between the junctions that we classified as productive or unproductive in the nat gen manuscript.
+
+```{r}
+
+Mean.Junc.CPM %>%
+    pivot_wider(names_from = "group", values_from = "MeanJuncCPM") %>%
+    inner_join(
+        MostCommonContexts %>%
+            mutate(Intron = str_glue("{chrom}_{start}_{stop-1}_{strand}"))
+    ) %>%
+  mutate(ProductiveOrUnproductive = case_when(
+    SuperAnnotation %in% c("AnnotatedJunc_ProductiveCodingGene", "UnannotatedJunc_ProductiveCodingGene") ~ "Productive",
+    SuperAnnotation %in% c("UnannotatedJunc_UnproductiveCodingGene", "AnnotatedJunc_UnproductiveCodingGene") ~ "Unproductive",
+    TRUE ~ NA_character_
+  )) %>%
+  mutate(ProductiveOrUnproductive = SuperAnnotation) %>%
+  filter(!str_detect(SuperAnnotation, "Noncoding")) %>%
+    ggplot(aes(x=dKD, y=control, color=ProductiveOrUnproductive)) +
+        geom_point(alpha=0.1) +
+        geom_abline(slope=1, intercept=0, color='#760d0d') +
+        geom_text( data = . %>%
+            group_by(ModeNMDFinder, ProductiveOrUnproductive) %>%
+                summarise(med = str_glue(round(2**median(dKD-control),3 )), n=n()) %>%
+                ungroup() %>%
+                mutate(label = str_glue("med={med}; n={n}")) %>%
+              group_by(ModeNMDFinder) %>%
+              mutate(vjust = row_number()) %>%
+              ungroup(),
+            aes(label=label, vjust=vjust),
+            x=-Inf, y=Inf, hjust=0
+            ) +
+        scale_color_manual(values=c("AnnotatedJunc_ProductiveCodingGene"="#1f78b4", "UnannotatedJunc_ProductiveCodingGene"="#a6cee3", "UnannotatedJunc_UnproductiveCodingGene"="#fb9a99", "AnnotatedJunc_UnproductiveCodingGene"="#e31a1c")) +
+        facet_wrap(~ModeNMDFinder) +
+        theme_bw()
+```
+
+The presence of many Gencode annotated productive juncs in the "Trigger NMD" category that are also unaffected by dKD, highlights that many of these junction classifications are wrong. This could explain some of the variance between categories - bad classification. The reason for bad classification may be that combination of low read count noise and real biology in long read dataset leads to presence of some genes for which the most common context is "Trigger NMD", result in all of those introns being classified as Trigger NMD in my methodology.
+
+```{r}
+IntronAnnotations <- read_tsv("../data/IntronAnnotationsFromYang.Updated.tsv.gz")
+
+juncs.long.summarised <- juncs.long %>%
+    filter(Dataset %in% c("chRNA.Expression.Splicing", "Expression.Splicing","HeLa.dKD", "HeLa.scr", "MetabolicLabelled.30min", "MetabolicLabelled.60min")) %>%
+    mutate(Dataset = if_else(str_detect(Dataset, "Metabolic"), "Metabolic", Dataset)) %>%
+    group_by(chrom, start, stop, strand, Dataset) %>%
+    summarise(count = sum(Count)) %>%
+    ungroup() %>%
+    distinct()
+
+juncs.long.summarised %>%
+  distinct(Dataset)
+
+JuncCountMin <- 100
+
+juncs.summarised.Ratios <- bind_rows(
+  full_join(
+    juncs.long.summarised %>%
+      filter(Dataset == "chRNA.Expression.Splicing") %>%
+      dplyr::select(-Dataset),
+    juncs.long.summarised %>%
+      filter(Dataset == "Expression.Splicing")  %>%
+      dplyr::select(-Dataset),
+    by=c("chrom", "start", "stop", "strand"),
+    suffix=c(".num", ".den")) %>%
+    mutate(Comparison = "chRNA/steadyState"),
+  full_join(
+    juncs.long.summarised %>%
+      filter(Dataset == "HeLa.dKD") %>%
+      dplyr::select(-Dataset),
+    juncs.long.summarised %>%
+      filter(Dataset == "HeLa.scr")  %>%
+      dplyr::select(-Dataset),
+    by=c("chrom", "start", "stop", "strand"),
+    suffix=c(".num", ".den")) %>%
+    mutate(Comparison = "dKD/control"),
+  full_join(
+    juncs.long.summarised %>%
+      filter(Dataset == "Metabolic") %>%
+      dplyr::select(-Dataset),
+    juncs.long.summarised %>%
+      filter(Dataset == "Expression.Splicing")  %>%
+      dplyr::select(-Dataset),
+    by=c("chrom", "start", "stop", "strand"),
+    suffix=c(".num", ".den")) %>%
+    mutate(Comparison = "Metabolic/SteadyState")
+  ) %>%
+  replace_na(list(count.den = 0, count.num=0)) %>%
+  group_by(Comparison) %>%
+    mutate(count.num.sum = sum(count.num), count.den.sum=sum(count.den)) %>%
+    ungroup() %>%
+    mutate(Ratio = (count.num/count.num.sum)/(count.den/count.den.sum)) %>%
+  drop_na()
+
+juncs.summarised.Ratios %>%
+  filter(count.num >= JuncCountMin | count.den >= JuncCountMin) %>%
+  pivot_wider(names_from="Comparison", values_from="Ratio", id_cols = c("chrom", "start", "stop", "strand")) %>%
+  inner_join(IntronAnnotations) %>%
+  ggplot(aes(x=`chRNA/steadyState`, y=`dKD/control`)) +
+  geom_hex(bins=100) +
+  # geom_point(alpha=0.1) +
+  scale_fill_viridis_c() +
+  scale_y_continuous(trans='log10') +
+  scale_x_continuous(trans='log10') +
+  theme_bw() +
+  facet_wrap(~SuperAnnotation) +
+  geom_vline(color='red', xintercept = 1, linetype='dashed') +
+  geom_hline(color='red', yintercept = 1, linetype='dashed') +
+  coord_fixed() +
+  labs(title="correlation of junctionRPM ratios", caption="Only included juncs with >100 reads in at least one of the datasets")
+
+juncs.summarised.Ratios %>%
+  filter(count.num >= JuncCountMin | count.den >= JuncCountMin) %>%
+  pivot_wider(names_from="Comparison", values_from="Ratio", id_cols = c("chrom", "start", "stop", "strand")) %>%
+  mutate(end=stop+1) %>% dplyr::select(-stop) %>%
+  inner_join(IntronAnnotations) %>%
+  ggplot(aes(x=`chRNA/steadyState`, y=`Metabolic/SteadyState`)) +
+  geom_hex(bins=100) +
+  # geom_point(alpha=0.1) +
+  scale_fill_viridis_c() +
+  scale_y_continuous(trans='log10') +
+  scale_x_continuous(trans='log10') +
+  theme_bw() +
+  facet_wrap(~SuperAnnotation) +
+  geom_vline(color='red', xintercept = 1, linetype='dashed') +
+  geom_hline(color='red', yintercept = 1, linetype='dashed') +
+  coord_fixed() +
+  labs(title="correlation of junctionRPM ratios", caption="Only included juncs with >100 reads in at least one of the datasets")
+
+juncs.summarised.Ratios %>%
+  filter(count.num >= JuncCountMin | count.den >= JuncCountMin) %>%
+  pivot_wider(names_from="Comparison", values_from="Ratio", id_cols = c("chrom", "start", "stop", "strand")) %>%
+  mutate(end=stop+1) %>% dplyr::select(-stop) %>%
+  inner_join(IntronAnnotations) %>% 
+  ggplot(aes(x=`Metabolic/SteadyState`, y=`dKD/control`)) +
+  geom_hex(bins=100) +
+  # geom_point(alpha=0.1) +
+  scale_fill_viridis_c() +
+  scale_y_continuous(trans='log10') +
+  scale_x_continuous(trans='log10') +
+  theme_bw() +
+  facet_wrap(~SuperAnnotation) +
+  geom_vline(color='red', xintercept = 1, linetype='dashed') +
+  geom_hline(color='red', yintercept = 1, linetype='dashed') +
+  coord_fixed() +
+  labs(title="correlation of junctionRPM ratios", caption="Only included juncs with >100 reads in at least one of the datasets")
+
+juncs.summarised.Ratios %>%
+  filter(count.num >= JuncCountMin | count.den >= JuncCountMin) %>%
+  pivot_wider(names_from="Comparison", values_from="Ratio", id_cols = c("chrom", "start", "stop", "strand")) %>%
+  dplyr::select(5:7) %>% cor(method='s', use='pairwise.complete.obs') %>%
+  as.data.frame() %>%
+  rownames_to_column("Comparison") %>%
+  pivot_longer(-c("Comparison")) %>%
+  ggplot(aes(x=Comparison, y=name, fill=value)) +
+  geom_raster() +
+  geom_text(aes(label=round(value, 2)), color='red') +
+  scale_fill_viridis_c() +
+  labs(x=NULL, y=NULL, title="spearman cor coef")
+
+
+
+```
+
+It doesn't make much sesne to me that there is decent correlation in the logFC in naRNA/steadyState vs dKD/control even for the junctions in non-coding. Maybe I should
+also make these plots with PSI or something like that (which uses a local junction count for the denominator) to corroborate these findings.
+
+```{r}
+# juncs.summarised.Ratios %>%
+#   mutate(end=stop+1) %>% dplyr::select(-stop) %>%
+#   inner_join(IntronAnnotations) %>%
+#   filter(!str_detect(gene, ",")) %>%
+#   group_by(Comparison, gene) %>%
+#   mutate(count.num.PSInum = )
+
+
+juncs.summarised.Ratios.NormalizedToGeneJuncs <- juncs.summarised.Ratios %>%
+  mutate(end=stop+1) %>% dplyr::select(-stop) %>%
+  inner_join(IntronAnnotations) %>%
+  filter(!str_detect(gene, ",")) %>%
+  group_by(gene, Comparison) %>%
+  mutate(count.num.sum = sum(count.num), count.den.sum=sum(count.den)) %>%
+    ungroup() %>%
+    mutate(Ratio = (count.num/count.num.sum)/(count.den/count.den.sum)) %>%
+  drop_na() %>%
+  filter(count.num >= JuncCountMin | count.den >= JuncCountMin)
+
+juncs.summarised.Ratios.NormalizedToGeneJuncs %>%
+  pivot_wider(names_from="Comparison", values_from="Ratio", id_cols = c("chrom", "start", "end", "strand")) %>%
+  inner_join(IntronAnnotations) %>%
+  ggplot(aes(x=`chRNA/steadyState`, y=`dKD/control`)) +
+  geom_hex(bins=100) +
+  # geom_point(alpha=0.1) +
+  scale_fill_viridis_c() +
+  scale_y_continuous(trans='log10') +
+  scale_x_continuous(trans='log10') +
+  theme_bw() +
+  facet_wrap(~SuperAnnotation) +
+  geom_vline(color='red', xintercept = 1, linetype='dashed') +
+  geom_hline(color='red', yintercept = 1, linetype='dashed') +
+  coord_fixed() +
+  labs(title="correlation of junction/GenewiseSum(junction) ratios", caption="Only included juncs with >100 reads in at least one of the datasets")
+
+juncs.summarised.Ratios.NormalizedToGeneJuncs %>%
+  pivot_wider(names_from="Comparison", values_from="Ratio", id_cols = c("chrom", "start", "end", "strand")) %>%
+  inner_join(IntronAnnotations) %>%
+  ggplot(aes(x=`chRNA/steadyState`, y=`Metabolic/SteadyState`)) +
+  geom_hex(bins=100) +
+  # geom_point(alpha=0.1) +
+  scale_fill_viridis_c() +
+  scale_y_continuous(trans='log10') +
+  scale_x_continuous(trans='log10') +
+  theme_bw() +
+  facet_wrap(~SuperAnnotation) +
+  geom_vline(color='red', xintercept = 1, linetype='dashed') +
+  geom_hline(color='red', yintercept = 1, linetype='dashed') +
+  coord_fixed() +
+  labs(title="correlation of junction/GenewiseSum(junction) ratios", caption="Only included juncs with >100 reads in at least one of the datasets")
+
+juncs.summarised.Ratios.NormalizedToGeneJuncs %>%
+  pivot_wider(names_from="Comparison", values_from="Ratio", id_cols = c("chrom", "start", "end", "strand")) %>%
+  inner_join(IntronAnnotations) %>%
+  ggplot(aes(x=`Metabolic/SteadyState`, y=`dKD/control`)) +
+  geom_hex(bins=100) +
+  # geom_point(alpha=0.1) +
+  scale_fill_viridis_c() +
+  scale_y_continuous(trans='log10') +
+  scale_x_continuous(trans='log10') +
+  theme_bw() +
+  facet_wrap(~SuperAnnotation) +
+  geom_vline(color='red', xintercept = 1, linetype='dashed') +
+  geom_hline(color='red', yintercept = 1, linetype='dashed') +
+  coord_fixed() +
+  labs(title="correlation of junction/GenewiseSum(junction) ratios", caption="Only included juncs with >100 reads in at least one of the datasets")
+
+juncs.summarised.Ratios.NormalizedToGeneJuncs %>%
+  pivot_wider(names_from="Comparison", values_from="Ratio", id_cols = c("chrom", "start", "end", "strand")) %>%
+  dplyr::select(5:7) %>% cor(method='s', use='pairwise.complete.obs') %>%
+  as.data.frame() %>%
+  rownames_to_column("Comparison") %>%
+  pivot_longer(-c("Comparison")) %>%
+  ggplot(aes(x=Comparison, y=name, fill=value)) +
+  geom_raster() +
+  geom_text(aes(label=round(value, 2)), color='red') +
+  scale_fill_viridis_c() +
+  labs(x=NULL, y=NULL, title="spearman cor coef")
+
+juncs.summarised.Ratios.NormalizedToGeneJuncs %>%
+  pivot_wider(names_from="Comparison", values_from="Ratio", id_cols = c("chrom", "start", "end", "strand")) %>%
+  inner_join(IntronAnnotations) %>%
+  group_by(SuperAnnotation) %>%
+  summarise(cor = cor(`chRNA/steadyState`, `dKD/control`, method='s', use='pairwise.complete.obs'))
+
+```
+
+Ok that is nice, this makes me feel a bit more confident that naRNA/steadyState is a decent proxy for dKD/control for unproductive junctions: It's the same plot that I shared a few minutes ago but rather than junctionRPM (that is, junction / sum(AllJunctions), i used the junction/sum(AllJunctionsWithinTheSameGene)...
+The previous correlation in the Noncoding facets and the productive facets was probably just reflecting some similar differential expression effects that are (somewhat suprisingly) correlated... While that largely goes away in the Noncoding facets in this version,  the correlation in the unproductive facet remains.
+
+Now let's see if I can better classify the unproductive junctions from the long read data...
+
+```{r}
+
+```
+
