@@ -186,7 +186,7 @@ results %>%
 
 I want to next check out the scatter plot of junc RPM but while distinguishing between the junctions that we classified as productive or unproductive in the nat gen manuscript.
 
-```{r}
+```{r, fig.height=6, fig.width=10}
 
 Mean.Junc.CPM %>%
     pivot_wider(names_from = "group", values_from = "MeanJuncCPM") %>%
@@ -221,6 +221,30 @@ Mean.Junc.CPM %>%
 ```
 
 The presence of many Gencode annotated productive juncs in the "Trigger NMD" category that are also unaffected by dKD, highlights that many of these junction classifications are wrong. This could explain some of the variance between categories - bad classification. The reason for bad classification may be that combination of low read count noise and real biology in long read dataset leads to presence of some genes for which the most common context is "Trigger NMD", result in all of those introns being classified as Trigger NMD in my methodology.
+
+Let's replot the differences in those 7 categories if you only consider the "unproductive" juncs as we categorized them red in the manuscript...
+
+```{r}
+Mean.Junc.CPM %>%
+    pivot_wider(names_from = "group", values_from = "MeanJuncCPM") %>%
+    inner_join(
+        MostCommonContexts %>%
+            mutate(Intron = str_glue("{chrom}_{start}_{stop-1}_{strand}"))
+    ) %>%
+  mutate(ProductiveOrUnproductive = case_when(
+    SuperAnnotation %in% c("AnnotatedJunc_ProductiveCodingGene", "UnannotatedJunc_ProductiveCodingGene") ~ "Productive",
+    SuperAnnotation %in% c("UnannotatedJunc_UnproductiveCodingGene", "AnnotatedJunc_UnproductiveCodingGene") ~ "Unproductive",
+    TRUE ~ NA_character_
+  )) %>%
+  filter(ProductiveOrUnproductive == "Unproductive") %>%
+  mutate(JunctionLogFC = dKD - control) %>%
+  ggplot(aes(x=JunctionLogFC, color=ModeNMDFinder)) +
+  stat_ecdf() +
+  theme_bw()
+```
+So, more noisy, not sure what is significant... can formally test later... but I think it would also be good to look at chRNA/steadyState since we have so much more data there for more counts than the dKD/control...
+
+First let's compare the logFC(junctionRPM) in dKD/control vs naRNA/steadyState to get some sense of if they are really measuring the same thing. 
 
 ```{r}
 IntronAnnotations <- read_tsv("../data/IntronAnnotationsFromYang.Updated.tsv.gz")
@@ -359,6 +383,8 @@ also make these plots with PSI or something like that (which uses a local juncti
 #   mutate(count.num.PSInum = )
 
 
+# JuncCountMin <- 20
+
 juncs.summarised.Ratios.NormalizedToGeneJuncs <- juncs.summarised.Ratios %>%
   mutate(end=stop+1) %>% dplyr::select(-stop) %>%
   inner_join(IntronAnnotations) %>%
@@ -367,10 +393,10 @@ juncs.summarised.Ratios.NormalizedToGeneJuncs <- juncs.summarised.Ratios %>%
   mutate(count.num.sum = sum(count.num), count.den.sum=sum(count.den)) %>%
     ungroup() %>%
     mutate(Ratio = (count.num/count.num.sum)/(count.den/count.den.sum)) %>%
-  drop_na() %>%
-  filter(count.num >= JuncCountMin | count.den >= JuncCountMin)
+  drop_na()
 
 juncs.summarised.Ratios.NormalizedToGeneJuncs %>%
+  filter(count.num >= JuncCountMin | count.den >= JuncCountMin) %>%
   pivot_wider(names_from="Comparison", values_from="Ratio", id_cols = c("chrom", "start", "end", "strand")) %>%
   inner_join(IntronAnnotations) %>%
   ggplot(aes(x=`chRNA/steadyState`, y=`dKD/control`)) +
@@ -444,6 +470,269 @@ The previous correlation in the Noncoding facets and the productive facets was p
 Now let's see if I can better classify the unproductive junctions from the long read data...
 
 ```{r}
+Mode <- function(x) {
+  ux <- unique(x)
+  ux[which.max(tabulate(match(x, ux)))]
+}
+
+JunctionAnnotations <- read_tsv("../data/IntronAnnotationsFromYang.Updated.tsv.gz") %>%
+  mutate(Introns = paste(chrom, start, end, strand, sep="_"))
+
+dat <- c(Sys.glob("../code/LongReads/bed12translated/*/CTRL*_shRNA.*.bed.gz"),
+  Sys.glob("../code/LongReads/bed12translated/*/SMG6_SMG7_shRNA.SAMEA8691113.bed.gz")) %>%
+  setNames(str_replace(., "../code/LongReads/bed12translated/(.+?)/(.+?).bed.gz", "\\1;\\2")) %>%
+  lapply(fread, col.names=c("chrom", "start", "stop", "ReadName", "score", "strand", "thickStart", "thickEnd", "Color", "blocks","blockSizes", "blockStarts", "sequence", "NMDFinderB", "AllJuncsIdentifiable", "Introns")) %>%
+  bind_rows(.id="approach_sample") %>%
+  separate(approach_sample, into=c("ORF.translation.approach", "sample"), sep=";")
+
+dat %>%
+  filter(AllJuncsIdentifiable) %>%
+  filter(str_detect(chrom, "^chr[1-9]")) %>%
+  # filter(str_detect(sample, "shRNA")) %>%
+  filter(ORF.translation.approach == "firstORF") %>%
+  separate_rows(Introns, sep=",") %>%
+  inner_join(
+    JunctionAnnotations %>%
+      dplyr::select(-chrom, -start, -strand, -end)) %>%
+  add_count(Introns) %>%
+  filter(n>3) %>%
+  group_by(Introns) %>%
+  mutate(ModeNMDFinder = Mode(NMDFinderB)) %>%
+  ungroup() %>%
+  dplyr::select(-n) %>%
+  distinct(Introns, .keep_all=T) %>%
+  count(ModeNMDFinder, SuperAnnotation) %>%
+  group_by(SuperAnnotation) %>%
+  mutate(TotalIntsInSuperAnnotation = sum(n)) %>%
+  ungroup() %>%
+  filter(!str_detect(SuperAnnotation, "Noncoding")) %>%
+  # ggplot(aes(x=SuperAnnotation, y=n, fill=ModeNMDFinder)) +
+  ggplot(aes(x=ModeNMDFinder, y=n, fill=SuperAnnotation)) +
+  geom_col(position='fill') +
+  Rotate_x_labels +
+  labs(x="Our intron classes", fill="Most common transcript context,\nLindeboom transcript categories", y="fraction")
+
+dat %>%
+  filter(AllJuncsIdentifiable) %>%
+  filter(str_detect(chrom, "^chr[1-9]")) %>%
+  # filter(str_detect(sample, "shRNA")) %>%
+  filter(ORF.translation.approach == "firstORF") %>%
+  separate_rows(Introns, sep=",") %>%
+  inner_join(
+    JunctionAnnotations %>%
+      dplyr::select(-chrom, -start, -strand, -end)) %>%
+  add_count(Introns) %>%
+  filter(n>3) %>%
+  add_count(Introns, NMDFinderB, name="NumNMDFinderContexts") %>%
+  group_by(Introns) %>%
+  mutate(FractionNMDFinderBContexts = NumNMDFinderContexts/sum(NumNMDFinderContexts)) %>%
+  mutate(NMDFinderB = case_when(
+    any(NMDFinderB == "Last exon") & FractionNMDFinderBContexts >=0.1 ~ "Last exon",
+    TRUE ~ NMDFinderB
+  )) %>%
+  mutate(ModeNMDFinder = Mode(NMDFinderB)) %>%
+  ungroup() %>%
+  dplyr::select(-n) %>%
+  distinct(Introns, .keep_all=T) %>%
+  count(ModeNMDFinder, SuperAnnotation) %>%
+  group_by(SuperAnnotation) %>%
+  mutate(TotalIntsInSuperAnnotation = sum(n)) %>%
+  ungroup() %>%
+  filter(!str_detect(SuperAnnotation, "Noncoding")) %>%
+  # ggplot(aes(x=SuperAnnotation, y=n, fill=ModeNMDFinder)) +
+  ggplot(aes(x=ModeNMDFinder, y=n, fill=SuperAnnotation)) +
+  geom_col(position='fill') +
+  Rotate_x_labels +
+  labs(x="Our intron classes", fill="Most common transcript context,\nLindeboom transcript categories", y="fraction", caption="If >10% of context is Last exon, then most common context is Last exon, otherwise, use the mode")
+
+dat %>%
+  filter(AllJuncsIdentifiable) %>%
+  filter(str_detect(chrom, "^chr[1-9]")) %>%
+  # filter(str_detect(sample, "shRNA")) %>%
+  filter(ORF.translation.approach == "firstORF") %>%
+  separate_rows(Introns, sep=",") %>%
+  inner_join(
+    JunctionAnnotations %>%
+      dplyr::select(-chrom, -start, -strand, -end)) %>%
+  add_count(Introns) %>%
+  filter(n>3) %>%
+  add_count(Introns, NMDFinderB, name="NumNMDFinderContexts") %>%
+  group_by(Introns) %>%
+  mutate(FractionNMDFinderBContexts = NumNMDFinderContexts/sum(NumNMDFinderContexts)) %>%
+  mutate(NMDFinderB = case_when(
+    any(NMDFinderB == "Last exon") ~ "Last exon",
+    TRUE ~ NMDFinderB
+  )) %>%
+  mutate(ModeNMDFinder = Mode(NMDFinderB)) %>%
+  ungroup() %>%
+  dplyr::select(-n) %>%
+  distinct(Introns, .keep_all=T) %>%
+  count(ModeNMDFinder, SuperAnnotation) %>%
+  group_by(SuperAnnotation) %>%
+  mutate(TotalIntsInSuperAnnotation = sum(n)) %>%
+  ungroup() %>%
+  filter(!str_detect(SuperAnnotation, "Noncoding")) %>%
+  # ggplot(aes(x=SuperAnnotation, y=n, fill=ModeNMDFinder)) +
+  ggplot(aes(x=ModeNMDFinder, y=n, fill=SuperAnnotation)) +
+  geom_col(position='fill') +
+  Rotate_x_labels +
+  labs(x="Our intron classes", fill="Most common transcript context,\nLindeboom transcript categories", y="fraction", caption="If any context is Last exon, then most common context is Last exon, otherwise, use the mode")
+```
+
+Ok, so still I think even using the rule "if any of the context is "Last exon" then the junction category is "last exon"" is not a good approach, since many of the "Trigger NMD" juncs are "productive" when other wise categorized... I think a better approach would be to use the red/blue categories we used in the published paper, then further subdivided the red ones based on long read context, as I have done above... Now let's look at chRNA/steadyState...
+
+```{r}
+juncs.summarised.Ratios.NormalizedToGeneJuncs %>%
+  filter(count.num >= JuncCountMin | count.den >= JuncCountMin) %>%
+  pivot_wider(names_from="Comparison", values_from="Ratio", id_cols = c("chrom", "start", "end", "strand")) %>%
+  inner_join(IntronAnnotations) %>%
+  mutate(ProductiveOrUnproductive = case_when(
+    SuperAnnotation %in% c("AnnotatedJunc_ProductiveCodingGene", "UnannotatedJunc_ProductiveCodingGene") ~ "Productive",
+    SuperAnnotation %in% c("UnannotatedJunc_UnproductiveCodingGene", "AnnotatedJunc_UnproductiveCodingGene") ~ "Unproductive",
+    TRUE ~ NA_character_
+  )) %>%
+  filter(ProductiveOrUnproductive == "Unproductive") %>%
+  inner_join(
+        MostCommonContexts %>%
+            mutate(Intron = str_glue("{chrom}_{start}_{stop-1}_{strand}"))
+    ) %>%
+  pivot_longer(names_to = "Comparison", values_to = "FC", c("chRNA/steadyState", "dKD/control", "Metabolic/SteadyState")) %>%
+  ggplot(aes(x=log2(FC), color=ModeNMDFinder)) +
+  stat_ecdf() +
+  facet_wrap(~Comparison) +
+  coord_cartesian(xlim=c(-2,2)) +
+  theme_bw()
+
+juncs.summarised.Ratios.NormalizedToGeneJuncs %>%
+  filter(count.num >= 100 | count.den >= 100) %>%
+  pivot_wider(names_from="Comparison", values_from="Ratio", id_cols = c("chrom", "start", "end", "strand")) %>%
+  inner_join(IntronAnnotations) %>%
+  mutate(ProductiveOrUnproductive = case_when(
+    SuperAnnotation %in% c("AnnotatedJunc_ProductiveCodingGene", "UnannotatedJunc_ProductiveCodingGene") ~ "Productive",
+    SuperAnnotation %in% c("UnannotatedJunc_UnproductiveCodingGene", "AnnotatedJunc_UnproductiveCodingGene") ~ "Unproductive",
+    TRUE ~ NA_character_
+  )) %>%
+  filter(!is.na(ProductiveOrUnproductive)) %>%
+  inner_join(
+        MostCommonContexts %>%
+            mutate(Intron = str_glue("{chrom}_{start}_{stop-1}_{strand}"))
+    ) %>%
+  pivot_longer(names_to = "Comparison", values_to = "FC", c("chRNA/steadyState", "dKD/control", "Metabolic/SteadyState")) %>%
+  ggplot(aes(x=log2(FC), color=ModeNMDFinder)) +
+  stat_ecdf() +
+  coord_cartesian(xlim=c(-2,2)) +
+  theme_bw() +
+  facet_grid(ProductiveOrUnproductive~Comparison) +
+  labs(title="Distinguishing between strength of NMD effects, based on junction context from long read", y="ecdf", x="log2FC(JunctionCount/JunctionSumPerGene)", caption="Long read context (NMDFinder) still not good at distinguishing productive/unproductive...\nSo I'm sepearting the NMDFinder context by Gencode productive/unproductive")
+
+juncs.summarised.Ratios.NormalizedToGeneJuncs %>%
+  filter(count.num >= JuncCountMin | count.den >= JuncCountMin) %>%
+  pivot_wider(names_from="Comparison", values_from="Ratio", id_cols = c("chrom", "start", "end", "strand")) %>%
+  inner_join(IntronAnnotations) %>%
+  mutate(ProductiveOrUnproductive = case_when(
+    SuperAnnotation %in% c("AnnotatedJunc_ProductiveCodingGene", "UnannotatedJunc_ProductiveCodingGene") ~ "Productive",
+    SuperAnnotation %in% c("UnannotatedJunc_UnproductiveCodingGene", "AnnotatedJunc_UnproductiveCodingGene") ~ "Unproductive",
+    TRUE ~ NA_character_
+  )) %>%
+  filter(!is.na(ProductiveOrUnproductive)) %>%
+  inner_join(
+        MostCommonContexts %>%
+            mutate(Intron = str_glue("{chrom}_{start}_{stop-1}_{strand}"))
+    ) %>%
+  # filter(ModeNMDFinder %in% c("Trigger NMD", "Start proximal", "No NDS", "No Stop", "Long exon")) %>%
+  ggplot(aes(x=`chRNA/steadyState`, y=`dKD/control`, color=ModeNMDFinder)) +
+  geom_point(alpha=0.5) +
+  scale_x_continuous(trans='log10') +
+  scale_y_continuous(trans='log10') +
+  theme_bw() +
+  labs(caption="logFC in JuncCount/(TotalJuncCountInGene)") +
+  geom_vline(color='red', xintercept = 1, linetype='dashed') +
+  geom_hline(color='red', yintercept = 1, linetype='dashed') +
+  coord_fixed() +
+  facet_wrap(~ProductiveOrUnproductive)
+
+juncs.summarised.Ratios.NormalizedToGeneJuncs %>%
+  filter(count.num >= JuncCountMin | count.den >= JuncCountMin) %>%
+  pivot_wider(names_from="Comparison", values_from="Ratio", id_cols = c("chrom", "start", "end", "strand")) %>%
+  inner_join(IntronAnnotations) %>%
+  mutate(ProductiveOrUnproductive = case_when(
+    SuperAnnotation %in% c("AnnotatedJunc_ProductiveCodingGene", "UnannotatedJunc_ProductiveCodingGene") ~ "Productive",
+    SuperAnnotation %in% c("UnannotatedJunc_UnproductiveCodingGene", "AnnotatedJunc_UnproductiveCodingGene") ~ "Unproductive",
+    TRUE ~ NA_character_
+  )) %>%
+  filter(!is.na(ProductiveOrUnproductive)) %>%
+  inner_join(
+        MostCommonContexts %>%
+            mutate(Intron = str_glue("{chrom}_{start}_{stop-1}_{strand}"))
+    ) %>%
+  group_by(ProductiveOrUnproductive, ModeNMDFinder) %>%
+  summarise(cor = cor(`chRNA/steadyState`, `dKD/control`, method='s', use="pairwise.complete.obs"), n=n()) %>%
+  ungroup()
+
+juncs.summarised.Ratios.NormalizedToGeneJuncs %>%
+  filter(count.num >= JuncCountMin | count.den >= JuncCountMin) %>%
+  pivot_wider(names_from="Comparison", values_from="Ratio", id_cols = c("chrom", "start", "end", "strand")) %>%
+  inner_join(IntronAnnotations) %>%
+  mutate(ProductiveOrUnproductive = case_when(
+    SuperAnnotation %in% c("AnnotatedJunc_ProductiveCodingGene", "UnannotatedJunc_ProductiveCodingGene") ~ "Productive",
+    SuperAnnotation %in% c("UnannotatedJunc_UnproductiveCodingGene", "AnnotatedJunc_UnproductiveCodingGene") ~ "Unproductive",
+    TRUE ~ NA_character_
+  )) %>%
+  filter(!is.na(ProductiveOrUnproductive)) %>%
+  inner_join(
+        MostCommonContexts %>%
+            mutate(Intron = str_glue("{chrom}_{start}_{stop-1}_{strand}"))
+    ) %>%
+  group_by(ProductiveOrUnproductive) %>%
+  summarise(cor = cor(`chRNA/steadyState`, `dKD/control`, method='s', use="pairwise.complete.obs"), n=n()) %>%
+  ungroup()
+```
+
+Is the start proximal vs Trigger NMD difference meaningful?
+
+first test difference in dKD/control...
+
+```{r}
+juncs.summarised.Ratios.NormalizedToGeneJuncs %>%
+  filter(count.num >= JuncCountMin | count.den >= JuncCountMin) %>%
+  pivot_wider(names_from="Comparison", values_from="Ratio", id_cols = c("chrom", "start", "end", "strand")) %>%
+  inner_join(IntronAnnotations) %>%
+  mutate(ProductiveOrUnproductive = case_when(
+    SuperAnnotation %in% c("AnnotatedJunc_ProductiveCodingGene", "UnannotatedJunc_ProductiveCodingGene") ~ "Productive",
+    SuperAnnotation %in% c("UnannotatedJunc_UnproductiveCodingGene", "AnnotatedJunc_UnproductiveCodingGene") ~ "Unproductive",
+    TRUE ~ NA_character_
+  )) %>%
+  filter(ProductiveOrUnproductive == "Unproductive") %>%
+  inner_join(
+        MostCommonContexts %>%
+            mutate(Intron = str_glue("{chrom}_{start}_{stop-1}_{strand}"))
+    ) %>%
+    filter(ModeNMDFinder %in% c("Trigger NMD", "Start proximal")) %>%
+  wilcox.test(`dKD/control` ~ ModeNMDFinder, data=.)
+```
+
+Now same test in chRNA/steadyState
+
+```{r}
+juncs.summarised.Ratios.NormalizedToGeneJuncs %>%
+  filter(count.num >= JuncCountMin | count.den >= JuncCountMin) %>%
+  pivot_wider(names_from="Comparison", values_from="Ratio", id_cols = c("chrom", "start", "end", "strand")) %>%
+  inner_join(IntronAnnotations) %>%
+  mutate(ProductiveOrUnproductive = case_when(
+    SuperAnnotation %in% c("AnnotatedJunc_ProductiveCodingGene", "UnannotatedJunc_ProductiveCodingGene") ~ "Productive",
+    SuperAnnotation %in% c("UnannotatedJunc_UnproductiveCodingGene", "AnnotatedJunc_UnproductiveCodingGene") ~ "Unproductive",
+    TRUE ~ NA_character_
+  )) %>%
+  filter(ProductiveOrUnproductive == "Unproductive") %>%
+  inner_join(
+        MostCommonContexts %>%
+            mutate(Intron = str_glue("{chrom}_{start}_{stop-1}_{strand}"))
+    ) %>%
+    filter(ModeNMDFinder %in% c("Trigger NMD", "Start proximal")) %>%
+  wilcox.test(`chRNA/steadyState` ~ ModeNMDFinder, data=.)
+
+
 
 ```
+
 

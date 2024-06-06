@@ -1,0 +1,185 @@
+---
+title: "2024-04-30_MakeExampleConfigForPlotting"
+output: html_document
+date: '2024-04-30'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Making config file to make it easier to get test data for using my plotting scripts...
+
+```{r}
+library(tidyverse)
+
+sm.samples <- read_tsv("/project2/yangili1/bjf79/sm_splicingmodulators/code/config/samples.tsv") %>%
+  distinct(sample, .keep_all=T) %>%
+  filter(Experiment %in% c(1,2))
+
+
+
+
+
+YRI <- read_tsv("/project2/yangili1/bjf79/ChromatinSplicingQTLs/data/igsr_samples.tsv.gz") %>%
+  filter(`Population code` == 'YRI')
+
+project.samples <- read_tsv("/project2/yangili1/bjf79/ChromatinSplicingQTLs/code/config/samples.tsv") %>%
+  filter(Phenotype %in% c("Expression.Splicing", "chRNA.Expression.Splicing", "H3K27AC")) %>%
+  filter(IndID %in% YRI$`Sample name`)
+
+Sys.glob("")
+
+bind_rows(
+  #HTT example
+  sm.samples %>%
+    mutate(bigwig = str_glue("/project2/yangili1/bjf79/sm_splicingmodulators/code/rna-seq/bigwigs/unstranded/{sample}.bw")) %>%
+    mutate(ROI = "chr4:3,211,727-3,215,527") %>%
+    mutate(bigwig_out = str_glue("Example_HTT_data/bigwigs/{sample}.bw")) %>%
+    dplyr::select(bigwig, bigwig_out, ROI),
+  #ZNF718 promoter example
+  project.samples %>%
+    filter(Phenotype %in% c("H3K27AC", "Expression.Splicing")) %>%
+    mutate(Assay = recode(Phenotype, "H3K27AC"="H3K27AC_ChIPseq", "Expression.Splicing"="GeuvadisYRI_RNAseq")) %>%
+    mutate(bigwig = case_when(
+      Assay == "H3K27AC_ChIPseq" ~ str_glue("/project2/yangili1/bjf79/ChromatinSplicingQTLs/code/bigwigs/H3K27AC/{IndID}.{RepNumber}.bw"),
+      Assay == "GeuvadisYRI_RNAseq" ~ str_glue("/project2/yangili1/bjf79/ChromatinSplicingQTLs/code/bigwigs/Expression.Splicing/{IndID}.{RepNumber}.bw"))) %>%
+    mutate(bigwig_out = str_glue("Example_ZNF718_data/bigwigs/{Assay}_{IndID}.{RepNumber}.bw")) %>%
+    mutate(ROI = "chr4:123,137-127,511") %>%
+    dplyr::select(bigwig, bigwig_out, ROI),
+  #TTC38 example
+  bind_rows(
+    project.samples %>%
+      filter(Phenotype == "chRNA.Expression.Splicing")  %>%
+      mutate(bigwig = str_glue("/project2/yangili1/bjf79/ChromatinSplicingQTLs/code/bigwigs/chRNA.Expression.Splicing_stranded/{IndID}.{RepNumber}.minus.bw")) %>%
+      mutate(bigwig_out = str_glue("Example_TTC38_data/bigwigs/naRNA_{IndID}.{RepNumber}.plus.bw")) %>%
+      mutate(ROI = "chr22:46,289,343-46,294,094") %>%
+      dplyr::select(bigwig, bigwig_out, ROI),
+    project.samples %>%
+      filter(Phenotype == "chRNA.Expression.Splicing")  %>%
+      mutate(bigwig = str_glue("/project2/yangili1/bjf79/ChromatinSplicingQTLs/code/bigwigs/chRNA.Expression.Splicing_stranded/{IndID}.{RepNumber}.plus.bw")) %>%
+      mutate(bigwig_out = str_glue("Example_TTC38_data/bigwigs/naRNA_{IndID}.{RepNumber}.minus.bw")) %>%
+      mutate(ROI = "chr22:46,289,343-46,294,094") %>%
+      dplyr::select(bigwig, bigwig_out, ROI),
+    project.samples %>%
+      filter(Phenotype == "Expression.Splicing")  %>%
+      mutate(bigwig = str_glue("/project2/yangili1/bjf79/ChromatinSplicingQTLs/code/bigwigs/Expression.Splicing/{IndID}.{RepNumber}.bw")) %>%
+      mutate(bigwig_out = str_glue("Example_TTC38_data/bigwigs/GeuvadisYRI_{IndID}.{RepNumber}.bw")) %>%
+      mutate(ROI = "chr22:46,289,343-46,294,094") %>%
+      dplyr::select(bigwig, bigwig_out, ROI)
+  )
+) %>%
+  filter(file.exists(bigwig)) %>%
+    write_tsv("/project2/yangili1/bjf79/GenometracksByGenotype/test_data/bigwigsToSubset.tsv")
+
+sm.PSI <- read_tsv("/project2/yangili1/bjf79/GenometracksByGenotype/test_data/test_data/Example_HTT_data/SplicingTable.bed.gz") %>%
+  dplyr::select(1:6, starts_with("X1"), starts_with("X2")) %>%
+  dplyr::rename_all(~str_replace_all(., 'X', ''))
+
+sm.PSI %>%
+  write_tsv("/project2/yangili1/bjf79/GenometracksByGenotype/test_data/Example_HTT_data/SplicingTable.bed")
+  
+```
+
+Now write the bwtables and group tables
+
+```{r}
+
+bwList.sm <- data.frame(fn = Sys.glob("/project2/yangili1/bjf79/GenometracksByGenotype/test_data/Example_HTT_data/bigwigs/*.bw")) %>%
+  mutate(sample = str_replace(fn, "/project2/yangili1/bjf79/GenometracksByGenotype/test_data/Example_HTT_data/bigwigs/(.+?).bw", "\\1")) %>%
+  mutate(bigwigPath = str_replace(fn, "/project2/yangili1/bjf79/GenometracksByGenotype/", "")) %>%
+  dplyr::select(sample, bigwigPath) %>%
+  inner_join(sm.samples) %>%
+  mutate(Group_label = case_when(
+    cell.type == "Fibroblast" ~ Treatment,
+    sample == "2_LCL_polyA_DMSO_NA_1" ~ "Branaplam_0nM",
+    sample == "2_LCL_polyA_DMSO_NA_2" ~ "Risdiplam_0nM",
+    sample == "2_LCL_polyA_DMSO_NA_3" ~ "C2C5_0nM",
+    cell.type == "LCL" ~ as.character(str_glue("{Treatment}_{dose.nM}nM"))
+  )) %>%
+  mutate(strand = ".") %>%
+  mutate(Supergroup = case_when(
+    sample == "2_LCL_polyA_DMSO_NA_1" ~ "Branaplam_TitrationSeriesInLCLs",
+    sample == "2_LCL_polyA_DMSO_NA_2" ~ "Risdiplam_TitrationSeriesInLCLs",
+    sample == "2_LCL_polyA_DMSO_NA_3" ~ "C2C5_TitrationSeriesInLCLs",
+    cell.type == "LCL" ~ paste(Treatment, "TitrationSeriesInLCLs", sep="_"),
+    cell.type == "Fibroblast" ~ "SingleDoseTreatments"
+  )) %>%
+  mutate(Bedgz = "test_data/Example_HTT_data/SplicingTable.bed.gz") %>%
+  dplyr::select(sample, bigwigPath, Bedgz, Group_label, strand, color, Supergroup)
+
+Full.bwList <- bind_rows(
+  bwList.sm,
+  data.frame(fn = Sys.glob("/project2/yangili1/bjf79/GenometracksByGenotype/test_data/Example_ZNF718_data/bigwigs/*.bw")) %>%
+    mutate(group.IndID = str_replace(fn, "/project2/yangili1/bjf79/GenometracksByGenotype/test_data/Example_ZNF718_data/bigwigs/(.+?_.+?)_(.+?).[12].bw", "\\1;\\2")) %>%
+    separate(group.IndID, into=c("Group_label", "sample"), sep=";") %>%
+    mutate(bigwigPath = str_replace(fn, "/project2/yangili1/bjf79/GenometracksByGenotype/", "")) %>%
+    mutate(strand = '.', Bedgz='', color='', Supergroup='') %>%
+    dplyr::select(sample, bigwigPath, Bedgz, Group_label, strand, color, Supergroup),
+  data.frame(fn = Sys.glob("/project2/yangili1/bjf79/GenometracksByGenotype/test_data/Example_TTC38_data/bigwigs/*.bw")) %>%
+    mutate(group.IndID = str_replace(fn, "/project2/yangili1/bjf79/GenometracksByGenotype/test_data/Example_TTC38_data/bigwigs/(.+?)_(NA.+?)\\..+$", "\\1;\\2")) %>%
+    separate(group.IndID, into=c("Group_label", "sample"), sep=";") %>%
+    mutate(bigwigPath = str_replace(fn, "/project2/yangili1/bjf79/GenometracksByGenotype/", "")) %>%
+    mutate(Supergroup='') %>%
+    mutate(strand = case_when(
+      Group_label == "GeuvadisYRI" ~ ".",
+      str_detect(bigwigPath, "minus") ~ "-",
+      str_detect(bigwigPath, "plus") ~ "+"
+    )) %>%
+    mutate(Bedgz = '', color='') %>%
+    dplyr::select(sample, bigwigPath, Bedgz, Group_label, strand, color, Supergroup)
+)
+
+Full.bwList %>%
+  dplyr::select(sample, bigwigPath, Group_label, strand) %>%
+  write_tsv("/project2/yangili1/bjf79/GenometracksByGenotype/test_data/bigwig.list.tsv")
+
+Full.bwList %>%
+  filter(Supergroup=="SingleDoseTreatments") %>%
+  dplyr::select(sample, bigwigPath, Group_label, strand) %>%
+  write_tsv("/project2/yangili1/bjf79/GenometracksByGenotype/test_data/bigwig.list.OnlyFirstExample.tsv")
+
+# Example2 groups
+bwList.sm %>%
+  distinct(Group_label, .keep_all=T) %>%
+  filter(Supergroup == "SingleDoseTreatments") %>%
+  mutate(Supergroup = "") %>%
+  mutate(Bedgz="") %>%
+  dplyr::select(Group_label, color, Bedgz, Supergroup) %>%
+  mutate(Group_label = relevel(as.factor(Group_label), "DMSO")) %>%
+  arrange(Group_label) %>%
+  write_tsv("/project2/yangili1/bjf79/GenometracksByGenotype/test_data/Example_HTT_data/GroupsFile.A.tsv")
+
+# Example3 groups
+bwList.sm %>%
+  distinct(Group_label, .keep_all=T) %>%
+  mutate(dose.nM = case_when(
+    str_detect(Supergroup, "TitrationSeriesInLCLs") ~ str_replace(Group_label, "^.+?_(.+?)nM", "\\1"),
+    Group_label == "DMSO" ~ "0.0",
+    TRUE ~ "1.0")) %>%
+  mutate(dose.nM = as.numeric(dose.nM)) %>%
+  arrange(Supergroup, dose.nM) %>%
+  dplyr::select(Group_label, color, Bedgz, Supergroup) %>%
+  write_tsv("/project2/yangili1/bjf79/GenometracksByGenotype/test_data/Example_HTT_data/GroupsFile.B.tsv")
+
+# Example5 groups
+Full.bwList %>%
+  filter(str_detect(bigwigPath, "ZNF")) %>%
+  distinct(Group_label, .keep_all=T) %>%
+  dplyr::select(Group_label, color, Bedgz, Supergroup) %>%
+  write_tsv("/project2/yangili1/bjf79/GenometracksByGenotype/test_data/Example_ZNF718_data/GroupsFile.A.tsv")
+
+# Example6 groups
+Full.bwList %>%
+  filter(str_detect(bigwigPath, "TTC")) %>%
+  mutate(Bedgz = "/project2/yangili1/bjf79/GenometracksByGenotype/test_data/Example_TTC38_data/SplicingTable.naRNA.bed.gz") %>%
+  distinct(Group_label, .keep_all=T) %>%
+  dplyr::select(Group_label, color, Bedgz, Supergroup) %>%
+  write_tsv("/project2/yangili1/bjf79/GenometracksByGenotype/test_data/Example_TTC38_data/GroupsFile.A.tsv")
+```
+
+
+```{r}
+
+```
+

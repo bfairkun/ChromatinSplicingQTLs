@@ -201,6 +201,12 @@ volcano.dat %>%
 
 volcano.dat %>%
   filter(!is.na(FDR)) %>%
+  mutate(Effect = if_else(FDR<0.01, sign(logFC), NaN )) %>%
+  count(Effect, dose.nM, dataset) %>%
+  arrange(dataset, dose.nM, Effect)
+
+volcano.dat %>%
+  filter(!is.na(FDR)) %>%
 ggplot( aes(x=logFC, y=-log10(PValue), color=FDR<0.1)) +
   geom_point(alpha=0.5) +
   facet_wrap(dataset~dose.nM, scales = "free_y")
@@ -245,6 +251,123 @@ ggplot( aes(x=Estimate.expression.untreated, y=logFC, color=FDR<0.01)) +
 P.MA
 
 ```
+
+Let's make another MA plot for naRNA
+
+```{r}
+P.naRNA.MA.count.labels <- volcano.dat %>%
+  filter(!is.na(FDR)) %>%
+  filter(dataset == "chRNA") %>%
+  mutate(dose.nM = recode(dose.nM, `100`="100nM risdiplam", `3160`="3160nM risdiplam")) %>%
+  filter(FDR<0.01) %>%
+  mutate(sign = sign(logFC)) %>%
+  mutate(UpOrDown = recode(sign, `1`="Up", `-1`="Down")) %>%
+  count(dose.nM, sign, UpOrDown, .drop=F) %>%
+  mutate(y = Inf * sign) %>%
+  mutate(label = str_glue("{n} {UpOrDown}"))
+  
+
+
+P.naRNA.MA <- volcano.dat %>%
+  filter(!is.na(FDR)) %>%
+  filter(dataset == "chRNA") %>%
+  dplyr::select(-Estimate.expression.untreated) %>%
+  inner_join(
+    chRNA.DE.dat %>%
+      separate(Geneid, into= c("gene", "symbol"), sep="_", convert=T) %>%
+      dplyr::select(symbol, dose.nM = risdiplam_conc, Estimate.expression.untreated=logCPM)
+  ) %>%
+  mutate(dose.nM = recode(dose.nM, `100`="100nM risdiplam", `3160`="3160nM risdiplam")) %>%
+ggplot( aes(x=Estimate.expression.untreated, y=logFC, color=FDR<0.01)) +
+  geom_point(alpha=0.5) +
+  geom_hline(yintercept=0, linetype='dashed') +
+  scale_color_manual(values=c(`TRUE`="red", `FALSE`="gray")) +
+  geom_text(data=P.naRNA.MA.count.labels, aes(y=y, label=label, vjust=sign), x=Inf, color="red", hjust=1) +
+  facet_wrap(~dose.nM, scales = "free_y") +
+  labs(x="Expression in DMSO control (log2CPM)", y="log2FoldChange")
+P.naRNA.MA
+
+P.MA
+```
+
+Combined MA
+
+```{r}
+
+CombinedMA.dat <- bind_rows(
+  volcano.dat %>%
+    filter(!is.na(FDR)) %>%
+    filter(dataset == "chRNA") %>%
+    dplyr::select(-Estimate.expression.untreated) %>%
+    inner_join(
+      chRNA.DE.dat %>%
+        separate(Geneid, into= c("gene", "symbol"), sep="_", convert=T) %>%
+        dplyr::select(symbol, dose.nM = risdiplam_conc, Estimate.expression.untreated=logCPM)
+    ) %>%
+    mutate(dose.nM = recode(dose.nM, `100`="100nM risdiplam", `3160`="3160nM risdiplam")),
+  volcano.dat %>%
+    filter(!is.na(FDR)) %>%
+    filter(dataset == "polyA") %>%
+    mutate(dose.nM = recode(dose.nM, `100`="100nM risdiplam", `3160`="3160nM risdiplam"))
+) %>%
+  mutate(dataset = recode(dataset, "chRNA"="naRNA", "polyA"="steady-state"))
+
+
+CombinedMA.dat %>%
+  distinct(dataset)
+
+P.Combined.MA.count.labels <- CombinedMA.dat %>%
+  filter(!is.na(FDR)) %>%
+  mutate(dose.nM = recode(dose.nM, `100`="100nM risdiplam", `3160`="3160nM risdiplam")) %>%
+  filter(FDR<0.01) %>%
+  mutate(sign = sign(logFC)) %>%
+  mutate(UpOrDown = recode(sign, `1`="Up", `-1`="Down")) %>%
+  count(dose.nM, sign, UpOrDown, dataset, .drop=F) %>%
+  mutate(y = Inf * sign) %>%
+  mutate(label = str_glue("{n} {UpOrDown}"))
+
+library(scattermore)
+
+
+P.CombinedMA <- CombinedMA.dat %>%
+  ggplot( aes(x=Estimate.expression.untreated, y=logFC, color=FDR<0.01)) +
+  geom_point(alpha=0.5) +
+  geom_hline(yintercept=0, linetype='dashed') +
+  scale_color_manual(values=c(`TRUE`="black", `FALSE`="gray")) +
+  geom_text(data=P.Combined.MA.count.labels, aes(y=y, label=label, vjust=sign*1.5), x=Inf, color="black", hjust=1) +
+  facet_grid(dataset~dose.nM) +
+  labs(x="Expression in DMSO control (log2CPM)", y="log2FoldChange")
+P.CombinedMA
+
+P.CombinedMA <- CombinedMA.dat %>%
+  mutate(IsSig = FDR<0.01) %>%
+  ggplot( aes(x=Estimate.expression.untreated, y=logFC, color=FDR<0.01)) +
+  scattermore::geom_scattermore(alpha=0.5, pointsize=5) +
+  # geom_point(alpha=0.5) +
+  geom_hline(yintercept=0, linetype='dashed') +
+  scale_color_manual(values=c(`TRUE`="black", `FALSE`="gray")) +
+  geom_text(data=P.Combined.MA.count.labels, aes(y=y, label=label, vjust=sign*1.5), x=Inf, color="black", hjust=1) +
+  facet_grid(dataset~dose.nM) +
+  theme(legend.position="none") +
+  labs(x="Expression in DMSO control (log2CPM)", y="log2FoldChange")
+
+P.CombinedMA <- CombinedMA.dat %>%
+  mutate(IsSig = FDR<0.01) %>%
+  ggplot( aes(x=Estimate.expression.untreated, y=logFC)) +
+  geom_point(data = . %>%
+               filter(IsSig), alpha=0.5, color='black') +
+  geom_hex(data = . %>% filter(!IsSig), bins=100, fill='gray') +
+  geom_hline(yintercept=0, linetype='dashed') +
+  scale_color_manual(values=c(`TRUE`="black", `FALSE`="gray")) +
+  geom_text(data=P.Combined.MA.count.labels, aes(y=y, label=label, vjust=sign*1.5), x=Inf, color="black", hjust=1) +
+  facet_grid(dataset~dose.nM) +
+  theme(legend.position="none") +
+  labs(x="Expression in DMSO control (log2CPM)", y="log2FoldChange")
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig4_CombinedMA.pdf",P.CombinedMA, height=5, width=5)
+
+```
+
 
 ### bar plots of predicted effects
 
@@ -1642,6 +1765,28 @@ OMIM.risdiplam.genes <- P.scatter.byPrediction.dat %>%
 
 kable(OMIM.risdiplam.genes)
 
+P.scatter.byPrediction.dat %>%
+  filter(ColorEffect == "NMD") %>%
+  filter(FDR_polyA < 0.1) %>%
+  filter(logFC_polyA < -1)
+
+NewDat <- read_tsv("../data/FigS23_Join_Fig5DE.dat.tsv.gz")
+
+New.OMIM.risdiplam.genes <- NewDat %>%
+  filter(ColorEffect == "NMD") %>%
+  distinct(gene, .keep_all=T) %>%
+  filter(FDR_polyA < 0.1) %>%
+  filter(logFC_polyA < -1) %>%
+  
+  inner_join(
+    OMIM %>%
+      filter(!is.na(Phenotypes)) %>%
+      filter(!is.na(`Ensembl Gene ID`)) %>%
+      filter(str_detect(Phenotypes, "dominant")) %>%
+      dplyr::select("MIM Number":"Phenotypes"),
+    by=c("gene"="Ensembl Gene ID")
+  ) %>%
+  arrange(hgnc_symbol)
 ```
 
 Now let's plot the ecdf of gene length nicer for possible publication...
@@ -1771,14 +1916,98 @@ Splicing.tidyForDose_ActualDataForModel <- read_tsv("../code/SmallMolecule/Casse
   inner_join(
     P.boxplot.dat %>%
       filter(dataset=="polyA") %>%
+      # filter(gene %in% New.OMIM.risdiplam.genes$gene) %>% distinct(gene)
       dplyr::select(GAGTjunc=GAGTInt, gene, ColorEffect, MergedEffect, ExonStart_Cassette, ExonStop_Cassette) %>%
       unite(Exon, ExonStart_Cassette,ExonStop_Cassette, sep="-")
     )
 
 
+Tidy.junc.dat <- read_tsv("../code/SmallMolecule/CassetteExons/TidyPSI.tsv.gz")
+
+P.boxplot.dat %>%
+      filter(dataset=="polyA") %>%
+      filter(gene %in% New.OMIM.risdiplam.genes$gene) %>% distinct(gene, .keep_all=T) %>%
+      dplyr::select(GAGTjunc=GAGTInt, gene, ColorEffect, MergedEffect, ExonStart_Cassette, ExonStop_Cassette) %>%
+      filter(!GAGTjunc %in% Tidy.junc.dat$GAGTjunc)
+
+Splicing.tidyForDose_ActualDataForModel %>%
+  filter(gene %in% New.OMIM.risdiplam.genes$gene) %>%
+  distinct(gene)
+
+New.OMIM.risdiplam.genes %>%
+  filter(!gene %in% Splicing.tidyForDose_ActualDataForModel$gene)
+
+New.OMIM.risdiplam.genes %>%
+  filter(!gene %in% Splicing.tidyForDose_ActualDataForModel$gene)
+
+cassette.exons <- read_tsv("../output/SmallMoleculeGAGT_CassetteExonclusters.bed", col_names=c("chrom","start", "stop","name", "score", "strand", "thickStart", "thickEnd", "color" )) %>%
+    separate(name, into=c("type", "dummy", "clusterNum", "GAGTjunc"), sep="_", convert=T) %>%
+    dplyr::select(-dummy, -score, -thickStart, -thickEnd, -color) %>%
+    mutate(rowname = str_glue("{chrom}:{start}:{stop}:clu_{clusterNum}_{strand}"))
+
+leafcutter.counts <- read.table("../code/SmallMolecule/leafcutter/clustering/autosomes/leafcutter_perind_numers.counts.gz", header=T, sep=' ') %>%
+    rownames_to_column("rowname") %>%
+    as_tibble()
+
+counts.tidy <- leafcutter.counts %>%
+    inner_join(cassette.exons) %>% 
+    filter(GAGTjunc %in% New.OMIM.risdiplam.genes$GAGTInt) %>%
+    pivot_longer(contains("LCL"),names_to="Sample", values_to="Counts") %>%
+    dplyr::select(type, GAGTjunc, Counts, Sample) %>%
+    pivot_wider(names_from="type", values_from="Counts") %>%
+    mutate(IncludedCounts = (junc.GAGT + junc.UpstreamIntron)/2) %>%
+    mutate(PSI = IncludedCounts / (IncludedCounts + junc.skipping)) %>%
+    separate(Sample, into=c("treatment", "dose.nM", "cell.type", "libType", "RepNumber"), convert=T, sep="_") %>%
+    replace_na(list(dose.nM=0))
+
+
+New.OMIM.risdiplam.genes %>%
+  filter(GAGTInt %in% counts.tidy$GAGTjunc)
+
+```
+
+update after fixing something after accepted in principle
+
+```{r}
+Splicing.tidyForDose_ActualDataForModel.fixed <- counts.tidy %>%
+  inner_join(
+    P.boxplot.dat %>%
+      filter(dataset=="polyA") %>%
+      # filter(gene %in% New.OMIM.risdiplam.genes$gene) %>% distinct(gene)
+      dplyr::select(GAGTjunc=GAGTInt, gene, ColorEffect, MergedEffect, ExonStart_Cassette, ExonStop_Cassette) %>%
+      unite(Exon, ExonStart_Cassette,ExonStop_Cassette, sep="-")
+    )
+
+
+P.OMIM.splicing.Effections.fixed <- Splicing.tidyForDose_ActualDataForModel.fixed %>%
+  filter(gene %in% New.OMIM.risdiplam.genes$gene) %>%
+  left_join(ensembl_to_symbols, by=c("gene"="ensembl_gene_id")) %>%
+  mutate(chrom = str_extract(GAGTjunc, "^chr.+?:")) %>%
+  mutate(facet = str_glue("{hgnc_symbol}\n{chrom}{Exon}")) %>%
+  # filter(libType=="polyA") %>%
+  # mutate(dose.nM = dose.nM + 0.1) %>%
+  ggplot(aes(x=dose.nM, y=PSI, color=libType)) +
+  geom_point() +
+  scale_color_manual(values=c("chRNA"="#969696", "polyA"="#252525"), labels=c("polyA"="steady-state", "chRNA"="naRNA")) +
+  geom_smooth(
+    data = . %>%
+      filter(libType=="polyA"),
+    method = drm, method.args = list(fct = L.4(names=c("Steepness", "LowerLimit", "UpperLimit", "ED50"))), se = FALSE) +
+  scale_x_continuous(trans="log1p", limits=c(0, 10000), breaks=c(10000, 3160, 1000, 316, 100, 31.6, 10, 3.16, 0) + 0.1, labels=rev(c("0", "3.16","10","31.6","100", "316", "1000", "3160", "10000"))) +  facet_wrap(~facet, scales="free_y") +
+  Rotate_x_labels +
+  labs(x="[risdiplam] (nanomolar)", y="Splicing of indicated NMD exon; PSI", color="RNA-seq\nlibrary type") +
+  theme(legend.position='bottom')
+P.OMIM.splicing.Effections.fixed
+```
+
+
+```{r}
+
+New.OMIM.risdiplam.genes %>%
+  inner_join(P.boxplot.dat) %>% distinct(gene)
 
 P.OMIM.splicing.Effections <- Splicing.tidyForDose_ActualDataForModel %>%
-  filter(gene %in% OMIM.risdiplam.genes$gene) %>%
+  filter(gene %in% New.OMIM.risdiplam.genes$gene) %>%
   left_join(ensembl_to_symbols, by=c("gene"="ensembl_gene_id")) %>%
   mutate(chrom = str_extract(GAGTjunc, "^chr.+?:")) %>%
   mutate(facet = str_glue("{hgnc_symbol}\n{chrom}{Exon}")) %>%
@@ -1875,6 +2104,24 @@ P.OMIM.expression.Effections <- Expression.tidyForDose_ActualDataForModel.Relati
   scale_x_continuous(trans="log1p", limits=c(0, 10000), breaks=c(10000, 3160, 1000, 316, 100, 31.6, 10, 3.16, 0), labels=rev(c("0", "3.16","10","31.6","100", "316", "1000", "3160", "10000"))) +  facet_wrap(~hgnc_symbol, scales="free_y") +
   Rotate_x_labels +
   labs(x="[risdiplam] (nanomolar)", y=expression("Expression "*log["2"]*"FC"))
+P.OMIM.expression.Effections
+
+P.OMIM.expression.Effections <- Expression.tidyForDose_ActualDataForModel.Relative %>%
+  dplyr::rename(libType = "LibraryType") %>%
+  filter(ensembl_gene_id %in% New.OMIM.risdiplam.genes$gene) %>%
+  left_join(ensembl_to_symbols) %>%
+  # mutate(dose.nM = dose.nM + 0.1) %>%
+  ggplot(aes(x=dose.nM, y=Log2CPM-MeanNormalCPM, color=libType)) +
+  geom_point() +
+  scale_color_manual(values=c("chRNA"="#969696", "polyA"="#252525"), labels=c("polyA"="steady-state", "chRNA"="naRNA")) +
+  geom_smooth(
+    data = . %>%
+      filter(libType=="polyA"),
+    method = drm, method.args = list(fct = L.4(names=c("Steepness", "LowerLimit", "UpperLimit", "ED50"))), se = FALSE) +
+  scale_x_continuous(trans="log1p", limits=c(0, 10000), breaks=c(10000, 3160, 1000, 316, 100, 31.6, 10, 3.16, 0), labels=rev(c("0", "3.16","10","31.6","100", "316", "1000", "3160", "10000"))) +  facet_wrap(~hgnc_symbol, scales="free_y") +
+  Rotate_x_labels +
+  labs(x="[risdiplam] (nanomolar)", y=expression("Expression "*log["2"]*"FC"), color="RNA-seq\nlibrary type") +
+  theme(legend.position='bottom')
 P.OMIM.expression.Effections
 ```
 
@@ -2069,6 +2316,11 @@ ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/202
 
 ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig4_OMIM_SplicingDoseResponse.pdf",P.OMIM.splicing.Effections, height=9, width=15)
 ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig4_OMIM_ExpresionDoseResponse.pdf",P.OMIM.expression.Effections, height=9, width=15)
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig4_OMIM_SplicingDoseResponse.fixed.pdf",P.OMIM.splicing.Effections.fixed, height=5, width=12)
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig4_OMIM_ExpresionDoseResponse.pdf",P.OMIM.expression.Effections, height=5, width=12)
+
+
 
 ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/2023_FinalFig4_MA.pdf",P.MA, height=3.5, width=6)
 

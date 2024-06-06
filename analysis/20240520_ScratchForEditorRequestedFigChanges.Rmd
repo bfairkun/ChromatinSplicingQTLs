@@ -1,0 +1,52 @@
+---
+title: "20240520_ScratchForEditorRequestedFigChanges"
+author: "Benjamin Fair"
+date: "`r format(Sys.time(), '%Y-%m-%d')`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+# Introduction
+
+This is your R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown, see [R Markdown: The Definitive Guide](https://bookdown.org/yihui/rmarkdown/).
+
+## R Code Chunk
+
+```{r}
+library(tidyverse)
+```
+
+## small molecule figs
+
+```{r}
+dat.sm <- read_tsv("../data/FigS23_Join_Fig5DE.dat.tsv.gz")
+
+dat.sm %>%
+    filter(!is.na(ColorEffect)) %>%
+    distinct(gene, ColorEffect, .keep_all=T) %>%
+    count(ColorEffect)
+```
+
+## Sample size of RNA-seq datasets
+
+```{r}
+samples <- read_tsv("../code/config/samples.tsv")
+
+samples %>%
+    filter(Assay == "RNA-seq") %>%
+    distinct(Phenotype, IndID) %>%
+    count(Phenotype)
+```
+
+## NUDT14 and D2GHGDH P, beta, q, PPFC
+
+```{r}
+
+```
+
+### beta beta scatter exact P
+
+### Intron len in risdi-exon containing introns, exact P

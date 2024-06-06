@@ -675,7 +675,7 @@ bind_rows(
   facet_wrap(~ProductiveOrUnproductive) +
   theme_classic() +
   labs(x="Junction RPM, control", y="Junction RPM, dKD", caption="Filtered out UTR juncs.\nVertical facets are 'Coding' value")
-ggsave("/project2/yangili1/bjf79/scratch/EvaluateJuncClassification.shRNAKD.NoOld.pdf", height=3, width=3)
+# ggsave("/project2/yangili1/bjf79/scratch/EvaluateJuncClassification.shRNAKD.NoOld.pdf", height=3, width=3)
 
 
 
@@ -721,7 +721,7 @@ bind_rows(
   facet_grid(method~ProductiveOrUnproductive) +
   theme_classic() +
   labs(x="Junction RPM, steady-state", y="Junction RPM, naRNA", caption="Filtered out UTR juncs.\nVertical facets are 'Coding' value")
-ggsave("/project2/yangili1/bjf79/scratch/EvaluateJuncClassification.naRNA.pdf", height=6, width=3)
+# ggsave("/project2/yangili1/bjf79/scratch/EvaluateJuncClassification.naRNA.pdf", height=6, width=3)
 
 bind_rows(
   juncs.long.summary.joined.toplot %>%
@@ -755,7 +755,7 @@ bind_rows(
   facet_wrap(~ProductiveOrUnproductive) +
   theme_classic() +
   labs(x="Junction RPM, steady-state", y="Junction RPM, naRNA", caption="Filtered out UTR juncs.\nVertical facets are 'Coding' value")
-ggsave("/project2/yangili1/bjf79/scratch/EvaluateJuncClassification.naRNA.NoOld.pdf", height=3, width=3)
+# ggsave("/project2/yangili1/bjf79/scratch/EvaluateJuncClassification.naRNA.NoOld.pdf", height=3, width=3)
 
 
 

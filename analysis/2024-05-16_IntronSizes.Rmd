@@ -1,0 +1,25 @@
+---
+title: "scratch"
+output: html_document
+date: "2024-05-16_IntronSizes"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Results
+
+```{r}
+library(tidyverse)
+
+introns <- read_tsv("../code/ReferenceGenome/Annotations/GTFTools_BasicAnnotations/gencode.v34.chromasomal.introns.bed", col_names = c("chrom", "start", "stop", "gene", "transcript", "strand"))
+
+introns %>%
+  distinct(chrom, start, stop, strand, .keep_all=T) %>%
+  mutate(len = stop- start) %>%
+  ggplot(aes(x=len)) +
+  stat_ecdf() +
+  scale_x_continuous(trans='log10')
+```
+

@@ -170,5 +170,79 @@ rule collect_gtex:
         expand("GTEx/QTLs/{tissue}/cpm.bed.gz", tissue = gtex_tissues),
         expand("GTEx/QTLs/{tissue}/NominalPass.{norm}.txt.tabix.gz", tissue=gtex_tissues, norm = ['cpm', 'qqnorm']),
         expand("GTEx/QTLs/{tissue}/PermutationPass.{norm}.FDR_Added.txt.gz", tissue=gtex_tissues, norm = ['cpm', 'qqnorm']),
-        
-        
+
+rule Subset_gtex_vcf:
+    """
+    rule added by Ben, for a quick analysis.
+    """
+    input:
+        vcf = "GTEx/data/GTEx_Analysis_2017-06-05_v8_WholeGenomeSeq_866Indiv.vcf.gz",
+        tbi = "GTEx/data/GTEx_Analysis_2017-06-05_v8_WholeGenomeSeq_866Indiv.vcf.gz.tbi",
+        snps = "../output/eQTLs_FromSplicingVsChromatin_AcrossGTEx.ForCarlos.tsv.gz"
+    output:
+        vcf = "GTEx/data/eQTL_sQTL_hQTL_SNPs.vcf.gz",
+        tbi = "GTEx/data/eQTL_sQTL_hQTL_SNPs.vcf.gz.tbi"
+    shell:
+        """
+        zcat {input.snps} | awk -v OFS='\\t' 'NR>1 {{split($1, a, ":"); print "chr"a[1], a[2]-5, a[2]+5}}' | bedtools sort -i  | bcftools view -o {output.vcf} -O z  -R - {input.vcf}
+        tabix -p vcf {output.vcf}
+        """
+
+rule QTLtools_GTEx_BenSubsetSNPs:
+    input:
+        vcf = "GTEx/data/eQTL_sQTL_hQTL_SNPs.vcf.gz",
+        tbi = "GTEx/data/eQTL_sQTL_hQTL_SNPs.vcf.gz.tbi",
+        bed = "GTEx/QTLs/{tissue}/{norm}.sorted.bed.gz",
+        bed_tbi = "GTEx/QTLs/{tissue}/{norm}.sorted.bed.gz.tbi",
+        cov = "GTEx/QTLs/{tissue}/{norm}.sorted.bed.pca"
+    output:
+        dat = temp("GTEx/BenSubsetSNPs_QTLs/{tissue}/{Pass}.{norm}.txt"),
+        header = temp("GTEx/BenSubsetSNPs_QTLs/{tissue}/{Pass}.{norm}.header.txt")
+
+    log:
+        "logs/GTEx/QTLtools_GTEx_BenSubsetSNPs/{tissue}/{Pass}Chunks/{norm}.log"
+    wildcard_constraints:
+        Pass = "NominalPass",
+        norm = 'cpm|qqnorm',
+    params:
+        WindowFlag = "--window 500000",
+        OtherFlags = "",
+        PassFlags = GetQTLtoolsPassFlags,
+        ExcFlag = "",
+    shell:
+        """
+        {config[QTLtools]} cis --chunk 0 1 --std-err  --vcf {input.vcf} --bed {input.bed} --cov {input.cov} --out {output.header} {params.OtherFlags} {params.WindowFlag} {params.PassFlags} {params.ExcFlag} &> {log}
+        {config[QTLtools]} cis --std-err  --vcf {input.vcf} --bed {input.bed} --cov {input.cov} --out {output.dat} {params.OtherFlags} {params.WindowFlag} {params.PassFlags} {params.ExcFlag} &> {log}
+        """
+
+rule gzip_QTLtools_GTEx_BenSubsetSNPs:
+    input:
+        header = "GTEx/BenSubsetSNPs_QTLs/{tissue}/{Pass}.{norm}.header.txt",
+        dat = "GTEx/BenSubsetSNPs_QTLs/{tissue}/{Pass}.{norm}.txt",
+    output:
+        "GTEx/BenSubsetSNPs_QTLs/{tissue}/{Pass}.{norm}.txt.gz"
+    shell:
+        """
+        cat {input.header} {input.dat} | gzip - > {output}
+        """
+
+use rule tabixNominalPassQTLResults_GTEx as tabixNominalPassQTLResults_GTEx_BenSubsetSNPs with:
+    input:
+        "GTEx/BenSubsetSNPs_QTLs/{tissue}/NominalPass.{norm}.txt.gz"
+    wildcard_constraints:
+        tissues = '|'.join(gtex_tissues),
+        norm = 'cpm|qqnorm'
+    output:
+        txt = "GTEx/BenSubsetSNPs_QTLs/{tissue}/NominalPass.{norm}.txt.tabix.gz",
+        tbi = "GTEx/BenSubsetSNPs_QTLs/{tissue}/NominalPass.{norm}.txt.tabix.gz.tbi"
+    log:
+        "logs/GTEx/BenSubsetSNPs_QTLs/tabixNominalPassQTLResults/{tissue}.NominalPass.{norm}.log"
+
+rule collect_BenSubsetGtexSNPs:
+    input:
+        expand("GTEx/BenSubsetSNPs_QTLs/{tissue}/NominalPass.{norm}.txt.tabix.gz.tbi", tissue=gtex_tissues, norm = ['cpm', 'qqnorm']),
+        # expand("GTEx/BenSubsetSNPs_QTLs/{tissue}/NominalPass.{norm}.txt.tabix.gz.tbi", tissue="cells_ebv-transformed_lymphocytes", norm = ['cpm', 'qqnorm']),
+
+
+
+

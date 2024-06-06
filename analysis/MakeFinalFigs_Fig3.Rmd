@@ -461,6 +461,9 @@ hyprcoloc.results %>%
 
 
 ```{r}
+library(broom)
+
+
 dat.for.scatter.P <- hyprcoloc.results %>%
   filter(ColocalizedClusterContainsGWASTrait) %>%
   inner_join(
@@ -481,6 +484,11 @@ dat.for.scatter.P <- hyprcoloc.results %>%
     symbol == "D2HGDH" & Category=="sQTL colocs" ~ "D2HGDH",
     TRUE ~ NA_character_
   ))
+
+
+dat.for.scatter.P %>%
+  filter(sQTL.type == "u-sQTL") %>%
+  distinct(gene, .keep_all=T)
 
 Scatter.GWASLoci.eQTL.sQTL.Full <- dat.for.scatter.P %>%
   nest(-sQTL.type, -Category) %>% 
@@ -510,6 +518,14 @@ Scatter.GWASLoci.eQTL.sQTL.Full <- dat.for.scatter.P %>%
   labs(x="sQTL beta", y="eQTL beta") +
   theme_bw() +
   theme(legend.position='none')
+
+dat.for.scatter.P %>%
+  nest(-sQTL.type) %>% 
+  mutate(cor=map(data,~cor.test(.x$beta.x, .x$x.beta.in.y, method = "sp"))) %>%
+  mutate(tidied = map(cor, tidy)) %>% 
+  unnest(tidied, .drop = T) %>%
+  unnest(data) %>%
+  count(SuperAnnotation.simplified, gene)
 
 Scatter.GWASLoci.eQTL.sQTL.Short <- dat.for.scatter.P %>%
   nest(-sQTL.type) %>% 
@@ -541,6 +557,7 @@ Scatter.GWASLoci.eQTL.sQTL.Short <- dat.for.scatter.P %>%
 
 Scatter.GWASLoci.eQTL.sQTL.Full
 Scatter.GWASLoci.eQTL.sQTL.Short
+
 
 Scatter.GWASLoci.eQTL.sQTL.Shortest <- dat.for.scatter.P %>%
   nest(-sQTL.type) %>% 
@@ -1487,6 +1504,27 @@ ggplot(dat.boxplot, aes(x=genotype, y=NormalizedExpression)) +
 So conclusion about this locus:
 that MS locus is slightly confusing... I also see siginficant colocalization between the GWAS and the sQTL (specifically, splice junction chr12:6330711:6333069). And we classify that splice junction as unproductive, and manually inspecting it, I think I agree with that 'unprductive' classification since it skips an assymetric exon in the basic/productive transcript structure. However, the surprising thing is that I don't see eQTL signal. Like here is the boxplot for the sQTL and eQTL signal. Let me quickly look up the nominal P-value for the eQTL signal (when including PCs as covariates, which isn't accounted for in the boxplot I show).
 
+```{r}
+nudt14.boxplot.dat <- read_tsv("../code/scratch/Plot_sQTLeQTLGWASColocs/DatForBoxplots.NUDT14.sQTL.chRNA.tsv") %>%
+  dplyr::rename("value"=2)
+lm.fit <- lm(value~genotype,data=nudt14.boxplot.dat)
+summary(lm.fit)
+
+nudt14.boxplot.dat <- read_tsv("../code/scratch/Plot_sQTLeQTLGWASColocs/DatForBoxplots.NUDT14.sQTL.polyA.tsv") %>%
+  dplyr::rename("value"=2)
+lm.fit <- lm(value~genotype,data=nudt14.boxplot.dat)
+summary(lm.fit)
+
+nudt14.boxplot.dat <- read_tsv("../code/scratch/Plot_sQTLeQTLGWASColocs/DatForBoxplots.NUDT14.eQTL.chRNA.tsv") %>%
+  dplyr::rename("value"=2)
+lm.fit <- lm(value~genotype,data=nudt14.boxplot.dat)
+summary(lm.fit)
+
+nudt14.boxplot.dat <- read_tsv("../code/scratch/Plot_sQTLeQTLGWASColocs/DatForBoxplots.NUDT14.eQTL.polyA.tsv") %>%
+  dplyr::rename("value"=2)
+lm.fit <- lm(value~genotype,data=nudt14.boxplot.dat)
+summary(lm.fit)
+```
 
 
 ## Save plots

@@ -1,0 +1,166 @@
+---
+title: "2024-04-26_eQTL_subtypePlieotropy"
+output: html_document
+date: '2024-04-26'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+
+
+
+### pleiotropy of u-sQTLs/eQTLs vs hQTL/eQTLs
+
+I predict that u-sQTL/eQTLs will be eQTLs less genes than hQTL/eQTLs...
+
+> About that horizontal pleiotropy of transcription based eQTLs vs splicing based eQTLs... Here I used the same red/purple groups of eQTL SNPs that I used for the manuscript where we looked at effect sizes across GTEx tissues. In this plot I looked for associations in GTEx LCL data, and counted the number of protein coding genes (100kb window from the SNP, among the 14000 genes we considered for many of our other analyses throughout the paper) with a nominally significant association (P<0.01) with the SNP. 
+
+
+```{r}
+library(tidyverse)
+GTEx.dat <- read_tsv("../code/scratch/Tidy.SummaryStats.eQTLsQTLhQTL_AllGenes.tsv.gz")
+
+GTEx.dat %>% distinct(sQTL_or_hQTL, BensClassification)
+
+GTEx.dat %>%
+  group_by(TopSNP, sQTL_or_hQTL, gene) %>%
+  summarise(IsSigInAnyTissue = any(eQTL_nomP < 0.01)) %>%
+  ungroup() %>%
+  count(TopSNP, sQTL_or_hQTL) %>%
+  ggplot(aes(x=n, color=sQTL_or_hQTL)) +
+  stat_ecdf()
+
+GTEx.dat %>%
+  distinct(tissue)
+
+GTEx.dat %>%
+  filter(tissue == "cells_ebv-transformed_lymphocytes") %>%
+  # mutate(sQTL_or_hQTL = BensClassification) %>%
+  count(nom_pval < 0.01, TopSNP, sQTL_or_hQTL) %>%
+  filter(`nom_pval < 0.01`) %>%
+  add_count(sQTL_or_hQTL) %>%
+  mutate(sQTL_or_hQTL = recode(sQTL_or_hQTL, "sQTL"="u-sQTL/eQTL", "hQTL"="hQTL/eQTL")) %>%
+  mutate(sQTL_or_hQTL = str_glue("{sQTL_or_hQTL}; n={nn}")) %>%
+  ggplot(aes(x=n, color=sQTL_or_hQTL)) +
+  stat_ecdf() +
+  scale_color_manual(values=c("#e31a1c", "#6a3d9a"), name=NULL) +
+  coord_cartesian(xlim=c(1,10)) +
+  scale_x_continuous(breaks=seq(0, 10, 2)) +
+  labs(y="ecdf", x="horizontal pleiotropy\n[Number eGenes per SNP\n in validation dataset]", caption="P=2.2E-16") +
+  theme(
+    legend.position = c(1, .5),
+    legend.justification = c("right", "top"),
+    legend.box.just = "right",
+    legend.margin = margin(6, 6, 6, 6)
+    )
+
+ggsave("../code/scratch/sQTL_hQTL_Pleiotropy.pdf", width=3.5, height=3.5)
+
+GTEx.dat %>%
+  filter(tissue == "cells_ebv-transformed_lymphocytes") %>%
+  count(nom_pval < 0.01, TopSNP, sQTL_or_hQTL) %>%
+  filter(`nom_pval < 0.01`) %>%
+  wilcox.test(n~sQTL_or_hQTL, data=.)
+
+
+```
+
+What's up with the 25% or so of sQTLs apparently with more than one eQTL?
+
+```{r}
+
+
+Genes <- read_tsv("../code/GTEx/QTLs/cells_ebv-transformed_lymphocytes/qqnorm.sorted.bed.gz") %>%
+  dplyr::select(1:6)
+
+GTEx.dat %>%
+  filter(tissue == "cells_ebv-transformed_lymphocytes") %>%
+  filter(sQTL_or_hQTL == "sQTL") %>%
+  filter(nom_pval < 0.01) %>%
+  add_count(TopSNP) %>%
+  inner_join(Genes, by=c("gene"="gid")) %>%
+  mutate(IsPleitropic = n > 1) %>%
+  dplyr::select(`#Chr`:pid, nom_pval, strand, IsPleitropic) %>%
+  group_by(IsPleitropic) %>%
+  group_walk(~ write_tsv(.x, paste0("../code/scratch/sQTLs_IsPleitropic_", .y$IsPleitropic, ".bed"), col_names = F))
+```
+
+Let's repeat some of the above analysis but after I recalled QTLtools use use 500kb cis windows...
+
+```{r}
+dat.500kbwindow <- Sys.glob("../code/GTEx/BenSubsetSNPs_QTLs/*/NominalPass.qqnorm.txt.tabix.gz") %>%
+  setNames(str_replace(., "../code/GTEx/BenSubsetSNPs_QTLs/(.+?)/NominalPass.qqnorm.txt.tabix.gz", "\\1")) %>%
+  lapply(read_tsv) %>%
+  bind_rows(.id="tissue") %>%
+  inner_join(GTEx.dat %>%
+               dplyr::select(-c(1:5)) %>%
+               distinct() %>%
+               separate(TopSNP, into=c("SNP_chrom", "var_from", "SNP_ref", "SNP_alt"), sep=":", remove=F, convert=T) %>%
+               mutate(var_chr = paste0("chr", SNP_chrom)),
+             by=c("var_chr", "var_from")) 
+
+
+
+dat.500kbwindow %>%
+  distinct(TopSNP)
+
+GTEx.dat %>%
+  distinct(TopSNP)
+
+dat.500kbwindow %>%
+  filter(tissue == "cells_ebv-transformed_lymphocytes") %>%
+  mutate(sQTL_or_hQTL = recode(sQTL_or_hQTL, "sQTL"="u-sQTL/eQTL", "hQTL"="hQTL/eQTL")) %>%
+  mutate(IsDiscovery.eGene = if_else(`#phe_id` == eGene, "Original discovery gene", "Other cis-genes")) %>%
+  group_by(sQTL_or_hQTL, IsDiscovery.eGene) %>%
+  mutate(expected_p = percent_rank(nom_pval)) %>%
+  ggplot(aes(x=-log10(expected_p), y=-log10(nom_pval), color=sQTL_or_hQTL)) +
+  geom_point() +
+  geom_abline(slope=1, color='red') +
+  scale_color_manual(values=c("#e31a1c", "#6a3d9a")) +
+  facet_wrap(~IsDiscovery.eGene) +
+  geom_hline(yintercept =c(2, 5, 8), linetype='dashed')
+
+
+
+dat.500kbwindow %>%
+  filter(tissue == "cells_ebv-transformed_lymphocytes") %>%
+  mutate(`1E-2`=nom_pval<0.01,
+         `1E-5`=nom_pval<1E-5,
+         `1E-8`=nom_pval<1E-8,
+         ) %>%
+  dplyr::select(sQTL_or_hQTL, TopSNP, `1E-2`:`1E-8`) %>%
+  pivot_longer(names_to = "Threshold", values_to = "PassThreshold", `1E-2`:`1E-8`) %>%
+  group_by(sQTL_or_hQTL, TopSNP, Threshold) %>%
+  summarise(Num_eGenes = sum(PassThreshold)) %>%
+  ungroup() %>%
+  add_count(sQTL_or_hQTL, Threshold) %>%
+  mutate(sQTL_or_hQTL = recode(sQTL_or_hQTL, "sQTL"="u-sQTL/eQTL", "hQTL"="hQTL/eQTL")) %>%
+  mutate(sQTL_or_hQTL = str_glue("{sQTL_or_hQTL}; n={n}")) %>%
+  ggplot() +
+  stat_ecdf(aes(x=Num_eGenes, color=sQTL_or_hQTL)) +
+  scale_color_manual(values=c("#e31a1c", "#6a3d9a")) +
+  coord_cartesian(xlim=c(0,10)) +
+  facet_wrap(~Threshold) +
+  geom_text( data = . %>%
+                group_by(Threshold) %>%
+                summarize(results = format.pval(wilcox.test(Num_eGenes ~ sQTL_or_hQTL)$p.value, 2)),
+             aes(label=str_glue("P: {results}"), x=Inf, y=-Inf, vjust=0, hjust=1)) +
+  labs(y="ecdf", x="horizontal pleiotropy\n(Number eGenes per SNP in GTEx LCLs)", title="facets are nominal Pval threshold")
+
+
+dat.500kbwindow %>%
+  filter(tissue == "cells_ebv-transformed_lymphocytes") %>%
+  mutate(`1E-2`=nom_pval<0.01,
+         `1E-5`=nom_pval<1E-5,
+         `1E-8`=nom_pval<1E-8,
+         ) %>%
+  dplyr::select(sQTL_or_hQTL, TopSNP, `1E-2`:`1E-8`) %>%
+  pivot_longer(names_to = "Threshold", values_to = "PassThreshold", `1E-2`:`1E-8`) %>%
+  group_by(sQTL_or_hQTL, TopSNP, Threshold) %>%
+  summarise(Num_eGenes = sum(PassThreshold)) %>%
+  ungroup() %>%
+  group_by(Threshold) %>%
+  summarize(results = wilcox.test(Num_eGenes ~ sQTL_or_hQTL)$p.value)
+```

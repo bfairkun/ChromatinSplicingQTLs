@@ -1,0 +1,37 @@
+---
+title: "2024-06-06_Recreate_naRNA_v_steadyState_juncScatter"
+output: html_document
+date: '2024-06-06'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+## Intro
+
+Quinn asked me for code and data for a scatter plot I made for Yang that I can't find anymore. I'll recreate something like it here:
+
+## code
+
+Load libs
+
+```{r}
+library(data.table)
+library(tidyverse)
+```
+
+I previously created "long format" junction count tables for naRNA-seq and steady-state, and another file for the previously published NMD knockdown experiment (Karousis et al)... Read in those files
+
+```{r}
+
+juncs.long <- fread("../code/SplicingAnalysis/CombinedJuncTables/All.tsv.gz")
+
+dat.KD <- fread("/project2/yangili1/cfbuenabadn/ChromatinSplicingQTLs/code/SplicingAnalysis/CombinedJuncTables/NMD_KD.tsv.gz")
+
+juncs.long <- bind_rows(juncs.long, dat.KD)
+
+juncs.long %>%
+    distinct(Dataset, IndID)
+```
+

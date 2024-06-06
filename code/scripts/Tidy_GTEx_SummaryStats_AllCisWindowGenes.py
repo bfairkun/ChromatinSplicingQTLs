@@ -39,7 +39,7 @@ df[['pos']] = df[['pos']].astype(int)
 TabixFilesDict = {re.search("/project2/yangili1/cfbuenabadn/ChromatinSplicingQTLs/code/GTEx/QTLs/(.+?)/NominalPass.cpm.txt.tabix.gz", fn).group(1):pysam.TabixFile(fn, parser=pysam.asTuple()) for fn in glob.glob("/project2/yangili1/cfbuenabadn/ChromatinSplicingQTLs/code/GTEx/QTLs/*/NominalPass.cpm.txt.tabix.gz")} 
 
 out = []
-ColumnIndexes = [11,13,14]
+ColumnIndexes = [0, 11,13,14]
 for index, row in df.iterrows():
     if index >= 0:
         print(index)
@@ -48,12 +48,12 @@ for index, row in df.iterrows():
             tbx_fetch = tabix_f.fetch(*fetch_region)
             ToReturn = pd.Series([None for i in ColumnIndexes]) 
             for line in tbx_fetch:
-                # if (row["eGene"] == line[0]) and row['GtexSnpName'] == line[7]:
-                if True:
-                    ToReturn = [float(i) for i in itemgetter(*ColumnIndexes)(line)] + [tissue] + row.tolist() 
+                if row['GtexSnpName'] == line[7]:
+                    itemgetter_items = itemgetter(*ColumnIndexes)(line)
+                    ToReturn = [itemgetter_items[0]] +  [float(i) for i in itemgetter_items[1:]] + [tissue] + row.tolist() 
                     out.append(ToReturn)
                 # print(ToReturn)
-out_df = pd.DataFrame(out, columns=['nom_pval', 'beta_GTEx', 'betaSE_GTEx', 'tissue'] + df.columns.tolist())
+out_df = pd.DataFrame(out, columns=['gene','nom_pval', 'beta_GTEx', 'betaSE_GTEx', 'tissue'] + df.columns.tolist())
 
 out_df.drop(columns=['chrom', 'pos', 'ref', 'alt', 'b38', 'GtexSnpName']).to_csv(f_out, sep='\t', index=False)
 

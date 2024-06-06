@@ -50,6 +50,7 @@ counts.tidy <- leafcutter.counts %>%
 counts.tidy %>%
     write_tsv(f_tidy_out)
 
+
 model.dat.df.FilteredGAGT <- counts.tidy %>%
     dplyr::rename(junc=GAGTjunc) %>%
     filter(libType == "polyA") %>%
