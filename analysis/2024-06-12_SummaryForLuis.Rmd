@@ -1,0 +1,285 @@
+---
+title: "2024-06-12_SummaryForLuis"
+output: html_document
+date: '2024-06-12'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message=F)
+```
+
+## Intro
+
+Luis wants a high level summary for our work on unproductive splicing... Here I'll make some summary plots I may include...
+
+First, 
+
+```{r}
+library(data.table)
+library(tidyverse)
+
+# Set theme
+theme_set(
+  theme_classic() +
+  theme(text=element_text(size=16,  family="Helvetica")))
+
+# I use layer a lot, to rotate long x-axis labels
+Rotate_x_labels <- theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+
+sample_n_of <- function(data, size, ...) {
+  dots <- quos(...)
+  
+  group_ids <- data %>% 
+    group_by(!!! dots) %>% 
+    group_indices()
+  
+  sampled_groups <- sample(unique(group_ids), size)
+  
+  data %>% 
+    filter(group_ids %in% sampled_groups)
+}
+
+```
+
+get colored full length reads for IGV
+
+```{r}
+dat <- c(Sys.glob("../code/LongReads/bed12translated/*/CTRL*_shRNA.*.bed.gz"),
+  Sys.glob("../code/LongReads/bed12translated/*/GM[1234].bed.gz"),
+  Sys.glob("../code/LongReads/bed12translated/*/SMG6_SMG7_shRNA.SAMEA8691113.bed.gz")) %>%
+  setNames(str_replace(., "../code/LongReads/bed12translated/(.+?)/(.+?).bed.gz", "\\1;\\2")) %>%
+  lapply(fread, col.names=c("chrom", "start", "stop", "ReadName", "score", "strand", "thickStart", "thickEnd", "Color", "blocks","blockSizes", "blockStarts", "sequence", "NMDFinderB", "AllJuncsIdentifiable", "Introns")) %>%
+  bind_rows(.id="approach_sample") %>%
+  separate(approach_sample, into=c("ORF.translation.approach", "sample"), sep=";")
+
+# recolor dKD data bed as blue and red
+dat.dKD <- fread("../code/LongReads/bed12translated/firstORF/SMG6_SMG7_shRNA.SAMEA8691113.bed.gz", col.names=c("chrom", "start", "stop", "ReadName", "score", "strand", "thickStart", "thickEnd", "Color", "blocks","blockSizes", "blockStarts", "sequence", "NMDFinderB", "AllJuncsIdentifiable", "Introns"))
+
+dat.dKD %>%
+  filter(AllJuncsIdentifiable) %>%
+  mutate(ProductiveStats = recode(NMDFinderB, "50 nt rule"="Productive", "Start proximal"="Unproductive","Last exon"="Productive", "Trigger NMD"="Unproductive", "Long exon"="Unproductive", "No stop"="Unproductive", "No CDS"="Unproductive")) %>%
+  mutate(ReadName = " ") %>%
+  mutate(Color = recode(ProductiveStats, "Unproductive"="#7f0000", "Productive"="#08306b")) %>%
+  write_tsv("../code/scratch/dKD.Recolored.bed", col_names = F)
+
+```
+
+plot bar
+
+```{r}
+NMDFinderBCategoriesToColors <- dat %>%
+  count(NMDFinderB) %>%
+  mutate(Color = recode(NMDFinderB, "50 nt rule"="#c6dbef", "Last exon"="#08306b", "Start proximal"="#4292c6","Long exon"="#ef6548", "Trigger NMD"="#7f0000", "No stop"="#fee8c8", "No CDS"="#bdbdbd")) %>%
+  mutate(NMDFinderB = factor(NMDFinderB, levels=c("Last exon", "Start proximal", "50 nt rule",  "No stop","Long exon", "Trigger NMD", "No CDS"))) %>%
+  arrange(NMDFinderB)
+
+JunctionAnnotations <- read_tsv("../data/IntronAnnotationsFromYang.Updated.tsv.gz") %>%
+  mutate(Introns = paste(chrom, start, end, strand, sep="_"))
+
+Mode <- function(x) {
+  ux <- unique(x)
+  ux[which.max(tabulate(match(x, ux)))]
+}
+
+
+dat.temp.readattributed <- dat %>%
+  filter(str_detect(sample, "shRNA")) %>%
+  # filter(sample == "SMG6_SMG7_shRNA.SAMEA8691113") %>%
+  mutate(sample = recode(sample, "SMG6_SMG7_shRNA.SAMEA8691113"="shRNA dKD NMD factors", "CTRL1_shRNA.SAMEA8691110"="shRNA control", "CTRL2_shRNA.SAMEA8691111"="shRNA control")) %>%
+  filter(AllJuncsIdentifiable) %>%
+  filter(str_detect(chrom, "^chr[1-9]")) %>%
+  filter(ORF.translation.approach == "firstORF") %>%
+  separate_rows(Introns, sep=",") %>%
+  inner_join(
+    JunctionAnnotations %>%
+      dplyr::select(-chrom, -start, -strand, -end)) %>%
+  group_by(ReadName, sample) %>%
+  mutate(GeneAttributedToRead = Mode(symbol)) %>%
+  ungroup() %>%
+  distinct(sample, ReadName, GeneAttributedToRead, ORF.translation.approach) %>%
+  inner_join(dat %>%
+                 mutate(sample = recode(sample, "SMG6_SMG7_shRNA.SAMEA8691113"="shRNA dKD NMD factors", "CTRL1_shRNA.SAMEA8691110"="shRNA control", "CTRL2_shRNA.SAMEA8691111"="shRNA control"))
+               ) %>%
+  # filter(!NMDFinderB %in% c("Last exon", "50 nt rule", "No CDS")) %>%
+  add_count(sample, GeneAttributedToRead, name="GeneCounts") %>%
+  filter(GeneCounts > 20)
+
+dat.temp <- dat.temp.readattributed %>%
+  count(NMDFinderB, sample, GeneAttributedToRead, GeneCounts, name="IsoformCounts") %>%
+  mutate(PercentIsoform =  IsoformCounts/GeneCounts) %>%
+  # filter(GeneAttributedToRead=="SRSF5") %>%
+  # filter(GeneAttributedToRead=="RPL12") %>%
+  mutate(EntropyPart = PercentIsoform * log2(PercentIsoform)) %>%
+  group_by(sample, GeneAttributedToRead) %>%
+  mutate(Entropy = sum(EntropyPart)) %>%
+  ungroup() %>%
+  # arrange(sample, GeneAttributedToRead, IsoformRank, PercentIsoform)
+  group_by(sample, GeneAttributedToRead) %>%
+  mutate(PercentIsoform = PercentIsoform/sum(PercentIsoform)) %>%
+  ungroup()
+
+dat.temp.entropy.ordered.genes <- dat.temp %>%
+  mutate(ProductiveOrUnproductive = case_when(
+    NMDFinderB %in% c("Last exon", "Start proximal", "50 nt rule") ~ "Productive",
+    TRUE ~ "Unproductive"
+  )) %>%
+  filter(ProductiveOrUnproductive == "Productive") %>%
+  group_by(sample, GeneAttributedToRead, ProductiveOrUnproductive) %>%
+  summarise(FractionProductive = sum(PercentIsoform)) %>%
+  ungroup %>%
+  arrange(sample, FractionProductive) %>%
+  mutate(GeneAttributedToRead.DummyByEntropy = row_number())
+
+TPM <- dat %>%
+  filter(str_detect(sample, "shRNA")) %>%
+  # filter(sample == "SMG6_SMG7_shRNA.SAMEA8691113") %>%
+  mutate(sample = recode(sample, "SMG6_SMG7_shRNA.SAMEA8691113"="shRNA dKD NMD factors", "CTRL1_shRNA.SAMEA8691110"="shRNA control", "CTRL2_shRNA.SAMEA8691111"="shRNA control")) %>%
+  filter(AllJuncsIdentifiable) %>%
+  filter(str_detect(chrom, "^chr[1-9]")) %>%
+  filter(ORF.translation.approach == "firstORF") %>%
+  separate_rows(Introns, sep=",") %>%
+  inner_join(
+    JunctionAnnotations %>%
+      dplyr::select(-chrom, -start, -strand, -end)) %>%
+  group_by(ReadName, sample) %>%
+  mutate(GeneAttributedToRead = Mode(symbol)) %>%
+  ungroup() %>%
+  distinct(sample, ReadName, GeneAttributedToRead, ORF.translation.approach) %>%
+  inner_join(dat %>%
+                 mutate(sample = recode(sample, "SMG6_SMG7_shRNA.SAMEA8691113"="shRNA dKD NMD factors", "CTRL1_shRNA.SAMEA8691110"="shRNA control", "CTRL2_shRNA.SAMEA8691111"="shRNA control"))
+               ) %>%
+  # filter(!NMDFinderB %in% c("Last exon", "50 nt rule", "No CDS")) %>%
+  count(sample, GeneAttributedToRead, name="GeneCounts") %>%
+  group_by(sample) %>%
+  mutate(TPM = GeneCounts/sum(GeneCounts, na.rm=T)*1E6) %>%
+  ungroup() %>%
+  inner_join(dat.temp.entropy.ordered.genes) %>%
+  mutate(GeneAttributedToRead.DummyByEntropy = factor(GeneAttributedToRead.DummyByEntropy)) %>%
+  arrange(GeneAttributedToRead.DummyByEntropy) %>%
+  add_count(sample) %>%
+  mutate(FacetTitle = str_glue("{sample},\n{n} genes"))
+
+TPM %>%
+  filter(FractionProductive < 1) %>%
+  group_by(sample) %>%
+  summarize(COR = stats::cor.test(TPM, FractionProductive, method='s')$estimate,
+                  pval = stats::cor.test(TPM, FractionProductive, method='s')$p.value
+                  ) %>%
+        ungroup()
+
+TPM %>%
+  ggplot(aes(x=1-FractionProductive, y=TPM)) +
+  geom_point() +
+  scale_y_continuous(trans='log10') +
+  scale_x_continuous(trans='log10') +
+  facet_wrap(~sample)
+
+P.D <- dat.temp %>%
+  inner_join(dat.temp.entropy.ordered.genes %>%
+               dplyr::select(sample, GeneAttributedToRead, GeneAttributedToRead.DummyByEntropy)) %>%
+  mutate(GeneAttributedToRead.DummyByEntropy = factor(GeneAttributedToRead.DummyByEntropy)) %>%
+  mutate(NMDFinderB = factor(NMDFinderB, levels=c( "50 nt rule", "Start proximal","Last exon", "Trigger NMD", "Long exon", "No stop", "No CDS"))) %>%
+   # distinct(sample, GeneCounts, GeneAttributedToRead.DummyByEntropy, .keep_all=T) %>%
+   #    group_by(sample) %>%
+   #    mutate(TPM = GeneCounts/sum(GeneCounts, na.rm = T)*1E6) %>%
+   #    ungroup()
+  inner_join(TPM) %>%
+  ggplot() +
+  geom_rug(
+    data = . %>% distinct(GeneAttributedToRead.DummyByEntropy, .keep_all=T),
+    aes(color=TPM, x=GeneAttributedToRead.DummyByEntropy),
+    size=1, outside=F, y=-0.05
+  ) +
+  scale_color_viridis_c(trans='log10') +
+  ggnewscale::new_scale_color() +
+  geom_col(aes(x=GeneAttributedToRead.DummyByEntropy, y=PercentIsoform, fill=NMDFinderB), width=1.1) +
+  geom_hline(yintercept = 0) +
+  facet_grid(~FacetTitle, scales="free") +
+  scale_y_continuous(expand=c(0,0), limits=c(-0.03,1)) +
+  scale_fill_manual(values=NMDFinderBCategoriesToColors %>% dplyr::select(NMDFinderB, Color) %>% deframe()) +
+  scale_color_manual(values=NMDFinderBCategoriesToColors %>% dplyr::select(NMDFinderB, Color) %>% deframe(), guide=F) +
+  theme(
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  labs(fill="Transcript\ncategory", x="Genes, ranked by fraction unproductive", y="Fraction of transcript molecules")
+P.D
+```
+
+```{r}
+dat.temp %>%
+  distinct(sample)
+
+
+dat.toplot <- dat.temp %>%
+  filter(sample == "shRNA dKD NMD factors") %>%
+  inner_join(dat.temp.entropy.ordered.genes %>%
+               dplyr::select(sample, GeneAttributedToRead, GeneAttributedToRead.DummyByEntropy)) %>%
+  mutate(GeneAttributedToRead.DummyByEntropy = factor(GeneAttributedToRead.DummyByEntropy)) %>%
+  mutate(NMDFinderB = factor(NMDFinderB, levels=c( "50 nt rule", "Start proximal","Last exon", "Trigger NMD", "Long exon", "No stop", "No CDS"))) %>%
+   # distinct(sample, GeneCounts, GeneAttributedToRead.DummyByEntropy, .keep_all=T) %>%
+   #    group_by(sample) %>%
+   #    mutate(TPM = GeneCounts/sum(GeneCounts, na.rm = T)*1E6) %>%
+   #    ungroup()
+  mutate(ProductiveStats = recode(NMDFinderB, "50 nt rule"="Productive", "Start proximal"="Unproductive","Last exon"="Productive", "Trigger NMD"="Unproductive", "Long exon"="Unproductive", "No stop"="Unproductive", "No CDS"="Unproductive")) %>%
+  inner_join(TPM) %>%
+  mutate(IsAllProductive = FractionProductive == 1) %>%
+  filter(TPM > 3000 | !IsAllProductive) %>%
+  group_by(GeneAttributedToRead, ProductiveStats) %>%
+  summarise(Percent = sum(PercentIsoform)) %>%
+  ungroup()
+
+dat.toplot %>%
+  filter(ProductiveStats == "Unproductive") %>%
+  summarise(mean = mean(Percent), median=median(Percent))
+
+dat.toplot %>%
+  inner_join(
+    dat.toplot %>%
+      filter(ProductiveStats == "Unproductive") %>%
+      arrange(desc(Percent)) %>%
+      mutate(GeneAttributedToRead.Dummy = row_number()) %>%
+      dplyr::select(GeneAttributedToRead, GeneAttributedToRead.Dummy)) %>%
+  ggplot() +
+  geom_col(aes(x=GeneAttributedToRead.Dummy, y=Percent, fill=ProductiveStats), width=1, position='fill') +
+  geom_hline(yintercept = 0) +
+  scale_y_continuous(expand=c(0,0), limits=c(0.0,1), breaks=c(0, 0.25, 0.5, 0.75, 1), labels=c(0,25,50,75,100)) +
+  scale_x_continuous(expand=c(0,0)) +
+  geom_hline(yintercept = .129, color='red', linetype='dashed') +
+  scale_fill_manual(values=c("Productive"="#08306b", "Unproductive"="#7f0000")) +
+  theme(
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  labs(fill=NULL, x="Genes, ranked", y="Percent transcript molecules\nafter NMD inhibition") +
+  theme(legend.position = 'bottom')
+
+ggsave("/project2/yangili1/carlos_and_ben_shared/rough_figs/OriginalSubplots/202407_UnproductivePercent.pdf", height = 3.7, width=7.5)
+```
+
+
+barchart
+
+```{r}
+gwas.traits <- read_tsv("../code/config/gwas_table.tsv") %>%
+  dplyr::rename(GWAS.accession=gwas, gwas.trait=trait)
+
+
+hyprcoloc.results <- read_tsv("../code/hyprcoloc/Results/ForGWASColoc/GWASColoc_ChromatinAPAAndRNA/results.txt.gz") %>%
+  dplyr::rename(GWAS.Loci = GWASLeadSnpChrom_Pos_RefAllele_AltAllele_rsID_trait) %>%
+  separate(GWAS.Loci, into=c("GWAS.LeadSNP.Chrom", "GWAS.LeadSNP.Pos", "GWAS.accession"), sep="_", remove=F) %>%
+  separate_rows(ColocalizedTraits, sep = ",") %>%
+  mutate(IsColocalizedWithSomething = !ColocalizedTraits == "None") %>%
+  mutate(Trait = if_else(IsColocalizedWithSomething, ColocalizedTraits, DroppedTrait)) %>%
+  dplyr::select(-DroppedTrait, -ColocalizedTraits) %>%
+  mutate(Trait = str_replace_all(Trait, " ", "")) %>%
+  mutate(GWAS.Loci = str_replace_all(GWAS.Loci, " ", "")) %>%
+  mutate(Trait = if_else(Trait == GWAS.Loci, paste("GWAS",GWAS.Loci,sep = ";"),Trait)) %>%
+  separate(Trait, into=c("PhenotypeClass", "Phenotype"), sep=";", remove=F) %>%
+  group_by(GWAS.Loci, HyprcolocIteration) %>%
+  mutate(ColocalizedClusterContainsGWASTrait = any(PhenotypeClass=="GWAS") & IsColocalizedWithSomething) %>%
+  ungroup() %>%
+  inner_join(gwas.traits %>%
+               dplyr::select(1:2))
+
+hyprcoloc.results$gwas.trait %>% unique() %>% sort()
+```
+
